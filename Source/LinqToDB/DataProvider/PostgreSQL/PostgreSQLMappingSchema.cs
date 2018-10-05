@@ -5,6 +5,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Mapping;
+	using System.Data.Linq;
 
 	public class PostgreSQLMappingSchema : MappingSchema
 	{
@@ -23,6 +24,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetValueToSqlConverter(typeof(bool),   (sb,dt,v) => sb.Append(v));
 			SetValueToSqlConverter(typeof(String), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
 			SetValueToSqlConverter(typeof(Char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+		}
+
+		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
+		{
+			stringBuilder.Append("E'\\\\x");
+
+			foreach (var b in value)
+				stringBuilder.Append(b.ToString("X2"));
+
+			stringBuilder.Append("'");
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)

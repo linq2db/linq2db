@@ -50,6 +50,7 @@ namespace LinqToDB.Mapping
 			if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
 			if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
 			if (columnAttribute.HasScale    ()) Scale     = columnAttribute.Scale;
+			if (columnAttribute.HasOrder    ()) Order     = columnAttribute.Order;
 
 			if (Storage == null)
 			{
@@ -288,6 +289,12 @@ namespace LinqToDB.Mapping
 		/// - {3} - identity specification.
 		/// </summary>
 		public string         CreateFormat    { get; private set; }
+
+		/// <summary>
+		/// Sort order for column list.
+		/// Positive values first, then unspecified (null), then negative values.
+		/// </summary>
+		public int?           Order           { get; private set; }
 
 		/// <summary>
 		/// Gets sequence name for specified column.

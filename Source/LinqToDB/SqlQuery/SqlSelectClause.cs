@@ -79,6 +79,12 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
+		public SqlSelectClause ExprNew(ISqlExpression expr)
+		{
+			Columns.Add(new SqlColumn(SelectQuery, expr));
+			return this;
+		}
+
 		public SqlSelectClause Expr(ISqlExpression expr, string alias)
 		{
 			AddOrFindColumn(new SqlColumn(SelectQuery, expr, alias));

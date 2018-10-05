@@ -1082,8 +1082,8 @@ namespace Tests.DataProvider
 								ColumnName           = "dateDataType",
 								ColumnType           = "date",
 								MemberName           = "dateDataType",
-								MemberType           = "DateTime?",
-								SystemType           = typeof(DateTime),
+								MemberType           = "NpgsqlDate?",
+								SystemType           = typeof(NpgsqlDate),
 								ProviderSpecificType = "NpgsqlDate",
 								IsNullable           = true,
 								DataType             = DataType.Date
@@ -1113,8 +1113,8 @@ namespace Tests.DataProvider
 								ColumnName           = "intervalDataType",
 								ColumnType           = "interval(0)",
 								MemberName           = "intervalDataType",
-								MemberType           = "TimeSpan?",
-								SystemType           = typeof(TimeSpan),
+								MemberType           = "NpgsqlTimeSpan?",
+								SystemType           = typeof(NpgsqlTimeSpan),
 								ProviderSpecificType = "NpgsqlTimeSpan",
 								IsNullable           = true,
 								DataType             = DataType.Time
@@ -1291,8 +1291,8 @@ namespace Tests.DataProvider
 								ColumnName           = "inetDataType",
 								ColumnType           = "inet",
 								MemberName           = "inetDataType",
-								MemberType           = "IPAddress",
-								SystemType           = typeof(IPAddress),
+								MemberType           = "NpgsqlInet?",
+								SystemType           = typeof(NpgsqlInet),
 								ProviderSpecificType = "NpgsqlInet",
 								IsNullable           = true,
 								DataType             = DataType.Udt

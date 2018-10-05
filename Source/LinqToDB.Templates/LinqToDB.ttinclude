@@ -701,7 +701,7 @@ void GenerateTypesFromMetadata()
 				p.IsStatic = true;
 				p.Type = p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
 				var paramCount = p.ProcParameters.Count(pr => !pr.IsResult);
-				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + (p.Schema != null ? "." : null) + p.ProcedureName + "\"", "ServerSideOnly=true, IsAggregate = true" + (paramCount > 0 ? (", ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }") : null)));
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + (p.Schema != null ? p.Schema + "." : null) + p.ProcedureName + "\"", "ServerSideOnly=true, IsAggregate = true" + (paramCount > 0 ? (", ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }") : null)));
 
 				if (p.IsDefaultSchema || !GenerateSchemaAsType)
 					p.Parameters.Add("this IEnumerable<TSource> src");
@@ -717,7 +717,7 @@ void GenerateTypesFromMetadata()
 			{
 				p.IsStatic = true;
 				p.Type = p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
-				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + (p.Schema != null ? "." : null)  + p.ProcedureName + "\"", "ServerSideOnly=true"));
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + (p.Schema != null ? p.Schema + "." : null)  + p.ProcedureName + "\"", "ServerSideOnly=true"));
 			}
 			else
 			{

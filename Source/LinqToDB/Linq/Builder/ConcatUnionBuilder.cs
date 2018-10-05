@@ -214,26 +214,37 @@ namespace LinqToDB.Linq.Builder
 						if (nctor != null)
 						{
 							var members = nctor.Members
-								.Select(m => m is MethodInfo ? ((MethodInfo)m).GetPropertyInfo() : m)
+								.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
 								.ToList();
 
 							expr = Expression.New(
 								nctor.Constructor,
 								members.Select(m => Expression.PropertyOrField(_unionParameter, m.Name)),
 								members);
+
+							var ex = Builder.BuildExpression(this, expr, enforceServerSide);
+							return ex;
 						}
-						else
+
+						var isNew = Expression.Find(e => e is NewExpression && e.Type == type) != null;
+						if (isNew)
 						{
 							var ta = TypeAccessor.GetAccessor(type);
 
 							expr = Expression.MemberInit(
 								Expression.New(ta.Type),
-								_members.Select(m => Expression.Bind(m.Value.MemberExpression.Member, m.Value.MemberExpression)));
+								_members.Select(m =>
+									Expression.Bind(m.Value.MemberExpression.Member, m.Value.MemberExpression)));
+							var ex = Builder.BuildExpression(this, expr, enforceServerSide);
+							return ex;
 						}
-
-						var ex = Builder.BuildExpression(this, expr, enforceServerSide);
-
-						return ex;
+						else
+						{
+							var tableContext = new TableBuilder.TableContext(Builder,
+								new BuildInfo(Parent, Expression, new SelectQuery()), type);
+							var ex = tableContext.BuildExpression(null, 0, enforceServerSide);
+							return ex;
+						}
 					}
 
 					if (level == 0 || level == 1)
@@ -325,9 +336,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									var ma = (MemberExpression)expression;
 
-									Member member;
-
-									if (!_members.TryGetValue(ma.Member, out member))
+									if (!_members.TryGetValue(ma.Member, out var member))
 									{
 										var ed = Builder.MappingSchema.GetEntityDescriptor(_type);
 
@@ -346,8 +355,7 @@ namespace LinqToDB.Linq.Builder
 									}
 
 									if (member == null)
-										throw new LinqToDBException(
-											string.Format("Expression '{0}' is not a field.", expression));
+										throw new LinqToDBException($"Expression '{expression}' is not a field.");
 
 									if (member.SqlQueryInfo == null)
 									{
