@@ -121,6 +121,41 @@ namespace LinqToDB.Extensions
 			return type.GetMembers(BindingFlags.Instance | BindingFlags.Public);
 		}
 
+		public static MemberInfo[] GetPublicInstanceValueMembers(this Type type)
+		{
+			var hierarchy = type.GetTypeHierarchy().Select((t, i) => new { ord = i, type = t }).ToArray();
+
+			var members =
+				from m in type.GetMembers(BindingFlags.Instance | BindingFlags.Public).Select((mem, ord) => new { ord, mem })
+				where m.mem.IsFieldEx() || m.mem.IsPropertyEx() && ((PropertyInfo)m.mem).GetIndexParameters().Length == 0
+
+				join h in hierarchy on m.mem.DeclaringType equals h.type
+
+				orderby h.ord, m.ord
+
+				group m.mem by m.mem.Name into grp
+				select grp.First();
+
+			return members.ToArray();
+		}
+
+		public static Type[] GetTypeHierarchy(this Type type)
+		{
+			IEnumerable<Type> enumerator(Type curr)
+			{
+				while (curr != null && curr != typeof(Object))
+				{
+					yield return curr;
+#if NETSTANDARD1_6
+					curr = curr.GetTypeInfo().BaseType;
+#else
+					curr = curr.BaseType;
+#endif
+				}
+			}
+			return enumerator(type).ToArray();
+		}
+
 		public static MemberInfo[] GetStaticMembersEx(this Type type, string name)
 		{
 			return type.GetMember(name, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
