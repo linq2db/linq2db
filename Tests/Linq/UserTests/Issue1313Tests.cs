@@ -43,7 +43,7 @@ namespace Tests.UserTests
 		}
 
 		/// <summary>
-		/// Derived class, replaces each data member (field & property) in base class above using the 'new' keyword.
+		/// Derived class, replaces each data member (field + property) in base class above using the 'new' keyword.
 		/// </summary>
 		public class I1313_Derived : I1313_Base
 		{
