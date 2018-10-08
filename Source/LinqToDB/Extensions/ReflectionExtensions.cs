@@ -123,37 +123,28 @@ namespace LinqToDB.Extensions
 
 		public static MemberInfo[] GetPublicInstanceValueMembers(this Type type)
 		{
-			var hierarchy = type.GetTypeHierarchy().Select((t, i) => new { ord = i, type = t }).ToArray();
+			var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public)
+				.Where(m => m.IsFieldEx() || m.IsPropertyEx() && ((PropertyInfo)m).GetIndexParameters().Length == 0)
+				.ToArray();
 
-			var members =
-				from m in type.GetMembers(BindingFlags.Instance | BindingFlags.Public).Select((mem, ord) => new { ord, mem })
-				where m.mem.IsFieldEx() || m.mem.IsPropertyEx() && ((PropertyInfo)m.mem).GetIndexParameters().Length == 0
+			var baseType = type.BaseTypeEx();
+			if (baseType == typeof(object) || baseType == typeof(ValueType))
+				return members;
 
-				join h in hierarchy on m.mem.DeclaringType equals h.type
-
-				orderby h.ord, m.ord
-
-				group m.mem by m.mem.Name into grp
-				select grp.First();
-
-			return members.ToArray();
-		}
-
-		public static Type[] GetTypeHierarchy(this Type type)
-		{
-			IEnumerable<Type> enumerator(Type curr)
+			var results = new LinkedList<MemberInfo>();
+			var names = new HashSet<string>();
+			for (var t = type; t != typeof(object) && t != typeof(ValueType); t = t.BaseTypeEx())
 			{
-				while (curr != null && curr != typeof(Object))
+				foreach (var m in members.Where(_ => _.DeclaringType == t))
 				{
-					yield return curr;
-#if NETSTANDARD1_6
-					curr = curr.GetTypeInfo().BaseType;
-#else
-					curr = curr.BaseType;
-#endif
+					if (!names.Contains(m.Name))
+					{
+						results.AddFirst(m);
+						names.Add(m.Name);
+					}
 				}
 			}
-			return enumerator(type).ToArray();
+			return results.ToArray();
 		}
 
 		public static MemberInfo[] GetStaticMembersEx(this Type type, string name)
