@@ -128,7 +128,7 @@ namespace LinqToDB.Extensions
 				.ToArray();
 
 			var baseType = type.BaseTypeEx();
-			if (baseType == typeof(object) || baseType == typeof(ValueType))
+			if (baseType == null || baseType == typeof(object) || baseType == typeof(ValueType))
 				return members;
 
 			var results = new LinkedList<MemberInfo>();
