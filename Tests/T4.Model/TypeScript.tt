@@ -1,0 +1,61 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                        #>
+<#@ output extension=".generated.ts"                                               #>
+<#@ include file="..\..\Source\LinqToDB.Templates\T4Model.ttinclude"               #>
+<#@ include file="..\..\Source\LinqToDB.Templates\TypeScript.ttinclude"            #>
+<#
+	Model.Namespaces[0].Usings.Add("import { ISomething, format, g, sealed, configurable } from \"./include\"");
+	Model.Namespaces[0].Types.Add(new Class
+	{
+		Name    = "TestClass1",
+		Members =
+		{
+			new Property ("number",  "numberValue") { InitValue = "12345", Attributes = { new Attribute("format", "\"test\"") }},
+			new Property ("string",  "stringValue"),
+			new MemberGroup
+			{
+				Region    = "Test Region",
+				IsCompact = true,
+				Members   =
+				{
+					new Field
+					{
+						Type       = "number",
+						Name       = "Field1",
+						Comment    = { " <summary>", " 123", " </summary>" },
+						IsOptional = true
+					},
+					new Property
+					{
+						Type       = "string",
+						Name       = "Field221",
+					}
+				}
+			},
+			new MemberGroup
+			{
+				Region    = "Test Region 2",
+				IsCompact = true,
+				Members   =
+				{
+					new Field   ("boolean", "Field12") { EndLineComment = "Field3 comnt" },
+					new Property("string",  "PField23",  new[] { "return null;" }, new[] { "//some setter" }) { EndLineComment = "Fieomment", SetAttributes = { new Attribute("configurable", "true") } },
+				}
+			},
+		}
+	});
+
+	Model.Namespaces[0].Types.Add(new Class
+	{
+		Name       = "TestClass2",
+		BaseClass  = "TestClass1",
+		Interfaces = { "ISomething" },
+		Attributes = { new Attribute("sealed") },
+		
+		Members   =
+		{
+		    new Method("void", "something", new [] {"val?: number"}, new []{"//line1", "//line2"}) {EndLineComment = "This is method comment", Attributes = { new Attribute("g", "") }}
+		}
+	});
+
+	GenerateModel();
+#>

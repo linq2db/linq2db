@@ -1,0 +1,233 @@
+<#
+	{
+		CreateRenderer = CreateTypeScriptRenderer;
+	}
+#>
+<#+
+
+static IRenderer CreateTypeScriptRenderer(GeneratedTextTransformation tt)
+{
+	return new TypeScriptRenderer(tt);
+}
+
+partial class Property
+{
+	public List<Attribute> GetAttributes = new List<Attribute>();
+	public List<Attribute> SetAttributes = new List<Attribute>();
+}
+
+partial class Field
+{
+	public bool   IsOptional;
+}
+
+public class TypeScriptRenderer : BaseRenderer
+{
+	public TypeScriptRenderer(GeneratedTextTransformation tt) : base(tt)
+	{
+		Indent = "    ";
+	}
+
+	protected override void BeginNamespace(Namespace ns)
+	{
+		WriteLine("namespace {0} {{", ns.Name);
+	}
+
+	protected override void EndNamespace(Namespace ns)
+	{
+		WriteLine("}");
+	}
+
+	protected override void BeginConditional(string condition, bool isCompact)
+	{
+		if (!string.IsNullOrEmpty(condition))
+			throw new NotSupportedException("Conditional is not supported for TypeScript");
+	}
+
+	protected override void EndConditional(string condition, bool isCompact)
+	{
+		if (!string.IsNullOrEmpty(condition))
+			throw new NotSupportedException("Conditional is not supported for TypeScript");
+	}
+
+	protected override void BeginAttributes()
+	{
+	}
+
+	protected override void EndAttributes()
+	{
+	}
+
+	protected override void SplitAttributes()
+	{
+	}
+
+	protected override void RenderAttribute(Attribute attribute)
+	{
+		Write("@" + attribute.Name);
+
+		if (attribute.Parameters.Count > 0) Write("(");
+
+		for (var i = 0; i < attribute.Parameters.Count; i++)
+		{
+			if (i > 0) Write(", ");
+			Write(attribute.Parameters[i]);
+		}
+
+		if (attribute.Parameters.Count > 0) Write(")");
+	}
+
+	protected override void BeginClass(Class cl)
+	{
+		if (cl.AccessModifier == AccessModifier.Public)
+			Write("export ");
+
+		if (cl.IsAbstract)
+			Write("abstract ");
+
+		Write("class {0} ", cl.Name);
+
+		if (!string.IsNullOrEmpty(cl.BaseClass))
+			Write("extends {0} ", cl.BaseClass);
+
+		if (cl.Interfaces.Count > 0)
+			Write("implements ");
+
+		for (var i = 0; i < cl.Interfaces.Count; i++)
+		{
+			if (i > 0) Write(", ");
+			Write(cl.Interfaces[i]);
+		}
+
+		if (cl.Interfaces.Count > 0)
+			Write(" ");
+
+		WriteLine("{");
+	}
+
+	protected override void EndClass(Class cl)
+	{
+		WriteLine("}");
+	}
+
+	protected override void RenderEvent(Event ev)
+	{
+		throw new NotSupportedException("Events are not supported for TypeScript");
+	}
+
+	protected override void RenderField(Field fl)
+	{
+		var am = fl.AccessModifier.ToString().ToLower();
+
+		Write(am + " ");
+
+		if (fl.IsStatic) Write("static ");
+
+		if (fl.IsReadonly) Write("readonly ");
+
+		Write(fl.Name);
+
+		if (fl.IsOptional) Write("?");
+
+		Write(": {0}", fl.Type);
+
+		if (fl.InitValue != null) Write(" = {0}", fl.InitValue);
+
+		Write(";");
+
+		WriteEndLineComment(fl.EndLineComment);
+	}
+
+	protected override void RenderProperty(Property pt, bool isCompact)
+	{
+		if (pt.IsAuto || (pt.HasGetter == pt.HasSetter == false))
+		{
+			RenderField(new Field()
+			{
+				Name = pt.Name,
+				AccessModifier = pt.AccessModifier,
+				Type = pt.Type,
+				EndLineComment = pt.EndLineComment,
+				IsReadonly = pt.HasSetter == false,
+				InitValue = pt.InitValue
+			});
+
+			return;
+		}
+
+		if (pt.HasGetter)
+		{
+			RenderAttributes(pt.GetAttributes);
+			Write("get {0}(): {1} {{", pt.Name, pt.Type);
+			WriteEndLineComment(pt.EndLineComment);
+			PushIndent();
+			WriteLines(pt.GetBody);
+			PopIndent();
+			WriteLine("}");
+		}
+
+		if (pt.HasSetter)
+		{
+			RenderAttributes(pt.SetAttributes);
+			Write("set {0}(value: {1}) {{", pt.Name, pt.Type);
+			WriteEndLineComment(pt.EndLineComment);
+			PushIndent();
+			WriteLines(pt.SetBody);
+			PopIndent();
+			WriteLine("}");
+		}
+	}
+
+	protected override void RenderMethod(Method mt, bool isCompact)
+	{
+		var am = mt.AccessModifier.ToString().ToLower();
+
+		Write(am + " ");
+
+		if (mt.IsStatic) Write("static ");
+
+		if (mt.IsAbstract) Write("abstract ");
+
+
+		Write("{0}(", mt.Name);
+
+		for (var i = 0; i < mt.Parameters.Count; i++)
+		{
+			if (i > 0) Write(", ");
+			Write(mt.Parameters[i]);
+		}
+
+		Write(")");
+		
+		if (!string.IsNullOrEmpty(mt.Type)) Write(": {0}", mt.Type);
+
+		if (mt.Body.Count > 0) Write(" {");
+		else Write(";");
+
+		WriteEndLineComment(mt.EndLineComment);
+
+		if (mt.Body.Count > 0)
+		{
+			PushIndent();
+			WriteLines(mt.Body);
+			PopIndent();
+			WriteLine("}");
+		}
+	}
+
+	protected override void RenderMemberGroup(MemberGroup mg, bool isCompact)
+	{
+		if (!string.IsNullOrEmpty(mg.Region))
+		{
+			WriteComment("Begin {0}", mg.Region);
+			WriteLine("");
+		}
+
+		foreach (var m in mg.Members)
+			Render(m);
+
+		if (!string.IsNullOrEmpty(mg.Region))
+			WriteComment("End {0}", mg.Region);
+	}
+}
+#>
