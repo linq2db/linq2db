@@ -236,7 +236,6 @@ namespace LinqToDB.Linq.Builder
 			var expr = expression;
 
 			expr = ConvertParameters (expr);
-			expr = ExposeExpression  (expr);
 			expr = OptimizeExpression(expr);
 
 			var paramType   = expr.Type;
@@ -479,6 +478,85 @@ namespace LinqToDB.Linq.Builder
 
 							break;
 						}
+
+					case ExpressionType.Call:
+						{
+							var mc = (MethodCallExpression)expr;
+
+							List<Expression> newArgs = null;
+							for (var index = 0; index < mc.Arguments.Count; index++)
+							{
+								var arg = mc.Arguments[index];
+								Expression newArg = null;
+								if (typeof(LambdaExpression).IsSameOrParentOf(arg.Type))
+								{
+									var argUnwrapped = arg.Unwrap();
+									if (argUnwrapped.NodeType == ExpressionType.MemberAccess ||
+									    argUnwrapped.NodeType == ExpressionType.Call)
+									{
+										newArg = argUnwrapped.EvaluateExpression() as LambdaExpression;
+									}
+
+									if (newArg == null)
+										newArgs?.Add(arg);
+									else
+									{
+										if (newArgs == null)
+											newArgs = new List<Expression>(mc.Arguments.Take(index));
+										newArgs.Add(newArg);
+									}
+								}
+							}
+
+							if (newArgs != null)
+							{
+								mc = mc.Update(mc.Object, newArgs);
+							}
+
+
+							if (mc.Method.Name == "Compile" && typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
+							{
+								if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
+								{
+									return lambda;
+								}
+							}
+							
+							return mc;
+						}
+
+					case ExpressionType.Invoke:
+						{
+							var invokation = (InvocationExpression)expr;
+							if (invokation.Expression.NodeType == ExpressionType.Call)
+							{
+								var mc = (MethodCallExpression)invokation.Expression;
+								if (mc.Method.Name == "Compile" &&
+								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
+								{
+									if (mc.Object.EvaluateExpression() is LambdaExpression lambds)
+									{
+										var map = new Dictionary<Expression, Expression>();
+										for (int i = 0; i < invokation.Arguments.Count; i++)
+										{
+											map.Add(lambds.Parameters[i], invokation.Arguments[i]);
+										}
+
+										var newBody = lambds.Body.Transform(se =>
+										{
+											if (se.NodeType == ExpressionType.Parameter &&
+											    map.TryGetValue(se, out var newExpr))
+												return newExpr;
+											return se;
+										});
+
+										return ExposeExpression(newBody);
+									}
+								}
+							}
+							break;
+						}
+
 				}
 
 				return expr;
@@ -502,7 +580,10 @@ namespace LinqToDB.Linq.Builder
 			if (_optimizedExpressions.TryGetValue(expression, out var expr))
 				return expr;
 
-			_optimizedExpressions[expression] = expr = expression.Transform((Func<Expression,TransformInfo>)OptimizeExpressionImpl);
+			expr = ExposeExpression(expression);
+			expr = expr.Transform((Func<Expression,TransformInfo>)OptimizeExpressionImpl);
+
+			_optimizedExpressions[expression] = expr;
 
 			return expr;
 		}
