@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Tools;
@@ -114,11 +115,6 @@ namespace Tests.Playground
 			}
 		}
 
-		int SomeFunc(int value)
-		{
-			return value;
-		}
-
 		[Test, Combinatorial]
 		public void LocalInvokation([SQLiteDataSources] string context)
 		{
@@ -127,16 +123,19 @@ namespace Tests.Playground
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(sampleData))
 			{
+				var ids = new[] { 1, 2, 3, 4, 5, 6 };
+
 				var query = from t in table
-					where t.Value == SomeFunc(1)
+					where ids.Where(i => i < 3).GroupBy(i => i).Select(i => i.Key).Contains(t.Id)
 					select t;
 				var expected = from t in sampleData
-					where t.Value == SomeFunc(1)
+					where ids.Where(i => i < 3).GroupBy(i => i).Select(i => i.Key).Contains(t.Id)
 					select t;
 
 				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
 			}
 		}
+
 
 	}
 }
