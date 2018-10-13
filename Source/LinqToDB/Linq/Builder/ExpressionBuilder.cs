@@ -496,15 +496,15 @@ namespace LinqToDB.Linq.Builder
 									{
 										newArg = argUnwrapped.EvaluateExpression() as LambdaExpression;
 									}
+								}
 
-									if (newArg == null)
-										newArgs?.Add(arg);
-									else
-									{
-										if (newArgs == null)
-											newArgs = new List<Expression>(mc.Arguments.Take(index));
-										newArgs.Add(newArg);
-									}
+								if (newArg == null)
+									newArgs?.Add(arg);
+								else
+								{
+									if (newArgs == null)
+										newArgs = new List<Expression>(mc.Arguments.Take(index));
+									newArgs.Add(newArg);
 								}
 							}
 
@@ -527,19 +527,19 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Invoke:
 						{
-							var invokation = (InvocationExpression)expr;
-							if (invokation.Expression.NodeType == ExpressionType.Call)
+							var invocation = (InvocationExpression)expr;
+							if (invocation.Expression.NodeType == ExpressionType.Call)
 							{
-								var mc = (MethodCallExpression)invokation.Expression;
+								var mc = (MethodCallExpression)invocation.Expression;
 								if (mc.Method.Name == "Compile" &&
 								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
 								{
 									if (mc.Object.EvaluateExpression() is LambdaExpression lambds)
 									{
 										var map = new Dictionary<Expression, Expression>();
-										for (int i = 0; i < invokation.Arguments.Count; i++)
+										for (int i = 0; i < invocation.Arguments.Count; i++)
 										{
-											map.Add(lambds.Parameters[i], invokation.Arguments[i]);
+											map.Add(lambds.Parameters[i], invocation.Arguments[i]);
 										}
 
 										var newBody = lambds.Body.Transform(se =>

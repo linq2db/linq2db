@@ -35,7 +35,7 @@ namespace Tests.Playground
 		}
 
 		[Test, Combinatorial]
-		public void InvokationTestLocal([SQLiteDataSources] string context)
+		public void InvocationTestLocal([SQLiteDataSources] string context)
 		{
 			Expression<Func<SampleClass, bool>> predicate = c => c.Value > 1;
 			var sampleData = GenerateData();
@@ -97,7 +97,7 @@ namespace Tests.Playground
 		}
 
 		[Test, Combinatorial]
-		public void InvokationTestFunction([SQLiteDataSources] string context)
+		public void InvocationTestFunction([SQLiteDataSources] string context)
 		{
 			var sampleData = GenerateData();
 
@@ -116,7 +116,7 @@ namespace Tests.Playground
 		}
 
 		[Test, Combinatorial]
-		public void LocalInvokation([SQLiteDataSources] string context)
+		public void LocalInvocation([SQLiteDataSources] string context)
 		{
 			var sampleData = GenerateData();
 
