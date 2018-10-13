@@ -67,7 +67,7 @@ namespace Tests.UserTests
 			[Column,     NotNull    ] public int       TargetId    { get; set; } // Int
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void Test(
 			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context
 		)

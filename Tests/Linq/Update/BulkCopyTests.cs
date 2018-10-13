@@ -37,7 +37,7 @@ namespace Tests.xUpdate
 			public int Value { get; set; }
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void KeepIdentity_SkipOnInsertTrue(
 			[DataSources(false)]string context,
 			[Values(null, true, false)]bool? keepIdentity,
@@ -101,7 +101,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void KeepIdentity_SkipOnInsertFalse(
 			[DataSources(false)]string context,
 			[Values(null, true, false)]bool? keepIdentity,

@@ -46,7 +46,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void Test1([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -69,7 +69,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void Test2([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -102,7 +102,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestAsTable([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -357,7 +357,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void Test4([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -406,7 +406,7 @@ namespace Tests.Linq
 			public int ParentID { get; set; }
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -439,7 +439,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestDelete([CteContextSource(ProviderName.Firebird, ProviderName.DB2)] string context)
 		{
 			using (var db  = GetDataContext(context))
@@ -458,7 +458,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestUpdate(
 			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
@@ -491,7 +491,7 @@ namespace Tests.Linq
 			public int? GrandChildID;
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void RecursiveTest([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
