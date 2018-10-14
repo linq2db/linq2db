@@ -210,7 +210,7 @@ static Action<GeneratedTextTransformation,Class> WriteBeginClass = (tt,cl) =>
 	tt.Write(cl.AccessModifier.ToString().ToLower() + " ");
 	if (cl.IsStatic)  tt.Write("static ");
 	if (cl.IsPartial) tt.Write("partial ", cl.Name);
-	tt.Write("class {0}", cl.Name);
+	tt.Write("class {0}{1}", cl.Name, cl.GenericArguments);
 
 	if (!string.IsNullOrEmpty(cl.BaseClass) || cl.Interfaces.Count > 0)
 	{
@@ -231,6 +231,7 @@ static Action<GeneratedTextTransformation> WriteEndClass = tt => tt.WriteLine("}
 public partial class Class : TypeBase
 {
 	public string             BaseClass;
+	public string             GenericArguments;
 	public bool               IsStatic   = false;
 	public List<string>       Interfaces = new List<string>();
 	public List<IClassMember> Members    = new List<IClassMember>();
@@ -1176,13 +1177,14 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 		mlen--;
 	}
 
-	tt.Write("{0}{1}{2}{3}{4}{5}{6}{7}{8} {9}",
+	tt.Write("{0}{1}{2}{3}{4}{5}{6}{7}{8} {9}{10}",
 		am1,    LenDiff(len1, am1),
 		mdf,    LenDiff(mlen, mdf),
 		am2,    LenDiff(len2, am2),
 		m.Type == null ? "" : " ",
 		m.Type, LenDiff(m.TypeLen,     m.Type ?? ""),
-		m.Name);
+		m.Name,
+		m.GenericArguments);
 
 	Action writeComment = () =>
 	{
@@ -1282,6 +1284,7 @@ public partial class Method : MemberBase
 	public bool         IsVirtual;
 	public bool         IsOverride;
 	public bool         IsStatic;
+	public string       GenericArguments;
 	public List<string> AfterSignature = new List<string>();
 	public List<string> Parameters     = new List<string>();
 	public List<string> Body           = new List<string>();
