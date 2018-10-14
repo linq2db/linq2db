@@ -47,7 +47,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test]
+		[Test, Combinatorial]
 		public void TestDateTime(
 			[IncludeDataSources(ProviderName.Informix)] string context,
 			[Values] bool inlineParameters,
