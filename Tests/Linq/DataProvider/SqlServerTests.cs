@@ -1324,5 +1324,19 @@ namespace Tests.DataProvider
 			}
 		}
 
+#if !NETSTANDARD1_6
+		[Test, SqlServerDataContext(false)]
+		public void TestIssue1144(string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				var table = schema.Tables.Where(_ => _.TableName == "Issue1144").Single();
+
+				Assert.AreEqual(1, table.Columns.Count);
+			}
+		}
+#endif
 	}
 }
