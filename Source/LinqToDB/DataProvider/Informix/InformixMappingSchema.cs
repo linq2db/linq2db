@@ -59,6 +59,9 @@ namespace LinqToDB.DataProvider.Informix
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
 		{
+			// datetime literal using TO_DATE function used because it works with all kinds of datetime ranges
+			// without generation of range-specific literals
+			// see Issue1307Tests tests
 			string format;
 			if (value.Millisecond != 0)
 				format = InformixConfiguration.ExplicitFractionalSecondsSeparator ? 
