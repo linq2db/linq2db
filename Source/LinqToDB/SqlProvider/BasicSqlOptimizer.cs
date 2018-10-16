@@ -116,6 +116,14 @@ namespace LinqToDB.SqlProvider
 					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
 						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 
+					// append missing CTE's from dependencies
+					var hasSet = new HashSet<CteClause>(foundCte.Values.SelectMany(hs => hs));
+					foreach (var clause in hasSet)
+					{
+						if (!foundCte.ContainsKey(clause))
+							foundCte.Add(clause, new HashSet<CteClause>());
+					}
+
 					var ordered = TopoSorting.TopoSort(foundCte.Keys, i => foundCte[i]).ToList();
 
 					Utils.MakeUniqueNames(ordered, c => c.Name, (c, n) => c.Name = n, "CTE_1");
