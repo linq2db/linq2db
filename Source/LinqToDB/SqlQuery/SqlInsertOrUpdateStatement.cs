@@ -37,6 +37,7 @@ namespace LinqToDB.SqlQuery
 
 		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
 		{
+			With?.Walk(skipColumns, func);
 			((ISqlExpressionWalkable)_insert)?.Walk(skipColumns, func);
 			((ISqlExpressionWalkable)_update)?.Walk(skipColumns, func);
 
