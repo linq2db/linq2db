@@ -336,6 +336,10 @@ namespace LinqToDB.SqlProvider
 				{
 					AppendIndent();
 					StringBuilder.Append("WITH ");
+	
+					if (IsRecursiveCteKeywordRequired && with.Clauses.Any(c => c.IsRecursive))
+						StringBuilder.Append("RECURSIVE ");
+
 					first = false;
 				}
 				else
@@ -343,9 +347,6 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(',').AppendLine();
 					AppendIndent();
 				}
-
-				if (IsRecursiveCteKeywordRequired && cte.IsRecursive)
-					StringBuilder.Append("RECURSIVE ");
 
 				ConvertTableName(StringBuilder, null, null, cte.Name);
 
