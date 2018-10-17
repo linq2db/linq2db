@@ -61,6 +61,10 @@ namespace LinqToDB.Linq.Builder
 			var cteBuildInfo = new BuildInfo(buildInfo, bodyExpr, buildInfo.SelectQuery);
 			var cteContext   = new CteTableContext(builder, cteBuildInfo, cte.Item1, bodyExpr);
 
+			// populate all fields
+			if (isRecursive)
+				cteContext.ConvertToSql(null, 0, ConvertFlags.All);
+
 			return cteContext;
 		}
 
@@ -114,11 +118,6 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					return baseInfos;
-				}
-
-				if (_cte.IsRecursive)
-				{
-					ConvertConvertToSqlAndRegister(null, 0, ConvertFlags.All);
 				}
 
 				var result = ConvertConvertToSqlAndRegister(expression, level, flags);

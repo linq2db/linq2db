@@ -605,22 +605,22 @@ namespace Tests.Linq
 			return cte;
 		}
 
+		IEnumerable<HierarchyData> EnumerateDown(HierarchyTree[] items, int currentLevel, int? currentParent)
+		{
+			foreach (var i in items.Where(i => i.ParentId == currentParent))
+			{
+				yield return new HierarchyData { Id = i.Id, Level = currentLevel };
+
+				foreach (var c in EnumerateDown(items, currentLevel + 1, i.Id))
+				{
+					yield return c;
+				}
+			}
+		}
+
 		[Test, Combinatorial]
 		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2)] string context)
 		{
-			IEnumerable<HierarchyData> EnumerateDown(HierarchyTree[] items, int currentLevel, int? currentParent)
-			{
-				foreach (var i in items.Where(i => i.ParentId == currentParent))
-				{
-					yield return new HierarchyData { Id = i.Id, Level = currentLevel };
-
-					foreach (var c in EnumerateDown(items, currentLevel + 1, i.Id))
-					{
-						yield return c;
-					}
-				}
-			}
-
 			var hierarchyData = GeHirarchyData();
 
 			using (var db = GetDataContext(context))
@@ -660,6 +660,44 @@ namespace Tests.Linq
 					var count = query.Count();
 
 					Assert.Greater(count, 0);
+				}
+			}
+		}
+
+		[Test, Combinatorial]
+		public void RecursiveCount([CteContextSource(true, ProviderName.DB2)] string context)
+		{
+			var hierarchyData = GeHirarchyData();
+
+			using (var db = GetDataContext(context))
+			{
+				using (var tree = db.CreateLocalTable(hierarchyData))
+				{
+					var hierarchy = GetHierarchyDown(tree, db);
+					var expected = EnumerateDown(hierarchyData, 0, null);
+
+					Assert.AreEqual(expected.Count(), hierarchy.Count());
+				}
+			}
+		}
+
+		[Test, Combinatorial]
+		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2)] string context)
+		{
+			var hierarchyData = GeHirarchyData();
+
+			using (var db = GetDataContext(context))
+			{
+				using (var tree = db.CreateLocalTable(hierarchyData))
+				using (var resultTable = db.CreateLocalTable<HierarchyData>())
+				{
+					var hierarchy = GetHierarchyDown(tree, db);
+					hierarchy.Insert(resultTable, r => r);
+
+					var result = resultTable.OrderBy(h => h.Id);
+					var expected = EnumerateDown(hierarchyData, 0, null).OrderBy(h => h.Id);
+
+					AreEqual(expected, result, ComparerBuilder<HierarchyData>.GetEqualityComparer());
 				}
 			}
 		}
