@@ -407,7 +407,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.SapHana)]
 		public void Update12(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -424,7 +424,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.SapHana)]
 		public async Task Update12Async(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -441,7 +441,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.SapHana)]
 		public void Update13(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1061,7 +1061,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.Firebird3)]
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.Firebird3, ProviderName.SapHana)]
 		public void UpdateIssue319Regression(string context)
 		{
 			using (var db = GetDataContext(context))

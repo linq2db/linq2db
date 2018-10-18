@@ -47,7 +47,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.DB2)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.DB2, ProviderName.SapHana)]
 		public void CharAsSqlParameter1(string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -59,7 +59,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2, ProviderName.SapHana)]
 		public void CharAsSqlParameter2(string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -71,7 +71,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2, ProviderName.SQLiteMS, ProviderName.SapHana)]
 		public void CharAsSqlParameter3(string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -159,7 +159,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(false)]
+		// DB2: see DB2SqlOptimizer.SetQueryParameter - binary parameters inlined for DB2
+		[Test, DataContextSource(false, ProviderName.DB2)]
 		public void ExposeSqlBinaryParameter(string context)
 		{
 			using (var db = new DataConnection(context))
