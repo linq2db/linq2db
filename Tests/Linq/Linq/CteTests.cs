@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Humanizer;
@@ -698,6 +699,31 @@ namespace Tests.Linq
 					var expected = EnumerateDown(hierarchyData, 0, null).OrderBy(h => h.Id);
 
 					AreEqual(expected, result, ComparerBuilder<HierarchyData>.GetEqualityComparer());
+				}
+			}
+		}
+
+		[Test, Combinatorial]
+		public void RecursiveDeepNesting([CteContextSource(true, ProviderName.DB2)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (var tree = db.CreateLocalTable<HierarchyTree>())
+				{
+					var hierarchy = GetHierarchyDown(tree, db);
+
+					var query = from q in hierarchy
+						from data1 in tree.InnerJoin(data1 => data1.Id == q.Id)
+						from data2 in tree.InnerJoin(data2 => data2.Id == q.Id)
+						from data3 in tree.InnerJoin(data3 => data3.Id == q.Id)
+						from data4 in tree.InnerJoin(data4 => data4.Id == q.Id)
+						select new
+						{
+							q.Id,
+							q.Level
+						};
+
+					Assert.DoesNotThrow(() => Console.WriteLine(query.ToString()));
 				}
 			}
 		}
