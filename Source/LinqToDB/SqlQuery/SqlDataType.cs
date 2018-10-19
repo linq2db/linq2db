@@ -326,6 +326,7 @@ namespace LinqToDB.SqlQuery
 				case DataType.Dictionary       : return DbDictionary;
 				case DataType.Json             : return DbJson;
 				case DataType.BinaryJson       : return DbBinaryJson;
+				case DataType.SByte            : return DbSByte;
 			}
 
 			throw new InvalidOperationException($"Unexpected type: {type}");
