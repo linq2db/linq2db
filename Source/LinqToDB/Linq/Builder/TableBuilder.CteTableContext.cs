@@ -61,6 +61,10 @@ namespace LinqToDB.Linq.Builder
 			var cteBuildInfo = new BuildInfo(buildInfo, bodyExpr, buildInfo.SelectQuery);
 			var cteContext   = new CteTableContext(builder, cteBuildInfo, cte.Item1, bodyExpr);
 
+			// populate all fields
+			if (isRecursive)
+				cteContext.ConvertToSql(null, 0, ConvertFlags.All);
+
 			return cteContext;
 		}
 
@@ -98,14 +102,14 @@ namespace LinqToDB.Linq.Builder
 				if (queryContext == null)
 					return base.ConvertToSql(expression, level, flags);
 
-				SqlInfo[] ConverConvertToSqlAndRegister(Expression exp, int lvl, ConvertFlags fl)
+				SqlInfo[] ConvertConvertToSqlAndRegister(Expression exp, int lvl, ConvertFlags fl)
 				{
 					var baseInfos = base.ConvertToSql(exp, lvl, fl);
 					var subInfos = queryContext.ConvertToIndex(exp, lvl, fl);
 
 					var pairs = from bi in baseInfos
 						from si in subInfos.Where(si =>
-							si.Members.Count == bi.Members.Count && si.Members.Count == 1 && si.Members[0] == bi.Members[0])
+							si.MemberChain.Count == bi.MemberChain.Count && si.MemberChain.Count == 1 && si.MemberChain[0] == bi.MemberChain[0])
 						select new { bi, si };
 
 					foreach (var pair in pairs)
@@ -116,12 +120,7 @@ namespace LinqToDB.Linq.Builder
 					return baseInfos;
 				}
 
-				if (_cte.IsRecursive)
-				{
-					ConverConvertToSqlAndRegister(null, 0, ConvertFlags.All);
-				}
-
-				var result = ConverConvertToSqlAndRegister(expression, level, flags);
+				var result = ConvertConvertToSqlAndRegister(expression, level, flags);
 				return result;
 			}
 		}

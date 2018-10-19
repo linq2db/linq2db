@@ -15,7 +15,7 @@ namespace Tests.xUpdate
 			public int ID;
 		}
 
-		[Test]
+		[Test, Combinatorial]
 		public void CreateTable1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -36,7 +36,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test]
+		[Test, Combinatorial]
 		public void CreateTable2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -57,7 +57,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test]
+		[Test, Combinatorial]
 		public void CreateTable3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

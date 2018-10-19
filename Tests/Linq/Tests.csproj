@@ -62,7 +62,7 @@
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
-		<PackageReference Include="AdoNetCore.AseClient" Version="0.10.1" />
+		<PackageReference Include="AdoNetCore.AseClient" Version="0.11.0" />
 
 		<PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
 		<PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
@@ -226,7 +226,7 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
 	  <PackageReference Include="Oracle.ManagedDataAccess.Core">
-	    <Version>2.12.0-beta2</Version>
+	    <Version>2.18.3</Version>
 	  </PackageReference>
 	</ItemGroup>
 </Project>

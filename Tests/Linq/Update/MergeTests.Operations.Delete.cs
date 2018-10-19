@@ -99,7 +99,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void DeleteWithPredicatePartialSourceProjection_UnknownFieldInCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))

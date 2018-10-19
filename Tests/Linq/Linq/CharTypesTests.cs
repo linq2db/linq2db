@@ -130,15 +130,7 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							Assert.AreEqual(testData[i].String?.TrimEnd(' '), records[i].String);
 
-						if (   context == ProviderName.Sybase
-							|| context == ProviderName.Sybase + ".LinqService")
-							// this kind of replacement is allowed in unicode, but dunno why it is done for sybase
-							Assert.AreEqual(
-								testData[i].NString?.TrimEnd(' ')
-									.Replace('\u2000', '\u2002')
-									.Replace('\u2001', '\u2003'),
-								records[i].NString);
-						else if (context != ProviderName.Firebird
+						if (context != ProviderName.Firebird
 							  && context != ProviderName.Firebird + ".LinqService"
 							  && context != TestProvName.Firebird3
 							  && context != TestProvName.Firebird3 + ".LinqService")
@@ -292,14 +284,7 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							Assert.AreEqual(testData[i].Char, records[i].Char);
 
-						if (   context == ProviderName.Sybase
-							|| context == ProviderName.Sybase + ".LinqService")
-							// this kind of replacement is allowed in unicode, but dunno why it is done for sybase
-							Assert.AreEqual(
-								testData[i].NChar == '\u2000' || testData[i].NChar == '\u2001'
-									? (char)(testData[i].NChar + 2) : testData[i].NChar,
-								records[i].NChar);
-						else if (context == ProviderName.MySql
+						if (context == ProviderName.MySql
 							  || context == ProviderName.MySql + ".LinqService"
 							  || context == TestProvName.MySql57
 							  || context == TestProvName.MySql57 + ".LinqService"
