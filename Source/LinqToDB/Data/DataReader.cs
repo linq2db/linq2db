@@ -25,6 +25,7 @@ namespace LinqToDB.Data
 					{
 						TraceLevel = TraceLevel.Info,
 						DataConnection = CommandInfo.DataConnection,
+						Command = CommandInfo.DataConnection.Command,
 						ExecutionTime = DateTime.Now - StartedOn,
 						RecordsAffected = ReadNumber,
 					});

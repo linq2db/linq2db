@@ -118,6 +118,7 @@ namespace LinqToDB.Data
 					{
 						TraceLevel       = TraceLevel.Info,
 						DataConnection   = _dataConnection,
+						Command          = _dataConnection.Command,
 						MapperExpression = MapperExpression,
 						ExecutionTime    = DateTime.Now - _startedOn,
 						RecordsAffected  = RowsCount,

@@ -51,47 +51,70 @@ namespace Tests.Data
 		[Test, NorthwindDataContext]
 		public void TraceInfoStepsAreReportedForLinqQuery(string context)
 		{
-			var steps = GetEnumValues((TraceInfoStep s) => 0);
+			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
 			using (var db = new DataConnection(context))
 			{
-				db.OnTraceConnection = e => steps[e.TraceInfoStep]++;
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+
 				db.GetTable<Northwind.Category>().ToList();
 
-				// called once
-				Assert.AreEqual(1, steps[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(1, steps[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(1, steps[TraceInfoStep.Completed]);
+				// the same command is reported on each step
+				var command = events[TraceInfoStep.BeforeExecute].Command;
+				Assert.AreSame(command, events[TraceInfoStep.AfterExecute].Command);
+				Assert.AreSame(command, events[TraceInfoStep.Completed].Command);
+				Assert.NotNull(command);
 
-				// never called
-				Assert.AreEqual(0, steps[TraceInfoStep.MapperCreated]);
-				Assert.AreEqual(0, steps[TraceInfoStep.Error]);
+				// steps called once
+				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
+				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
+				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+				// steps never called
+				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
 			}
 		}
 
 		[Test, NorthwindDataContext]
 		public void TraceInfoStepsAreReportedForDataReader(string context)
 		{
-			var steps = GetEnumValues((TraceInfoStep s) => 0);
+			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
 			using (var db = new DataConnection(context))
 			{
 				var sql = db.GetTable<Northwind.Category>().SqlText;
-				db.OnTraceConnection = e => steps[e.TraceInfoStep]++;
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
 
 				using (var reader = db.ExecuteReader(sql))
 				{
 					reader.Query<Northwind.Category>().ToList();
 				}
 
-				// called once
-				Assert.AreEqual(1, steps[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(1, steps[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(1, steps[TraceInfoStep.Completed]);
+				// the same command is reported on each step
+				var command = events[TraceInfoStep.BeforeExecute].Command;
+				Assert.AreSame(command, events[TraceInfoStep.AfterExecute].Command);
+				Assert.AreSame(command, events[TraceInfoStep.Completed].Command);
+				Assert.NotNull(command);
 
-				// never called
-				Assert.AreEqual(0, steps[TraceInfoStep.MapperCreated]);
-				Assert.AreEqual(0, steps[TraceInfoStep.Error]);
+				// steps called once
+				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
+				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
+				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+				// steps never called
+				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
 			}
 		}
 	}
