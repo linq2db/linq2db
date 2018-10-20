@@ -8,7 +8,6 @@ using NUnit.Framework;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 
 namespace Tests.Data
 {
@@ -52,39 +51,47 @@ namespace Tests.Data
 		[Test, NorthwindDataContext]
 		public void TraceInfoStepsAreReportedForLinqQuery(string context)
 		{
-			var steps = GetEnumValues((TraceInfoStep s) => false);
+			var steps = GetEnumValues((TraceInfoStep s) => 0);
 
 			using (var db = new DataConnection(context))
 			{
-				db.OnTraceConnection = e => steps[e.TraceInfoStep] = true;
+				db.OnTraceConnection = e => steps[e.TraceInfoStep]++;
 				db.GetTable<Northwind.Category>().ToList();
 
-				Assert.IsTrue(steps[TraceInfoStep.BeforeExecute]);
-				Assert.IsTrue(steps[TraceInfoStep.AfterExecute]);
-				Assert.IsTrue(steps[TraceInfoStep.Completed]);
-				Assert.IsFalse(steps[TraceInfoStep.Error]);
+				// called once
+				Assert.AreEqual(1, steps[TraceInfoStep.BeforeExecute]);
+				Assert.AreEqual(1, steps[TraceInfoStep.AfterExecute]);
+				Assert.AreEqual(1, steps[TraceInfoStep.Completed]);
+
+				// never called
+				Assert.AreEqual(0, steps[TraceInfoStep.MapperCreated]);
+				Assert.AreEqual(0, steps[TraceInfoStep.Error]);
 			}
 		}
 
 		[Test, NorthwindDataContext]
 		public void TraceInfoStepsAreReportedForDataReader(string context)
 		{
-			var steps = GetEnumValues((TraceInfoStep s) => false);
+			var steps = GetEnumValues((TraceInfoStep s) => 0);
 
 			using (var db = new DataConnection(context))
 			{
 				var sql = db.GetTable<Northwind.Category>().SqlText;
-				db.OnTraceConnection = e => steps[e.TraceInfoStep] = true;
+				db.OnTraceConnection = e => steps[e.TraceInfoStep]++;
 
 				using (var reader = db.ExecuteReader(sql))
 				{
 					reader.Query<Northwind.Category>().ToList();
 				}
 
-				Assert.IsTrue(steps[TraceInfoStep.BeforeExecute]);
-				Assert.IsTrue(steps[TraceInfoStep.AfterExecute]);
-				Assert.IsTrue(steps[TraceInfoStep.Completed]);
-				Assert.IsFalse(steps[TraceInfoStep.Error]);
+				// called once
+				Assert.AreEqual(1, steps[TraceInfoStep.BeforeExecute]);
+				Assert.AreEqual(1, steps[TraceInfoStep.AfterExecute]);
+				Assert.AreEqual(1, steps[TraceInfoStep.Completed]);
+
+				// never called
+				Assert.AreEqual(0, steps[TraceInfoStep.MapperCreated]);
+				Assert.AreEqual(0, steps[TraceInfoStep.Error]);
 			}
 		}
 	}
