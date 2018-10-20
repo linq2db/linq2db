@@ -79,12 +79,12 @@ namespace Tests.Data
 				using (var reader = db.ExecuteReader(sql))
 				{
 					reader.Query<Northwind.Category>().ToList();
-
-					Assert.IsTrue(steps[TraceInfoStep.BeforeExecute]);
-					Assert.IsTrue(steps[TraceInfoStep.AfterExecute]);
-					Assert.IsTrue(steps[TraceInfoStep.Completed]);
-					Assert.IsFalse(steps[TraceInfoStep.Error]);
 				}
+
+				Assert.IsTrue(steps[TraceInfoStep.BeforeExecute]);
+				Assert.IsTrue(steps[TraceInfoStep.AfterExecute]);
+				Assert.IsTrue(steps[TraceInfoStep.Completed]);
+				Assert.IsFalse(steps[TraceInfoStep.Error]);
 			}
 		}
 	}
