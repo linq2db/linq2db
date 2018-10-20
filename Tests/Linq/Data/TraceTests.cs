@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 using NUnit.Framework;
 
@@ -99,6 +100,43 @@ namespace Tests.Data
 				using (var reader = db.ExecuteReader(sql))
 				{
 					reader.Query<Northwind.Category>().ToList();
+				}
+
+				// the same command is reported on each step
+				var command = events[TraceInfoStep.BeforeExecute].Command;
+				Assert.AreSame(command, events[TraceInfoStep.AfterExecute].Command);
+				Assert.AreSame(command, events[TraceInfoStep.Completed].Command);
+				Assert.NotNull(command);
+
+				// steps called once
+				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
+				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
+				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+				// steps never called
+				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public async Task TraceInfoStepsAreReportedForDataReaderAsync(string context)
+		{
+			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db = new DataConnection(context))
+			{
+				var sql = db.GetTable<Northwind.Category>().SqlText;
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+
+				using (var reader = await new CommandInfo(db, sql).ExecuteReaderAsync())
+				{
+					await reader.QueryToListAsync<Northwind.Category>();
 				}
 
 				// the same command is reported on each step

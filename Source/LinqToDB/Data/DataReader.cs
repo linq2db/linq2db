@@ -23,10 +23,10 @@ namespace LinqToDB.Data
 				{
 					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.Completed)
 					{
-						TraceLevel = TraceLevel.Info,
-						DataConnection = CommandInfo.DataConnection,
-						Command = CommandInfo.DataConnection.Command,
-						ExecutionTime = DateTime.Now - StartedOn,
+						TraceLevel      = TraceLevel.Info,
+						DataConnection  = CommandInfo.DataConnection,
+						Command         = CommandInfo.DataConnection.Command,
+						ExecutionTime   = DateTime.Now - StartedOn,
 						RecordsAffected = ReadNumber,
 					});
 				}
