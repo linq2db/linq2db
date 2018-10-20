@@ -304,10 +304,10 @@ namespace LinqToDB.SqlProvider
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
 
-			if(database != null)
+			if (database != null)
 			{
 				if (schema == null) sb.Append(database).Append("..");
-				else sb.Append(database).Append(".").Append(schema).Append(".");
+				else                sb.Append(database).Append(".").Append(schema).Append(".");
 			}
 			else if (schema != null) sb.Append(schema).Append(".");
 
@@ -338,6 +338,10 @@ namespace LinqToDB.SqlProvider
 				{
 					AppendIndent();
 					StringBuilder.Append("WITH ");
+	
+					if (IsRecursiveCteKeywordRequired && with.Clauses.Any(c => c.IsRecursive))
+						StringBuilder.Append("RECURSIVE ");
+
 					first = false;
 				}
 				else
@@ -349,7 +353,7 @@ namespace LinqToDB.SqlProvider
 				if (IsRecursiveCteKeywordRequired && cte.IsRecursive)
 					StringBuilder.Append("RECURSIVE ");
 
-				ConvertTableName(StringBuilder, null, null, null, cte.Name);
+				ConvertTableName(StringBuilder, null, null, cte.Name);
 
 				if (cte.Fields.Count > 3)
 				{
