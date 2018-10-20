@@ -350,10 +350,7 @@ namespace LinqToDB.SqlProvider
 					AppendIndent();
 				}
 
-				if (IsRecursiveCteKeywordRequired && cte.IsRecursive)
-					StringBuilder.Append("RECURSIVE ");
-
-				ConvertTableName(StringBuilder, null, null, cte.Name);
+				ConvertTableName(StringBuilder, null, null, null, cte.Name);
 
 				if (cte.Fields.Count > 3)
 				{
