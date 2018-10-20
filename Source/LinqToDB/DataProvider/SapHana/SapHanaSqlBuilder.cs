@@ -270,7 +270,7 @@ namespace LinqToDB.DataProvider.SapHana
 				ConvertCase(systemType, parameters, start + 2));
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 			if (schema    != null && schema.   Length == 0) schema    = null;
@@ -280,7 +280,7 @@ namespace LinqToDB.DataProvider.SapHana
 			if (database != null && schema == null)
 				throw new LinqToDBException("SAP HANA requires schema name if database name provided.");
 
-			return base.BuildTableName(sb, database, schema, table);
+			return base.BuildTableName(sb, null, database, schema, table);
 		}
 	}
 }

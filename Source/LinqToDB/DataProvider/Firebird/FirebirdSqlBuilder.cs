@@ -379,7 +379,7 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
 			return sb.Append(table);
 		}

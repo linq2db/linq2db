@@ -456,17 +456,17 @@ namespace LinqToDB.DataProvider
 		#region Merge
 
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
+			string tableName, string serverName, string databaseName, string schemaName)
 			where T : class
 		{
-			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
+			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, serverName, databaseName, schemaName);
 		}
 
 		public virtual Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
+			string tableName, string serverName, string databaseName, string schemaName, CancellationToken token)
 			where T : class
 		{
-			return new BasicMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+			return new BasicMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, serverName, databaseName, schemaName, token);
 		}
 
 		public int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)

@@ -30,13 +30,13 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields, [JetBrains.Annotations.NotNull] CteClause cte)
-			: base(id, cte.Name, alias, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.Cte, null)
+			: base(id, cte.Name, alias, string.Empty, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.Cte, null)
 		{
 			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields)
-			: base(id, null, alias, string.Empty, string.Empty, null, null, null, fields, SqlTableType.Cte, null)
+			: base(id, null, alias, string.Empty, string.Empty, string.Empty, null, null, null, fields, SqlTableType.Cte, null)
 		{
 		}
 
@@ -51,6 +51,7 @@ namespace LinqToDB.SqlQuery
 		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause cte)
 		{
 			Alias              = table.Alias;
+			Server             = table.Server;
 			Database           = table.Database;
 			Schema             = table.Schema;
 

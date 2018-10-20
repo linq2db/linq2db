@@ -53,6 +53,7 @@ namespace LinqToDB.DataProvider
 			bool                     delete,
 			IEnumerable<T>           source,
 			string                   tableName,
+			string                   serverName,
 			string                   databaseName,
 			string                   schemaName)
 			where T : class;
@@ -63,6 +64,7 @@ namespace LinqToDB.DataProvider
 			bool                     delete,
 			IEnumerable<T>           source,
 			string                   tableName,
+			string                   serverName,
 			string                   databaseName,
 			string                   schemaName,
 			CancellationToken        token)

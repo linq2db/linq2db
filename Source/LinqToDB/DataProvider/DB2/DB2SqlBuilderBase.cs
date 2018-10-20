@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.DB2
 				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
 				StringBuilder
 					.Append(" ALTER ")
 					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
@@ -231,7 +231,7 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
@@ -240,7 +240,7 @@ namespace LinqToDB.DataProvider.DB2
 			if (database != null && schema == null)
 				throw new LinqToDBException("DB2 requires schema name if database name provided.");
 
-			return base.BuildTableName(sb, database, schema, table);
+			return base.BuildTableName(sb, null, database, schema, table);
 		}
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)

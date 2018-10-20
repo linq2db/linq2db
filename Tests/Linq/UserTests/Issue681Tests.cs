@@ -89,5 +89,51 @@ namespace Tests.UserTests
 			[Column("ID")]
 			public int ID { get; set; }
 		}
+
+		[Test]
+		public void TestTableFQN(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			var throws = false;
+			string serverName;
+			string schemaName;
+			string dbName;
+
+			using (var db = GetDataContext(context))
+			{
+				if (withServer && (!withDatabase || !withSchema) && (context.Contains("SqlServer") || context.Contains("Azure")))
+				{
+					// SQL Server FQN requires schema and db components for linked-server query
+					throws = true;
+				}
+
+				using (new DisableLogging())
+				{
+					serverName = withServer   ? TestUtils.GetServerName(db)   : null;
+					dbName     = withDatabase ? TestUtils.GetDatabaseName(db) : null;
+					schemaName = withSchema   ? TestUtils.GetSchemaName(db)   : null;
+				}
+
+				var table = db.GetTable<TestTable>();
+
+				if (withServer)   table = table.ServerName  (serverName);
+				if (withDatabase) table = table.DatabaseName(dbName);
+				if (withSchema)   table = table.SchemaName  (schemaName);
+
+				if (throws && context.Contains(".LinqService"))
+				{
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+					Assert.Throws<FaultException<ExceptionDetail>>(() => table.ToList());
+#endif
+				}
+				else if (throws)
+					Assert.Throws<LinqToDBException>(() => table.ToList());
+				else
+					table.ToList();
+			}
+		}
 	}
 }

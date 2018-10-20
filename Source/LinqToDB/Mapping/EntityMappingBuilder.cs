@@ -399,6 +399,17 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Sets linked server name.
+		/// See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
+		/// <param name="serverName">Linked server name.</param>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<T> HasServerName(string serverName)
+		{
+			return SetTable(a => a.Server = serverName);
+		}
+
+		/// <summary>
 		/// Adds inheritance mapping for specified discriminator value.
 		/// </summary>
 		/// <typeparam name="TS">Discriminator value type.</typeparam>
@@ -433,6 +444,7 @@ namespace LinqToDB.Mapping
 					Name                      = a.Name,
 					Schema                    = a.Schema,
 					Database                  = a.Database,
+					Server                    = a.Server,
 					IsColumnAttributeRequired = a.IsColumnAttributeRequired,
 				});
 		}

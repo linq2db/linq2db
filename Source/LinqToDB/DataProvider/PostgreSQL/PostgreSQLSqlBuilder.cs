@@ -51,13 +51,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				name = Convert(name, ConvertType.NameToQueryTable);
 
+				var server   = GetTableServerName(into);
 				var database = GetTableDatabaseName(into);
 				var schema   = GetTableSchemaName(into);
 
 				AppendIndent()
 					.Append("SELECT currval('");
 
-				BuildTableName(StringBuilder, database, schema, name.ToString());
+				BuildTableName(StringBuilder, server, database, schema, name.ToString());
 
 				StringBuilder.AppendLine("')");
 			}
@@ -262,10 +263,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				if (attr != null)
 				{
 					var name     = Convert(attr.SequenceName, ConvertType.NameToQueryTable).ToString();
+					var server   = GetTableServerName(table);
 					var database = GetTableDatabaseName(table);
 					var schema   = GetTableSchemaName  (table);
 
-					var sb = BuildTableName(new StringBuilder(), database, schema, name);
+					var sb = BuildTableName(new StringBuilder(), server, database, schema, name);
 
 					return new SqlExpression($"nextval('{sb}')", Precedence.Primary);
 				}
@@ -311,7 +313,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildJoinType(join);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
@@ -321,7 +323,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (database != null && schema == null)
 				database = null;
 
-			return base.BuildTableName(sb, database, schema, table);
+			return base.BuildTableName(sb, null, database, schema, table);
 		}
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)

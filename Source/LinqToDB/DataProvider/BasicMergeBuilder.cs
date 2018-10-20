@@ -194,7 +194,7 @@ namespace LinqToDB.DataProvider
 
 		protected virtual void AddFakeSourceTableName()
 		{
-			SqlBuilder.BuildTableName(Command, FakeSourceTableDatabase, FakeSourceTableSchema, FakeSourceTable);
+			SqlBuilder.BuildTableName(Command, null, FakeSourceTableDatabase, FakeSourceTableSchema, FakeSourceTable);
 		}
 
 		protected virtual void AddSourceValue(
@@ -1274,6 +1274,7 @@ namespace LinqToDB.DataProvider
 
 			SqlBuilder.ConvertTableName(
 				sb,
+				target.ServerName   ?? TargetDescriptor.ServerName,
 				target.DatabaseName ?? TargetDescriptor.DatabaseName,
 				target.SchemaName   ?? TargetDescriptor.SchemaName,
 				target.TableName    ?? TargetDescriptor.TableName);

@@ -511,14 +511,20 @@ END;",
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
+			if (server != null && server.Length == 0) server = null;
 			if (schema != null && schema.Length == 0) schema = null;
 
 			if (schema != null)
 				sb.Append(schema).Append(".");
 
-			return sb.Append(table);
+			sb.Append(table);
+
+			if (server != null)
+				sb.Append("@").Append(server);
+
+			return sb;
 		}
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)

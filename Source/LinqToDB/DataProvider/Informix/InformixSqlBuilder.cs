@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.Informix
 				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
 				StringBuilder
 					.Append(" MODIFY ")
 					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
@@ -232,13 +232,16 @@ namespace LinqToDB.DataProvider.Informix
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
+			if (server != null   && server  .Length == 0) server   = null;
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
 
-			// TODO: FQN could also contain server name, but we don't have such API for now
-			// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
+			if (server != null)
+				sb.Append(server).Append("@");
+
 			if (database != null)
 				sb.Append(database).Append(":");
 

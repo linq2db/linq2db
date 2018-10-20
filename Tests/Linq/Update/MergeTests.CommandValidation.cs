@@ -196,11 +196,11 @@ namespace Tests.xUpdate
 
 				bool? IDataProvider.IsDBNullAllowed(IDataReader reader, int idx) => throw new NotImplementedException();
 
-				int IDataProvider.Merge<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source, string tableName, string databaseName, string schemaName) => throw new NotImplementedException();
+				int IDataProvider.Merge<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source, string tableName, string serverName, string databaseName, string schemaName) => throw new NotImplementedException();
 
 				int IDataProvider.Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge) => throw new NotImplementedException();
 
-				Task<int> IDataProvider.MergeAsync<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source, string tableName, string databaseName, string schemaName, CancellationToken token) => throw new NotImplementedException();
+				Task<int> IDataProvider.MergeAsync<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source, string tableName, string serverName, string databaseName, string schemaName, CancellationToken token) => throw new NotImplementedException();
 
 				Task<int> IDataProvider.MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token) => throw new NotImplementedException();
 

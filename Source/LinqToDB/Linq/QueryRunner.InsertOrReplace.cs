@@ -16,12 +16,13 @@ namespace LinqToDB.Linq
 		{
 			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
-			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
+			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string serverName, string databaseName, string schemaName, Type type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
@@ -116,26 +117,26 @@ namespace LinqToDB.Linq
 				return ei;
 			}
 
-			public static int Query(IDataContext dataContext, T obj, string tableName, string databaseName, string schema)
+			public static int Query(IDataContext dataContext, T obj, string tableName, string serverName, string databaseName, string schema)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
-				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type };
-				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schema, type));
+				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, type };
+				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, serverName, schema, type));
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
 
-			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, string tableName, string databaseName, string schema, CancellationToken token)
+			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, string tableName, string serverName, string databaseName, string schema, CancellationToken token)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
-				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type };
-				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName, type));
+				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, serverName, databaseName, schema, type };
+				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName, serverName, type));
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 

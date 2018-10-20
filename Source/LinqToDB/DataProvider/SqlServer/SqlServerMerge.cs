@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override bool IsIdentitySupported { get { return true; } }
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
+			string tableName, string serverName, string databaseName, string schemaName)
 		{
 			var table       = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var hasIdentity = table.Columns.Any(c => c.IsIdentity);
@@ -33,6 +33,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
 
 				tblName = sqlBuilder.ConvertTableName(new StringBuilder(),
+					serverName   ?? table.ServerName,
 					databaseName ?? table.DatabaseName,
 					schemaName   ?? table.SchemaName,
 					tableName    ?? table.TableName).ToString();
@@ -42,7 +43,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			try
 			{
-				return base.Merge(dataConnection, predicate, delete, source, tableName, databaseName, schemaName);
+				return base.Merge(dataConnection, predicate, delete, source, tableName, serverName, databaseName, schemaName);
 			}
 			finally
 			{
@@ -52,7 +53,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		public override async Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
+			string tableName, string serverName, string databaseName, string schemaName, CancellationToken token)
 		{
 			var table       = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var hasIdentity = table.Columns.Any(c => c.IsIdentity);
@@ -64,6 +65,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
 
 				tblName = sqlBuilder.ConvertTableName(new StringBuilder(),
+					serverName   ?? table.ServerName,
 					databaseName ?? table.DatabaseName,
 					schemaName   ?? table.SchemaName,
 					tableName    ?? table.TableName).ToString();
@@ -76,7 +78,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			try
 			{
-				ret = await base.MergeAsync(dataConnection, predicate, delete, source, tableName, databaseName, schemaName, token);
+				ret = await base.MergeAsync(dataConnection, predicate, delete, source, tableName, serverName, databaseName, schemaName, token);
 			}
 			catch (Exception e)
 			{
@@ -93,9 +95,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected override bool BuildCommand<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
+			string tableName, string serverName, string databaseName, string schemaName)
 		{
-			if (!base.BuildCommand(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName))
+			if (!base.BuildCommand(dataConnection, deletePredicate, delete, source, tableName, serverName, databaseName, schemaName))
 				return false;
 
 			StringBuilder.AppendLine(";");

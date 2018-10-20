@@ -614,21 +614,21 @@ namespace LinqToDB.DataProvider.Oracle
 		#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
+			string tableName, string serverName, string databaseName, string schemaName)
 		{
 			if (delete)
 				throw new LinqToDBException("Oracle MERGE statement does not support DELETE by source.");
 
-			return new OracleMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
+			return new OracleMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, serverName, databaseName, schemaName);
 		}
 
 		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
+			string tableName, string serverName, string databaseName, string schemaName, CancellationToken token)
 		{
 			if (delete)
 				throw new LinqToDBException("Oracle MERGE statement does not support DELETE by source.");
 
-			return new OracleMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+			return new OracleMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, serverName, databaseName, schemaName, token);
 		}
 
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(

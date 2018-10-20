@@ -64,12 +64,14 @@ namespace LinqToDB.DataProvider
 
 		protected internal static string GetTableName(ISqlBuilder sqlBuilder, BulkCopyOptions options, EntityDescriptor descriptor)
 		{
+			var serverName   = options.ServerName   ?? descriptor.ServerName;
 			var databaseName = options.DatabaseName ?? descriptor.DatabaseName;
 			var schemaName   = options.SchemaName   ?? descriptor.SchemaName;
 			var tableName    = options.TableName    ?? descriptor.TableName;
 
 			return sqlBuilder.BuildTableName(
 				new StringBuilder(),
+				serverName   == null ? null : sqlBuilder.Convert(serverName,   ConvertType.NameToServer).    ToString(),
 				databaseName == null ? null : sqlBuilder.Convert(databaseName, ConvertType.NameToDatabase).  ToString(),
 				schemaName   == null ? null : sqlBuilder.Convert(schemaName,   ConvertType.NameToSchema).    ToString(),
 				tableName    == null ? null : sqlBuilder.Convert(tableName,    ConvertType.NameToQueryTable).ToString())

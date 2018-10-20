@@ -12,7 +12,7 @@ namespace LinqToDB.Linq
 		public static class CreateTable<T>
 		{
 			public static ITable<T> Query(IDataContext dataContext,
-				string tableName, string databaseName, string schemaName,
+				string tableName, string serverName, string databaseName, string schemaName,
 				string statementHeader, string statementFooter,
 				DefaultNullable defaultNullable)
 			{
@@ -20,6 +20,7 @@ namespace LinqToDB.Linq
 				var createTable = new SqlCreateTableStatement();
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
@@ -40,6 +41,7 @@ namespace LinqToDB.Linq
 				ITable<T> table = new Table<T>(dataContext);
 
 				if (sqlTable.PhysicalName != null) table = table.TableName   (sqlTable.PhysicalName);
+				if (sqlTable.Server       != null) table = table.ServerName  (sqlTable.Server);
 				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
 				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
 
@@ -47,7 +49,7 @@ namespace LinqToDB.Linq
 			}
 
 			public static async Task<ITable<T>> QueryAsync(IDataContext dataContext,
-				string tableName, string databaseName, string schemaName, string statementHeader,
+				string tableName, string serverName, string databaseName, string schemaName, string statementHeader,
 				string statementFooter, DefaultNullable defaultNullable,
 				CancellationToken token)
 			{
@@ -55,6 +57,7 @@ namespace LinqToDB.Linq
 				var createTable = new SqlCreateTableStatement();
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
@@ -75,6 +78,7 @@ namespace LinqToDB.Linq
 				ITable<T> table = new Table<T>(dataContext);
 
 				if (sqlTable.PhysicalName != null) table = table.TableName   (sqlTable.PhysicalName);
+				if (sqlTable.Server       != null) table = table.ServerName  (sqlTable.Server);
 				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
 				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
 

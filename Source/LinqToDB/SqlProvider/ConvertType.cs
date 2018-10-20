@@ -55,6 +55,16 @@ namespace LinqToDB.SqlProvider
 		NameToQueryFieldAlias,
 
 		/// <summary>
+		/// Provided name should be converted to linked server name.
+		/// For example:
+		///     host name\named instance -> [host name\named instance]
+		/// for the following query:
+		///     SELECT * FROM [host name\named instance]..[Person]
+		///                   ^ and      ^
+		/// </summary>
+		NameToServer,
+
+		/// <summary>
 		/// Provided name should be converted to query database.
 		/// For example:
 		///     MyDatabase -> [MyDatabase]

@@ -366,15 +366,15 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
+			string tableName, string serverName, string databaseName, string schemaName)
 		{
-			return new SqlServerMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
+			return new SqlServerMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, serverName, databaseName, schemaName);
 		}
 
 		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
+			string tableName, string serverName, string databaseName, string schemaName, CancellationToken token)
 		{
-			return new SqlServerMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+			return new SqlServerMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, serverName, databaseName, schemaName, token);
 		}
 
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(

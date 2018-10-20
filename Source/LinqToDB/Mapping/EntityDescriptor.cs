@@ -67,6 +67,17 @@ namespace LinqToDB.Mapping
 			set => DatabaseName = value;
 		}
 
+		/// <summary>
+		/// Gets or sets optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
+		public string ServerName { get; private set; }
+
+		string IEntityChangeDescriptor.ServerName
+		{
+			get => ServerName;
+			set => ServerName = value;
+		}
+
 		// TODO: V2: remove?
 		/// <summary>
 		/// Gets or sets column mapping rules for current mapping class or interface.
@@ -131,6 +142,7 @@ namespace LinqToDB.Mapping
 				TableName = ta.Name;
 				SchemaName = ta.Schema;
 				DatabaseName = ta.Database;
+				ServerName = ta.Server;
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
 			}
 

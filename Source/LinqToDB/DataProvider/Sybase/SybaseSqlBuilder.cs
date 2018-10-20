@@ -253,7 +253,7 @@ namespace LinqToDB.DataProvider.Sybase
 			if (statement is SqlTruncateTableStatement trun)
 			{
 				StringBuilder.Append("sp_chgattribute ");
-				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
 				StringBuilder.AppendLine(", 'identity_burn_max', 0, '0'");
 			}
 		}

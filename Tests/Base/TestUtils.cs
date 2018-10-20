@@ -27,8 +27,9 @@ namespace Tests
 			return Interlocked.Increment(ref _cnt);
 		}
 
-		public const string NO_SCHEMA_NAME = "UNUSED_SCHEMA";
+		public const string NO_SCHEMA_NAME   = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
+		public const string NO_SERVER_NAME   = "UNUSED_SERVER";
 
 		[Sql.Function("VERSION", ServerSideOnly = true)]
 		private static string MySqlVersion()
@@ -65,6 +66,12 @@ namespace Tests
 			throw new InvalidOperationException();
 		}
 
+		[Sql.Expression("@@SERVERNAME", ServerSideOnly = true)]
+		private static string ServerName()
+		{
+			throw new InvalidOperationException();
+		}
+
 		/// <summary>
 		/// Returns schema name for provided connection.
 		/// Returns UNUSED_SCHEMA if fully-qualified table name doesn't support database name.
@@ -89,6 +96,27 @@ namespace Tests
 				case ProviderName.SqlServer2014:
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
+			}
+
+			return NO_SCHEMA_NAME;
+		}
+
+		/// <summary>
+		/// Returns server name for provided connection.
+		/// Returns UNUSED_SERVER if fully-qualified table name doesn't support server name.
+		/// </summary>
+		public static string GetServerName(IDataContext db)
+		{
+			switch (GetContextName(db))
+			{
+				case ProviderName.SybaseManaged:
+				case ProviderName.SqlServer2000:
+				case ProviderName.SqlServer2005:
+				case ProviderName.SqlServer2008:
+				case ProviderName.SqlServer2012:
+				case ProviderName.SqlServer2014:
+				case TestProvName.SqlAzure:
+					return db.Select(() => ServerName());
 			}
 
 			return NO_SCHEMA_NAME;

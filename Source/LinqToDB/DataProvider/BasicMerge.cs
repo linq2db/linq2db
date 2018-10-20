@@ -36,21 +36,21 @@ namespace LinqToDB.DataProvider
 		protected virtual bool IsIdentitySupported { get { return false; } }
 
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
+			string tableName, string serverName, string databaseName, string schemaName)
 			where T : class
 		{
-			if (!BuildCommand(dataConnection, predicate, delete, source, tableName, databaseName, schemaName))
+			if (!BuildCommand(dataConnection, predicate, delete, source, tableName, serverName, databaseName, schemaName))
 				return 0;
 
 			return Execute(dataConnection);
 		}
 
 		public virtual async Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName,
+			string tableName, string serverName, string databaseName, string schemaName,
 			CancellationToken token)
 			where T : class
 		{
-			if (!BuildCommand(dataConnection, predicate, delete, source, tableName, databaseName, schemaName))
+			if (!BuildCommand(dataConnection, predicate, delete, source, tableName, serverName, databaseName, schemaName))
 				return 0;
 
 			return await ExecuteAsync(dataConnection, token);
@@ -70,12 +70,13 @@ namespace LinqToDB.DataProvider
 		/// <param name="delete">Should MERGE command include DELETE operation or not.</param>
 		/// <param name="source">Source data.</param>
 		/// <param name="tableName">Optional target table name.</param>
+		/// <param name="serverName">Optional target table's linked server name.</param>
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>True if command built and false if source is empty and command execution not required.</returns>
 		protected virtual bool BuildCommand<T>(
 			DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
+			string tableName, string serverName, string databaseName, string schemaName)
 			where T : class
 		{
 			var table      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
@@ -91,6 +92,7 @@ namespace LinqToDB.DataProvider
 
 			StringBuilder.Append("MERGE INTO ");
 			sqlBuilder.ConvertTableName(StringBuilder,
+				serverName   ?? table.ServerName,
 				databaseName ?? table.DatabaseName,
 				schemaName   ?? table.SchemaName,
 				tableName    ?? table.TableName);

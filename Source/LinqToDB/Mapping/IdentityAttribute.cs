@@ -6,8 +6,8 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Marks target column as identity column with value, generated on database side during insert operations.
 	/// Identity columns will be ignored for insert and update operations with implicit column list like 
-	/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string)"/> or
-	/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string)"/> methods.
+	/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string, string)"/> or
+	/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string, string)"/> methods.
 	/// </summary>
 	[Serializable]
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]

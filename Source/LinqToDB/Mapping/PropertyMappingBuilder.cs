@@ -193,7 +193,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="format">
 		/// Custom template for column definition in create table SQL expression, generated using
-		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable)"/> methods.
+		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable, string)"/> methods.
 		/// Template accepts following string parameters:
 		/// - {0} - column name;
 		/// - {1} - column type;
@@ -229,7 +229,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Sets whether a column is insertable.
 		/// This flag will affect only insert operations with implicit columns specification like
-		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string)"/>
+		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		/// <param name="skipOnInsert">If <c>true</c> - column will be ignored for implicit insert operations.</param>
@@ -242,7 +242,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Sets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string)"/>
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		/// <param name="skipOnUpdate">If <c>true</c> - column will be ignored for implicit update operations.</param>

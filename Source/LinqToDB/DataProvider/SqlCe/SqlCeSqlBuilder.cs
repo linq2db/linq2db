@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
 				StringBuilder
 					.Append(" ALTER COLUMN ")
 					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
@@ -164,7 +164,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			StringBuilder.Append("IDENTITY");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
 			return sb.Append(table);
 		}

@@ -23,16 +23,36 @@ namespace LinqToDB.Linq
 
 			var ed = dataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 
+			_serverName   = ed.ServerName;
 			_databaseName = ed.DatabaseName;
 			_schemaName   = ed.SchemaName;
 			_tableName    = ed.TableName;
 		}
 
 		// ReSharper disable StaticMemberInGenericType
+		static MethodInfo _serverNameMethodInfo;
 		static MethodInfo _databaseNameMethodInfo;
 		static MethodInfo _schemaNameMethodInfo;
 		static MethodInfo _tableNameMethodInfo;
 		// ReSharper restore StaticMemberInGenericType
+
+		private string _serverName;
+		public  string ServerName
+		{
+			get => _serverName;
+			set
+			{
+				if (_serverName != value)
+				{
+					Expression = Expression.Call(
+						null,
+						_serverNameMethodInfo ?? (_serverNameMethodInfo = LinqExtensions.ServerNameMethodInfo.MakeGenericMethod(typeof(T))),
+						new[] { Expression, Expression.Constant(value) });
+
+					_serverName = value;
+				}
+			}
+		}
 
 		private string _databaseName;
 		public  string  DatabaseName
@@ -90,7 +110,7 @@ namespace LinqToDB.Linq
 
 		public string GetTableName() =>
 			DataContext.CreateSqlProvider()
-				.ConvertTableName(new StringBuilder(), DatabaseName, SchemaName, TableName)
+				.ConvertTableName(new StringBuilder(), ServerName, DatabaseName, SchemaName, TableName)
 				.ToString();
 
 		#region Overrides

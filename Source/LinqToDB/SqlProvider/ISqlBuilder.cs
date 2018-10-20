@@ -13,8 +13,8 @@ namespace LinqToDB.SqlProvider
 		int              CommandCount         (SqlStatement statement);
 		void             BuildSql             (int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0);
 
-		StringBuilder    ConvertTableName     (StringBuilder sb, string database, string schema, string table);
-		StringBuilder    BuildTableName       (StringBuilder sb, string database, string schema, string table);
+		StringBuilder    ConvertTableName     (StringBuilder sb, string server, string database, string schema, string table);
+		StringBuilder    BuildTableName       (StringBuilder sb, string server, string database, string schema, string table);
 		object           Convert              (object value, ConvertType convertType);
 		ISqlExpression   GetIdentityExpression(SqlTable table);
 

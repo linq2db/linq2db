@@ -33,12 +33,15 @@ namespace LinqToDB.DataProvider.SqlServer
 				var ttype  = method.GetGenericArguments()[0];
 				var tbl    = new SqlTable(ttype);
 
+				var server       = Convert(tbl.Server);
 				var database     = Convert(tbl.Database);
 				var schema       = Convert(tbl.Schema);
 				var physicalName = Convert(tbl.PhysicalName);
 
 				var name = "";
 
+				if (server != null)
+					name = server + "." + (database != null ? database + "." + (schema == null ? "." : schema + ".") : "." + (schema == null ? "." : schema + "."));
 				if (database != null)
 					name = database + "." + (schema == null ? "." : schema + ".");
 				else if (schema != null)

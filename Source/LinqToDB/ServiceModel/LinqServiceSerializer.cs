@@ -764,6 +764,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.SourceID);
 							Append(elem.Name);
 							Append(elem.Alias);
+							Append(elem.Server);
 							Append(elem.Database);
 							Append(elem.Schema);
 							Append(elem.PhysicalName);
@@ -1396,6 +1397,7 @@ namespace LinqToDB.ServiceModel
 							var sourceID           = ReadInt();
 							var name               = ReadString();
 							var alias              = ReadString();
+							var server             = ReadString();
 							var database           = ReadString();
 							var schema             = ReadString();
 							var physicalName       = ReadString();
@@ -1423,7 +1425,7 @@ namespace LinqToDB.ServiceModel
 							var tableArgs    = sqlTableType == SqlTableType.Table ? null : ReadArray<ISqlExpression>();
 
 							obj = new SqlTable(
-								sourceID, name, alias, database, schema, physicalName, objectType, sequenceAttributes, flds,
+								sourceID, name, alias, server, database, schema, physicalName, objectType, sequenceAttributes, flds,
 								sqlTableType, tableArgs);
 
 							break;

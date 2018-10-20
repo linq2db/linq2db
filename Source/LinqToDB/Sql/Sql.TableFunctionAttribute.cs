@@ -51,6 +51,7 @@ namespace LinqToDB
 			public string Name          { get; set; }
 			public string Schema        { get; set; }
 			public string Database      { get; set; }
+			public string Server        { get; set; }
 			public int[]  ArgIndices    { get; set; }
 
 			protected ISqlExpression[] ConvertArgs(MemberInfo member, ISqlExpression[] args)
@@ -88,6 +89,7 @@ namespace LinqToDB
 
 				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;
+				if (Server   != null) table.Server   = Server;
 			}
 		}
 	}
