@@ -85,7 +85,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Overrides linked server name with new name for current query. This call will have effect only for databases that support
 		/// linked server name in fully-qualified table name.
-		/// <para>Supported by: SQL Server, Informix, Oracle.</para>
+		/// <para>Supported by: SQL Server, Informix, Oracle, SAP HANA2.</para>
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
@@ -113,7 +113,7 @@ namespace LinqToDB
 		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
 		/// owner/schema name in fully-qualified table name.
 		/// <see cref="SchemaName{T}(ITable{T}, string)"/> method is a synonym of this method.
-		/// <para>Supported by: DB2, Oracle, PostgreSQL, SAP HANA, Informix, SQL Server, Sybase ASE.</para>
+		/// <para>Supported by: DB2, Oracle, PostgreSQL, Informix, SQL Server, Sybase ASE.</para>
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
@@ -132,7 +132,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
 		/// owner/schema name in fully-qualified table name.
-		/// <para>Supported by: DB2, Oracle, PostgreSQL, SAP HANA, Informix, SQL Server, Sybase ASE.</para>
+		/// <para>Supported by: DB2, Oracle, PostgreSQL, Informix, SQL Server, Sybase ASE.</para>
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>

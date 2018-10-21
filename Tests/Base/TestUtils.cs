@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using LinqToDB.Data;
 using System.Threading;
 using Tests.Model;
+using LinqToDB.SchemaProvider;
 
 namespace Tests
 {
@@ -56,7 +57,6 @@ namespace Tests
 		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.Informix)]
 		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.OracleNative)]
 		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.OracleManaged)]
-		[Sql.Expression("current_user"  , ServerSideOnly = true, Configuration = ProviderName.SapHana)]
 		[Sql.Expression("current schema", ServerSideOnly = true, Configuration = ProviderName.DB2)]
 		[Sql.Function("current_schema"  , ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
 		[Sql.Function("USER_NAME"       , ServerSideOnly = true, Configuration = ProviderName.Sybase)]
@@ -80,7 +80,6 @@ namespace Tests
 		{
 			switch (GetContextName(db))
 			{
-				case ProviderName.SapHana:
 				case ProviderName.Informix:
 				case ProviderName.Oracle:
 				case ProviderName.OracleNative:
@@ -101,6 +100,31 @@ namespace Tests
 			return NO_SCHEMA_NAME;
 		}
 
+		public static GetSchemaOptions GetDefaultSchemaOptions(string context, GetSchemaOptions baseOptions = null)
+		{
+			if (context.Contains("SapHana"))
+			{
+				// SAP HANA provider throws C++ assertions when we try to load schema for some functions
+				var options = baseOptions ?? new GetSchemaOptions();
+
+				var oldLoad = options.LoadProcedure;
+				if (oldLoad != null)
+					options.LoadProcedure = p => oldLoad(p) && loadCheck(p);
+				else
+					options.LoadProcedure = loadCheck;
+
+				bool loadCheck(ProcedureSchema p)
+				{
+					return p.ProcedureName != "SERIES_GENERATE_TIME"
+						&& p.ProcedureName != "SERIES_DISAGGREGATE_TIME";
+				}
+
+				return options;
+			}
+
+			return baseOptions;
+		}
+
 		/// <summary>
 		/// Returns server name for provided connection.
 		/// Returns UNUSED_SERVER if fully-qualified table name doesn't support server name.
@@ -117,6 +141,22 @@ namespace Tests
 				case ProviderName.SqlServer2014:
 				case TestProvName.SqlAzure:
 					return db.Select(() => ServerName());
+				case ProviderName.SapHana:
+					/* SAP HANA should be configured for linked server queries
+					 This will help to configure (especially second link):
+					 https://www.linkedin.com/pulse/cross-database-queries-thing-past-how-use-sap-hana-your-nandan
+					 https://blogs.sap.com/2017/04/12/introduction-to-the-sap-hana-smart-data-access-linked-database-feature/
+					 https://blogs.sap.com/2014/12/19/step-by-step-tutorial-cross-database-queries-in-sap-hana-sps09/
+					 SAMPLE CONFIGURATION SCRIPT:
+
+			CREATE REMOTE SOURCE "LINKED_DB" ADAPTER "hanaodbc" CONFIGURATION 'DRIVER=libodbcHDB.so;ServerNode=192.168.56.101:39013;';
+
+			// optional step
+			GRANT LINKED DATABASE ON REMOTE SOURCE LINKED_DB TO SYSTEM;
+
+			CREATE CREDENTIAL FOR USER SYSTEM COMPONENT 'SAPHANAFEDERATION' PURPOSE 'LINKED_DB' TYPE 'PASSWORD' USING 'user=SYSTEM;password=E15342GcbaFd';
+					 */
+					return "LINKED_DB";
 			}
 
 			return NO_SCHEMA_NAME;

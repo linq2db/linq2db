@@ -452,7 +452,7 @@ namespace Tests.DataProvider
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				var sp = db.DataProvider.GetSchemaProvider();
-				var schema = sp.GetSchema(db);
+				var schema = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				var systemTables = schema.Tables.Where(_ => _.CatalogName.Equals("sys", StringComparison.OrdinalIgnoreCase)).ToList();
 
@@ -649,7 +649,7 @@ namespace Tests.DataProvider
 			{
 				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
 
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				var procedures = schema.Procedures.Where(_ => _.ProcedureName == expectedProc.ProcedureName).ToList();
 

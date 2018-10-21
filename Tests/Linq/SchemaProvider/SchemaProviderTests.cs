@@ -27,7 +27,7 @@ namespace Tests.SchemaProvider
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn);
+				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
 
 				var tableNames = new HashSet<string>();
 				foreach (var schemaTable in dbSchema.Tables)
@@ -132,7 +132,7 @@ namespace Tests.SchemaProvider
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn);
+				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
 
 				Assert.IsNotNull(dbSchema);
 			}
@@ -146,7 +146,7 @@ namespace Tests.SchemaProvider
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn);
+				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
 				var table    = dbSchema.Tables.Single(t => t.TableName.Equals("alltypes", StringComparison.OrdinalIgnoreCase));
 
 				Assert.That(table.Columns[0].MemberType, Is.Not.EqualTo("object"));
@@ -165,7 +165,7 @@ namespace Tests.SchemaProvider
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn);
+				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
 				var table    = dbSchema.Tables.Single(t => t.TableName.Equals("person", StringComparison.OrdinalIgnoreCase));
 				var pk       = table.Columns.FirstOrDefault(t => t.IsPrimaryKey);
 
@@ -191,7 +191,7 @@ namespace Tests.SchemaProvider
 				conn.CreateTable<PKTest>();
 
 				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn);
+				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
 				var table    = dbSchema.Tables.Single(t => t.TableName == "PKTest");
 
 				Assert.That(table.Columns[0].PrimaryKeyOrder, Is.EqualTo(1));
@@ -207,7 +207,7 @@ namespace Tests.SchemaProvider
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn);
+				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
 				var table    = dbSchema.Tables.Single(t => t.TableName == "ALLTYPES");
 
 				Assert.That(table.Columns.Single(c => c.ColumnName == "BINARYDATATYPE").   ColumnType, Is.EqualTo("CHAR (5) FOR BIT DATA"));
@@ -232,12 +232,12 @@ namespace Tests.SchemaProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var exclude = conn.DataProvider.GetSchemaProvider().GetSchema(conn).Tables.Select(_ => _.CatalogName).Distinct().ToList();
+				var exclude = conn.DataProvider.GetSchemaProvider().GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context)).Tables.Select(_ => _.CatalogName).Distinct().ToList();
 				exclude.Add(null);
 				exclude.Add("");
 
-				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedCatalogs = exclude.ToArray()});
-				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedCatalogs = new []{ "IncludeExcludeCatalogTest" }});
+				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions { ExcludedCatalogs = exclude.ToArray() }));
+				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions { IncludedCatalogs = new[] { "IncludeExcludeCatalogTest" } }));
 
 				Assert.IsEmpty(schema1.Tables);
 				Assert.IsEmpty(schema2.Tables);
@@ -254,15 +254,15 @@ namespace Tests.SchemaProvider
 			using (var conn = new DataConnection(context))
 			{
 				var exclude = conn.DataProvider.GetSchemaProvider()
-					.GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = new string[] { null }})
+					.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions {ExcludedSchemas = new string[] { null }}))
 					.Tables.Select(_ => _.SchemaName)
 					.Distinct()
 					.ToList();
 				exclude.Add(null);
 				exclude.Add("");
 
-				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = exclude.ToArray()});
-				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedSchemas = new []{ "IncludeExcludeSchemaTest" } });
+				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions {ExcludedSchemas = exclude.ToArray()}));
+				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions {IncludedSchemas = new []{ "IncludeExcludeSchemaTest" } }));
 
 				Assert.IsEmpty(schema1.Tables);
 				Assert.IsEmpty(schema2.Tables);
@@ -301,7 +301,7 @@ namespace Tests.SchemaProvider
 					)");
 
 				var sp = db.DataProvider.GetSchemaProvider();
-				var sc = sp.GetSchema(db);
+				var sc = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				Assert.IsNotNull(sc);
 				Assert.IsEmpty(sc.Tables.SelectMany(_ => _.ForeignKeys).Where(_ => _.MemberName.Any(char.IsDigit)));
@@ -318,7 +318,7 @@ namespace Tests.SchemaProvider
 			using (var db = new DataConnection(context))
 			{
 				var p = db.DataProvider.GetSchemaProvider();
-				var s = p.GetSchema(db);
+				var s = p.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				var fkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
 				var pkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
@@ -341,7 +341,7 @@ namespace Tests.SchemaProvider
 			using (var db = new DataConnection(context))
 			{
 				var p = db.DataProvider.GetSchemaProvider();
-				var s = p.GetSchema(db);
+				var s = p.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				var table = s.Tables.Single(t => t.TableName == "TestSchemaY");
 				var fks   = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();
@@ -361,7 +361,7 @@ namespace Tests.SchemaProvider
 			using (var db = new DataConnection(context))
 			{
 				var p = db.DataProvider.GetSchemaProvider();
-				var s = p.GetSchema(db);
+				var s = p.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				var table = s.Tables.Single(t => t.TableName == "Employees");
 				var fks   = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();

@@ -1673,7 +1673,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				foreach (var proc in schema.Procedures)
 				{
@@ -1695,7 +1695,7 @@ namespace Tests.DataProvider
 				// added SchemaProceduresLoadedTest to test system schema
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(
 					db,
-					new GetSchemaOptions() { ExcludedSchemas = new[] { "pg_catalog" } });
+					TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions() { ExcludedSchemas = new[] { "pg_catalog" } }));
 
 				var procedures = schema.Procedures.Where(_ => _.ProcedureName == expectedProc.ProcedureName).ToList();
 

@@ -60,11 +60,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		// SAP HANA should be configured for such queries (I failed)
-		// Maybe this will help:
-		// https://www.linkedin.com/pulse/cross-database-queries-thing-past-how-use-sap-hana-your-nandan
-		// https://blogs.sap.com/2017/04/12/introduction-to-the-sap-hana-smart-data-access-linked-database-feature/
-		// https://blogs.sap.com/2014/12/19/step-by-step-tutorial-cross-database-queries-in-sap-hana-sps09/
 		[DataContextSource(ProviderName.SapHana)]
 		public void TestTableNameWithDatabaseAndSchema(string context)
 		{
@@ -90,6 +85,7 @@ namespace Tests.UserTests
 			public int ID { get; set; }
 		}
 
+		// for SAP HANA cross-server queries see comments how to configure SAP HANA in TestUtils.GetServerName() method
 		[Test]
 		public void TestTableFQN(
 			[DataSources] string context,
@@ -107,6 +103,17 @@ namespace Tests.UserTests
 				if (withServer && (!withDatabase || !withSchema) && (context.Contains("SqlServer") || context.Contains("Azure")))
 				{
 					// SQL Server FQN requires schema and db components for linked-server query
+					throws = true;
+				}
+
+				if (withServer && !withDatabase && context.Contains("SapHana"))
+				{
+					// SAP HANA requires db name
+					throws = true;
+				}
+
+				if (withDatabase && !withSchema && context.Contains("DB2"))
+				{
 					throws = true;
 				}
 
