@@ -276,7 +276,7 @@ namespace LinqToDB.DataProvider.SapHana
 			if (database != null && database.Length == 0) database = null;
 
 			// <table_name> ::= [[<linked_server_name>.]<database_name>.]<identifier>
-			// SAP HANA to linq2db deficitions:
+			// SAP HANA to linq2db definitions:
 			// linked database -> linked server
 			// schema          -> database
 			if (server != null && database == null)

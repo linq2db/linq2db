@@ -66,6 +66,8 @@ namespace Tests
 			throw new InvalidOperationException();
 		}
 
+		[Sql.Expression("sys_context('userenv','service_name')", ServerSideOnly = true, Configuration = ProviderName.OracleNative)]
+		[Sql.Expression("sys_context('userenv','service_name')", ServerSideOnly = true, Configuration = ProviderName.OracleManaged)]
 		[Sql.Expression("@@SERVERNAME", ServerSideOnly = true)]
 		private static string ServerName()
 		{
@@ -140,6 +142,9 @@ namespace Tests
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
 				case TestProvName.SqlAzure:
+				case ProviderName.Oracle:
+				case ProviderName.OracleManaged:
+				case ProviderName.OracleNative:
 					return db.Select(() => ServerName());
 				case ProviderName.SapHana:
 					/* SAP HANA should be configured for linked server queries
