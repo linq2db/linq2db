@@ -68,6 +68,7 @@ namespace Tests
 
 		[Sql.Expression("sys_context('userenv','service_name')", ServerSideOnly = true, Configuration = ProviderName.OracleNative)]
 		[Sql.Expression("sys_context('userenv','service_name')", ServerSideOnly = true, Configuration = ProviderName.OracleManaged)]
+		[Sql.Expression("DBSERVERNAME", ServerSideOnly = true, Configuration = ProviderName.Informix)]
 		[Sql.Expression("@@SERVERNAME", ServerSideOnly = true)]
 		private static string ServerName()
 		{
@@ -145,6 +146,7 @@ namespace Tests
 				case ProviderName.Oracle:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
+				case ProviderName.Informix:
 					return db.Select(() => ServerName());
 				case ProviderName.SapHana:
 					/* SAP HANA should be configured for linked server queries

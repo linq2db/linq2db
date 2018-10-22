@@ -14,70 +14,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue681Tests : TestBase
 	{
-		[DataContextSource]
-		public void TestTableName(string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<TestTable>().ToList();
-			}
-		}
-
-		[DataContextSource]
-		public void TestTableNameWithSchema(string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				string schemaName;
-
-				using (new DisableLogging())
-					schemaName = TestUtils.GetSchemaName(db);
-
-				db.GetTable<TestTable>().SchemaName(schemaName).ToList();
-			}
-		}
-
-		[DataContextSource]
-		public void TestTableNameWithDatabase(string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				string dbName;
-
-				using (new DisableLogging())
-					dbName = TestUtils.GetDatabaseName(db);
-
-				if (   context == ProviderName.SapHana
-					|| context == ProviderName.DB2)
-					Assert.Throws<LinqToDBException>(() => db.GetTable<TestTable>().DatabaseName(dbName).ToList());
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-				else if (context == ProviderName.SapHana + ".LinqService"
-					||   context == ProviderName.DB2     + ".LinqService")
-					Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<TestTable>().DatabaseName(dbName).ToList());
-#endif
-				else
-					db.GetTable<TestTable>().DatabaseName(dbName).ToList();
-			}
-		}
-
-		[DataContextSource(ProviderName.SapHana)]
-		public void TestTableNameWithDatabaseAndSchema(string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				string schemaName;
-				string dbName;
-
-				using (new DisableLogging())
-				{
-					schemaName = TestUtils.GetSchemaName(db);
-					dbName = TestUtils.GetDatabaseName(db);
-				}
-
-				db.GetTable<TestTable>().SchemaName(schemaName).DatabaseName(dbName).ToList();
-			}
-		}
-
 		[Table("LinqDataTypes")]
 		class TestTable
 		{
@@ -106,9 +42,9 @@ namespace Tests.UserTests
 					throws = true;
 				}
 
-				if (withServer && !withDatabase && context.Contains("SapHana"))
+				if (withServer && !withDatabase && (context.Contains("SapHana") || context.Contains("Informix")))
 				{
-					// SAP HANA requires db name
+					// SAP HANA and Informix require db name for linked server queries
 					throws = true;
 				}
 

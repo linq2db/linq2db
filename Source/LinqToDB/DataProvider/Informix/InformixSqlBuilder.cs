@@ -235,15 +235,21 @@ namespace LinqToDB.DataProvider.Informix
 		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
 		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
-			if (server != null   && server  .Length == 0) server   = null;
+			if (server   != null && server  .Length == 0) server   = null;
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
 
-			if (server != null)
-				sb.Append(server).Append("@");
+			if (server != null && database == null)
+				throw new LinqToDBException("You must specify database for linked server query");
 
 			if (database != null)
-				sb.Append(database).Append(":");
+				sb.Append(database);
+
+			if (server != null)
+				sb.Append("@").Append(server);
+
+			if (database != null)
+				sb.Append(":");
 
 			if (schema != null)
 				sb.Append(schema).Append(".");
