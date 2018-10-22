@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+    <Compile Include="..\Linq\Linq\AnalyticTests.cs" Link="AnalyticTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

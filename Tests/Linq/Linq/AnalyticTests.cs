@@ -1230,5 +1230,30 @@
 			}
 		}
 
+		[ActiveIssue]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle)]
+		public void NestedQueries(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 =
+					from p in db.Parent
+					select new
+					{
+						p.ParentID,
+						MaxValue = Sql.Ext.Max(p.Value1).Over().PartitionBy(p.ParentID).ToValue(),
+					};
+
+				var q2 = from q in q1
+					select new
+					{
+						q.ParentID,
+						MaxValue = Sql.Ext.Max(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
+					};
+
+				var result = q2.ToArray();
+			}
+		}
+
 	}
 }
