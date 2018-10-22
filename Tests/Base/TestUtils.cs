@@ -44,7 +44,6 @@ namespace Tests
 			throw new InvalidOperationException();
 		}
 
-		[Sql.Expression("current_schema", ServerSideOnly = true, Configuration = ProviderName.SapHana)]
 		[Sql.Expression("current server", ServerSideOnly = true, Configuration = ProviderName.DB2)]
 		[Sql.Function("current_database", ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
 		[Sql.Function("DATABASE"        , ServerSideOnly = true, Configuration = ProviderName.MySql)]
@@ -60,7 +59,8 @@ namespace Tests
 		[Sql.Expression("current schema", ServerSideOnly = true, Configuration = ProviderName.DB2)]
 		[Sql.Function("current_schema"  , ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
 		[Sql.Function("USER_NAME"       , ServerSideOnly = true, Configuration = ProviderName.Sybase)]
-		[Sql.Function("SCHEMA_NAME"     , ServerSideOnly = true)]
+		[Sql.Expression("current_schema", ServerSideOnly = true, Configuration = ProviderName.SapHana)]
+		[Sql.Function("SCHEMA_NAME", ServerSideOnly = true)]
 		private static string SchemaName()
 		{
 			throw new InvalidOperationException();
@@ -97,6 +97,7 @@ namespace Tests
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
 				case TestProvName.SqlAzure:
+				case ProviderName.SapHana:
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
 			}
 
@@ -195,7 +196,6 @@ namespace Tests
 					return "main";
 				case ProviderName.Access:
 					return "Database\\TestData";
-				case ProviderName.SapHana:
 				case ProviderName.MySql:
 				case TestProvName.MariaDB:
 				case TestProvName.MySql57:

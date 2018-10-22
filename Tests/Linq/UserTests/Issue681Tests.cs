@@ -42,9 +42,15 @@ namespace Tests.UserTests
 					throws = true;
 				}
 
-				if (withServer && !withDatabase && (context.Contains("SapHana") || context.Contains("Informix")))
+				if (withServer && !withDatabase && context.Contains("Informix"))
 				{
-					// SAP HANA and Informix require db name for linked server queries
+					// Informix requires db name for linked server queries
+					throws = true;
+				}
+
+				if (withServer && !withSchema && context.Contains("SapHana"))
+				{
+					// SAP HANA requires schema name for linked server queries
 					throws = true;
 				}
 

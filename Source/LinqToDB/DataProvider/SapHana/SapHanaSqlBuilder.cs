@@ -272,21 +272,18 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
-			if (server   != null && server  .Length == 0) server   = null;
-			if (database != null && database.Length == 0) database = null;
+			if (server   != null && server.Length == 0) server = null;
+			if (schema   != null && schema.Length == 0) schema = null;
 
-			// <table_name> ::= [[<linked_server_name>.]<database_name>.]<identifier>
-			// SAP HANA to linq2db definitions:
-			// linked database -> linked server
-			// schema          -> database
-			if (server != null && database == null)
-				throw new LinqToDBException("You must specify database name for linked server queries.");
+			// <table_name> ::= [[<linked_server_name>.]<schema_name>.]<identifier>
+			if (server != null && schema == null)
+				throw new LinqToDBException("You must specify schema name for linked server queries.");
 
 			if (server != null)
 				sb.Append(server).Append(".");
 
-			if (database != null)
-				sb.Append(database).Append(".");
+			if (schema != null)
+				sb.Append(schema).Append(".");
 
 			return sb.Append(table);
 		}
