@@ -23,9 +23,8 @@ namespace Tests.UserTests
 			public Guid? Optional { get; set; }
 		}
 
-		[ActiveIssue(1363, SkipForLinqService = true)]
-		[Test, DataContextSource]
-		public void Test(string context)
+		[Test, Combinatorial]
+		public void TestInsert([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -49,5 +48,6 @@ namespace Tests.UserTests
 				}
 			}
 		}
+
 	}
 }
