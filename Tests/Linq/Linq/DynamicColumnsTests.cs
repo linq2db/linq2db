@@ -537,7 +537,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial]
 		public void TestConcatWithDynamic([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			var mappingSchema = new MappingSchema();

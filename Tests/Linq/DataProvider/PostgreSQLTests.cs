@@ -821,7 +821,6 @@ namespace Tests.DataProvider
 
 		// test that native bulk copy method inserts data properly
 		[Test]
-		[Combinatorial]
 		public void BulkCopyTest([Values]BulkTestMode mode, [IncludeDataSources(false, CurrentProvider)] string context)
 		{
 			var testData = new[]
@@ -1682,7 +1681,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void ProceduresSchemaProviderTest(
 			[IncludeDataSources(false, ProviderName.PostgreSQL)] string context,
 			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
@@ -1809,7 +1808,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestVoidFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1822,7 +1821,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestCustomAggregate([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1844,7 +1843,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestCustomAggregateNotNullable([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1866,7 +1865,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1888,7 +1887,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestParametersFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1904,7 +1903,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestScalarTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1919,7 +1918,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestRecordTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1935,7 +1934,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestScalarFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1946,7 +1945,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestSingleOutParameterFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1958,7 +1957,7 @@ namespace Tests.DataProvider
 		}
 
 		[ActiveIssue("Functionality not implemented yet")]
-		[Test, Combinatorial]
+		[Test]
 		public void TestDynamicRecordFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1977,7 +1976,7 @@ namespace Tests.DataProvider
 		}
 
 		[ActiveIssue("Functionality not implemented yet")]
-		[Test, Combinatorial]
+		[Test]
 		public void TestDynamicTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))

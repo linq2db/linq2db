@@ -162,7 +162,7 @@ namespace Tests.Playground
 	public class JsonConvertTests : TestBase
 	{
 
-		[Test, Combinatorial]
+		[Test]
 		public void SampleSelectTest([IncludeDataSources(false, TestProvName.SqlAzure)] string context)
 		{
 			using (var db = new MyDataConnection(context))
