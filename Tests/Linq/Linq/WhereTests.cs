@@ -1269,7 +1269,7 @@ namespace Tests.Linq
 			public static readonly IEqualityComparer<WhereCases> Comparer = Tools.ComparerBuilder<WhereCases>.GetEqualityComparer();
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void WhereBooleanTest2([DataSources(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Firebird, TestProvName.Firebird3)] string context)
 		{
 			void AreEqualLocal(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases,bool>> predicate)

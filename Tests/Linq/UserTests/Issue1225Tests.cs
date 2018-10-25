@@ -68,7 +68,7 @@ namespace Tests.UserTests
 			public LastInChain Container { get; set; }
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

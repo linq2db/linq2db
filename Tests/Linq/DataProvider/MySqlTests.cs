@@ -639,7 +639,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void ProceduresSchemaProviderTest(
 			[IncludeDataSources(false, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)] string context,
 			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
