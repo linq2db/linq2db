@@ -210,7 +210,7 @@ static Action<GeneratedTextTransformation,Class> WriteBeginClass = (tt,cl) =>
 	tt.Write(cl.AccessModifier.ToString().ToLower() + " ");
 	if (cl.IsStatic)  tt.Write("static ");
 	if (cl.IsPartial) tt.Write("partial ", cl.Name);
-	tt.Write("class {0}{1}", cl.Name, cl.GenericArguments);
+	tt.Write("class {0}{1}", cl.Name, cl.GenericArguments.Count > 0 ? $"<{string.Join(", ", cl.GenericArguments)}>" : string.Empty);
 
 	if (!string.IsNullOrEmpty(cl.BaseClass) || cl.Interfaces.Count > 0)
 	{
@@ -231,10 +231,10 @@ static Action<GeneratedTextTransformation> WriteEndClass = tt => tt.WriteLine("}
 public partial class Class : TypeBase
 {
 	public string             BaseClass;
-	public string             GenericArguments;
-	public bool               IsStatic   = false;
-	public List<string>       Interfaces = new List<string>();
-	public List<IClassMember> Members    = new List<IClassMember>();
+	public List<string>       GenericArguments = new List<string>();
+	public bool               IsStatic         = false;
+	public List<string>       Interfaces       = new List<string>();
+	public List<IClassMember> Members          = new List<IClassMember>();
 
 	public Class()
 	{
@@ -1184,7 +1184,7 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 		m.Type == null ? "" : " ",
 		m.Type, LenDiff(m.TypeLen,     m.Type ?? ""),
 		m.Name,
-		m.GenericArguments);
+		m.GenericArguments.Count > 0 ? $"<{string.Join(", ", m.GenericArguments)}>" : string.Empty);
 
 	Action writeComment = () =>
 	{
@@ -1284,10 +1284,10 @@ public partial class Method : MemberBase
 	public bool         IsVirtual;
 	public bool         IsOverride;
 	public bool         IsStatic;
-	public string       GenericArguments;
-	public List<string> AfterSignature = new List<string>();
-	public List<string> Parameters     = new List<string>();
-	public List<string> Body           = new List<string>();
+	public List<string> GenericArguments = new List<string>();
+	public List<string> AfterSignature   = new List<string>();
+	public List<string> Parameters       = new List<string>();
+	public List<string> Body             = new List<string>();
 
 	public Method()
 	{

@@ -41,7 +41,7 @@ void DoGenerateSqlServerFreeText()
 						}
 					})
 				{
-					GenericArguments = "<T>",
+					GenericArguments = { "T" },
 					IsPartial        = false
 				},
 
@@ -63,7 +63,7 @@ void DoGenerateSqlServerFreeText()
 						"	text);",
 					})
 				{
-					GenericArguments = "<TTable,TKey>",
+					GenericArguments = new List<string>() { "TTable", "TKey" },
 					Attributes = { new Attribute("FreeTextTableExpression") }
 				},
 
@@ -90,8 +90,8 @@ void DoGenerateSqlServerFreeText()
 						"	text);",
 					})
 				{
-					GenericArguments = "<TTable,TKey>",
-					Attributes = { new Attribute("FreeTextTableExpression") }
+					GenericArguments = { "TTable", "TKey" },
+					Attributes       = { new Attribute("FreeTextTableExpression") }
 				},
 			}
 		}
