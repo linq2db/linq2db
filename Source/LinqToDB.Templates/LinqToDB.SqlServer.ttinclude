@@ -30,7 +30,7 @@ void DoGenerateSqlServerFreeText()
 			Region  = "FreeTextTable",
 			Members =
 			{
-				new Class("FreeTextKey<T>",
+				new Class("FreeTextKey",
 					new MemberGroup
 					{
 						IsCompact = true,
@@ -41,7 +41,8 @@ void DoGenerateSqlServerFreeText()
 						}
 					})
 				{
-					IsPartial = false
+					GenericArguments = { "T" },
+					IsPartial        = false
 				},
 
 				new Field("MethodInfo", "_freeTextTableMethod1")
@@ -51,7 +52,7 @@ void DoGenerateSqlServerFreeText()
 					InitValue      = "typeof(" + DataContextObject.Name + ").GetMethod(\"FreeTextTable\", new Type[] { typeof(string), typeof(string) })"
 				},
 
-				new Method("ITable<FreeTextKey<TKey>>", "FreeTextTable<TTable,TKey>",
+				new Method("ITable<FreeTextKey<TKey>>", "FreeTextTable",
 					new[] { "string field", "string text" },
 					new[]
 					{
@@ -62,6 +63,7 @@ void DoGenerateSqlServerFreeText()
 						"	text);",
 					})
 				{
+					GenericArguments = new List<string>() { "TTable", "TKey" },
 					Attributes = { new Attribute("FreeTextTableExpression") }
 				},
 
@@ -77,7 +79,7 @@ void DoGenerateSqlServerFreeText()
 					"		.Single()"
 				},
 
-				new Method("ITable<FreeTextKey<TKey>>", "FreeTextTable<TTable,TKey>",
+				new Method("ITable<FreeTextKey<TKey>>", "FreeTextTable",
 					new[] { "Expression<Func<TTable,string>> fieldSelector", "string text" },
 					new[]
 					{
@@ -88,7 +90,8 @@ void DoGenerateSqlServerFreeText()
 						"	text);",
 					})
 				{
-					Attributes = { new Attribute("FreeTextTableExpression") }
+					GenericArguments = { "TTable", "TKey" },
+					Attributes       = { new Attribute("FreeTextTableExpression") }
 				},
 			}
 		}
