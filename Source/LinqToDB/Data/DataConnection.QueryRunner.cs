@@ -32,7 +32,7 @@ namespace LinqToDB.Data
 			}
 
 			readonly DataConnection _dataConnection;
-			readonly DateTime       _startedOn = DateTime.Now;
+			readonly DateTime       _startedOn = DateTime.UtcNow;
 
 			bool       _isAsync;
 			Expression _mapperExpression;
@@ -120,7 +120,7 @@ namespace LinqToDB.Data
 						DataConnection   = _dataConnection,
 						Command          = _dataConnection.Command,
 						MapperExpression = MapperExpression,
-						ExecutionTime    = DateTime.Now - _startedOn,
+						ExecutionTime    = DateTime.UtcNow - _startedOn,
 						RecordsAffected  = RowsCount,
 						IsAsync          = _isAsync,
 					});

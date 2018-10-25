@@ -168,7 +168,7 @@ namespace LinqToDB.DataProvider
 				});
 			}
 
-			var now = DateTime.Now;
+			var now = DateTime.UtcNow;
 
 			try
 			{
@@ -181,7 +181,7 @@ namespace LinqToDB.DataProvider
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = dataConnection,
 						CommandText     = commandText(),
-						ExecutionTime   = DateTime.Now - now,
+						ExecutionTime   = DateTime.UtcNow - now,
 						RecordsAffected = count,
 					});
 				}

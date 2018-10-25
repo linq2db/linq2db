@@ -1056,7 +1056,7 @@ namespace LinqToDB.Data
 				});
 			}
 
-			var now = DateTime.Now;
+			var now = DateTime.UtcNow;
 
 			try
 			{
@@ -1071,7 +1071,7 @@ namespace LinqToDB.Data
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = this,
 						Command         = Command,
-						ExecutionTime   = DateTime.Now - now,
+						ExecutionTime   = DateTime.UtcNow - now,
 						RecordsAffected = ret,
 					});
 				}
@@ -1087,7 +1087,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						ExecutionTime  = DateTime.UtcNow - now,
 						Exception      = ex,
 					});
 				}
@@ -1111,7 +1111,7 @@ namespace LinqToDB.Data
 				});
 			}
 
-			var now = DateTime.Now;
+			var now = DateTime.UtcNow;
 
 			try
 			{
@@ -1124,7 +1124,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						ExecutionTime  = DateTime.UtcNow - now,
 					});
 				}
 
@@ -1139,7 +1139,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						ExecutionTime  = DateTime.UtcNow - now,
 						Exception      = ex,
 					});
 				}
@@ -1169,7 +1169,7 @@ namespace LinqToDB.Data
 				});
 			}
 
-			var now = DateTime.Now;
+			var now = DateTime.UtcNow;
 
 			try
 			{
@@ -1185,7 +1185,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						ExecutionTime  = DateTime.UtcNow - now,
 					});
 				}
 
@@ -1200,7 +1200,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						ExecutionTime  = DateTime.UtcNow - now,
 						Exception      = ex,
 					});
 				}

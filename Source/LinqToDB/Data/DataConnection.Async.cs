@@ -68,7 +68,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var now = DateTime.Now;
+				var now = DateTime.UtcNow;
 				var ret = await ((DbCommand)Command).ExecuteNonQueryAsync(cancellationToken);
 
 				if (TraceSwitch.TraceInfo)
@@ -78,7 +78,7 @@ namespace LinqToDB.Data
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = this,
 						Command         = Command,
-						ExecutionTime   = DateTime.Now - now,
+						ExecutionTime   = DateTime.UtcNow - now,
 						RecordsAffected = ret,
 						IsAsync         = true,
 					});
@@ -122,7 +122,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var now = DateTime.Now;
+				var now = DateTime.UtcNow;
 				var ret = await ((DbCommand)Command).ExecuteScalarAsync(cancellationToken);
 
 				if (TraceSwitch.TraceInfo)
@@ -132,7 +132,7 @@ namespace LinqToDB.Data
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = this,
 						Command         = Command,
-						ExecutionTime   = DateTime.Now - now,
+						ExecutionTime   = DateTime.UtcNow - now,
 						IsAsync         = true,
 					});
 				}
@@ -175,7 +175,7 @@ namespace LinqToDB.Data
 				});
 			}
 
-			var now = DateTime.Now;
+			var now = DateTime.UtcNow;
 
 			try
 			{
@@ -188,7 +188,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						ExecutionTime  = DateTime.UtcNow - now,
 						IsAsync        = true,
 					});
 				}
@@ -204,7 +204,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						ExecutionTime  = DateTime.UtcNow - now,
 						Exception      = ex,
 						IsAsync        = true,
 					});
