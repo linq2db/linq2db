@@ -19,6 +19,7 @@ namespace LinqToDB.Data
 		public TraceLevel     TraceLevel       { get; set; }
 		public DataConnection DataConnection   { get; set; }
 		public IDbCommand     Command          { get; set; }
+		public DateTime?      StartTime        { get; set; }
 		public TimeSpan?      ExecutionTime    { get; set; }
 		public int?           RecordsAffected  { get; set; }
 		public Exception      Exception        { get; set; }
