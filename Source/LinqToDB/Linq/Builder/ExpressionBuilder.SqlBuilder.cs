@@ -1216,6 +1216,8 @@ namespace LinqToDB.Linq.Builder
 			if (_lastExpr2 == expr)
 				return _lastResult2;
 
+			var allowedParams = new HashSet<Expression> { ParametersParam };
+
 			var result = null == expr.Find(ex =>
 			{
 				if (IsServerSideOnly(ex))
@@ -1224,20 +1226,22 @@ namespace LinqToDB.Linq.Builder
 				switch (ex.NodeType)
 				{
 					case ExpressionType.Parameter    :
-						return !ReferenceEquals(ex, ParametersParam);
-/*
-					case ExpressionType.MemberAccess :
-						{
-							var attr = GetExpressionAttribute(((MemberExpression)ex).Member);
-							return attr != null && attr.ServerSideOnly;
-						}
+						return !allowedParams.Contains(ex);
 
-					case ExpressionType.Call         :
+					case ExpressionType.Call:
 						{
-							var attr = GetExpressionAttribute(((MethodCallExpression)ex).Method);
-							return attr != null && attr.ServerSideOnly;
+							var mc = (MethodCallExpression)ex;
+							foreach (var arg in mc.Arguments)
+							{
+								if (arg.NodeType == ExpressionType.Lambda)
+								{
+									var lambda = (LambdaExpression)arg;
+									foreach (var prm in lambda.Parameters)
+										allowedParams.Add(prm);
+								}
+							}
+							break;
 						}
-*/
 				}
 
 				return false;
