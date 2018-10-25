@@ -619,7 +619,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
@@ -638,7 +638,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestDoubleRecursion([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
@@ -665,7 +665,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void RecursiveCount([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
@@ -682,7 +682,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
@@ -703,7 +703,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void RecursiveDeepNesting([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))

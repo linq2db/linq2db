@@ -24,7 +24,7 @@ namespace Tests.UserTests
 		}
 
 		// TODO: mysql - need to add default db type for create table for Guid
-		[Test, Combinatorial]
+		[Test]
 		public void TestInsert([DataSources(ProviderName.Access, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)] string context)
 		{
 			using (var db = GetDataContext(context))

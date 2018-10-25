@@ -34,7 +34,7 @@ namespace Tests.Playground
 			return c => c.Value == v;
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void InvocationTestLocal([SQLiteDataSources] string context)
 		{
 			Expression<Func<SampleClass, bool>> predicate = c => c.Value > 1;
@@ -54,7 +54,7 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void CompileTestLocal([SQLiteDataSources] string context)
 		{
 			Expression<Func<SampleClass, bool>> predicate = c => c.Value > 1;
@@ -75,7 +75,7 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void NonCompileTestLocal([SQLiteDataSources] string context)
 		{
 			Expression<Func<SampleClass, bool>> predicate = c => c.Value > 1;
@@ -96,7 +96,7 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void InvocationTestFunction([SQLiteDataSources] string context)
 		{
 			var sampleData = GenerateData();
@@ -115,7 +115,7 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void LocalInvocation([SQLiteDataSources] string context)
 		{
 			var sampleData = GenerateData();
@@ -135,7 +135,5 @@ namespace Tests.Playground
 				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
 			}
 		}
-
-
 	}
 }
