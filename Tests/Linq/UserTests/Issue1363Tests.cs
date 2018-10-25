@@ -23,8 +23,9 @@ namespace Tests.UserTests
 			public Guid? Optional { get; set; }
 		}
 
+		// TODO: mysql - need to add default db type for create table for Guid
 		[Test, Combinatorial]
-		public void TestInsert([DataSources(ProviderName.Access)] string context)
+		public void TestInsert([DataSources(ProviderName.Access, ProviderName.MySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
