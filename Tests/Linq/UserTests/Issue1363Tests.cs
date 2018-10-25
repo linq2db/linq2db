@@ -23,9 +23,9 @@ namespace Tests.UserTests
 			public Guid? Optional { get; set; }
 		}
 
-		// TODO: mysql - need to add default db type for create table for Guid
+		// TODO: sqlce,mysql - need to add default db type for create table for Guid
 		[Test]
-		public void TestInsert([DataSources(ProviderName.Access, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)] string context)
+		public void TestInsert([DataSources(ProviderName.Access, ProviderName.SqlCe, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
