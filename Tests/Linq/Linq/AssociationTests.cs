@@ -865,7 +865,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void AssociationExpressionMethod([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

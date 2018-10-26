@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	using Mapping;
 	using SqlQuery;
+	using System.Data.Linq;
 
 	public class FirebirdMappingSchema : MappingSchema
 	{
@@ -21,6 +22,18 @@ namespace LinqToDB.DataProvider.Firebird
 			// firebird string literals can contain only limited set of characters, so we should encode them
 			SetValueToSqlConverter(typeof(string), (sb, dt, v) => ConvertStringToSql(sb, (string)v));
 			SetValueToSqlConverter(typeof(char)  , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+		}
+
+		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
+		{
+			stringBuilder.Append("X'");
+
+			foreach (var b in value)
+				stringBuilder.Append(b.ToString("X2"));
+
+			stringBuilder.Append("'");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

@@ -1,10 +1,13 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
-
+using Humanizer;
 using LinqToDB;
 using LinqToDB.Expressions;
 
 using NUnit.Framework;
+using Tests.Tools;
 
 namespace Tests.Linq
 {
@@ -46,7 +49,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void Test1([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -69,7 +72,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void Test2([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -102,7 +105,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestAsTable([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -316,11 +319,14 @@ namespace Tests.Linq
 		{
 			using (var db = new NorthwindDB(context))
 			{
+				// just create another CTE
+				var employeeCte = db.Employee.Where(e => e.EmployeeID > 0).AsCte();
+
 				var employeeHierarchyCte = db.GetCte<EmployeeHierarchyCTE>(employeeHierarchy =>
 				{
 					return
 						(
-							from e in db.Employee
+							from e in employeeCte
 							where e.ReportsTo == null
 							select new EmployeeHierarchyCTE
 							{
@@ -333,7 +339,7 @@ namespace Tests.Linq
 						)
 						.Concat
 						(
-							from e in db.Employee
+							from e in employeeCte
 							from eh in employeeHierarchy.InnerJoin(eh => e.ReportsTo == eh.EmployeeID)
 							select new EmployeeHierarchyCTE
 							{
@@ -357,7 +363,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void Test4([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -406,7 +412,7 @@ namespace Tests.Linq
 			public int ParentID { get; set; }
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -439,7 +445,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestDelete([CteContextSource(ProviderName.Firebird, ProviderName.DB2)] string context)
 		{
 			using (var db  = GetDataContext(context))
@@ -458,7 +464,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestUpdate(
 			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
@@ -491,7 +497,7 @@ namespace Tests.Linq
 			public int? GrandChildID;
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void RecursiveTest([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -523,6 +529,202 @@ namespace Tests.Linq
 
 				var str = cteRecursive.ToString();
 				var result = cteRecursive.ToArray();
+			}
+		}
+
+		public class HierarchyTree
+		{
+			public int Id { get; set; }
+			public int? ParentId { get; set; }
+		}
+
+		HierarchyTree[] GeHirarchyData()
+		{
+			return new[]
+			{
+				new HierarchyTree { Id = 1, ParentId = null },
+				new HierarchyTree { Id = 2, ParentId = null },
+
+				// level 1
+				
+				new HierarchyTree { Id = 10, ParentId = 1 },
+				new HierarchyTree { Id = 11, ParentId = 1 },
+
+				new HierarchyTree { Id = 20, ParentId = 2 },
+				new HierarchyTree { Id = 22, ParentId = 2 },
+
+				// level 2
+
+				new HierarchyTree { Id = 100, ParentId = 10 },
+				new HierarchyTree { Id = 101, ParentId = 10 },
+				new HierarchyTree { Id = 102, ParentId = 10 },
+
+				new HierarchyTree { Id = 110, ParentId = 11 },
+				new HierarchyTree { Id = 111, ParentId = 11 },
+				new HierarchyTree { Id = 112, ParentId = 11 },
+
+				new HierarchyTree { Id = 200, ParentId = 20 },
+				new HierarchyTree { Id = 201, ParentId = 20 },
+				new HierarchyTree { Id = 202, ParentId = 20 },
+
+				new HierarchyTree { Id = 210, ParentId = 21 },
+				new HierarchyTree { Id = 211, ParentId = 21 },
+				new HierarchyTree { Id = 212, ParentId = 21 },
+			};
+		}
+
+		class HierarchyData
+		{
+			public int Id { get; set; }
+			public int Level { get; set; }
+		}
+
+		IQueryable<HierarchyData> GetHierarchyDown(IQueryable<HierarchyTree> tree, IDataContext db)
+		{
+			var subCte1 = tree.Where(t => t.ParentId == null).AsCte();
+			var subCte2 = tree.AsCte();
+
+			var cte = db.GetCte<HierarchyData>(hierarchyDown =>
+				{
+					return subCte1.Select(t => new HierarchyData
+						{
+							Id = t.Id,
+							Level = 0
+						})
+						.Concat(
+							from h in hierarchyDown
+							from t in subCte2.InnerJoin(t => t.ParentId == h.Id)
+							select new HierarchyData
+							{
+								Id = t.Id,
+								Level = h.Level + 1
+							}
+						);
+				}
+			);
+
+			return cte;
+		}
+
+		IEnumerable<HierarchyData> EnumerateDown(HierarchyTree[] items, int currentLevel, int? currentParent)
+		{
+			foreach (var i in items.Where(i => i.ParentId == currentParent))
+			{
+				yield return new HierarchyData { Id = i.Id, Level = currentLevel };
+
+				foreach (var c in EnumerateDown(items, currentLevel + 1, i.Id))
+				{
+					yield return c;
+				}
+			}
+		}
+
+		[Test]
+		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2)] string context)
+		{
+			var hierarchyData = GeHirarchyData();
+
+			using (var db = GetDataContext(context))
+			{
+				using (var tree = db.CreateLocalTable(hierarchyData))
+				{
+					var hierarchy = GetHierarchyDown(tree, db);
+
+					var result = hierarchy.OrderBy(h => h.Id);
+					var expected = EnumerateDown(hierarchyData, 0, null).OrderBy(h => h.Id);
+
+					AreEqual(expected, result, ComparerBuilder<HierarchyData>.GetEqualityComparer());
+				}
+			}
+		}
+
+		[Test]
+		public void TestDoubleRecursion([CteContextSource(true, ProviderName.DB2)] string context)
+		{
+			var hierarchyData = GeHirarchyData();
+
+			using (var db = GetDataContext(context))
+			{
+				using (var tree = db.CreateLocalTable(hierarchyData))
+				{
+					var hierarchy1 = GetHierarchyDown(tree, db);
+					var hierarchy2 = GetHierarchyDown(tree, db);
+
+					var query = from h1 in hierarchy1
+						from h2 in hierarchy2.InnerJoin(h2 => h2.Id == h1.Id)
+						select new
+						{
+							h1.Id,
+							LevelSum = h2.Level + h1.Level
+						};
+
+					var count = query.Count();
+
+					Assert.Greater(count, 0);
+				}
+			}
+		}
+
+		[Test]
+		public void RecursiveCount([CteContextSource(true, ProviderName.DB2)] string context)
+		{
+			var hierarchyData = GeHirarchyData();
+
+			using (var db = GetDataContext(context))
+			{
+				using (var tree = db.CreateLocalTable(hierarchyData))
+				{
+					var hierarchy = GetHierarchyDown(tree, db);
+					var expected = EnumerateDown(hierarchyData, 0, null);
+
+					Assert.AreEqual(expected.Count(), hierarchy.Count());
+				}
+			}
+		}
+
+		[Test]
+		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2)] string context)
+		{
+			var hierarchyData = GeHirarchyData();
+
+			using (var db = GetDataContext(context))
+			{
+				using (var tree = db.CreateLocalTable(hierarchyData))
+				using (var resultTable = db.CreateLocalTable<HierarchyData>())
+				{
+					var hierarchy = GetHierarchyDown(tree, db);
+					hierarchy.Insert(resultTable, r => r);
+
+					var result = resultTable.OrderBy(h => h.Id);
+					var expected = EnumerateDown(hierarchyData, 0, null).OrderBy(h => h.Id);
+
+					AreEqual(expected, result, ComparerBuilder<HierarchyData>.GetEqualityComparer());
+				}
+			}
+		}
+
+		[Test]
+		public void RecursiveDeepNesting([CteContextSource(true, ProviderName.DB2)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (var tree = db.CreateLocalTable<HierarchyTree>())
+				{
+					var hierarchy = GetHierarchyDown(tree, db);
+
+					var query = from q in hierarchy
+						from data1 in tree.InnerJoin(data1 => data1.Id == q.Id)
+						from data2 in tree.InnerJoin(data2 => data2.Id == q.Id)
+						from data3 in tree.InnerJoin(data3 => data3.Id == q.Id)
+						from data4 in tree.InnerJoin(data4 => data4.Id == q.Id)
+						select new
+						{
+							q.Id,
+							q.Level
+						};
+
+					Assert.DoesNotThrow(() => Console.WriteLine(query.ToString()));
+				}
 			}
 		}
 

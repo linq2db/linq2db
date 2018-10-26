@@ -484,5 +484,96 @@ namespace Tests.Linq
 			[Column, Identity, PrimaryKey]
 			public int ID { get; set; }
 		}
+
+		public class SomeClassWithDynamic
+		{
+			public string Description { get; set; }
+
+			private sealed class SomeClassEqualityComparer : IEqualityComparer<SomeClassWithDynamic>
+			{
+				public bool Equals(SomeClassWithDynamic x, SomeClassWithDynamic y)
+				{
+					if (ReferenceEquals(x, y)) return true;
+					if (ReferenceEquals(x, null)) return false;
+					if (ReferenceEquals(y, null)) return false;
+					if (x.GetType() != y.GetType()) return false;
+					if (!string.Equals(x.Description, y.Description))
+						return false;
+
+					if (x.ExtendedProperties == null && x.ExtendedProperties == null)
+						return true;
+
+					if (x.ExtendedProperties == null || x.ExtendedProperties == null)
+						return false;
+
+					bool CompareValues(IDictionary<string, object> values1, IDictionary<string, object> values2)
+					{
+						foreach (var property in values1)
+						{
+							var value1 = property.Value as string ?? string.Empty;
+							values2.TryGetValue(property.Key, out var value);
+							var value2 = value as string ?? string.Empty;
+							if (!string.Equals(value1, value2))
+								return false;
+						}
+
+						return true;
+					}
+
+					return CompareValues(x.ExtendedProperties, y.ExtendedProperties) &&
+					       CompareValues(y.ExtendedProperties, x.ExtendedProperties);
+				}
+
+				public int GetHashCode(SomeClassWithDynamic obj)
+				{
+					return (obj.Description != null ? obj.Description.GetHashCode() : 0);
+				}
+			}
+
+			public static IEqualityComparer<SomeClassWithDynamic> SomeClassComparer { get; } = new SomeClassEqualityComparer();
+
+			[DynamicColumnsStore]
+			public IDictionary<string, object> ExtendedProperties { get; set; }
+		}
+
+		[Test]
+		public void TestConcatWithDynamic([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			var mappingSchema = new MappingSchema();
+			var builder = mappingSchema.GetFluentMappingBuilder()
+				.Entity<SomeClassWithDynamic>();
+
+			builder.Property(x => x.Description).HasColumnName("F066_04");
+			builder.Property(x => Sql.Property<string>(x, "F066_05"));
+			builder.Property(x => Sql.Property<string>(x, "F066_00"));
+
+			var testData1 = new SomeClassWithDynamic[]
+			{
+				new SomeClassWithDynamic{Description = "Desc1", ExtendedProperties = new Dictionary<string, object>{{"F066_05", "v1"}}},
+				new SomeClassWithDynamic{Description = "Desc2", ExtendedProperties = new Dictionary<string, object>{{"F066_05", "v2"}}},
+			};
+
+			var testData2 = new SomeClassWithDynamic[]
+			{
+				new SomeClassWithDynamic{Description = "Desc3", ExtendedProperties = new Dictionary<string, object>{{"F066_00", "v3"}}},
+				new SomeClassWithDynamic{Description = "Desc4", ExtendedProperties = new Dictionary<string, object>{{"F066_00", "v4"}}},
+			};
+
+			using (var dataContext = GetDataContext(context, mappingSchema))
+			{
+				using (dataContext.CreateLocalTable("M998_T066", testData1))
+				using (dataContext.CreateLocalTable("M998_T000", testData2))
+				{
+					var expected = testData1.Concat(testData2);
+					var result =
+						dataContext.GetTable<SomeClassWithDynamic>().TableName("M998_T066")
+							.Concat(dataContext.GetTable<SomeClassWithDynamic>().TableName("M998_T000"))
+							.ToList();
+
+					AreEqual(expected, result, SomeClassWithDynamic.SomeClassComparer);
+				}
+			}
+		}
+
 	}
 }

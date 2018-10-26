@@ -521,7 +521,6 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[Combinatorial]
 		public void DropTableTest(
 			[IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)] string context,
 			[Values] FirebirdIdentifierQuoteMode quoteMode,

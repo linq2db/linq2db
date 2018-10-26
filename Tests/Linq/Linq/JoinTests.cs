@@ -1157,7 +1157,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
 		public void SqlJoinSimple([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
@@ -1214,7 +1213,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
 		public void SqlJoinSubQuery([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
@@ -1233,7 +1231,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
 		public void SqlNullWhereJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
@@ -1251,7 +1248,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
 		public void SqlNullWhereSubqueryJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
@@ -1269,7 +1265,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
 		public void SqlLinqJoinSimple([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
@@ -1321,7 +1316,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
 		public void SqlLinqJoinSubQuery([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
@@ -1340,7 +1334,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
 		public void SqlLinqNullWhereJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
@@ -1356,7 +1349,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
 		public void SqlLinqNullWhereSubqueryJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
@@ -1394,7 +1386,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial]
 		public void SqlFullJoinWithCount1([AllJoinsSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1411,7 +1402,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial]
 		public void SqlFullJoinWithCount2([AllJoinsSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1430,7 +1420,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial]
 		public void SqlFullJoinWithCount3([AllJoinsSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1449,7 +1438,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial]
 		public void SqlFullJoinWithCount4([AllJoinsSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1469,7 +1457,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial]
 		public void SqlFullJoinWithCount5([AllJoinsSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1488,7 +1475,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial]
 		public void SqlFullJoinWithBothFilters([AllJoinsSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1523,7 +1509,6 @@ namespace Tests.Linq
 		/// </summary>
 		/// <param name="context"></param>
 		[Test]
-		[Combinatorial]
 		public void JoinBuildersConflicts([IncludeDataSources(false, ProviderName.SQLiteClassic)] string context)
 		{
 			using (var db = GetDataContext(context))

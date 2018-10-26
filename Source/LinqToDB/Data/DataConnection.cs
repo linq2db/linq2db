@@ -994,7 +994,12 @@ namespace LinqToDB.Data
 		public  int   CommandTimeout
 		{
 			get => _commandTimeout ?? 0;
-			set => _commandTimeout = value;
+			set
+			{
+				_commandTimeout = value;
+				if (_command != null)
+					_command.CommandTimeout = value;
+			}
 		}
 
 		private IDbCommand _command;
