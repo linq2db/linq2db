@@ -27,7 +27,7 @@ namespace Tests.Linq
 			// Will be supported in SQL 8.0 - ProviderName.MySql
 		};
 
-		class CteContextSourceAttribute : IncludeDataSourcesAttribute
+		public class CteContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public CteContextSourceAttribute() : this(true)
 			{

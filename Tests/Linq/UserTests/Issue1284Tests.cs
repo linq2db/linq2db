@@ -1,15 +1,16 @@
 ﻿using System.Linq;
 using LinqToDB;
-using LinqToDB.Mapping;
 using NUnit.Framework;
+using Tests.Linq;
 
 namespace Tests.UserTests
 {
-	[TestFixture, ActiveIssue(1284)]
+	[TestFixture]
 	public class Issue1284Tests : TestBase
 	{
-		[Test, DataContextSource]
-		public void TestCteExpressionIsNotATable(string context)
+		[ActiveIssue(1284)]
+		[Test]
+		public void TestCteExpressionIsNotATable([CteTests.CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -20,8 +21,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestCteNoFieldList(string context)
+		[Test]
+		public void TestCteNoFieldList([CteTests.CteContextSource] string context)
 		{
 			// fails in postgresql
 			using (var db = GetDataContext(context))
@@ -38,8 +39,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestCteInvalidMapping(string context)
+		[ActiveIssue(1284)]
+		[Test]
+		public void TestCteInvalidMapping([CteTests.CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -54,8 +56,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestCteReservedWords(string context)
+		[Test]
+		public void TestCteReservedWords([CteTests.CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

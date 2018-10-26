@@ -102,26 +102,39 @@ namespace LinqToDB.Linq.Builder
 				if (queryContext == null)
 					return base.ConvertToSql(expression, level, flags);
 
-				SqlInfo[] ConvertConvertToSqlAndRegister(Expression exp, int lvl, ConvertFlags fl)
-				{
-					var baseInfos = base.ConvertToSql(exp, lvl, fl);
-					var subInfos = queryContext.ConvertToIndex(exp, lvl, fl);
+				var baseInfos = base.ConvertToSql(expression, level, flags);
+				var subInfos  = queryContext.ConvertToIndex(expression, level, flags);
 
-					var pairs = from bi in baseInfos
-						from si in subInfos.Where(si =>
-							si.MemberChain.Count == bi.MemberChain.Count && si.MemberChain.Count == 1 && si.MemberChain[0] == bi.MemberChain[0])
-						select new { bi, si };
-
-					foreach (var pair in pairs)
+				var pairs = subInfos
+					.Where(si => si.MemberChain.Count > 0)
+					.Select(si => new
 					{
-						_cte.RegisterFieldMapping((SqlField)pair.bi.Sql);
+						SubInfo = si,
+						BaseInfo = baseInfos.FirstOrDefault(bi =>
+							bi.MemberChain.Count > 0 &&
+							si.MemberChain[si.MemberChain.Count - 1] == bi.MemberChain[bi.MemberChain.Count - 1])
+					})
+					.ToArray();
+
+				foreach (var pair in pairs)
+				{
+					var field = pair.BaseInfo?.Sql as SqlField;
+					if (field == null)
+					{
+						field = pair.SubInfo.Sql as SqlField;
+						if (field == null)
+						{
+							if (pair.SubInfo.Sql is SqlColumn column)
+								field = column.Expression as SqlField;
+						}
 					}
 
-					return baseInfos;
+					if (field != null)
+						_cte.RegisterFieldMapping(field);
+
 				}
 
-				var result = ConvertConvertToSqlAndRegister(expression, level, flags);
-				return result;
+				return baseInfos;
 			}
 		}
 	}
