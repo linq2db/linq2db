@@ -27,7 +27,8 @@ namespace LinqToDB.Common
 		public static bool UseEnumValueNameForStringColumns = true;
 
 		/// <summary>
-		/// If <c>true</c> - data providers will try to use standard ADO.NET interfaces instead of provider-specific functionality when possible. This option could be usefull if you need to intercept
+		/// If <c>true</c> - data providers will try to use standard ADO.NET interfaces instead of provider-specific functionality when possible.
+		/// This option could be useful if you need to intercept
 		/// database calls using tools such as <a href="https://github.com/MiniProfiler/dotnet">MiniProfiler</a>.
 		/// Default value: <c>false</c>.
 		/// </summary>
@@ -71,7 +72,7 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Enables generation of test class for each LINQ query, executed while this option is enabled.
-			/// This option could be usefull for issue reporting, when you need to provide reproduceable case.
+			/// This option could be useful for issue reporting, when you need to provide reproducible case.
 			/// Test file will be placed to <c>linq2db</c> subfolder of temp folder and exact file path will be logged
 			/// to data connection tracing infrastructure.
 			/// See <see cref="DataConnection.TraceSwitch"/> for more details.
@@ -89,7 +90,7 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, System.Linq.Expressions.Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, System.Linq.Expressions.Expression{Func{TSource, TKey}})"/> calls:
 			/// - if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;
-			/// - if <c>false</c> - OrdredBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
+			/// - if <c>false</c> - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool DoNotClearOrderBys;
@@ -105,7 +106,7 @@ namespace LinqToDB.Common
 			public static bool OptimizeJoins = true;
 
 			/// <summary>
-			/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparasions.
+			/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
 			/// This affects: Equal, NotEqual, Not Contains
 			/// Default value: <c>true</c>.
 			/// </summary>
@@ -152,7 +153,7 @@ namespace LinqToDB.Common
 
 #pragma warning disable 1574
 			/// <summary>
-			/// Used to optimize huge logical operations with large number of operands like expr1.and.axpr2...and.exprN into balanced tree.
+			/// Used to optimize huge logical operations with large number of operands like expr1.and.expr2...and.exprN into balanced tree.
 			/// Without this option, such conditions could lead to <seealso cref="StackOverflowException"/>.
 			/// Default value: <c>false</c>.
 			/// </summary>
@@ -183,7 +184,7 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Allows SQL generation to automatically transform
-			/// <code>SELECT DICTINCT value FROM Table ORDER BY date</code>
+			/// <code>SELECT DISTINCT value FROM Table ORDER BY date</code>
 			/// Into GROUP BY equivalent if syntax is not supported
 			/// </summary>
 			public static bool KeepDistinctOrdered = true;
@@ -232,8 +233,8 @@ namespace LinqToDB.Common
 			/// </summary>
 			public static bool UseDefaultPolicy
 			{
-				get { return Factory == DefaultRetryPolicyFactory.GetRetryPolicy; }
-				set { Factory = value ? DefaultRetryPolicyFactory.GetRetryPolicy : (Func<DataConnection,IRetryPolicy>)null; }
+				get => Factory == DefaultRetryPolicyFactory.GetRetryPolicy;
+				set => Factory = value ? DefaultRetryPolicyFactory.GetRetryPolicy : (Func<DataConnection,IRetryPolicy>)null;
 			}
 
 			/// <summary>

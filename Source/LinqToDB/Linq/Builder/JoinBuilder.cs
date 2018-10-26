@@ -328,9 +328,7 @@ namespace LinqToDB.Linq.Builder
 
 					var innerKey = context._innerKeyLambda.Body.Transform(e =>
 					{
-						int idx;
-
-						if (parameters.TryGetValue(e, out idx))
+						if (parameters.TryGetValue(e, out var idx))
 						{
 							return Expression.Convert(
 								Expression.ArrayIndex(paramArray, Expression.Constant(idx)),
@@ -360,7 +358,7 @@ namespace LinqToDB.Linq.Builder
 
 					return Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => GetGrouping(null, null, default(TKey), null)),
+						MemberHelper.MethodOf(() => GetGrouping(null, null, default, null)),
 						new[]
 						{
 							ExpressionBuilder.QueryRunnerParam,

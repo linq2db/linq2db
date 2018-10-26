@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
