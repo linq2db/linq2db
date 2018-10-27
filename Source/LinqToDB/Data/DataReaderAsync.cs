@@ -17,6 +17,7 @@ namespace LinqToDB.Data
 		internal int               ReadNumber        { get; set; }
 		internal CancellationToken CancellationToken { get; set; }
 		private  DateTime          StartedOn         { get; }      = DateTime.UtcNow;
+		private  Stopwatch         Stopwatch         { get; }      = Stopwatch.StartNew();
 
 		public void Dispose()
 		{
@@ -31,7 +32,8 @@ namespace LinqToDB.Data
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = CommandInfo.DataConnection,
 						Command         = CommandInfo.DataConnection.Command,
-						ExecutionTime   = DateTime.UtcNow - StartedOn,
+						StartTime       = StartedOn,
+						ExecutionTime   = Stopwatch.Elapsed,
 						RecordsAffected = ReadNumber,
 					});
 				}

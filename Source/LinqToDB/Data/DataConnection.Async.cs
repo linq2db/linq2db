@@ -40,6 +40,7 @@ namespace LinqToDB.Data
 						{
 							TraceLevel     = TraceLevel.Error,
 							DataConnection = this,
+							StartTime      = DateTime.UtcNow,
 							Exception      = ex,
 							IsAsync        = true,
 						});
@@ -55,11 +56,15 @@ namespace LinqToDB.Data
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				return await ((DbCommand)Command).ExecuteNonQueryAsync(cancellationToken);
 
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (TraceSwitch.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
+					StartTime      = now,
 					DataConnection = this,
 					Command        = Command,
 					IsAsync        = true,
@@ -68,7 +73,6 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var now = DateTime.UtcNow;
 				var ret = await ((DbCommand)Command).ExecuteNonQueryAsync(cancellationToken);
 
 				if (TraceSwitch.TraceInfo)
@@ -78,7 +82,8 @@ namespace LinqToDB.Data
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = this,
 						Command         = Command,
-						ExecutionTime   = DateTime.UtcNow - now,
+						StartTime       = now,
+						ExecutionTime   = sw.Elapsed,
 						RecordsAffected = ret,
 						IsAsync         = true,
 					});
@@ -95,6 +100,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 						IsAsync        = true,
 					});
@@ -109,6 +116,9 @@ namespace LinqToDB.Data
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				return await ((DbCommand)Command).ExecuteScalarAsync(cancellationToken);
 
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (TraceSwitch.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
@@ -116,13 +126,13 @@ namespace LinqToDB.Data
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
 					Command        = Command,
+					StartTime      = now,
 					IsAsync        = true,
 				});
 			}
 
 			try
 			{
-				var now = DateTime.UtcNow;
 				var ret = await ((DbCommand)Command).ExecuteScalarAsync(cancellationToken);
 
 				if (TraceSwitch.TraceInfo)
@@ -132,7 +142,8 @@ namespace LinqToDB.Data
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = this,
 						Command         = Command,
-						ExecutionTime   = DateTime.UtcNow - now,
+						StartTime       = now,
+						ExecutionTime   = sw.Elapsed,
 						IsAsync         = true,
 					});
 				}
@@ -148,6 +159,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 						IsAsync        = true,
 					});
@@ -164,6 +177,9 @@ namespace LinqToDB.Data
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				return await ((DbCommand)Command).ExecuteReaderAsync(commandBehavior, cancellationToken);
 
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (TraceSwitch.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
@@ -171,11 +187,10 @@ namespace LinqToDB.Data
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
 					Command        = Command,
+					StartTime      = now,
 					IsAsync        = true,
 				});
 			}
-
-			var now = DateTime.UtcNow;
 
 			try
 			{
@@ -188,7 +203,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.UtcNow - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						IsAsync        = true,
 					});
 				}
@@ -204,7 +220,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.UtcNow - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 						IsAsync        = true,
 					});
