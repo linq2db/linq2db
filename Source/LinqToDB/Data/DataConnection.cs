@@ -918,6 +918,7 @@ namespace LinqToDB.Data
 				{
 					_connection.Open();
 					_closeConnection = true;
+					OnConnectionOpened?.Invoke(_connection);
 				}
 
 				return _connection;
@@ -934,7 +935,12 @@ namespace LinqToDB.Data
 		public event EventHandler OnClosed;
 
 		/// <inheritdoc />
-		public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+		public Action<EntityCreatedEventArgs> OnEntityCreated    { get; set; }
+
+		/// <summary>
+		/// Gets or sets callback to call after connection to database opened.
+		/// </summary>
+		public event Action<IDbConnection> OnConnectionOpened;
 
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
