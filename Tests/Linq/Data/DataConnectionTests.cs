@@ -226,5 +226,23 @@ namespace Tests.Data
 				Assert.True(openedAsync);
 			}
 		}
+
+		[Test]
+		public void TestOpenEventWithoutHandlers()
+		{
+			using (var conn = new DataConnection())
+			{
+				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+			}
+		}
+
+		[Test]
+		public async Task TestAsyncOpenEventWithoutHandlers()
+		{
+			using (var conn = new DataConnection())
+			{
+				await conn.SelectAsync(() => 1);
+			}
+		}
 	}
 }
