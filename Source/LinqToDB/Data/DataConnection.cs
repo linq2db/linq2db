@@ -918,7 +918,7 @@ namespace LinqToDB.Data
 				{
 					_connection.Open();
 					_closeConnection = true;
-					OnConnectionOpened?.Invoke(_connection);
+					OnConnectionOpened?.Invoke(this, _connection);
 				}
 
 				return _connection;
@@ -938,7 +938,7 @@ namespace LinqToDB.Data
 		public Action<EntityCreatedEventArgs> OnEntityCreated    { get; set; }
 
 		/// <summary>
-		/// Gets or sets callback to call after connection to database opened.
+		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> method.
 		/// </summary>
 		public event Action<IDbConnection> OnConnectionOpened;
 
