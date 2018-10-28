@@ -13,6 +13,7 @@ namespace Tests.Data
 {
 #if !NETSTANDARD1_6
 	using System.Configuration;
+	using System.Threading.Tasks;
 #endif
 
 	using Model;
@@ -189,6 +190,32 @@ namespace Tests.Data
 
 					break;
 				}
+			}
+		}
+
+		[Test]
+		public void TestOpenEvent()
+		{
+			var opened = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnConnectionOpened += (dc, cn) => opened = true;
+				Assert.False(opened);
+				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.True(opened);
+			}
+		}
+
+		[Test]
+		public async Task TestAsyncOpenEvent()
+		{
+			var opened = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnConnectionOpened += (dc, cn) => opened = true;
+				Assert.False(opened);
+				await conn.SelectAsync(() => 1);
+				Assert.True(opened);
 			}
 		}
 	}

@@ -938,7 +938,7 @@ namespace LinqToDB.Data
 		public Action<EntityCreatedEventArgs> OnEntityCreated    { get; set; }
 
 		/// <summary>
-		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> method.
+		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> or <see cref="DbConnection.OpenAsync"/> methods.
 		/// </summary>
 		public event Action<DataConnection, IDbConnection> OnConnectionOpened;
 
