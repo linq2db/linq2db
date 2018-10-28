@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Threading.Tasks;
 
 using NUnit.Framework;
 
@@ -13,7 +14,6 @@ namespace Tests.Data
 {
 #if !NETSTANDARD1_6
 	using System.Configuration;
-	using System.Threading.Tasks;
 #endif
 
 	using Model;
@@ -197,12 +197,16 @@ namespace Tests.Data
 		public void TestOpenEvent()
 		{
 			var opened = false;
+			var openedAsync = false;
 			using (var conn = new DataConnection())
 			{
 				conn.OnConnectionOpened += (dc, cn) => opened = true;
+				conn.OnConnectionAsyncOpened += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
 				Assert.False(opened);
+				Assert.False(openedAsync);
 				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
 				Assert.True(opened);
+				Assert.False(openedAsync);
 			}
 		}
 
@@ -210,12 +214,16 @@ namespace Tests.Data
 		public async Task TestAsyncOpenEvent()
 		{
 			var opened = false;
+			var openedAsync = false;
 			using (var conn = new DataConnection())
 			{
 				conn.OnConnectionOpened += (dc, cn) => opened = true;
+				conn.OnConnectionAsyncOpened += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
 				Assert.False(opened);
+				Assert.False(openedAsync);
 				await conn.SelectAsync(() => 1);
-				Assert.True(opened);
+				Assert.False(opened);
+				Assert.True(openedAsync);
 			}
 		}
 	}
