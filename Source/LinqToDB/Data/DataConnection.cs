@@ -940,7 +940,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> method.
 		/// </summary>
-		public event Action<IDbConnection> OnConnectionOpened;
+		public event Action<DataConnection, IDbConnection> OnConnectionOpened;
 
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
