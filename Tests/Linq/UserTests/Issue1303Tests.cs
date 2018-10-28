@@ -20,7 +20,7 @@ namespace Tests.UserTests
 			public Binary Binary { get; set; }
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestBinary([DataSources] string context, [Values] bool inlineParameters)
 		{
 			using (var db = GetDataContext(context))

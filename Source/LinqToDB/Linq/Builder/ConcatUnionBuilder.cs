@@ -328,9 +328,9 @@ namespace LinqToDB.Linq.Builder
 
 						case ConvertFlags.Field :
 
-							if (expression != null && (level == 0 || level == 1) && expression.NodeType == ExpressionType.MemberAccess)
+							if (expression != null && expression.NodeType == ExpressionType.MemberAccess)
 							{
-								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
+								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level == 0 ? 1 : level);
 
 								if (expression == levelExpression)
 								{
