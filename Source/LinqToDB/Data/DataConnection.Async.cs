@@ -31,7 +31,7 @@ namespace LinqToDB.Data
 						await ((DbConnection)_connection).OpenAsync(cancellationToken);
 
 					_closeConnection = true;
-					await OnConnectionAsyncOpened?.Invoke(this, _connection, cancellationToken);
+					await OnConnectionOpenedAsync?.Invoke(this, _connection, cancellationToken);
 				}
 				catch (Exception ex)
 				{

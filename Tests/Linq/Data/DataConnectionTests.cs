@@ -201,7 +201,7 @@ namespace Tests.Data
 			using (var conn = new DataConnection())
 			{
 				conn.OnConnectionOpened += (dc, cn) => opened = true;
-				conn.OnConnectionAsyncOpened += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
+				conn.OnConnectionOpenedAsync += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
 				Assert.False(opened);
 				Assert.False(openedAsync);
 				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
@@ -218,7 +218,7 @@ namespace Tests.Data
 			using (var conn = new DataConnection())
 			{
 				conn.OnConnectionOpened += (dc, cn) => opened = true;
-				conn.OnConnectionAsyncOpened += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
+				conn.OnConnectionOpenedAsync += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
 				Assert.False(opened);
 				Assert.False(openedAsync);
 				await conn.SelectAsync(() => 1);
