@@ -36,10 +36,6 @@ namespace Tests.DataProvider
 		{
 			// load spatial types support
 			//Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
-
-#if NETSTANDARD2_0
-			//SqlServerTools.AddUdtType<SqlHierarchyId>("hierarchyid", new SqlHierarchyId(), LinqToDB.DataType.Udt);
-#endif
 		}
 #endif
 
@@ -129,8 +125,10 @@ namespace Tests.DataProvider
 
 #if !NETSTANDARD1_6
 				Assert.That(TestType<SqlHierarchyId?>(conn, "hierarchyidDataType",              tableName:"AllTypes2"),            Is.EqualTo(SqlHierarchyId.Parse("/1/3/")));
+#if !NETSTANDARD2_0
 				Assert.That(TestType<SqlGeography>   (conn, "geographyDataType", skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (-122.36 47.656, -122.343 47.656)"));
 				Assert.That(TestType<SqlGeometry>    (conn, "geometryDataType",  skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
+#endif
 #endif
 			}
 		}
@@ -620,16 +618,13 @@ namespace Tests.DataProvider
 			}
 		}
 
+#if !NETSTANDARD2_0
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
 		public void TestGeometry(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
-#if !NETSTANDARD2_0 // SqlGeometry.Parse missing in Unofficial.Microsoft.SqlServer.Types
 				var id = SqlGeometry.Parse("LINESTRING (100 100, 20 180, 180 180)");
-#else
-				var id = conn.Execute<SqlGeometry>("SELECT Cast(geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0) as geometry)");
-#endif
 
 				Assert.That(conn.Execute<SqlGeometry>("SELECT Cast(geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0) as geometry)")
 					.ToString(), Is.EqualTo(id.ToString()));
@@ -648,11 +643,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-#if !NETSTANDARD2_0 // SqlGeography.Parse missing in Unofficial.Microsoft.SqlServer.Types
 				var id = SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)");
-#else
-				var id = conn.Execute<SqlGeography>("SELECT Cast(geography::STGeomFromText('LINESTRING(-122.360 47.656, -122.343 47.656)', 4326) as geography)");
-#endif
 
 				Assert.That(conn.Execute<SqlGeography>("SELECT Cast(geography::STGeomFromText('LINESTRING(-122.360 47.656, -122.343 47.656)', 4326) as geography)")
 					.ToString(), Is.EqualTo(id.ToString()));
@@ -665,6 +656,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<SqlGeography>("SELECT @p", DataParameter.Udt("p", id)).ToString(),               Is.EqualTo(id.ToString()));
 			}
 		}
+#endif
 #endif
 
 		[Test, SqlServerDataContext]
@@ -1025,7 +1017,7 @@ namespace Tests.DataProvider
 					datetimeoffsetDataType = DateTime.Now.AddMinutes(i),
 					datetime2DataType      = DateTime.Today.AddDays(i),
 					timeDataType           = TimeSpan.FromSeconds(i),
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 					hierarchyidDataType    = SqlHierarchyId.Parse("/1/3/"),
 					geographyDataType      = SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)"),
 					geometryDataType       = SqlGeometry.Parse("LINESTRING (100 100, 20 180, 180 180)"),
@@ -1061,7 +1053,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD1_6
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
 		public void BulkCopyAllTypes2MultipleRows(string context)
 		{

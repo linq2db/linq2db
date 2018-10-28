@@ -189,7 +189,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<PackageReference Include="Microsoft.Data.SQLite" Version="2.1.0" />
 		<Reference Include="Microsoft.SqlServer.Types">
-			<HintPath>..\..\Redist\Unofficial.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
+			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
