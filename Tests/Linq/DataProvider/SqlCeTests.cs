@@ -18,7 +18,7 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	using System.Globalization;
-
+	using LinqToDB.Linq;
 	using Model;
 
 	[TestFixture]
@@ -488,6 +488,38 @@ namespace Tests.DataProvider
 			{
 				Assert.AreEqual(Person.Count(),  db.Person.                Set(_ => _.FirstName, _ => _.FirstName).Update());
 				Assert.AreEqual(Person.Count(),  db.Person.With("TABLOCK").Set(_ => _.FirstName, _ => _.FirstName).Update());
+			}
+		}
+
+		[Table("AllTypes")]
+		public class TestInline
+		{
+			[Column("datetimeDataType")]
+			public DateTime? DateTimeValue { get; set; }
+		}
+
+		[Test]
+		public void ParametersInlining(
+			[IncludeDataSources(false, ProviderName.SqlCe)] string context,
+			[Values] bool inline)
+		{
+			Query.ClearCaches();
+			var defaultValue = SqlCeConfiguration.InlineFunctionParameters;
+			try
+			{
+				SqlCeConfiguration.InlineFunctionParameters = inline;
+				using (var db = new DataConnection(context))
+				{
+					var values = db.GetTable<TestInline>()
+						.Where(_ => (_.DateTimeValue ?? SqlDateTime.MinValue.Value) <= DateTime.Now)
+						.ToList();
+
+					Assert.True(db.LastQuery.Contains(", @p") != inline);
+				}
+			}
+			finally
+			{
+				SqlCeConfiguration.InlineFunctionParameters = defaultValue;
 			}
 		}
 	}
