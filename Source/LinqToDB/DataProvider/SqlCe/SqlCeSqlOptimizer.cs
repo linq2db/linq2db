@@ -82,8 +82,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
-			// sql ce doesn't support parameters as function arguments, so make sure to inline them
-			if (expr is SqlFunction sqlFunction)
+			if (SqlCeConfiguration.InlineFunctionParameters && expr is SqlFunction sqlFunction)
 			{
 				foreach (var parameter in sqlFunction.Parameters)
 				{
