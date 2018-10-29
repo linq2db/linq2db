@@ -8,6 +8,7 @@ namespace LinqToDB.Common
 	using Expressions;
 	using Extensions;
 	using JetBrains.Annotations;
+	using LinqToDB.Data;
 	using Mapping;
 
 	/// <summary>
@@ -37,6 +38,7 @@ namespace LinqToDB.Common
 			_values[typeof(DateTimeOffset)] = default(DateTimeOffset);
 			_values[typeof(Guid)]           = default(Guid);
 			_values[typeof(string)]         = default(string);
+			_values[typeof(DataParameter)]  = new DataParameter();
 		}
 
 		static readonly ConcurrentDictionary<Type,object> _values = new ConcurrentDictionary<Type,object>();
