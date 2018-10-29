@@ -127,8 +127,8 @@ namespace Tests.DataProvider
 				Assert.That(TestType<SqlHierarchyId?>(conn, "hierarchyidDataType",              tableName:"AllTypes2"),            Is.EqualTo(SqlHierarchyId.Parse("/1/3/")));
 #if !NETSTANDARD2_0
 				Assert.That(TestType<SqlGeography>   (conn, "geographyDataType", skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (-122.36 47.656, -122.343 47.656)"));
-				Assert.That(TestType<SqlGeometry>    (conn, "geometryDataType",  skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
 #endif
+				Assert.That(TestType<SqlGeometry>    (conn, "geometryDataType",  skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
 #endif
 			}
 		}
@@ -618,7 +618,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD2_0
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
 		public void TestGeometry(string context)
 		{
@@ -656,7 +655,6 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<SqlGeography>("SELECT @p", DataParameter.Udt("p", id)).ToString(),               Is.EqualTo(id.ToString()));
 			}
 		}
-#endif
 #endif
 
 		[Test, SqlServerDataContext]
@@ -1053,7 +1051,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
 		public void BulkCopyAllTypes2MultipleRows(string context)
 		{
