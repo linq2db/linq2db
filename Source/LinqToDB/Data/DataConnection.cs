@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -918,6 +919,7 @@ namespace LinqToDB.Data
 				{
 					_connection.Open();
 					_closeConnection = true;
+					OnConnectionOpened?.Invoke(this, _connection);
 				}
 
 				return _connection;
@@ -934,7 +936,17 @@ namespace LinqToDB.Data
 		public event EventHandler OnClosed;
 
 		/// <inheritdoc />
-		public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+		public Action<EntityCreatedEventArgs> OnEntityCreated    { get; set; }
+
+		/// <summary>
+		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> method.
+		/// </summary>
+		public event Action<DataConnection, IDbConnection> OnConnectionOpened;
+
+		/// <summary>
+		/// Event, triggered right after connection opened using <see cref="DbConnection.OpenAsync"/> methods.
+		/// </summary>
+		public event Func<DataConnection, IDbConnection, CancellationToken, Task> OnConnectionOpenedAsync;
 
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
