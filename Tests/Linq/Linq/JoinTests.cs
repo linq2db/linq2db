@@ -515,6 +515,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void GroupJoin8(string context)
 		{

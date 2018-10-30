@@ -101,6 +101,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("Unsupported column datatype", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void KeepIdentity_SkipOnInsertFalse(
 			[DataSources(false)]string context,

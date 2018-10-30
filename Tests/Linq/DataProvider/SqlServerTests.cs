@@ -1330,7 +1330,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				var table = schema.Tables.Where(_ => _.TableName == "Issue1144").Single();
 

@@ -23,9 +23,19 @@ namespace Tests.UserTests
 			public Guid? Optional { get; set; }
 		}
 
-		// TODO: sqlce,mysql - need to add default db type for create table for Guid
-		[Test]
-		public void TestInsert([DataSources(ProviderName.Access, ProviderName.SqlCe, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)] string context)
+		[ActiveIssue("CreateTable(Guid)", Configuration = ProviderName.Access)]
+		[ActiveIssue("CreateTable(Guid)", Configuration = ProviderName.SqlCe)]
+		[ActiveIssue("CreateTable(Guid)", Configuration = ProviderName.MySql)]
+		[ActiveIssue("CreateTable(Guid)", Configuration = TestProvName.MariaDB)]
+		[ActiveIssue("CreateTable(Guid)", Configuration = TestProvName.MySql57)]
+		[ActiveIssue("CreateTable(Guid)", Configuration = ProviderName.DB2)]
+		[ActiveIssue("CreateTable(Guid)", Configuration = ProviderName.Sybase)]
+		[ActiveIssue("CreateTable(Guid)", Configuration = ProviderName.SybaseManaged)]
+		[ActiveIssue("CreateTable(Guid)", Configuration = ProviderName.Firebird)]
+		[ActiveIssue("CreateTable(Guid)", Configuration = TestProvName.Firebird3)]
+		[ActiveIssue("CreateTable(Guid)", Configuration = ProviderName.Informix)]
+		[Test, DataContextSource]
+		public void TestInsert(string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -49,6 +59,5 @@ namespace Tests.UserTests
 				}
 			}
 		}
-
 	}
 }
