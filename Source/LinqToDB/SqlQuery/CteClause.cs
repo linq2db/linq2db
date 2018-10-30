@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading;
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
 	public class CteClause : IQueryElement, ICloneableElement, ISqlExpressionWalkable
 	{
+		Dictionary<ISqlExpression, Tuple<SqlField, int>> FieldIndexes { get; } = new Dictionary<ISqlExpression, Tuple<SqlField, int>>();
+
 		public static int CteIDCounter;
 
+		public List<SqlField>               Fields { get; } = new List<SqlField>();
 		public int                          CteID  { get; } = Interlocked.Increment(ref CteIDCounter);
-		public Dictionary<string, SqlField> Fields { get; } = new Dictionary<string, SqlField>();
 
 		public string      Name        { get; set; }
 		public SelectQuery Body        { get; set; }
@@ -25,10 +29,10 @@ namespace LinqToDB.SqlQuery
 			                                  bool        isRecursive,
 			                                  string      name)
 		{
-			ObjectType = objectType ?? throw new ArgumentNullException(nameof(objectType));
-			Body       = body;
+			ObjectType  = objectType ?? throw new ArgumentNullException(nameof(objectType));
+			Body        = body;
 			IsRecursive = isRecursive;
-			Name       = name;
+			Name        = name;
 		}
 
 		internal CteClause(
@@ -43,7 +47,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var field in fields)
 			{
-				Fields.Add(field.PhysicalName, field);
+				Fields.Add(field);
 			}
 		}
 
@@ -66,12 +70,24 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public void RegisterFieldMapping(SqlField field)
+		public SqlField RegisterFieldMapping(ISqlExpression expression, int index, Func<SqlField> fieldFactory)
 		{
-			if (!Fields.ContainsKey(field.PhysicalName))
+			if (FieldIndexes.TryGetValue(expression, out var value))
+				return value.Item1;
+
+			var newField = fieldFactory();
+
+			Utils.MakeUniqueNames(new[] { newField }, FieldIndexes.Values.Select(t => t.Item1.Name), f => f.Name, (f, n) =>
 			{
-				Fields.Add(field.PhysicalName, new SqlField(field));
-			}
+				f.Name = n;
+				f.PhysicalName = n;
+			}, f => "cte_field");
+
+			Fields.Insert(index, newField);
+
+			FieldIndexes.Add(expression, Tuple.Create(newField, index));
+			return newField;
+
 		}
 	}
 }

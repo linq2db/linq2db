@@ -413,6 +413,31 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TestNoColumns([CteContextSource(true, ProviderName.DB2)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
+			{
+				var expected = db.GetTable<Child>().Count();
+
+				var cte1 = db.GetTable<Child>().AsCte("CTE1_");
+				var cnt1 = cte1.Count();
+
+				Assert.AreEqual(expected, cnt1);
+
+				var query = db.GetTable<Child>().Select(c => new { C = new { c.ChildID }});
+				var cte2 = query.AsCte("CTE1_");
+				var cnt2 = cte2.Count();
+
+				Assert.AreEqual(expected, cnt2);
+
+				var any  = cte2.Any();
+
+				Assert.IsTrue(any);
+			}
+		}
+
+		[Test]
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))

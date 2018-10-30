@@ -102,39 +102,87 @@ namespace LinqToDB.Linq.Builder
 				if (queryContext == null)
 					return base.ConvertToSql(expression, level, flags);
 
-				var baseInfos = base.ConvertToSql(expression, level, flags);
-				var subInfos  = queryContext.ConvertToIndex(expression, level, flags);
+				var baseInfos = base.ConvertToSql(null, 0, ConvertFlags.All);
+				var infos     = queryContext.ConvertToIndex(expression, level, flags);
 
-				var pairs = subInfos
-					.Where(si => si.MemberChain.Count > 0)
-					.Select(si => new
+				var result = infos
+					.Select(info =>
 					{
-						SubInfo = si,
-						BaseInfo = baseInfos.FirstOrDefault(bi =>
-							bi.MemberChain.Count > 0 &&
-							si.MemberChain[si.MemberChain.Count - 1] == bi.MemberChain[bi.MemberChain.Count - 1])
+						var cteField = _cte.RegisterFieldMapping(info.Sql, info.Index, () =>
+						{
+							var f = QueryHelper.GetUnderlyingField(baseInfos
+								        .FirstOrDefault(bi => bi.CompareMembers(info))?.Sql) ??
+							        QueryHelper.GetUnderlyingField(info.Sql);
+
+							var newField = f == null
+								? new SqlField { SystemType = info.Sql.SystemType, CanBeNull = info.Sql.CanBeNull }
+								: new SqlField(f);
+
+							return newField;
+						});
+
+						if (!SqlTable.Fields.TryGetValue(cteField.Name, out var field))
+						{
+							field = new SqlField(cteField);
+							SqlTable.Add(field);
+						}
+
+						return new SqlInfo(info.MemberChain)
+						{
+							Sql = field,
+						};
 					})
 					.ToArray();
+				return result;
+			}
 
-				foreach (var pair in pairs)
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			{
+				var queryContext = GetQueryContext();
+				if (queryContext == null)
+					base.BuildQuery(query, queryParameter);
+				else
 				{
-					var field = pair.BaseInfo?.Sql as SqlField;
-					if (field == null)
+					var sqInfos = ConvertToIndex(null, 0, ConvertFlags.All);
+
+					//TODO: igor-tkachev, review usage of Parent.IsExpression here.
+					if (Parent != null && Parent.IsExpression(null, 0, RequestFor.Object).Result)
 					{
-						field = pair.SubInfo.Sql as SqlField;
-						if (field == null)
+						foreach (var info in sqInfos.OrderBy(i => i.Index))
 						{
-							if (pair.SubInfo.Sql is SqlColumn column)
-								field = column.Expression as SqlField;
+							Parent?.ConvertToParentIndex(info.Index, this);
 						}
+
+						queryContext.BuildQuery(query, queryParameter);
 					}
-
-					if (field != null)
-						_cte.RegisterFieldMapping(field);
-
+					else
+						base.BuildQuery(query, queryParameter);
 				}
+			}
 
-				return baseInfos;
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			{
+				var queryContext = GetQueryContext();
+				if (queryContext == null)
+					return base.BuildExpression(expression, level, enforceServerSide);
+
+				ConvertToIndex(null, 0, ConvertFlags.All);
+
+				//TODO: igor-tkachev, review this.
+				var result = Parent == null
+					? queryContext.BuildExpression(expression, level, enforceServerSide)
+					: base.BuildExpression(expression, level, enforceServerSide);
+
+				return result;
+			}
+
+			public override SqlStatement GetResultStatement()
+			{
+				if (_cte.Fields.Count == 0)
+				{
+					ConvertToSql(null, 0, ConvertFlags.Key);
+				}
+				return base.GetResultStatement();
 			}
 		}
 	}
