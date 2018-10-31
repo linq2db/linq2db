@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -918,6 +919,7 @@ namespace LinqToDB.Data
 				{
 					_connection.Open();
 					_closeConnection = true;
+					OnConnectionOpened?.Invoke(this, _connection);
 				}
 
 				return _connection;
@@ -934,7 +936,17 @@ namespace LinqToDB.Data
 		public event EventHandler OnClosed;
 
 		/// <inheritdoc />
-		public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+		public Action<EntityCreatedEventArgs> OnEntityCreated    { get; set; }
+
+		/// <summary>
+		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> method.
+		/// </summary>
+		public event Action<DataConnection, IDbConnection> OnConnectionOpened;
+
+		/// <summary>
+		/// Event, triggered right after connection opened using <see cref="DbConnection.OpenAsync"/> methods.
+		/// </summary>
+		public event Func<DataConnection, IDbConnection, CancellationToken, Task> OnConnectionOpenedAsync;
 
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
@@ -994,7 +1006,12 @@ namespace LinqToDB.Data
 		public  int   CommandTimeout
 		{
 			get => _commandTimeout ?? 0;
-			set => _commandTimeout = value;
+			set
+			{
+				_commandTimeout = value;
+				if (_command != null)
+					_command.CommandTimeout = value;
+			}
 		}
 
 		private IDbCommand _command;
@@ -1041,6 +1058,9 @@ namespace LinqToDB.Data
 				using (DataProvider.ExecuteScope())
 					return Command.ExecuteNonQuery();
 
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (TraceSwitch.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
@@ -1048,10 +1068,10 @@ namespace LinqToDB.Data
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
 					Command        = Command,
+					StartTime      = now,
 				});
 			}
 
-			var now = DateTime.Now;
 
 			try
 			{
@@ -1066,7 +1086,8 @@ namespace LinqToDB.Data
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = this,
 						Command         = Command,
-						ExecutionTime   = DateTime.Now - now,
+						StartTime       = now,
+						ExecutionTime   = sw.Elapsed,
 						RecordsAffected = ret,
 					});
 				}
@@ -1082,7 +1103,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 					});
 				}
@@ -1096,17 +1118,19 @@ namespace LinqToDB.Data
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				return Command.ExecuteScalar();
 
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (TraceSwitch.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
-					Command        = Command
+					Command        = Command,
+					StartTime      = now,
 				});
 			}
-
-			var now = DateTime.Now;
 
 			try
 			{
@@ -1119,7 +1143,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 					});
 				}
 
@@ -1134,7 +1159,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 					});
 				}
@@ -1154,6 +1180,9 @@ namespace LinqToDB.Data
 				using (DataProvider.ExecuteScope())
 					return Command.ExecuteReader(GetCommandBehavior(commandBehavior));
 
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (TraceSwitch.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
@@ -1161,10 +1190,9 @@ namespace LinqToDB.Data
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
 					Command        = Command,
+					StartTime      = now,
 				});
 			}
-
-			var now = DateTime.Now;
 
 			try
 			{
@@ -1180,7 +1208,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 					});
 				}
 
@@ -1195,7 +1224,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 					});
 				}

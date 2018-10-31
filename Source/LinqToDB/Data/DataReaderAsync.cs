@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,11 +16,28 @@ namespace LinqToDB.Data
 		public   DbDataReader      Reader            { get; set; }
 		internal int               ReadNumber        { get; set; }
 		internal CancellationToken CancellationToken { get; set; }
+		private  DateTime          StartedOn         { get; }      = DateTime.UtcNow;
+		private  Stopwatch         Stopwatch         { get; }      = Stopwatch.StartNew();
 
 		public void Dispose()
 		{
 			if (Reader != null)
+			{
 				Reader.Dispose();
+
+				if (DataConnection.TraceSwitch.TraceInfo && CommandInfo?.DataConnection?.OnTraceConnection != null)
+				{
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.Completed)
+					{
+						TraceLevel      = TraceLevel.Info,
+						DataConnection  = CommandInfo.DataConnection,
+						Command         = CommandInfo.DataConnection.Command,
+						StartTime       = StartedOn,
+						ExecutionTime   = Stopwatch.Elapsed,
+						RecordsAffected = ReadNumber,
+					});
+				}
+			}
 		}
 
 		#region Query with object reader

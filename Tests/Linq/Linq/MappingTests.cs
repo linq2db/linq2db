@@ -96,6 +96,7 @@ namespace Tests.Linq
 					where p.Value1 == TypeValue.Value1 select p);
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void Enum7(string context)
 		{

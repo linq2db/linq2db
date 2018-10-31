@@ -400,6 +400,7 @@ namespace Tests.Linq
 					).Where(t => t.ParentID > 0).Take(5000));
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void LetTest8(string context)
 		{
@@ -431,6 +432,7 @@ namespace Tests.Linq
 					});
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void LetTest9(string context)
 		{

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Humanizer;
@@ -48,7 +49,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void Test1([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -71,7 +72,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void Test2([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -104,7 +105,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestAsTable([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -362,7 +363,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void Test4([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -411,7 +412,7 @@ namespace Tests.Linq
 			public int ParentID { get; set; }
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -444,7 +445,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestDelete([CteContextSource(ProviderName.Firebird, ProviderName.DB2)] string context)
 		{
 			using (var db  = GetDataContext(context))
@@ -463,7 +464,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestUpdate(
 			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
@@ -496,7 +497,7 @@ namespace Tests.Linq
 			public int? GrandChildID;
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void RecursiveTest([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -618,7 +619,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
@@ -637,7 +638,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestDoubleRecursion([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
@@ -664,7 +665,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void RecursiveCount([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
@@ -681,7 +682,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
@@ -698,6 +699,31 @@ namespace Tests.Linq
 					var expected = EnumerateDown(hierarchyData, 0, null).OrderBy(h => h.Id);
 
 					AreEqual(expected, result, ComparerBuilder<HierarchyData>.GetEqualityComparer());
+				}
+			}
+		}
+
+		[Test]
+		public void RecursiveDeepNesting([CteContextSource(true, ProviderName.DB2)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (var tree = db.CreateLocalTable<HierarchyTree>())
+				{
+					var hierarchy = GetHierarchyDown(tree, db);
+
+					var query = from q in hierarchy
+						from data1 in tree.InnerJoin(data1 => data1.Id == q.Id)
+						from data2 in tree.InnerJoin(data2 => data2.Id == q.Id)
+						from data3 in tree.InnerJoin(data3 => data3.Id == q.Id)
+						from data4 in tree.InnerJoin(data4 => data4.Id == q.Id)
+						select new
+						{
+							q.Id,
+							q.Level
+						};
+
+					Assert.DoesNotThrow(() => Console.WriteLine(query.ToString()));
 				}
 			}
 		}

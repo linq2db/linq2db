@@ -1194,9 +1194,15 @@ namespace Tests
 		{
 			return Providers.Where(TestBase.UserProviders.Contains);
 		}
-
 	}
 
+	public class SQLiteDataSourcesAttribute : IncludeDataSourcesAttribute
+	{
+		public SQLiteDataSourcesAttribute(bool includeLinqService = false) : base(includeLinqService, 
+			ProviderName.SQLiteClassic, ProviderName.SQLite, ProviderName.SQLiteMS)
+		{
+		}
+	}
 
 	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 	public class SkipCategoryAttribute : NUnitAttribute, IApplyToTest

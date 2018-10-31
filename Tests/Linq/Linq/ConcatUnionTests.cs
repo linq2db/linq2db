@@ -857,7 +857,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial]
 		public void TestConcatInheritance([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			var testData = new BaseEntity[]

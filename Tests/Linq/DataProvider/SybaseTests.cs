@@ -363,7 +363,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestUnicodeString(
 			[IncludeDataSources(false, CurrentProvider, CurrentProviderCore)] string context,
 			[ValueSource(nameof(StringTestCases))] Tuple<string, string> testCase)

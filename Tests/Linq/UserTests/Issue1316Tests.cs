@@ -112,7 +112,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(1316)]
 		[Test, DataContextSource]
 		public void Test_Linq(string context)
 		{
