@@ -213,6 +213,16 @@ namespace LinqToDB.SqlQuery
 		private SqlField _all;
 		public  SqlField  All => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
 
+		private List<ISqlExpression[]> _uniqueKeys;
+
+		/// <summary>
+		/// Contains list of columns that build unique key for this table.
+		/// Used in JoinOptimizer for safely removing join to table from resulting SQL.
+		/// </summary>
+		public  List<ISqlExpression[]>  UniqueKeys    => _uniqueKeys ?? (_uniqueKeys = new List<ISqlExpression[]>());
+
+		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
+
 		public SqlField GetIdentityField()
 		{
 			foreach (var field in Fields)

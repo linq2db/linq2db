@@ -23,6 +23,11 @@ namespace Tests
 			return information.GetQueriesParentFirst();
 		}
 
+		public static IEnumerable<SqlJoinedTable> EnumJoins(this SelectQuery query)
+		{
+			return query.From.Tables.SelectMany(t => t.Joins);
+		}
+
 		public static SqlSearchCondition GetWhere<T>(this IQueryable<T> query)
 		{
 			return GetSelectQuery(query).Where.SearchCondition;

@@ -791,7 +791,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var query = (SelectQuery)childSource.Source;
 
-			var isQueryOK = query.From.Tables.Count == 1;
+			var isQueryOK = !query.DoNotRemove && query.From.Tables.Count == 1;
 
 			isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
 			isQueryOK = isQueryOK && !query.HasUnion && query.GroupBy.IsEmpty && !query.Select.HasModifier;
@@ -811,6 +811,15 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var c in query.Select.Columns)
 				map.Add(c, c.Expression);
+
+			//TODO: consider to extend ISqlTableSource interface for unique keys
+			List<ISqlExpression[]> uniqueKeys = null;
+			if (query.HasUniqueKeys)
+				uniqueKeys = query.UniqueKeys;
+
+			uniqueKeys = uniqueKeys?
+				.Select(k => k.Select(e => map.TryGetValue(e, out var nw) ? nw : e).ToArray())
+				.ToList();
 
 			var top = _statement ?? (IQueryElement)_selectQuery.RootQuery();
 
@@ -845,7 +854,23 @@ namespace LinqToDB.SqlQuery
 				return expr;
 			});
 
-			return query.From.Tables[0];
+			var result = query.From.Tables[0];
+
+			if (uniqueKeys != null)
+			{
+				//TODO: consider to extend ISqlTableSource interface for unique keys
+				switch (result.Source)
+				{
+					case SelectQuery sq:
+						sq.UniqueKeys.AddRange(uniqueKeys);
+						break;
+					case SqlTable t:
+						t.UniqueKeys.AddRange(uniqueKeys);
+						break;
+				}
+			}
+
+			return result;
 		}
 
 		static bool IsAggregationFunction(IQueryElement expr)

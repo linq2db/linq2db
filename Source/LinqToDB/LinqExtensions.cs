@@ -3032,6 +3032,58 @@ namespace LinqToDB
 
 		#endregion
 
+		#region AsSubQuery
+
+		/// <summary>
+		/// Defines that sub-query is mandatory for <paramref name="source"/> query.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <returns>Query covered in sub-query.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> AsSubQuery<TSource>([NotNull] this IQueryable<TSource> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsSubQuery, source), source.Expression));
+		}
+
+		#endregion
+
+		#region HasUniqueKey
+
+		/// <summary>
+		/// Records unique key for IQueryable. It allows sub-query to be optimized out in LEFT JOIN if columns from sub-query are not used in final projection and predicate.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TKey">Key type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="keySelector">A function to specify which fields are unique.</param>
+		/// <returns>Query covered in sub-query.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> HasUniqueKey<TSource, TKey>(
+			[NotNull] this IQueryable<TSource>             source,
+			[NotNull]      Expression<Func<TSource, TKey>> keySelector)
+		{
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(HasUniqueKey, source, keySelector),
+					source.Expression,
+					Expression.Quote(keySelector) 
+				));
+		}		
+
+		#endregion
+
 		#region Tests
 
 		/// <summary>

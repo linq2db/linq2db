@@ -1,4 +1,7 @@
-﻿namespace Tests.Linq
+﻿using System;
+using System.Diagnostics;
+
+namespace Tests.Linq
 {
 	using System.Linq;
 
@@ -1230,28 +1233,31 @@
 			}
 		}
 
-		[ActiveIssue]
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle)]
 		public void NestedQueries(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
-					from p in db.Parent
+					from p in db.Parent.Where(p => p.ParentID > 0).AsSubQuery()
 					select new
 					{
 						p.ParentID,
 						MaxValue = Sql.Ext.Max(p.Value1).Over().PartitionBy(p.ParentID).ToValue(),
 					};
 
-				var q2 = from q in q1
+				var q2 = from q in q1.AsSubQuery()
 					select new
 					{
 						q.ParentID,
-						MaxValue = Sql.Ext.Max(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
+						MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
 					};
 
-				var result = q2.ToArray();
+				Console.WriteLine(q1.ToString());
+				Console.WriteLine(q2.ToString());
+
+				Assert.AreEqual(2, q1.EnumQueries().Count());
+				Assert.AreEqual(3, q2.EnumQueries().Count());
 			}
 		}
 

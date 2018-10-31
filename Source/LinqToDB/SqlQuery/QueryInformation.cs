@@ -80,11 +80,6 @@ namespace LinqToDB.SqlQuery
 			{
 				// assuming that list at this stage is immutable
 				foreach (var item in list)
-				{
-					yield return item;
-				}
-
-				foreach (var item in list)
 				foreach (var subItem in GetQueriesParentFirst(item))
 				{
 					yield return subItem;

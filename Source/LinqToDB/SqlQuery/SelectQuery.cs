@@ -77,6 +77,22 @@ namespace LinqToDB.SqlQuery
 
 		public bool               IsParameterDependent { get; set; }
 
+		/// <summary>
+		/// Gets or sets flag when sub-query can be removed during optimization.
+		/// </summary>
+		public bool               DoNotRemove         { get; set; }
+
+		private List<ISqlExpression[]> _uniqueKeys;
+
+		/// <summary>
+		/// Contains list of columns that build unique key for this sub-query.
+		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
+		/// </summary>
+		public  List<ISqlExpression[]>  UniqueKeys   => _uniqueKeys ?? (_uniqueKeys = new List<ISqlExpression[]>());
+
+		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
+
+
 		#endregion
 
 		#region Union

@@ -13,6 +13,7 @@
   <ItemGroup>
     <Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
     <Compile Include="..\Linq\Linq\AnalyticTests.cs" Link="AnalyticTests.cs" />
+    <Compile Include="..\Linq\Linq\JoinOptimizeTests.cs" Link="JoinOptimizeTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
