@@ -48,7 +48,7 @@ namespace Tests.UserTests
 			[Column, Nullable] public string Name { get; set; }
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestConcurrentSelect(
 			[IncludeDataSources(false, ProviderName.SqlServer,ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context
 		)

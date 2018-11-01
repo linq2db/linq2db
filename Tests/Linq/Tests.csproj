@@ -68,14 +68,13 @@
 		<PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" Condition=" '$(TargetFramework)' != 'net40' " />
 		<PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-		<PackageReference Include="NUnit" Version="3.10.1" />
+		<PackageReference Include="NUnit" Version="3.11.0" />
 		<PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.12.1" />
 		<PackageReference Include="Npgsql" Version="3.2.7" />
 		<PackageReference Include="Mono.Cecil" Version="0.10.0" />
 		<PackageReference Include="MySql.Data" Version="6.10.6" />
 		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.4.3" />
 	</ItemGroup>
 
 
@@ -189,6 +188,9 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<PackageReference Include="Microsoft.Data.SQLite" Version="2.1.0" />
+		<Reference Include="Microsoft.SqlServer.Types">
+			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
@@ -205,7 +207,7 @@
 		<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
 		<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
 		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
 
 		<PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />

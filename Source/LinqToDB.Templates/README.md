@@ -82,6 +82,9 @@ IsCompactColumnAliases              = true;    // If true, column alias compact 
 
 NormalizeNames                      = false;   // convert some_name to SomeName for types and members
 
+GetSchemaOptions.GetTables     = true; // Enables generation of table mappings
+GetSchemaOptions.GetProcedures = true; // Enables generation of procedures and functions mappings
+
 GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" }; // Defines excluded schemas.
 GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };     // Defines only included schemas.
 
@@ -89,6 +92,8 @@ GetSchemaOptions.ExcludedCatalogs = new[] { "TestUser", "SYSSTAT" }; // Defines 
 GetSchemaOptions.IncludedCatalogs = new[] { "TestUser", "SYS" };     // Defines only included catalogs.
 
 GetSchemaOptions.GetAssociationMemberName = key => "Association_" + key.MemberName;     // Defines custom naming logic for generated associations.
+
+GetSchemaOptions.LoadProcedure = p => true; // Procedure/function load filter. By default all procedures/functions loaded
 
 // check GetSchemaOptions class for more options
 

@@ -57,7 +57,7 @@ namespace Tests.Linq
 			return GetTestData().Where(t => t.Id == 1 || t.Id == 10 || t.Id == 100).ToArray();
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void OrderByDistinctTestOrdering(
 			[DataSources(ProviderName.SqlCe)] 
 			string context)
@@ -179,7 +179,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void OrderByDistinctTest(
 			[DataSources(ProviderName.SqlCe)] 
 			string context)
@@ -237,7 +237,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void OrderByDistinctFailTest(
 			[IncludeDataSources(ProviderName.SqlCe)] 
 			string context)
@@ -260,7 +260,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void OrderByExpressionDistinctTests(
 			[DataSources(ProviderName.SqlCe)] 
 			string context)
@@ -295,7 +295,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void OrderByDistinctNoTransformTests(
 			[DataSources(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
 			string context)
@@ -325,7 +325,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void OrderByDistinctPartialTransformTests(
 			[DataSources(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
 			string context)
@@ -363,7 +363,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void OrderByUnionOptimization(
 			[DataSources(ProviderName.SqlCe)] 
 			string context)
@@ -414,7 +414,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void OrderBySubQuery(
 			[DataSources(ProviderName.SqlCe)] 
 			string context)
@@ -455,7 +455,7 @@ namespace Tests.Linq
 		}
 
 		
-		[Test, Combinatorial]
+		[Test]
 		public void DoubleOrderBy(
 			[DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)] 
 			string context)

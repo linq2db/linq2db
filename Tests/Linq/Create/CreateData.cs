@@ -70,7 +70,17 @@ namespace Tests._Create
 						if (DataConnection.TraceSwitch.TraceInfo)
 							Console.WriteLine(command);
 
-						db.Execute(command);
+						if (configString == ProviderName.OracleNative)
+						{
+							// we need this to avoid errors in trigger creation when native provider
+							// recognize ":NEW" as parameter
+							var cmd = db.CreateCommand();
+							cmd.CommandText = command;
+							((dynamic)cmd).BindByName = false;
+							cmd.ExecuteNonQuery();
+						}
+						else
+							db.Execute(command);
 
 						if (DataConnection.TraceSwitch.TraceInfo)
 							Console.WriteLine("\nOK\n");
@@ -246,7 +256,7 @@ namespace Tests._Create
 		[Test, IncludeDataContextSource(ProviderName.SQLiteMS)]      public void SQLiteMS         (string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction);   }
 		[Test, IncludeDataContextSource(ProviderName.SQLiteMS)]      public void SQLiteMSData     (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction); }
 #if !NETSTANDARD1_6
-		[Test, IncludeDataContextSource(ProviderName.OracleManaged)] public void Oracle           (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle"); }
+		[Test, IncludeDataContextSource(ProviderName.OracleManaged)] public void OracleManaged    (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle"); }
 #endif
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
@@ -263,6 +273,7 @@ namespace Tests._Create
 		[Test, IncludeDataContextSource(ProviderName.Access)]        public void Access           (string ctx) { RunScript(ctx,          "\nGO\n",  "Access",   AccessAction);                  }
 		[Test, IncludeDataContextSource(ProviderName.Access)]        public void AccessData       (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access",   AccessAction);                  }
 		[Test, IncludeDataContextSource(ProviderName.SapHana)]       public void SapHana          (string ctx) { RunScript(ctx,          ";;\n"  ,  "SapHana");                                 }
+		[Test, IncludeDataContextSource(ProviderName.OracleNative)]  public void OracleNative     (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle"); }
 
 		static void AccessAction(IDbConnection connection)
 		{
