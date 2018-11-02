@@ -385,6 +385,40 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void Test5([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cte1 = db.GetTable<Child>()
+					.Where(c => c.ParentID > 1)
+					.Select(child => new
+					{
+						child.ParentID,
+						child.ChildID
+					}).Distinct()
+					.AsCte();
+				var query = from p in db.Parent
+					join c in cte1 on p.ParentID equals c.ParentID
+					join c2 in cte1 on p.ParentID equals c2.ParentID
+					select p;
+
+				var cte1_ = db.GetTable<Child>().Where(c => c.ParentID > 1).Select(child => new
+				{
+					child.ParentID,
+					child.ChildID
+				}).Distinct();
+
+				var expected =
+					from p in db.Parent
+					join c in cte1_ on p.ParentID equals c.ParentID
+					join c2 in cte1_ on p.ParentID equals c2.ParentID
+					select p;
+
+				Assert.AreEqual(expected.Count(), query.Count());
+			}
+		}
+
 		private class CteDMLTests
 		{
 			protected bool Equals(CteDMLTests other)

@@ -63,6 +63,30 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue]
+		[Test]
+		public void TestCteInvalidMappingUnion([CteTests.CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person
+					.Select(person => new { entry = person, rn = 1 })
+					.Concat(db.Person
+					.Select(person => new { entry = person, rn = 2 }))
+					.Where(x => x.rn == 1);
+
+				var cte = query
+					.AsCte();
+
+				var item = cte.First();
+
+				var expected = query
+					.First();
+
+				Assert.AreEqual(expected, item);
+			}
+		}
+
 		[Test]
 		public void TestCteReservedWords([CteTests.CteContextSource] string context)
 		{

@@ -12,6 +12,7 @@ namespace LinqToDB.SqlQuery
 	public class CteClause : IQueryElement, ICloneableElement, ISqlExpressionWalkable
 	{
 		Dictionary<ISqlExpression, Tuple<SqlField, int>> FieldIndexes { get; } = new Dictionary<ISqlExpression, Tuple<SqlField, int>>();
+		Dictionary<string, Tuple<SqlField, int>> FieldIndexesByName   { get; } = new Dictionary<string, Tuple<SqlField, int>>();
 
 		public static int CteIDCounter;
 
@@ -70,9 +71,13 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public SqlField RegisterFieldMapping(ISqlExpression expression, int index, Func<SqlField> fieldFactory)
+		public SqlField RegisterFieldMapping(ISqlExpression baseExpression, ISqlExpression expression, int index, Func<SqlField> fieldFactory)
 		{
-			if (FieldIndexes.TryGetValue(expression, out var value))
+			var baseField = baseExpression as SqlField;
+			if (baseField != null && FieldIndexesByName.TryGetValue(baseField.Name, out var value))
+				return value.Item1;
+
+			if (baseField == null && expression != null && FieldIndexes.TryGetValue(expression, out value))
 				return value.Item1;
 
 			var newField = fieldFactory();
@@ -85,7 +90,10 @@ namespace LinqToDB.SqlQuery
 
 			Fields.Insert(index, newField);
 
-			FieldIndexes.Add(expression, Tuple.Create(newField, index));
+			if (expression != null && !FieldIndexes.ContainsKey(expression))
+				FieldIndexes.Add(expression, Tuple.Create(newField, index));
+			if (baseField != null)
+				FieldIndexesByName.Add(baseField.Name, Tuple.Create(newField, index));
 			return newField;
 
 		}

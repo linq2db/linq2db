@@ -1036,7 +1036,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region ConvertToParentIndex
 
-			public int ConvertToParentIndex(int index, IBuildContext context)
+			public virtual int ConvertToParentIndex(int index, IBuildContext context)
 			{
 				return Parent?.ConvertToParentIndex(index, this) ?? index;
 			}

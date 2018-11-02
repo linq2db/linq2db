@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using JetBrains.Annotations;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -103,30 +104,21 @@ namespace LinqToDB.Linq.Builder
 					return base.ConvertToSql(expression, level, flags);
 
 				var baseInfos = base.ConvertToSql(null, 0, ConvertFlags.All);
-				var infos     = queryContext.ConvertToIndex(expression, level, flags);
+
+				if (flags != ConvertFlags.All && _cte.Fields.Count == 0 && queryContext.SelectQuery.Select.Columns.Count > 0)
+				{
+					// it means that queryContext context already has columns and we need all of them. For example for Distinct.
+					ConvertToSql(null, 0, ConvertFlags.All);
+				}
+
+				var infos  = queryContext.ConvertToIndex(expression, level, flags);
 
 				var result = infos
 					.Select(info =>
 					{
-						var cteField = _cte.RegisterFieldMapping(info.Sql, info.Index, () =>
-						{
-							var f = QueryHelper.GetUnderlyingField(baseInfos
-								        .FirstOrDefault(bi => bi.CompareMembers(info))?.Sql) ??
-							        QueryHelper.GetUnderlyingField(info.Sql);
-
-							var newField = f == null
-								? new SqlField { SystemType = info.Sql.SystemType, CanBeNull = info.Sql.CanBeNull }
-								: new SqlField(f);
-
-							return newField;
-						});
-
-						if (!SqlTable.Fields.TryGetValue(cteField.Name, out var field))
-						{
-							field = new SqlField(cteField);
-							SqlTable.Add(field);
-						}
-
+						var expr     = (info.Sql is SqlColumn column) ? column.Expression : info.Sql;
+						var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info))?.Sql;
+						var field    = RegisterCteField(baseInfo, expr, info.Index);
 						return new SqlInfo(info.MemberChain)
 						{
 							Sql = field,
@@ -136,6 +128,44 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
+			public override int ConvertToParentIndex(int index, IBuildContext context)
+			{
+				if (context == _cteQueryContext)
+				{
+					var expr  = context.SelectQuery.Select.Columns[index].Expression;
+					    expr  = expr is SqlColumn column ? column.Expression : expr;
+					var field = RegisterCteField(null, expr, index);
+
+					index = SelectQuery.Select.Add(field);
+				}
+
+				return base.ConvertToParentIndex(index, context);
+			}
+
+			SqlField RegisterCteField(ISqlExpression baseExpression, [NotNull] ISqlExpression expression, int index)
+			{
+				if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+				var cteField = _cte.RegisterFieldMapping(baseExpression, expression, index, () =>
+						{
+							var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
+
+							var newField = f == null
+								? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull }
+								: new SqlField(f);
+
+							return newField;
+						});
+
+				if (!SqlTable.Fields.TryGetValue(cteField.Name, out var field))
+				{
+					field = new SqlField(cteField);
+					SqlTable.Add(field);
+				}
+
+				return field;
+			}
+
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				var queryContext = GetQueryContext();
@@ -143,20 +173,8 @@ namespace LinqToDB.Linq.Builder
 					base.BuildQuery(query, queryParameter);
 				else
 				{
-					var sqInfos = ConvertToIndex(null, 0, ConvertFlags.All);
-
-					//TODO: igor-tkachev, review usage of Parent.IsExpression here.
-					if (Parent != null && Parent.IsExpression(null, 0, RequestFor.Object).Result)
-					{
-						foreach (var info in sqInfos.OrderBy(i => i.Index))
-						{
-							Parent?.ConvertToParentIndex(info.Index, this);
-						}
-
-						queryContext.BuildQuery(query, queryParameter);
-					}
-					else
-						base.BuildQuery(query, queryParameter);
+					queryContext.Parent = this;
+					queryContext.BuildQuery(query, queryParameter);
 				}
 			}
 
@@ -182,6 +200,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					ConvertToSql(null, 0, ConvertFlags.Key);
 				}
+
 				return base.GetResultStatement();
 			}
 		}
