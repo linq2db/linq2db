@@ -61,7 +61,9 @@ namespace LinqToDB.SqlQuery
 
 		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
-			return new CteClause((SelectQuery) Body.Clone(objectTree, doClone), ObjectType, IsRecursive, Name);
+			var newClause = new CteClause((SelectQuery) Body.Clone(objectTree, doClone), ObjectType, IsRecursive, Name);
+			newClause.Fields.AddRange(Fields.Select(f => (SqlField)f.Clone(objectTree, doClone)));
+			return newClause;
 		}
 
 		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
