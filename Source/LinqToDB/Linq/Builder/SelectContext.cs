@@ -479,7 +479,7 @@ namespace LinqToDB.Linq.Builder
 						idx = ConvertToSql(null, 0, flags);
 
 						foreach (var info in idx)
-							SetInfo(info);
+							SetInfo(info, null);
 
 						_memberIndex.Add(key, idx);
 					}
@@ -536,7 +536,7 @@ namespace LinqToDB.Linq.Builder
 								var idx = Builder.ConvertExpressions(this, expression, flags);
 
 								foreach (var info in idx)
-									SetInfo(info);
+									SetInfo(info, null);
 
 								return idx;
 							}
@@ -559,7 +559,7 @@ namespace LinqToDB.Linq.Builder
 													throw new InvalidOperationException();
 
 												foreach (var info in idx)
-													SetInfo(info);
+													SetInfo(info, member.Item1);
 
 												_memberIndex.Add(member, idx);
 											}
@@ -591,14 +591,18 @@ namespace LinqToDB.Linq.Builder
 			throw new NotImplementedException();
 		}
 
-		void SetInfo(SqlInfo info)
+		void SetInfo(SqlInfo info, MemberInfo member)
 		{
 			info.Query = SelectQuery;
 
 			if (info.Sql == SelectQuery)
 				info.Index = SelectQuery.Select.Columns.Count - 1;
 			else
+			{
 				info.Index = SelectQuery.Select.Add(info.Sql);
+				if (member != null)
+					SelectQuery.Select.Columns[info.Index].Alias = member.Name;
+			}
 		}
 
 		#endregion

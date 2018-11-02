@@ -46,11 +46,11 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide)
 		{
-			var newExpr = expression.Transform(expr => TransformExpression(context, expr, enforceServerSide));
+			var newExpr = expression.Transform(expr => TransformExpression(context, expr, enforceServerSide, null));
 			return newExpr;
 		}
 
-		TransformInfo TransformExpression(IBuildContext context, Expression expr, bool enforceServerSide)
+		TransformInfo TransformExpression(IBuildContext context, Expression expr, bool enforceServerSide, string alias)
 		{
 			if (_skippedExpressions.Contains(expr))
 				return new TransformInfo(expr, true);
@@ -85,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 					{
 						if (IsServerSideOnly(expr) || PreferServerSide(expr, enforceServerSide))
-							return new TransformInfo(BuildSql(context, expr));
+							return new TransformInfo(BuildSql(context, expr, alias));
 
 						var ma = (MemberExpression)expr;
 
@@ -94,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							// In Grouping KeyContext we have to perform calculation on server side
 							if (Contexts.Any(c => c is GroupByBuilder.KeyContext))
-								return new TransformInfo(BuildSql(context, expr));
+								return new TransformInfo(BuildSql(context, expr, alias));
 							break;
 						}
 
@@ -207,17 +207,17 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Coalesce:
 
 					if (expr.Type == typeof(string) && MappingSchema.GetDefaultValue(typeof(string)) != null)
-						return new TransformInfo(BuildSql(context, expr));
+						return new TransformInfo(BuildSql(context, expr, alias));
 
 					if (CanBeTranslatedToSql(context, ConvertExpression(expr), true))
-						return new TransformInfo(BuildSql(context, expr));
+						return new TransformInfo(BuildSql(context, expr, alias));
 
 					break;
 
 				case ExpressionType.Conditional:
 
 					if (CanBeTranslatedToSql(context, ConvertExpression(expr), true))
-						return new TransformInfo(BuildSql(context, expr));
+						return new TransformInfo(BuildSql(context, expr, alias));
 					break;
 
 				case ExpressionType.Call:
@@ -263,10 +263,37 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						if (IsServerSideOnly(expr) || PreferServerSide(expr, enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
-							return new TransformInfo(BuildSql(context, expr));
+							return new TransformInfo(BuildSql(context, expr, alias));
 					}
 
 					break;
+
+				case ExpressionType.New:
+					{
+						var ne = (NewExpression)expr;
+
+						if (EnforceServerSide(context))
+						{
+							if (CanBeCompiled(expr))
+								break;
+							return new TransformInfo(BuildSql(context, expr, alias));
+						}
+
+						List<Expression> arguments = new List<Expression>();
+						for (var i = 0; i < ne.Arguments.Count; i++)
+						{
+							var a = ne.Arguments[i];
+							var memberAlias = ne.Members[i].Name;
+							var newArgument = 
+								a.Transform(ae => TransformExpression(context, ae, enforceServerSide, memberAlias));
+							a = newArgument;
+							arguments.Add(a);
+						}
+
+						ne = ne.Update(arguments);
+
+						return new TransformInfo(ne, true);
+					}
 			}
 
 			if (EnforceServerSide(context))
@@ -274,14 +301,14 @@ namespace LinqToDB.Linq.Builder
 				switch (expr.NodeType)
 				{
 					case ExpressionType.MemberInit :
-					case ExpressionType.New        :
+//					case ExpressionType.New        :
 					case ExpressionType.Convert    :
 						break;
 
 					default                        :
 						if (CanBeCompiled(expr))
 							break;
-						return new TransformInfo(BuildSql(context, expr));
+						return new TransformInfo(BuildSql(context, expr, alias));
 				}
 			}
 
@@ -337,10 +364,13 @@ namespace LinqToDB.Linq.Builder
 
 		#region BuildSql
 
-		Expression BuildSql(IBuildContext context, Expression expression)
+		Expression BuildSql(IBuildContext context, Expression expression, string alias)
 		{
 			var sqlex = ConvertToSqlExpression(context, expression);
 			var idx   = context.SelectQuery.Select.Add(sqlex);
+
+			if (alias != null)
+				context.SelectQuery.Select.Columns[idx].RawAlias = alias;
 
 			idx = context.ConvertToParentIndex(idx, context);
 
