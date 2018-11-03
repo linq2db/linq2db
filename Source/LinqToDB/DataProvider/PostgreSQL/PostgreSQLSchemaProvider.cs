@@ -534,7 +534,7 @@ SELECT	r.ROUTINE_CATALOG,
 					let length       = r.IsNull("ColumnSize")       ? (int?)null : r.Field<int>("ColumnSize")
 					let precision    = r.IsNull("NumericPrecision") ? (int?)null : r.Field<int>("NumericPrecision")
 					let scale        = r.IsNull("NumericScale")     ? (int?)null : r.Field<int>("NumericScale")
-					let providerType = r.IsNull("ProviderType")     ? null       : r.Field<Type>("ProviderType")
+					let providerType = r.IsNull("DataType")         ? null       : r.Field<Type>("DataType")
 					let systemType   =  GetSystemType(columnType, null, dataType, length, precision, scale) ?? providerType ?? typeof(object)
 
 					select new ColumnSchema
