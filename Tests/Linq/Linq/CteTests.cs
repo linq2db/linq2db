@@ -27,7 +27,7 @@ namespace Tests.Linq
 			// Will be supported in SQL 8.0 - ProviderName.MySql
 		};
 
-		class CteContextSourceAttribute : IncludeDataSourcesAttribute
+		public class CteContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public CteContextSourceAttribute() : this(true)
 			{
@@ -385,6 +385,40 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void Test5([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cte1 = db.GetTable<Child>()
+					.Where(c => c.ParentID > 1)
+					.Select(child => new
+					{
+						child.ParentID,
+						child.ChildID
+					}).Distinct()
+					.AsCte();
+				var query = from p in db.Parent
+					join c in cte1 on p.ParentID equals c.ParentID
+					join c2 in cte1 on p.ParentID equals c2.ParentID
+					select p;
+
+				var cte1_ = db.GetTable<Child>().Where(c => c.ParentID > 1).Select(child => new
+				{
+					child.ParentID,
+					child.ChildID
+				}).Distinct();
+
+				var expected =
+					from p in db.Parent
+					join c in cte1_ on p.ParentID equals c.ParentID
+					join c2 in cte1_ on p.ParentID equals c2.ParentID
+					select p;
+
+				Assert.AreEqual(expected.Count(), query.Count());
+			}
+		}
+
 		private class CteDMLTests
 		{
 			protected bool Equals(CteDMLTests other)
@@ -410,6 +444,31 @@ namespace Tests.Linq
 
 			public int ChildID  { get; set; }
 			public int ParentID { get; set; }
+		}
+
+		[Test]
+		public void TestNoColumns([CteContextSource(true, ProviderName.DB2)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
+			{
+				var expected = db.GetTable<Child>().Count();
+
+				var cte1 = db.GetTable<Child>().AsCte("CTE1_");
+				var cnt1 = cte1.Count();
+
+				Assert.AreEqual(expected, cnt1);
+
+				var query = db.GetTable<Child>().Select(c => new { C = new { c.ChildID }});
+				var cte2 = query.AsCte("CTE1_");
+				var cnt2 = cte2.Count();
+
+				Assert.AreEqual(expected, cnt2);
+
+				var any  = cte2.Any();
+
+				Assert.IsTrue(any);
+			}
 		}
 
 		[Test]
