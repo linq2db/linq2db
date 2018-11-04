@@ -26,7 +26,6 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Redist\SapHana\Sap.Data.Hana.v4.5.dll"                    target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"            target="tools" />
 		
 		<file src="SapHana\linq2db.SapHana.props"                               target="build" />
