@@ -2242,7 +2242,7 @@ namespace Tests.DataProvider
 					OracleTools.DontEscapeLowercaseIdentifiers = false;
 
 					// no specific exception type as it differ for managed and native providers
-					Assert.That(() => db.GetTable<TestIdentifiersTable1>().ToList(), Throws.Exception.With.Message.ContainsSubstring("ORA-00942"));
+					Assert.That(() => db.GetTable<TestIdentifiersTable1>().ToList(), Throws.Exception.With.Message.Contains("ORA-00942"));
 
 					db.GetTable<TestIdentifiersTable2>().ToList();
 				}
