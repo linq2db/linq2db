@@ -357,7 +357,7 @@ namespace LinqToDB.SqlProvider
 					++Indent;
 
 					var firstField = true;
-					foreach (var field in cte.Fields.Values)
+					foreach (var field in cte.Fields)
 					{
 						if (!firstField)
 							StringBuilder.AppendLine(", ");
@@ -375,7 +375,7 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(" (");
 
 					var firstField = true;
-					foreach (var field in cte.Fields.Values)
+					foreach (var field in cte.Fields)
 					{
 						if (!firstField)
 							StringBuilder.Append(", ");
