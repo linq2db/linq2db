@@ -1330,20 +1330,25 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = new ValueTypeExpression() { DataTypeExpression = Expression.Constant(DataType.Undefined) };
 
-			if (expression.NodeType == ExpressionType.ArrayIndex)
+			if (expression.NodeType == ExpressionType.ArrayIndex && expression.Type == typeof(object))
 			{
-				var value = expression.EvaluateExpression();
-				if (value is DataParameter dataParameter)
-					setName(dataParameter.Name);
-				else
-				{
-					var arrayIndex = (BinaryExpression)expression;
-					var index = (int)arrayIndex.Right.EvaluateExpression();
-					var array = arrayIndex.Left as NewArrayExpression;
-					var arrayItem = array?.Expressions[index].Unwrap();
+				var canEvaluate = null == expression.Find(e => e.NodeType == ExpressionType.Parameter);
 
-					if (arrayItem?.NodeType == ExpressionType.MemberAccess)
-						setName(((MemberExpression)arrayItem).Member.Name);
+				if (canEvaluate)
+				{
+					var value = expression.EvaluateExpression();
+					if (value is DataParameter dataParameter)
+						setName(dataParameter.Name);
+					else
+					{
+						var arrayIndex = (BinaryExpression)expression;
+						var index = (int)arrayIndex.Right.EvaluateExpression();
+						var array = arrayIndex.Left as NewArrayExpression;
+						var arrayItem = array?.Expressions[index].Unwrap();
+
+						if (arrayItem?.NodeType == ExpressionType.MemberAccess)
+							setName(((MemberExpression)arrayItem).Member.Name);
+					}
 				}
 
 				result.DataTypeExpression =
