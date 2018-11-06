@@ -34,7 +34,7 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(GenerateTestData()))
 			{
 				int startId = 5;
-				int endId = 15;
+				int endId   = 15;
 
 				var query = db.FromSql<SampleClass>($"SELECT * FROM sample_class where id >= {startId} and id < {endId}");
 				var projection = query
@@ -59,7 +59,7 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(GenerateTestData()))
 			{
 				int startId = 5;
-				int endId = 15;
+				int endId   = 15;
 
 				var query = 
 					from t in table 
@@ -80,6 +80,7 @@ namespace Tests.Linq
 				Assert.AreEqual(expected, projection);
 			}
 		}
+
 #endif
 
 		[Test]
@@ -89,7 +90,8 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(GenerateTestData()))
 			{
 				int startId = 5;
-				int endId = 15;
+				int endId   = 15;
+
 				var query = db.FromSql<SampleClass>("SELECT * FROM sample_class where id >= {0} and id < {1}", new DataParameter("startId", startId, DataType.Int64), endId);
 				var projection = query
 					.Where(c => c.Id > 10)
@@ -113,11 +115,44 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(GenerateTestData()))
 			{
 				int startId = 5;
-				int endId = 15;
+				int endId   = 15;
+
 				var query =
 					from t in table 
 					from s in db.FromSql<SampleClass>("SELECT * FROM sample_class where id >= {0} and id < {1}", new DataParameter("startId", startId, DataType.Int64), endId).InnerJoin(s => s.Id == t.Id)
 					select s;
+
+				var projection = query
+					.Where(c => c.Id > 10)
+					.Select(c => new { c.Value, c.Id })
+					.ToArray();
+
+				var expected = table
+					.Where(t => t.Id >= startId && t.Id < endId)
+					.Where(c => c.Id > 10)
+					.Select(c => new { c.Value, c.Id })
+					.ToArray();
+
+				Assert.AreEqual(expected, projection);
+			}
+		}
+
+		[Test]
+		public void TestParametersInExpr2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
+			{
+				int startId = 5;
+				int endId   = 15;
+
+				var parameters = new object[] { new DataParameter("startId", startId, DataType.Int64), endId };
+
+				var query =
+					from t in table 
+					from s in db.FromSql<SampleClass>("SELECT * FROM sample_class where id >= {0} and id < {1}", parameters).InnerJoin(s => s.Id == t.Id)
+					select s;
+
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })

@@ -1330,6 +1330,33 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = new ValueTypeExpression() { DataTypeExpression = Expression.Constant(DataType.Undefined) };
 
+			if (expression.NodeType == ExpressionType.ArrayIndex)
+			{
+				var value = expression.EvaluateExpression();
+				if (value is DataParameter dataParameter)
+					setName(dataParameter.Name);
+				else
+				{
+					var arrayIndex = (BinaryExpression)expression;
+					var index = (int)arrayIndex.Right.EvaluateExpression();
+					var array = arrayIndex.Left as NewArrayExpression;
+					var arrayItem = array?.Expressions[index].Unwrap();
+
+					if (arrayItem?.NodeType == ExpressionType.MemberAccess)
+						setName(((MemberExpression)arrayItem).Member.Name);
+				}
+
+				result.DataTypeExpression =
+					Expression.Condition(Expression.TypeIs(expression, typeof(DataParameter)),
+						Expression.Property(Expression.Convert(expression, typeof(DataParameter)), "DataType"),
+						Expression.Constant(DataType.Undefined));
+
+				expression =
+					Expression.Condition(Expression.TypeIs(expression, typeof(DataParameter)),
+						Expression.Property(Expression.Convert(expression, typeof(DataParameter)), "Value"),
+						expression);
+			}
+
 			result.ValueExpression = expression.Transform(expr =>
 			{
 				if (expr.NodeType == ExpressionType.Constant)
@@ -1355,26 +1382,6 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 					}
-				}
-				else if (expr.NodeType == ExpressionType.Call)
-				{
-					// TODO: handle it better
-				}
-				else if (expr.NodeType == ExpressionType.ArrayIndex)
-				{
-					var value = expr.EvaluateExpression();
-					if (value is DataParameter dataParameter)
-						setName(dataParameter.Name);
-
-					result.DataTypeExpression =
-						Expression.Condition(Expression.TypeIs(expr, typeof(DataParameter)),
-							Expression.Property(Expression.Convert(expr, typeof(DataParameter)), "DataType"),
-							Expression.Constant(DataType.Undefined));
-
-					return 
-						Expression.Condition(Expression.TypeIs(expr, typeof(DataParameter)),
-							Expression.Property(Expression.Convert(expr, typeof(DataParameter)), "Value"),
-							expr);
 				}
 
 				return expr;

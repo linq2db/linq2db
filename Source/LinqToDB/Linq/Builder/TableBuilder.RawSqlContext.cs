@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB.Common;
@@ -20,47 +21,53 @@ namespace LinqToDB.Linq.Builder
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
 
-			//TODO: Parse SQL for parameters
-			string sqlFormat ;
-			var arguments = new List<ISqlExpression>();
+			string                  format;
+			IEnumerable<Expression> arguments;
 
-			var sql = methodCall.Arguments[1].EvaluateExpression();
-#if !NET45
-			if (sql is FormattableString formattable)
+			var sqlExpr = methodCall.Arguments[1];
+
+			// Consider that FormattableString is used
+			if (sqlExpr.NodeType == ExpressionType.Call)
 			{
-				var formattableExpr = methodCall.Arguments[1];
+				var mc = (MethodCallExpression)sqlExpr;
 
-				var objects = formattable.GetArguments();
-				for (var i = 0; i < objects.Length; i++)
-				{
-					var getter = Expression.Call(formattableExpr, _getArgumentMethodInfo,
-						Expression.Constant(i));
+				format    = (string)mc.Arguments[0].EvaluateExpression();
+				arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
 
-					var v = builder.ConvertToSql(null, getter);
-					arguments.Add(v);
-				}
-
-				sqlFormat = formattable.Format;
 			} else
-
-#endif
 			{
-				sqlFormat = ((RawSqlString)sql).Format;
-
-				var parametersExpr = methodCall.Arguments[2];
-				var array = (object[])parametersExpr.EvaluateExpression();
-
-				for (var i = 0; i < array.Length; i++)
+				var evaluatedSql = sqlExpr.EvaluateExpression();
+#if !NET45
+				if (evaluatedSql is FormattableString formattable)
 				{
-					var getter = Expression.ArrayIndex(parametersExpr, Expression.Constant(i));
+					format    = formattable.Format;
+					arguments = formattable.GetArguments()
+						.Select((o, i) => Expression.Call(sqlExpr,
+							_getArgumentMethodInfo,
+							Expression.Constant(i))
+						);
+					//arguments = formattable.GetArguments().Select(Expression.Constant);
+				}
+				else
+#endif
+				{
+					var rawSqlString = (RawSqlString)evaluatedSql;
 
-					var v = builder.ConvertToSql(null, getter);
-					arguments.Add(v);
+					format        = rawSqlString.Format;
+					var arrayExpr = methodCall.Arguments[2];
+					var array     = (object[])arrayExpr.EvaluateExpression();
+					//arrayExpr = Expression.Constant(array);
+
+					arguments = array
+						.Select((o, i) => Expression.ArrayIndex(arrayExpr,
+							Expression.Constant(i))
+						);
 				}
 			}
 
+			var sqlArguments = arguments.Select(a => builder.ConvertToSql(buildInfo.Parent, a)).ToArray();
 
-			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], sqlFormat, arguments.ToArray());
+			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], format, sqlArguments);
 		}
 
 		class RawSqlContext : TableContext	
