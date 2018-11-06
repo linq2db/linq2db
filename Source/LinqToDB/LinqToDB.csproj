@@ -24,7 +24,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
-		<DefineConstants>TRACE;OVERRIDETOSTRING</DefineConstants>
+		<DefineConstants>OVERRIDETOSTRING1;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -70,17 +70,9 @@
     <Reference Include="IBM.Data.Informix">
       <HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
     </Reference>
-    <Reference Include="Sap.Data.Hana.v4.5">
-      <HintPath>..\..\Redist\SAPHana\Sap.Data.Hana.v4.5.dll</HintPath>
-    </Reference>
     <Reference Include="Sybase.AdoNet45.AseClient">
       <HintPath>..\..\Redist\Sybase\Sybase.AdoNet45.AseClient.dll</HintPath>
     </Reference>
-    <Reference Include="Oracle.DataAccess, Version=4.122.1.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
-    </Reference>
-
 
     <None Include="..\..\Data\*">
         <Link>Database/%(FileName)%(Extension)</Link>
