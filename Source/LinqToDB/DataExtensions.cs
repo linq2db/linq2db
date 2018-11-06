@@ -786,7 +786,7 @@ namespace LinqToDB
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="sql"> The interpolated string representing a SQL query. </param>
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
-        [StringFormatMethod("sql")]
+		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
 			[NotNull]  this               IDataContext      dataContext,
 			[NotNull, SqlQueryDependent]  FormattableString sql)
