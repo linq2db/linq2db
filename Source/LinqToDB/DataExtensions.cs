@@ -13,6 +13,8 @@ namespace LinqToDB
 	using Extensions;
 	using Linq;
 	using SqlQuery;
+    using Common;
+    using Expressions;
 
 	/// <summary>
 	/// Data context extension methods.
@@ -761,5 +763,89 @@ namespace LinqToDB
 		}
 
 		#endregion
+
+		#region FromSql
+
+#if !NET45
+		/// <summary>
+		///     <para>
+		///         Creates a LINQ query based on an interpolated string representing a SQL query.
+		///     </para>
+		///     <para>
+		///         If the database provider supports composing on the supplied SQL, you can compose on top of the raw SQL query using
+		///         LINQ operators - <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM dbo.Blogs").OrderBy(b =&gt; b.Name)</code>.
+		///     </para>
+		///     <para>
+		///         As with any API that accepts SQL it is important to parameterize any user input to protect against a SQL injection
+		///         attack. You can include interpolated parameter place holders in the SQL query string. Any interpolated parameter values
+		///         you supply will automatically be converted to a DbParameter -
+		///         <code>context.FromSql&lt;Blogs&gt;($"SELECT * FROM [dbo].[SearchBlogs]({userSuppliedSearchTerm})")</code>.
+		///     </para>
+		/// </summary>
+		/// <typeparam name="TEntity">Source query record type.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="sql"> The interpolated string representing a SQL query. </param>
+		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
+        [StringFormatMethod("sql")]
+		public static IQueryable<TEntity> FromSql<TEntity>(
+			[NotNull]  this               IDataContext      dataContext,
+			[NotNull, SqlQueryDependent]  FormattableString sql)
+		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (sql         == null) throw new ArgumentNullException(nameof(sql));
+
+			var table = new Table<TEntity>(dataContext);
+
+			return ((IQueryable<TEntity>)table).Provider.CreateQuery<TEntity>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql),
+					new Expression[] {Expression.Constant(dataContext), Expression.Constant(sql)}));
+		}
+#endif
+
+		/// <summary>
+		///     <para>
+		///         Creates a LINQ query based on a raw SQL query.
+		///     </para>
+		///     <para>
+		///         If the database provider supports composing on the supplied SQL, you can compose on top of the raw SQL query using
+		///         LINQ operators - <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM dbo.Blogs").OrderBy(b => b.Name)</code>.
+		///     </para>
+		///     <para>
+		///         As with any API that accepts SQL it is important to parameterize any user input to protect against a SQL injection
+		///         attack. You can include parameter place holders in the SQL query string and then supply parameter values as additional
+		///         arguments. Any parameter values you supply will automatically be converted to a DbParameter -
+		///         <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM [dbo].[SearchBlogs]({0})", userSuppliedSearchTerm)</code>.
+		///     </para>
+		///     <para>
+		///         This overload also accepts DbParameter instances as parameter values. 
+		///         <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM [dbo].[SearchBlogs]({0})", new DataParameter("@searchTerm", userSuppliedSearchTerm, DataType.Int64))</code>
+		///     </para>
+		/// </summary>
+		/// <typeparam name="TEntity">Source query record type.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="sql">The raw SQL query</param>
+		/// <param name="parameters"> The values to be assigned to parameters. </param>
+		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
+		[StringFormatMethod("sql")]
+		public static IQueryable<TEntity> FromSql<TEntity>(
+			[NotNull] this                IDataContext dataContext,
+			[NotNull, SqlQueryDependent]  RawSqlString   sql,
+			[NotNull] params              object[]     parameters)
+		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+
+			var table = new Table<TEntity>(dataContext);
+
+			return ((IQueryable<TEntity>)table).Provider.CreateQuery<TEntity>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql, parameters),
+					new Expression[] {Expression.Constant(dataContext), Expression.Constant(sql), Expression.Constant(parameters)}));
+		}
+
+		#endregion
+
 	}
 }

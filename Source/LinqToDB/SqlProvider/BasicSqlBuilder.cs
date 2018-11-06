@@ -1274,6 +1274,14 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
+				case QueryElementType.SqlRawSqlTable :
+					StringBuilder.Append("(").AppendLine();
+					var rawSqlTable = (SqlRawSqlTable)table;
+					BuildFormatValues(rawSqlTable.SQL, rawSqlTable.Parameters, () => Precedence.Primary);
+					StringBuilder.AppendLine();
+					AppendIndent().Append(")");
+					break;
+
 				default                          :
 					throw new InvalidOperationException();
 			}
@@ -2224,25 +2232,8 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlExpression:
 					{
 						var e = (SqlExpression)expr;
-						var s = new StringBuilder();
 
-						if (e.Parameters == null || e.Parameters.Length == 0)
-							StringBuilder.Append(e.Expr);
-						else
-						{
-							var values = new object[e.Parameters.Length];
-
-							for (var i = 0; i < values.Length; i++)
-							{
-								var value = e.Parameters[i];
-
-								s.Length = 0;
-								WithStringBuilder(s, () => BuildExpression(GetPrecedence(e), value));
-								values[i] = s.ToString();
-							}
-
-							StringBuilder.AppendFormat(e.Expr, values);
-						}
+						BuildFormatValues(e.Expr, e.Parameters, () => GetPrecedence(e));
 					}
 
 					break;
@@ -2296,6 +2287,28 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return StringBuilder;
+		}
+
+		private void BuildFormatValues(string format, IReadOnlyList<ISqlExpression> parameters, Func<int> getPrecedence)
+		{
+			if (parameters == null || parameters.Count == 0)
+				StringBuilder.Append(format);
+			else
+			{
+				StringBuilder s = new StringBuilder();
+				var values = new object[parameters.Count];
+
+				for (var i = 0; i < values.Length; i++)
+				{
+					var value = parameters[i];
+
+					s.Length = 0;
+					WithStringBuilder(s, () => BuildExpression(getPrecedence(), value));
+					values[i] = s.ToString();
+				}
+
+				StringBuilder.AppendFormat(format, values);
+			}
 		}
 
 		void BuildExpression(int parentPrecedence, ISqlExpression expr, string alias, ref bool addAlias)

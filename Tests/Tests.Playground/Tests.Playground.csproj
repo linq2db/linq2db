@@ -12,12 +12,10 @@
 
   <ItemGroup>
     <Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-    <Compile Include="..\Linq\Linq\CteTests.cs" Link="CteTests.cs" />
-    <Compile Include="..\Linq\UserTests\Issue1284Tests.cs" Link="Issue1284Tests.cs" />
+    <Compile Include="..\Linq\Linq\FromSqlTests.cs" Link="FromSqlTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
-
     <ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
     <ProjectReference Include="..\Base\Tests.Base.csproj" />
     <ProjectReference Include="..\Model\Tests.Model.csproj" />

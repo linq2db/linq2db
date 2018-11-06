@@ -625,6 +625,7 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlTable            : GetType(((SqlTable)           e).ObjectType); break;
 					case QueryElementType.SqlCteTable         : GetType(((SqlCteTable)        e).ObjectType); break;
 					case QueryElementType.CteClause           : GetType(((CteClause)          e).ObjectType); break;
+					case QueryElementType.SqlRawSqlTable      : GetType(((SqlRawSqlTable)     e).ObjectType); break;
 				}
 
 				ObjectIndices.Add(e, ++Index);
@@ -820,6 +821,35 @@ namespace LinqToDB.ServiceModel
 
 							foreach (var field in elem.Fields)
 								Append(ObjectIndices[field.Value]);
+
+							break;
+						}
+
+					case QueryElementType.SqlRawSqlTable :
+						{
+							var elem = (SqlRawSqlTable)e;
+
+							Append(elem.SourceID);
+							Append(elem.Alias);
+							Append(elem.ObjectType);
+
+							Append(ObjectIndices[elem.All]);
+							Append(elem.Fields.Count);
+
+							foreach (var field in elem.Fields)
+								Append(ObjectIndices[field.Value]);
+
+							Append(elem.SQL);
+
+							if (elem.Parameters == null)
+								Append(0);
+							else
+							{
+								Append(elem.Parameters.Length);
+
+								foreach (var expr in elem.Parameters)
+									Append(ObjectIndices[expr]);
+							}
 
 							break;
 						}
@@ -1461,6 +1491,27 @@ namespace LinqToDB.ServiceModel
 								new SqlCteTable(sourceID, alias, flds, cte);
 
 							obj = cteTable;
+
+							break;
+						}
+
+					case QueryElementType.SqlRawSqlTable :
+						{
+							var sourceID           = ReadInt();
+							var alias              = ReadString();
+							var objectType         = Read<Type>();
+
+							var all    = Read<SqlField>();
+							var fields = ReadArray<SqlField>();
+							var flds   = new SqlField[fields.Length + 1];
+
+							flds[0] = all;
+							Array.Copy(fields, 0, flds, 1, fields.Length);
+
+							var sql        = ReadString();
+							var parameters = ReadArray<ISqlExpression>();
+
+							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, parameters);
 
 							break;
 						}

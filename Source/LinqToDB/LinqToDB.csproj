@@ -3,7 +3,7 @@
 	<Import Project="..\..\Build\linq2db.Default.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net45;netcoreapp2.0;netstandard1.6;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net45;net46;netcoreapp2.0;netstandard1.6;netstandard2.0</TargetFrameworks>
 		<AssemblyName>linq2db</AssemblyName>
 		<RootNamespace>LinqToDB</RootNamespace>
 
@@ -59,7 +59,7 @@
 
 	<!-- .NET Framework -->
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451' OR '$(TargetFramework)' == 'net46' ">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System" />
 		<Reference Include="System.Configuration" />
@@ -75,6 +75,9 @@
 		<Reference Include="System.Runtime.Serialization" />
 
 		<Compile Remove="Metadata\SystemComponentModelDataAnnotationsSchemaAttributeReader.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451' ">
 		<Compile Include="Compatibility\System\Threading\AsyncLocal.cs" />
 	</ItemGroup>
 

@@ -1356,6 +1356,26 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 				}
+				else if (expr.NodeType == ExpressionType.Call)
+				{
+					// TODO: handle it better
+				}
+				else if (expr.NodeType == ExpressionType.ArrayIndex)
+				{
+					var value = expr.EvaluateExpression();
+					if (value is DataParameter dataParameter)
+						setName(dataParameter.Name);
+
+					result.DataTypeExpression =
+						Expression.Condition(Expression.TypeIs(expr, typeof(DataParameter)),
+							Expression.Property(Expression.Convert(expr, typeof(DataParameter)), "DataType"),
+							Expression.Constant(DataType.Undefined));
+
+					return 
+						Expression.Condition(Expression.TypeIs(expr, typeof(DataParameter)),
+							Expression.Property(Expression.Convert(expr, typeof(DataParameter)), "Value"),
+							expr);
+				}
 
 				return expr;
 			});
