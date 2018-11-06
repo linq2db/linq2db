@@ -59,7 +59,7 @@
 
 	<!-- .NET Framework -->
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451' OR '$(TargetFramework)' == 'net46' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' ">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System" />
 		<Reference Include="System.Configuration" />
@@ -77,33 +77,9 @@
 		<Compile Remove="Metadata\SystemComponentModelDataAnnotationsSchemaAttributeReader.cs" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
 		<Compile Include="Compatibility\System\Threading\AsyncLocal.cs" />
 	</ItemGroup>
-
-
-	<!-- .NET 4.0 specific -->
-
-	<ItemGroup Condition="'$(TargetFramework)' != 'net40'">
-		<None Remove="App.config" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'net40'">
-		<PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
-
-		<Compile Include="Compatibility\System\Data\DbConnection.cs" />
-		<Compile Include="Compatibility\System\Data\DbCommand.cs" />
-		<Compile Include="Compatibility\System\Data\DbDataReader.cs" />
-		<Compile Remove="Compatibility\System\Threading\Tasks\TaskEx.cs" />
-	</ItemGroup>
-
-	<Import Project="..\..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets') AND '$(TargetFramework)' == 'net40'" />
-
-	<Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == '' AND '$(TargetFramework)' == 'net40'">
-		<Error Condition="!Exists('..\..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." HelpKeyword="BCLBUILD2001" />
-		<Error Condition="Exists('..\..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." HelpKeyword="BCLBUILD2002" />
-	</Target>
-
 
 	<!-- .NET Standard -->
 
