@@ -244,7 +244,6 @@ namespace Tests.UserTests
 
 	namespace Tests.UserTests
 	{
-		[ActiveIssue(1347)]
 		[TestFixture]
 		public class UserTest : TestBase
 		{
@@ -522,6 +521,7 @@ namespace Tests.UserTests
 							});
 
 					var str = query.ToString();
+					Console.WriteLine(str);
 				}
 			}
 		}
