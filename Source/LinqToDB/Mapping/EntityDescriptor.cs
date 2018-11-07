@@ -184,17 +184,15 @@ namespace LinqToDB.Mapping
 					Columns.Add(cd);
 					_columnNames.Add(member.Name, cd);
 				}
-				else
+
+				var caa = mappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+
+				if (caa != null)
 				{
-					var caa = mappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+					if (Aliases == null)
+						Aliases = new Dictionary<string, string>();
 
-					if (caa != null)
-					{
-						if (Aliases == null)
-							Aliases = new Dictionary<string, string>();
-
-						Aliases.Add(member.Name, caa.MemberName);
-					}
+					Aliases.Add(member.Name, caa.MemberName);
 				}
 
 				var ma = mappingSchema.GetAttribute<ExpressionMethodAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);

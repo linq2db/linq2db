@@ -76,6 +76,16 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Adds member mapping to current entity.
+		/// </summary>
+		/// <param name="func">Column mapping property or field getter expression.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Member(Expression<Func<T,object>> func)
+		{
+			return _entity.Member(func);
+		}
+
+		/// <summary>
 		/// Adds association mapping to current column's entity.
 		/// </summary>
 		/// <typeparam name="S">Association member type.</typeparam>
@@ -319,5 +329,53 @@ namespace LinqToDB.Mapping
 		{
 			return SetColumn(a => a.Order = order);
 		}
+
+		/// <summary>
+		/// Sets that property is alias to another member.
+		/// </summary>
+		/// <param name="aliasMember">Alias member getter expression.</param>
+		/// <returns>Returns current column mapping builder.</returns>
+		public PropertyMappingBuilder<T> IsAlias([JetBrains.Annotations.NotNull] Expression<Func<T, object>> aliasMember)
+		{
+			if (aliasMember == null) throw new ArgumentNullException(nameof(aliasMember));
+
+			var memberInfo = MemberHelper.GetMemberInfo(aliasMember);
+
+			if (memberInfo == null)
+				throw new ArgumentException($"Can not deduce MemberInfo from Lambda: '{aliasMember}'");
+
+			return HasAttribute(new ColumnAliasAttribute(memberInfo.Name));
+		}
+
+		/// <summary>
+		/// Sets that property is alias to another member.
+		/// </summary>
+		/// <param name="aliasMember">Alias member name.</param>
+		/// <returns>Returns current column mapping builder.</returns>
+		public PropertyMappingBuilder<T> IsAlias([JetBrains.Annotations.NotNull] string aliasMember)
+		{
+			if (string.IsNullOrEmpty(aliasMember))
+				throw new ArgumentException("Value cannot be null or empty.", nameof(aliasMember));
+
+			var memberInfo = typeof(T).GetMember(aliasMember);
+			if (memberInfo == null)
+				throw new ArgumentException($"Member '{aliasMember}' not found in type '{typeof(T)}'");
+
+			return HasAttribute(new ColumnAliasAttribute(aliasMember));
+		}
+
+		/// <summary>
+		/// Sets that property is alias to another member and marks property as Not Column.
+		/// </summary>
+		/// <param name="expression">Expression for mapping member during read.</param>
+		/// <param name="isColumn">Indicates whether a property should be mapped with this expression Method <see cref="ExpressionMethodAttribute.IsColumn"/>>.</param>
+		/// <returns>Returns current column mapping builder.</returns>
+		public PropertyMappingBuilder<T> IsExpression<TR>([JetBrains.Annotations.NotNull] Expression<Func<T, TR>> expression, bool isColumn = false)
+		{
+			if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+			return HasAttribute(new ExpressionMethodAttribute(expression) {  IsColumn = isColumn }).IsNotColumn();
+		}
+
 	}
 }
