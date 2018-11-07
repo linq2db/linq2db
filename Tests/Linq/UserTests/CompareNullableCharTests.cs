@@ -28,8 +28,8 @@ namespace Tests.UserTests
 			public ITable<Table1> Table1 => this.GetTable<Table1>();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Access)]
-		public void Test(string context)
+		[Test]
+		public void Test([IncludeDataSources(ProviderName.Access)] string context)
 		{
 			using (var db = new Repository(context))
 			{

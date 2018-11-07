@@ -64,8 +64,12 @@ namespace Tests
 		/// </summary>
 		public bool SkipForNonLinqService { get; set; }
 
+		public Test LastTest;
+
 		void IApplyToTest.ApplyToTest(Test test)
 		{
+			LastTest = test;
+
 			if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Ignored)
 			{
 				var reason = string.IsNullOrWhiteSpace(_issue) ? "Active issue" : $"Issue {_issue}";

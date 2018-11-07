@@ -1,12 +1,12 @@
-﻿using LinqToDB;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Data.Linq;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.UserTests
@@ -14,96 +14,88 @@ namespace Tests.UserTests
 	/// <summary>
 	/// SimpleTest tests that parameter object released after use.
 	/// RetryTest tests that parameter release do not break query re-execution.
-	/// Oracle tests fail due to LOB types limitation in Oracle, like mising support for direct comparison and linq2db
+	/// Oracle tests fail due to LOB types limitation in Oracle, like missing support for direct comparison and linq2db
 	/// doesn't generate proper comparison for such cases.
 	/// Tests executed against all providers, because they could also uncover memory leaks in providers.
 	/// </summary>
 	[TestFixture]
 	public class Issue256Tests : TestBase
 	{
-		private readonly static DateTime Date = DateTime.Now;
+		static readonly DateTime _date = DateTime.Now;
 
 		[Table("LinqDataTypes")]
 		public class LinqDataTypesWithPK
 		{
-			[PrimaryKey]
-			public int ID;
-			[Column]
-			public decimal MoneyValue;
-			[Column(DataType = DataType.DateTime)]
-			public DateTime DateTimeValue;
-			[Column]
-			public bool BoolValue;
-			[Column]
-			public Guid GuidValue;
-			[Column]
-			public Binary BinaryValue;
-			[Column]
-			public short SmallIntValue;
+			[PrimaryKey]                         public int      ID;
+			[Column]                             public decimal  MoneyValue;
+			[Column(DataType=DataType.DateTime)] public DateTime DateTimeValue;
+			[Column]                             public bool     BoolValue;
+			[Column]                             public Guid     GuidValue;
+			[Column]                             public Binary   BinaryValue;
+			[Column]                             public short    SmallIntValue;
 		}
 
-		[AttributeUsage(AttributeTargets.Method)]
-		class Issue256TestSourceAttribute : IncludeDataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		class Issue256TestSourceAttribute : IncludeDataSourcesAttribute
 		{
 			// tests are provider-agnostic
-			public Issue256TestSourceAttribute()
-				: base(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)
-			{
-			}
-
-			protected override IEnumerable<Tuple<object[], string>> GetParameters(string provider)
-			{
-				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)Unused }, (string)null);
-
-				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)SelectWhere }, (string)null);
-				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)SelectSelect }, (string)null);
-				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)SelectOrderBy }, (string)null);
-
-				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)UpdateWhere }, (string)null);
-				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)UpdateSet }, (string)null);
-				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)UpdateUpdate }, (string)null);
-
-				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)InsertInsert }, (string)null);
-
-				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)DeleteWhere }, (string)null);
-
-				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)NonLinqInsert }, (string)null);
-				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)NonLinqUpdate }, (string)null);
-				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)NonLinqDelete }, (string)null);
-
-				// More test candidates:
-				// BatchInsert, Merge, Sql.ExpressionAttribute
-			}
+			public Issue256TestSourceAttribute() : base(ProviderName.SQLiteClassic, ProviderName.SQLiteMS) {}
 		}
 
+		static Action<ITestDataContext,byte[],int>[] TestActions => new Action<ITestDataContext,byte[],int>[]
+		{
+			Unused,
+			SelectWhere,
+			SelectSelect,
+			SelectOrderBy,
+
+			UpdateWhere,
+			UpdateSet,
+			UpdateUpdate,
+
+			InsertInsert,
+
+			DeleteWhere,
+
+			NonLinqInsert,
+			NonLinqUpdate,
+			NonLinqDelete,
+		};
+
 #if !MONO && !NETSTANDARD1_6
-		[Test, Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
+
+		[Test, Explicit("Demonstrates memory leak when fails")]
 		[Category("Explicit")]
-		public void SimpleTest(string context, Action<ITestDataContext, byte[], int> action)
+		public void SimpleTest(
+			[Issue256TestSource] string context,
+			[ValueSource(nameof(TestActions))] Action<ITestDataContext,byte[],int> action)
 		{
 			Test(context, action, 1);
 		}
 
-		[Test, Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
+		[Test, Explicit("Demonstrates memory leak when fails")]
 		[Category("Explicit")]
-		public void RetryTest(string context, Action<ITestDataContext, byte[], int> action)
+		public void RetryTest(
+			[Issue256TestSource] string context,
+			[ValueSource(nameof(TestActions))] Action<ITestDataContext,byte[],int> action)
 		{
 			Test(context, action, 3);
 		}
+
 #endif
 
 		public void Test(string context, Action<ITestDataContext, byte[], int> testAction, int calls)
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.Insert(new LinqDataTypes()
+				db.Insert(new LinqDataTypes
 				{
-					ID = 256,
-					BinaryValue = new byte[] { 1, 2, 3 },
-					DateTimeValue = Date,
-					BoolValue = false,
-					GuidValue = Guid.Empty,
-					MoneyValue = 0,
+					ID            = 256,
+					BinaryValue   = new byte[] { 1, 2, 3 },
+					DateTimeValue = _date,
+					BoolValue     = false,
+					GuidValue     = Guid.Empty,
+					MoneyValue    = 0,
 					SmallIntValue = 0
 				});
 
@@ -304,7 +296,7 @@ namespace Tests.UserTests
 
 		private static void NonLinqInsert(ITestDataContext db, byte[] value, int calls)
 		{
-			db.Insert(new LinqDataTypesWithPK() { ID = 10256, BinaryValue = value, DateTimeValue = Date });
+			db.Insert(new LinqDataTypesWithPK() { ID = 10256, BinaryValue = value, DateTimeValue = _date });
 			var result = db.Types.Where(_ => _.ID == 10256).ToList();
 			db.Types.Where(_ => _.ID == 10256).Delete();
 
@@ -319,14 +311,14 @@ namespace Tests.UserTests
 
 			while (calls > 0)
 			{
-				db.Update(new LinqDataTypesWithPK() { ID = 256, BinaryValue = null, DateTimeValue = Date });
+				db.Update(new LinqDataTypesWithPK() { ID = 256, BinaryValue = null, DateTimeValue = _date });
 				var result = query.ToList();
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
 				Assert.IsNull(result[0].BinaryValue);
 
-				db.Update(new LinqDataTypesWithPK() { ID = 256, BinaryValue = value, DateTimeValue = Date });
+				db.Update(new LinqDataTypesWithPK() { ID = 256, BinaryValue = value, DateTimeValue = _date });
 				result = query.ToList();
 
 				Assert.AreEqual(1, result.Count);
@@ -341,7 +333,7 @@ namespace Tests.UserTests
 		{
 			while (calls > 0)
 			{
-				db.Delete(new LinqDataTypesWithPK() { ID = 256, BinaryValue = value, DateTimeValue = Date });
+				db.Delete(new LinqDataTypesWithPK() { ID = 256, BinaryValue = value, DateTimeValue = _date });
 				var result = db.Types.Where(_ => _.ID == 256).ToList();
 
 				Assert.AreEqual(0, result.Count);

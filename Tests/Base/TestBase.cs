@@ -1139,7 +1139,7 @@ namespace Tests
 		}
 	}
 
-	public abstract class DataSourcesBaseAttribute : DataAttribute, IParameterDataSource
+	public abstract class DataSourcesBaseAttribute : NUnitAttribute, IParameterDataSource
 	{
 		public bool     IncludeLinqService { get; }
 		public string[] Providers          { get; }
@@ -1147,14 +1147,23 @@ namespace Tests
 		protected DataSourcesBaseAttribute(bool includeLinqService, string[] providers)
 		{
 			IncludeLinqService = includeLinqService;
-			Providers = providers;
+			Providers          = providers;
 		}
 
 		public IEnumerable GetData(IParameterInfo parameter)
 		{
+			var skipAttrs = new HashSet<string>(
+				from a in parameter.Method.GetCustomAttributes<SkipCategoryAttribute>(true)
+				where a.ProviderName != null && TestBase.SkipCategories.Contains(a.Category)
+				select a.ProviderName);
+
+			var providers = skipAttrs.Count == 0 ?
+				GetProviders().ToList() :
+				GetProviders().Where(a => !skipAttrs.Contains(a)).ToList();
+
 			if (!IncludeLinqService)
-				return GetProviders();
-			var providers = GetProviders().ToArray();
+				return providers;
+
 			return providers.Concat(providers.Select(p => p + ".LinqService"));
 		}
 
@@ -1181,7 +1190,7 @@ namespace Tests
 	[AttributeUsage(AttributeTargets.Parameter)]
 	public class IncludeDataSourcesAttribute : DataSourcesBaseAttribute
 	{
-		public IncludeDataSourcesAttribute(params string[] includeProviders) : base(true, includeProviders)
+		public IncludeDataSourcesAttribute(params string[] includeProviders) : base(false, includeProviders)
 		{
 		}
 
@@ -1197,7 +1206,7 @@ namespace Tests
 
 	public class SQLiteDataSourcesAttribute : IncludeDataSourcesAttribute
 	{
-		public SQLiteDataSourcesAttribute(bool includeLinqService = false) : base(includeLinqService, 
+		public SQLiteDataSourcesAttribute(bool includeLinqService = false) : base(includeLinqService,
 			ProviderName.SQLiteClassic, ProviderName.SQLite, ProviderName.SQLiteMS)
 		{
 		}

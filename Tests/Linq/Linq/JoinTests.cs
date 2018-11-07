@@ -16,7 +16,7 @@ namespace Tests.Linq
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TResult>(
 			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
 			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner,
-			                                SqlJoinType                   joinType, 
+			                                SqlJoinType                   joinType,
 			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, bool>    predicate,
 			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, TResult> resultSelector)
 		{
@@ -51,9 +51,9 @@ namespace Tests.Linq
 
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TKey, TResult>(
 			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
-			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner, 
+			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner,
 			                                SqlJoinType                   joinType,
-			[JetBrains.Annotations.NotNull] Func<TOuter, TKey>            outerKeySelector, 
+			[JetBrains.Annotations.NotNull] Func<TOuter, TKey>            outerKeySelector,
 			[JetBrains.Annotations.NotNull] Func<TInner, TKey>            innerKeySelector,
 			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, TResult> resultSelector)
 		{
@@ -961,8 +961,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void LeftJoinTest2(string context)
+		[Test]
+		public void LeftJoinTest2([IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+			string context)
 		{
 			// THIS TEST MUST BE RUN IN RELEASE CONFIGURATION (BECAUSE IT PASSES UNDER DEBUG CONFIGURATION)
 			// Reproduces the problem described here: http://rsdn.ru/forum/prj.rfd/4221837.flat.aspx
@@ -981,8 +982,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Explicit, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012/*, ProviderName.SqlServer2014*/)]
-		public void StackOverflow(string context)
+		[Test, Explicit]
+		public void StackOverflow([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012/*, ProviderName.SqlServer2014*/)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1004,8 +1007,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
-		public void ApplyJoin(string context)
+		[Test]
+		public void ApplyJoin([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1127,8 +1133,8 @@ namespace Tests.Linq
 					);
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.SqlServer2012)]
-		public void FromLeftJoinTest(string context)
+		[Test]
+		public void FromLeftJoinTest([IncludeDataSources(true, ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1150,7 +1156,7 @@ namespace Tests.Linq
 
 		public class AllJoinsSourceAttribute : IncludeDataSourcesAttribute
 		{
-			public AllJoinsSourceAttribute() : base(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+			public AllJoinsSourceAttribute() : base(true, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
 				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird, ProviderName.PostgreSQL)
 			{
 			}
@@ -1325,7 +1331,7 @@ namespace Tests.Linq
 					select new { ParentID = p.p == null ? (int?)null : p.p.ParentID, ChildID = p.c == null ? (int?)null : p.c.ChildID };
 
 				var actual = db.Parent.Where(p => p.ParentID > 0).Take(10)
-					.Join(db.Child, joinType, (p, c) => p.ParentID == c.ParentID, 
+					.Join(db.Child, joinType, (p, c) => p.ParentID == c.ParentID,
 						(p, c) => new { ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID });
 
 				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),

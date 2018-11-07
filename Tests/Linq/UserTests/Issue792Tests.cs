@@ -113,11 +113,12 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(false,
+		[Test]
+		public void TestWithTransactionThrowsFromProvider([IncludeDataSources(false,
 			ProviderName.DB2,
 			ProviderName.SqlServer2000, ProviderName.SqlServer2005, TestProvName.SqlAzure,
 			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TestWithTransactionThrowsFromProvider(string context)
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			using (var ts = db.BeginTransaction())
@@ -126,7 +127,7 @@ namespace Tests.UserTests
 
 				var sp = db.DataProvider.GetSchemaProvider();
 
-				var ex = Assert.Catch(() => sp.GetSchema(db, new GetSchemaOptions()
+				var ex = Assert.Catch(() => sp.GetSchema(db, new GetSchemaOptions
 				{
 					GetTables = false
 				}));
@@ -136,10 +137,11 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(false,
+		[Test]
+		public void TestWithTransactionThrowsFromLinqToDB([IncludeDataSources(false,
 			ProviderName.Sybase, ProviderName.SybaseManaged,
 			ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB)]
-		public void TestWithTransactionThrowsFromLinqToDB(string context)
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			using (var ts = db.BeginTransaction())

@@ -216,8 +216,8 @@ namespace Tests.Linq
 					from p in db.Parent1 where arr.Contains(p) select p);
 		}
 
-		[Test, NorthwindDataContext]
-		public void Contains10(string context)
+		[Test]
+		public void Contains10([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -242,8 +242,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void Contains11(string context)
+		[Test]
+		public void Contains11([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -261,8 +261,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void Contains12(string context)
+		[Test]
+		public void Contains12([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -280,8 +280,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void Contains13(string context)
+		[Test]
+		public void Contains13([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{

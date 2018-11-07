@@ -56,8 +56,8 @@ namespace Tests.DataProvider
 			PassValueSql = "SELECT \"ID\" FROM \"{1}\" WHERE \"{0}\" = :p";
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestParameters(string context)
+		[Test]
+		public void TestParameters([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -70,8 +70,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestDataTypes(string context)
+		[Test]
+		public void TestDataTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -127,8 +127,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestDate(string context)
+		[Test]
+		public void TestDate([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -141,8 +141,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestDateTime(string context)
+		[Test]
+		public void TestDateTime([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -157,8 +157,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestChar(string context)
+		[Test]
+		public void TestChar([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -188,8 +188,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestString(string context)
+		[Test]
+		public void TestString([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -208,8 +208,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestBinaryFromDb(string context)
+		[Test]
+		public void TestBinaryFromDb([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var arr = new byte[] {97, 98, 99, 100, 101, 102, 103, 104};
 			using (var conn = new DataConnection(context))
@@ -219,8 +219,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestBinaryParameterSelect(string context)
+		[Test]
+		public void TestBinaryParameterSelect([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var arr1 = new byte[] { 46, 127, 0, 5 };
 
@@ -239,8 +239,8 @@ namespace Tests.DataProvider
 		}
 
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestXml(string context)
+		[Test]
+		public void TestXml([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -265,8 +265,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestEnum1(string context)
+		[Test]
+		public void TestEnum1([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -277,8 +277,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestEnum2(string context)
+		[Test]
+		public void TestEnum2([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -393,20 +393,20 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void BulkCopyMultipleRows(string context)
+		[Test]
+		public void BulkCopyMultipleRows([IncludeDataSources(CurrentProvider)] string context)
 		{
 			BulkCopyTest(context, BulkCopyType.MultipleRows);
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void BulkCopyProviderSpecific(string context)
+		[Test]
+		public void BulkCopyProviderSpecific([IncludeDataSources(CurrentProvider)] string context)
 		{
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void BulkCopyProviderSpecificUpperCaseColumns(string context)
+		[Test]
+		public void BulkCopyProviderSpecificUpperCaseColumns([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -429,8 +429,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void BulkCopyProviderSpecificLowerCaseColumns(string context)
+		[Test]
+		public void BulkCopyProviderSpecificLowerCaseColumns([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -452,9 +452,8 @@ namespace Tests.DataProvider
 				Assert.That(count, Is.EqualTo(10));
 			}
 		}
-		
 
-		public void BulkCopyLinqTypes(string context)
+		public void BulkCopyLinqTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
@@ -479,9 +478,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void CalculationViewLinqQuery(string context)
+		[Test]
+		public void CalculationViewLinqQuery([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var ctx = new CalcViewInputParameters(context))
 			{
@@ -492,8 +490,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void CalculationViewLinqQueryCaching(string context)
+		[Test]
+		public void CalculationViewLinqQueryCaching([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var ctx = new CalcViewInputParameters(context))
 			{
@@ -524,7 +522,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-
 		[Table(Schema = "_SYS_BIC", Name = "FIT/CA_PARAM_TEST")]
 		public partial class FIT_CA_PARAM_TEST
 		{
@@ -543,6 +540,5 @@ namespace Tests.DataProvider
 			[Column, Nullable]
 			public string stringoptional { get; set; }
 		}
-
 	}
 }

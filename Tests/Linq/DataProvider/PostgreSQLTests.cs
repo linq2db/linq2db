@@ -44,8 +44,8 @@ namespace Tests.DataProvider
 
 		const string CurrentProvider = ProviderName.PostgreSQL;
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestParameters(string context)
+		[Test]
+		public void TestParameters([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -264,8 +264,8 @@ namespace Tests.DataProvider
 			TestNumeric(conn, (T?)null, dataType);
 		}
 
-		//[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestNumerics(string context)
+		//[Test]
+		public void TestNumerics([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -313,8 +313,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestDate(string context)
+		[Test]
+		public void TestDate([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -331,8 +331,8 @@ namespace Tests.DataProvider
 		/// Ensure we can pass data as Json parameter type and get
 		/// same value back out equivalent in value
 		/// </summary>
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestJson(string context)
+		[Test]
+		public void TestJson([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -346,8 +346,8 @@ namespace Tests.DataProvider
 		/// Ensure we can pass data as binary json and have things handled
 		/// with values coming back as being equivalent in value
 		/// </summary>
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestJsonb(string context)
+		[Test]
+		public void TestJsonb([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var json = new { name = "bob", age = 10 };
 			using (var conn = new DataConnection(context))
@@ -362,8 +362,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestDateTime(string context)
+		[Test]
+		public void TestDateTime([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -378,8 +378,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestChar(string context)
+		[Test]
+		public void TestChar([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -414,8 +414,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestString(string context)
+		[Test]
+		public void TestString([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -441,8 +441,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestBinary(string context)
+		[Test]
+		public void TestBinary([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var arr1 = new byte[] { 48, 57 };
 
@@ -462,8 +462,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestGuid(string context)
+		[Test]
+		public void TestGuid([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -482,8 +482,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestXml(string context)
+		[Test]
+		public void TestXml([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -508,8 +508,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestEnum1(string context)
+		[Test]
+		public void TestEnum1([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -520,8 +520,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestEnum2(string context)
+		[Test]
+		public void TestEnum2([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -534,8 +534,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void SequenceInsert1(string context)
+		[Test]
+		public void SequenceInsert1([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -550,8 +550,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void SequenceInsert2(string context)
+		[Test]
+		public void SequenceInsert2([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -566,8 +566,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void SequenceInsert3(string context)
+		[Test]
+		public void SequenceInsert3([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -582,8 +582,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void SequenceInsertWithIdentity1(string context)
+		[Test]
+		public void SequenceInsertWithIdentity1([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -600,8 +600,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void SequenceInsertWithIdentity2(string context)
+		[Test]
+		public void SequenceInsertWithIdentity2([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -618,8 +618,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void SequenceInsertWithIdentity3(string context)
+		[Test]
+		public void SequenceInsertWithIdentity3([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -636,8 +636,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void SequenceInsertWithIdentity4(string context)
+		[Test]
+		public void SequenceInsertWithIdentity4([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -652,8 +652,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void SequenceInsertWithIdentity5(string context)
+		[Test]
+		public void SequenceInsertWithIdentity5([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -668,8 +668,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void BulkCopyLinqTypes(string context)
+		[Test]
+		public void BulkCopyLinqTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
@@ -699,8 +699,8 @@ namespace Tests.DataProvider
 			public string cdni_cd_cod_numero_item1;
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void Issue140(string context)
+		[Test]
+		public void Issue140([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -717,8 +717,8 @@ namespace Tests.DataProvider
 			public Guid Guid;
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void CreateTableTest(string context)
+		[Test]
+		public void CreateTableTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<CreateTableTestClass>())
@@ -740,8 +740,8 @@ namespace Tests.DataProvider
 		}
 
 #if !NPGSQL226
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void NpgsqlDateTimeTest(string context)
+		[Test]
+		public void NpgsqlDateTimeTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			PostgreSQLTools.GetDataProvider().CreateConnection(DataConnection.GetConnectionString(context));
 
@@ -821,7 +821,7 @@ namespace Tests.DataProvider
 
 		// test that native bulk copy method inserts data properly
 		[Test]
-		public void BulkCopyTest([Values]BulkTestMode mode, [IncludeDataSources(false, CurrentProvider)] string context)
+		public void BulkCopyTest([Values] BulkTestMode mode, [IncludeDataSources(CurrentProvider)] string context)
 		{
 			var testData = new[]
 			{
@@ -1668,7 +1668,7 @@ namespace Tests.DataProvider
 
 #if !NETSTANDARD1_6
 		public void SchemaProceduresLoadedTest(
-			[IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)] string context)
+			[IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1683,7 +1683,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void ProceduresSchemaProviderTest(
-			[IncludeDataSources(false, ProviderName.PostgreSQL)] string context,
+			[IncludeDataSources(ProviderName.PostgreSQL)] string context,
 			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
@@ -1809,7 +1809,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestVoidFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestVoidFunction([IncludeDataSources(ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1822,7 +1822,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestCustomAggregate([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestCustomAggregate([IncludeDataSources(ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1844,7 +1844,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestCustomAggregateNotNullable([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestCustomAggregateNotNullable([IncludeDataSources(ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1866,7 +1866,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestTableFunction([IncludeDataSources(ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1888,7 +1888,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestParametersFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestParametersFunction([IncludeDataSources(ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1904,7 +1904,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestScalarTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestScalarTableFunction([IncludeDataSources(ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1919,7 +1919,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestRecordTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestRecordTableFunction([IncludeDataSources(ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1935,7 +1935,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestScalarFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestScalarFunction([IncludeDataSources(ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1946,7 +1946,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestSingleOutParameterFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestSingleOutParameterFunction([IncludeDataSources(ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1958,7 +1958,7 @@ namespace Tests.DataProvider
 
 		[ActiveIssue("Functionality not implemented yet")]
 		[Test]
-		public void TestDynamicRecordFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestDynamicRecordFunction([IncludeDataSources(ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1977,7 +1977,7 @@ namespace Tests.DataProvider
 
 		[ActiveIssue("Functionality not implemented yet")]
 		[Test]
-		public void TestDynamicTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestDynamicTableFunction([IncludeDataSources(ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -27,8 +27,10 @@ namespace Tests.Data
 				new DataParameter("@id", @id));
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Test(string context)
+		[Test]
+		public void Test([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{

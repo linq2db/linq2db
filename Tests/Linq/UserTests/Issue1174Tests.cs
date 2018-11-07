@@ -77,6 +77,6 @@ namespace Tests.UserTests
 					Assert.IsNotNull(user2Task.Result);
 				}
 			}
-		}		
+		}
 	}
 }

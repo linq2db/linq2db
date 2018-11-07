@@ -13,8 +13,10 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue264Tests : TestBase
 	{
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Test1(string context)
+		[Test]
+		public void Test1([IncludeDataSources(false,
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -30,8 +32,10 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Test2(string context)
+		[Test]
+		public void Test2([IncludeDataSources(false,
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -47,8 +51,10 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Test3(string context)
+		[Test]
+		public void Test3([IncludeDataSources(false,
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -64,8 +70,10 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TestWorkaround(string context)
+		[Test]
+		public void TestWorkaround([IncludeDataSources(false,
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{

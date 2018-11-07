@@ -257,8 +257,8 @@ namespace Tests.Linq
 					select c);
 		}
 
-		[Test, NorthwindDataContext]
-		public void AllNestedTest(string context)
+		[Test]
+		public void AllNestedTest([NorthwindDataContext] string context)
 		{
 			var dd = GetNorthwindAsList(context);
 
@@ -272,8 +272,8 @@ namespace Tests.Linq
 					select c);
 		}
 
-		[Test, NorthwindDataContext]
-		public void ComplexAllTest(string context)
+		[Test]
+		public void ComplexAllTest([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{

@@ -94,8 +94,11 @@ namespace Tests.Linq
 					from p in db.Parent where p.Children.Count > 2 select p);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana)]
-		public void SubQueryCount(string context)
+		[Test]
+		public void SubQueryCount([IncludeDataSources(
+				ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+				ProviderName.SqlServer2014, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

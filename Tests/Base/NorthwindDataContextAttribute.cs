@@ -2,8 +2,8 @@
 
 namespace Tests
 {
-	[AttributeUsage(AttributeTargets.Method)]
-	public class NorthwindDataContextAttribute : IncludeDataContextSourceAttribute
+	[AttributeUsage(AttributeTargets.Parameter)]
+	public class NorthwindDataContextAttribute : IncludeDataSourcesAttribute
 	{
 		public NorthwindDataContextAttribute(bool excludeSqlite, bool excludeSqliteMs = false)
 			: base(

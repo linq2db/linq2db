@@ -217,8 +217,10 @@ namespace Tests.Linq
 
 		// ProviderName.SqlServer2014 disabled due to:
 		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SapHana, ParallelScope = ParallelScope.None)]
-		public void MultipleSelect11(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void MultipleSelect11([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SapHana)]
+			string context)
 		{
 			var dt = DateTime.Now;
 

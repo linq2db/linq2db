@@ -4,6 +4,7 @@ using System.Linq;
 namespace Tests
 {
 	[AttributeUsage(AttributeTargets.Method)]
+	[Obsolete]
 	public class DataContextSourceAttribute : BaseDataContextSourceAttribute
 	{
 		public DataContextSourceAttribute()

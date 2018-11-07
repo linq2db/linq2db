@@ -941,8 +941,8 @@ namespace Tests.Linq
 					db.Parent.Where(p_ => p_.ParentID == 3));
 		}
 
-		[Test, NorthwindDataContext]
-		public void SelectNestedCalculatedTest(string context)
+		[Test]
+		public void SelectNestedCalculatedTest([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -1270,7 +1270,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereBooleanTest2([DataSources(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Firebird, TestProvName.Firebird3)] string context)
+		public void WhereBooleanTest2(
+			[DataSources(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			void AreEqualLocal(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases,bool>> predicate)
 			{

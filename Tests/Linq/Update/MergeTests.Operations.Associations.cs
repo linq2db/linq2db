@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
+
 using Tests.Model;
 
 using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -11,8 +11,8 @@ namespace Tests.xUpdate
 {
 	public partial class MergeTests
 	{
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceAssociationInDeleteBySourcePredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceAssociationInDeleteBySourcePredicate([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -284,8 +284,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceAssociationInUpdateBySource(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceAssociationInUpdateBySource([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -325,8 +325,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceAssociationInUpdateBySourcePredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceAssociationInUpdateBySourcePredicate(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -407,8 +408,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceAssociationInDeleteBySourcePredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceAssociationInDeleteBySourcePredicate(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -684,8 +686,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceAssociationInUpdateBySource(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceAssociationInUpdateBySource([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -726,8 +728,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceAssociationInUpdateBySourcePredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceAssociationInUpdateBySourcePredicate(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -844,8 +847,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeUpdateWithDeleteDataContextSource]
-		public void SameSourceAssociationInUpdateWithDeleteDeletePredicate(string context)
+		[Test]
+		public void SameSourceAssociationInUpdateWithDeleteDeletePredicate(
+			[MergeUpdateWithDeleteDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -878,8 +882,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeUpdateWithDeleteDataContextSource]
-		public void OtherSourceAssociationInUpdateWithDeleteDeletePredicate(string context)
+		[Test]
+		public void OtherSourceAssociationInUpdateWithDeleteDeletePredicate(
+			[MergeUpdateWithDeleteDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())

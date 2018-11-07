@@ -22,8 +22,9 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = false;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void Test1(string context)
+		[Test]
+		public void Test1([IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{

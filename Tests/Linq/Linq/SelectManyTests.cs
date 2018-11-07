@@ -626,8 +626,8 @@ namespace Tests.Linq
 						.SelectMany(ch => ch.p.GrandChildren, (ch, t) => new { t, ch }));
 		}
 
-		[Test, NorthwindDataContext]
-		public void Test157_1(string context)
+		[Test]
+		public void Test157_1([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -745,8 +745,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void Test157_2(string context)
+		[Test]
+		public void Test157_2([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{

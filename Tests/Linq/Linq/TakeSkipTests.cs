@@ -359,8 +359,11 @@ namespace Tests.Linq
 					db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(3));
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TakeWithPercent(string context)
+		[Test]
+		public void TakeWithPercent([IncludeDataSources(
+			ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -374,8 +377,11 @@ namespace Tests.Linq
 
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TakeWithPercent1(string context)
+		[Test]
+		public void TakeWithPercent1([IncludeDataSources(
+			ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -389,8 +395,11 @@ namespace Tests.Linq
 
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TakeWithTies(string context)
+		[Test]
+		public void TakeWithTies([IncludeDataSources(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -405,8 +414,11 @@ namespace Tests.Linq
 
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TakeWithTies2(string context)
+		[Test]
+		public void TakeWithTies2([IncludeDataSources(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -421,8 +433,11 @@ namespace Tests.Linq
 
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void SkipTakeWithTies(string context)
+		[Test]
+		public void SkipTakeWithTies([IncludeDataSources(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -432,15 +447,18 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SqlCe, ProviderName.SQLiteMS)]
-		public void TakeWithHintsFails(string context)
+		[Test]
+		public void TakeWithHintsFails([IncludeDataSources(
+			ProviderName.SQLiteClassic, ProviderName.SqlCe, ProviderName.SQLiteMS)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.Throws<LinqException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void TakeSkipJoin(string context)
+		[Test]
+		public void TakeSkipJoin([IncludeDataSources(ProviderName.Sybase, ProviderName.SybaseManaged)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{

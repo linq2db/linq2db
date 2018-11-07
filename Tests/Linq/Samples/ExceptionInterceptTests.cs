@@ -93,8 +93,9 @@ namespace Tests.Samples
 		}
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
-		[Test, IncludeDataContextSource(false, ProviderName.SQLiteClassic)]
-		public void StandardExceptionExecuteReader(string context)
+		[Test]
+		public void StandardExceptionExecuteReader([IncludeDataSources(false, ProviderName.SQLiteClassic)]
+			string context)
 		{
 			Assert.Throws<SQLiteException>(() =>
 			{

@@ -145,8 +145,8 @@ namespace Tests.Linq
 					from p in QueryTable<ParentInheritance1>(db) where p.ParentID == 1 select p);
 		}
 
-		[Test, NorthwindDataContext]
-		public void TypeCastAsTest1(string context)
+		[Test]
+		public void TypeCastAsTest1([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -161,8 +161,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void TypeCastAsTest11(string context)
+		[Test]
+		public void TypeCastAsTest11([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -177,8 +177,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void TypeCastAsTest2(string context)
+		[Test]
+		public void TypeCastAsTest2([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -193,8 +193,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void FirstOrDefault(string context)
+		[Test]
+		public void FirstOrDefault([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -246,8 +246,8 @@ namespace Tests.Linq
 				Assert.AreEqual(1, QueryTable<PersonEx>(db).Where(_ => _.FirstName == "John").Select(_ => _.ID).Single());
 		}
 
-		[Test, NorthwindDataContext]
-		public void TypeCastIsChildConditional2(string context)
+		[Test]
+		public void TypeCastIsChildConditional2([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{

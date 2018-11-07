@@ -47,8 +47,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void MergeWithDelete(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void MergeWithDelete([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -64,8 +64,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void MergeWithDeletePredicate1(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void MergeWithDeletePredicate1([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -81,8 +81,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void MergeWithDeletePredicate3(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void MergeWithDeletePredicate3([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -115,8 +115,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void MergeWithDeletePredicate4(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void MergeWithDeletePredicate4([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -151,8 +151,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void MergeWithDeletePredicate5(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void MergeWithDeletePredicate5([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())

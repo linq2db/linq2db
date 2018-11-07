@@ -29,8 +29,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
-		public void Test(string context)
+		[Test]
+		public void Test([IncludeDataSources(ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

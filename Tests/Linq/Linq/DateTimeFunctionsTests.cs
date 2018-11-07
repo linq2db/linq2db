@@ -285,8 +285,8 @@ namespace Tests.Linq
 					from t in db.Types select TruncMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
 		}
 
-		[Test, IncludeDataContextSource(TestProvName.MySql57)]
-		public void TimeOfDay2(string context)
+		[Test]
+		public void TimeOfDay2([IncludeDataSources(TestProvName.MySql57)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -721,8 +721,8 @@ namespace Tests.Linq
 
 		#endregion
 
-		[Test, DataContextSource(ProviderName.PostgreSQL)]
-		public void GetDateTest1(string context)
+		[Test]
+		public void GetDateTest1([DataSources(ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

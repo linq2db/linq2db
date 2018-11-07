@@ -2,7 +2,7 @@
 // TODO: try to uncomment, when newer version used on Travis
 #if !MONO
 using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -12,43 +12,17 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using Tests.Model;
+	using Model;
 
 	[TestFixture]
 	public class Issue278Tests : TestBase
 	{
-		private const int TOTAL_QUERIES_PER_RUN = 1000;
-
-		private static readonly int[] ThreadsCount = new[] { 1, 2, 5, 10, 20 };
-
-		//private static IDictionary<string, TimeSpan> _results = new Dictionary<string, TimeSpan>();
-
-		private static readonly Tuple<string, Action<ITestDataContext>[]>[] ActionSets = new[]
-		{
-			// linq queries
-			Tuple.Create("Select"                 , new Action<ITestDataContext>[] { Select                                                             }),
-			Tuple.Create("Insert"                 , new Action<ITestDataContext>[] { Insert                                                             }),
-			Tuple.Create("InsertWithIdentity"     , new Action<ITestDataContext>[] { InsertWithIdentity                                                 }),
-			Tuple.Create("InsertOrUpdate"         , new Action<ITestDataContext>[] { InsertOrUpdate                                                     }),
-			Tuple.Create("Update"                 , new Action<ITestDataContext>[] { Update                                                             }),
-			Tuple.Create("Delete"                 , new Action<ITestDataContext>[] { Delete                                                             }),
-			Tuple.Create("MixedLinq"              , new Action<ITestDataContext>[] { Select, Insert, InsertWithIdentity, InsertOrUpdate, Update, Delete }),
-
-			// object queries
-			Tuple.Create("InsertObject"             , new Action<ITestDataContext>[] { InsertObject                                                                             }),
-			Tuple.Create("InsertWithIdentityObject" , new Action<ITestDataContext>[] { InsertWithIdentityObject                                                                 }),
-			Tuple.Create("InsertOrUpdateObject"     , new Action<ITestDataContext>[] { InsertOrUpdateObject                                                                     }),
-			Tuple.Create("UpdateObject"             , new Action<ITestDataContext>[] { UpdateObject                                                                             }),
-			Tuple.Create("DeleteObject"             , new Action<ITestDataContext>[] { DeleteObject                                                                             }),
-			Tuple.Create("MixedObject"              , new Action<ITestDataContext>[] { InsertObject, InsertWithIdentityObject, InsertOrUpdateObject, UpdateObject, DeleteObject }),
-
-			// linq and object queries mixed
-			Tuple.Create("MixedAll", new Action<ITestDataContext>[] { Select, Insert, InsertWithIdentity, InsertOrUpdate, Update, Delete, InsertObject, InsertWithIdentityObject, InsertOrUpdateObject, UpdateObject, DeleteObject }),
-		};
+		const int TOTAL_QUERIES_PER_RUN = 1000;
 
 		enum CacheMode
 		{
@@ -58,32 +32,47 @@ namespace Tests.UserTests
 			NoCacheScope
 		}
 
-		[AttributeUsage(AttributeTargets.Method)]
-		class Issue278TestSourceAttribute : IncludeDataContextSourceAttribute
+		class Issue278TestData : TestCaseSourceAttribute
 		{
-			private readonly CacheMode _mode;
-
-			public Issue278TestSourceAttribute(CacheMode mode)
-				: base(TestProvName.NoopProvider)
+			public Issue278TestData(CacheMode mode)
+				: base(typeof(Issue278TestData), nameof(TestData), new object[] { mode })
 			{
-				// test using noop test provider to be not affected by provider side-effects
-				_mode = mode;
 			}
 
-			protected override IEnumerable<Tuple<object[], string>> GetParameters(string provider)
+			static IEnumerable TestData(CacheMode mode)
 			{
-				foreach (var cnt in ThreadsCount)
-				{
-					foreach (var set in ActionSets)
-					{
-						var baseName = string.Format("TestPerformance.set={0}.threads={1:00}.cache={2}", set.Item1, cnt, _mode);
-						yield return Tuple.Create(new object[] { provider, cnt, set.Item2, baseName }, baseName);
-					}
-				}
+				foreach (var provider in UserProviders.Where(p => p == TestProvName.NoopProvider))
+					foreach (var cnt in new[] { 1, 2, 5, 10, 20 })
+						foreach (var set in new[]
+						{
+							// linq queries
+							new { Name = "Select",                   Action = new Action<ITestDataContext>[] { Select                                                             } },
+							new { Name = "Insert",                   Action = new Action<ITestDataContext>[] { Insert                                                             } },
+							new { Name = "InsertWithIdentity",       Action = new Action<ITestDataContext>[] { InsertWithIdentity                                                 } },
+							new { Name = "InsertOrUpdate",           Action = new Action<ITestDataContext>[] { InsertOrUpdate                                                     } },
+							new { Name = "Update",                   Action = new Action<ITestDataContext>[] { Update                                                             } },
+							new { Name = "Delete",                   Action = new Action<ITestDataContext>[] { Delete                                                             } },
+							new { Name = "MixedLinq",                Action = new Action<ITestDataContext>[] { Select, Insert, InsertWithIdentity, InsertOrUpdate, Update, Delete } },
+
+							// object queries
+							new { Name = "InsertObject",             Action = new Action<ITestDataContext>[] { InsertObject                                                                             } },
+							new { Name = "InsertWithIdentityObject", Action = new Action<ITestDataContext>[] { InsertWithIdentityObject                                                                 } },
+							new { Name = "InsertOrUpdateObject",     Action = new Action<ITestDataContext>[] { InsertOrUpdateObject                                                                     } },
+							new { Name = "UpdateObject",             Action = new Action<ITestDataContext>[] { UpdateObject                                                                             } },
+							new { Name = "DeleteObject",             Action = new Action<ITestDataContext>[] { DeleteObject                                                                             } },
+							new { Name = "MixedObject",              Action = new Action<ITestDataContext>[] { InsertObject, InsertWithIdentityObject, InsertOrUpdateObject, UpdateObject, DeleteObject } },
+
+							// linq and object queries mixed
+							new { Name = "MixedAll",                 Action = new Action<ITestDataContext>[] { Select, Insert, InsertWithIdentity, InsertOrUpdate, Update, Delete, InsertObject, InsertWithIdentityObject, InsertOrUpdateObject, UpdateObject, DeleteObject } },
+						})
+						{
+							var baseName = $"TestPerformance_set={set.Name}_threads={cnt:00}_cache={mode}";
+							yield return new TestCaseData(provider, cnt, set.Action, baseName) { TestName = baseName };
+						}
 			}
 		}
 
-		[Issue278TestSource(CacheMode.CacheEnabled)]
+		[Issue278TestData(CacheMode.CacheEnabled)]
 		public void TestPerformanceWithCache(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
 			var oldValue = Configuration.Linq.DisableQueryCache;
@@ -100,7 +89,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Issue278TestSource(CacheMode.CacheDisabled)]
+		[Issue278TestData(CacheMode.CacheDisabled)]
 		public void TestPerformanceWithoutCache(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
 			var oldValue = Configuration.Linq.DisableQueryCache;
@@ -117,7 +106,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Issue278TestSource(CacheMode.ClearCache)]
+		[Issue278TestData(CacheMode.ClearCache)]
 		public void TestPerformanceWithCacheClear(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
 			var oldValue = Configuration.Linq.DisableQueryCache;
@@ -134,7 +123,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Issue278TestSource(CacheMode.NoCacheScope)]
+		[Issue278TestData(CacheMode.NoCacheScope)]
 		public void TestPerformanceWithNoCacheScope(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
 			var oldValue = Configuration.Linq.DisableQueryCache;
@@ -151,8 +140,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[IncludeDataContextSource(false, TestProvName.NoopProvider)]
-		public void TestQueryCacheFull(string context)
+		[Test]
+		public void TestQueryCacheFull([IncludeDataSources(false, TestProvName.NoopProvider)] string context)
 		{
 			var oldValue = Configuration.Linq.DisableQueryCache;
 
@@ -190,8 +179,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[IncludeDataContextSource(false, TestProvName.NoopProvider)]
-		public void TestQueryCacheOverflow(string context)
+		[Test]
+		public void TestQueryCacheOverflow([IncludeDataSources(false, TestProvName.NoopProvider)] string context)
 		{
 			var oldValue = Configuration.Linq.DisableQueryCache;
 

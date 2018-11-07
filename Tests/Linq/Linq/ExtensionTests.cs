@@ -19,29 +19,37 @@ namespace Tests.Linq
 			public int? Value1;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TableName(string context)
+		[Test]
+		public void TableName([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<ParenTable>().TableName("Parent").ToList();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void DatabaseName(string context)
+		[Test]
+		public void DatabaseName([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<Parent>().DatabaseName(TestUtils.GetDatabaseName(db)).ToList();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void SchemaName(string context)
+		[Test]
+		public void SchemaName([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<Parent>().SchemaName("dbo").ToList();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void AllNames(string context)
+		[Test]
+		public void AllNames([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<ParenTable>()
@@ -51,8 +59,8 @@ namespace Tests.Linq
 					.ToList();
 		}
 
-		[Test, DataContextSource]
-		public void GetTableNameTest(string context)
+		[Test]
+		public void GetTableNameTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

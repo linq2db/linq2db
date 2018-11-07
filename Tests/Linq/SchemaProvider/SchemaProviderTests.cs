@@ -126,8 +126,8 @@ namespace Tests.SchemaProvider
 			//Assert.That(schemaTable.ForeignKeys.Count >= e.Associations.Count);
 		}
 
-		[Test, NorthwindDataContext(false, true)]
-		public void NorthwindTest(string context)
+		[Test]
+		public void NorthwindTest([NorthwindDataContext(false, true)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -140,8 +140,10 @@ namespace Tests.SchemaProvider
 
 #if !NETSTANDARD2_0
 
-		[Test, IncludeDataContextSource(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void MySqlTest(string context)
+		[Test]
+		public void MySqlTest([IncludeDataSources(
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -159,8 +161,10 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void MySqlPKTest(string context)
+		[Test]
+		public void MySqlPKTest([IncludeDataSources(
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -181,8 +185,8 @@ namespace Tests.SchemaProvider
 			[PrimaryKey(2)] public int ID2;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]
-		public void PostgreSQLTest(string context)
+		[Test]
+		public void PostgreSQLTest([IncludeDataSources(ProviderName.PostgreSQL)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -201,8 +205,8 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.DB2)]
-		public void DB2Test(string context)
+		[Test]
+		public void DB2Test([IncludeDataSources(ProviderName.DB2)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -269,8 +273,9 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)]
-		public void SchemaProviderNormalizeName(string context)
+		[Test]
+		public void SchemaProviderNormalizeName([IncludeDataSources(ProviderName.SQLiteClassic)]
+			string context)
 		{
 			using (var db = new DataConnection(context, "Data Source=:memory:;"))
 			{
@@ -334,9 +339,11 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(false,
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void ForeignKeyMemberNameTest1(string context)
+		[Test]
+		public void ForeignKeyMemberNameTest1([IncludeDataSources(false,
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -355,8 +362,9 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, TestProvName.Northwind)]
-		public void ForeignKeyMemberNameTest2(string context)
+		[Test]
+		public void ForeignKeyMemberNameTest2([IncludeDataSources(false, TestProvName.Northwind)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{

@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+
+using LinqToDB;
+
 using NUnit.Framework;
 
 namespace Tests.Infrastructure
@@ -7,20 +10,22 @@ namespace Tests.Infrastructure
 		Details = "Active Issue Testing: Noop provider disabled on fixture level for non-wcf tests",
 		Configuration = TestProvName.NoopProvider,
 		SkipForLinqService = true)]
-	internal class ActiveIssueConfigurationTests : TestBase
+	public class ActiveIssueConfigurationTests : TestBase
 	{
 		[Test]
 		[ActiveIssue(Details = "Active Issue Testing: all configurations disabled")]
-		[IncludeDataContextSource(true, TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
-		public void AllConfigurationsDisabledTest(string configuration)
+		public void AllConfigurationsDisabledTest([IncludeDataSources(true,
+			TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
+			string configuration)
 		{
 			Assert.Fail("This test should be available only for explicit run");
 		}
 
 		[Test]
 		[ActiveIssue(Details = "Active Issue Testing: sqlite disabled", Configuration = ProviderName.SQLiteClassic)]
-		[IncludeDataContextSource(true, TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
-		public void OneProviderDisabledTest(string configuration)
+		public void OneProviderDisabledTest([IncludeDataSources(true,
+			TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
+			string configuration)
 		{
 			switch (configuration)
 			{
@@ -35,12 +40,16 @@ namespace Tests.Infrastructure
 					break;
 			}
 
-			Assert.Fail($"Unexprected configuration: {configuration}");
+			Assert.Fail($"Unexpected configuration: {configuration}");
 		}
+	}
 
+	public class ActiveIssueConfigurationTestsXXX : TestBase
+	{
 		[Test]
-		[IncludeDataContextSource(true, TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
-		public void NoopProviderDisabledOnFixtureLevelTest(string configuration)
+		public void NoopProviderDisabledOnFixtureLevelTest([IncludeDataSources(true,
+			TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
+			string configuration)
 		{
 			switch (configuration)
 			{
@@ -55,7 +64,7 @@ namespace Tests.Infrastructure
 					break;
 			}
 
-			Assert.Fail($"Unexprected configuration: {configuration}");
+			Assert.Fail($"Unexpected configuration: {configuration}");
 		}
 
 		[Test]
@@ -63,8 +72,9 @@ namespace Tests.Infrastructure
 			Details = "Active Issue Testing: sqlite non-wcf disabled",
 			Configuration = ProviderName.SQLiteClassic,
 			SkipForLinqService = true)]
-		[IncludeDataContextSource(true, TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
-		public void NonWcfTestDisabledTest(string configuration)
+		public void NonWcfTestDisabledTest([IncludeDataSources(true,
+			TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
+			string configuration)
 		{
 			switch (configuration)
 			{
@@ -87,8 +97,9 @@ namespace Tests.Infrastructure
 			Details = "Active Issue Testing: sqlite wcf disabled",
 			Configuration = ProviderName.SQLiteClassic,
 			SkipForNonLinqService = true)]
-		[IncludeDataContextSource(true, TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
-		public void WcfTestDisabledTest(string configuration)
+		public void WcfTestDisabledTest([IncludeDataSources(true,
+			TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
+			string configuration)
 		{
 			switch (configuration)
 			{
@@ -103,7 +114,7 @@ namespace Tests.Infrastructure
 					break;
 			}
 
-			Assert.Fail($"Unexprected configuration: {configuration}");
+			Assert.Fail($"Unexpected configuration: {configuration}");
 		}
 
 		[Test]
@@ -115,8 +126,9 @@ namespace Tests.Infrastructure
 			Details = "Active Issue Testing: sqlite non-wcf disabled",
 			Configuration = ProviderName.SQLiteClassic,
 			SkipForLinqService = true)]
-		[IncludeDataContextSource(true, TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
-		public void MultipleAttributesTest(string configuration)
+		public void MultipleAttributesTest([IncludeDataSources(true,
+			TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
+			string configuration)
 		{
 			switch (configuration)
 			{
@@ -131,7 +143,7 @@ namespace Tests.Infrastructure
 					break;
 			}
 
-			Assert.Fail($"Unexprected configuration: {configuration}");
+			Assert.Fail($"Unexpected configuration: {configuration}");
 		}
 	}
 }

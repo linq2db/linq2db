@@ -80,15 +80,14 @@ namespace Tests.Linq
 
 	public static class GenericExtensionsFunctions
 	{
-		
 		[Sql.Extension(typeof(GenericBuilder))]
 		[ExtensionChoise("", "'T1=UNSUPPORTED PARAMETERS'",                                                                                                             null,           null          )]
 		[ExtensionChoise("", "'T2=(BYTE: ' + CASE WHEN {second} IS NULL THEN 'null' ELSE CAST({second} AS NVARCHAR) END + ')'",                                         null,           typeof(byte?) )]
 		[ExtensionChoise("", "'T3=(BYTE: ' + CAST({first} AS NVARCHAR) + ', INT: ' + CASE WHEN {second} IS NULL THEN 'null' ELSE CAST({second} AS NVARCHAR) END + ')'", typeof(byte),   typeof(int?)  )]
 		[ExtensionChoise("", "'T4=(BYTE: ' + CAST({first} AS NVARCHAR) + ', INT: ' + CAST({second} AS NVARCHAR) + ')'",                                                 typeof(byte),   typeof(int)   )]
 		[ExtensionChoise("", "'T5=(CHAR: ' + CASE WHEN {first} IS NULL THEN 'null' ELSE CAST({first} AS NVARCHAR) END + ', STRING: ' + {second} + ')'",                 typeof(char?),  typeof(string))]
-		public static string TestGenericExpression<TFirstValue, TSecondValue>(this Sql.ISqlExtension ext, 
-			[ExprParameter("first")]  TFirstValue value, 
+		public static string TestGenericExpression<TFirstValue, TSecondValue>(this Sql.ISqlExtension ext,
+			[ExprParameter("first")]  TFirstValue value,
 			[ExprParameter("second")] TSecondValue secondValue)
 		{
 			throw new InvalidOperationException("Server-side call failed");
@@ -98,8 +97,11 @@ namespace Tests.Linq
 	class GenericExtensionTests : TestBase
 	{
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void Issue326(string context)
+		[Test]
+		public void Issue326([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{

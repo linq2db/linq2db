@@ -1,14 +1,17 @@
-﻿using LinqToDB;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
 	/// <summary>
 	/// Test fixes to Issue #1305.
-	/// Before fix fields in derived tables were added first in the column order by <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, LinqToDB.SqlQuery.DefaultNullable)"/>.
+	/// Before fix fields in derived tables were added first in the column order by
+	/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, LinqToDB.SqlQuery.DefaultNullable)"/>.
 	/// </summary>
 	[TestFixture]
 	public class Issue1363Tests : TestBase
@@ -16,16 +19,16 @@ namespace Tests.UserTests
 		[Table("Issue1363")]
 		public sealed class Issue1363Record
 		{
-			[Column("required_field")]
-			public Guid Required { get; set; }
-
-			[Column("optional_field")]
-			public Guid? Optional { get; set; }
+			[Column("required_field")] public Guid  Required { get; set; }
+			[Column("optional_field")] public Guid? Optional { get; set; }
 		}
 
 		// TODO: sqlce,mysql - need to add default db type for create table for Guid
 		[Test]
-		public void TestInsert([DataSources(ProviderName.Access, ProviderName.SqlCe, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)] string context)
+		public void TestInsert([DataSources(
+			ProviderName.Access, ProviderName.SqlCe, ProviderName.MySql,
+			TestProvName.MariaDB, TestProvName.MySql57)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -49,6 +52,5 @@ namespace Tests.UserTests
 				}
 			}
 		}
-
 	}
 }

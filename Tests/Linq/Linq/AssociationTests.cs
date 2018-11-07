@@ -215,8 +215,8 @@ namespace Tests.Linq
 					from p in db.Types group p by p.DateTimeValue.Year into g select g.Key);
 		}
 
-		[Test, NorthwindDataContext]
-		public void EqualsNull1(string context)
+		[Test]
+		public void EqualsNull1([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -227,8 +227,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void EqualsNull2(string context)
+		[Test]
+		public void EqualsNull2([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -239,8 +239,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void EqualsNull3(string context)
+		[Test]
+		public void EqualsNull3([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -251,8 +251,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void StackOverflow1(string context)
+		[Test]
+		public void StackOverflow1([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -487,8 +487,10 @@ namespace Tests.Linq
 					from p1 in db.Parent select p1.ParentTest);
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2012, ProviderName.PostgreSQL)]
-		public void MultipleUse(string context)
+		[Test]
+		public void MultipleUse([IncludeDataSources(
+			ProviderName.SqlServer2012, ProviderName.PostgreSQL)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

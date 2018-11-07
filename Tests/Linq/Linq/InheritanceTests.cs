@@ -152,8 +152,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void TypeCastAsTest1(string context)
+		[Test]
+		public void TypeCastAsTest1([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -168,8 +168,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void TypeCastAsTest11(string context)
+		[Test]
+		public void TypeCastAsTest11([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -184,8 +184,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void TypeCastAsTest2(string context)
+		[Test]
+		public void TypeCastAsTest2([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -200,8 +200,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void FirstOrDefault(string context)
+		[Test]
+		public void FirstOrDefault([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -322,8 +322,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void ReferenceNavigation(string context)
+		[Test]
+		public void ReferenceNavigation([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -348,8 +348,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void TypeCastIsChildConditional1(string context)
+		[Test]
+		public void TypeCastIsChildConditional1([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -363,8 +363,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void TypeCastIsChildConditional2(string context)
+		[Test]
+		public void TypeCastIsChildConditional2([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -379,8 +379,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void TypeCastIsChild(string context)
+		[Test]
+		public void TypeCastIsChild([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -426,8 +426,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void Test15(string context)
+		[Test]
+		public void Test15([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -440,8 +440,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void Test16(string context)
+		[Test]
+		public void Test16([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{

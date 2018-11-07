@@ -11,11 +11,12 @@ namespace LinqToDB.DataProvider.Oracle
 	using Configuration;
 	using Data;
 	using Extensions;
+
 	public enum AlternativeBulkCopy
 	{
 		InsertAll,
 		InsertInto,
-		InsertDual	
+		InsertDual
 	}
 
 	public static partial class OracleTools

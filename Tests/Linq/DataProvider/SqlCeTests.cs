@@ -24,8 +24,8 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlCeTests : DataProviderTestBase
 	{
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void TestParameters(string context)
+		[Test]
+		public void TestParameters([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -38,8 +38,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void TestDataTypes(string context)
+		[Test]
+		public void TestDataTypes([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -116,8 +116,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void TestNumerics(string context)
+		[Test]
+		public void TestNumerics([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -166,8 +166,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void TestDateTime(string context)
+		[Test]
+		public void TestDateTime([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -183,8 +183,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void TestChar(string context)
+		[Test]
+		public void TestChar([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -219,8 +219,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void TestString(string context)
+		[Test]
+		public void TestString([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -248,8 +248,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void TestBinary(string context)
+		[Test]
+		public void TestBinary([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			var arr1 = new byte[] {       48, 57 };
 			var arr2 = new byte[] { 0, 0, 48, 57 };
@@ -278,8 +278,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void TestSqlTypes(string context)
+		[Test]
+		public void TestSqlTypes([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -319,8 +319,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void TestGuid(string context)
+		[Test]
+		public void TestGuid([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -339,8 +339,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void TestTimestamp(string context)
+		[Test]
+		public void TestTimestamp([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -354,8 +354,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void TestXml(string context)
+		[Test]
+		public void TestXml([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -380,8 +380,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void TestEnum1(string context)
+		[Test]
+		public void TestEnum1([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -392,8 +392,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void TestEnum2(string context)
+		[Test]
+		public void TestEnum2([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -413,8 +413,8 @@ namespace Tests.DataProvider
 			public int Id;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void CreateDatabase(string context)
+		[Test]
+		public void CreateDatabase([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			SqlCeTools.CreateDatabase ("TestDatabase");
 			Assert.IsTrue(File.Exists ("TestDatabase.sdf"));
@@ -429,8 +429,8 @@ namespace Tests.DataProvider
 			Assert.IsFalse(File.Exists("TestDatabase.sdf"));
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void BulkCopyLinqTypes(string context)
+		[Test]
+		public void BulkCopyLinqTypes([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
@@ -456,8 +456,8 @@ namespace Tests.DataProvider
 		}
 
 #if !NETSTANDARD1_6
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void Issue695Test(string context)
+		[Test]
+		public void Issue695Test([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -472,8 +472,8 @@ namespace Tests.DataProvider
 		}
 #endif
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void SelectTableWithHintTest(string context)
+		[Test]
+		public void SelectTableWithHintTest([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -481,8 +481,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
-		public void UpdateTableWithHintTest(string context)
+		[Test]
+		public void UpdateTableWithHintTest([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

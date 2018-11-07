@@ -65,8 +65,11 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
-		public void CreateLocalTempTable1(string context)
+		[Test]
+		public void CreateLocalTempTable1([IncludeDataSources(false,
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -113,8 +116,12 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
-		public async Task CreateLocalTempTable1Async(string context)
+		[Test]
+		public async Task CreateLocalTempTable1Async([IncludeDataSources(false,
+			ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -191,8 +198,8 @@ namespace Tests.xUpdate
 			public FieldType3 Field3;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
-		public void CreateTableWithEnum(string context)
+		[Test]
+		public void CreateTableWithEnum([IncludeDataSources(ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -286,8 +293,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
-		public void CreateTable2(string context)
+		[Test]
+		public void CreateTable2([IncludeDataSources(ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -316,8 +323,8 @@ namespace Tests.xUpdate
 			public int Field2;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
-		public void CreateFormatTest(string context)
+		[Test]
+		public void CreateFormatTest([IncludeDataSources(ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

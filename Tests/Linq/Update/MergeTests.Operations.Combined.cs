@@ -148,8 +148,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void InsertUpdateBySourceWithConditionDeleteBySource(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void InsertUpdateBySourceWithConditionDeleteBySource(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -188,8 +189,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void InsertDeleteUpdateBySource(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void InsertDeleteUpdateBySource([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -396,8 +397,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeUpdateWithDeleteDataContextSourceAttribute]
-		public void UpdateWithDeleteWithDeleteCondition(string context)
+		[Test]
+		public void UpdateWithDeleteWithDeleteCondition(
+			[MergeUpdateWithDeleteDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -458,8 +460,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeUpdateWithDeleteDataContextSource]
-		public void InsertUpdateWithDelete(string context)
+		[Test]
+		public void InsertUpdateWithDelete([MergeUpdateWithDeleteDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -659,8 +661,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeUpdateWithDeleteDataContextSourceAttribute]
-		public void UpdateWithDeleteInsert(string context)
+		[Test]
+		public void UpdateWithDeleteInsert([MergeUpdateWithDeleteDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

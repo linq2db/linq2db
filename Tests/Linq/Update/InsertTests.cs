@@ -889,9 +889,11 @@ namespace Tests.xUpdate
 					   public int  Field1;
 		}
 
-		[Test, IncludeDataContextSource(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void InsertWithGuidIdentity(string context)
+		[Test]
+		public void InsertWithGuidIdentity([IncludeDataSources(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -900,9 +902,11 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void InsertWithGuidIdentityOutput(string context)
+		[Test]
+		public void InsertWithGuidIdentityOutput([IncludeDataSources(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
+			string context)
 		{
 			try
 			{
@@ -919,9 +923,11 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void InsertWithIdentityOutput(string context)
+		[Test]
+		public void InsertWithIdentityOutput([IncludeDataSources(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -960,9 +966,11 @@ namespace Tests.xUpdate
 			[Identity] public Guid ID;
 		}
 
-		[Test, IncludeDataContextSource(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void InsertWithGuidIdentity2(string context)
+		[Test]
+		public void InsertWithGuidIdentity2([IncludeDataSources(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -1266,8 +1274,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged)]
-		public void InsertBatch1(string context)
+		[Test]
+		public void InsertBatch1([IncludeDataSources(ProviderName.OracleNative, ProviderName.OracleManaged)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1288,8 +1297,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void InsertBatch2(string context)
+		[Test]
+		public void InsertBatch2([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1528,8 +1539,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008)]//, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void InsertWith(string context)
+		[Test]
+		public void InsertWith([IncludeDataSources(false,
+			ProviderName.SqlServer2008)]//, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			var m = null as int?;
 

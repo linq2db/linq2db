@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 using NUnit.Framework;
@@ -11,7 +10,8 @@ using NUnit.Framework.Internal.Builders;
 namespace Tests
 {
 	[AttributeUsage(AttributeTargets.Method)]
-	public abstract class BaseDataContextSourceAttribute : NUnitAttribute, ITestBuilder, IImplyFixture
+	[Obsolete]
+	public abstract class BaseDataContextSourceAttribute : NUnitAttribute, ITestBuilder, IApplyToTest, IImplyFixture
 	{
 		protected BaseDataContextSourceAttribute(bool includeLinqService, string[] providers)
 		{

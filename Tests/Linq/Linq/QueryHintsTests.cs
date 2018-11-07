@@ -55,8 +55,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
-		public void Option1(string context)
+		[Test]
+		public void Option1([IncludeDataSources(ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -82,8 +82,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
-		public void Option2(string context)
+		[Test]
+		public void Option2([IncludeDataSources(ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

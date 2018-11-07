@@ -652,8 +652,8 @@ namespace Tests.Linq
 			throw new NotImplementedException();
 		}
 
-		[Test, NorthwindDataContext]
-		public void ConvertDataToDecimal(string context)
+		[Test]
+		public void ConvertDataToDecimal([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -674,8 +674,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void ConvertDataToDecimalNoConvert(string context)
+		[Test]
+		public void ConvertDataToDecimalNoConvert([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{

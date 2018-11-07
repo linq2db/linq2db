@@ -137,8 +137,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void TestParameters2(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestParameters2([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -182,8 +182,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void TestParametersInListSourceProperty(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestParametersInListSourceProperty([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -351,8 +351,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void TestParametersInDeleteBySourceCondition(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestParametersInDeleteBySourceCondition([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -374,8 +374,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void TestParametersInUpdateBySourceCondition(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestParametersInUpdateBySourceCondition([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -477,8 +477,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void TestParametersInUpdateBySourceExpression(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestParametersInUpdateBySourceExpression([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -584,8 +584,10 @@ namespace Tests.xUpdate
 		}
 
 		// Provider optimize scalar parameters
-		[Test, IncludeDataContextSource(false, ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
-		public void TestParametersInUpdateWithDeleteDeleteCondition(string context)
+		[Test]
+		public void TestParametersInUpdateWithDeleteDeleteCondition([IncludeDataSources(false,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

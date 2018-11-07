@@ -1,7 +1,8 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
@@ -13,7 +14,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue773Tests : TestBase
 	{
-
 		public static class SqlLite
 		{
 			class MatchBuilder : Sql.IExtensionCallBuilder
@@ -35,29 +35,23 @@ namespace Tests.UserTests
 			}
 		}
 
-
 		[Table("dataFTS")]
 		public partial class DtaFts
 		{
-			[Column]
-			public long Id { get; set; }
-			[Column]
-			public string FirstName { get; set; }
-			[Column]
-			public string LastName { get; set; }
-			[Column]
-			public string MidName { get; set; }
+			[Column] public long   Id        { get; set; }
+			[Column] public string FirstName { get; set; }
+			[Column] public string LastName  { get; set; }
+			[Column] public string MidName   { get; set; }
 		}
 
-
-		[Test, IncludeDataContextSource(false, ProviderName.SQLite)]
-		public void TestAnonymous(string context)
+		[Test]
+		public void TestAnonymous([IncludeDataSources(false, ProviderName.SQLite)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
 				db.Execute(@"
-	DROP TABLE IF EXISTS dataFTS;
-	CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
+DROP TABLE IF EXISTS dataFTS;
+CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
 
 				try
 				{
@@ -72,7 +66,7 @@ namespace Tests.UserTests
 
 					var query = data.Where(arg => SqlLite.MatchFts<DtaFts>("John*"));
 					Console.WriteLine(query.ToString());
-					query.ToList();
+					var _ = query.ToList();
 				}
 				finally
 				{
@@ -82,14 +76,14 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SQLite)]
-		public void TestDirect(string context)
+		[Test]
+		public void TestDirect([IncludeDataSources(false, ProviderName.SQLite)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
 				db.Execute(@"
-	DROP TABLE IF EXISTS dataFTS;
-	CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
+DROP TABLE IF EXISTS dataFTS;
+CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
 
 				try
 				{
@@ -107,16 +101,8 @@ namespace Tests.UserTests
 
 					Assert.AreEqual(0, list.Count);
 
-					db.GetTable<DtaFts>()
-						.Insert(() => new DtaFts()
-						{
-							FirstName = "JohnTheRipper"
-						});
-					db.GetTable<DtaFts>()
-						.Insert(() => new DtaFts()
-						{
-							FirstName = "DoeJohn"
-						});
+					db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "JohnTheRipper" });
+					db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "DoeJohn"       });
 
 					list = data.ToList(); // <=THROWS EXCEPTION
 
@@ -130,6 +116,5 @@ namespace Tests.UserTests
 				}
 			}
 		}
-
 	}
 }

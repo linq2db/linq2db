@@ -288,8 +288,8 @@ namespace Tests.Linq
 					from p in db.Parent where p.Value1.Equals(null) select p);
 		}
 
-		[Test, NorthwindDataContext]
-		public void Equals4(string context)
+		[Test]
+		public void Equals4([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -454,8 +454,10 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void MatchFtsTest(string context)
+		[Test]
+		public void MatchFtsTest([IncludeDataSources(true,
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{

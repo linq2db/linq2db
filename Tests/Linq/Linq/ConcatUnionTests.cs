@@ -168,8 +168,8 @@ namespace Tests.Linq
 					db.Child.Where(c => c.GrandChildren.Count == 2).Concat(db.Child.Where(c => c.GrandChildren.Count() == 3)));
 		}
 
-		[Test, NorthwindDataContext]
-		public void Concat7(string context)
+		[Test]
+		public void Concat7([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -566,8 +566,8 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = new { p = p2, ParentID = p2.ParentID + 1 } })));
 		}
 
-		[Test, NorthwindDataContext]
-		public void ObjectUnion(string context)
+		[Test]
+		public void ObjectUnion([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -857,7 +857,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatInheritance([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void TestConcatInheritance([IncludeDataSources(false, ProviderName.SQLiteClassic)] string context)
 		{
 			var testData = new BaseEntity[]
 			{

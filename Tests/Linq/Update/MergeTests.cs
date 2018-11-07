@@ -14,7 +14,8 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public partial class MergeTests : TestBase
 	{
-		public class MergeUpdateWithDeleteDataContextSourceAttribute : IncludeDataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		public class MergeUpdateWithDeleteDataContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public MergeUpdateWithDeleteDataContextSourceAttribute()
 				: base(false, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)
@@ -22,12 +23,12 @@ namespace Tests.xUpdate
 			}
 		}
 
-		public class MergeBySourceDataContextSourceAttribute : IncludeDataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		public class MergeBySourceDataContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public MergeBySourceDataContextSourceAttribute()
 				: base(false, TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)
 			{
-				ParallelScope = ParallelScope.None;
 			}
 		}
 
@@ -57,7 +58,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		public class IdentityInsertMergeDataContextSourceAttribute : IncludeDataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		public class IdentityInsertMergeDataContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			static string[] Supported = new[]
 			{
@@ -71,7 +73,6 @@ namespace Tests.xUpdate
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
 				: base(false, Supported.Except(except).ToArray())
 			{
-				ParallelScope = ParallelScope.None;
 			}
 		}
 

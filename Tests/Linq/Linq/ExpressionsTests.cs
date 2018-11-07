@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Linq;
 
@@ -28,8 +29,8 @@ namespace Tests.Linq
 
 		static int Count2(Parent p, int id) { return p.Children.Count(c => c.ChildID > id); }
 
-		[Test, DataContextSource]
-		public void MapMember2(string context)
+		[Test]
+		public void MapMember2([DataSources] string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
 
@@ -177,8 +178,10 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void MethodExpression9(string context)
+		[Test]
+		public void MethodExpression9([IncludeDataSources(
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 				AreEqual(
@@ -196,8 +199,10 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void MethodExpression10(string context)
+		[Test]
+		public void MethodExpression10([IncludeDataSources(
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 				AreEqual(

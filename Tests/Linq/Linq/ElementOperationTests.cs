@@ -179,8 +179,8 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.Select(c => c.ParentID).Distinct().SingleOrDefault());
 		}
 
-		[Test, NorthwindDataContext]
-		public void FirstOrDefaultEntitySet(string context)
+		[Test]
+		public void FirstOrDefaultEntitySet([NorthwindDataContext] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = new NorthwindDB(context))
@@ -192,8 +192,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void NestedSingleOrDefaultTest(string context)
+		[Test]
+		public void NestedSingleOrDefaultTest([NorthwindDataContext] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = new NorthwindDB(context))
@@ -205,8 +205,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void MultipleQuery(string context)
+		[Test]
+		public void MultipleQuery([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{

@@ -482,7 +482,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-					join c in 
+					join c in
 						from c in Child
 						where c.ParentID == 1
 						select c
@@ -492,7 +492,7 @@ namespace Tests.Linq
 					select new { gg.Key }
 					,
 					from p in db.Parent
-					join c in 
+					join c in
 						from c in db.Child
 						where c.ParentID == 1
 						select c
@@ -1105,12 +1105,12 @@ namespace Tests.Linq
 					select g.Key.Value1);
 		}
 
-		[Test, NorthwindDataContext]
-		public void GrooupByAssociation3(string context)
+		[Test]
+		public void GrooupByAssociation3([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
-				var result = 
+				var result =
 					from p in db.Product
 					group p by p.Category into g
 					where g.Count() == 12
@@ -1121,12 +1121,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void GrooupByAssociation4(string context)
+		[Test]
+		public void GrooupByAssociation4([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
-				var result = 
+				var result =
 					from p in db.Product
 					group p by p.Category into g
 					where g.Count() == 12
@@ -1181,8 +1181,8 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
-		[Test, NorthwindDataContext]
-		public void GroupByAggregate2(string context)
+		[Test]
+		public void GroupByAggregate2([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -1438,8 +1438,8 @@ namespace Tests.Linq
 					 select g.Select(ch => ch.ChildID).Where(id => id < 30).Count(id => id >= 20)));
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.MySql)]
-		public void GroupByExtraFieldBugTest(string context)
+		[Test]
+		public void GroupByExtraFieldBugTest([IncludeDataSources(ProviderName.MySql)] string context)
 		{
 			// https://github.com/igor-tkachev/LinqToDB/issues/42
 			// extra field is generated in the GROUP BY clause, for example:
@@ -1460,7 +1460,7 @@ namespace Tests.Linq
 				var lastQuery  = db.LastQuery;
 				var groupByPos = lastQuery.IndexOf("GROUP BY");
 				var fieldPos   = lastQuery.IndexOf(fieldName, groupByPos);
-				
+
 				// check that our field does not present in the GROUP BY clause second time.
 				//
 				Assert.AreEqual(-1, lastQuery.IndexOf(fieldName, fieldPos + 1));

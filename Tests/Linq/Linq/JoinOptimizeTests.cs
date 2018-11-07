@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Linq;
-	using LinqToDB.SqlQuery;
 
 	using Model;
-	using System.Linq.Expressions;
 
 	[TestFixture]
 	public class JoinOptimizeTests : TestBase
 	{
-		[Test, NorthwindDataContext]
-		public void InnerJoinToSelf(string context)
+		[Test]
+		public void InnerJoinToSelf([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -61,8 +61,8 @@ namespace Tests.Linq
 				Assert.AreEqual(1, ts.Joins.Count);
 			}
 		}
-		[Test, NorthwindDataContext]
-		public void InnerJoin(string context)
+		[Test]
+		public void InnerJoin([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -123,8 +123,8 @@ namespace Tests.Linq
 		}
 
 
-		[Test, NorthwindDataContext]
-		public void InnerJoinFalse(string context)
+		[Test]
+		public void InnerJoinFalse([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -166,8 +166,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void LeftJoin(string context)
+		[Test]
+		public void LeftJoin([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -230,8 +230,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void InnerJoin1(string context)
+		[Test]
+		public void InnerJoin1([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -254,8 +254,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void InnerJoinSubquery(string context)
+		[Test]
+		public void InnerJoinSubquery([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -280,8 +280,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void InnerJoinMixKeys(string context)
+		[Test]
+		public void InnerJoinMixKeys([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -308,8 +308,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void InnerAndLeftMixed(string context)
+		[Test]
+		public void InnerAndLeftMixed([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -338,8 +338,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void InnerJoin2(string context)
+		[Test]
+		public void InnerJoin2([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -368,8 +368,8 @@ namespace Tests.Linq
 		}
 
 
-		[Test, NorthwindDataContext]
-		public void InnerJoin3(string context)
+		[Test]
+		public void InnerJoin3([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -392,8 +392,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void LeftJoin1(string context)
+		[Test]
+		public void LeftJoin1([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -414,8 +414,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void LeftJoin2(string context)
+		[Test]
+		public void LeftJoin2([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -436,8 +436,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void LeftJoinProjection(string context)
+		[Test]
+		public void LeftJoinProjection([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -469,8 +469,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void LeftJoinProjectionSubquery(string context)
+		[Test]
+		public void LeftJoinProjectionSubquery([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -520,8 +520,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void SelftJoinFail(string context)
+		[Test]
+		public void SelftJoinFail([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -546,8 +546,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void SelftJoinOptimized(string context)
+		[Test]
+		public void SelftJoinOptimized([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -590,8 +590,8 @@ namespace Tests.Linq
 			public int PersonId { get; set; }
 		}
 
-		[Test, NorthwindDataContext]
-		public void JoinWithHint(string context)
+		[Test]
+		public void JoinWithHint([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -604,8 +604,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void SelfJoinWithHint(string context)
+		[Test]
+		public void SelfJoinWithHint([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -618,8 +618,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void SelfJoinWithDifferentHint(string context)
+		[Test]
+		public void SelfJoinWithDifferentHint([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -631,6 +631,5 @@ namespace Tests.Linq
 				Assert.AreEqual(1, query.GetTableSource().Joins.Count);
 			}
 		}
-
 	}
 }

@@ -301,8 +301,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void ExpressionTest1(string context)
+		[Test]
+		public void ExpressionTest1([NorthwindDataContext] string context)
 		{
 			Expression<Func<Northwind.Customer,bool>> pred1 = cust=>cust.Country=="UK";
 			Expression<Func<Northwind.Customer,bool>> pred2 = cust=>cust.Country=="France";

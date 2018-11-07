@@ -24,6 +24,5 @@ namespace Tests.Playground
 				var result = table.ToArray();
 			}
 		}
-
 	}
 }

@@ -99,8 +99,10 @@ namespace Tests.Data
 			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008)]
-		public async Task ExecuteTestAsync(string context)
+		[Test]
+		public async Task ExecuteTestAsync([IncludeDataSources(false,
+			ProviderName.SqlServer2008)]
+			string context)
 		{
 			var ret = new Retry();
 

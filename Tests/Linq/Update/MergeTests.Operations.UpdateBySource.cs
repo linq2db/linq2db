@@ -11,8 +11,8 @@ namespace Tests.xUpdate
 
 	public partial class MergeTests
 	{
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceUpdateBySource(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceUpdateBySource([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -60,8 +60,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceUpdateBySourceWithPredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceUpdateBySourceWithPredicate([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -105,8 +105,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void OnConditionPartialSourceProjection_KnownFieldInCondition(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OnConditionPartialSourceProjection_KnownFieldInCondition(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -154,8 +155,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceUpdateBySourceWithPredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceUpdateBySourceWithPredicate([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -206,8 +207,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void AnonymousSourceUpdateBySourceWithPredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void AnonymousSourceUpdateBySourceWithPredicate(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -266,8 +268,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void AnonymousListSourceUpdateBySourceWithPredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void AnonymousListSourceUpdateBySourceWithPredicate(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -326,8 +329,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void UpdateBySourceReservedAndCaseNames(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void UpdateBySourceReservedAndCaseNames([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -386,8 +389,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void UpdateBySourceReservedAndCaseNamesFromList(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void UpdateBySourceReservedAndCaseNamesFromList(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

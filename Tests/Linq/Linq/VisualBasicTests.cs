@@ -55,8 +55,8 @@ namespace Tests.Linq
 					VisualBasicCommon.SearchCondition1(db));
 		}
 
-		[Test, NorthwindDataContext]
-		public void SearchCondition2(string context)
+		[Test]
+		public void SearchCondition2([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -69,8 +69,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void SearchCondition3(string context)
+		[Test]
+		public void SearchCondition3([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -89,8 +89,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void SearchCondition4(string context)
+		[Test]
+		public void SearchCondition4([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{

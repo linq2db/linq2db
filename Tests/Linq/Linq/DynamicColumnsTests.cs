@@ -257,13 +257,13 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyGroupByAssociated(string context)
+		[Test]
+		public void SqlPropertyGroupByAssociated([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
 				var expected = Person.GroupBy(p => p.Patient?.Diagnosis).Select(p => new {p.Key, Count = p.Count()}).ToList();
-				var result = db.GetTable<PersonWithDynamicStore>()
+				var result   = db.GetTable<PersonWithDynamicStore>()
 					.GroupBy(x => Sql.Property<string>(Sql.Property<Patient>(x, PatientColumn), DiagnosisColumn))
 					.Select(p => new {p.Key, Count = p.Count()})
 					.ToList();
@@ -537,7 +537,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatWithDynamic([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void TestConcatWithDynamic([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
 		{
 			var mappingSchema = new MappingSchema();
 			var builder = mappingSchema.GetFluentMappingBuilder()

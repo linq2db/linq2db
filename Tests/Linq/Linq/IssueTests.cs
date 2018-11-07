@@ -62,7 +62,8 @@ namespace Tests.Linq
 #if !NETSTANDARD1_6
 		// https://github.com/linq2db/linq2db/issues/60
 		//
-		[Test, IncludeDataContextSource(
+		[Test]
+		public void Issue60Test([IncludeDataSources(
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			ProviderName.SqlServer2008,
@@ -70,7 +71,7 @@ namespace Tests.Linq
 			ProviderName.SqlServer2014,
 			TestProvName.SqlAzure,
 			ProviderName.SqlCe)]
-		public void Issue60Test(string context)
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{

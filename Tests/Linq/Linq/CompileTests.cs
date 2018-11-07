@@ -97,8 +97,10 @@ namespace Tests.Linq
 				query(db).ToList().Count();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void ConcurentTest1(string context)
+		[Test]
+		public void ConcurentTest1([IncludeDataSources(
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+			string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.GetTable<Parent>().Where(p => p.ParentID == n).First().ParentID);
@@ -133,8 +135,10 @@ namespace Tests.Linq
 				Assert.AreEqual(results[i,0], results[i,1]);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void ConcurentTest2(string context)
+		[Test]
+		public void ConcurentTest2([IncludeDataSources(
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+			string context)
 		{
 			var threads = new Thread[100];
 			var results = new int   [100,2];

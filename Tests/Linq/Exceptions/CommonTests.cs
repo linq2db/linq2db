@@ -75,8 +75,10 @@ namespace Tests.Exceptions
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void ReplaceTableTest(string context)
+		[Test]
+		public void ReplaceTableTest([IncludeDataSources(
+				ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new MyDataConnection(context))
 			{
