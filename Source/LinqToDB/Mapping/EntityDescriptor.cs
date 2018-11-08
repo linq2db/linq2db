@@ -105,10 +105,14 @@ namespace LinqToDB.Mapping
 		public Dictionary<string, string> Aliases { get; private set; }
 
 		/// <summary>
-		/// Gets list of calculated members. Members with attribute MethodExpression and IsColumn flag
+		/// Gets list of calculated column members (properties with <see cref="ExpressionMethodAttribute.IsColumn"/> set to <c>true</c>).
 		/// </summary>
 		public List<MemberAccessor> CalculatedMembers { get; private set; }
 
+		/// <summary>
+		/// Returns <c>true</c>, if entity has calculated columns.
+		/// Also see <seealso cref="CalculatedMembers"/>.
+		/// </summary>
 		public bool HasCalculatedMembers => CalculatedMembers != null && CalculatedMembers.Count > 0;
 
 		private List<InheritanceMapping> _inheritanceMappings;

@@ -365,10 +365,10 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Sets that property is alias to another member and marks property as Not Column.
+		/// Configure property as alias to another member.
 		/// </summary>
 		/// <param name="expression">Expression for mapping member during read.</param>
-		/// <param name="isColumn">Indicates whether a property should be mapped with this expression Method <see cref="ExpressionMethodAttribute.IsColumn"/>>.</param>
+		/// <param name="isColumn">Indicates whether a property value should be filled during entity materialization (calculated property).</param>
 		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<T> IsExpression<TR>([JetBrains.Annotations.NotNull] Expression<Func<T, TR>> expression, bool isColumn = false)
 		{

@@ -81,9 +81,9 @@ namespace LinqToDB
 		public LambdaExpression Expression { get; set; }
 
 		/// <summary>
-		/// Indicates whether a property should be mapped with this expression Method. </summary>
-		/// <value>
-		/// True if the property should be mapped with this expression Method. </value>
+		/// Gets or sets calculated column flag. When applied to property and set to <c>true</c>, Linq To DB will
+		/// load data into property using expression during entity materialization.
+		/// </summary>
 		public bool IsColumn { get; set; }
 
 	}
