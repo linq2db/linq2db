@@ -14,13 +14,16 @@ namespace Tests.Mapping
 			public int    Value    { get; set; }
 			public string ValueStr { get; set; }
 
-			public int    EntityValue     { get => Value;    set => Value    = value; }
-			public string EntityValueStr  { get => ValueStr; set => ValueStr = value; }
+			public int    EntityValue       { get => Value;    set => Value    = value; }
+			public string EntityValueStr    { get => ValueStr; set => ValueStr = value; }
+
+			[ColumnAlias("Id")]
+			public int    EntityId          { get => Id;       set => Id       = value; }
 		}
 
 		interface IProjected
 		{
-			int    Id             { get; set; }
+			int    EntityId       { get; set; }
 			int    EntityValue    { get; set; }
 			string EntityValueStr { get; set; }
 		}
@@ -57,8 +60,8 @@ namespace Tests.Mapping
 				{
 					IQueryable<IProjected> queryable = table;
 
-					var items = queryable.Where(t => t.EntityValue >= 104 && t.EntityValue <= 115 && t.EntityValueStr.StartsWith("S")).ToArray();
-					var expected = table .Where(t => t.EntityValue >= 104 && t.EntityValue <= 115 && t.EntityValueStr.StartsWith("S")).OfType<IProjected>().ToArray();
+					var items = queryable.Where(t => t.EntityId > 1 & t.EntityValue >= 104 && t.EntityValue <= 115 && t.EntityValueStr.StartsWith("S")).ToArray();
+					var expected = table .Where(t => t.EntityId > 1 & t.EntityValue >= 104 && t.EntityValue <= 115 && t.EntityValueStr.StartsWith("S")).OfType<IProjected>().ToArray();
 
 					AreEqual(expected, items, ComparerBuilder<IProjected>.GetEqualityComparer());
 				}
