@@ -636,7 +636,8 @@ namespace LinqToDB.SqlQuery
 			bool allColumns,
 			bool isApplySupported,
 			bool optimizeValues,
-			bool optimizeColumns)
+			bool optimizeColumns, 
+			JoinType joinType)
 		{
 			foreach (var jt in source.Joins)
 			{
@@ -646,7 +647,8 @@ namespace LinqToDB.SqlQuery
 					false,
 					isApplySupported,
 					jt.JoinType == JoinType.Inner || jt.JoinType == JoinType.CrossApply,
-					optimizeColumns);
+					optimizeColumns,
+					jt.JoinType);
 
 				if (table != jt.Table)
 				{
@@ -674,7 +676,7 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 				if (canRemove)
-					return RemoveSubQuery(source, optimizeWhere, allColumns && !isApplySupported, optimizeValues, optimizeColumns);
+					return RemoveSubQuery(source, optimizeWhere, allColumns && !isApplySupported, optimizeValues, optimizeColumns, joinType);
 			}
 
 			return source;
@@ -787,7 +789,8 @@ namespace LinqToDB.SqlQuery
 			bool concatWhere,
 			bool allColumns,
 			bool optimizeValues,
-			bool optimizeColumns)
+			bool optimizeColumns,
+			JoinType joinType)
 		{
 			var query = (SelectQuery)childSource.Source;
 
@@ -812,9 +815,8 @@ namespace LinqToDB.SqlQuery
 			foreach (var c in query.Select.Columns)
 				map.Add(c, c.Expression);
 
-			//TODO: consider to extend ISqlTableSource interface for unique keys
 			List<ISqlExpression[]> uniqueKeys = null;
-			if (query.HasUniqueKeys)
+			if (joinType == JoinType.Inner && query.HasUniqueKeys)
 				uniqueKeys = query.UniqueKeys;
 
 			uniqueKeys = uniqueKeys?
@@ -857,18 +859,7 @@ namespace LinqToDB.SqlQuery
 			var result = query.From.Tables[0];
 
 			if (uniqueKeys != null)
-			{
-				//TODO: consider to extend ISqlTableSource interface for unique keys
-				switch (result.Source)
-				{
-					case SelectQuery sq:
-						sq.UniqueKeys.AddRange(uniqueKeys);
-						break;
-					case SqlTable t:
-						t.UniqueKeys.AddRange(uniqueKeys);
-						break;
-				}
-			}
+				result.UniqueKeys.AddRange(uniqueKeys);
 
 			return result;
 		}
@@ -967,7 +958,8 @@ namespace LinqToDB.SqlQuery
 						joinTable.JoinType == JoinType.CrossApply,
 						isApplySupported,
 						joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply,
-						optimizeColumns);
+						optimizeColumns,
+						joinTable.JoinType);
 
 					if (table != joinTable.Table)
 					{
@@ -1025,7 +1017,7 @@ namespace LinqToDB.SqlQuery
 
 			for (var i = 0; i < _selectQuery.From.Tables.Count; i++)
 			{
-				var table = OptimizeSubQuery(_selectQuery.From.Tables[i], true, false, isApplySupported, true, optimizeColumns);
+				var table = OptimizeSubQuery(_selectQuery.From.Tables[i], true, false, isApplySupported, true, optimizeColumns, JoinType.Inner);
 
 				if (table != _selectQuery.From.Tables[i])
 				{

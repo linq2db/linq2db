@@ -132,6 +132,9 @@ namespace LinqToDB.SqlQuery
 
 			IsParameterDependent = clone.IsParameterDependent;
 
+			if (clone.HasUniqueKeys)
+				UniqueKeys.AddRange(clone.UniqueKeys.Select(uk => uk.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
+
 			new QueryVisitor().Visit(this, expr =>
 			{
 				var sb = expr as SelectQuery;
@@ -272,6 +275,11 @@ namespace LinqToDB.SqlQuery
 			if (HasUnion)
 				foreach (var union in Unions)
 					((ISqlExpressionWalkable)union.SelectQuery).Walk(skipColumns, func);
+
+			if (HasUniqueKeys)
+				foreach (var uk in UniqueKeys)
+					foreach (var k in uk)
+						k.Walk(skipColumns, func);
 
 			return func(this);
 		}

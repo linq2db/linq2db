@@ -342,5 +342,42 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void UniqueKeysPropagation([DataSources] string context, [Values] bool opimizerSwitch)
+		{
+			var testData = GenerateTestData();
+
+			using (var db = GetDataContext(context))
+			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
+			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
+			using (new WithoutJoinOptimization(opimizerSwitch))
+			{
+				var subqueryWhichWillBeOptimized =
+					from f in first
+					where f.ValueStr.StartsWith("Str")
+					select f;
+
+				subqueryWhichWillBeOptimized = subqueryWhichWillBeOptimized.HasUniqueKey(f => f.DataKey11);
+
+				var query =
+					from s in second.HasUniqueKey(s => new { s.Key1, s.Key2 })
+					from f in subqueryWhichWillBeOptimized.InnerJoin(f => f.DataKey11 == s.DataKey11)
+					select new
+					{
+						S = s,
+						F = f
+					};
+
+				Console.WriteLine(query.ToString());
+
+				var selectQuery = query.EnumQueries().Single();
+				var table = selectQuery.From.Tables[0];
+				var joinedTable = table.Joins[0].Table;
+				Assert.IsTrue(joinedTable.HasUniqueKeys && table.HasUniqueKeys);
+				
+				Assert.AreEqual(2, joinedTable.UniqueKeys.Count + table.UniqueKeys.Count);
+			}
+		}
+
 	}
 }

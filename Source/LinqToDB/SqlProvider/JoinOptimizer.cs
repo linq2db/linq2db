@@ -330,6 +330,14 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
+			//TODO: investigate another ways when we can propagate keys up
+			if (join.JoinType == JoinType.Inner && join.Table.HasUniqueKeys)
+			{
+				var newFields = join.Table.UniqueKeys
+					.Select(uk => uk.Select(k => GetNewField(new VirtualField(k)).Element).ToArray());
+				fromTable.UniqueKeys.AddRange(newFields);
+			}
+
 			ResetFieldSearchCache(join.Table);
 		}
 
@@ -659,22 +667,20 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		/// <param name="tableSource"></param>
 		/// <returns>List of unique keys</returns>
-		List<VirtualField[]> GetKeysInternal(ISqlTableSource tableSource)
+		List<VirtualField[]> GetKeysInternal(SqlTableSource tableSource)
 		{
 			var knownKeys = new Lazy<List<IList<ISqlExpression>>>(() => new List<IList<ISqlExpression>>());
 
-			switch (tableSource)
+			if (tableSource.HasUniqueKeys)
+				knownKeys.Value.AddRange(tableSource.UniqueKeys);
+
+			switch (tableSource.Source)
 			{
 				case SqlTable table:
 				{
-					//TODO: needed mechanism to define unique indexes. Currently only primary key is used
-
-					var keys = tableSource.GetKeys(false);
+					var keys = table.GetKeys(false);
 					if (keys != null && keys.Count > 0)
 						knownKeys.Value.Add(keys);
-
-					if (table.HasUniqueKeys)
-						knownKeys.Value.AddRange(table.UniqueKeys);
 
 					break;
 				}
@@ -713,7 +719,7 @@ namespace LinqToDB.SqlProvider
 			return result.Count > 0 ? result : null;
 		}
 
-		List<VirtualField[]> GetKeys(ISqlTableSource tableSource)
+		List<VirtualField[]> GetKeys(SqlTableSource tableSource)
 		{
 			if (_keysCache == null || !_keysCache.TryGetValue(tableSource.SourceID, out var keys))
 			{
@@ -752,7 +758,7 @@ namespace LinqToDB.SqlProvider
 					// trying to remove join that is equal to FROM table
 					if (IsEqualTables(fromTable.Source as SqlTable, j1.Table.Source as SqlTable))
 					{
-						var keys = GetKeys(j1.Table.Source);
+						var keys = GetKeys(j1.Table);
 						if (keys != null && TryMergeWithTable(fromTable, j1, keys))
 						{
 							fromTable.Joins.RemoveAt(i1);
@@ -772,7 +778,7 @@ namespace LinqToDB.SqlProvider
 						if (!IsEqualTables(j1.Table.Source as SqlTable, j2.Table.Source as SqlTable))
 							continue;
 
-						var keys = GetKeys(j2.Table.Source);
+						var keys = GetKeys(j2.Table);
 
 						if (keys != null)
 						{
@@ -804,7 +810,7 @@ namespace LinqToDB.SqlProvider
 
 					if (j1.JoinType == JoinType.Left || j1.JoinType == JoinType.Inner)
 					{
-						var keys = GetKeys(j1.Table.Source);
+						var keys = GetKeys(j1.Table);
 
 						if (keys != null && !IsDependedBetweenJoins(fromTable, j1))
 						{
@@ -1198,9 +1204,23 @@ namespace LinqToDB.SqlProvider
 			public VirtualField OneField;
 		}
 
+		//TODO: investigate do we still needs this class over ISqlExpression
 		[DebuggerDisplay("{DisplayString()}")]
 		class VirtualField
 		{
+			public VirtualField([NotNull] ISqlExpression expression)
+			{
+				if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+				if (expression is SqlField field)
+					Field = field;
+				else if (expression is SqlColumn column)
+					Column = column;
+				else
+					throw new ArgumentException($"Expression '{expression}' is not a Field or Column.",
+						nameof(expression));
+			}
+
 			public VirtualField([NotNull] SqlField field)
 			{
 				Field = field ?? throw new ArgumentNullException(nameof(field));
