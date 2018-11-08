@@ -31,21 +31,13 @@ namespace LinqToDB.Linq
 
 				foreach (var field in sqlTable.Fields)
 				{
-					if (field.Value.IsInsertable)
+					if (field.Value.IsInsertable || field.Value.IsIdentity)
 					{
 						var param = GetParameter(type, dataContext, field.Value);
 
 						ei.Queries[0].Parameters.Add(param);
 
 						insertStatement.Insert.Items.Add(new SqlSetExpression(field.Value, param.SqlParameter));
-					}
-					else if (field.Value.IsIdentity)
-					{
-						var sqlb = dataContext.CreateSqlProvider();
-						var expr = sqlb.GetIdentityExpression(sqlTable);
-
-						if (expr != null)
-							insertStatement.Insert.Items.Add(new SqlSetExpression(field.Value, expr));
 					}
 				}
 
