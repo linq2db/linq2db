@@ -135,20 +135,11 @@
 		<Reference Include="IBM.Data.Informix">
 			<HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
 		</Reference>
-		<Reference Include="Sap.Data.Hana.v4.5">
-			<HintPath>..\..\Redist\SAPHana\Sap.Data.Hana.v4.5.dll</HintPath>
-		</Reference>
 		<Reference Include="Sybase.AdoNet45.AseClient">
 			<HintPath>..\..\Redist\Sybase\Sybase.AdoNet45.AseClient.dll</HintPath>
 		</Reference>
-		<Reference Include="Oracle.DataAccess, Version=4.122.1.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
-		</Reference>
 
-		<!--
 		<PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />
-		-->
 		<PackageReference Include="Oracle.ManagedDataAccess" Version="12.2.1100" />
 		<PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
@@ -188,6 +179,9 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<PackageReference Include="Microsoft.Data.SQLite" Version="2.1.0" />
+		<Reference Include="Microsoft.SqlServer.Types">
+			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">

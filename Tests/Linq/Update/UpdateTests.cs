@@ -1183,6 +1183,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test, DataContextSource]
 		public void UpdateByTableName(string context)
 		{

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Threading.Tasks;
 
 using NUnit.Framework;
 
@@ -192,6 +193,58 @@ namespace Tests.Data
 
 					break;
 				}
+			}
+		}
+
+		[Test]
+		public void TestOpenEvent()
+		{
+			var opened = false;
+			var openedAsync = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnConnectionOpened += (dc, cn) => opened = true;
+				conn.OnConnectionOpenedAsync += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
+				Assert.False(opened);
+				Assert.False(openedAsync);
+				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.True(opened);
+				Assert.False(openedAsync);
+			}
+		}
+
+		[Test]
+		public async Task TestAsyncOpenEvent()
+		{
+			var opened = false;
+			var openedAsync = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnConnectionOpened += (dc, cn) => opened = true;
+				conn.OnConnectionOpenedAsync += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
+				Assert.False(opened);
+				Assert.False(openedAsync);
+				await conn.SelectAsync(() => 1);
+				Assert.False(opened);
+				Assert.True(openedAsync);
+			}
+		}
+
+		[Test]
+		public void TestOpenEventWithoutHandlers()
+		{
+			using (var conn = new DataConnection())
+			{
+				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+			}
+		}
+
+		[Test]
+		public async Task TestAsyncOpenEventWithoutHandlers()
+		{
+			using (var conn = new DataConnection())
+			{
+				await conn.SelectAsync(() => 1);
 			}
 		}
 	}

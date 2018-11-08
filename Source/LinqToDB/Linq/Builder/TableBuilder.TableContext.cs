@@ -1027,7 +1027,7 @@ namespace LinqToDB.Linq.Builder
 				throw new InvalidOperationException();
 			}
 
-			public SqlStatement GetResultStatement()
+			public virtual SqlStatement GetResultStatement()
 			{
 				return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
 			}
@@ -1036,7 +1036,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region ConvertToParentIndex
 
-			public int ConvertToParentIndex(int index, IBuildContext context)
+			public virtual int ConvertToParentIndex(int index, IBuildContext context)
 			{
 				return Parent?.ConvertToParentIndex(index, this) ?? index;
 			}

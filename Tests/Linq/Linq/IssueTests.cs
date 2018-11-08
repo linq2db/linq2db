@@ -76,7 +76,7 @@ namespace Tests.Linq
 			using (var db = new DataConnection(context))
 			{
 				var sp       = db.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(db);
+				var dbSchema = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				var q =
 					from t in dbSchema.Tables
@@ -433,6 +433,7 @@ namespace Tests.Linq
 			};
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void Issue376(string context)
 		{

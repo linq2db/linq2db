@@ -11,7 +11,7 @@ namespace Tests
 {
 	[AttributeUsage(AttributeTargets.Method)]
 	[Obsolete]
-	public abstract class BaseDataContextSourceAttribute : NUnitAttribute, ITestBuilder, IApplyToTest, IImplyFixture
+	public abstract class BaseDataContextSourceAttribute : NUnitAttribute, ITestBuilder, IImplyFixture
 	{
 		protected BaseDataContextSourceAttribute(bool includeLinqService, string[] providers)
 		{

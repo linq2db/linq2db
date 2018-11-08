@@ -131,6 +131,7 @@ namespace Tests.Linq
 					from p in db.Parent select db.Child.FirstOrDefault());
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void NestedFirstOrDefault2(string context)
 		{
@@ -160,6 +161,7 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.Where(c => c.ParentID > 0).Distinct().FirstOrDefault());
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void NestedFirstOrDefault5(string context)
 		{

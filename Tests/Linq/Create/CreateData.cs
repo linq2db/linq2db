@@ -70,7 +70,17 @@ namespace Tests._Create
 						if (DataConnection.TraceSwitch.TraceInfo)
 							Console.WriteLine(command);
 
-						db.Execute(command);
+						if (configString == ProviderName.OracleNative)
+						{
+							// we need this to avoid errors in trigger creation when native provider
+							// recognize ":NEW" as parameter
+							var cmd = db.CreateCommand();
+							cmd.CommandText = command;
+							((dynamic)cmd).BindByName = false;
+							cmd.ExecuteNonQuery();
+						}
+						else
+							db.Execute(command);
 
 						if (DataConnection.TraceSwitch.TraceInfo)
 							Console.WriteLine("\nOK\n");
@@ -250,7 +260,9 @@ namespace Tests._Create
 				case TestProvName.SqlAzure      : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 				case ProviderName.SQLiteMS      : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
+#if !NETSTANDARD1_6
 				case ProviderName.OracleManaged : RunScript(context,          "\n/\n",   "Oracle");                         break;
+#endif
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 				case ProviderName.SQLiteClassic : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;

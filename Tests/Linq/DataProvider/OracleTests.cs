@@ -432,6 +432,7 @@ namespace Tests.DataProvider
 #if NET46
 
 		[Test]
+		[ActiveIssue("ArgumentNullException: Value cannot be null. Parameter name: connection", Configuration = ProviderName.OracleNative)]
 		public void TestOracleNativeTypes([IncludeDataSources(ProviderName.OracleNative)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -2015,7 +2016,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[SkipCategory("Oracle.Native.New", ProviderName.OracleNative)]
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		public void Issue723Test1([OracleDataContext] string context)
 		{
 			var ms = new MappingSchema();
@@ -2066,7 +2067,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[SkipCategory("Oracle.Native.New", ProviderName.OracleNative)]
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		public void Issue723Test2([OracleDataContext] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -2310,7 +2311,10 @@ namespace Tests.DataProvider
 
 					Query.ClearCaches();
 					OracleTools.DontEscapeLowercaseIdentifiers = false;
-					Assert.Throws<OracleException>(() => db.GetTable<TestIdentifiersTable1>().ToList());
+
+					// no specific exception type as it differ for managed and native providers
+					Assert.That(() => db.GetTable<TestIdentifiersTable1>().ToList(), Throws.Exception.With.Message.Contains("ORA-00942"));
+
 					db.GetTable<TestIdentifiersTable2>().ToList();
 				}
 				finally

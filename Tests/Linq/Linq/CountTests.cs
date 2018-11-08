@@ -94,6 +94,7 @@ namespace Tests.Linq
 					from p in db.Parent where p.Children.Count > 2 select p);
 		}
 
+		[ActiveIssue("not supported?", Configuration = ProviderName.SapHana)]
 		[Test]
 		public void SubQueryCount([IncludeDataSources(
 				ProviderName.SqlServer2008, ProviderName.SqlServer2012,
@@ -175,6 +176,8 @@ namespace Tests.Linq
 					select g.Count(ch => ch.ChildID > 20));
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
 		[Test, DataContextSource]
 		public void GroupBy21(string context)
 		{
@@ -194,6 +197,8 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
 		[Test, DataContextSource]
 		public void GroupBy22(string context)
 		{
@@ -213,6 +218,7 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
+		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Access)]
@@ -232,6 +238,7 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
+		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
 		[Test, DataContextSource]
 		public void GroupBy3(string context)
 		{

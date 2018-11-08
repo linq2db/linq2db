@@ -235,5 +235,40 @@ namespace LinqToDB.SqlQuery
 
 			return false;
 		}
+		/// <summary>
+		/// Returns SqlField from specific expression. Usually from SqlColumn.
+		/// Complex expressions ignored.
+		/// </summary>
+		/// <param name="expression"></param>
+		/// <returns>Field instance associated with expression</returns>
+		public static SqlField GetUnderlyingField(ISqlExpression expression)
+		{
+			switch (expression)
+			{
+				case SqlField field:
+					return field;
+				case SqlColumn column:
+					return GetUnderlyingField(column.Expression, new HashSet<ISqlExpression>());
+			}
+			return null;
+		}
+
+ 		static SqlField GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
+		{
+			switch (expression)
+			{
+				case SqlField field:
+					return field;
+				case SqlColumn column:
+				{
+					if (visited.Contains(column))
+						return null;
+					visited.Add(column);
+					return GetUnderlyingField(column.Expression, visited);
+				}
+			}
+			return null;
+		}
+
 	}
 }

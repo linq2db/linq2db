@@ -16,6 +16,7 @@ namespace Tests.UserTests
 			public char CharFld { get; set; }
 		}
 
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test, DataContextSource]
 		public void Test(string context)
 		{

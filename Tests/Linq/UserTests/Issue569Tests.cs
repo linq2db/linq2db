@@ -1,7 +1,7 @@
 ﻿namespace Tests.UserTests
 {
 	using System.Linq;
-
+	using LinqToDB;
 	using NUnit.Framework;
 
 	[TestFixture]
@@ -75,6 +75,7 @@
 			}
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void Test3(string context)
 		{

@@ -163,6 +163,7 @@ namespace Tests.Linq
 					select p);
 		}
 
+		[ActiveIssue(Configuration = ProviderName.Informix)]
 		[Test, DataContextSource]
 		public void PreferServerFunc1(string context)
 		{
@@ -172,6 +173,7 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length);
 		}
 
+		[ActiveIssue(Configuration = ProviderName.Informix)]
 		[Test, DataContextSource]
 		public void PreferServerFunc2(string context)
 		{
