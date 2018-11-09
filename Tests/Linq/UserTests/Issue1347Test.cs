@@ -10,6 +10,7 @@ namespace Tests.UserTests
 	using LinqToDB;
 
 	using NUnit.Framework;
+	using MCC.WMS.ServiceInterfaces.DTO;
 
 	namespace MCC.Common.ServiceInterfaces.DTO
 	{
@@ -247,6 +248,47 @@ namespace Tests.UserTests
 		[TestFixture]
 		public class UserTest : TestBase
 		{
+			[Test]
+			public void Test2([DataSources]string context)
+			{
+				using (var s = GetDataContext(context))
+				{
+					var gts = s.GetTable<GlobalTaskDTO>().Union(
+						s.GetTable<GlobalTaskDTO>()
+							.TableName(
+								"WMS_GlobalTaskA"));
+
+					var lcs = s.GetTable<WmsLoadCarrierDTO>().Union(
+						s.GetTable<WmsLoadCarrierDTO>()
+							.TableName(
+								"WMS_LoadCarrierA"));
+
+					var ots = s.GetTable<OutfeedTransportOrderDTO>().Union(
+						s.GetTable<OutfeedTransportOrderDTO>()
+							.TableName(
+								"WMS_OutfeedTransportOrderA"));
+
+					var qry = from g in gts
+						join source1 in s.GetTable<WmsResourcePointDTO>() on g.RPSourceID equals source1.Id into source1List
+						from source in source1List.DefaultIfEmpty()
+						join sourceShelf1 in s.GetTable<StorageShelfDTO>() on g.StorageShelfSourceID equals sourceShelf1.Id into sourceShelf1List
+						from sourceShelf in sourceShelf1List.DefaultIfEmpty()
+						join dest1 in s.GetTable<WmsResourcePointDTO>() on g.RPDestinationID equals dest1.Id into destList
+						from dest in destList.DefaultIfEmpty()
+						join destShelf1 in s.GetTable<StorageShelfDTO>() on g.StorageShelfDestinationID equals destShelf1.Id into destShelf1List
+						from destShelf in destShelf1List.DefaultIfEmpty()
+						join origdest1 in s.GetTable<WmsResourcePointDTO>() on g.RPOrigDestinationID equals origdest1.Id into origdestList
+						from origdest in origdestList.DefaultIfEmpty()
+						join res in lcs on g.ResourceID equals res.Id into reslist
+						from res in reslist.DefaultIfEmpty()
+						join outfeed1 in ots on g.OutfeedTransportOrderID equals outfeed1.Id into outfeed1List
+						from outfeed in outfeed1List.DefaultIfEmpty()
+						select new WmsGlobalTaskCombinedDTO() { GlobalTask = g, LoadCarrier = res, Source = source, SourceShelf = sourceShelf, Destination = dest, DestinationShelf = destShelf, OriginDestination = origdest, OutfeedTransportOrder = outfeed };
+
+					var result = qry.ToString();
+				}
+
+			}
 			[Test]
 			public void Test([DataSources]string context)
 			{
