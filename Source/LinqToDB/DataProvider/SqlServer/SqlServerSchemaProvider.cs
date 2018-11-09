@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						--OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
 						OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
 						COLUMNPROPERTY(OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'ColumnID') = x.minor_id AND
-						x.name = 'MS_Description'")
+						x.name = 'MS_Description' AND x.class = 1")
 				.Select(c =>
 				{
 					DataTypeInfo dti;

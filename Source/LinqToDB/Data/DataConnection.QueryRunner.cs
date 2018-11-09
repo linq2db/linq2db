@@ -33,7 +33,8 @@ namespace LinqToDB.Data
 			}
 
 			readonly DataConnection _dataConnection;
-			readonly DateTime       _startedOn = DateTime.Now;
+			readonly DateTime       _startedOn = DateTime.UtcNow;
+			readonly Stopwatch      _stopwatch = Stopwatch.StartNew();
 
 			bool       _isAsync;
 			Expression _mapperExpression;
@@ -53,6 +54,8 @@ namespace LinqToDB.Data
 							TraceLevel       = TraceLevel.Info,
 							DataConnection   = _dataConnection,
 							MapperExpression = MapperExpression,
+							StartTime        = _startedOn,
+							ExecutionTime    = _stopwatch.Elapsed,
 							IsAsync          = _isAsync,
 						});
 					}
@@ -119,8 +122,10 @@ namespace LinqToDB.Data
 					{
 						TraceLevel       = TraceLevel.Info,
 						DataConnection   = _dataConnection,
+						Command          = _dataConnection.Command,
 						MapperExpression = MapperExpression,
-						ExecutionTime    = DateTime.Now - _startedOn,
+						StartTime        = _startedOn,
+						ExecutionTime    = _stopwatch.Elapsed,
 						RecordsAffected  = RowsCount,
 						IsAsync          = _isAsync,
 					});

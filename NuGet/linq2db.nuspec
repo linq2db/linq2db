@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db</id>
-		<version>2.5.0</version>
+		<version>2.6.0</version>
 		<title>LINQ to DB</title>
 		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
 		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
@@ -27,17 +27,17 @@
 				<dependency id="System.Linq.Queryable"                version="4.3.0" />
 				<dependency id="System.Runtime.Loader"                version="4.3.0" />
 				<dependency id="System.Xml.XmlDocument"               version="4.3.0" />
-				<dependency id="System.Data.SqlClient"                version="4.4.2" />
+				<dependency id="System.Data.SqlClient"                version="4.5.1" />
 				<dependency id="System.Net.NetworkInformation"        version="4.3.0" />
 			</group>
 			<group targetFramework=".NETStandard2.0">
 				<dependency id="Microsoft.CSharp"                     version="4.4.0" />
 				<dependency id="System.ComponentModel.Annotations"    version="4.4.1" />
-				<dependency id="System.Data.SqlClient"                version="4.4.2" />
+				<dependency id="System.Data.SqlClient"                version="4.5.1" />
 			</group>
 			<group targetFramework=".NETCoreApp2.0">
 				<dependency id="System.ComponentModel.Annotations"    version="4.4.1" />
-				<dependency id="System.Data.SqlClient"                version="4.4.2" />
+				<dependency id="System.Data.SqlClient"                version="4.5.1" />
 			</group>
 		</dependencies>
 	</metadata>

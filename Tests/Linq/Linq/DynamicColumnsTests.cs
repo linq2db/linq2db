@@ -75,6 +75,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void SqlPropertyWithNonDynamicAssociationViaObject2(string context)
 		{
@@ -167,6 +168,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void SqlPropertySelectAssociated(string context)
 		{
@@ -257,6 +259,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void SqlPropertyGroupByAssociated(string context)
 		{
@@ -369,6 +372,7 @@ namespace Tests.Linq
 			db.CreateTable<T>(tableName);
 		}
 
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test, DataContextSource]
 		public void SqlPropertyNoStoreNonIdentifier(string context)
 		{
@@ -398,6 +402,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test, DataContextSource]
 		public void SqlPropertyNoStoreNonIdentifierGrouping(string context)
 		{
@@ -537,7 +542,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Combinatorial]
 		public void TestConcatWithDynamic([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			var mappingSchema = new MappingSchema();

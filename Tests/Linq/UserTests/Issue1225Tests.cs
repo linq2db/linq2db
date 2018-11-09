@@ -68,8 +68,9 @@ namespace Tests.UserTests
 			public LastInChain Container { get; set; }
 		}
 
-		[Test, Combinatorial]
-		public void Test([DataSources] string context)
+		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
+		[Test, DataContextSource]
+		public void Test(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

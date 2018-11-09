@@ -341,6 +341,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource(
 			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix,
 			ProviderName.SqlCe, ProviderName.Sybase, ProviderName.Access, ProviderName.SQLiteMS)]

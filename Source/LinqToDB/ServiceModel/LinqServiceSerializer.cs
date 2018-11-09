@@ -1072,7 +1072,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Name);
 							Append(elem.Body);
 							Append(elem.ObjectType);
-							Append(elem.Fields.Values);
+							Append(elem.Fields);
 							Append(elem.IsRecursive);
 
 							break;

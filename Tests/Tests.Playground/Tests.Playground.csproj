@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
@@ -67,17 +67,9 @@
     <Reference Include="IBM.Data.Informix">
       <HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
     </Reference>
-    <Reference Include="Sap.Data.Hana.v4.5">
-      <HintPath>..\..\Redist\SAPHana\Sap.Data.Hana.v4.5.dll</HintPath>
-    </Reference>
     <Reference Include="Sybase.AdoNet45.AseClient">
       <HintPath>..\..\Redist\Sybase\Sybase.AdoNet45.AseClient.dll</HintPath>
     </Reference>
-    <Reference Include="Oracle.DataAccess, Version=4.122.1.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
-    </Reference>
-
 
     <None Include="..\..\Data\*">
         <Link>Database/%(FileName)%(Extension)</Link>
@@ -105,14 +97,14 @@
     <PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" Condition=" '$(TargetFramework)' != 'net40' " />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="NUnit" Version="3.10.1" />
+    <PackageReference Include="NUnit" Version="3.11.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
     <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.12.1" />
     <PackageReference Include="Npgsql" Version="3.2.7" />
     <PackageReference Include="Mono.Cecil" Version="0.10.0" />
     <PackageReference Include="MySql.Data" Version="6.10.6" />
     <PackageReference Include="Humanizer.Core" Version="2.2.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.4.3" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
 
 
   </ItemGroup>
