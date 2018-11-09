@@ -247,8 +247,15 @@ namespace Tests.UserTests
 		[TestFixture]
 		public class UserTest : TestBase
 		{
+			class LimitedSources : IncludeDataSourcesAttribute
+			{
+				public LimitedSources() : base(ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)
+				{
+				}
+			}
+
 			[Test]
-			public void Test5([DataSources]string context)
+			public void Test5([LimitedSources]string context)
 			{
 				using (var s = GetDataContext(context))
 				{
@@ -273,7 +280,7 @@ namespace Tests.UserTests
 			}
 
 			[Test]
-			public void Test4([DataSources] string context)
+			public void Test4([LimitedSources] string context)
 			{
 				using (var s = GetDataContext(context))
 				{
@@ -295,7 +302,7 @@ namespace Tests.UserTests
 			}
 
 			[Test]
-			public void Test3([DataSources] string context)
+			public void Test3([LimitedSources] string context)
 			{
 				using (var s = GetDataContext(context))
 				{
@@ -331,7 +338,7 @@ namespace Tests.UserTests
 			}
 
 			[Test]
-			public void Test2([DataSources]string context)
+			public void Test2([LimitedSources]string context)
 			{
 				using (var s = GetDataContext(context))
 				{
@@ -372,7 +379,7 @@ namespace Tests.UserTests
 			}
 
 			[Test]
-			public void Test([DataSources]string context)
+			public void Test([LimitedSources]string context)
 			{
 				using (var db = GetDataContext(context))
 				{
