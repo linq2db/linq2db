@@ -143,7 +143,6 @@ namespace Tests.UserTests
 
 	namespace MCC.WMS.ServiceInterfaces.DTO
 	{
-		[System.Xml.Serialization.XmlTypeAttribute("WMS_StorageShelfDTO")]
 		[System.Runtime.Serialization.DataContractAttribute(Name = "WMS_StorageShelfDTO")]
 		public class StorageShelfDTO : MCC.Common.ServiceInterfaces.DTO.Base.BasicDTOwithExtensionData, MCC.Common.ServiceInterfaces.DTO.Base.IMccEntityState, MCC.Common.ServiceInterfaces.DTO.Base.IInterlinqDTO, MCC.Common.ServiceInterfaces.DTO.Base.IDTOWithId, MCC.Common.ServiceInterfaces.Interfaces.IExtensionData, MCC.Common.ServiceInterfaces.DTO.IModifiedTimeStamp
 		{
@@ -217,7 +216,6 @@ namespace Tests.UserTests
 
 	namespace MCC.WMS.ServiceInterfaces.DTO
 	{
-		[System.Xml.Serialization.XmlTypeAttribute("WMS_ResourceDTO")]
 		[System.Runtime.Serialization.DataContractAttribute(Name = "WMS_ResourceDTO")]
 		public class WmsLoadCarrierDTO : MCC.WMS.ServiceInterfaces.DTO.WmsBasicDTO<MCC.WMS.ServiceInterfaces.DTO.WmsLoadCarrierDTO>, MCC.Common.ServiceInterfaces.DTO.Base.IMccEntityState, MCC.Common.ServiceInterfaces.DTO.Base.IInterlinqDTO, MCC.Common.ServiceInterfaces.DTO.Base.IDTOWithId, MCC.Common.ServiceInterfaces.Interfaces.IExtensionData, MCC.Common.ServiceInterfaces.DTO.IModifiedTimeStamp, MCC.Common.ServiceInterfaces.DTO.Base.ICreatedTimeStamp, MCC.Common.ServiceInterfaces.DTO.Base.IHasArchiveTable
 		{
@@ -235,7 +233,6 @@ namespace Tests.UserTests
 
 	namespace MCC.WMS.ServiceInterfaces.DTO
 	{
-		[System.Xml.Serialization.XmlTypeAttribute("WMS_ResourcePointDTO")]
 		[System.Runtime.Serialization.DataContractAttribute(Name = "WMS_ResourcePointDTO")]
 		public class WmsResourcePointDTO : MCC.Common.ServiceInterfaces.DTO.Base.BasicDTOwithExtensionData, MCC.Common.ServiceInterfaces.DTO.Base.IMccEntityState, MCC.Common.ServiceInterfaces.DTO.Base.IInterlinqDTO, MCC.Common.ServiceInterfaces.DTO.Base.IDTOWithId, MCC.Common.ServiceInterfaces.Interfaces.IExtensionData
 		{
@@ -245,7 +242,7 @@ namespace Tests.UserTests
 	namespace Tests.UserTests
 	{
 		[TestFixture]
-		public class UserTest : TestBase
+		public class Issue1347Tests : TestBase
 		{
 			class LimitedSources : IncludeDataSourcesAttribute
 			{
