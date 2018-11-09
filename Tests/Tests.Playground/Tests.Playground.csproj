@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-    <Compile Include="..\Linq\UserTests\Issue1347Test.cs" Link="Issue1347Test.cs" />
   </ItemGroup>
 
   <ItemGroup>
