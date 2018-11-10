@@ -17,7 +17,7 @@ void DataAnnotationsImpl()
 		{
 			if (p.DisplayName != null)
 			{
-				p.Attributes.Add(new Attribute("Display", "Name=\"" + p.DisplayName + "\"") { IsSeparated = true });
+				p.Attributes.Add(new Attribute("Display", "Name=" + LinqToDB.SchemaProvider.CSharpTools.ToStringLiteral(p.DisplayName) + "") { IsSeparated = true });
 			}
 
 			if (p.IsRequired)
@@ -25,7 +25,7 @@ void DataAnnotationsImpl()
 				var attr = new Attribute("Required") { IsSeparated = true };
 
 				if (p.IsRequiredMessage != null)
-					attr.Parameters.Add(string.Format("ErrorMessage=\"" + p.IsRequiredMessage + "\"", p.DisplayName ?? p.Name));
+					attr.Parameters.Add(string.Format("ErrorMessage=" + LinqToDB.SchemaProvider.CSharpTools.ToStringLiteral(p.IsRequiredMessage) + "", p.DisplayName ?? p.Name));
 
 				p.Attributes.Add(attr);
 			}
@@ -35,7 +35,7 @@ void DataAnnotationsImpl()
 				var attr = new Attribute("StringLength", p.StringLength.ToString()) { IsSeparated = true };
 
 				if (p.StringLengthMessage != null)
-					attr.Parameters.Add(string.Format("ErrorMessage=\"" + p.StringLengthMessage + "\"", p.DisplayName ?? p.Name));
+					attr.Parameters.Add(string.Format("ErrorMessage=" + LinqToDB.SchemaProvider.CSharpTools.ToStringLiteral(p.StringLengthMessage) + "", p.DisplayName ?? p.Name));
 
 				p.Attributes.Add(attr);
 
@@ -43,7 +43,7 @@ void DataAnnotationsImpl()
 //					new Attribute("StringLength",
 //						p.StringLength.ToString(),
 //						string.Format(
-//							"ErrorMessage=\"The {0} must be a string with a maximum lenfth of {1}.\"",
+//							"ErrorMessage=\"The {0} must be a string with a maximum length of {1}.\"",
 //							p.DisplayName ?? "field",
 //							p.StringLength))
 //					{

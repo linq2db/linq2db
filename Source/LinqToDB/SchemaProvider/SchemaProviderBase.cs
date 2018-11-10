@@ -10,6 +10,7 @@ namespace LinqToDB.SchemaProvider
 	using Common;
 	using Data;
 	using Extensions;
+	using System.Globalization;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
@@ -568,26 +569,12 @@ namespace LinqToDB.SchemaProvider
 			return dbType;
 		}
 
+		/// <summary>
+		/// Converts <paramref name="name"/> to valid C# identifier.
+		/// </summary>
 		public static string ToValidName(string name)
 		{
-			if (name.Contains(" ") || name.Contains("\t"))
-			{
-				var ss = name.Split(new [] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries)
-					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
-
-				name = string.Join("", ss.ToArray());
-			}
-
-			if (name.Length > 0 && char.IsDigit(name[0]))
-				name = "_" + name;
-
-			return name
-				.Replace('$',  '_')
-				.Replace('#',  '_')
-				.Replace('-',  '_')
-				.Replace('/',  '_')
-				.Replace('\\', '_')
-				;
+			return CSharpTools.ToValidIdentifier(name);
 		}
 
 		public static string ToTypeName(Type type, bool isNullable)

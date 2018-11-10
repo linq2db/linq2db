@@ -97,8 +97,7 @@ GetSchemaOptions.LoadProcedure = p => true; // Procedure/function load filter. B
 
 // check GetSchemaOptions class for more options
 
-Func<string, bool, string> ToValidName         = ToValidNameDefault;          // Defines function to convert names to valid (My_Table to MyTable) 
-Func<string, bool, string> ConvertToCompilable = ConvertToCompilableDefault;  // Converts name to c# compatible. By default removes uncompatible symbols and converts result with ToValidName
+Func<string, bool, string> ToValidName         = ToValidNameDefault;          // Defines function to convert names to valid C# identifier. Passing true to second parameter enables underscore removal. E.g. (cl_ass => class => @class).
 
 Func<ForeignKey, string> GetAssociationExtensionSinglularName = GetAssociationExtensionSinglularNameDefault; // Gets singular method extension method name for association 
 Func<ForeignKey, string> GetAssociationExtensionPluralName    = GetAssociationExtensionPluralNameDefault;    // Gets plural method extension method name for association 

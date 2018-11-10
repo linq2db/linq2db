@@ -963,3 +963,62 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Column descrip
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Index description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'INDEX',@level2name=N'PK_Issue1144'
 
 GO
+
+-- T4/LINQPad naming test-cases
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'proc@t4')
+	DROP Procedure proc@t4
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'delegate')
+	DROP Procedure delegate
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 't4''"\proc')
+	DROP Procedure [t4'"\proc]
+
+IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID('FK_t4@test') AND parent_object_id = OBJECT_ID('t4@test'))
+  ALTER TABLE t4@test DROP CONSTRAINT FK_t4@test
+IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID('enum') AND parent_object_id = OBJECT_ID('class'))
+  ALTER TABLE class DROP CONSTRAINT enum
+IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID('[FK_t4''"\fail]') AND parent_object_id = OBJECT_ID('[t4''"\table]'))
+  ALTER TABLE [t4'"\table] DROP CONSTRAINT [FK_t4'"\fail]
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('t4@test') AND type in (N'U'))
+	DROP TABLE t4@test
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('class') AND type in (N'U'))
+	DROP TABLE class
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('[t4''"\table]') AND type in (N'U'))
+	DROP TABLE [t4'"\table]
+
+CREATE TABLE t4@test(
+t4@test INT NOT NULL
+)
+
+CREATE TABLE class(
+class INT NOT NULL
+)
+
+CREATE TABLE [t4'"\table](
+[t4'"\column] INT NOT NULL
+)
+ALTER TABLE t4@test ADD CONSTRAINT PK_t4@test PRIMARY KEY NONCLUSTERED (t4@test)
+ALTER TABLE class ADD CONSTRAINT struct PRIMARY KEY NONCLUSTERED (class)
+ALTER TABLE [t4'"\table] ADD CONSTRAINT [PK_t4'"\fail] PRIMARY KEY NONCLUSTERED ([t4'"\column])
+
+ALTER TABLE t4@test ADD CONSTRAINT FK_t4@test FOREIGN KEY(t4@test) REFERENCES class(class)
+ALTER TABLE class ADD CONSTRAINT enum FOREIGN KEY(class) REFERENCES [t4'"\table]([t4'"\column])
+ALTER TABLE [t4'"\table] ADD CONSTRAINT [FK_t4'"\fail] FOREIGN KEY([t4'"\column]) REFERENCES t4@test(t4@test)
+GO
+CREATE PROCEDURE proc@t4
+ @param@t4 INT
+AS
+SELECT * FROM t4@test
+GO
+CREATE PROCEDURE delegate
+ @object INT
+AS
+SELECT * FROM class
+GO
+CREATE PROCEDURE [t4'"\proc]
+ --[@t4'"\param] INT
+ @t4 INT
+AS
+SELECT * FROM [t4'"\table]
+GO
+

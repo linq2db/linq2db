@@ -51,13 +51,6 @@ Func<string, bool, string> ToValidName
 	set { _toValidName = value; }
 }
 
-private Func<string, bool, string> _convertToCompilabl;
-Func<string, bool, string> ConvertToCompilable
-{
-	get { return _convertToCompilabl ?? ConvertToCompilableDefault; }
-	set { _convertToCompilabl = value; }
-}
-
 private Func<ForeignKey, string> _getAssociationExtensionPluralName;
 Func<ForeignKey, string> GetAssociationExtensionPluralName
 {
@@ -82,18 +75,6 @@ Func<TableSchema,Table> LoadProviderSpecificTable = tableSchema => null;
 static Func<ColumnSchema,string>                 ConvertColumnMemberType          = (c) => c.MemberType;
 static Func<TableSchema,ColumnSchema,string>     ConvertTableColumnMemberType     = (t,c) => ConvertColumnMemberType(c);
 static Func<ProcedureSchema,ColumnSchema,string> ConvertProcedureColumnMemberType = (t,c) => ConvertColumnMemberType(c);
-
-HashSet<string> KeyWords = new HashSet<string>
-{
-	"abstract", "as",       "base",     "bool",    "break",     "byte",     "case",       "catch",     "char",    "checked",
-	"class",    "const",    "continue", "decimal", "default",   "delegate", "do",         "double",    "else",    "enum",
-	"event",    "explicit", "extern",   "false",   "finally",   "fixed",    "float",      "for",       "foreach", "goto",
-	"if",       "implicit", "in",       "int",     "interface", "internal", "is",         "lock",      "long",    "new",
-	"null",     "object",   "operator", "out",     "override",  "params",   "private",    "protected", "public",  "readonly",
-	"ref",      "return",   "sbyte",    "sealed",  "short",     "sizeof",   "stackalloc", "static",    "struct",  "switch",
-	"this",     "throw",    "true",     "try",     "typeof",    "uint",     "ulong",      "unchecked", "unsafe",  "ushort",
-	"using",    "virtual",  "volatile", "void",    "while",     "namespace", "string"
-};
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
@@ -282,7 +263,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 								IsIdentity      = c.IsIdentity,
 								IsPrimaryKey    = c.IsPrimaryKey,
 								PrimaryKeyOrder = c.PrimaryKeyOrder,
-								MemberName      = CheckColumnName(CheckType(c.SystemType, c.MemberName)),
+								MemberName      = CheckType(c.SystemType, c.MemberName),
 								Type            = ConvertProcedureColumnMemberType(p, c),
 								SkipOnInsert    = c.SkipOnInsert,
 								SkipOnUpdate    = c.SkipOnUpdate,
@@ -358,33 +339,6 @@ string CheckType(Type type, string typeName)
 	return typeName;
 }
 
-string CheckColumnName(string memberName)
-{
-	if (string.IsNullOrEmpty(memberName))
-		memberName = "Empty";
-	else
-	{
-		memberName = memberName
-			.Replace("%", "Percent")
-			.Replace(">", "Greater")
-			.Replace("<", "Lower")
-			.Replace("+", "Plus")
-			.Replace('(', '_')
-			.Replace(')', '_')
-			.Replace('-', '_')
-			.Replace('|', '_')
-			.Replace(',', '_')
-			.Replace('"', '_')
-			.Replace("'", "_")
-			.Replace(".", "_")
-			.Replace("\u00A3", "Pound");
-
-		if (KeyWords.Contains(memberName))
-			memberName = "@" + memberName;
-	}
-	return memberName;
-}
-
 string CheckParameterName(string parameterName)
 {
 	var invalidParameterNames = new List<string>
@@ -418,33 +372,14 @@ void LoadMetadata(DataConnection dataConnection)
 
 	foreach (var t in Tables.Values)
 	{
-		if (KeyWords.Contains(t.TypeName))
-			t.TypeName = "@" + t.TypeName;
-
-		if (KeyWords.Contains(t.DataContextPropertyName))
-			t.DataContextPropertyName = "@" + t.DataContextPropertyName;
-
-		t.TypeName                = ConvertToCompilable(t.TypeName,                true);
-		t.DataContextPropertyName = ConvertToCompilable(t.DataContextPropertyName, true);
-
 		foreach (var col in t.Columns.Values)
 		{
-			if (KeyWords.Contains(col.MemberName))
-				col.MemberName = "@" + col.MemberName;
-
-			col.MemberName = ConvertToCompilable(col.MemberName, true);
-
 			if (col.MemberName == t.TypeName)
 				col.MemberName += "_Column";
 		}
 
 		foreach (var fk in t.ForeignKeys.Values)
 		{
-			if (KeyWords.Contains(fk.MemberName))
-				fk.MemberName = "@" + fk.MemberName;
-
-			fk.MemberName = ConvertToCompilable(fk.MemberName, true);
-
 			if (fk.MemberName == t.TypeName)
 				fk.MemberName += "_FK";
 		}
@@ -478,18 +413,6 @@ void LoadMetadata(DataConnection dataConnection)
 
 				col.MemberName = SuggestNoDuplicate(mayDuplicate, col.MemberName, null);
 			}
-		}
-	}
-
-	foreach (var proc in Procedures.Values)
-	{
-		if (KeyWords.Contains(proc.Name))
-			proc.Name = "@" + proc.Name;
-
-		foreach (var param in proc.ProcParameters)
-		{
-			if (KeyWords.Contains(param.ParameterName))
-				param.ParameterName = ConvertToCompilable("@" + param.ParameterName, true);
 		}
 	}
 
@@ -530,15 +453,6 @@ string SuggestNoDuplicate(IEnumerable<string> currentNames, string newName, stri
 	}
 
 	return result;
-}
-
-string ConvertToCompilableDefault(string name, bool mayRemoveUnderscore)
-{
-	var query =
-		from c in name
-		select char.IsLetterOrDigit(c) || c == '@' ? c : '_';
-
-	return ToValidName(new string(query.ToArray()), mayRemoveUnderscore);
 }
 
 Table GetTable(string name)
@@ -818,8 +732,6 @@ public class Parameter
 	public string   DataType      { get; set; }
 }
 
-private int _counter = 0;
-
 string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 {
 	if (NormalizeNames && mayRemoveUnderscore && name.Contains("_"))
@@ -827,23 +739,7 @@ string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 		name = SplitAndJoin(name, "", '_');
 	}
 
-	if (name.Contains("."))
-	{
-		name = SplitAndJoin(name, "", '.');
-	}
-
-	if (name.Length > 0 && char.IsDigit(name[0]))
-		name = "_" + name;
-
-	if (string.IsNullOrEmpty(name))
-		name = "_" + _counter++;
-
-	if (NormalizeNames)
-	{
-		name = char.ToUpper(name[0]) + name.Substring(1);
-	}
-
-	return name;
+	return SchemaProviderBase.ToValidName(name);
 }
 
 static string SplitAndJoin(string value, string join, params char[] split)

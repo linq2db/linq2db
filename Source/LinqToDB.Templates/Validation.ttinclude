@@ -50,7 +50,7 @@ void ValidationImpl()
 				cl.Attributes.Add(
 					new Attribute("CustomValidation",
 						"typeof(" + cl.Name + ".CustomValidator)",
-						"\"" + mname + "\"")
+						LinqToDB.SchemaProvider.CSharpTools.ToStringLiteral(mname))
 						{
 							IsSeparated = true
 						});

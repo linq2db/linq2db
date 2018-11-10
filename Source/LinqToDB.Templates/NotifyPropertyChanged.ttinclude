@@ -88,7 +88,7 @@ void NotifyPropertyChangedImpl()
 			{
 				new Field("const string", "NameOf" + name)
 				{
-					InitValue      = "\"" + name + "\"",
+					InitValue      = LinqToDB.SchemaProvider.CSharpTools.ToStringLiteral(name),
 					AccessModifier = AccessModifier.Public,
 				},
 				new Field("PropertyChangedEventArgs", "_" + ToCamelCase(name) + "ChangedEventArgs")
