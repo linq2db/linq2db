@@ -92,7 +92,7 @@ before_build:
     if ($env:docfxsecret)
     {
       $gitDeploy = $env:APPVEYOR_REPO_BRANCH -eq "master"
-      .\Build\AppVeyor.DocFx.ps1 $env:docfxuser $env:docfxsecret $env:docfxmail $gitDeploy
+      #.\Build\AppVeyor.DocFx.ps1 $env:docfxuser $env:docfxsecret $env:docfxmail $gitDeploy
     }
     else
     {
