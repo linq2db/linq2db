@@ -2,13 +2,13 @@
 using System.Linq;
 using System.Linq.Expressions;
 using NUnit.Framework;
+using Tests.Model;
+using Tests.xUpdate;
 
 namespace Tests.UserTests
 {
 	using LinqToDB;
 	using LinqToDB.Mapping;
-	using Tests.Model;
-	using Tests.xUpdate;
 
 	[TestFixture]
 	public class Issue1238Tests : TestBase
