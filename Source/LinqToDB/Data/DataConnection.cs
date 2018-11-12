@@ -944,7 +944,7 @@ namespace LinqToDB.Data
 		public event Action<DataConnection, IDbConnection> OnConnectionOpened;
 
 		/// <summary>
-		/// Event, triggered right after connection opened using <see cref="DbConnection.OpenAsync"/> methods.
+		/// Event, triggered right after connection opened using <see cref="DbConnection.OpenAsync()"/> methods.
 		/// </summary>
 		public event Func<DataConnection, IDbConnection, CancellationToken, Task> OnConnectionOpenedAsync;
 
