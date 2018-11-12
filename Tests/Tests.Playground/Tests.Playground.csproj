@@ -12,8 +12,6 @@
 
   <ItemGroup>
     <Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-    <Compile Include="..\Linq\Linq\DynamicColumnsTests.cs" Link="DynamicColumnsTests.cs" />
-    <Compile Include="..\Linq\UserTests\Issue1347Tests.cs" Link="Issue1347Tests.cs" />
   </ItemGroup>
 
   <ItemGroup>

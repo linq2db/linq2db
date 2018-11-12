@@ -72,7 +72,6 @@ namespace LinqToDB.Linq.Builder
 			readonly Dictionary<MemberInfo,Member> _members = new Dictionary<MemberInfo,Member>(new MemberInfoComparer());
 			readonly SubQueryContext               _sequence1;
 			readonly SubQueryContext               _sequence2;
-			TableBuilder.TableContext              _tableContext;
 
 			class Member
 			{
@@ -241,10 +240,9 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							_tableContext = new TableBuilder.TableContext(Builder,
-								new BuildInfo(this, Expression, new SelectQuery()), type);
-							var ex = _tableContext.BuildExpression(null, 0, enforceServerSide);
-							_tableContext = null;
+							var tableContext = new TableBuilder.TableContext(Builder,
+								new BuildInfo((IBuildContext) null, Expression, new SelectQuery()), type);
+							var ex = tableContext.BuildExpression(null, 0, enforceServerSide);
 							return ex;
 						}
 					}
@@ -272,17 +270,6 @@ namespace LinqToDB.Linq.Builder
 				//	_sequence2.BuildExpression(expression, level);
 
 				return ret;
-			}
-
-			public override int ConvertToParentIndex(int index, IBuildContext context)
-			{
-				if (context == _tableContext)
-				{
-					// Here we assume that everything are already added during Init. Do not allow to add additional columns.
-					return index;
-				}
-
-				return base.ConvertToParentIndex(index, context);
 			}
 
 			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor testFlag)
