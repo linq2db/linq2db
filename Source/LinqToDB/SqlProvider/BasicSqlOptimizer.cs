@@ -286,7 +286,11 @@ namespace LinqToDB.SqlProvider
 					}
 					else
 					{
-						query.Select.Columns[i].Expression = subQuery.Select.Columns[0];
+						// Added Coalesce(column, 0) because Count() can be null in case of LEFT JOIN which may fail fast mapper.
+						var column = subQuery.Select.Columns[0];
+						var newExpr = new SqlFunction(column.SystemType, "Coalesce", column, new SqlValue(0));
+
+						query.Select.Columns[i].Expression = newExpr;
 					}
 				}
 			}
