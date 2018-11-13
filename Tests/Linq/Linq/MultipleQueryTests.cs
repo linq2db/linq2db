@@ -10,8 +10,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class MultipleQueryTests : TestBase
 	{
-		//[Test, DataContextSource]
-		public void Test1(string context)
+		//[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -20,8 +20,8 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children);
 		}
 
-		//[Test, DataContextSource]
-		public void Test2(string context)
+		//[Test]
+		public void Test2([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -30,8 +30,8 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.ToList());
 		}
 
-		[Test, DataContextSource]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -39,8 +39,8 @@ namespace Tests.Linq
 					from p in db.Parent select db.Child);
 		}
 
-		[Test, DataContextSource]
-		public void Test4(string context)
+		[Test]
+		public void Test4([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -51,8 +51,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase)]
-		public void Test5(string context)
+		[Test]
+		public void Test5([DataSources(ProviderName.Sybase)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))

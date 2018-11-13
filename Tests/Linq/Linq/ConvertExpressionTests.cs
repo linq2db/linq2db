@@ -10,8 +10,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ConvertExpressionTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Select1(string context)
+		[Test]
+		public void Select1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -23,8 +23,8 @@ namespace Tests.Linq
 					select children.Sum(c => c.ChildID));
 		}
 
-		[Test, DataContextSource]
-		public void Select2(string context)
+		[Test]
+		public void Select2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -38,8 +38,8 @@ namespace Tests.Linq
 					select children2.Sum(c => c.ChildID));
 		}
 
-		[Test, DataContextSource]
-		public void Select3(string context)
+		[Test]
+		public void Select3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -53,8 +53,8 @@ namespace Tests.Linq
 						.Select(t => t.children2.Sum(c => c.ChildID)));
 		}
 
-		[Test, DataContextSource]
-		public void Select4(string context)
+		[Test]
+		public void Select4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -68,8 +68,8 @@ namespace Tests.Linq
 						.Select(t => t.Sum(c => c.ChildID)));
 		}
 
-		[Test, DataContextSource]
-		public void Where1(string context)
+		[Test]
+		public void Where1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -85,8 +85,8 @@ namespace Tests.Linq
 					select children2.Sum(c => c.ChildID));
 		}
 
-		[Test, DataContextSource]
-		public void Where2(string context)
+		[Test]
+		public void Where2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -102,8 +102,8 @@ namespace Tests.Linq
 					select children2.Sum(c => c.ChildID));
 		}
 
-		[Test, DataContextSource]
-		public void Where3(string context)
+		[Test]
+		public void Where3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -119,8 +119,8 @@ namespace Tests.Linq
 					select children2.Sum(c => c.ChildID));
 		}
 
-		//[Test, DataContextSource]
-		public void Where4(string context)
+		//[Test]
+		public void Where4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -132,8 +132,8 @@ namespace Tests.Linq
 						.Where (t => t.children1.Any()));
 		}
 
-		//[Test, DataContextSource]
-		public void Where5(string context)
+		//[Test]
+		public void Where5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -145,8 +145,8 @@ namespace Tests.Linq
 						.Where (t => t.children1.Any()));
 		}
 
-		//[Test, DataContextSource]
-		public void Where6(string context)
+		//[Test]
+		public void Where6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -158,8 +158,8 @@ namespace Tests.Linq
 						.Where (t => t.Any()));
 		}
 
-		[Test, DataContextSource]
-		public void Any1(string context)
+		[Test]
+		public void Any1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -171,8 +171,8 @@ namespace Tests.Linq
 						.Any(p => p.children1.Any()));
 		}
 
-		[Test, DataContextSource]
-		public void Any2(string context)
+		[Test]
+		public void Any2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -184,8 +184,8 @@ namespace Tests.Linq
 						.Any(p => p.Any()));
 		}
 
-		[Test, DataContextSource]
-		public void Any3(string context)
+		[Test]
+		public void Any3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -199,8 +199,8 @@ namespace Tests.Linq
 						.Any());
 		}
 
-		//[Test, DataContextSource]
-		public void Any4(string context)
+		//[Test]
+		public void Any4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -214,8 +214,10 @@ namespace Tests.Linq
 						.Any());
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
-		public void LetTest1(string context)
+		[Test]
+		public void LetTest1([DataSources(
+			ProviderName.SqlCe, ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -232,8 +234,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SybaseManaged, ProviderName.SapHana)]
-		public void LetTest2(string context)
+		[Test]
+		public void LetTest2([DataSources(
+			ProviderName.SqlCe, ProviderName.Informix, ProviderName.Sybase, ProviderName.
+			SybaseManaged, ProviderName.SybaseManaged, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -250,8 +255,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
-		public void LetTest3(string context)
+		[Test]
+		public void LetTest3([DataSources(
+			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -266,8 +273,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
-		public void LetTest4(string context)
+		[Test]
+		public void LetTest4([DataSources(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -297,8 +304,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
-		public void LetTest5(string context)
+		[Test]
+		public void LetTest5([DataSources(
+			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
+			string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -328,8 +337,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
-		public void LetTest6(string context)
+		[Test]
+		public void LetTest6([DataSources(
+			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
+			string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
@@ -365,8 +376,10 @@ namespace Tests.Linq
 					).Where(t => t.ParentID > 0));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
-		public void LetTest7(string context)
+		[Test]
+		public void LetTest7([DataSources(
+			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
+			string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -401,8 +414,8 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(Configuration = ProviderName.SapHana)]
-		[Test, DataContextSource]
-		public void LetTest8(string context)
+		[Test]
+		public void LetTest8([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -433,8 +446,8 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(Configuration = ProviderName.SapHana)]
-		[Test, DataContextSource]
-		public void LetTest9(string context)
+		[Test]
+		public void LetTest9([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -458,8 +471,8 @@ namespace Tests.Linq
 					).Take(10));
 		}
 
-		[Test, DataContextSource]
-		public void LetTest10(string context)
+		[Test]
+		public void LetTest10([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -483,8 +496,8 @@ namespace Tests.Linq
 					).Any());
 		}
 
-		[Test, DataContextSource]
-		public void LetTest11(string context)
+		[Test]
+		public void LetTest11([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))

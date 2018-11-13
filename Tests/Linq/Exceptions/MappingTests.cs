@@ -13,8 +13,8 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class MappingTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void MapIgnore1(string context)
+		[Test]
+		public void MapIgnore1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -30,8 +30,8 @@ namespace Tests.Exceptions
 			         public string FirstName;
 		}
 
-		[Test, DataContextSource]
-		public void MapIgnore2(string context)
+		[Test]
+		public void MapIgnore2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.Throws(typeof(LinqException), () => db.GetTable<TestPerson1>().FirstOrDefault(_ => _.FirstName == null));

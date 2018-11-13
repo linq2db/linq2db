@@ -1,10 +1,11 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
-using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using System;
-using System.Linq;
 
 namespace Tests.UserTests
 {
@@ -85,7 +86,7 @@ namespace Tests.UserTests
 			Assert.IsTrue(members.Length == 5, "Expected 5 returned members, found {0}.", members.Length);
 
 			// Check for duplicate names
-			string[] dupNames = 
+			string[] dupNames =
 				(
 					from m in members
 					group 1 by m.Name into grp
@@ -104,8 +105,8 @@ namespace Tests.UserTests
 			Assert.IsFalse(baseMembers.Any(), "Found incorrect base class member(s): {0}.", string.Join(", ", baseMembers));
 		}
 
-		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
-		public void TestQuery(string context)
+		[Test]
+		public void TestQuery([DataSources(false, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{

@@ -1,9 +1,10 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
@@ -41,11 +42,11 @@ namespace Tests.UserTests
 			public Test GetChild() => Child;
 		}
 
-		[Test, DataContextSource]
-		public void Test_ComplexNavigation(string context)
+		[Test]
+		public void Test_ComplexNavigation([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var tbl = db.CreateLocalTable<Table>())
+			using (var db  = GetDataContext(context))
+			using (var __ = db.CreateLocalTable<Table>())
 			{
 				db.Insert(new Table() { ID = 5 });
 
@@ -68,11 +69,11 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test_ObjectNavigation(string context)
+		[Test]
+		public void Test_ObjectNavigation([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var tbl = db.CreateLocalTable<Table>())
+			using (var __ = db.CreateLocalTable<Table>())
 			{
 				db.Insert(new Table() { ID = 5 });
 
@@ -84,45 +85,45 @@ namespace Tests.UserTests
 					}
 				};
 
-				db.GetTable<Table>().Where(_ => _.ID == obj.Child.Id).Single();
+				var ___ = db.GetTable<Table>().Where(_ => _.ID == obj.Child.Id).Single();
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test_MethodWithProperty(string context)
+		[Test]
+		public void Test_MethodWithProperty([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var tbl = db.CreateLocalTable<Table>())
+			using (var __ = db.CreateLocalTable<Table>())
 			{
 				db.Insert(new Table() { ID = 5 });
 
-				db.GetTable<Table>().Where(_ => _.ID == GetTuple().Item1).Single();
+				var ___ = db.GetTable<Table>().Where(_ => _.ID == GetTuple().Item1).Single();
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test_Method(string context)
+		[Test]
+		public void Test_Method([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var tbl = db.CreateLocalTable<Table>())
+			using (var __ = db.CreateLocalTable<Table>())
 			{
 				db.Insert(new Table() { ID = 5 });
 
-				db.GetTable<Table>().Where(_ => _.ID == GetValue()).Single();
+				var ___ = db.GetTable<Table>().Where(_ => _.ID == GetValue()).Single();
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test_Linq(string context)
+		[Test]
+		public void Test_Linq([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var tbl = db.CreateLocalTable<Table>())
+			using (var __ = db.CreateLocalTable<Table>())
 			{
 				db.Insert(new Table() { ID = 5 });
 
 				var ids = new[] { 1, 2, 3, 4, 5, 6 };
 
-				db.GetTable<Table>().Where(_ => ids.Where(id => id > 3).Contains(_.ID)).Single();
+				var ___ = db.GetTable<Table>().Where(_ => ids.Where(id => id > 3).Contains(_.ID)).Single();
 			}
 		}
 	}

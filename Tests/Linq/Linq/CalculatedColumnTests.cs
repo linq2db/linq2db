@@ -54,13 +54,13 @@ namespace Tests.Linq
 			[Column, PrimaryKey, Identity] public int    PersonID { get; set; } // Long
 			[Column(Length = 50), NotNull] public string Taxonomy { get; set; } // text(50)
 
-			// Many associsation for test
+			// Many association for test
 			[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull = false, KeyName="PersonDoctor", BackReferenceName="PersonDoctor")]
 			public IEnumerable<PersonCalculated> PersonDoctor { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void CalculatedColumnTest1(string context)
+		[Test]
+		public void CalculatedColumnTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -75,8 +75,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CalculatedColumnTest2(string context)
+		[Test]
+		public void CalculatedColumnTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -92,8 +92,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CalculatedColumnTest3(string context)
+		[Test]
+		public void CalculatedColumnTest3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -116,8 +116,8 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(Configuration = ProviderName.SapHana)]
-		[Test, DataContextSource]
-		public void CalculatedColumnTest4(string context)
+		[Test]
+		public void CalculatedColumnTest4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -131,6 +131,5 @@ namespace Tests.Linq
 				Assert.That(l[0].AsSqlFullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
 			}
 		}
-
 	}
 }

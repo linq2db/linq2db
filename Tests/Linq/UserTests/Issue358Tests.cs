@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-
-using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -120,8 +116,8 @@ namespace Tests.UserTests
 			return data;
 		}
 
-		[Test, DataContextSource]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -131,8 +127,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -142,8 +138,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -153,8 +149,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test4(string context)
+		[Test]
+		public void Test4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -166,8 +162,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test4WithoutComparasionNullCheck(string context)
+		[Test]
+		public void Test4WithoutComparasionNullCheck([DataSources] string context)
 		{
 			using (new WithoutComparasionNullCheck())
 			using (var db = GetDataContext(context))
@@ -180,8 +176,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test5(string context)
+		[Test]
+		public void Test5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -193,8 +189,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test6(string context)
+		[Test]
+		public void Test6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -206,8 +202,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test7(string context)
+		[Test]
+		public void Test7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -219,8 +215,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test8(string context)
+		[Test]
+		public void Test8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -232,8 +228,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test9(string context)
+		[Test]
+		public void Test9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -245,8 +241,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test81(string context)
+		[Test]
+		public void Test81([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -258,8 +254,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test91(string context)
+		[Test]
+		public void Test91([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -271,8 +267,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test82(string context)
+		[Test]
+		public void Test82([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -284,8 +280,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test92(string context)
+		[Test]
+		public void Test92([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

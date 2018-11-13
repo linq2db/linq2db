@@ -12,8 +12,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue513Tests : TestBase
 	{
-		[Test, DataContextSource, Category("WindowsOnly")]
-		public void Simple(string context)
+		[Test, Category("WindowsOnly")]
+		public void Simple([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -28,8 +28,8 @@ namespace Tests.UserTests
 
 		// Informix disabled due to issue, described here (but it reproduced with client 4.1):
 		// https://www-01.ibm.com/support/docview.wss?uid=swg1IC66046
-		[Test, DataContextSource(ProviderName.SQLiteMS, ProviderName.Informix), Category("WindowsOnly")]
-		public void Test(string context)
+		[Test, Category("WindowsOnly")]
+		public void Test([DataSources(ProviderName.SQLiteMS, ProviderName.Informix)] string context)
 		{
 			using (var semaphore = new Semaphore(0, 10))
 			{

@@ -12,8 +12,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class SelectManyTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Basic1(string context)
+		[Test]
+		public void Basic1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -21,8 +21,8 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => db.Child));
 		}
 
-		[Test, DataContextSource]
-		public void Basic1_1(string context)
+		[Test]
+		public void Basic1_1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -30,8 +30,8 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => db.Child.SelectMany(t => db.GrandChild)));
 		}
 
-		[Test, DataContextSource]
-		public void Basic2(string context)
+		[Test]
+		public void Basic2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -39,8 +39,8 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => db.Child.Select(_ => _.ParentID + 1)));
 		}
 
-		[Test, DataContextSource]
-		public void Basic3(string context)
+		[Test]
+		public void Basic3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -48,8 +48,8 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => db.Child.Select(_ => _.ParentID + 1).Where(_ => _ > 1)));
 		}
 
-		[Test, DataContextSource]
-		public void Basic4(string context)
+		[Test]
+		public void Basic4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -57,8 +57,8 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => db.Child.Select(_ => _.ParentID + 1).Where(_ => p.ParentID == _)));
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Basic5(string context)
+		[Test]
+		public void Basic5([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -66,8 +66,8 @@ namespace Tests.Linq
 					db.Child.SelectMany(t => t.Parent.GrandChildren));
 		}
 
-		[Test, DataContextSource]
-		public void Basic6(string context)
+		[Test]
+		public void Basic6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -75,8 +75,8 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => p.Children.Select(_ => _.ParentID + 1).Where(_ => _ > 1)));
 		}
 
-		[Test, DataContextSource]
-		public void Basic61(string context)
+		[Test]
+		public void Basic61([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -84,8 +84,8 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => p.Children.Select(_ => _.ParentID + 1).Where(_ => _ > 1 || _ > 2)).Where(_ => _ > 0 || _ > 3));
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Basic62(string context)
+		[Test]
+		public void Basic62([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -93,8 +93,8 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => p.Children.Select(_ => _.ParentID + p.ParentID).Where(_ => _ > 1)));
 		}
 
-		[Test, DataContextSource]
-		public void Basic7(string context)
+		[Test]
+		public void Basic7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -102,8 +102,8 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => p.Children));
 		}
 
-		[Test, DataContextSource]
-		public void Basic8(string context)
+		[Test]
+		public void Basic8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -111,8 +111,8 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => p.Children.SelectMany(t => t.GrandChildren)));
 		}
 
-		[Test, DataContextSource]
-		public void Basic9(string context)
+		[Test]
+		public void Basic9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -120,8 +120,8 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => p.Children.SelectMany(t => p.GrandChildren)));
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Basic10(string context)
+		[Test]
+		public void Basic10([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -129,8 +129,8 @@ namespace Tests.Linq
 					db.Child.GroupBy(o => o.ParentID2).SelectMany(g => g.Select(o => o.Parent)));
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Basic11(string context)
+		[Test]
+		public void Basic11([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -142,8 +142,8 @@ namespace Tests.Linq
 						.SelectMany(g => db.Child.Where(o => o.ParentID2 == g.Key).Select(o => o.ParentID)));
 		}
 
-		[Test, DataContextSource]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -156,8 +156,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test11(string context)
+		[Test]
+		public void Test11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(db.Person
@@ -166,8 +166,8 @@ namespace Tests.Linq
 					.Select    (t => new Person { ID = t.p1.ID, FirstName = t.p2.FirstName }));
 		}
 
-		[Test, DataContextSource]
-		public void Test21(string context)
+		[Test]
+		public void Test21([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -178,8 +178,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID1, FirstName = p2.FirstName, LastName = p3.LastName } );
 		}
 
-		[Test, DataContextSource]
-		public void Test22(string context)
+		[Test]
+		public void Test22([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -190,8 +190,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID, FirstName = p2.FirstName, LastName = p3.LastName } );
 		}
 
-		[Test, DataContextSource]
-		public void Test31(string context)
+		[Test]
+		public void Test31([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -206,8 +206,8 @@ namespace Tests.Linq
 					select p.p.p);
 		}
 
-		[Test, DataContextSource]
-		public void Test32(string context)
+		[Test]
+		public void Test32([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -233,8 +233,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SubQuery1(string context)
+		[Test]
+		public void SubQuery1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -254,7 +254,7 @@ namespace Tests.Linq
 			var q1 = from p in db.Person where p.ID == 1 || p.ID == 2 select p;
 			var q2 = from p in db.Person where !(p.ID == 2) select p;
 
-			var q = 
+			var q =
 				from p1 in q1
 				from p2 in q2
 				where p1.ID == p2.ID
@@ -267,8 +267,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SubQuery2(string context)
+		[Test]
+		public void SubQuery2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -282,8 +282,8 @@ namespace Tests.Linq
 			return from p in db.Person where p.ID == id select new Person { ID = p.ID + 1, FirstName = p.FirstName };
 		}
 
-		[Test, DataContextSource]
-		public void SubQuery3(string context)
+		[Test]
+		public void SubQuery3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -297,15 +297,15 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OneParam1(string context)
+		[Test]
+		public void OneParam1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(db.Person.SelectMany(p => db.Person).Where(t => t.ID == 1).Select(t => t));
 		}
 
-		[Test, DataContextSource]
-		public void OneParam2(string context)
+		[Test]
+		public void OneParam2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -313,8 +313,8 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => p.Children).Where(t => t.ParentID == 1).Select(t => t));
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void OneParam3(string context)
+		[Test]
+		public void OneParam3([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -322,8 +322,8 @@ namespace Tests.Linq
 					db.Child.SelectMany(p => p.Parent.GrandChildren).Where(t => t.ParentID == 1).Select(t => t));
 		}
 
-		[Test, DataContextSource]
-		public void ScalarQuery(string context)
+		[Test]
+		public void ScalarQuery([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -333,8 +333,8 @@ namespace Tests.Linq
 					select new Person { ID = p2, FirstName = p1.FirstName });
 		}
 
-		[Test, DataContextSource]
-		public void SelectManyLeftJoin1(string context)
+		[Test]
+		public void SelectManyLeftJoin1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -346,8 +346,8 @@ namespace Tests.Linq
 					select new { p.Value1, o = c }).AsEnumerable().Count());
 		}
 
-		[Test, DataContextSource]
-		public void SelectManyLeftJoin2(string context)
+		[Test]
+		public void SelectManyLeftJoin2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -359,8 +359,8 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void SelectManyLeftJoin3(string context)
+		[Test]
+		public void SelectManyLeftJoin3([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -375,8 +375,8 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test, DataContextSource]
-		public void SelectManyLeftJoin4(string context)
+		[Test]
+		public void SelectManyLeftJoin4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -389,8 +389,8 @@ namespace Tests.Linq
 					select new { p.ParentID, ch });
 		}
 
-		[Test, DataContextSource]
-		public void SelectManyLeftJoinCount(string context)
+		[Test]
+		public void SelectManyLeftJoinCount([DataSources] string context)
 		{
 			var expected =
 				from p in Parent
@@ -405,12 +405,12 @@ namespace Tests.Linq
 					select new { p.Value1, n = c.ChildID + 1, o = c }).Count());
 		}
 
-		[Test, DataContextSource]
-		public void TestJoin1(string context)
+		[Test]
+		public void TestJoin1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in 
+					from p in
 						from p in Parent
 						from g in p.GrandChildren
 						join c in Child on g.ChildID equals c.ChildID
@@ -418,7 +418,7 @@ namespace Tests.Linq
 						select c
 					join t in Person on p.ParentID equals t.ID
 					select p,
-					from p in 
+					from p in
 						from p in db.Parent
 						from g in p.GrandChildren
 						join c in db.Child on g.ChildID equals c.ChildID
@@ -428,8 +428,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -445,8 +445,8 @@ namespace Tests.Linq
 					 select c).Count());
 		}
 
-		[Test, DataContextSource]
-		public void Test4(string context)
+		[Test]
+		public void Test4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -462,8 +462,8 @@ namespace Tests.Linq
 					select c).Count());
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Test5(string context)
+		[Test]
+		public void Test5([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -477,8 +477,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Test6(string context)
+		[Test]
+		public void Test6([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -493,8 +493,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Test7(string context)
+		[Test]
+		public void Test7([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -513,8 +513,8 @@ namespace Tests.Linq
 					select r);
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Test8(string context)
+		[Test]
+		public void Test8([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -534,8 +534,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test81(string context)
+		[Test]
+		public void Test81([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -555,8 +555,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Test9(string context)
+		[Test]
+		public void Test9([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -586,8 +586,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Test91(string context)
+		[Test]
+		public void Test91([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -611,8 +611,8 @@ namespace Tests.Linq
 			}
 		}
 
-		/////[Test, DataContextSource]
-		public void Test92(string context)
+		/////[Test]
+		public void Test92([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

@@ -16,8 +16,8 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		// ASE: just fails
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void Merge(string context)
+		[Test]
+		public void Merge([MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -32,8 +32,8 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: just fails
-		[Test, MergeDataContextSource(ProviderName.Sybase)]
-		public void MergeWithEmptySource(string context)
+		[Test]
+		public void MergeWithEmptySource([MergeDataContextSource(ProviderName.Sybase)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -184,8 +184,10 @@ namespace Tests.xUpdate
 
 		// DB2: ncharDataType field missing in AllTypes
 		// Informix: install the latest server
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void MergeChar1(string context)
+		[Test]
+		public void MergeChar1([MergeDataContextSource(
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -209,8 +211,10 @@ namespace Tests.xUpdate
 		// ASE: alltypes table must be fixed
 		// DB2: ncharDataType field missing in AllTypes
 		// Informix: install the latest server
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
-		public void MergeChar2(string context)
+		[Test]
+		public void MergeChar2([MergeDataContextSource(
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -237,8 +241,10 @@ namespace Tests.xUpdate
 		// ASE: AllTypes table must be fixed
 		// DB2: ncharDataType and nvarcharDataType fields missing in AllTypes
 		// Informix, SAP: looks like \0 terminates string
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
-		public void MergeString(string context)
+		[Test]
+		public void MergeString([MergeDataContextSource(
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())

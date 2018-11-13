@@ -21,8 +21,8 @@ namespace Tests.xUpdate
 			public DateTime? CreatedOn;
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
-		public void CreateTable1(string context)
+		[Test]
+		public void CreateTable1([DataSources(ProviderName.OracleNative)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -43,8 +43,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
-		public async Task CreateTable1Async(string context)
+		[Test]
+		public async Task CreateTable1Async([DataSources(ProviderName.OracleNative)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -249,8 +249,8 @@ namespace Tests.xUpdate
 			public string cc { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void TestIssue160(string context)
+		[Test]
+		public void TestIssue160([DataSources] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{

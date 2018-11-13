@@ -4,6 +4,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -11,8 +12,10 @@ namespace Tests.Linq
 	[TestFixture]
 	public class QueryHintsTests : TestBase
 	{
-		[Test, DataContextSource(ProviderName.Access, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void Comment(string context)
+		[Test]
+		public void Comment([DataSources(
+			ProviderName.Access, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{

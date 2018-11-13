@@ -15,12 +15,13 @@ namespace Tests.SchemaProvider
 	[TestFixture]
 	public class SchemaProviderTests : TestBase
 	{
-		[Test, DataContextSource(false, ProviderName.SQLiteMS
+		[Test]
+		public void Test([DataSources(false, ProviderName.SQLiteMS
 #if NETSTANDARD2_0
 			, ProviderName.MySql, TestProvName.MySql57
 #endif
 			)]
-		public void Test(string context)
+			string context)
 		{
 			SqlServerTools.ResolveSqlTypes("");
 
@@ -41,12 +42,12 @@ namespace Tests.SchemaProvider
 					tableNames.Add(tableName);
 
 					var columnNames = new HashSet<string>();
-					foreach (var schemaColumm in schemaTable.Columns)
+					foreach (var schemaColumn in schemaTable.Columns)
 					{
-						if(columnNames.Contains(schemaColumm.ColumnName))
-							Assert.Fail("Not unique column {0} for table {1}.{2}", schemaColumm.ColumnName, schemaTable.SchemaName, schemaTable.TableName);
+						if(columnNames.Contains(schemaColumn.ColumnName))
+							Assert.Fail("Not unique column {0} for table {1}.{2}", schemaColumn.ColumnName, schemaTable.SchemaName, schemaTable.TableName);
 
-						columnNames.Add(schemaColumm.ColumnName);
+						columnNames.Add(schemaColumn.ColumnName);
 					}
 				}
 
@@ -227,12 +228,13 @@ namespace Tests.SchemaProvider
 			Assert.AreEqual("_1", SchemaProviderBase.ToValidName("\t1\t"));
 		}
 
-		[Test, DataContextSource(false, ProviderName.SQLiteMS
+		[Test]
+		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS
 #if NETSTANDARD2_0
 			, ProviderName.MySql, TestProvName.MySql57
 #endif
 			)]
-		public void IncludeExcludeCatalogTest(string context)
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -248,12 +250,13 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.SQLiteMS
+		[Test]
+		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS
 #if NETSTANDARD2_0
 			, ProviderName.MySql, TestProvName.MySql57
 #endif
 			)]
-		public void IncludeExcludeSchemaTest(string context)
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -313,12 +316,13 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.SQLiteMS
+		[Test]
+		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS
 #if NETSTANDARD2_0
 			, ProviderName.MySql, TestProvName.MySql57
 #endif
 			)]
-		public void PrimaryForeignKeyTest(string context)
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{

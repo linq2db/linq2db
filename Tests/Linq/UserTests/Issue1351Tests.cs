@@ -17,8 +17,8 @@ namespace Tests.UserTests
 		}
 
 		[ActiveIssue("CreateTable(sbyte) support missing", Configuration = ProviderName.DB2)]
-		[Test, DataContextSource(false)]
-		public void TestSByteQuery(string context)
+		[Test]
+		public void TestSByteQuery([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<T1351Model>())

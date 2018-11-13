@@ -1,5 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+
 using LinqToDB;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -7,8 +10,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class JoinToLimitedTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void LeftJoinToTop(string context)
+		[Test]
+		public void LeftJoinToTop([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -29,8 +32,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoinToTopWhere(string context)
+		[Test]
+		public void LeftJoinToTopWhere([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -50,8 +53,8 @@ namespace Tests.Linq
 		}
 
 		// Sybase escalates TOP 1 closure in subquery to all query
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void LeftJoinLimited(string context)
+		[Test]
+		public void LeftJoinLimited([DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -70,8 +73,8 @@ namespace Tests.Linq
 		}
 
 		// Sybase escalates TOP 1 closure in subquery to all query
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void LeftJoinLimitedWhere(string context)
+		[Test]
+		public void LeftJoinLimitedWhere([DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -87,8 +90,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoinLimited2(string context)
+		[Test]
+		public void LeftJoinLimited2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -109,8 +112,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoinToDistinct(string context)
+		[Test]
+		public void LeftJoinToDistinct([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -131,8 +134,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoinToDistinctWhere(string context)
+		[Test]
+		public void LeftJoinToDistinctWhere([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -151,8 +154,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoinDistinct(string context)
+		[Test]
+		public void LeftJoinDistinct([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -170,8 +173,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoinDistinctWhere(string context)
+		[Test]
+		public void LeftJoinDistinctWhere([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -187,8 +190,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoinDistinct2(string context)
+		[Test]
+		public void LeftJoinDistinct2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -209,8 +212,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoinToTop(string context)
+		[Test]
+		public void InnerJoinToTop([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -231,8 +234,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoinToTopWhere(string context)
+		[Test]
+		public void InnerJoinToTopWhere([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -251,8 +254,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoinLimited(string context)
+		[Test]
+		public void InnerJoinLimited([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -270,8 +273,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoinLimitedWhere(string context)
+		[Test]
+		public void InnerJoinLimitedWhere([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -287,8 +290,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoinLimited2(string context)
+		[Test]
+		public void InnerJoinLimited2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -309,8 +312,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoinToDistinct(string context)
+		[Test]
+		public void InnerJoinToDistinct([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -331,8 +334,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoinToDistinctWhere(string context)
+		[Test]
+		public void InnerJoinToDistinctWhere([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -351,17 +354,19 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoinDistinct(string context)
+		[Test]
+		public void InnerJoinDistinct([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var exp = from o in Parent
+				var exp =
+					from o in Parent
 					join c in Child.Distinct() on o.ParentID equals c.ParentID into cg
 					from c in cg
 					select new { o, c };
 
-				var act = from o in db.Parent
+				var act =
+					from o in db.Parent
 					join c in db.Child.Distinct() on o.ParentID equals c.ParentID into cg
 					from c in cg
 					select new { o, c };
@@ -370,16 +375,18 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoinDistinctWhere(string context)
+		[Test]
+		public void InnerJoinDistinctWhere([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var exp = from o in Parent
+				var exp =
+					from o in Parent
 					from c in Child.Distinct().Where(x => x.ParentID == o.ParentID)
 					select new { o, c };
 
-				var act = from o in db.Parent
+				var act =
+					from o in db.Parent
 					from c in db.Child.Distinct().Where(x => x.ParentID == o.ParentID)
 					select new { o, c };
 
@@ -387,8 +394,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoinDistinct2(string context)
+		[Test]
+		public void InnerJoinDistinct2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

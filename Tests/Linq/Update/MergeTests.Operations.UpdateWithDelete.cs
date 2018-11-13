@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 
-using LinqToDB.Data;
-
 using NUnit.Framework;
 
 namespace Tests.xUpdate

@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
 using NUnit.Framework;
 
-using LinqToDB;
 using LinqToDB.Data;
 
 namespace Tests.Data

@@ -12,8 +12,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class GroupByTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Simple1(string context)
+		[Test]
+		public void Simple1([DataSources] string context)
 		{
 			LinqToDB.Common.Configuration.Linq.PreloadGroups = true;
 
@@ -42,8 +42,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Simple2(string context)
+		[Test]
+		public void Simple2([DataSources] string context)
 		{
 			LinqToDB.Common.Configuration.Linq.PreloadGroups = false;
 
@@ -60,8 +60,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Simple3(string context)
+		[Test]
+		public void Simple3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -77,8 +77,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Simple4(string context)
+		[Test]
+		public void Simple4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -95,8 +95,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Simple5(string context)
+		[Test]
+		public void Simple5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -111,8 +111,8 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
-		[Test, DataContextSource]
-		public void Simple6(string context)
+		[Test]
+		public void Simple6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -124,8 +124,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Simple7(string context)
+		[Test]
+		public void Simple7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -138,8 +138,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Simple8(string context)
+		[Test]
+		public void Simple8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -150,8 +150,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Simple9(string context)
+		[Test]
+		public void Simple9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -162,8 +162,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Simple10(string context)
+		[Test]
+		public void Simple10([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -176,8 +176,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Simple11(string context)
+		[Test]
+		public void Simple11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -195,8 +195,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Simple12(string context)
+		[Test]
+		public void Simple12([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -208,8 +208,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Simple13(string context)
+		[Test]
+		public void Simple13([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -221,8 +221,8 @@ namespace Tests.Linq
 			}
 		}
 
-		//[Test, DataContextSource]
-		public void Simple14(string context)
+		//[Test]
+		public void Simple14([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -238,8 +238,8 @@ namespace Tests.Linq
 						select g.Key);
 		}
 
-		[Test, DataContextSource]
-		public void MemberInit1(string context)
+		[Test]
+		public void MemberInit1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -278,8 +278,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void MemberInit2(string context)
+		[Test]
+		public void MemberInit2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -292,8 +292,8 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
-		[Test, DataContextSource]
-		public void MemberInit3(string context)
+		[Test]
+		public void MemberInit3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -306,8 +306,8 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
-		[Test, DataContextSource]
-		public void SubQuery1(string context)
+		[Test]
+		public void SubQuery1([DataSources] string context)
 		{
 			var n = 1;
 
@@ -326,8 +326,8 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
-		[Test, DataContextSource]
-		public void SubQuery2(string context)
+		[Test]
+		public void SubQuery2([DataSources] string context)
 		{
 			var n = 1;
 
@@ -344,8 +344,8 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
-		[Test, DataContextSource]
-		public void SubQuery3(string context)
+		[Test]
+		public void SubQuery3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -370,8 +370,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource]
-		public void SubQuery31(string context)
+		[Test]
+		public void SubQuery31([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -396,8 +396,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource]
-		public void SubQuery32(string context)
+		[Test]
+		public void SubQuery32([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -422,8 +422,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource]
-		public void SubQuery4(string context)
+		[Test]
+		public void SubQuery4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -444,8 +444,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource]
-		public void SubQuery5(string context)
+		[Test]
+		public void SubQuery5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -462,8 +462,8 @@ namespace Tests.Linq
 					select g.Sum(_ => _.ParentID));
 		}
 
-		[Test, DataContextSource]
-		public void SubQuery6(string context)
+		[Test]
+		public void SubQuery6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -476,8 +476,8 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
-		[Test, DataContextSource]
-		public void SubQuery7(string context)
+		[Test]
+		public void SubQuery7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -502,8 +502,8 @@ namespace Tests.Linq
 					select new { gg.Key });
 		}
 
-		[Test, DataContextSource]
-		public void Calculated1(string context)
+		[Test]
+		public void Calculated1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -528,8 +528,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Calculated2(string context)
+		[Test]
+		public void Calculated2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -552,8 +552,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, DataContextSource]
-		public void GroupBy1(string context)
+		[Test]
+		public void GroupBy1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -561,8 +561,8 @@ namespace Tests.Linq
 					db.Child.GroupBy(ch => ch.ParentID).GroupBy(ch => ch).GroupBy(ch => ch).Select(p => p.Key.Key.Key));
 		}
 
-		[Test, DataContextSource]
-		public void GroupBy2(string context)
+		[Test]
+		public void GroupBy2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -591,8 +591,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource]
-		public void GroupBy3(string context)
+		[Test]
+		public void GroupBy3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -613,8 +613,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource]
-		public void Sum1(string context)
+		[Test]
+		public void Sum1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -627,8 +627,8 @@ namespace Tests.Linq
 					select g.Sum(p => p.ChildID));
 		}
 
-		[Test, DataContextSource]
-		public void Sum2(string context)
+		[Test]
+		public void Sum2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -641,8 +641,8 @@ namespace Tests.Linq
 					select new { Sum = g.Sum(p => p.ChildID) });
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Sum3(string context)
+		[Test]
+		public void Sum3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -654,8 +654,8 @@ namespace Tests.Linq
 					select g.Key.Children.Sum(p => p.ChildID));
 		}
 
-		[Test, DataContextSource]
-		public void SumSubQuery1(string context)
+		[Test]
+		public void SumSubQuery1([DataSources] string context)
 		{
 			var n = 1;
 
@@ -672,8 +672,8 @@ namespace Tests.Linq
 					select g.Sum(p => p.ParentID - 3));
 		}
 
-		[Test, DataContextSource]
-		public void GroupByMax(string context)
+		[Test]
+		public void GroupByMax([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -681,8 +681,8 @@ namespace Tests.Linq
 					from ch in db.Child group ch.ParentID by ch.ChildID into g select new { Max = g.Max() });
 		}
 
-		[Test, DataContextSource]
-		public void Aggregates1(string context)
+		[Test]
+		public void Aggregates1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -708,8 +708,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource]
-		public void Aggregates2(string context)
+		[Test]
+		public void Aggregates2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -735,8 +735,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Aggregates3(string context)
+		[Test]
+		public void Aggregates3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -762,8 +762,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Aggregates4(string context)
+		[Test]
+		public void Aggregates4([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -783,8 +783,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Aggregates5(string context)
+		[Test]
+		public void Aggregates5([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -807,8 +807,8 @@ namespace Tests.Linq
 		}
 
 
-		[Test, DataContextSource]
-		public void SelectMax(string context)
+		[Test]
+		public void SelectMax([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -821,8 +821,8 @@ namespace Tests.Linq
 					select g.Max(c => c.ChildID));
 		}
 
-		[Test, DataContextSource]
-		public void JoinMax(string context)
+		[Test]
+		public void JoinMax([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -843,8 +843,8 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test, DataContextSource]
-		public void Min1(string context)
+		[Test]
+		public void Min1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -852,8 +852,8 @@ namespace Tests.Linq
 					db.Child.Min(c => c.ChildID));
 		}
 
-		[Test, DataContextSource]
-		public void Min2(string context)
+		[Test]
+		public void Min2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -861,8 +861,8 @@ namespace Tests.Linq
 					db.Child.Select(c => c.ChildID).Min());
 		}
 
-		[Test, DataContextSource]
-		public void Max1(string context)
+		[Test]
+		public void Max1([DataSources] string context)
 		{
 			var expected = Child.Max(c => c.ChildID);
 			Assert.AreNotEqual(0, expected);
@@ -871,8 +871,8 @@ namespace Tests.Linq
 				Assert.AreEqual(expected, db.Child.Max(c => c.ChildID));
 		}
 
-		[Test, DataContextSource]
-		public void Max11(string context)
+		[Test]
+		public void Max11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -880,8 +880,8 @@ namespace Tests.Linq
 					db.Child.Max(c => c.ChildID > 20));
 		}
 
-		[Test, DataContextSource]
-		public void Max12(string context)
+		[Test]
+		public void Max12([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -889,8 +889,8 @@ namespace Tests.Linq
 					db.Child.Max(c => (bool?)(c.ChildID > 20)));
 		}
 
-		[Test, DataContextSource]
-		public void Max2(string context)
+		[Test]
+		public void Max2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -910,8 +910,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Max3(string context)
+		[Test]
+		public void Max3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -919,8 +919,8 @@ namespace Tests.Linq
 					db.Child.Select(c => c.ChildID).Max());
 		}
 
-		[Test, DataContextSource]
-		public void Max4(string context)
+		[Test]
+		public void Max4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -961,8 +961,8 @@ namespace Tests.Linq
 					);
 		}
 
-		[Test, DataContextSource]
-		public void Average1(string context)
+		[Test]
+		public void Average1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -970,8 +970,8 @@ namespace Tests.Linq
 					(int)   Child.Average(c => c.ChildID));
 		}
 
-		[Test, DataContextSource]
-		public void Average2(string context)
+		[Test]
+		public void Average2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -979,8 +979,8 @@ namespace Tests.Linq
 					(int)db.Child.Select(c => c.ChildID).Average());
 		}
 
-		[Test, DataContextSource]
-		public void GrooupByAssociation1(string context)
+		[Test]
+		public void GroupByAssociation1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -995,8 +995,8 @@ namespace Tests.Linq
 					select g.Key.Value1);
 		}
 
-		[Test, DataContextSource]
-		public void GrooupByAssociation101(string context)
+		[Test]
+		public void GroupByAssociation101([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1011,8 +1011,8 @@ namespace Tests.Linq
 					select g.Key.Value1);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void GrooupByAssociation102(string context)
+		[Test]
+		public void GroupByAssociation102([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1027,8 +1027,10 @@ namespace Tests.Linq
 					select g.Key.Value1);
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix /* Can be fixed*/)]
-		public void GrooupByAssociation1022(string context)
+		[Test]
+		public void GroupByAssociation1022([DataSources(
+			ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix /* Can be fixed*/)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1043,8 +1045,10 @@ namespace Tests.Linq
 					select g.Key.Value1);
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix /* Can be fixed.*/)]
-		public void GrooupByAssociation1023(string context)
+		[Test]
+		public void GroupByAssociation1023([DataSources(
+			ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix /* Can be fixed.*/)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1065,8 +1069,10 @@ namespace Tests.Linq
 					select g.Key.Value1);
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix) /* Can be fixed. */]
-		public void GrooupByAssociation1024(string context)
+		[Test]
+		public void GroupByAssociation1024([DataSources(
+			ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix) /* Can be fixed. */]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1089,8 +1095,8 @@ namespace Tests.Linq
 					select g.Key.Value1);
 		}
 
-		[Test, DataContextSource]
-		public void GrooupByAssociation2(string context)
+		[Test]
+		public void GroupByAssociation2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1106,7 +1112,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GrooupByAssociation3([NorthwindDataContext] string context)
+		public void GroupByAssociation3([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -1122,7 +1128,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GrooupByAssociation4([NorthwindDataContext] string context)
+		public void GroupByAssociation4([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -1137,8 +1143,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void GroupByAggregate1(string context)
+		[Test]
+		public void GroupByAggregate1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1151,8 +1157,8 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void GroupByAggregate11(string context)
+		[Test]
+		public void GroupByAggregate11([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1167,8 +1173,8 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void GroupByAggregate12(string context)
+		[Test]
+		public void GroupByAggregate12([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1199,8 +1205,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void GroupByAggregate3(string context)
+		[Test]
+		public void GroupByAggregate3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1215,8 +1221,8 @@ namespace Tests.Linq
 					).ToList().First(g => !g.Key));
 		}
 
-		[Test, DataContextSource]
-		public void ByJoin(string context)
+		[Test]
+		public void ByJoin([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1231,8 +1237,8 @@ namespace Tests.Linq
 					select g.Sum(_ => _.ChildID));
 		}
 
-		[Test, DataContextSource]
-		public void SelectMany(string context)
+		[Test]
+		public void SelectMany([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1240,8 +1246,8 @@ namespace Tests.Linq
 					db.Child.GroupBy(ch => ch.ParentID).SelectMany(g => g));
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Scalar1(string context)
+		[Test]
+		public void Scalar1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1253,8 +1259,8 @@ namespace Tests.Linq
 					 select g.Select(ch => ch.ChildID).Max()));
 		}
 
-		[Test, DataContextSource]
-		public void Scalar101(string context)
+		[Test]
+		public void Scalar101([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1269,8 +1275,8 @@ namespace Tests.Linq
 					select g.Max());
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Scalar2(string context)
+		[Test]
+		public void Scalar2([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1290,8 +1296,8 @@ namespace Tests.Linq
 						 }));
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Scalar3(string context)
+		[Test]
+		public void Scalar3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1303,8 +1309,8 @@ namespace Tests.Linq
 					 select g.Select(ch => ch.ChildID).Where(id => id > 0).Max()));
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix)]
-		public void Scalar4(string context)
+		[Test]
+		public void Scalar4([DataSources(ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1319,8 +1325,8 @@ namespace Tests.Linq
 					select g.Where(ch => ch.ParentID > 2).Select(ch => ch.ChildID).Min());
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix)]
-		public void Scalar41(string context)
+		[Test]
+		public void Scalar41([DataSources(ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1337,8 +1343,8 @@ namespace Tests.Linq
 					select g.g.Where(ch => ch.ParentID > 2).Select(ch => ch.ChildID).Min());
 		}
 
-		[Test, DataContextSource]
-		public void Scalar5(string context)
+		[Test]
+		public void Scalar5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1353,8 +1359,8 @@ namespace Tests.Linq
 					select g.Max());
 		}
 
-		//[Test, DataContextSource]
-		public void Scalar51(string context)
+		//[Test]
+		public void Scalar51([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1367,8 +1373,8 @@ namespace Tests.Linq
 					select g.Max());
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Scalar6(string context)
+		[Test]
+		public void Scalar6([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1383,8 +1389,8 @@ namespace Tests.Linq
 					 select g.Where(ch => ch.ParentID < 3).Max(ch => ch.ChildID)));
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Scalar7(string context)
+		[Test]
+		public void Scalar7([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1397,8 +1403,8 @@ namespace Tests.Linq
 					 select new { max = g.Select(ch => ch.ChildID).Max()}).Select(id => id.max));
 		}
 
-		[Test, DataContextSource]
-		public void Scalar8(string context)
+		[Test]
+		public void Scalar8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1411,8 +1417,8 @@ namespace Tests.Linq
 					select new { max = g.Max(ch => ch.ChildID)}).Select(id => id.max));
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Scalar9(string context)
+		[Test]
+		public void Scalar9([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1424,8 +1430,8 @@ namespace Tests.Linq
 					 select g.Select(ch => ch.ChildID).Where(id => id < 30).Count()));
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Scalar10(string context)
+		[Test]
+		public void Scalar10([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1453,7 +1459,7 @@ namespace Tests.Linq
 					group d by p.LastName into g
 					select g.Key;
 
-				q.ToList();
+				var _ = q.ToList();
 
 				const string fieldName = "LastName";
 
@@ -1467,8 +1473,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void DoubleGroupBy1(string context)
+		[Test]
+		public void DoubleGroupBy1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1504,8 +1510,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource]
-		public void DoubleGroupBy2(string context)
+		[Test]
+		public void DoubleGroupBy2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1539,8 +1545,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SapHana)]
-		public void InnerQuery(string context)
+		[Test]
+		public void InnerQuery([DataSources(ProviderName.SqlCe, ProviderName.SapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1550,8 +1556,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CalcMember(string context)
+		[Test]
+		public void CalcMember([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1587,8 +1593,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void GroupByNone(string context)
+		[Test]
+		public void GroupByNone([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1610,8 +1616,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void GroupByExpression(string context)
+		[Test]
+		public void GroupByExpression([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1633,8 +1639,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void GroupByDate1(string context)
+		[Test]
+		public void GroupByDate1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1658,8 +1664,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void GroupByDate2(string context)
+		[Test]
+		public void GroupByDate2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1683,8 +1689,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void GroupByDate3(string context)
+		[Test]
+		public void GroupByDate3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1708,8 +1714,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void GroupByCount(string context)
+		[Test]
+		public void GroupByCount([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1719,8 +1725,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void AggregateAssociation(string context)
+		[Test]
+		public void AggregateAssociation([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1740,8 +1746,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void FirstGroupBy(string context)
+		[Test]
+		public void FirstGroupBy([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -1759,8 +1765,8 @@ namespace Tests.Linq
 			public int RandValue;
 		}
 
-		//////[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase)]
-		public void GroupByCustomEntity1(string context)
+		//////[Test]
+		public void GroupByCustomEntity1([DataSources(ProviderName.Informix, ProviderName.Sybase)] string context)
 		{
 			var rand = new Random().Next(5);
 			//var rand = new Random();
@@ -1801,8 +1807,10 @@ namespace Tests.Linq
 			return id;
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void GroupByCustomEntity2(string context)
+		[Test]
+		public void GroupByCustomEntity2([DataSources(
+			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			string context)
 		{
 			var rand = new Random().Next(5);
 
@@ -1836,8 +1844,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void JoinGroupBy1(string context)
+		[Test]
+		public void JoinGroupBy1([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1855,8 +1863,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void JoinGroupBy2(string context)
+		[Test]
+		public void JoinGroupBy2([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1874,8 +1882,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void GroupByGuard(string context)
+		[Test]
+		public void GroupByGuard([DataSources] string context)
 		{
 			using(new AllowMultipleQuery())
 			using(new GuardGrouping())
@@ -1895,7 +1903,7 @@ namespace Tests.Linq
 				Assert.AreEqual(dictionary2.Count,               dictionary1.Count);
 				Assert.AreEqual(dictionary2.First().Value.Count, dictionary1.First().Value.Count);
 
-				var list =
+				var __ =
 				(
 					from p in db.Person
 					group p by p.Gender into gr

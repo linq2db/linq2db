@@ -10,7 +10,7 @@ namespace Tests.UserTests
 	{
 		public static Expression<Func<T, bool>> True<T> ()  { return f => true;  }
 		public static Expression<Func<T, bool>> False<T> () { return f => false; }
- 
+
 		public static Expression<Func<T, bool>> Or<T> (this Expression<Func<T, bool>> expr1,
 			Expression<Func<T, bool>> expr2)
 		{
@@ -18,7 +18,7 @@ namespace Tests.UserTests
 			return Expression.Lambda<Func<T, bool>>
 				(Expression.OrElse (expr1.Body, invokedExpr), expr1.Parameters);
 		}
- 
+
 		public static Expression<Func<T, bool>> And<T> (this Expression<Func<T, bool>> expr1,
 			Expression<Func<T, bool>> expr2)
 		{
@@ -31,65 +31,65 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue667Tests: TestBase
 	{
-		[Test, DataContextSource]
-		public void TestAnd(string context)
+		[Test]
+		public void TestAnd([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var predicate = PredicateBuilder.True<Parent>();
 				predicate = predicate.And(p => p.ParentID >= 1);
 				predicate = predicate.And(p => p.ParentID <= 4);
-				
-				var q = db.Parent.Where(predicate); 
-				var e = Parent.Where(predicate.Compile()); 
+
+				var q = db.Parent.Where(predicate);
+				var e = Parent.Where(predicate.Compile());
 
 				Assert.AreEqual(e, q);
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestAndFalse(string context)
+		[Test]
+		public void TestAndFalse([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var predicate = PredicateBuilder.False<Parent>();
 				predicate = predicate.And(p => p.ParentID >= 1);
 				predicate = predicate.And(p => p.ParentID <= 4);
-				
-				var q = db.Parent.Where(predicate); 
-				var e = Parent.Where(predicate.Compile()); 
+
+				var q = db.Parent.Where(predicate);
+				var e = Parent.Where(predicate.Compile());
 
 				Assert.AreEqual(e, q);
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestOrTrue(string context)
+		[Test]
+		public void TestOrTrue([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var predicate = PredicateBuilder.True<Parent>();
 				predicate = predicate.Or(p => p.ParentID >= 1);
 				predicate = predicate.Or(p => p.ParentID <= 4);
-				
-				var q = db.Parent.Where(predicate); 
-				var e = Parent.Where(predicate.Compile()); 
+
+				var q = db.Parent.Where(predicate);
+				var e = Parent.Where(predicate.Compile());
 
 				Assert.AreEqual(e, q);
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestOrFalse(string context)
+		[Test]
+		public void TestOrFalse([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var predicate = PredicateBuilder.False<Parent>();
 				predicate = predicate.Or(p => p.ParentID >= 1);
 				predicate = predicate.Or(p => p.ParentID <= 4);
-				
-				var q = db.Parent.Where(predicate); 
-				var e = Parent.Where(predicate.Compile()); 
+
+				var q = db.Parent.Where(predicate);
+				var e = Parent.Where(predicate.Compile());
 
 				Assert.AreEqual(e, q);
 			}

@@ -1,14 +1,16 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Tests.Model;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
+	using Model;
 
 	[TestFixture]
 	public class BulkCopyTests : TestBase

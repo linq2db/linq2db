@@ -34,8 +34,8 @@ namespace Tests.UserTests
 			A
 		}
 
-		[Test, DataContextSource]
-		public void Issue693Test(string context)
+		[Test]
+		public void Issue693Test([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 

@@ -18,8 +18,8 @@ namespace Tests.Linq
 	{
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
-		[Test, DataContextSource]
-		public void MapMember1(string context)
+		[Test]
+		public void MapMember1([DataSources] string context)
 		{
 			Expressions.MapMember<Parent,int>(p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
 
@@ -40,8 +40,8 @@ namespace Tests.Linq
 
 		static int Count3(Parent p, int id) { return p.Children.Count(c => c.ChildID > id) + 2; }
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void MapMember3(string context)
+		[Test]
+		public void MapMember3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count3(p, id), (p, id) => p.Children.Count(c => c.ChildID > id) + 2);
 
@@ -51,7 +51,7 @@ namespace Tests.Linq
 				AreEqual(Parent.Select(p => Count3(p, n)), db.Parent.Select(p => Count3(p, n)));
 		}
 
-		[ExpressionMethod("Count4Expression")]
+		[ExpressionMethod(nameof(Count4Expression))]
 		static int Count4(Parent p, int id, int n)
 		{
 			return (_count4Expression ?? (_count4Expression = Count4Expression().Compile()))(p, id, n);
@@ -64,8 +64,8 @@ namespace Tests.Linq
 			return (p, id, n) => p.Children.Count(c => c.ChildID > id) + n;
 		}
 
-		[Test, DataContextSource]
-		public void MethodExpression4(string context)
+		[Test]
+		public void MethodExpression4([DataSources] string context)
 		{
 			var n = 3;
 
@@ -75,7 +75,7 @@ namespace Tests.Linq
 					db.Parent.Select(p => Count4(p, n, 4)));
 		}
 
-		[ExpressionMethod("Count5Expression")]
+		[ExpressionMethod(nameof(Count5Expression))]
 		static int Count5(ITestDataContext db, Parent p, int n)
 		{
 			return (_count5Expression ?? (_count5Expression = Count5Expression().Compile()))(db, p, n);
@@ -88,8 +88,8 @@ namespace Tests.Linq
 			return (db, p, n) => Sql.AsSql(db.Child.Where(c => c.ParentID == p.ParentID).Count() + n);
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.Firebird)]
-		public void MethodExpression5(string context)
+		[Test]
+		public void MethodExpression5([DataSources(ProviderName.SqlCe, ProviderName.Firebird)] string context)
 		{
 			var n = 2;
 
@@ -99,7 +99,7 @@ namespace Tests.Linq
 					db.Parent.Select(p => Count5(db, p, n)));
 		}
 
-		[ExpressionMethod("Count6Expression")]
+		[ExpressionMethod(nameof(Count6Expression))]
 		static int Count6(ITable<Child> c, Parent p)
 		{
 			return (_count6Expression ?? (_count6Expression = Count6Expression().Compile()))(c, p);
@@ -112,8 +112,8 @@ namespace Tests.Linq
 			return (ch, p) => ch.Where(c => c.ParentID == p.ParentID).Count();
 		}
 
-		[Test, DataContextSource]
-		public void MethodExpression6(string context)
+		[Test]
+		public void MethodExpression6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -121,7 +121,7 @@ namespace Tests.Linq
 					db.Parent.Select(p => Count6(db.Child, p)));
 		}
 
-		[ExpressionMethod("Count7Expression")]
+		[ExpressionMethod(nameof(Count7Expression))]
 		static int Count7(ITable<Child> ch, Parent p, int n)
 		{
 			return (_count7Expression ?? (_count7Expression = Count7Expression().Compile()))(ch, p, n);
@@ -134,8 +134,8 @@ namespace Tests.Linq
 			return (ch, p, n) => Sql.AsSql(ch.Where(c => c.ParentID == p.ParentID).Count() + n);
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.Firebird)]
-		public void MethodExpression7(string context)
+		[Test]
+		public void MethodExpression7([DataSources(ProviderName.SqlCe, ProviderName.Firebird)] string context)
 		{
 			var n = 2;
 
@@ -145,7 +145,7 @@ namespace Tests.Linq
 					db.Parent.Select(p => Count7(db.Child, p, n)));
 		}
 
-		[ExpressionMethod("Expression8")]
+		[ExpressionMethod(nameof(Expression8))]
 		static IQueryable<Parent> GetParent(ITestDataContext db, Child ch)
 		{
 			throw new InvalidOperationException();
@@ -159,8 +159,8 @@ namespace Tests.Linq
 				select p;
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void MethodExpression8(string context)
+		[Test]
+		public void MethodExpression8([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -243,7 +243,7 @@ namespace Tests.Linq
 					where GetBool1(ch.Parent)
 					select ch;
 
-				q.ToList();
+				var _ = q.ToList();
 			}
 		}
 #endif
@@ -269,13 +269,13 @@ namespace Tests.Linq
 					where GetBool2(ch.Parent)
 					select ch;
 
-				q.ToList();
+				var _ = q.ToList();
 			}
 		}
 
 		class TestClass<T>
 		{
-			[ExpressionMethod("GetBoolExpression3")]
+			[ExpressionMethod(nameof(GetBoolExpression3))]
 			public static bool GetBool3(Parent obj)
 			{
 				throw new InvalidOperationException();
@@ -301,7 +301,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ExpressionMethod("AssociationExpression")]
+		[ExpressionMethod(nameof(AssociationExpression))]
 		static IEnumerable<GrandChild> GrandChildren(Parent p)
 		{
 			throw new InvalidOperationException();
@@ -312,8 +312,8 @@ namespace Tests.Linq
 			return parent => parent.Children.SelectMany(gc => gc.GrandChildren);
 		}
 
-		[Test, DataContextSource]
-		public void AssociationMethodExpression(string context)
+		[Test]
+		public void AssociationMethodExpression([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -324,12 +324,12 @@ namespace Tests.Linq
 					select GrandChildren(p).Count());
 		}
 
-		[Test, DataContextSource]
-		public async Task AssociationMethodExpressionAsync(string context)
+		[Test]
+		public async Task AssociationMethodExpressionAsync([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var list = await db.Parent.ToListAsync();
+				var _ = await db.Parent.ToListAsync();
 
 				AreEqual(
 					from p in Parent
@@ -376,7 +376,7 @@ namespace Tests.Linq
 //			return parent => parent.Children.SelectMany(gc => gc.GrandChildren);
 //		}
 
-		[ExpressionMethod("MyWhereImpl")]
+		[ExpressionMethod(nameof(MyWhereImpl))]
 		static IQueryable<TSource> MyWhere<TSource>(IQueryable<TSource> source, Expression<Func<TSource, bool>> predicate)
 		{
 			return source.Where(predicate);
@@ -387,21 +387,21 @@ namespace Tests.Linq
 			return (source, predicate) => source.Where(predicate);
 		}
 
-		[Test, DataContextSource]
-		public void PredicateExpressionTest1(string context)
+		[Test]
+		public void PredicateExpressionTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				MyWhere(db.Parent, p => p.ParentID == 1).ToList();
+				var _ = MyWhere(db.Parent, p => p.ParentID == 1).ToList();
 			}
 		}
 
-		[Test, DataContextSource]
-		public void PredicateExpressionTest2(string context)
+		[Test]
+		public void PredicateExpressionTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				(
+				var _ = (
 					from c in db.Child
 					from p in MyWhere(db.Parent, p => p.ParentID == c.ParentID)
 					select p
@@ -409,21 +409,21 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoinTest1(string context)
+		[Test]
+		public void LeftJoinTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID).ToList();
+				var _ = db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID).ToList();
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoinTest2(string context)
+		[Test]
+		public void LeftJoinTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				(
+				var _ = (
 					from g in db.GrandChild
 					where db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID).Any(t => t.Outer.ChildID == g.ChildID)
 					select g
@@ -432,10 +432,10 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(Configuration = ProviderName.SapHana)]
-		[Test, DataContextSource]
-		public void ToLowerInvariantTest(string context)
+		[Test]
+		public void ToLowerInvariantTest([DataSources] string context)
 		{
-			Expressions.MapMember((string s) => s.ToLowerInvariant(), (string s) => s.ToLower());
+			Expressions.MapMember((string s) => s.ToLowerInvariant(), s => s.ToLower());
 
 			using (var db = GetDataContext(context))
 			{
@@ -447,7 +447,7 @@ namespace Tests.Linq
 
 		/*
 		[Test, DataContextSource]
-		public void LeftJoinTest3(string context)
+		public void LeftJoinTest3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -460,8 +460,8 @@ namespace Tests.Linq
 		}
 		*/
 
-		[Test, DataContextSource]
-		public void AssociationTest(string context)
+		[Test]
+		public void AssociationTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -471,8 +471,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void AssociationTest2(string context)
+		[Test]
+		public void AssociationTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -491,7 +491,7 @@ namespace Tests.Linq
 			public TInner Inner;
 		}
 
-		[ExpressionMethod("LeftJoinImpl")]
+		[ExpressionMethod(nameof(LeftJoinImpl))]
 		public static IQueryable<LeftJoinInfo<TOuter,TInner>> LeftJoin<TOuter, TInner, TKey>(
 			this IQueryable<TOuter> outer,
 			IEnumerable<TInner> inner,

@@ -67,7 +67,7 @@ namespace Tests.Linq
 
 		// most of ending characters here trimmed by default by .net string TrimX methods
 		// unicode test cases not used for String
-		private static StringTestTable[] StringTestData = new[]
+		static readonly StringTestTable[] StringTestData =
 		{
 			new StringTestTable() { String = "test01",      NString = "test01"        },
 			new StringTestTable() { String = "test02  ",    NString = "test02  "      },
@@ -94,8 +94,8 @@ namespace Tests.Linq
 		};
 
 		// TODO: MySql57 disabled due to encoding issues on CI
-		[Test, DataContextSource(false, TestProvName.MySql57, ProviderName.Informix)]
-		public void StringTrimming(string context)
+		[Test]
+		public void StringTrimming([DataSources(false, TestProvName.MySql57, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -145,7 +145,7 @@ namespace Tests.Linq
 			}
 		}
 
-		private static CharTestTable[] GetCharData(string context)
+		private static CharTestTable[] GetCharData([DataSources] string context)
 		{
 			// filter out null-character test cases for servers/providers without support
 			if (   context == ProviderName.PostgreSQL
@@ -173,7 +173,7 @@ namespace Tests.Linq
 			return CharTestData;
 		}
 
-		private static StringTestTable[] GetStringData(string context)
+		private static StringTestTable[] GetStringData([DataSources] string context)
 		{
 			// filter out null-character test cases for servers/providers without support
 			if (   context == ProviderName.PostgreSQL
@@ -206,7 +206,7 @@ namespace Tests.Linq
 			return StringTestData;
 		}
 
-		private static CharTestTable[] CharTestData = new[]
+		static readonly CharTestTable[] CharTestData =
 		{
 			new CharTestTable() { Char = ' ',    NChar = ' '      },
 			new CharTestTable() { Char = '\x09', NChar = '\x09'   },
@@ -232,8 +232,8 @@ namespace Tests.Linq
 		};
 
 		// TODO: MySql57 disabled due to encoding issues on CI
-		[Test, DataContextSource(false, TestProvName.MySql57, ProviderName.Informix)]
-		public void CharTrimming(string context)
+		[Test]
+		public void CharTrimming([DataSources(false, TestProvName.MySql57, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -306,7 +306,7 @@ namespace Tests.Linq
 			}
 		}
 
-		private static bool SkipChar(string context)
+		private static bool SkipChar([DataSources] string context)
 		{
 			return context == ProviderName.SqlCe
 				|| context == ProviderName.SqlCe      + ".LinqService"

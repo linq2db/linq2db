@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using Humanizer;
+
 using LinqToDB;
 using LinqToDB.Expressions;
 
 using NUnit.Framework;
-using Tests.Tools;
 
 namespace Tests.Linq
 {
 	using Model;
+	using Tools;
 
 	public class CteTests : TestBase
 	{

@@ -59,7 +59,7 @@ namespace Tests.Linq
 			[Column, Nullable]                         public string MiddleName;
 			[Column]                                   public Gender Gender;
 
-			public string Name { get { return FirstName + " " + LastName; } }
+			public string Name => FirstName + " " + LastName;
 
 			public override bool Equals(object obj)
 			{
@@ -579,7 +579,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestComparePropertyOfEnumTypeToVaribleInSubquery([IdlProviders] string context)
+		public void TestComparePropertyOfEnumTypeToVariableInSubquery([IdlProviders] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

@@ -53,21 +53,18 @@ namespace Tests.UserTests
 			public int UserId { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var userId = 32;
+				var userId  = 32;
 				var childId = 32;
 
-				var old = Configuration.Linq.AllowMultipleQuery;
 				//Configuration.Linq.OptimizeJoins = false;
 
-				try
+				using (new AllowMultipleQuery())
 				{
-					Configuration.Linq.AllowMultipleQuery = true;
-
 					var query = db.GetTable<Parent825>()
 						.Where(p => p.ParentPermissions.Any(permission => permission.UserId == userId))
 						.SelectMany(parent => parent.Childs)
@@ -78,10 +75,6 @@ namespace Tests.UserTests
 
 					Assert.AreEqual(1, result.Count);
 					Assert.AreEqual(3, result[0].Id);
-				}
-				finally
-				{
-					Configuration.Linq.AllowMultipleQuery = old;
 				}
 			}
 		}

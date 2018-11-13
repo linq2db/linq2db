@@ -13,12 +13,12 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue822Tests : TestBase
 	{
-		private int? ID1;
+		int? ID1;
 
-		private int? ID2;
+		int? ID2;
 
-		[Test, DataContextSource]
-		public void TestWrongValue(string context)
+		[Test]
+		public void TestWrongValue([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -41,8 +41,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestNullValue(string context)
+		[Test]
+		public void TestNullValue([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -65,7 +65,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		private IQueryable<LinqDataTypes2> GetSource(ITestDataContext db, int id)
+		IQueryable<LinqDataTypes2> GetSource(ITestDataContext db, int id)
 		{
 			return db.GetTable<LinqDataTypes2>().Where(_ => _.ID == id);
 		}

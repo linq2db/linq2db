@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -13,8 +12,8 @@ namespace Tests.xUpdate
 
 	public partial class MergeTests
 	{
-		[Test, MergeDataContextSource]
-		public void BigSource(string context)
+		[Test]
+		public void BigSource([MergeDataContextSource] string context)
 		{
 			var batchSize = 2500;
 

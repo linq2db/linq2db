@@ -59,12 +59,12 @@ namespace Tests.UserTests
 			Assert.AreEqual(ed1.TableName, ed4.TableName);
 		}
 
-		[Test, DataContextSource]
-		public void TestFluent(string configuration)
+		[Test]
+		public void TestFluent([DataSources] string context)
 		{
 			var ms = SetFluentMappings();
 
-			using (var db = GetDataContext(configuration, ms))
+			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<FluentBase>())
 			{
 				var res = db.Insert<FluentBase>(new FluentDerived { Id = 1 });
@@ -72,12 +72,12 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestAttribute(string configuration)
+		[Test]
+		public void TestAttribute([DataSources] string context)
 		{
 			var ms = SetFluentMappings();
 
-			using (var db = GetDataContext(configuration, ms))
+			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<AttributeBase>())
 			{
 				var res = db.Insert<AttributeBase>(new AttributeDerived { Id = 1 });

@@ -75,7 +75,6 @@ namespace Tests.xUpdate
 					// hint specified for unsupported provider
 					new object[] { new ValidationTestMergeBuilder(new FakeTable<Child>().Merge("hint").Using(new Child[0]).OnTargetKey().InsertWhenNotMatched()), "Merge hints not supported by TestProvider provider." },
 					new object[] { new ValidationTestMergeBuilder(new FakeTable<Child>().MergeInto(new FakeTable<Child>(), "hint").OnTargetKey().InsertWhenNotMatched()), "Merge hints not supported by TestProvider provider." },
-					
 				}.Select((data, i) => new TestCaseData(data).SetName($"Merge.Validation.Negative.{i}"));
 			}
 		}
@@ -284,12 +283,14 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Sybase, ProviderName.SybaseManaged,
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
-			TestProvName.SqlAzure, ProviderName.Informix, ProviderName.SapHana,
-			ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
-		public void NotSupportedProviders(string context)
+		[Test]
+		public void NotSupportedProviders([DataSources(false,
+			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure,
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

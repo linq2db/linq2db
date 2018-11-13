@@ -1,12 +1,12 @@
 ﻿using System;
+
 using LinqToDB.Data;
+using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using LinqToDB;
-	using LinqToDB.Mapping;
-
 	public class Issue1107Tests : TestBase
 	{
 		[Table(Name = "Issue1107TB")]
@@ -20,8 +20,8 @@ namespace Tests.UserTests
 		}
 
 
-		[Test, DataContextSource(false)]
-		public void Test(string configuration)
+		[Test]
+		public void Test([DataSources(false)] string configuration)
 		{
 			using (var db = GetDataContext(configuration))
 			{

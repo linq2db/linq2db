@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using LinqToDB;
 
@@ -24,8 +21,8 @@ namespace Tests.UserTests
 			public int? ChildID;
 		}
 
-		[Test, DataContextSource]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

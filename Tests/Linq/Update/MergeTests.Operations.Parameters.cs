@@ -14,9 +14,12 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		// ASE: just fails
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void TestParameters1(string context)
+		[Test]
+		public void TestParameters1([MergeDataContextSource(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -76,9 +79,12 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: just fails
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void TestParameters3(string context)
+		[Test]
+		public void TestParameters3([MergeDataContextSource(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -222,8 +228,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void TestParametersInMatchCondition(string context)
+		[Test]
+		public void TestParametersInMatchCondition([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -250,7 +256,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		private static char GetParameterToken(string context)
+		private static char GetParameterToken([MergeDataContextSource] string context)
 		{
 			switch (context)
 			{
@@ -266,8 +272,10 @@ namespace Tests.xUpdate
 			return '@';
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void TestParametersInUpdateCondition(string context)
+		[Test]
+		public void TestParametersInUpdateCondition([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -294,8 +302,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void TestParametersInInsertCondition(string context)
+		[Test]
+		public void TestParametersInInsertCondition([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -322,9 +332,12 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void TestParametersInDeleteCondition(string context)
+		[Test]
+		public void TestParametersInDeleteCondition([MergeDataContextSource(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -403,10 +416,12 @@ namespace Tests.xUpdate
 		}
 
 		// excluded providers use literal instead of parameter
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Informix,
-			ProviderName.SapHana)]
-		public void TestParametersInInsertCreate(string context)
+		[Test]
+		public void TestParametersInInsertCreate([MergeDataContextSource(
+			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Informix, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -441,10 +456,12 @@ namespace Tests.xUpdate
 		}
 
 		// excluded providers use literal instead of parameter
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Informix,
-			ProviderName.SapHana)]
-		public void TestParametersInUpdateExpression(string context)
+		[Test]
+		public void TestParametersInUpdateExpression([MergeDataContextSource(
+			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Informix, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -516,8 +533,10 @@ namespace Tests.xUpdate
 		}
 
 		// FB, INFORMIX: supports this parameter, but for now we disable all parameters in source for them
-		[Test, MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
-		public void TestParametersInSourceFilter(string context)
+		[Test]
+		public void TestParametersInSourceFilter([MergeDataContextSource(
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -545,10 +564,11 @@ namespace Tests.xUpdate
 		}
 
 		// FB, INFORMIX, Oracle: doesn't support parameters in source select list
-		[Test, MergeDataContextSource(
+		[Test]
+		public void TestParametersInSourceSelect([MergeDataContextSource(
 			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix,
 			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
-		public void TestParametersInSourceSelect(string context)
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

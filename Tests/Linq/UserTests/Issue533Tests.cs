@@ -34,8 +34,8 @@ namespace Tests.UserTests
 			[Column]public MyString LastName   { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void Issue533Test(string context)
+		[Test]
+		public void Issue533Test([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetConverter<MyString, string>((obj) =>

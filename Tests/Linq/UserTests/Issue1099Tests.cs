@@ -14,7 +14,7 @@ namespace Tests.UserTests
 			public int DurationID { get; set; }
 			public int DurationInterval { get; set; }
 			public int? PersonID { get; set; }
-		}		
+		}
 
 		public interface IBackgroundTask
 		{
@@ -28,8 +28,8 @@ namespace Tests.UserTests
 			int? PersonID { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -12,7 +12,7 @@ namespace Tests.ComplexTests2
 {
 	/// <summary>
 	/// Tests:
-	/// 
+	///
 	/// Complex Property Mapping
 	/// Inheritance Mapping
 	/// LoadWith for Inheritance
@@ -152,7 +152,7 @@ namespace Tests.ComplexTests2
 		void CleanupData(ITestDataContext db)
 		{
 			using (new DisableLogging())
-			{ 
+			{
 				db.DropTable<Animal>(throwExceptionIfNotExists: false);
 				db.DropTable<Eye>   (throwExceptionIfNotExists: false);
 				db.DropTable<Test>  (throwExceptionIfNotExists: false);
@@ -219,8 +219,8 @@ namespace Tests.ComplexTests2
 			return ms;
 		}
 
-		[Test, DataContextSource]
-		public void TestQueryForBaseType(string context)
+		[Test]
+		public void TestQueryForBaseType([DataSources] string context)
 		{
 			var ms = SetMappings();
 
@@ -239,8 +239,8 @@ namespace Tests.ComplexTests2
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestLoadWithWithCast(string context)
+		[Test]
+		public void TestLoadWithWithCast([DataSources] string context)
 		{
 			var ms = SetMappings();
 
@@ -259,8 +259,8 @@ namespace Tests.ComplexTests2
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestNestedLoadWithWithCast(string context)
+		[Test]
+		public void TestNestedLoadWithWithCast([DataSources] string context)
 		{
 			var ms = SetMappings();
 
@@ -286,8 +286,8 @@ namespace Tests.ComplexTests2
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestComplexPropertyLoading(string context)
+		[Test]
+		public void TestComplexPropertyLoading([DataSources] string context)
 		{
 			var ms = SetMappings();
 
@@ -308,8 +308,8 @@ namespace Tests.ComplexTests2
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestStringAndConverterEnums(string context)
+		[Test]
+		public void TestStringAndConverterEnums([DataSources] string context)
 		{
 			var ms = SetMappings();
 
@@ -337,8 +337,8 @@ namespace Tests.ComplexTests2
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestUpdateWithTypeAndBaseType(string context)
+		[Test]
+		public void TestUpdateWithTypeAndBaseType([DataSources] string context)
 		{
 			var ms = SetMappings();
 
@@ -347,9 +347,9 @@ namespace Tests.ComplexTests2
 				try
 				{
 					InsertData(db);
-					
+
 					var dog = db.GetTable<Dog>().First();
-					
+
 					db.Update(dog);
 					db.Update((Animal)dog);
 
@@ -369,8 +369,8 @@ namespace Tests.ComplexTests2
 			public int ColumnForOtherDB;
 		}
 
-		[Test, DataContextSource]
-		public void TestInsertUsingDerivedObjectUsingAttributes(string context)
+		[Test]
+		public void TestInsertUsingDerivedObjectUsingAttributes([DataSources] string context)
 		{
 			var ms = SetMappings();
 			using (var db = GetDataContext(context, ms))
@@ -413,8 +413,8 @@ namespace Tests.ComplexTests2
 		}
 
 		[ActiveIssue("cnt = -1", Configuration = ProviderName.OracleNative)]
-		[Test, DataContextSource]
-		public void TestInsertUsingDerivedObjectUsingFluentMapping(string context)
+		[Test]
+		public void TestInsertUsingDerivedObjectUsingFluentMapping([DataSources] string context)
 		{
 			var ms = SetMappings();
 
@@ -459,8 +459,8 @@ namespace Tests.ComplexTests2
 		}
 
 		[ActiveIssue("cnt = -1", Configuration = ProviderName.OracleNative)]
-		[Test, DataContextSource]
-		public void TestInheritanceByBaseType(string context)
+		[Test]
+		public void TestInheritanceByBaseType([DataSources] string context)
 		{
 			var ms = SetMappings();
 

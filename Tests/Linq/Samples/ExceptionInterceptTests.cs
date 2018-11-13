@@ -107,8 +107,8 @@ namespace Tests.Samples
 		}
 #endif
 
-		[Test, DataContextSource(false)]
-		public void InterceptedExceptionExecuteReader(string context)
+		[Test]
+		public void InterceptedExceptionExecuteReader([DataSources(false)] string context)
 		{
 			var ret = new Retry();
 

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -43,11 +44,11 @@ namespace Tests.UserTests
 
 		class SelectAllAndExpand<T>
 		{
-			public T Instance { get; set; } 
+			public T Instance { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void TestInheritance(string context)
+		[Test]
+		public void TestInheritance([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

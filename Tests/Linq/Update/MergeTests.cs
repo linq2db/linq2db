@@ -32,9 +32,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		public class MergeDataContextSourceAttribute : DataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		public class MergeDataContextSourceAttribute : DataSourcesAttribute
 		{
-			static string[] Unsupported = new []
+			static string[] Unsupported =
 			{
 				ProviderName.Access,
 				ProviderName.SqlCe,
@@ -54,7 +55,6 @@ namespace Tests.xUpdate
 			public MergeDataContextSourceAttribute(params string[] except)
 				: base(false, Unsupported.Concat(except).ToArray())
 			{
-				ParallelScope = ParallelScope.None;
 			}
 		}
 
@@ -215,8 +215,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void TestDataGenerationTest(string context)
+		[Test]
+		public void TestDataGenerationTest([DataSources(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

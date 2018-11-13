@@ -1,5 +1,7 @@
 ﻿using System.Linq;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.UserTests
@@ -7,8 +9,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue228Tests : TestBase
 	{
-		[Test, DataContextSource(false)]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

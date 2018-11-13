@@ -62,11 +62,11 @@ namespace Tests.UserTests
 		/// Confirm that tables creation uses the <see cref="ColumnAttribute.Order"/> field correctly.
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
-		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
-		public void TestAttributeMapping(string context)
+		[Test]
+		public void TestAttributeMapping([DataSources(false, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = new DataConnection(context))
-			using (var tbl = db.CreateLocalTable<ColumnOrderTest>())
+			using (var __ = db.CreateLocalTable<ColumnOrderTest>())
 			{
 				// Get table schema
 				var sp = db.DataProvider.GetSchemaProvider();
@@ -93,8 +93,8 @@ namespace Tests.UserTests
 		/// Confirm that tables creation uses the <see cref="ColumnAttribute.Order"/> field correctly.
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
-		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
-		public void TestFluentMapping(string context)
+		[Test]
+		public void TestFluentMapping([DataSources(false, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{

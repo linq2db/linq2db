@@ -15,10 +15,7 @@ namespace Tests.Linq
 	{
 		partial class GenericQueryBase
 		{
-			protected IQueryable<IdlPatient> AllPatients2
-			{
-				get { return m_ds.Patients(); }
-			}
+			protected IQueryable<IdlPatient> AllPatients2 => m_ds.Patients();
 		}
 
 		public class GenericConcatQuery1 : GenericQueryBase

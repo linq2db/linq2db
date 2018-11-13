@@ -8,8 +8,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue882Tests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Year(string context)
+		[Test]
+		public void Year([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -17,8 +17,8 @@ namespace Tests.UserTests
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Year % 7));
 		}
 
-		[Test, DataContextSource]
-		public void Month(string context)
+		[Test]
+		public void Month([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -26,8 +26,8 @@ namespace Tests.UserTests
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Month % 7));
 		}
 
-		[Test, DataContextSource]
-		public void DayOfYear(string context)
+		[Test]
+		public void DayOfYear([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -35,8 +35,8 @@ namespace Tests.UserTests
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.DayOfYear % 7));
 		}
 
-		[Test, DataContextSource]
-		public void Day(string context)
+		[Test]
+		public void Day([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -44,8 +44,8 @@ namespace Tests.UserTests
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Day % 7));
 		}
 
-		[Test, DataContextSource]
-		public void Hour(string context)
+		[Test]
+		public void Hour([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -53,8 +53,8 @@ namespace Tests.UserTests
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Hour % 7));
 		}
 
-		[Test, DataContextSource]
-		public void Minute(string context)
+		[Test]
+		public void Minute([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -62,8 +62,8 @@ namespace Tests.UserTests
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Minute % 7));
 		}
 
-		[Test, DataContextSource]
-		public void Second(string context)
+		[Test]
+		public void Second([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -71,14 +71,16 @@ namespace Tests.UserTests
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Second % 7));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void Millisecond(string context)
+		[Test]
+		public void Millisecond([DataSources(
+			ProviderName.Informix, ProviderName.MySql, ProviderName.Access,
+			ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in    Types select           t.DateTimeValue.Millisecond % 7,
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Millisecond % 7));
 		}
-
 	}
 }

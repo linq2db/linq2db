@@ -83,8 +83,8 @@ namespace Tests.Data
 		public class FakeClass
 		{}
 
-		[Test, DataContextSource(false)]
-		public void RetryPoliceTest(string context)
+		[Test]
+		public void RetryPoliceTest([DataSources(false)] string context)
 		{
 			var ret = new Retry();
 			Assert.Throws<TestException>(() =>
@@ -114,8 +114,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void RetryPoliceTestAsync(string context)
+		[Test]
+		public void RetryPoliceTestAsync([DataSources(false)] string context)
 		{
 			var ret = new Retry();
 

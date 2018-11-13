@@ -26,8 +26,8 @@ namespace Tests.UserTests
 			public byte[] BlobValue;
 		}
 
-		[Test, DataContextSource]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<BlobClass>())
@@ -54,8 +54,8 @@ namespace Tests.UserTests
 		}
 
 
-		[Test, DataContextSource]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<BlobClass>())
@@ -82,8 +82,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<BlobClass>())
@@ -106,8 +106,8 @@ namespace Tests.UserTests
 		}
 
 
-		[Test, DataContextSource]
-		public void Test4(string context)
+		[Test]
+		public void Test4([DataSources] string context)
 		{
 			var tableName = nameof(BlobClass) + TestUtils.GetNext().ToString();
 			using (var db = GetDataContext(context))

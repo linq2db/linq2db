@@ -14,8 +14,8 @@ namespace Tests.xUpdate
 			public int ID { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void DropCurrentDatabaseTableTest(string context)
+		[Test]
+		public void DropCurrentDatabaseTableTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -40,8 +40,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.SapHana)]
-		public void DropSpecificDatabaseTableTest(string context)
+		[Test]
+		public void DropSpecificDatabaseTableTest([DataSources(false, ProviderName.SapHana)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

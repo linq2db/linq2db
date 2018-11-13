@@ -33,8 +33,8 @@ namespace Tests.UserTests
 			public List<Child> Children { get; set; }
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix)]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
 		{
 			var harnessIds = new int[2];
 
@@ -46,8 +46,10 @@ namespace Tests.UserTests
 					.Update();
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources(
+			ProviderName.Access, ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			string context)
 		{
 			var harnessIds = new int[0];
 

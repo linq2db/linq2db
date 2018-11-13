@@ -119,8 +119,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void TestObject51(string context)
+		[Test]
+		public void TestObject51([DataSources(false)] string context)
 		{
 			using (var conn = new TestDataConnection(context))
 			{

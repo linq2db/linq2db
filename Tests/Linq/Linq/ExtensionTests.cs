@@ -7,7 +7,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.SqlQuery;
 	using Model;
 
 	[TestFixture]

@@ -7,8 +7,8 @@ namespace Tests.UserTests
 	[ActiveIssue(873, Details = "Also check WCF test error for Access")]
 	public class Issue873Tests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

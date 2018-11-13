@@ -14,8 +14,8 @@ namespace Tests.Update
 		private static string ChildIDColumn  = "ChildID";
 		private static string ParentIDColumn = "ParentID";
 
-		[Test, DataContextSource]
-		public void InsertViaSqlProperty(string context)
+		[Test]
+		public void InsertViaSqlProperty([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -40,8 +40,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void UpdateViaSqlProperty(string context)
+		[Test]
+		public void UpdateViaSqlProperty([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -67,8 +67,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InsertDynamicColumns(string context)
+		[Test]
+		public void InsertDynamicColumns([DataSources] string context)
 		{
 			var firstNameColumn = "FirstName";
 			var lastNameColumn  = "LastName";
@@ -95,8 +95,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void UpdateDynamicColumn(string context)
+		[Test]
+		public void UpdateDynamicColumn([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicMyClass()))
 			{

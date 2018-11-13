@@ -52,7 +52,7 @@ namespace Tests.Linq
 				Console.WriteLine(test);
 #endif
 
-				result.ToList();
+				var _ = result.ToList();
 			}
 		}
 	}

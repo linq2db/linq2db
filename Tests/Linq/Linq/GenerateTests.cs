@@ -25,7 +25,7 @@ namespace Tests.Linq
 			using (var db = new TestDataConnection())
 			{
 				var q = db.Person.Where(predicate);
-				var p = q.First();
+				var _ = q.First();
 			}
 		}
 	}

@@ -1,23 +1,27 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Linq
 {
+	using Model;
+
 	[TestFixture]
 	public class DynamicColumnsTests : TestBase
 	{
 		// Introduced to ensure that we process not only constants in column names
-		private static string IDColumn        = "ID";
-		private static string DiagnosisColumn = "Diagnosis";
-		private static string PatientColumn   = "Patient";
+		static string IDColumn        = "ID";
+		static string DiagnosisColumn = "Diagnosis";
+		static string PatientColumn   = "Patient";
 
-		[Test, DataContextSource]
-		public void SqlPropertyWithNonDynamicColumn(string context)
+		[Test]
+		public void SqlPropertyWithNonDynamicColumn([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -30,8 +34,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyWithNavigationalNonDynamicColumn(string context)
+		[Test]
+		public void SqlPropertyWithNavigationalNonDynamicColumn([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -45,8 +49,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyWithNonDynamicAssociation(string context)
+		[Test]
+		public void SqlPropertyWithNonDynamicAssociation([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -60,8 +64,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyWithNonDynamicAssociationViaObject1(string context)
+		[Test]
+		public void SqlPropertyWithNonDynamicAssociationViaObject1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -76,8 +80,8 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(Configuration = ProviderName.SapHana)]
-		[Test, DataContextSource]
-		public void SqlPropertyWithNonDynamicAssociationViaObject2(string context)
+		[Test]
+		public void SqlPropertyWithNonDynamicAssociationViaObject2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -90,8 +94,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyWithDynamicColumn(string context)
+		[Test]
+		public void SqlPropertyWithDynamicColumn([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -104,8 +108,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyWithDynamicAssociation(string context)
+		[Test]
+		public void SqlPropertyWithDynamicAssociation([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -119,8 +123,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertySelectAll(string context)
+		[Test]
+		public void SqlPropertySelectAll([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -131,8 +135,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertySelectOne(string context)
+		[Test]
+		public void SqlPropertySelectOne([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -145,8 +149,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertySelectProject(string context)
+		[Test]
+		public void SqlPropertySelectProject([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -169,8 +173,8 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(Configuration = ProviderName.SapHana)]
-		[Test, DataContextSource]
-		public void SqlPropertySelectAssociated(string context)
+		[Test]
+		public void SqlPropertySelectAssociated([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -184,8 +188,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyWhere(string context)
+		[Test]
+		public void SqlPropertyWhere([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -199,8 +203,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyWhereAssociated(string context)
+		[Test]
+		public void SqlPropertyWhereAssociated([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -214,8 +218,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyOrderBy(string context)
+		[Test]
+		public void SqlPropertyOrderBy([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -229,8 +233,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyOrderByAssociated(string context)
+		[Test]
+		public void SqlPropertyOrderByAssociated([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -244,8 +248,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyGroupBy(string context)
+		[Test]
+		public void SqlPropertyGroupBy([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -275,8 +279,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyJoin(string context)
+		[Test]
+		public void SqlPropertyJoin([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -294,8 +298,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyLoadWith(string context)
+		[Test]
+		public void SqlPropertyLoadWith([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -310,8 +314,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyNoStoreGrouping1(string context)
+		[Test]
+		public void SqlPropertyNoStoreGrouping1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
@@ -337,8 +341,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlPropertyNoStoreGrouping2(string context)
+		[Test]
+		public void SqlPropertyNoStoreGrouping2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -373,8 +377,8 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
-		[Test, DataContextSource]
-		public void SqlPropertyNoStoreNonIdentifier(string context)
+		[Test]
+		public void SqlPropertyNoStoreNonIdentifier([DataSources] string context)
 		{
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
 			using (var db = GetDataContext(context))
@@ -403,8 +407,8 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
-		[Test, DataContextSource]
-		public void SqlPropertyNoStoreNonIdentifierGrouping(string context)
+		[Test]
+		public void SqlPropertyNoStoreNonIdentifierGrouping([DataSources] string context)
 		{
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
 			using (var db = GetDataContext(context))
@@ -498,9 +502,9 @@ namespace Tests.Linq
 			{
 				public bool Equals(SomeClassWithDynamic x, SomeClassWithDynamic y)
 				{
-					if (ReferenceEquals(x, y)) return true;
-					if (ReferenceEquals(x, null)) return false;
-					if (ReferenceEquals(y, null)) return false;
+					if (ReferenceEquals(x, y))      return true;
+					if (ReferenceEquals(x, null))   return false;
+					if (ReferenceEquals(y, null))   return false;
 					if (x.GetType() != y.GetType()) return false;
 					if (!string.Equals(x.Description, y.Description))
 						return false;
@@ -552,13 +556,13 @@ namespace Tests.Linq
 			builder.Property(x => Sql.Property<string>(x, "F066_05"));
 			builder.Property(x => Sql.Property<string>(x, "F066_00"));
 
-			var testData1 = new SomeClassWithDynamic[]
+			var testData1 = new[]
 			{
 				new SomeClassWithDynamic{Description = "Desc1", ExtendedProperties = new Dictionary<string, object>{{"F066_05", "v1"}}},
 				new SomeClassWithDynamic{Description = "Desc2", ExtendedProperties = new Dictionary<string, object>{{"F066_05", "v2"}}},
 			};
 
-			var testData2 = new SomeClassWithDynamic[]
+			var testData2 = new[]
 			{
 				new SomeClassWithDynamic{Description = "Desc3", ExtendedProperties = new Dictionary<string, object>{{"F066_00", "v3"}}},
 				new SomeClassWithDynamic{Description = "Desc4", ExtendedProperties = new Dictionary<string, object>{{"F066_00", "v4"}}},

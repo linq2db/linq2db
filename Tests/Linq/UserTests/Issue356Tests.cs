@@ -9,8 +9,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue356Tests : TestBase
 	{
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.PostgreSQL)]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources(ProviderName.Sybase, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -28,8 +28,10 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Access)]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources(
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -49,8 +51,10 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(true, ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources(true,
+				ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{

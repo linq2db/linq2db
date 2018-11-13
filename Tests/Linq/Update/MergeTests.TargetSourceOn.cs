@@ -21,8 +21,8 @@ namespace Tests.xUpdate
 			public int Id { get; set; }
 		}
 
-		[Test, MergeDataContextSource]
-		public void OnTargetKeyWithoutKeyFields(string context)
+		[Test]
+		public void OnTargetKeyWithoutKeyFields([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -40,8 +40,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void MergeInto(string context)
+		[Test]
+		public void MergeInto([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -70,8 +70,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void InsertPartialSourceProjection_KnownFieldsInDefaultSetter(string context)
+		[Test]
+		public void InsertPartialSourceProjection_KnownFieldsInDefaultSetter([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -108,8 +108,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void UsingTarget(string context)
+		[Test]
+		public void UsingTarget([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -163,8 +163,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void OnKeysSingleField(string context)
+		[Test]
+		public void OnKeysSingleField([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -209,8 +209,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void OnKeysPartialSourceProjection_KnownFieldInKeySelector(string context)
+		[Test]
+		public void OnKeysPartialSourceProjection_KnownFieldInKeySelector([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -251,8 +251,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void OnKeysMultipleFields(string context)
+		[Test]
+		public void OnKeysMultipleFields([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -297,8 +297,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void OnKeysFieldAndConstant(string context)
+		[Test]
+		public void OnKeysFieldAndConstant([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -335,8 +335,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void OnKeysFieldAndConstantPartialSourceProjection_UnknownFieldInKey(string context)
+		[Test]
+		public void OnKeysFieldAndConstantPartialSourceProjection_UnknownFieldInKey([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

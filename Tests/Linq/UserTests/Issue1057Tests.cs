@@ -52,8 +52,8 @@ namespace Tests.UserTests
 			public bool Actual { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void Test(string configuration)
+		[Test]
+		public void Test([DataSources] string configuration)
 		{
 			using (var db = GetDataContext(configuration))
 			{
@@ -80,8 +80,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test2(string configuration)
+		[Test]
+		public void Test2([DataSources] string configuration)
 		{
 			using (var db = GetDataContext(configuration))
 			{

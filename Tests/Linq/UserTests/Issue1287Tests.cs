@@ -26,8 +26,8 @@ namespace Tests.UserTests
 			public char? charDataType { get; set; }
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void TestNullableChar(string context)
+		[Test]
+		public void TestNullableChar([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -38,8 +38,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void TestChar(string context)
+		[Test]
+		public void TestChar([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

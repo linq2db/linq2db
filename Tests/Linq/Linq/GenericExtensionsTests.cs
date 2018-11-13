@@ -2,36 +2,37 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
 using JetBrains.Annotations;
+
 using LinqToDB;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Linq
 {
+	using Model;
 
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-	public class ExtensionChoiseAttribute : Attribute
+	public class ExtensionChoiceAttribute : Attribute
 	{
-		public ExtensionChoiseAttribute(string configuration, string expression, [NotNull] params Type[] types)
+		public ExtensionChoiceAttribute(string configuration, string expression, [NotNull] params Type[] types)
 		{
-			if (types == null) throw new ArgumentNullException(nameof(types));
-
 			Configuration = configuration;
 			Expression    = expression;
-			Types         = types;
+			Types         = types ?? throw new ArgumentNullException(nameof(types));
 		}
 
-		public string Configuration { get;         set; }
-		public string Expression    { get;         set; }
-		public Type[] Types         { get; private set; }
+		public string Configuration { get; set; }
+		public string Expression    { get; set; }
+		public Type[] Types         { get; }
 	}
 
 	class GenericBuilder : Sql.IExtensionCallBuilder
 	{
-		string Match(Type[] current, ExtensionChoiseAttribute[] choices)
+		string Match(Type[] current, ExtensionChoiceAttribute[] choices)
 		{
-			var found = new List<ExtensionChoiseAttribute>();
+			var found = new List<ExtensionChoiceAttribute>();
 			foreach (var c in choices)
 			{
 				var notMatched = false;
@@ -52,11 +53,11 @@ namespace Tests.Linq
 				found = found.Where(f => f.Types.Any(t => t != null)).ToList();
 
 			if (found.Count == 0)
-				throw new InvalidOperationException("Can not deduce pattern for types squence: " +
+				throw new InvalidOperationException("Can not deduce pattern for types sequence: " +
 				                                    string.Join(", ", current.Select(t => t.Name)));
 
 			if (found.Count > 1)
-				throw new InvalidOperationException("Ambigous patterns found:\n" +
+				throw new InvalidOperationException("Ambiguous patterns found:\n" +
 				                                    string.Join("\n",
 					                                    found.Select(f => string.Join(", ",
 						                                    f.Types.Select(t => t == null ? "null" : t.Name)))));
@@ -71,7 +72,7 @@ namespace Tests.Linq
 			{
 				var typeParameters = method.GetGenericArguments();
 				builder.Expression = Match(typeParameters,
-					builder.Mapping.GetAttributes<ExtensionChoiseAttribute>(builder.Member.DeclaringType, method, a => a.Configuration));
+					builder.Mapping.GetAttributes<ExtensionChoiceAttribute>(builder.Member.DeclaringType, method, a => a.Configuration));
 			}
 			else
 				throw new InvalidOperationException("This extension could be applied only to methods with type parameters.");
@@ -81,11 +82,11 @@ namespace Tests.Linq
 	public static class GenericExtensionsFunctions
 	{
 		[Sql.Extension(typeof(GenericBuilder))]
-		[ExtensionChoise("", "'T1=UNSUPPORTED PARAMETERS'",                                                                                                             null,           null          )]
-		[ExtensionChoise("", "'T2=(BYTE: ' + CASE WHEN {second} IS NULL THEN 'null' ELSE CAST({second} AS NVARCHAR) END + ')'",                                         null,           typeof(byte?) )]
-		[ExtensionChoise("", "'T3=(BYTE: ' + CAST({first} AS NVARCHAR) + ', INT: ' + CASE WHEN {second} IS NULL THEN 'null' ELSE CAST({second} AS NVARCHAR) END + ')'", typeof(byte),   typeof(int?)  )]
-		[ExtensionChoise("", "'T4=(BYTE: ' + CAST({first} AS NVARCHAR) + ', INT: ' + CAST({second} AS NVARCHAR) + ')'",                                                 typeof(byte),   typeof(int)   )]
-		[ExtensionChoise("", "'T5=(CHAR: ' + CASE WHEN {first} IS NULL THEN 'null' ELSE CAST({first} AS NVARCHAR) END + ', STRING: ' + {second} + ')'",                 typeof(char?),  typeof(string))]
+		[ExtensionChoice("", "'T1=UNSUPPORTED PARAMETERS'",                                                                                                             null,           null          )]
+		[ExtensionChoice("", "'T2=(BYTE: ' + CASE WHEN {second} IS NULL THEN 'null' ELSE CAST({second} AS NVARCHAR) END + ')'",                                         null,           typeof(byte?) )]
+		[ExtensionChoice("", "'T3=(BYTE: ' + CAST({first} AS NVARCHAR) + ', INT: ' + CASE WHEN {second} IS NULL THEN 'null' ELSE CAST({second} AS NVARCHAR) END + ')'", typeof(byte),   typeof(int?)  )]
+		[ExtensionChoice("", "'T4=(BYTE: ' + CAST({first} AS NVARCHAR) + ', INT: ' + CAST({second} AS NVARCHAR) + ')'",                                                 typeof(byte),   typeof(int)   )]
+		[ExtensionChoice("", "'T5=(CHAR: ' + CASE WHEN {first} IS NULL THEN 'null' ELSE CAST({first} AS NVARCHAR) END + ', STRING: ' + {second} + ')'",                 typeof(char?),  typeof(string))]
 		public static string TestGenericExpression<TFirstValue, TSecondValue>(this Sql.ISqlExtension ext,
 			[ExprParameter("first")]  TFirstValue value,
 			[ExprParameter("second")] TSecondValue secondValue)

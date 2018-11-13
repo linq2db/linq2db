@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.SqlQuery;
+
+using static LinqToDB.ProviderName;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -128,7 +132,7 @@ namespace Tests.Linq
 					case Sql.DateParts.Hour        : partStr = "H"; break;
 					case Sql.DateParts.Minute      : partStr = "M"; break;
 					case Sql.DateParts.Second      : partStr = "S"; break;
-					case Sql.DateParts.Millisecond : 
+					case Sql.DateParts.Millisecond :
 						builder.Expression = "Cast(strFTime('%f', {date}) * 1000 as int) % 1000";
 						builder.Extension.Precedence = Precedence.Multiplicative;
 						break;
@@ -352,8 +356,8 @@ namespace Tests.Linq
 	{
 		#region DatePart
 
-		[Test, DataContextSource]
-		public void DatePartYear(string context)
+		[Test]
+		public void DatePartYear([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -361,8 +365,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Year, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartQuarter(string context)
+		[Test]
+		public void DatePartQuarter([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -370,8 +374,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Quarter, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartMonth(string context)
+		[Test]
+		public void DatePartMonth([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -379,8 +383,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Month, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartDayOfYear(string context)
+		[Test]
+		public void DatePartDayOfYear([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -388,8 +392,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.DayOfYear, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartDay(string context)
+		[Test]
+		public void DatePartDay([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -397,15 +401,15 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Day, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartWeek(string context)
+		[Test]
+		public void DatePartWeek([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				(from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Week, t.DateTimeValue))).ToList();
 		}
 
-		[Test, DataContextSource]
-		public void DatePartWeekDay(string context)
+		[Test]
+		public void DatePartWeekDay([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -413,8 +417,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.WeekDay, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartHour(string context)
+		[Test]
+		public void DatePartHour([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -422,8 +426,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Hour, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartMinute(string context)
+		[Test]
+		public void DatePartMinute([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -431,8 +435,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Minute, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartSecond(string context)
+		[Test]
+		public void DatePartSecond([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -440,8 +444,10 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Second, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void DatePartMillisecond(string context)
+		[Test]
+		public void DatePartMillisecond([DataSources(
+			Informix, ProviderName.MySql, Access, SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

@@ -8,15 +8,14 @@ using LinqToDB;
 
 using NUnit.Framework;
 using LinqToDB.Mapping;
-using System.Collections.Generic;
 
 namespace Tests.xUpdate
 {
 	public partial class MergeTests
 	{
 		#region Insert<TEntity>() + different source/match combinations
-		[Test, MergeDataContextSource]
-		public void SameSourceInsertFromTable(string context)
+		[Test]
+		public void SameSourceInsertFromTable([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -48,8 +47,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void SameSourceInsertFromQuery(string context)
+		[Test]
+		public void SameSourceInsertFromQuery([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -79,8 +78,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void SameSourceInsertFromQueryWithSelect(string context)
+		[Test]
+		public void SameSourceInsertFromQueryWithSelect([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -120,8 +119,10 @@ namespace Tests.xUpdate
 		}
 
 		// DB2, SAPHANA: match condition matches multiple target records
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.SapHana)]
-		public void SameSourceInsertFromTableWithMatch(string context)
+		[Test]
+		public void SameSourceInsertFromTableWithMatch([MergeDataContextSource(
+			ProviderName.DB2, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -151,8 +152,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void SameSourceInsertFromTableWithMatchAlternative(string context)
+		[Test]
+		public void SameSourceInsertFromTableWithMatchAlternative([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -183,8 +184,10 @@ namespace Tests.xUpdate
 		}
 
 		// DB2, SAPHANA: match condition matches multiple target records
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.SapHana)]
-		public void SameSourceInsertFromQueryWithSelectAndMatch(string context)
+		[Test]
+		public void SameSourceInsertFromQueryWithSelectAndMatch([MergeDataContextSource(
+			ProviderName.DB2, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -228,8 +231,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void SameSourceInsertFromQueryWithSelectAndMatchAlternative(string context)
+		[Test]
+		public void SameSourceInsertFromQueryWithSelectAndMatchAlternative([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -273,8 +276,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void SameSourceInsertFromCollection(string context)
+		[Test]
+		public void SameSourceInsertFromCollection([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -305,8 +308,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void SameSourceInsertFromEmptyCollection(string context)
+		[Test]
+		public void SameSourceInsertFromEmptyCollection([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -336,8 +339,10 @@ namespace Tests.xUpdate
 		}
 
 		// DB2, SAPHANA: match condition matches multiple target records
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.SapHana)]
-		public void SameSourceInsertFromCollectionWithMatch(string context)
+		[Test]
+		public void SameSourceInsertFromCollectionWithMatch([MergeDataContextSource(
+			ProviderName.DB2, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -367,8 +372,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void SameSourceInsertFromCollectionWithMatchAlternative(string context)
+		[Test]
+		public void SameSourceInsertFromCollectionWithMatchAlternative([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -398,8 +403,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void SameSourceInsertFromEmptyCollectionWithMatch(string context)
+		[Test]
+		public void SameSourceInsertFromEmptyCollectionWithMatch([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -428,8 +433,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void InsertFromCrossJoinedSourceQuery2Workaround(string context)
+		[Test]
+		public void InsertFromCrossJoinedSourceQuery2Workaround([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -462,8 +467,8 @@ namespace Tests.xUpdate
 		}
 
 		[ActiveIssue(896, Details = "Selects 10 columns instead of 6. Also see InsertFromCrossJoinedSourceQuery2Workaround for workaround")]
-		[Test, MergeDataContextSource]
-		public void InsertFromCrossJoinedSourceQuery2(string context)
+		[Test]
+		public void InsertFromCrossJoinedSourceQuery2([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -521,8 +526,8 @@ namespace Tests.xUpdate
 			public int RightId { get; set; }
 		}
 
-		[Test, MergeDataContextSource]
-		public void InsertFromCrossJoinedSourceQuery(string context)
+		[Test]
+		public void InsertFromCrossJoinedSourceQuery([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -584,8 +589,8 @@ namespace Tests.xUpdate
 		}
 
 		[ActiveIssue(896, Details = "Regression from 1.x: Member 'TestMapping1.Fake' is not a table column.")]
-		[Test, MergeDataContextSource]
-		public void InsertFromCrossJoinedSourceQuery3(string context)
+		[Test]
+		public void InsertFromCrossJoinedSourceQuery3([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -622,8 +627,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void InsertFromSelectManySourceQuery(string context)
+		[Test]
+		public void InsertFromSelectManySourceQuery([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -686,8 +691,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void InsertFromPartialSourceProjection_UnknownFieldInDefaultSetter(string context)
+		[Test]
+		public void InsertFromPartialSourceProjection_UnknownFieldInDefaultSetter([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -709,8 +714,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void InsertFromPartialSourceProjection_UnknownFieldInSetter(string context)
+		[Test]
+		public void InsertFromPartialSourceProjection_UnknownFieldInSetter([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -738,8 +743,10 @@ namespace Tests.xUpdate
 		#endregion
 
 		#region Insert<TEntity>(predicate)
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void SameSourceInsertWithPredicate(string context)
+		[Test]
+		public void SameSourceInsertWithPredicate([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -785,8 +792,8 @@ namespace Tests.xUpdate
 		#endregion
 
 		#region Insert<TEntity>(create)
-		[Test, MergeDataContextSource]
-		public void SameSourceInsertWithCreate(string context)
+		[Test]
+		public void SameSourceInsertWithCreate([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -837,8 +844,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void InsertPartialSourceProjection_KnownFieldInSetter(string context)
+		[Test]
+		public void InsertPartialSourceProjection_KnownFieldInSetter([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -890,8 +897,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void DataContextTest(string context)
+		[Test]
+		public void DataContextTest([MergeDataContextSource] string context)
 		{
 			using (var db = new DataContext(context))
 			using (db.BeginTransaction())
@@ -944,8 +951,10 @@ namespace Tests.xUpdate
 		#endregion
 
 		#region Insert<TEntity>(predicate, create)
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void SameSourceInsertWithPredicateAndCreate(string context)
+		[Test]
+		public void SameSourceInsertWithPredicateAndCreate([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -994,8 +1003,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void InsertWithPredicatePartialSourceProjection_KnownFieldInCondition(string context)
+		[Test]
+		public void InsertWithPredicatePartialSourceProjection_KnownFieldInCondition([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1045,8 +1056,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void SameSourceInsertWithPredicateAndCreatePartialSourceProjection_UnknownFieldInCondition(string context)
+		[Test]
+		public void SameSourceInsertWithPredicateAndCreatePartialSourceProjection_UnknownFieldInCondition([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1079,8 +1092,8 @@ namespace Tests.xUpdate
 		#endregion
 
 		#region Insert<TTarget, TSource>(create) + different source/match combinations
-		[Test, MergeDataContextSource]
-		public void OtherSourceInsertFromTable(string context)
+		[Test]
+		public void OtherSourceInsertFromTable([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1119,8 +1132,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void OtherSourceInsertFromQuery(string context)
+		[Test]
+		public void OtherSourceInsertFromQuery([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1164,8 +1177,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void OtherSourceInsertFromQueryWithSelect(string context)
+		[Test]
+		public void OtherSourceInsertFromQueryWithSelect([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1224,8 +1237,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void OtherSourceInsertFromList(string context)
+		[Test]
+		public void OtherSourceInsertFromList([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1276,8 +1289,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void OtherSourceInsertFromEmptyList(string context)
+		[Test]
+		public void OtherSourceInsertFromEmptyList([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1315,8 +1328,10 @@ namespace Tests.xUpdate
 		#endregion
 
 		#region Insert<TTarget, TSource>(predicate, create)
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void OtherSourceInsertWithPredicate(string context)
+		[Test]
+		public void OtherSourceInsertWithPredicate([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1356,8 +1371,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void AnonymousSourceInsertWithPredicate(string context)
+		[Test]
+		public void AnonymousSourceInsertWithPredicate([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1405,8 +1422,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void AnonymousListSourceInsertWithPredicate(string context)
+		[Test]
+		public void AnonymousListSourceInsertWithPredicate([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1455,8 +1474,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void InsertReservedAndCaseNames(string context)
+		[Test]
+		public void InsertReservedAndCaseNames([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1504,8 +1525,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void InsertReservedAndCaseNamesFromList(string context)
+		[Test]
+		public void InsertReservedAndCaseNamesFromList([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1557,8 +1580,8 @@ namespace Tests.xUpdate
 		#endregion
 
 		#region Async
-		[Test, MergeDataContextSource]
-		public async Task SameSourceInsertFromTableAsyn(string context)
+		[Test]
+		public async Task SameSourceInsertFromTableAsyn([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1589,8 +1612,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public async Task SameSourceInsertFromQueryAsyn(string context)
+		[Test]
+		public async Task SameSourceInsertFromQueryAsyn([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1625,8 +1648,8 @@ namespace Tests.xUpdate
 		// https://imgflip.com/i/2a6oc8
 		[ActiveIssue(Configuration = ProviderName.Sybase       , Details = "Cross-join doesn't work in Sybase. Also see SqlLinqCrossJoinSubQuery test")]
 		[ActiveIssue(Configuration = ProviderName.SybaseManaged, Details = "Cross-join doesn't work in Sybase. Also see SqlLinqCrossJoinSubQuery test")]
-		[Test, MergeDataContextSource]
-		public void CrossJoinedSourceWithSingleFieldSelection(string context)
+		[Test]
+		public void CrossJoinedSourceWithSingleFieldSelection([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -1691,8 +1714,8 @@ namespace Tests.xUpdate
 		// same as CrossJoinedSourceWithSingleFieldSelection test but with server-side sort
 		// it returns incorrectly ordered data for DB2 and Oracle for some reason
 		[ActiveIssue]
-		[Test, MergeDataContextSource]
-		public void SortedMergeResultsIssue(string context)
+		[Test]
+		public void SortedMergeResultsIssue([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())

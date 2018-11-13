@@ -77,13 +77,12 @@ namespace Tests.Linq
 				.TableName(tableName);
 		}
 
-
-		static int CountOccurences(string source, string subString)
+		static int CountOccurrences(string source, string subString)
 		{
 			var count = 0;
 			var n     = 0;
 
-			if(subString != "")
+			if (subString != "")
 			{
 				while ((n = source.IndexOf(subString, n, StringComparison.Ordinal)) != -1)
 				{
@@ -119,9 +118,9 @@ namespace Tests.Linq
 				var sql = query.ToString();
 				Console.WriteLine(sql);
 
-				Assert.That(CountOccurences(sql, tableName),    Is.EqualTo(2));
-				Assert.That(CountOccurences(sql, databaseName), Is.EqualTo(2));
-				Assert.That(CountOccurences(sql, schemaName),   Is.EqualTo(2));
+				Assert.That(CountOccurrences(sql, tableName),    Is.EqualTo(2));
+				Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
+				Assert.That(CountOccurrences(sql, schemaName),   Is.EqualTo(2));
 			}
 		}
 
@@ -150,9 +149,9 @@ namespace Tests.Linq
 				var sql = query.ToString();
 				Console.WriteLine(sql);
 
-				Assert.That(CountOccurences(sql, tableName),    Is.EqualTo(2));
-				Assert.That(CountOccurences(sql, databaseName), Is.EqualTo(2));
-				Assert.That(CountOccurences(sql, schemaName),   Is.EqualTo(2));
+				Assert.That(CountOccurrences(sql, tableName),    Is.EqualTo(2));
+				Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
+				Assert.That(CountOccurrences(sql, schemaName),   Is.EqualTo(2));
 			}
 		}
 
@@ -181,6 +180,5 @@ namespace Tests.Linq
 					Assert.That(sql, Contains.Substring("WITH TIES"));
 			}
 		}
-
 	}
 }

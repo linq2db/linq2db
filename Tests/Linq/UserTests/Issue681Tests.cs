@@ -14,17 +14,17 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue681Tests : TestBase
 	{
-		[DataContextSource]
-		public void TestTableName(string context)
+		[Test]
+		public void TestTableName([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.GetTable<TestTable>().ToList();
+				var _ = db.GetTable<TestTable>().ToList();
 			}
 		}
 
-		[DataContextSource]
-		public void TestTableNameWithSchema(string context)
+		[Test]
+		public void TestTableNameWithSchema([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -33,12 +33,12 @@ namespace Tests.UserTests
 				using (new DisableLogging())
 					schemaName = TestUtils.GetSchemaName(db);
 
-				db.GetTable<TestTable>().SchemaName(schemaName).ToList();
+				var _ = db.GetTable<TestTable>().SchemaName(schemaName).ToList();
 			}
 		}
 
-		[DataContextSource]
-		public void TestTableNameWithDatabase(string context)
+		[Test]
+		public void TestTableNameWithDatabase([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -65,8 +65,8 @@ namespace Tests.UserTests
 		// https://www.linkedin.com/pulse/cross-database-queries-thing-past-how-use-sap-hana-your-nandan
 		// https://blogs.sap.com/2017/04/12/introduction-to-the-sap-hana-smart-data-access-linked-database-feature/
 		// https://blogs.sap.com/2014/12/19/step-by-step-tutorial-cross-database-queries-in-sap-hana-sps09/
-		[DataContextSource(ProviderName.SapHana)]
-		public void TestTableNameWithDatabaseAndSchema(string context)
+		[Test]
+		public void TestTableNameWithDatabaseAndSchema([DataSources(ProviderName.SapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

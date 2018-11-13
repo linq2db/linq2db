@@ -84,8 +84,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void CloneTest(string context)
+		[Test]
+		public void CloneTest([DataSources(false)] string context)
 		{
 			using (var con = new DataConnection(context))
 			{

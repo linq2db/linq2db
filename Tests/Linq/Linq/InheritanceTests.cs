@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -15,22 +16,22 @@ namespace Tests.Linq
 	[TestFixture]
 	public class InheritanceTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(ParentInheritance, db.ParentInheritance);
 		}
 
-		[Test, DataContextSource]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(ParentInheritance, db.ParentInheritance.Select(p => p));
 		}
 
-		[Test, DataContextSource]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -38,8 +39,8 @@ namespace Tests.Linq
 					from p in db.ParentInheritance where p is ParentInheritance1 select p);
 		}
 
-		[Test, DataContextSource]
-		public void Test4(string context)
+		[Test]
+		public void Test4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -47,8 +48,8 @@ namespace Tests.Linq
 					from p in db.ParentInheritance where !(p is ParentInheritanceNull) select p);
 		}
 
-		[Test, DataContextSource]
-		public void Test5(string context)
+		[Test]
+		public void Test5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -56,18 +57,18 @@ namespace Tests.Linq
 					from p in db.ParentInheritance where p is ParentInheritanceValue select p);
 		}
 
-		[Test, DataContextSource]
-		public void Test6(string context)
+		[Test]
+		public void Test6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.ParentInheritance2 where p is ParentInheritance12 select p;
-				q.ToList();
+				var _ = q.ToList();
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test7(string context)
+		[Test]
+		public void Test7([DataSources] string context)
 		{
 #pragma warning disable 183
 			using (var db = GetDataContext(context))
@@ -77,8 +78,8 @@ namespace Tests.Linq
 #pragma warning restore 183
 		}
 
-		[Test, DataContextSource]
-		public void Test8(string context)
+		[Test]
+		public void Test8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -86,8 +87,8 @@ namespace Tests.Linq
 					db.ParentInheritance.OfType<ParentInheritance1>());
 		}
 
-		[Test, DataContextSource]
-		public void Test9(string context)
+		[Test]
+		public void Test9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -99,8 +100,8 @@ namespace Tests.Linq
 						.OfType<ParentInheritanceNull>());
 		}
 
-		[Test, DataContextSource]
-		public void Test10(string context)
+		[Test]
+		public void Test10([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -108,18 +109,18 @@ namespace Tests.Linq
 					db.ParentInheritance.OfType<ParentInheritanceValue>());
 		}
 
-		[Test, DataContextSource]
-		public void Test11(string context)
+		[Test]
+		public void Test11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.ParentInheritance3 where p is ParentInheritance13 select p;
-				q.ToList();
+				var _ = q.ToList();
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test12(string context)
+		[Test]
+		public void Test12([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -127,8 +128,8 @@ namespace Tests.Linq
 					from p in db.ParentInheritance1 where p.ParentID == 1 select p);
 		}
 
-		//[Test, DataContextSource]
-		public void Test13(string context)
+		//[Test]
+		public void Test13([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -140,8 +141,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, DataContextSource]
-		public void TestGetBaseClass(string context)
+		[Test]
+		public void TestGetBaseClass([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -212,8 +213,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Cast1(string context)
+		[Test]
+		public void Cast1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -221,8 +222,8 @@ namespace Tests.Linq
 					db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>());
 		}
 
-		[Test, DataContextSource]
-		public async Task Cast1Async(string context)
+		[Test]
+		public async Task Cast1Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -244,8 +245,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Cast2(string context)
+		[Test]
+		public void Cast2([DataSources] string context)
 		{
 			ParentEx.Test(this, context);
 		}
@@ -308,8 +309,8 @@ namespace Tests.Linq
 		public class MyChild11 : MyChildBase_11_21 { }
 		public class MyChild21 : MyChildBase_11_21 { }
 
-		[Test, DataContextSource]
-		public void InheritanceMappingIssue106Test(string context)
+		[Test]
+		public void InheritanceMappingIssue106Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -416,8 +417,8 @@ namespace Tests.Linq
 
 		#endregion
 
-		[Test, DataContextSource]
-		public void Test14(string context)
+		[Test]
+		public void Test14([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -532,8 +533,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void QuerySyntaxSimpleTest(string context)
+		[Test]
+		public void QuerySyntaxSimpleTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -561,8 +562,8 @@ namespace Tests.Linq
 			public string LastName { get; set; }
 		}
 
-		[Test, DataContextSource(false)]
-		public void Test17(string data)
+		[Test]
+		public void Test17([DataSources(false)] string data)
 		{
 			using (var context = GetDataContext(data))
 			{
@@ -592,8 +593,8 @@ namespace Tests.Linq
 			[Column] public string LastName  { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void Test18(string context)
+		[Test]
+		public void Test18([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -608,8 +609,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public async Task Test18Async(string context)
+		[Test]
+		public async Task Test18Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -624,8 +625,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test19(string context)
+		[Test]
+		public void Test19([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -641,8 +642,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InheritanceAssociationTest(string context)
+		[Test]
+		public void InheritanceAssociationTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -664,6 +665,5 @@ namespace Tests.Linq
 				AreEqual(expected, result);
 			}
 		}
-
 	}
 }
