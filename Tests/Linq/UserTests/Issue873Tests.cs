@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using System.Linq;
+using LinqToDB;
 
 namespace Tests.UserTests
 {
@@ -8,7 +9,7 @@ namespace Tests.UserTests
 	public class Issue873Tests : TestBase
 	{
 		[Test]
-		public void Test([DataSources] string context)
+		public void Test([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
