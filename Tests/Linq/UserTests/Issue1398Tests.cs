@@ -11,10 +11,6 @@ using static Tests.xUpdate.MergeTests;
 
 namespace Tests.UserTests
 {
-	/// <summary>
-	/// Test fixes to Issue #1305.
-	/// Before fix fields in derived tables were added first in the column order by <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, LinqToDB.SqlQuery.DefaultNullable)"/>.
-	/// </summary>
 	[TestFixture]
 	public class Issue1398Tests : TestBase
 	{
@@ -51,8 +47,45 @@ namespace Tests.UserTests
 			public List<AnimalUpdate> Updates { get; set; }
 		}
 
+		[Table("InsertTable1398")]
+		internal sealed class InsertTable
+		{
+			[Column(CanBeNull = false)]
+			public int Value { get; set; }
+		}
+
+		[Test, DataContextSource(false)]
+		public void TestInsert(string context)
+		{
+			const int recordsCount = 1000;
+
+			using (var db = new TestDataConnection(context))
+			using (db.CreateLocalTable<InsertTable>())
+			{
+				var tasks = new List<Task>();
+
+				for (var iteration = 0; iteration < recordsCount; iteration++)
+				{
+					var local = iteration;
+					tasks.Add(Task.Run(() => Insert(context, local)));
+				}
+
+				Task.WaitAll(tasks.ToArray());
+
+				Assert.AreEqual(db.GetTable<InsertTable>().Count(), db.GetTable<InsertTable>().GroupBy(_ => _.Value).Count());
+			}
+		}
+
+		private void Insert(string context, int value)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.GetTable<InsertTable>().Insert(() => new InsertTable { Value = value });
+			}
+		}
+
 		[Test, MergeDataContextSource]
-		public void Test(string context)
+		public void TestMerge(string context)
 		{
 			const int repeatsCount = 500;
 			var rnd = new Random();
