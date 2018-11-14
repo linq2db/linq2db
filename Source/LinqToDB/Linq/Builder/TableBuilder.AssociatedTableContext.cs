@@ -59,6 +59,8 @@ namespace LinqToDB.Linq.Builder
 				var psrc = parent.SelectQuery.From[parent.SqlTable];
 				var join = left ? SqlTable.WeakLeftJoin() : SqlTable.WeakInnerJoin();
 
+				join.JoinedTable.Table.Alias = "A_" + association.MemberInfo.Name;
+
 				Association           = association;
 				ParentAssociation     = parent;
 				ParentAssociationJoin = join.JoinedTable;

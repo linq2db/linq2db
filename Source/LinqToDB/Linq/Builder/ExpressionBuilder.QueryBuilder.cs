@@ -283,7 +283,7 @@ namespace LinqToDB.Linq.Builder
 						for (var i = 0; i < ne.Arguments.Count; i++)
 						{
 							var a = ne.Arguments[i];
-							var memberAlias = ne.Members[i].Name;
+							var memberAlias = ne.Members?[i].Name;
 							var newArgument = 
 								a.Transform(ae => TransformExpression(context, ae, enforceServerSide, memberAlias));
 							a = newArgument;

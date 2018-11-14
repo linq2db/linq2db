@@ -272,5 +272,28 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		public static IEnumerable<SqlTableSource> EnumerateLevelSources(SqlTableSource tableSource)
+		{
+			foreach (var j in tableSource.Joins)
+			{
+				yield return j.Table;
+ 				foreach (var js in EnumerateLevelSources(j.Table))
+				{
+					yield return js;
+				}
+			}
+		}
+
+ 		public static IEnumerable<SqlTableSource> EnumerateLevelSources(SelectQuery selectQuery)
+		{
+			foreach (var tableSource in selectQuery.Select.From.Tables)
+			{
+				yield return tableSource;
+ 				foreach (var js in EnumerateLevelSources(tableSource))
+				{
+					yield return js;
+				}
+			}
+		}
 	}
 }

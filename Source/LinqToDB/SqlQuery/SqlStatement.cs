@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Linq;
+using LinqToDB.Common;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.SqlQuery
@@ -296,14 +298,14 @@ namespace LinqToDB.SqlQuery
 
 		#region Aliases
 
-		IDictionary<string,object> _aliases;
+		HashSet<string> _aliases;
 
 		public void RemoveAlias(string alias)
 		{
 			if (_aliases != null)
 			{
 				alias = alias.ToUpper();
-				if (_aliases.ContainsKey(alias))
+				if (_aliases.Contains(alias))
 					_aliases.Remove(alias);
 			}
 		}
@@ -311,7 +313,7 @@ namespace LinqToDB.SqlQuery
 		public string GetAlias(string desiredAlias, string defaultAlias)
 		{
 			if (_aliases == null)
-				_aliases = new Dictionary<string,object>();
+				_aliases = new HashSet<string>();
 
 			var alias = desiredAlias;
 
@@ -325,9 +327,9 @@ namespace LinqToDB.SqlQuery
 			{
 				var s = alias.ToUpper();
 
-				if (!_aliases.ContainsKey(s) && !ReservedWords.IsReserved(s))
+				if (!_aliases.Contains(s) && !ReservedWords.IsReserved(s))
 				{
-					_aliases.Add(s, s);
+					_aliases.Add(s);
 					break;
 				}
 
@@ -354,89 +356,159 @@ namespace LinqToDB.SqlQuery
 		{
 			_aliases = null;
 
-			var objs = new Dictionary<object,object>();
+			var allAliases = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
+
+			// Search for first query only
+			//new QueryVisitor().VisitParentFirst(this, expr =>
+			//{
+			//	if (expr.ElementType == QueryElementType.SqlQuery)
+			//	{
+			//		var info = new QueryInformation((SelectQuery)expr);
+			//		var isRootQuery = true;
+			//		foreach (var query in info.GetQueriesParentFirst())
+			//		{
+			//			if (query.IsParameterDependent)
+			//				IsParameterDependent = true;
+
+			//			if (isRootQuery && !query.HasUnion)
+			//			{
+			//				// Root query do not need aliases
+			//				foreach (var c in query.Select.Columns.Where(c => c.Alias != "*"))
+			//				{
+			//					c.RawAlias = string.Empty;
+			//				}
+			//			}
+			//			else
+			//			{
+			//				Utils.MakeUniqueNames(query.Select.Columns.Where(c => c.Alias != "*"),
+			//					n => !ReservedWords.IsReserved(n), c => c.RawAlias, (c, n) =>
+			//					{
+			//						allAliases.Add(n);
+			//						c.RawAlias = n;
+			//					},
+			//					c => c.Alias ?? "c1", StringComparer.CurrentCultureIgnoreCase);
+
+			//				if (query.HasUnion)
+			//				{
+			//					for (var i = 0; i < query.Select.Columns.Count; i++)
+			//					{
+			//						var col = query.Select.Columns[i];
+
+			//						foreach (var t in query.Unions)
+			//						{
+			//							var union = t.SelectQuery.Select;
+			//							union.Columns[i].Alias = col.Alias;
+			//						}
+			//					}
+			//				}
+			//			}
+
+			//			isRootQuery = false;
+			//		}
+
+			//		return false;
+			//	}
+
+			//	return true;
+			//});
+
+			// assignNames for parameters
 
 			Parameters.Clear();
+			var paramsVisited = new HashSet<SqlParameter>();
+			var tablesVisited = new HashSet<SqlTableSource>();
 
 			new QueryVisitor().VisitAll(this, expr =>
 			{
 				switch (expr.ElementType)
 				{
+					case QueryElementType.SqlQuery:
+						{
+							var query = (SelectQuery)expr;
+							if (query.IsParameterDependent)
+								IsParameterDependent = true;
+							var isRootQuery = query.ParentSelect == null;
+							if (isRootQuery && !query.HasUnion)
+							{
+								// Root query do not need aliases
+								foreach (var c in query.Select.Columns.Where(c => c.Alias != "*"))
+								{
+									c.RawAlias = string.Empty;
+								}
+							}
+							else
+							{
+								if (query.Select.Columns.Count > 0)
+								{
+									Utils.MakeUniqueNames(query.Select.Columns.Where(c => c.Alias != "*"),
+										n => !ReservedWords.IsReserved(n), c => c.RawAlias, (c, n) =>
+										{
+											allAliases.Add(n);
+											c.Alias = n;
+										},
+										c => c.Alias ?? "c1",
+										StringComparer.CurrentCultureIgnoreCase);
+
+									if (query.HasUnion)
+									{
+										for (var i = 0; i < query.Select.Columns.Count; i++)
+										{
+											var col = query.Select.Columns[i];
+
+											foreach (var t in query.Unions)
+											{
+												var union = t.SelectQuery.Select;
+												union.Columns[i].Alias = col.Alias;
+											}
+										}
+									}
+								}
+							}
+							break;
+						}
 					case QueryElementType.SqlParameter:
 						{
 							var p = (SqlParameter)expr;
 
 							if (p.IsQueryParameter)
 							{
-								if (!objs.ContainsKey(expr))
+								if (!paramsVisited.Contains(expr))
 								{
-									objs.Add(expr, expr);
-									p.Name = GetAlias(p.Name, "p");
+									paramsVisited.Add(p);
 									Parameters.Add(p);
 								}
 							}
 							else
 								IsParameterDependent = true;
+
+							break;
 						}
-
-						break;
-
-					case QueryElementType.Column:
-						{
-							if (!objs.ContainsKey(expr))
-							{
-								objs.Add(expr, expr);
-
-								var c = (SqlColumn)expr;
-
-								if (c.Alias != "*")
-									c.Alias = GetAlias(c.Alias, "c");
-							}
-						}
-
-						break;
-
 					case QueryElementType.TableSource:
 						{
 							var table = (SqlTableSource)expr;
-
-							if (!objs.ContainsKey(table))
-							{
-								objs.Add(table, table);
-								table.Alias = GetAlias(table.Alias, "t");
-							}
+							tablesVisited.Add(table);
+							break;
 						}
-
-						break;
-
-					case QueryElementType.SqlQuery:
-						{
-							var sql = (SelectQuery)expr;
-
-							if (sql.IsParameterDependent)
-								IsParameterDependent = true;
-
-							if (sql.HasUnion)
-							{
-								for (var i = 0; i < sql.Select.Columns.Count; i++)
-								{
-									var col = sql.Select.Columns[i];
-
-									foreach (var t in sql.Unions)
-									{
-										var union = t.SelectQuery.Select;
-
-										objs.Remove(union.Columns[i].Alias);
-
-										union.Columns[i].Alias = col.Alias;
-									}
-								}
-							}
-						}
-
-						break;
 				}
 			});
+
+			Utils.MakeUniqueNames(tablesVisited,
+				n => !ReservedWords.IsReserved(n), ts => ts.Alias, (ts, n) =>
+				{
+					allAliases.Add(n);
+					ts.Alias = n;
+				},
+				ts => ts.Alias ?? "t1", StringComparer.CurrentCultureIgnoreCase);
+
+			Utils.MakeUniqueNames(Parameters,
+				n => !allAliases.Contains(n) && !ReservedWords.IsReserved(n), p => p.Name, (p, n) =>
+				{
+					allAliases.Add(n);
+					p.Name = n;
+				},
+				ts => ts.Name ?? "p1", StringComparer.CurrentCultureIgnoreCase);
+
+			_aliases = allAliases;
 		}
 
 		#endregion

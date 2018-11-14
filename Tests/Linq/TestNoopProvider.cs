@@ -782,7 +782,7 @@ namespace Tests
 		}
 	}
 
-	internal class TestNoopProvider : DynamicDataProviderBase
+	public class TestNoopProvider : DynamicDataProviderBase
 	{
 		public TestNoopProvider()
 			: base(TestProvName.NoopProvider, new MappingSchema())

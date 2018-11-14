@@ -7,22 +7,9 @@ namespace LinqToDB.Common
 {
 	public static class Utils
 	{
-		public static void MakeUniqueNames<T>([NotNull] IEnumerable<T> items, [NotNull] Func<T, string> nameFunc,
-			[NotNull] Action<T, string> nameSetter, string defaultName = "t")
-		{
-			if (items      == null) throw new ArgumentNullException(nameof(items));
-			if (nameFunc   == null) throw new ArgumentNullException(nameof(nameFunc));
-			if (nameSetter == null) throw new ArgumentNullException(nameof(nameSetter));
-
-			MakeUniqueNames(items, null, nameFunc, nameSetter, t =>
-			{
-				var name = nameFunc(t);
-				return string.IsNullOrEmpty(name) ? defaultName : name;
-			});
-		}
 
 		public static void MakeUniqueNames<T>([NotNull] IEnumerable<T> items, IEnumerable<string> staticNames, [NotNull] Func<T, string> nameFunc,
-			[NotNull] Action<T, string> nameSetter, string defaultName = "t")
+			[NotNull] Action<T, string> nameSetter, string defaultName = "t", StringComparer comparer = null)
 		{
 			if (items      == null) throw new ArgumentNullException(nameof(items));
 			if (nameFunc   == null) throw new ArgumentNullException(nameof(nameFunc));
@@ -36,20 +23,35 @@ namespace LinqToDB.Common
 		}
 
 		public static void MakeUniqueNames<T>([NotNull] IEnumerable<T> items, IEnumerable<string> staticNames, [NotNull] Func<T, string> nameFunc,
-			[NotNull] Action<T, string> nameSetter, [NotNull] Func<T, string> defaultName)
+			[NotNull] Action<T, string> nameSetter, [NotNull] Func<T, string> defaultName, StringComparer comparer = null)
 		{
-			if (items       == null) throw new ArgumentNullException(nameof(items));
-			if (nameFunc    == null) throw new ArgumentNullException(nameof(nameFunc));
-			if (nameSetter  == null) throw new ArgumentNullException(nameof(nameSetter));
-			if (defaultName == null) throw new ArgumentNullException(nameof(defaultName));
+			if (staticNames != null)
+			{
+				var staticHash = new HashSet<string>(staticNames, comparer);
+				MakeUniqueNames(items, n => !staticHash.Contains(n), nameFunc, nameSetter, defaultName, comparer);
+			}
+			else
+			{
+				MakeUniqueNames(items, n => true, nameFunc, nameSetter, defaultName, comparer);
+			}
+		}
 
-			var currentNames = staticNames != null ? new HashSet<string>(staticNames) : new HashSet<string>();
+		public static void MakeUniqueNames<T>([NotNull] IEnumerable<T> items, [NotNull] Func<string, bool> validatorFunc, [NotNull] Func<T, string> nameFunc,
+			[NotNull] Action<T, string> nameSetter, [NotNull] Func<T, string> defaultName, StringComparer comparer = null)
+		{
+			if (items         == null) throw new ArgumentNullException(nameof(items));
+			if (validatorFunc == null) throw new ArgumentNullException(nameof(validatorFunc));
+			if (nameFunc      == null) throw new ArgumentNullException(nameof(nameFunc));
+			if (nameSetter    == null) throw new ArgumentNullException(nameof(nameSetter));
+			if (defaultName   == null) throw new ArgumentNullException(nameof(defaultName));
+
+			var currentNames = new HashSet<string>(comparer);
 			List<T> conflicted = null;
 
 			foreach (var item in items)
 			{
 				var name = nameFunc(item);
-				if (name.IsNullOrEmpty() || currentNames.Contains(name))
+				if (name.IsNullOrEmpty() || currentNames.Contains(name) || !validatorFunc(name))
 				{
 					if (conflicted == null)
 						conflicted = new List<T>();
@@ -57,6 +59,8 @@ namespace LinqToDB.Common
 				}
 				else
 				{
+					// notify that name is ok
+					nameSetter(item, name);
 					currentNames.Add(name);
 				}
 			}
@@ -73,7 +77,7 @@ namespace LinqToDB.Common
 
 					var newName = name;
 
-					if (currentNames.Contains(newName))
+					if (currentNames.Contains(newName) || !validatorFunc(newName))
 					{
 						var digitCount = 0;
 						while (char.IsDigit(name[name.Length - 1 - digitCount]))
@@ -101,5 +105,6 @@ namespace LinqToDB.Common
 				}
 			}
 		}
+
 	}
 }

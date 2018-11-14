@@ -443,7 +443,7 @@ namespace LinqToDB.SqlProvider
 				AppendIndent();
 				BuildColumnExpression(selectQuery, col.Expression, col.Alias, ref addAlias);
 
-				if (!SkipAlias && addAlias && col.Alias != null)
+				if (!SkipAlias && addAlias && !string.IsNullOrEmpty(col.Alias))
 					StringBuilder.Append(" as ").Append(Convert(col.Alias, ConvertType.NameToQueryFieldAlias));
 			}
 
