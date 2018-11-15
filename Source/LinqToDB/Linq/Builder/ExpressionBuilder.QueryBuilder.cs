@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
+using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -136,7 +137,13 @@ namespace LinqToDB.Linq.Builder
 								}
 							}
 
-							return new TransformInfo(ctx.BuildExpression(ma, 0, enforceServerSide));
+							var prevCount  = ctx.SelectQuery.Select.Columns.Count;
+							var expression = ctx.BuildExpression(ma, 0, enforceServerSide);
+							if (!alias.IsNullOrEmpty() && (ctx.SelectQuery.Select.Columns.Count - prevCount) == 1)
+							{
+								ctx.SelectQuery.Select.Columns[ctx.SelectQuery.Select.Columns.Count - 1].Alias = alias;
+							}
+							return new TransformInfo(expression);
 						}
 
 						var ex = ma.Expression;
@@ -151,6 +158,8 @@ namespace LinqToDB.Linq.Builder
 								if (!IsMultipleQuery(ce))
 								{
 									var info = GetSubQueryContext(context, ce);
+									if (alias != null)
+										info.Context.SetAlias(alias);
 									var par  = Expression.Parameter(ex.Type);
 									var bex  = info.Context.BuildExpression(ma.Transform(e => e == ex ? par : e), 0, enforceServerSide);
 
@@ -259,7 +268,7 @@ namespace LinqToDB.Linq.Builder
 							if (IsMultipleQuery(ce))
 								return new TransformInfo(BuildMultipleQuery(context, ce, enforceServerSide));
 
-							return new TransformInfo(GetSubQueryExpression(context, ce, enforceServerSide));
+							return new TransformInfo(GetSubQueryExpression(context, ce, enforceServerSide, alias));
 						}
 
 						if (IsServerSideOnly(expr) || PreferServerSide(expr, enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
@@ -349,10 +358,15 @@ namespace LinqToDB.Linq.Builder
 			return info;
 		}
 
-		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr, bool enforceServerSide)
+		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr, bool enforceServerSide, string alias)
 		{
 			var info = GetSubQueryContext(context, expr);
-			return info.Expression ?? (info.Expression = info.Context.BuildExpression(null, 0, enforceServerSide));
+			if (info.Expression == null)
+				info.Expression = info.Context.BuildExpression(null, 0, enforceServerSide);
+
+			if (!alias.IsNullOrEmpty())
+				info.Context.SetAlias(alias);
+			return info.Expression;
 		}
 
 		static bool EnforceServerSide(IBuildContext context)

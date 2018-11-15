@@ -69,9 +69,9 @@ namespace LinqToDB.Common
 			{
 				foreach (var item in conflicted)
 				{
-					var name = nameFunc(item);
+					var	name = defaultName(item);
 					if (name.IsNullOrEmpty())
-						name = defaultName(item);
+						name = nameFunc(item);
 					if (name.IsNullOrEmpty())
 						name = "t";
 

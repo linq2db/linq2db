@@ -21,18 +21,26 @@ namespace Tests.Playground
 		{
 			using (var db = GetDataContext(context))
 			{
+				var query = from child in db.Child
+					select new
+					{
+						TrackId = child.ChildID,
+					};
+
+				var str = query.ToString();
+			 
 				var table = db.GetTable<SampleClass>();
 
-				var query = from t in table
+				var query2 = from t in table
 					select new
 					{
 						NewId = t.Id,
 						NewValue = t.Value
 					};
 
-				Console.WriteLine(query.ToString());
+				Console.WriteLine(query2.ToString());
 
-				query.GetSelectQuery();
+				query2.GetSelectQuery();
 			}
 		}
 

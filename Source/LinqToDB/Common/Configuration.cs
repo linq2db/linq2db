@@ -266,5 +266,76 @@ namespace LinqToDB.Common
 			/// </summary>
 			public static TimeSpan DefaultCoefficient = TimeSpan.FromSeconds(1);
 		}
+
+		/// <summary>
+		/// SQL generation global settings.
+		/// </summary>
+		[PublicAPI]
+		public static class Sql
+		{
+			/// <summary>
+			/// Format for association alias.
+			/// <para>
+			/// Default value: <c>"A_{0}"</c>.
+			/// </para>
+			/// <example> 
+			/// In the following query
+			/// <code>
+			/// var query = from child in db.Child
+			///    select new
+			///    {
+			///       child.ChildID,
+			///       child.Parent.Value1
+			///    };
+			/// </code>
+			/// for association <c>Parent</c> will be generated association <c>A_Parent</c> in resulting SQL.
+			/// <code>
+			/// SELECT
+			///	   [child].[ChildID],
+			///	   [A_Parent].[Value1]
+			/// FROM
+			///	   [Child] [child]
+			///       LEFT JOIN [Parent] [A_Parent] ON ([child].[ParentID] = [A_Parent].[ParentID])
+			/// </code>
+			/// </example>
+			/// <remarks>
+			/// Set this value to <c>null</c> to disable special alias generation queries.
+			/// </remarks>
+			/// </summary>
+			public static string AssociationAlias { get; set; } = "A_{0}";
+
+			/// <summary>
+			/// Indicates whether SQL Builder should generate aliases for final projection.
+			/// It is not required for correct query processing but simplifies SQL analysis.
+			/// <para>
+			/// Default value: <c>true</c>.
+			/// </para>
+			/// <example>
+			/// For the query
+			/// <code>
+			/// var query = from child in db.Child
+			///	   select new
+			///	   {
+			///       TrackId = child.ChildID,
+			///	   };
+			/// </code>
+			/// When property is <c>true</c>
+			/// <code>
+			/// SELECT
+			///	   [child].[ChildID] as [TrackId]
+			/// FROM
+			///	   [Child] [child]
+			/// </code>
+			/// Otherwise alias will be removed
+			/// <code>
+			/// SELECT
+			///	   [child].[ChildID]
+			/// FROM
+			///	   [Child] [child]
+			/// </code>
+			/// </example>
+			/// </summary>
+			public static bool GenerateFinalAliases { get; set; } = true;
+		}
 	}
 }

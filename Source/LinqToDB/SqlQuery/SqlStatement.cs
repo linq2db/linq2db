@@ -356,65 +356,9 @@ namespace LinqToDB.SqlQuery
 		{
 			_aliases = null;
 
-			var allAliases = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
-
-			// Search for first query only
-			//new QueryVisitor().VisitParentFirst(this, expr =>
-			//{
-			//	if (expr.ElementType == QueryElementType.SqlQuery)
-			//	{
-			//		var info = new QueryInformation((SelectQuery)expr);
-			//		var isRootQuery = true;
-			//		foreach (var query in info.GetQueriesParentFirst())
-			//		{
-			//			if (query.IsParameterDependent)
-			//				IsParameterDependent = true;
-
-			//			if (isRootQuery && !query.HasUnion)
-			//			{
-			//				// Root query do not need aliases
-			//				foreach (var c in query.Select.Columns.Where(c => c.Alias != "*"))
-			//				{
-			//					c.RawAlias = string.Empty;
-			//				}
-			//			}
-			//			else
-			//			{
-			//				Utils.MakeUniqueNames(query.Select.Columns.Where(c => c.Alias != "*"),
-			//					n => !ReservedWords.IsReserved(n), c => c.RawAlias, (c, n) =>
-			//					{
-			//						allAliases.Add(n);
-			//						c.RawAlias = n;
-			//					},
-			//					c => c.Alias ?? "c1", StringComparer.CurrentCultureIgnoreCase);
-
-			//				if (query.HasUnion)
-			//				{
-			//					for (var i = 0; i < query.Select.Columns.Count; i++)
-			//					{
-			//						var col = query.Select.Columns[i];
-
-			//						foreach (var t in query.Unions)
-			//						{
-			//							var union = t.SelectQuery.Select;
-			//							union.Columns[i].Alias = col.Alias;
-			//						}
-			//					}
-			//				}
-			//			}
-
-			//			isRootQuery = false;
-			//		}
-
-			//		return false;
-			//	}
-
-			//	return true;
-			//});
-
-			// assignNames for parameters
-
 			Parameters.Clear();
+
+			var allAliases    = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 			var paramsVisited = new HashSet<SqlParameter>();
 			var tablesVisited = new HashSet<SqlTableSource>();
 
@@ -428,9 +372,9 @@ namespace LinqToDB.SqlQuery
 							if (query.IsParameterDependent)
 								IsParameterDependent = true;
 							var isRootQuery = query.ParentSelect == null;
-							if (isRootQuery && !query.HasUnion)
+							if (isRootQuery && !query.HasUnion && !Common.Configuration.Sql.GenerateFinalAliases)
 							{
-								// Root query do not need aliases
+								// Removing aliases from root query
 								foreach (var c in query.Select.Columns.Where(c => c.Alias != "*"))
 								{
 									c.RawAlias = string.Empty;
@@ -441,13 +385,17 @@ namespace LinqToDB.SqlQuery
 								if (query.Select.Columns.Count > 0)
 								{
 									Utils.MakeUniqueNames(query.Select.Columns.Where(c => c.Alias != "*"),
-										n => !ReservedWords.IsReserved(n), c => c.RawAlias, (c, n) =>
+										n => !ReservedWords.IsReserved(n), c => c.Alias, (c, n) =>
 										{
 											allAliases.Add(n);
 											c.Alias = n;
 										},
-										c => c.Alias ?? "c1",
-										StringComparer.CurrentCultureIgnoreCase);
+										c =>
+										{
+											var a = c.Alias;
+											return a.IsNullOrEmpty() ? "c1" : a + "_1";
+										},
+										StringComparer.OrdinalIgnoreCase);
 
 									if (query.HasUnion)
 									{
@@ -498,7 +446,11 @@ namespace LinqToDB.SqlQuery
 					allAliases.Add(n);
 					ts.Alias = n;
 				},
-				ts => ts.Alias ?? "t1", StringComparer.CurrentCultureIgnoreCase);
+				ts =>
+				{
+					var a = ts.Alias;
+					return a.IsNullOrEmpty() ? "t1" : a + "_1";
+				}, StringComparer.OrdinalIgnoreCase);
 
 			Utils.MakeUniqueNames(Parameters,
 				n => !allAliases.Contains(n) && !ReservedWords.IsReserved(n), p => p.Name, (p, n) =>
@@ -506,7 +458,7 @@ namespace LinqToDB.SqlQuery
 					allAliases.Add(n);
 					p.Name = n;
 				},
-				ts => ts.Name ?? "p1", StringComparer.CurrentCultureIgnoreCase);
+				ts => ts.Name ?? "p1", StringComparer.OrdinalIgnoreCase);
 
 			_aliases = allAliases;
 		}
