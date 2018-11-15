@@ -55,21 +55,6 @@ namespace LinqToDB.SqlQuery
 			set => RawAlias = value;
 		}
 
-		internal string CalculateAlias()
-		{
-			var expr = Expression;
-
-			do
-			{
-				switch (expr)
-				{
-					case SqlField  field  : return field.Alias ?? field.PhysicalName;
-					case SqlColumn column : expr = column; break;
-					default: return null;
-				}
-			} while (true);
-		}
-
 		private bool   _underlyingColumnSet;
 
 		private SqlColumn _underlyingColumn;

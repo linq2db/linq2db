@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -59,7 +60,8 @@ namespace LinqToDB.Linq.Builder
 				var psrc = parent.SelectQuery.From[parent.SqlTable];
 				var join = left ? SqlTable.WeakLeftJoin() : SqlTable.WeakInnerJoin();
 
-				join.JoinedTable.Table.Alias = "A_" + association.MemberInfo.Name;
+				if (!Common.Configuration.Sql.AssociationAlias.IsNullOrEmpty())
+					join.JoinedTable.Table.Alias = string.Format(Common.Configuration.Sql.AssociationAlias, association.MemberInfo.Name);
 
 				Association           = association;
 				ParentAssociation     = parent;
