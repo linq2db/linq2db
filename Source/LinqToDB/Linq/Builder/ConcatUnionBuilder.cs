@@ -241,7 +241,7 @@ namespace LinqToDB.Linq.Builder
 						else
 						{
 							var tableContext = new TableBuilder.TableContext(Builder,
-								new BuildInfo(Parent, Expression, new SelectQuery()), type);
+								new BuildInfo((IBuildContext) null, Expression, new SelectQuery()), type);
 							var ex = tableContext.BuildExpression(null, 0, enforceServerSide);
 							return ex;
 						}

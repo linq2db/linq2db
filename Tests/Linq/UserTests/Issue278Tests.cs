@@ -14,6 +14,7 @@ using LinqToDB.Expressions;
 using LinqToDB.Linq;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.UserTests
 {
