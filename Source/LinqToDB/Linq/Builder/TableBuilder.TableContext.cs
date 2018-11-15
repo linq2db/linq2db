@@ -1332,7 +1332,8 @@ namespace LinqToDB.Linq.Builder
 								aa.ExpressionPredicate,
 								aa.Predicate,
 								aa.Storage,
-								aa.CanBeNull))
+								aa.CanBeNull,
+								aa.AliasName))
 							{ Parent = Parent };
 
 					isNew = true;

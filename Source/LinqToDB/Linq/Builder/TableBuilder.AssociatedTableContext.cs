@@ -60,8 +60,16 @@ namespace LinqToDB.Linq.Builder
 				var psrc = parent.SelectQuery.From[parent.SqlTable];
 				var join = left ? SqlTable.WeakLeftJoin() : SqlTable.WeakInnerJoin();
 
-				if (!Common.Configuration.Sql.AssociationAlias.IsNullOrEmpty())
-					join.JoinedTable.Table.Alias = string.Format(Common.Configuration.Sql.AssociationAlias, association.MemberInfo.Name);
+				if (!association.AliasName.IsNullOrEmpty())
+				{
+					join.JoinedTable.Table.Alias = association.AliasName;
+				}
+				else
+				{
+					if (!Common.Configuration.Sql.AssociationAlias.IsNullOrEmpty())
+						join.JoinedTable.Table.Alias = string.Format(Common.Configuration.Sql.AssociationAlias,
+							association.MemberInfo.Name);
+				}
 
 				Association           = association;
 				ParentAssociation     = parent;
