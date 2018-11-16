@@ -127,7 +127,7 @@ namespace LinqToDB.SqlProvider
 					var ordered = TopoSorting.TopoSort(foundCte.Keys, i => foundCte[i]).ToList();
 
 					Utils.MakeUniqueNames(ordered, n => !ReservedWords.IsReserved(n), c => c.Name, (c, n) => c.Name = n,
-						c => "CTE_1", StringComparer.CurrentCultureIgnoreCase);
+						c => "CTE_1", StringComparer.OrdinalIgnoreCase);
 
 					select.With = new SqlWithClause();
 					select.With.Clauses.AddRange(ordered);
