@@ -364,8 +364,9 @@ namespace LinqToDB.SqlQuery
 							var query = (SelectQuery)expr;
 							if (query.IsParameterDependent)
 								IsParameterDependent = true;
+
 							var isRootQuery = query.ParentSelect == null;
-							if (isRootQuery && !query.HasUnion && !Common.Configuration.Sql.GenerateFinalAliases)
+							if (isRootQuery && !Common.Configuration.Sql.GenerateFinalAliases && !query.HasUnion && query.From.Tables.Count > 0)
 							{
 								// Removing aliases from root query
 								foreach (var c in query.Select.Columns.Where(c => c.Alias != "*"))
