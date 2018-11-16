@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using JetBrains.Annotations;
 
 namespace LinqToDB.Linq.Builder
@@ -118,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var expr     = (info.Sql is SqlColumn column) ? column.Expression : info.Sql;
 						var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info))?.Sql;
-						var field    = RegisterCteField(baseInfo, expr, info.Index);
+						var field    = RegisterCteField(baseInfo, expr, info.Index, info.MemberChain.LastOrDefault());
 						return new SqlInfo(info.MemberChain)
 						{
 							Sql = field,
@@ -134,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var expr  = context.SelectQuery.Select.Columns[index].Expression;
 					    expr  = expr is SqlColumn column ? column.Expression : expr;
-					var field = RegisterCteField(null, expr, index);
+					var field = RegisterCteField(null, expr, index, null);
 
 					index = SelectQuery.Select.Add(field);
 				}
@@ -142,7 +143,7 @@ namespace LinqToDB.Linq.Builder
 				return base.ConvertToParentIndex(index, context);
 			}
 
-			SqlField RegisterCteField(ISqlExpression baseExpression, [NotNull] ISqlExpression expression, int index)
+			SqlField RegisterCteField(ISqlExpression baseExpression, [NotNull] ISqlExpression expression, int index, MemberInfo member)
 			{
 				if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -151,9 +152,10 @@ namespace LinqToDB.Linq.Builder
 							var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
 
 							var newField = f == null
-								? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull }
+								? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull, Name = member?.Name }
 								: new SqlField(f);
 
+							newField.PhysicalName = newField.Name;
 							return newField;
 						});
 

@@ -302,18 +302,13 @@ namespace LinqToDB.SqlQuery
 
 		public void RemoveAlias(string alias)
 		{
-			if (_aliases != null)
-			{
-				alias = alias.ToUpper();
-				if (_aliases.Contains(alias))
-					_aliases.Remove(alias);
-			}
+			_aliases?.Remove(alias);
 		}
 
 		public string GetAlias(string desiredAlias, string defaultAlias)
 		{
 			if (_aliases == null)
-				_aliases = new HashSet<string>();
+				_aliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
 			var alias = desiredAlias;
 
@@ -325,11 +320,9 @@ namespace LinqToDB.SqlQuery
 
 			for (var i = 1; ; i++)
 			{
-				var s = alias.ToUpper();
-
-				if (!_aliases.Contains(s) && !ReservedWords.IsReserved(s))
+				if (!_aliases.Contains(alias) && !ReservedWords.IsReserved(alias))
 				{
-					_aliases.Add(s);
+					_aliases.Add(alias);
 					break;
 				}
 
@@ -420,11 +413,8 @@ namespace LinqToDB.SqlQuery
 
 							if (p.IsQueryParameter)
 							{
-								if (!paramsVisited.Contains(expr))
-								{
-									paramsVisited.Add(p);
+								if (paramsVisited.Add(p))
 									Parameters.Add(p);
-								}
 							}
 							else
 								IsParameterDependent = true;

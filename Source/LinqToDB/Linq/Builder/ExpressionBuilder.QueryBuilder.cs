@@ -281,19 +281,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ne = (NewExpression)expr;
 
-						if (EnforceServerSide(context))
-						{
-							if (CanBeCompiled(expr))
-								break;
-							return new TransformInfo(BuildSql(context, expr, alias));
-						}
-
 						List<Expression> arguments = new List<Expression>();
 						for (var i = 0; i < ne.Arguments.Count; i++)
 						{
 							var a = ne.Arguments[i];
 							var memberAlias = ne.Members?[i].Name;
-							var newArgument = 
+							var newArgument =
 								a.Transform(ae => TransformExpression(context, ae, enforceServerSide, memberAlias));
 							a = newArgument;
 							arguments.Add(a);
@@ -310,7 +303,6 @@ namespace LinqToDB.Linq.Builder
 				switch (expr.NodeType)
 				{
 					case ExpressionType.MemberInit :
-//					case ExpressionType.New        :
 					case ExpressionType.Convert    :
 						break;
 

@@ -276,7 +276,7 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Format for association alias.
 			/// <para>
-			/// Default value: <c>"A_{0}"</c>.
+			/// Default value: <c>"a_{0}"</c>.
 			/// </para>
 			/// <example> 
 			/// In the following query
@@ -292,23 +292,23 @@ namespace LinqToDB.Common
 			/// <code>
 			/// SELECT
 			///	   [child].[ChildID],
-			///	   [A_Parent].[Value1]
+			///	   [a_Parent].[Value1]
 			/// FROM
 			///	   [Child] [child]
-			///       LEFT JOIN [Parent] [A_Parent] ON ([child].[ParentID] = [A_Parent].[ParentID])
+			///       LEFT JOIN [Parent] [a_Parent] ON ([child].[ParentID] = [a_Parent].[ParentID])
 			/// </code>
 			/// </example>
 			/// <remarks>
 			/// Set this value to <c>null</c> to disable special alias generation queries.
 			/// </remarks>
 			/// </summary>
-			public static string AssociationAlias { get; set; } = "A_{0}";
+			public static string AssociationAlias { get; set; } = "a_{0}";
 
 			/// <summary>
 			/// Indicates whether SQL Builder should generate aliases for final projection.
 			/// It is not required for correct query processing but simplifies SQL analysis.
 			/// <para>
-			/// Default value: <c>true</c>.
+			/// Default value: <c>false</c>.
 			/// </para>
 			/// <example>
 			/// For the query
@@ -335,7 +335,7 @@ namespace LinqToDB.Common
 			/// </code>
 			/// </example>
 			/// </summary>
-			public static bool GenerateFinalAliases { get; set; } = true;
+			public static bool GenerateFinalAliases { get; set; } = false;
 		}
 	}
 }
