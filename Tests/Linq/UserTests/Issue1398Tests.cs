@@ -11,6 +11,7 @@ using static Tests.xUpdate.MergeTests;
 
 namespace Tests.UserTests
 {
+	// disabled providers cannot handle concurrent queries well
 	[TestFixture]
 	public class Issue1398Tests : TestBase
 	{
@@ -54,10 +55,10 @@ namespace Tests.UserTests
 			public int Value { get; set; }
 		}
 
-		[Test, DataContextSource(false)]
+		[Test, DataContextSource(false, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 		public void TestInsert(string context)
 		{
-			const int recordsCount = 1000;
+			const int recordsCount = 20;
 
 			using (var db = new TestDataConnection(context))
 			using (db.CreateLocalTable<InsertTable>())
@@ -84,10 +85,10 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, MergeDataContextSource]
+		[Test, MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SybaseManaged, ProviderName.Informix)]
 		public void TestMerge(string context)
 		{
-			const int repeatsCount = 500;
+			const int repeatsCount = 20;
 			var rnd = new Random();
 
 			var mammals = new[] { "Elephant", "Cat" };
