@@ -15,6 +15,7 @@ namespace Tests.xUpdate
 	using Model;
 
 	[TestFixture]
+	[Order(10000)]
 	public class DeleteTests : TestBase
 	{
 		[Test]
@@ -373,7 +374,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
 		public void DeleteByTableName([DataSources] string context)
 		{
@@ -407,7 +408,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
 		public async Task DeleteByTableNameAsync([DataSources] string context)
 		{

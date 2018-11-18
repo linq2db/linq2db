@@ -241,7 +241,7 @@ namespace Tests._Create
 			}
 		}
 
-		[Test]
+		[Test, Order(0)]
 		public void CreateDatabase([DataSources(false, ProviderName.OracleNative)] string context)
 		{
 			switch (context)

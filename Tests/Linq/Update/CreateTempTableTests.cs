@@ -8,6 +8,7 @@ using NUnit.Framework;
 namespace Tests.xUpdate
 {
 	[TestFixture]
+	[Order(10000)]
 	public class CreateTempTableTests : TestBase
 	{
 		class IDTable

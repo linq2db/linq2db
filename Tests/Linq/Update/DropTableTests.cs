@@ -1,12 +1,16 @@
-﻿using LinqToDB;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
+
+using LinqToDB;
+
+using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.xUpdate
 {
 	[TestFixture]
+	[Order(10000)]
 	public class DropTableTests : TestBase
 	{
 		class DropTableTest

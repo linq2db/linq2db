@@ -95,7 +95,7 @@ namespace Tests.Linq
 					where p.Value1 == TypeValue.Value1 select p);
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void Enum7([DataSources] string context)
 		{

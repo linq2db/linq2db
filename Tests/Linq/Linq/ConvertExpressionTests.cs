@@ -413,7 +413,7 @@ namespace Tests.Linq
 					).Where(t => t.ParentID > 0).Take(5000));
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void LetTest8([DataSources] string context)
 		{
@@ -445,7 +445,7 @@ namespace Tests.Linq
 					});
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void LetTest9([DataSources] string context)
 		{

@@ -432,7 +432,7 @@ namespace Tests.DataProvider
 #if NET46
 
 		[Test]
-		[ActiveIssue("ArgumentNullException: Value cannot be null. Parameter name: connection", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue("ArgumentNullException: Value cannot be null. Parameter name: connection", Configurations = new[] { ProviderName.OracleNative })]
 		public void TestOracleNativeTypes([IncludeDataSources(ProviderName.OracleNative)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -2016,7 +2016,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		public void Issue723Test1([OracleDataContext] string context)
 		{
 			var ms = new MappingSchema();
@@ -2067,7 +2067,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		public void Issue723Test2([OracleDataContext] string context)
 		{
 			using (var db = GetDataContext(context))

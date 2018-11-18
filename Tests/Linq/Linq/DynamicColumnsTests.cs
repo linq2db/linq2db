@@ -79,7 +79,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void SqlPropertyWithNonDynamicAssociationViaObject2([DataSources] string context)
 		{
@@ -172,7 +172,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void SqlPropertySelectAssociated([DataSources] string context)
 		{
@@ -263,7 +263,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void SqlPropertyGroupByAssociated([DataSources] string context)
 		{
@@ -376,7 +376,7 @@ namespace Tests.Linq
 			db.CreateTable<T>(tableName);
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
 		public void SqlPropertyNoStoreNonIdentifier([DataSources] string context)
 		{
@@ -406,7 +406,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
 		public void SqlPropertyNoStoreNonIdentifierGrouping([DataSources] string context)
 		{

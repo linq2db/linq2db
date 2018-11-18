@@ -20,6 +20,7 @@ namespace Tests.xUpdate
 	using System.Collections.Generic;
 
 	[TestFixture]
+	[Order(10000)]
 	public class InsertTests : TestBase
 	{
 		[Test]
@@ -1567,7 +1568,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
 		public void InsertByTableName([DataSources] string context)
 		{
@@ -1612,7 +1613,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
 		public async Task InsertByTableNameAsync([DataSources] string context)
 		{

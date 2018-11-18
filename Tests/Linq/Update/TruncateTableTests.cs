@@ -8,9 +8,8 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	[TestFixture]
+	[Order(10000)]
 	public class TruncateTableTests : TestBase
 	{
 		[Table]
@@ -41,7 +40,7 @@ namespace Tests.xUpdate
 			[Column]                       public decimal Field1;
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void TruncateIdentityTest([DataSources(
 			ProviderName.OracleNative, ProviderName.Informix)]

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -24,16 +23,13 @@ using LinqToDB.ServiceModel;
 #endif
 
 using NUnit.Framework;
-using NUnit.Framework.Interfaces;
-using NUnit.Framework.Internal;
-
-//[assembly: Parallelizable]
 
 namespace Tests
 {
 	using Model;
 	using Tools;
 
+	[Order(1000)]
 	public class TestBase
 	{
 		static TestBase()
@@ -144,7 +140,7 @@ namespace Tests
 					traceLevel = TraceLevel.Info;
 
 			if (!string.IsNullOrEmpty(testSettings.NoLinqService))
-				BaseDataContextSourceAttribute.NoLinqService = ConvertTo<bool>.From(testSettings.NoLinqService);
+				DataSourcesBaseAttribute.NoLinqService = ConvertTo<bool>.From(testSettings.NoLinqService);
 
 			DataConnection.TurnTraceSwitchOn(traceLevel);
 
@@ -1125,9 +1121,9 @@ namespace Tests
 
 	}
 
-	public class WithoutComparasionNullCheck : IDisposable
+	public class WithoutComparisonNullCheck : IDisposable
 	{
-		public WithoutComparasionNullCheck()
+		public WithoutComparisonNullCheck()
 		{
 			Configuration.Linq.CompareNullsAsValues = false;
 		}
@@ -1136,110 +1132,6 @@ namespace Tests
 		{
 			Configuration.Linq.CompareNullsAsValues = true;
 			Query.ClearCaches();
-		}
-	}
-
-	public abstract class DataSourcesBaseAttribute : NUnitAttribute, IParameterDataSource
-	{
-		public bool     IncludeLinqService { get; }
-		public string[] Providers          { get; }
-
-		protected DataSourcesBaseAttribute(bool includeLinqService, string[] providers)
-		{
-			IncludeLinqService = includeLinqService;
-			Providers          = providers;
-		}
-
-		public IEnumerable GetData(IParameterInfo parameter)
-		{
-			var skipAttrs = new HashSet<string>(
-				from a in parameter.Method.GetCustomAttributes<SkipCategoryAttribute>(true)
-				where a.ProviderName != null && TestBase.SkipCategories.Contains(a.Category)
-				select a.ProviderName);
-
-			var providers = skipAttrs.Count == 0 ?
-				GetProviders().ToList() :
-				GetProviders().Where(a => !skipAttrs.Contains(a)).ToList();
-
-			if (!IncludeLinqService)
-				return providers;
-
-			return providers.Concat(providers.Select(p => p + ".LinqService"));
-		}
-
-		protected abstract IEnumerable<string> GetProviders();
-	}
-
-	[AttributeUsage(AttributeTargets.Parameter)]
-	public class DataSourcesAttribute : DataSourcesBaseAttribute
-	{
-		public DataSourcesAttribute(params string[] excludeProviders) : base(true, excludeProviders)
-		{
-		}
-
-		public DataSourcesAttribute(bool includeLinqService, params string[] excludeProviders) : base(includeLinqService, excludeProviders)
-		{
-		}
-
-		protected override IEnumerable<string> GetProviders()
-		{
-			return TestBase.UserProviders.Where(p => !Providers.Contains(p) && TestBase.Providers.Contains(p));
-		}
-	}
-
-	[AttributeUsage(AttributeTargets.Parameter)]
-	public class IncludeDataSourcesAttribute : DataSourcesBaseAttribute
-	{
-		public IncludeDataSourcesAttribute(params string[] includeProviders) : base(false, includeProviders)
-		{
-		}
-
-		public IncludeDataSourcesAttribute(bool includeLinqService, params string[] includeProviders) : base(includeLinqService, includeProviders)
-		{
-		}
-
-		protected override IEnumerable<string> GetProviders()
-		{
-			return Providers.Where(TestBase.UserProviders.Contains);
-		}
-	}
-
-	public class SQLiteDataSourcesAttribute : IncludeDataSourcesAttribute
-	{
-		public SQLiteDataSourcesAttribute(bool includeLinqService = false) : base(includeLinqService,
-			ProviderName.SQLiteClassic, ProviderName.SQLite, ProviderName.SQLiteMS)
-		{
-		}
-	}
-
-	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-	public class SkipCategoryAttribute : NUnitAttribute, IApplyToTest
-	{
-		public SkipCategoryAttribute(string category)
-		{
-			Category = category;
-		}
-
-		public SkipCategoryAttribute(string category, string providerName)
-		{
-			Category     = category;
-			ProviderName = providerName;
-		}
-
-		public string Category     { get; }
-		public string ProviderName { get; }
-
-		public void ApplyToTest(Test test)
-		{
-			if (test.RunState == RunState.NotRunnable || test.RunState == RunState.Explicit || ProviderName != null)
-				return;
-
-			if (TestBase.SkipCategories.Contains(Category))
-			{
-				test.RunState = RunState.Explicit;
-				test.Properties.Set(PropertyNames.Category, Category);
-				test.Properties.Set(PropertyNames.SkipReason, $"Skip category '{Category}'");
-			}
 		}
 	}
 }

@@ -1,13 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Update
 {
 	[TestFixture]
+	[Order(10000)]
 	public class DynamicColumnsTests : TestBase
 	{
 		// Introduced to ensure that we process not only constants in column names

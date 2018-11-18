@@ -75,7 +75,7 @@
 			}
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void Test3([DataSources] string context)
 		{

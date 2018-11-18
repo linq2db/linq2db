@@ -402,8 +402,7 @@ namespace Tests.Linq
 		}
 
 		// needs debugging, but suspect it fails due to issue 730
-		[ActiveIssue(730, Configuration = ProviderName.Sybase, SkipForNonLinqService = true)]
-		[ActiveIssue(730, Configuration = ProviderName.SybaseManaged, SkipForNonLinqService = true)]
+		[ActiveIssue(730, Configurations = new[] { ProviderName.Sybase, ProviderName.SybaseManaged }, SkipForNonLinqService = true)]
 		[Test]
 		public void ToSqlTime([DataSources(
 			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]

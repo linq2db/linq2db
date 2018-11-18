@@ -12,6 +12,7 @@ namespace Tests.xUpdate
 	using Model;
 
 	[TestFixture]
+	[Order(10101)]
 	public partial class MergeTests : TestBase
 	{
 		[AttributeUsage(AttributeTargets.Parameter)]

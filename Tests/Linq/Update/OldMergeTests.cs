@@ -14,6 +14,7 @@ namespace Tests.xUpdate
 	using Model;
 
 	[TestFixture]
+	[Order(10000)]
 	public class OldMergeTests : TestBase
 	{
 		[Test]

@@ -515,7 +515,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void GroupJoin8([DataSources] string context)
 		{
@@ -1374,8 +1374,9 @@ namespace Tests.Linq
 		}
 
 		// https://imgflip.com/i/2a6oc8
-		[ActiveIssue(Configuration = ProviderName.Sybase       , Details = "Cross-join doesn't work in Sybase")]
-		[ActiveIssue(Configuration = ProviderName.SybaseManaged, Details = "Cross-join doesn't work in Sybase")]
+		[ActiveIssue(
+			Configurations = new[] { ProviderName.Sybase, ProviderName.SybaseManaged },
+			Details        = "Cross-join doesn't work in Sybase")]
 		[Test]
 		public void SqlLinqCrossJoinSubQuery([DataSources] string context)
 		{

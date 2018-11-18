@@ -60,7 +60,7 @@ namespace Tests.UserTests
 		[Test]
 		public void ContainsHasIsNullWithoutComparasionNullCheck()
 		{
-			using (new WithoutComparasionNullCheck())
+			using (new WithoutComparisonNullCheck())
 			using (var db = new TestDataConnection())
 			{
 				var filter = new[] {TestIssue358Enum.Value2};
@@ -165,7 +165,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test4WithoutComparasionNullCheck([DataSources] string context)
 		{
-			using (new WithoutComparasionNullCheck())
+			using (new WithoutComparisonNullCheck())
 			using (var db = GetDataContext(context))
 			{
 				var bigintFilter = new Int64?[] {2};

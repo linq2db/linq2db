@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
+
 using NUnit.Framework;
+
 using Tests.Model;
 using Tests.xUpdate;
 
@@ -22,7 +23,7 @@ namespace Tests.UserTests
 		}
 
 		// PostgreSQL disabled because it needs real primary key on database side
-		[ActiveIssue(1239, Configuration = ProviderName.DB2)]
+		[ActiveIssue(1239, Configurations = new[] { ProviderName.DB2 })]
 		[Test]
 		public void TestInsertOrUpdate([DataSources(false, ProviderName.PostgreSQL)] string context)
 		{

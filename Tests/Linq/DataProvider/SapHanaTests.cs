@@ -478,7 +478,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("SAP HANA 1 only?", Configuration = CurrentProvider)]
+		[ActiveIssue("SAP HANA 1 only?", Configurations = new[] { CurrentProvider })]
 		[Test]
 		public void CalculationViewLinqQuery([IncludeDataSources(CurrentProvider)] string context)
 		{

@@ -1,15 +1,16 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Linq;
-using System.Threading;
-using Tests.Model;
 
+using NUnit.Framework;
 
 namespace Tests.ComplexTests2
 {
+	using Model;
+
 	/// <summary>
 	/// Tests:
 	///
@@ -412,7 +413,7 @@ namespace Tests.ComplexTests2
 			}
 		}
 
-		[ActiveIssue("cnt = -1", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue("cnt = -1", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
 		public void TestInsertUsingDerivedObjectUsingFluentMapping([DataSources] string context)
 		{
@@ -458,7 +459,7 @@ namespace Tests.ComplexTests2
 			}
 		}
 
-		[ActiveIssue("cnt = -1", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue("cnt = -1", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
 		public void TestInheritanceByBaseType([DataSources] string context)
 		{

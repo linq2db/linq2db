@@ -68,7 +68,7 @@ namespace Tests.UserTests
 			public LastInChain Container { get; set; }
 		}
 
-		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
+		[ActiveIssue("Unsupported by Informix?", Configurations = new[] { ProviderName.Informix })]
 		[Test]
 		public void Test([DataSources] string context)
 		{

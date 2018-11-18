@@ -95,7 +95,7 @@ namespace Tests.Linq
 					from p in db.Parent where p.Children.Count > 2 select p);
 		}
 
-		[ActiveIssue("not supported?", Configuration = ProviderName.SapHana)]
+		[ActiveIssue("not supported?", Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void SubQueryCount([IncludeDataSources(
 				ProviderName.SqlServer2008, ProviderName.SqlServer2012,
@@ -177,8 +177,7 @@ namespace Tests.Linq
 					select g.Count(ch => ch.ChildID > 20));
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
-		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
+		[ActiveIssue("Unsupported by Informix?", Configurations = new[] { ProviderName.Informix, ProviderName.SapHana })]
 		[Test]
 		public void GroupBy21([DataSources] string context)
 		{
@@ -198,8 +197,7 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
-		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
+		[ActiveIssue("Unsupported by Informix?", Configurations = new[] { ProviderName.Informix, ProviderName.SapHana })]
 		[Test]
 		public void GroupBy22([DataSources] string context)
 		{
@@ -219,7 +217,7 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
-		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
+		[ActiveIssue("Unsupported by Informix?", Configurations = new[] { ProviderName.Informix })]
 		[Test]
 		public void GroupBy23([DataSources(
 			ProviderName.SqlCe, ProviderName.OracleNative, ProviderName.OracleManaged,
@@ -240,7 +238,7 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
-		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
+		[ActiveIssue("Unsupported by Informix?", Configurations = new[] { ProviderName.Informix })]
 		[Test]
 		public void GroupBy3([DataSources] string context)
 		{

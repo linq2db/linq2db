@@ -13,6 +13,7 @@ namespace Tests.xUpdate
 	using Model;
 
 	[TestFixture]
+	[Order(10000)]
 	public class BulkCopyTests : TestBase
 	{
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
@@ -103,7 +104,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue("Unsupported column datatype", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue("Unsupported column datatype", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
 		public void KeepIdentity_SkipOnInsertFalse(
 			[DataSources(false)]string context,

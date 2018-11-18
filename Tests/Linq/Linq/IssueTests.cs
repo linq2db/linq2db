@@ -433,7 +433,7 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void Issue376([DataSources] string context)
 		{
