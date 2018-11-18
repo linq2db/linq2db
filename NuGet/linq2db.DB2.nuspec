@@ -26,7 +26,6 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Redist\IBM\IBM.Data.DB2.dll"                      target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"    target="tools" />
 		
 		<file src="DB2\linq2db.DB2.props"                               target="build" />
