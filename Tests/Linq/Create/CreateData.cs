@@ -242,7 +242,7 @@ namespace Tests._Create
 		}
 
 		[Test, Order(0)]
-		public void CreateDatabase([DataSources(false, ProviderName.OracleNative)] string context)
+		public void CreateDatabase([DataSources(false)] string context)
 		{
 			switch (context)
 			{
@@ -275,6 +275,7 @@ namespace Tests._Create
 				case ProviderName.Access        : RunScript(context,          "\nGO\n",  "Access",   AccessAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);         break;
 				case ProviderName.SapHana       : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
+				case ProviderName.OracleNative  : RunScript(context,          "\n/\n",   "Oracle");                         break;
 #endif
 				default: throw new InvalidOperationException(context);
 			}
