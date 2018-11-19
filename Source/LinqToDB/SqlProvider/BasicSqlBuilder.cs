@@ -1279,7 +1279,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlRawSqlTable :
 					StringBuilder.Append("(").AppendLine();
 					var rawSqlTable = (SqlRawSqlTable)table;
-					BuildFormatValues(rawSqlTable.SQL, rawSqlTable.Parameters, () => Precedence.Primary);
+					BuildFormatValues(IdentText(rawSqlTable.SQL, Indent + 1), rawSqlTable.Parameters, () => Precedence.Primary);
 					StringBuilder.AppendLine();
 					AppendIndent().Append(")");
 					break;
@@ -2291,7 +2291,7 @@ namespace LinqToDB.SqlProvider
 			return StringBuilder;
 		}
 
-		private void BuildFormatValues(string format, IReadOnlyList<ISqlExpression> parameters, Func<int> getPrecedence)
+		void BuildFormatValues(string format, IReadOnlyList<ISqlExpression> parameters, Func<int> getPrecedence)
 		{
 			if (parameters == null || parameters.Count == 0)
 				StringBuilder.Append(format);
@@ -2311,6 +2311,18 @@ namespace LinqToDB.SqlProvider
 
 				StringBuilder.AppendFormat(format, values);
 			}
+		}
+
+		string IdentText(string text, int ident)
+		{
+			if (text.IsNullOrEmpty())
+				return text;
+
+	        var strArray = text.Split('\n');
+	        var sb = new StringBuilder();
+	        foreach (var s in strArray)
+	            sb.Append('\t', ident).Append(s);
+	        return sb.ToString();
 		}
 
 		void BuildExpression(int parentPrecedence, ISqlExpression expr, string alias, ref bool addAlias)
