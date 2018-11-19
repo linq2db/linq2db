@@ -131,11 +131,9 @@
 
 		<Reference Include="IBM.Data.DB2">
 			<HintPath>..\..\Redist\IBM\IBM.Data.DB2.dll</HintPath>
-			<Private>false</Private>
 		</Reference>
 		<Reference Include="IBM.Data.Informix">
 			<HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
-			<Private>false</Private>
 		</Reference>
 
 		<PackageReference Include="Oracle.ManagedDataAccess" Version="12.2.1100" />
