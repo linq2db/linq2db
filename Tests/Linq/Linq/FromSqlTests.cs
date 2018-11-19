@@ -92,7 +92,7 @@ namespace Tests.Linq
 				int startId = 5;
 				int endId   = 15;
 
-				var query = db.FromSql<SampleClass>("SELECT * FROM sample_class where id >= {0} and id < {1}", new DataParameter("startId", startId, DataType.Int64), endId);
+				var query = db.FromSql<SampleClass>("SELECT * FROM\nsample_class\nwhere id >= {0} and id < {1}", new DataParameter("startId", startId, DataType.Int64), endId);
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })

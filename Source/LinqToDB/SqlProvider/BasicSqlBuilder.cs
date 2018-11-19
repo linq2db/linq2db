@@ -2320,9 +2320,15 @@ namespace LinqToDB.SqlProvider
 
 	        var strArray = text.Split('\n');
 	        var sb = new StringBuilder();
-	        foreach (var s in strArray)
-	            sb.Append('\t', ident).Append(s);
-	        return sb.ToString();
+			for (var i = 0; i < strArray.Length; i++)
+			{
+				var s = strArray[i];
+				sb.Append('\t', ident).Append(s);
+				if (i < strArray.Length - 1)
+					sb.AppendLine();
+			}
+
+			return sb.ToString();
 		}
 
 		void BuildExpression(int parentPrecedence, ISqlExpression expr, string alias, ref bool addAlias)
