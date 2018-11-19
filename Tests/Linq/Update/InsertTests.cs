@@ -1390,7 +1390,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2000,
-			ProviderName.SqlServer2005, ProviderName.Sybase)]
+			ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void Insert14(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1546,6 +1546,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test, DataContextSource]
 		public void InsertByTableName(string context)
 		{
@@ -1590,6 +1591,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test, DataContextSource]
 		public async Task InsertByTableNameAsync(string context)
 		{

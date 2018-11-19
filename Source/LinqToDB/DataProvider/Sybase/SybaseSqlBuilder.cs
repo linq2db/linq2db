@@ -167,6 +167,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 						if (name.Length > 28 || name.Length > 0 && name[0] == '[')
 							return value;
+
+						// https://github.com/linq2db/linq2db/issues/1064
+						if (convertType == ConvertType.NameToQueryField && Name.Length > 0 && name[0] == '#')
+							return value;
 					}
 
 					return "[" + value + "]";

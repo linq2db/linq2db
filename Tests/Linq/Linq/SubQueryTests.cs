@@ -210,7 +210,7 @@ namespace Tests.Linq
 					select new { p.ParentID, c.ChildID });
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase, ProviderName.SapHana, ProviderName.Access, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana, ProviderName.Access, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			 TestProvName.MySql57, ProviderName.DB2, TestProvName.MariaDB)]
 		public void Contains1(string context)
 		{
@@ -224,7 +224,7 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase, ProviderName.SapHana, ProviderName.Access, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana, ProviderName.Access, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			 TestProvName.MySql57, ProviderName.DB2, TestProvName.MariaDB)]
 		public void Contains2(string context)
 		{
@@ -276,7 +276,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.MySql,
-			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
+			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
 		public void SubSub2(string context)
 		{
 			using (var db = GetDataContext(context))

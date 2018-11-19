@@ -19,8 +19,8 @@ Partial code listings, or multiple fragments of code, will slow down our respons
 ```
 
 ### Environment details
-linq2db version: *2.0.0*  
-Database Server: *E.g. PostgreSQL 9.6.3*  
-Database Provider: *E.g. Npgsql 3.2.3*  
-Operating system: *E.g. Windows 10*  
+linq2db version: *2.5.2*
+Database Server: *E.g. PostgreSQL 9.6.3*
+Database Provider: *E.g. Npgsql 3.2.3*
+Operating system: *E.g. Windows 10*
 Framework version: *.NET Framework 4.6.2*

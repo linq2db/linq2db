@@ -1,16 +1,18 @@
 ﻿USE master
 GO
 
-DROP DATABASE TestData
+DROP DATABASE {DBNAME}
 GO
 
-CREATE DATABASE TestData
+CREATE DATABASE {DBNAME}
 	ON master = '102400K'
 GO
 
-USE TestData
+USE {DBNAME}
 GO
 
+sp_configure 'enable unicode normalization', 0
+GO
 CREATE TABLE InheritanceParent
 (
 	InheritanceParentId int          NOT NULL,
@@ -123,7 +125,7 @@ CREATE TABLE AllTypes
 	bigintDataType           bigint            NULL,
 	uBigintDataType          unsigned  bigint  NULL,
 	numericDataType          numeric           NULL,
-	bitDataType              bit           NOT NULL,
+	bitDataType              bit               default(0),
 	smallintDataType         smallint          NULL,
 	uSmallintDataType        unsigned smallint NULL,
 	decimalDataType          decimal           NULL,
@@ -256,5 +258,5 @@ CREATE TABLE TestMergeIdentity
 GO
 
 CREATE OR REPLACE PROCEDURE AddIssue792Record AS
-	INSERT INTO dbo.AllTypes(char20DataType, bitDataType) VALUES('issue792', 1)
+	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792')
 RETURN

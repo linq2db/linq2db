@@ -88,9 +88,18 @@ namespace Tests.DataProvider
 			}
 		}
 
+		// this adds type as string using single quotes, but sqlite understands such syntax
+		[Sql.Expression("CAST({0} as {1})", ServerSideOnly = true)]
+		static TValue Cast<TValue>(TValue value, string type)
+		{
+			throw new InvalidOperationException();
+		}
+
 		static void TestNumeric<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
 		{
 			var skipTypes = skip.Split(' ');
+
+			conn.InlineParameters = true;
 
 			foreach (var sqlType in new[]
 				{
@@ -107,14 +116,21 @@ namespace Tests.DataProvider
 					"real"
 				}.Except(skipTypes))
 			{
-				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
+				var result = conn.Select(() => Cast(expectedValue, sqlType));
 
-				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
-
-				Debug.WriteLine(sql + " -> " + typeof(T));
-
-				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
+				// sqlite floating point parser doesn't restore roundtrip values properly
+				// and also deviation could differ for different versions of engine
+				// see https://system.data.sqlite.org/index.html/tktview/fb9e4b30874d83042e09c2f791d6065fc5e73a4b
+				// and TestDoubleRoundTrip test
+				if (expectedValue is double doubleValue)
+					Assert.AreEqual(doubleValue, (double)(object)result, Math.Abs(doubleValue) * 1e-15);
+				else if (expectedValue is float floatValue)
+					Assert.AreEqual(floatValue, (float)(object)result, Math.Abs(floatValue) * 1e-9);
+				else
+					Assert.That(result, Is.EqualTo(expectedValue));
 			}
+
+			conn.InlineParameters = false;
 
 			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
 			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
@@ -124,12 +140,12 @@ namespace Tests.DataProvider
 			Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue }), Is.EqualTo(expectedValue));
 		}
 
-		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
+		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
 			where T : struct
 		{
-			TestNumeric<T> (conn, expectedValue, dataType);
-			TestNumeric<T?>(conn, expectedValue, dataType);
-			TestNumeric<T?>(conn, (T?)null,      dataType);
+			TestNumeric<T> (conn, expectedValue, dataType, skip);
+			TestNumeric<T?>(conn, expectedValue, dataType, skip);
+			TestNumeric<T?>(conn, (T?)null,      dataType, skip);
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
@@ -146,12 +162,18 @@ namespace Tests.DataProvider
 				TestSimple<ushort> (conn, 1,    DataType.UInt16);
 				TestSimple<uint>   (conn, 1u,   DataType.UInt32);
 				TestSimple<ulong>  (conn, 1ul,  DataType.UInt64);
-				TestSimple<float>  (conn, 1,    DataType.Single);
+				TestSimple<float>  (conn, 1f,   DataType.Single);
+				TestSimple<float>  (conn, 1.1f, DataType.Single,      "bigint int smallint tinyint");
 				TestSimple<double> (conn, 1d,   DataType.Double);
+				TestSimple<double> (conn, 1.1d, DataType.Double,      "bigint int smallint tinyint");
 				TestSimple<decimal>(conn, 1m,   DataType.Decimal);
+				//TestSimple<decimal>(conn, 1.1m, DataType.Decimal,     "bigint int smallint tinyint");
 				TestSimple<decimal>(conn, 1m,   DataType.VarNumeric);
+				//TestSimple<decimal>(conn, 1.1m, DataType.VarNumeric,  "bigint int smallint tinyint");
 				TestSimple<decimal>(conn, 1m,   DataType.Money);
+				//TestSimple<decimal>(conn, 1.1m, DataType.Money,       "bigint int smallint tinyint");
 				TestSimple<decimal>(conn, 1m,   DataType.SmallMoney);
+				//TestSimple<decimal>(conn, 1.1m, DataType.SmallMoney,  "bigint int smallint tinyint");
 
 				TestNumeric(conn, sbyte.MinValue,    DataType.SByte);
 				TestNumeric(conn, sbyte.MaxValue,    DataType.SByte);
@@ -184,13 +206,37 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS), Category("WindowsOnly")]
+		[ActiveIssue("https://system.data.sqlite.org/index.html/tktview/fb9e4b30874d83042e09c2f791d6065fc5e73a4b")]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+		public void TestDoubleRoundTrip(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var cmd = conn.CreateCommand();
+				var value = -1.7900000000000002E+308;
+
+				// SELECT CAST(-1.7900000000000002E+308 as real)
+				cmd.CommandText = FormattableString.Invariant($"SELECT CAST({value:G17} as real)");
+				using (var rd = cmd.ExecuteReader())
+				{
+					rd.Read();
+					var valueFromDB = rd.GetDouble(0);
+
+					// -1.790000000000001E+308d != -1.7900000000000002E+308
+					Assert.AreEqual(value, valueFromDB);
+				}
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestNumericsDouble(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
+				TestNumeric(conn, -1.7900000000000002E+308d, DataType.Double, "bigint int smallint tinyint");
 				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
-				TestNumeric(conn, 1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
+				TestNumeric(conn,  1.7900000000000002E+308d, DataType.Double, "bigint int smallint tinyint");
+				TestNumeric(conn,  1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
 			}
 		}
 
@@ -501,7 +547,7 @@ namespace Tests.DataProvider
 			using (var db = new TestDataConnection(context))
 			{
 				var sp = db.DataProvider.GetSchemaProvider();
-				var s  = sp.GetSchema(db);
+				var s  = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				var table = s.Tables.FirstOrDefault(_ => _.TableName.Equals("ForeignKeyTable", StringComparison.OrdinalIgnoreCase));
 				Assert.IsNotNull(table);

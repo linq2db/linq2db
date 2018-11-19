@@ -231,7 +231,6 @@ namespace LinqToDB.Linq.Builder
 												return sequence.BuildExpression(expression, level + 1, enforceServerSide);
 
 											break;
-
 										}
 
 									case ExpressionType.New        :
@@ -243,6 +242,9 @@ namespace LinqToDB.Linq.Builder
 								}
 
 								var expr = expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex);
+
+								if (sequence == null)
+									return Builder.BuildExpression(this, expr, enforceServerSide);
 
 								return sequence.BuildExpression(expr, 1, enforceServerSide);
 							}
@@ -435,7 +437,7 @@ namespace LinqToDB.Linq.Builder
 						if (i.Query == SelectQuery)
 							return i;
 
-						return new SqlInfo(i.Members)
+						return new SqlInfo(i.MemberChain)
 						{
 							Query = SelectQuery,
 							Index = SelectQuery.Select.Add(i.Query.Select.Columns[i.Index])

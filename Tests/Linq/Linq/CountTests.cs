@@ -94,6 +94,7 @@ namespace Tests.Linq
 					from p in db.Parent where p.Children.Count > 2 select p);
 		}
 
+		[ActiveIssue("not supported?", Configuration = ProviderName.SapHana)]
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana)]
 		public void SubQueryCount(string context)
 		{
@@ -172,6 +173,8 @@ namespace Tests.Linq
 					select g.Count(ch => ch.ChildID > 20));
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
 		[Test, DataContextSource]
 		public void GroupBy21(string context)
 		{
@@ -191,6 +194,8 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
 		[Test, DataContextSource]
 		public void GroupBy22(string context)
 		{
@@ -210,6 +215,7 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
+		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Access)]
@@ -229,6 +235,7 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
+		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
 		[Test, DataContextSource]
 		public void GroupBy3(string context)
 		{
@@ -513,7 +520,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Count = db.Parent.Where(p1 => p1.ParentID == p.ParentID).Count() });
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void SubQuery6(string context)
 		{
 			using (var db = GetDataContext(context))

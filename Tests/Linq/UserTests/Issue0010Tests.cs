@@ -11,7 +11,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue0010Tests : TestBase
 	{
-		[Test, IncludeDataContextSource(false, ProviderName.Access)]
+		[Test, IncludeDataContextSource(false, ProviderName.Access), SkipCategory("Access.12")]
 		public void Test(string context)
 		{
 			using (var db = new DataConnection(new AccessDataProvider(), "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\issue_10_linqpad.accdb;"))
@@ -19,8 +19,8 @@ namespace Tests.UserTests
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 
 				// call twice to ensure connection is still in good shape after call
-				var schema = schemaProvider.GetSchema(db);
-				schema     = schemaProvider.GetSchema(db);
+				var schema = schemaProvider.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				schema     = schemaProvider.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				// and query known table to be completely sure connection is not broken
 				db.Execute("SELECT * FROM CLONECODE");

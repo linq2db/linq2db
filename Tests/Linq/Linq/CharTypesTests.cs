@@ -36,9 +36,6 @@ namespace Tests.Linq
 			[Column("char20DataType" , Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public string NString;
-
-			[Column("bitDataType", Configuration = ProviderName.Sybase)]
-			public bool ThisIsSYBASE;
 		}
 
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
@@ -66,9 +63,6 @@ namespace Tests.Linq
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public char? NChar;
-
-			[Column("bitDataType", Configuration = ProviderName.Sybase)]
-			public bool ThisIsSYBASE;
 		}
 
 		// most of ending characters here trimmed by default by .net string TrimX methods
@@ -124,9 +118,6 @@ namespace Tests.Linq
 							|| context == TestProvName.Firebird3 + ".LinqService")
 							query = db.GetTable<StringTestTable>().Value(_ => _.String, record.String);
 
-						if (context == ProviderName.Sybase || context == ProviderName.Sybase + ".LinqService")
-							query = query.Value(_ => _.ThisIsSYBASE, true);
-
 						query.Insert();
 					}
 
@@ -139,15 +130,7 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							Assert.AreEqual(testData[i].String?.TrimEnd(' '), records[i].String);
 
-						if (   context == ProviderName.Sybase
-							|| context == ProviderName.Sybase + ".LinqService")
-							// this kind of replacement is allowed in unicode, but dunno why it is done for sybase
-							Assert.AreEqual(
-								testData[i].NString?.TrimEnd(' ')
-									.Replace('\u2000', '\u2002')
-									.Replace('\u2001', '\u2003'),
-								records[i].NString);
-						else if (context != ProviderName.Firebird
+						if (context != ProviderName.Firebird
 							  && context != ProviderName.Firebird + ".LinqService"
 							  && context != TestProvName.Firebird3
 							  && context != TestProvName.Firebird3 + ".LinqService")
@@ -272,9 +255,6 @@ namespace Tests.Linq
 							|| context == TestProvName.Firebird3 + ".LinqService")
 							query = db.GetTable<CharTestTable>().Value(_ => _.Char, record.Char);
 
-						if (context == ProviderName.Sybase || context == ProviderName.Sybase + ".LinqService")
-							query = query.Value(_ => _.ThisIsSYBASE, true);
-
 						query.Insert();
 					}
 
@@ -304,14 +284,7 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							Assert.AreEqual(testData[i].Char, records[i].Char);
 
-						if (   context == ProviderName.Sybase
-							|| context == ProviderName.Sybase + ".LinqService")
-							// this kind of replacement is allowed in unicode, but dunno why it is done for sybase
-							Assert.AreEqual(
-								testData[i].NChar == '\u2000' || testData[i].NChar == '\u2001'
-									? (char)(testData[i].NChar + 2) : testData[i].NChar,
-								records[i].NChar);
-						else if (context == ProviderName.MySql
+						if (context == ProviderName.MySql
 							  || context == ProviderName.MySql + ".LinqService"
 							  || context == TestProvName.MySql57
 							  || context == TestProvName.MySql57 + ".LinqService"

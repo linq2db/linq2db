@@ -32,6 +32,8 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
 			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.IsDistinctOrderBySupported        = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -105,6 +107,11 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
+			if (Name == ProviderName.SQLiteMS && value is char)
+			{
+				value = value.ToString();
+			}
+
 			base.SetParameter(parameter, "@" + name, dataType, value);
 		}
 

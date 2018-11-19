@@ -19,7 +19,7 @@ namespace LinqToDB.Mapping
 		#region Init
 
 		/// <summary>
-		/// Creates enity mapping builder.
+		/// Creates entity mapping builder.
 		/// </summary>
 		/// <param name="builder">Fluent mapping builder.</param>
 		/// <param name="configuration">Optional mapping schema configuration name, for which this entity builder should be taken into account.
@@ -205,6 +205,16 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<T> Property(Expression<Func<T,object>> func)
 		{
 			return (new PropertyMappingBuilder<T>(this, func)).IsColumn();
+		}
+
+		/// <summary>
+		/// Adds member mapping to current entity.
+		/// </summary>
+		/// <param name="func">Column mapping property or field getter expression.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Member(Expression<Func<T,object>> func)
+		{
+			return new PropertyMappingBuilder<T>(this, func);
 		}
 
 		/// <summary>

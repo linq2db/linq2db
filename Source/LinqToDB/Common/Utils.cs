@@ -86,7 +86,7 @@ namespace LinqToDB.Common
 						{
 							digitCount = Math.Min(6, digitCount);
 							startDigit = int.Parse(name.Substring(name.Length - digitCount, digitCount));
-							name = name.Remove(digitCount);
+							name = name.Remove(name.Length - digitCount);
 						}
 
 						do

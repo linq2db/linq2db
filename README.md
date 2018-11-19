@@ -18,7 +18,7 @@ T4 model generation help is [here](https://github.com/linq2db/linq2db/blob/maste
 
 ## How to help the project
 
-No, this is not the donate link. We do need something really more valuable - your **time**. If you really want to help us please read this [post](https://linq2db.github.io/articles/How-can-i-help.html).
+No, this is not the donate link. We do need something really more valuable - your **time**. If you really want to help us please read this [post](https://linq2db.github.io/articles/project/How-can-i-help.html).
 
 ## Project Build Status
 
@@ -101,7 +101,7 @@ You can also use same for regular .NET.
 
 ## Now let's create a **POCO** class
 
-Important: you also can generate those classes from your database using [T4 templates](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB.Templates#t4-models). Demonstration video could be found [here](https://github.com/linq2db/linq2db/wiki).
+Important: you also can generate those classes from your database using [T4 templates](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB.Templates#t4-models). Demonstration video could be found [here](https://linq2db.github.io/articles/general/Video.html).
 
 ```c#
 using System;
@@ -155,7 +155,7 @@ public static List<Product> All()
 }
 ```
 
-Make sure you **always** wrap your `DataConnection` class (in our case `DbNorthwind`) in a `using` statement. This is required for proper resource management, like releasing the database connections back into the pool. [More details](https://linq2db.github.io/articles/Managing-data-connection.html)
+Make sure you **always** wrap your `DataConnection` class (in our case `DbNorthwind`) in a `using` statement. This is required for proper resource management, like releasing the database connections back into the pool. [More details](https://linq2db.github.io/articles/general/Managing-data-connection.html)
 
 ## Selecting Columns
 
@@ -263,7 +263,7 @@ select new Product
 };
 ```
 
-[More samples are here](https://linq2db.github.io/articles/Join-Operators.html)
+[More samples are here](https://linq2db.github.io/articles/sql/Join-Operators.html)
 
 ## Creating your POCOs
 
@@ -474,11 +474,11 @@ using (var transaction = new TransactionScope())
 
 ## Merge
 
-[Here](https://linq2db.github.io/articles/Merge-API.html) you can read about MERGE support.
+[Here](https://linq2db.github.io/articles/sql/merge/Merge-API.html) you can read about MERGE support.
 
 ## Window (Analytic) Functions
 
-[Here](https://linq2db.github.io/articles/Window-Functions-%28Analytic-Functions%29.html) you can read about Window (Analytic) Functions support.
+[Here](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html) you can read about Window (Analytic) Functions support.
 
 ## MiniProfiler
 

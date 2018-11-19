@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -364,8 +365,8 @@ namespace LinqToDB.Data
 				case TraceInfoStep.AfterExecute:
 					WriteTraceLine(
 						info.RecordsAffected != null
-							? $"Query Execution Time ({info.TraceInfoStep}) {(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
-							: $"Query Execution Time ({info.TraceInfoStep}) {(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
+							? $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
+							: $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
 						TraceSwitch.DisplayName);
 					break;
 
@@ -640,6 +641,42 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Returns database provider associated with provider name, configuration and connection string.
+		/// </summary>
+		/// <param name="providerName">Provider name.</param>
+		/// <param name="configurationString">Connection configuration name.</param>
+		/// <param name="connectionString">Connection string.</param>
+		/// <returns>Database provider.</returns>
+		public static IDataProvider GetDataProvider(
+			[JetBrains.Annotations.NotNull] string providerName,
+			[JetBrains.Annotations.NotNull] string configurationString,
+			[JetBrains.Annotations.NotNull] string connectionString)
+		{
+			InitConfig();
+
+			return ConfigurationInfo.GetDataProvider(
+				new ConnectionStringSettings(configurationString, connectionString, providerName),
+				connectionString);
+		}
+
+		/// <summary>
+		/// Returns database provider associated with provider name and connection string.
+		/// </summary>
+		/// <param name="providerName">Provider name.</param>
+		/// <param name="connectionString">Connection string.</param>
+		/// <returns>Database provider.</returns>
+		public static IDataProvider GetDataProvider(
+			[JetBrains.Annotations.NotNull] string providerName,
+			[JetBrains.Annotations.NotNull] string connectionString)
+		{
+			InitConfig();
+
+			return ConfigurationInfo.GetDataProvider(
+				new ConnectionStringSettings(providerName, connectionString, providerName),
+				connectionString);
+		}
+
+		/// <summary>
 		/// Returns registered database providers.
 		/// </summary>
 		/// <returns>
@@ -668,7 +705,7 @@ namespace LinqToDB.Data
 			}
 
 			private string _connectionString;
-			public  string ConnectionString
+			public  string  ConnectionString
 			{
 				get => _connectionString;
 				set
@@ -696,7 +733,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
+			public static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
 			{
 				var configuration = css.Name;
 				var providerName  = css.ProviderName;
@@ -882,6 +919,7 @@ namespace LinqToDB.Data
 				{
 					_connection.Open();
 					_closeConnection = true;
+					OnConnectionOpened?.Invoke(this, _connection);
 				}
 
 				return _connection;
@@ -898,7 +936,17 @@ namespace LinqToDB.Data
 		public event EventHandler OnClosed;
 
 		/// <inheritdoc />
-		public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+		public Action<EntityCreatedEventArgs> OnEntityCreated    { get; set; }
+
+		/// <summary>
+		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> method.
+		/// </summary>
+		public event Action<DataConnection, IDbConnection> OnConnectionOpened;
+
+		/// <summary>
+		/// Event, triggered right after connection opened using <see cref="DbConnection.OpenAsync()"/> methods.
+		/// </summary>
+		public event Func<DataConnection, IDbConnection, CancellationToken, Task> OnConnectionOpenedAsync;
 
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
@@ -940,7 +988,7 @@ namespace LinqToDB.Data
 
 		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints)
 		{
-			if (queryHints != null && queryHints.Count > 0)
+			if (queryHints?.Count > 0)
 			{
 				var sqlProvider = DataProvider.CreateSqlBuilder();
 				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
@@ -958,7 +1006,12 @@ namespace LinqToDB.Data
 		public  int   CommandTimeout
 		{
 			get => _commandTimeout ?? 0;
-			set => _commandTimeout = value;
+			set
+			{
+				_commandTimeout = value;
+				if (_command != null)
+					_command.CommandTimeout = value;
+			}
 		}
 
 		private IDbCommand _command;
@@ -1005,6 +1058,9 @@ namespace LinqToDB.Data
 				using (DataProvider.ExecuteScope())
 					return Command.ExecuteNonQuery();
 
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (TraceSwitch.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
@@ -1012,10 +1068,10 @@ namespace LinqToDB.Data
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
 					Command        = Command,
+					StartTime      = now,
 				});
 			}
 
-			var now = DateTime.Now;
 
 			try
 			{
@@ -1030,7 +1086,8 @@ namespace LinqToDB.Data
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = this,
 						Command         = Command,
-						ExecutionTime   = DateTime.Now - now,
+						StartTime       = now,
+						ExecutionTime   = sw.Elapsed,
 						RecordsAffected = ret,
 					});
 				}
@@ -1046,7 +1103,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 					});
 				}
@@ -1060,17 +1118,19 @@ namespace LinqToDB.Data
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				return Command.ExecuteScalar();
 
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (TraceSwitch.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
-					Command        = Command
+					Command        = Command,
+					StartTime      = now,
 				});
 			}
-
-			var now = DateTime.Now;
 
 			try
 			{
@@ -1083,7 +1143,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 					});
 				}
 
@@ -1098,7 +1159,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 					});
 				}
@@ -1118,6 +1180,9 @@ namespace LinqToDB.Data
 				using (DataProvider.ExecuteScope())
 					return Command.ExecuteReader(GetCommandBehavior(commandBehavior));
 
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (TraceSwitch.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
@@ -1125,10 +1190,9 @@ namespace LinqToDB.Data
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
 					Command        = Command,
+					StartTime      = now,
 				});
 			}
-
-			var now = DateTime.Now;
 
 			try
 			{
@@ -1144,7 +1208,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 					});
 				}
 
@@ -1159,7 +1224,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 					});
 				}

@@ -222,7 +222,7 @@ namespace LinqToDB.DataProvider
 						{
 							if (e.ElementType == QueryElementType.SqlQuery)
 							{
-								
+
 							}
 
 							if (e.ElementType == QueryElementType.SqlField)

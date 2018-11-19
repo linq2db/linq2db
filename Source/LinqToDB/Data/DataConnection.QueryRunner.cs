@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -31,7 +32,8 @@ namespace LinqToDB.Data
 			}
 
 			readonly DataConnection _dataConnection;
-			readonly DateTime       _startedOn = DateTime.Now;
+			readonly DateTime       _startedOn = DateTime.UtcNow;
+			readonly Stopwatch      _stopwatch = Stopwatch.StartNew();
 
 			bool       _isAsync;
 			Expression _mapperExpression;
@@ -51,6 +53,8 @@ namespace LinqToDB.Data
 							TraceLevel       = TraceLevel.Info,
 							DataConnection   = _dataConnection,
 							MapperExpression = MapperExpression,
+							StartTime        = _startedOn,
+							ExecutionTime    = _stopwatch.Elapsed,
 							IsAsync          = _isAsync,
 						});
 					}
@@ -117,8 +121,10 @@ namespace LinqToDB.Data
 					{
 						TraceLevel       = TraceLevel.Info,
 						DataConnection   = _dataConnection,
+						Command          = _dataConnection.Command,
 						MapperExpression = MapperExpression,
-						ExecutionTime    = DateTime.Now - _startedOn,
+						StartTime        = _startedOn,
+						ExecutionTime    = _stopwatch.Elapsed,
 						RecordsAffected  = RowsCount,
 						IsAsync          = _isAsync,
 					});
@@ -433,32 +439,23 @@ namespace LinqToDB.Data
 
 			class DataReaderAsync : IDataReaderAsync
 			{
-				public DataReaderAsync(DataConnection dataConnection, Func<int> skipAction, Func<int> takeAction)
+				public DataReaderAsync(DbDataReader dataReader)
 				{
-					_dataConnection = dataConnection;
-					_skipAction     = skipAction;
-					_takeAction     = takeAction;
+					_dataReader = dataReader;
 				}
 
-				readonly DataConnection _dataConnection;
-				readonly Func<int>      _skipAction;
-				readonly Func<int>      _takeAction;
+				readonly DbDataReader _dataReader;
 
-				async Task IDataReaderAsync.QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Func<T,bool> action, CancellationToken cancellationToken)
+				public IDataReader DataReader => _dataReader;
+
+				public Task<bool> ReadAsync(CancellationToken cancellationToken)
 				{
-					using (var reader = await _dataConnection.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken))
-					{
-						var skip = _skipAction == null ? 0 : _skipAction();
+					return _dataReader.ReadAsync(cancellationToken);
+				}
 
-						while (skip-- > 0 && await reader.ReadAsync(cancellationToken))
-							{}
-
-						var take = _takeAction == null ? int.MaxValue : _takeAction();
-
-						while (take-- > 0 && await reader.ReadAsync(cancellationToken))
-							if (!action(objectReader(reader)))
-								return;
-					}
+				public void Dispose()
+				{
+					_dataReader.Dispose();
 				}
 			}
 
@@ -476,9 +473,9 @@ namespace LinqToDB.Data
 					foreach (var p in _preparedQuery.Parameters)
 						_dataConnection.Command.Parameters.Add(p);
 
-				var dataReader = new DataReaderAsync(_dataConnection, SkipAction, TakeAction);
+				var dataReader = await _dataConnection.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken);
 
-				return dataReader;
+				return new DataReaderAsync(dataReader);
 			}
 
 			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)

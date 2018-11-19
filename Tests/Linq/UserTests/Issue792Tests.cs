@@ -47,7 +47,7 @@ namespace Tests.UserTests
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			// those providers miss procedure schema load implementation for now
-			ProviderName.Informix, ProviderName.PostgreSQL)]
+			ProviderName.Informix)]
 		public void TestWithoutTransaction(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -58,10 +58,10 @@ namespace Tests.UserTests
 
 				try
 				{
-					var schema = sp.GetSchema(db, new GetSchemaOptions()
+					var schema = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
 					{
 						GetTables = false
-					});
+					}));
 
 					var recordsAfter = db.GetTable<AllTypes>().Count();
 
@@ -83,10 +83,10 @@ namespace Tests.UserTests
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			// those providers miss procedure schema load implementation for now
-			ProviderName.Informix, ProviderName.PostgreSQL,
+			ProviderName.Informix,
 			// those providers cannot load schema when in transaction
-			ProviderName.DB2, ProviderName.Sybase,
-			ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB,
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged,
+			ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB, ProviderName.PostgreSQL,
 			ProviderName.SqlServer2000, ProviderName.SqlServer2005, TestProvName.SqlAzure,
 			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void TestWithTransaction(string context)
@@ -98,10 +98,10 @@ namespace Tests.UserTests
 
 				var sp = db.DataProvider.GetSchemaProvider();
 
-				var schema = sp.GetSchema(db, new GetSchemaOptions()
+				var schema = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
 				{
 					GetTables = false
-				});
+				}));
 
 				var recordsAfter = db.GetTable<AllTypes>().Count();
 
@@ -126,10 +126,10 @@ namespace Tests.UserTests
 
 				var sp = db.DataProvider.GetSchemaProvider();
 
-				var ex = Assert.Catch(() => sp.GetSchema(db, new GetSchemaOptions()
+				var ex = Assert.Catch(() => sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
 				{
 					GetTables = false
-				}));
+				})));
 
 				Assert.IsInstanceOf<InvalidOperationException>(ex);
 				Assert.IsTrue(ex.Message.Contains("requires the command to have a transaction"));
@@ -137,7 +137,7 @@ namespace Tests.UserTests
 		}
 
 		[Test, IncludeDataContextSource(false,
-			ProviderName.Sybase,
+			ProviderName.Sybase, ProviderName.SybaseManaged,
 			ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB)]
 		public void TestWithTransactionThrowsFromLinqToDB(string context)
 		{
@@ -148,10 +148,10 @@ namespace Tests.UserTests
 
 				var sp = db.DataProvider.GetSchemaProvider();
 
-				var ex = Assert.Catch(() => sp.GetSchema(db, new GetSchemaOptions()
+				var ex = Assert.Catch(() => sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
 				{
 					GetTables = false
-				}));
+				})));
 
 				Assert.IsInstanceOf<LinqToDBException>(ex);
 				Assert.AreEqual("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false", ex.Message);

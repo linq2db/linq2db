@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using JetBrains.Annotations;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -61,6 +62,10 @@ namespace LinqToDB.Linq.Builder
 			var cteBuildInfo = new BuildInfo(buildInfo, bodyExpr, buildInfo.SelectQuery);
 			var cteContext   = new CteTableContext(builder, cteBuildInfo, cte.Item1, bodyExpr);
 
+			// populate all fields
+			if (isRecursive)
+				cteContext.ConvertToSql(null, 0, ConvertFlags.All);
+
 			return cteContext;
 		}
 
@@ -98,31 +103,105 @@ namespace LinqToDB.Linq.Builder
 				if (queryContext == null)
 					return base.ConvertToSql(expression, level, flags);
 
-				SqlInfo[] ConverConvertToSqlAndRegister(Expression exp, int lvl, ConvertFlags fl)
+				var baseInfos = base.ConvertToSql(null, 0, ConvertFlags.All);
+
+				if (flags != ConvertFlags.All && _cte.Fields.Count == 0 && queryContext.SelectQuery.Select.Columns.Count > 0)
 				{
-					var baseInfos = base.ConvertToSql(exp, lvl, fl);
-					var subInfos = queryContext.ConvertToIndex(exp, lvl, fl);
+					// it means that queryContext context already has columns and we need all of them. For example for Distinct.
+					ConvertToSql(null, 0, ConvertFlags.All);
+				}
 
-					var pairs = from bi in baseInfos
-						from si in subInfos.Where(si =>
-							si.Members.Count == bi.Members.Count && si.Members.Count == 1 && si.Members[0] == bi.Members[0])
-						select new { bi, si };
+				var infos  = queryContext.ConvertToIndex(expression, level, flags);
 
-					foreach (var pair in pairs)
+				var result = infos
+					.Select(info =>
 					{
-						_cte.RegisterFieldMapping((SqlField)pair.bi.Sql);
-					}
-
-					return baseInfos;
-				}
-
-				if (_cte.IsRecursive)
-				{
-					ConverConvertToSqlAndRegister(null, 0, ConvertFlags.All);
-				}
-
-				var result = ConverConvertToSqlAndRegister(expression, level, flags);
+						var expr     = (info.Sql is SqlColumn column) ? column.Expression : info.Sql;
+						var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info))?.Sql;
+						var field    = RegisterCteField(baseInfo, expr, info.Index);
+						return new SqlInfo(info.MemberChain)
+						{
+							Sql = field,
+						};
+					})
+					.ToArray();
 				return result;
+			}
+
+			public override int ConvertToParentIndex(int index, IBuildContext context)
+			{
+				if (context == _cteQueryContext)
+				{
+					var expr  = context.SelectQuery.Select.Columns[index].Expression;
+					    expr  = expr is SqlColumn column ? column.Expression : expr;
+					var field = RegisterCteField(null, expr, index);
+
+					index = SelectQuery.Select.Add(field);
+				}
+
+				return base.ConvertToParentIndex(index, context);
+			}
+
+			SqlField RegisterCteField(ISqlExpression baseExpression, [NotNull] ISqlExpression expression, int index)
+			{
+				if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+				var cteField = _cte.RegisterFieldMapping(baseExpression, expression, index, () =>
+						{
+							var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
+
+							var newField = f == null
+								? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull }
+								: new SqlField(f);
+
+							return newField;
+						});
+
+				if (!SqlTable.Fields.TryGetValue(cteField.Name, out var field))
+				{
+					field = new SqlField(cteField);
+					SqlTable.Add(field);
+				}
+
+				return field;
+			}
+
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			{
+				var queryContext = GetQueryContext();
+				if (queryContext == null)
+					base.BuildQuery(query, queryParameter);
+				else
+				{
+					queryContext.Parent = this;
+					queryContext.BuildQuery(query, queryParameter);
+				}
+			}
+
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			{
+				var queryContext = GetQueryContext();
+				if (queryContext == null)
+					return base.BuildExpression(expression, level, enforceServerSide);
+
+				ConvertToIndex(null, 0, ConvertFlags.All);
+
+				//TODO: igor-tkachev, review this.
+				var result = Parent == null
+					? queryContext.BuildExpression(expression, level, enforceServerSide)
+					: base.BuildExpression(expression, level, enforceServerSide);
+
+				return result;
+			}
+
+			public override SqlStatement GetResultStatement()
+			{
+				if (_cte.Fields.Count == 0)
+				{
+					ConvertToSql(null, 0, ConvertFlags.Key);
+				}
+
+				return base.GetResultStatement();
 			}
 		}
 	}

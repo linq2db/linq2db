@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class SubQueryContext : PassThroughContext
@@ -35,71 +34,11 @@ namespace LinqToDB.Linq.Builder
 		public override SelectQuery   SelectQuery { get; set; }
 		public override IBuildContext Parent      { get; set; }
 
-		public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-		{
-			if (Expression.NodeType == ExpressionType.Lambda)
-			{
-				var le = (LambdaExpression)Expression;
-
-				if (le.Parameters.Count == 2 ||
-					le.Parameters.Count == 1 && null != Expression.Find(
-						e => e.NodeType == ExpressionType.Call && ((MethodCallExpression)e).IsQueryable()))
-				{
-					if (le.Body.NodeType == ExpressionType.New)
-					{
-						var ne = (NewExpression)le.Body;
-						var p  = Expression.Parameter(ne.Type, "p");
-
-						var seq = new SelectContext(
-							Parent,
-							Expression.Lambda(
-								Expression.New(
-									ne.Constructor,
-									(IEnumerable<Expression>)ne.Members.Select(m => Expression.MakeMemberAccess(p, m)),
-									ne.Members),
-								p),
-							this);
-
-						seq.BuildQuery(query, queryParameter);
-
-						return;
-					}
-
-					if (le.Body.NodeType == ExpressionType.MemberInit)
-					{
-						var mi = (MemberInitExpression)le.Body;
-
-						if (mi.NewExpression.Arguments.Count == 0 && mi.Bindings.All(b => b is MemberAssignment))
-						{
-							var p = Expression.Parameter(mi.Type, "p");
-
-							var seq = new SelectContext(
-								Parent,
-								Expression.Lambda(
-								Expression.MemberInit(
-									mi.NewExpression,
-									(IEnumerable<MemberBinding>)mi.Bindings
-										.OfType<MemberAssignment>()
-										.Select(ma => Expression.Bind(ma.Member, Expression.MakeMemberAccess(p, ma.Member)))),
-									p),
-								this);
-
-							seq.BuildQuery(query, queryParameter);
-
-							return;
-						}
-					}
-				}
-			}
-
-			base.BuildQuery(query, queryParameter);
-		}
-
 		public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
 		{
 			return SubQuery
 				.ConvertToIndex(expression, level, flags)
-				.Select(idx => new SqlInfo(idx.Members) { Sql = SubQuery.SelectQuery.Select.Columns[idx.Index] })
+				.Select(idx => new SqlInfo(idx.MemberChain) { Sql = SubQuery.SelectQuery.Select.Columns[idx.Index] })
 				.ToArray();
 		}
 
@@ -132,9 +71,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected virtual int GetIndex(SqlColumn column)
 		{
-			int idx;
-
-			if (!ColumnIndexes.TryGetValue(column, out idx))
+			if (!ColumnIndexes.TryGetValue(column, out var idx))
 			{
 				idx = SelectQuery.Select.Add(column);
 				ColumnIndexes.Add(column, idx);
@@ -146,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 		public override int ConvertToParentIndex(int index, IBuildContext context)
 		{
 			var idx = GetIndex(context.SelectQuery.Select.Columns[index]);
-			return Parent == null ? idx : Parent.ConvertToParentIndex(idx, this);
+			return Parent?.ConvertToParentIndex(idx, this) ?? idx;
 		}
 
 		public override void SetAlias(string alias)

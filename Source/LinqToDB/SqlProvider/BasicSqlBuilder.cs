@@ -43,7 +43,9 @@ namespace LinqToDB.SqlProvider
 		/// True if it is needed to wrap join condition with ()
 		/// </summary>
 		/// <example>
+		/// <code>
 		/// INNER JOIN Table2 t2 ON (t1.Value = t2.Value)
+		/// </code>
 		/// </example>
 		public virtual bool WrapJoinCondition => false;
 
@@ -319,6 +321,8 @@ namespace LinqToDB.SqlProvider
 
 		#region Build CTE
 
+		protected virtual bool IsRecursiveCteKeywordRequired => false;
+
 		protected virtual void BuildWithClause(SqlWithClause with)
 		{
 			if (with == null || with.Clauses.Count == 0)
@@ -328,11 +332,14 @@ namespace LinqToDB.SqlProvider
 
 			foreach (var cte in with.Clauses)
 			{
-				AppendIndent();
-
 				if (first)
 				{
+					AppendIndent();
 					StringBuilder.Append("WITH ");
+	
+					if (IsRecursiveCteKeywordRequired && with.Clauses.Any(c => c.IsRecursive))
+						StringBuilder.Append("RECURSIVE ");
+
 					first = false;
 				}
 				else
@@ -350,7 +357,7 @@ namespace LinqToDB.SqlProvider
 					++Indent;
 
 					var firstField = true;
-					foreach (var field in cte.Fields.Values)
+					foreach (var field in cte.Fields)
 					{
 						if (!firstField)
 							StringBuilder.AppendLine(", ");
@@ -368,7 +375,7 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(" (");
 
 					var firstField = true;
-					foreach (var field in cte.Fields.Values)
+					foreach (var field in cte.Fields)
 					{
 						if (!firstField)
 							StringBuilder.Append(", ");
@@ -390,7 +397,7 @@ namespace LinqToDB.SqlProvider
 				Indent--;
 
 				AppendIndent();
-				StringBuilder.AppendLine(")");
+				StringBuilder.Append(")");
 			}
 
 			StringBuilder.AppendLine();
@@ -700,11 +707,27 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
+				if (key.Column.CanBeNull)
+				{
+					StringBuilder.Append("(");
+
+					StringBuilder.Append(targetAlias).Append('.');
+					BuildExpression(key.Column, false, false);
+					StringBuilder.Append(" IS NULL AND ");
+
+					StringBuilder.Append(sourceAlias).Append('.');
+					BuildExpression(key.Column, false, false);
+					StringBuilder.Append(" IS NULL OR ");
+				}
+
 				StringBuilder.Append(targetAlias).Append('.');
 				BuildExpression(key.Column, false, false);
 
 				StringBuilder.Append(" = ").Append(sourceAlias).Append('.');
 				BuildExpression(key.Column, false, false);
+
+				if (key.Column.CanBeNull)
+					StringBuilder.Append(")");
 
 				if (i + 1 < keys.Count)
 					StringBuilder.Append(" AND");
@@ -807,11 +830,23 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
+				if (expr.Column.CanBeNull)
+				{
+					StringBuilder.Append("(");
+
+					StringBuilder.Append(alias).Append('.');
+					BuildExpression(expr.Column, false, false);
+					StringBuilder.Append(" IS NULL OR ");
+				}
+
 				StringBuilder.Append(alias).Append('.');
 				BuildExpression(expr.Column, false, false);
 
 				StringBuilder.Append(" = ");
 				BuildExpression(Precedence.Comparison, expr.Expression);
+
+				if (expr.Column.CanBeNull)
+					StringBuilder.Append(")");
 
 				if (i + 1 < exprs.Count)
 					StringBuilder.Append(" AND");
@@ -924,7 +959,9 @@ namespace LinqToDB.SqlProvider
 			AppendIndent().Append("(");
 			Indent++;
 
-			var fields = table.Fields.Select(f => new CreateFieldInfo { Field = f.Value, StringBuilder = new StringBuilder() }).ToList();
+			// Order columns by the Order field. Positive first then negative.
+			var orderedFields = table.Fields.Values.OrderBy(_ => _.CreateOrder >= 0 ? 0 : (_.CreateOrder == null ? 1 : 2)).ThenBy(_ => _.CreateOrder);
+			var fields = orderedFields.Select(f => new CreateFieldInfo { Field = f, StringBuilder = new StringBuilder() }).ToList();
 			var maxlen = 0;
 
 			void AppendToMax(bool addCreateFormat)
@@ -3112,10 +3149,17 @@ namespace LinqToDB.SqlProvider
 
 		public string ApplyQueryHints(string sql, List<string> queryHints)
 		{
-			var sb = new StringBuilder(sql);
+			var sb = new StringBuilder();
 
 			foreach (var hint in queryHints)
-				sb.AppendLine(hint);
+				if (hint?.Length >= 2 && hint.StartsWith("**"))
+					sb.AppendLine(hint.Substring(2));
+
+			sb.Append(sql);
+
+			foreach (var hint in queryHints)
+				if (!(hint?.Length >= 2 && hint.StartsWith("**")))
+					sb.AppendLine(hint);
 
 			return sb.ToString();
 		}

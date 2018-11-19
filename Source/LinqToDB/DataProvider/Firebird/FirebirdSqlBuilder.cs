@@ -51,6 +51,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override bool   SkipFirst  => false;
 		protected override string SkipFormat => "SKIP {0}";
+		protected override bool   IsRecursiveCteKeywordRequired => true;
 
 		protected override string FirstFormat(SelectQuery selectQuery)
 		{
@@ -103,7 +104,10 @@ namespace LinqToDB.DataProvider.Firebird
 						StringBuilder.Append('(').Append(type.Length).Append(')');
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
 					break;
-				default                      : base.BuildDataType(type, createDbType); break;
+				case DataType.VarBinary     :
+					StringBuilder.Append("BLOB");
+					break;
+				default: base.BuildDataType(type, createDbType); break;
 			}
 		}
 

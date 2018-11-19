@@ -373,6 +373,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test, DataContextSource]
 		public void DeleteByTableName(string context)
 		{
@@ -383,7 +384,7 @@ namespace Tests.xUpdate
 			using (var table = db.CreateTempTable<Person>(tableName, schemaName: schemaName))
 			{
 				var iTable = (ITable<Person>)table;
-				Assert.AreEqual(tableName, iTable.TableName);
+				Assert.AreEqual(tableName,  iTable.TableName);
 				Assert.AreEqual(schemaName, iTable.SchemaName);
 
 				var person = new Person()
@@ -406,6 +407,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test, DataContextSource]
 		public async Task DeleteByTableNameAsync(string context)
 		{

@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.SqlServer</id>
-		<version>2.0.0-rc</version>
+		<version>2.6.0</version>
 		<title>LINQ to SqlServer</title>
 		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
 		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
@@ -18,14 +18,14 @@
 		</summary>
 		<tags>linq linq2db SqlServer LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db" version="2.0.0-*"/>
+			<dependency id="linq2db" version="2.6.0"/>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\AppVeyor\net452\Microsoft.SqlServer.Types.dll" target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\Microsoft.SqlServer.Types.dll"  target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"                target="tools" />
 		
 		<file src="SqlServer\linq2db.SqlServer.props"                               target="build" />

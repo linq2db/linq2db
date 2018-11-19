@@ -2,9 +2,9 @@
 <#@ output extension=".generated.cs"                                                      #>
 <#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SqlCe.ttinclude"               #>
 <#@ include file="..\..\Source\LinqToDB.Templates\Humanizer.ttinclude"                    #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\System.Data.SqlServerCe.dll" #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\linq2db.dll"                 #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\Humanizer.dll"               #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\System.Data.SqlServerCe.dll"  #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\linq2db.dll"                  #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\Humanizer.dll"                #>
 <#
 	NamespaceName = "SqlCeDataContext";
 

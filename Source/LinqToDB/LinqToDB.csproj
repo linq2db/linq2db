@@ -15,6 +15,7 @@
 
 		<Configurations>Debug;Release</Configurations>
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
+		<EnableSourceLink Condition="'$(TRAVIS)' == true">false</EnableSourceLink>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -40,6 +41,8 @@
 		<None Remove="SqlQuery\ReservedWordsFirebird.txt" />
 
 		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
+
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" />
 
 		<Compile Update="AsyncExtensions.generated.cs">
 			<DesignTime>True</DesignTime>
@@ -110,7 +113,7 @@
 		<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
 		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
 
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
@@ -127,7 +130,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
 		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
 
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
 		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
@@ -149,7 +152,7 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
 
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
 		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />

@@ -11,18 +11,17 @@
 
 		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			if (statement.SelectQuery != null)
-				CorrectSkip(statement.SelectQuery);
-
-			return base.Finalize(statement);
+			var result = base.Finalize(statement);
+			if (result.SelectQuery != null)
+				CorrectSkip(result.SelectQuery);
+			return result;
 		}
 
 		private void CorrectSkip(SelectQuery selectQuery)
 		{
 			((ISqlExpressionWalkable)selectQuery).Walk(false, e =>
 			{
-				var q = e as SelectQuery;
-				if (q != null && q.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(q) && q.OrderBy.IsEmpty)
+				if (e is SelectQuery q && q.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(q) && q.OrderBy.IsEmpty)
 				{
 					if (q.Select.Columns.Count == 0)
 					{

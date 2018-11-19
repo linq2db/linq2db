@@ -25,6 +25,7 @@ using LinqToDB.ServiceModel;
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
+using NUnit.Framework.Internal;
 
 //[assembly: Parallelizable]
 
@@ -132,7 +133,8 @@ namespace Tests
 				File.Copy(file, destination, true);
 			}
 
-			UserProviders = new HashSet<string>(testSettings.Providers, StringComparer.OrdinalIgnoreCase);
+			UserProviders  = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+			SkipCategories = new HashSet<string>(testSettings.Skip      ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
 
 			var logLevel   = testSettings.TraceLevel;
 			var traceLevel = TraceLevel.Info;
@@ -140,6 +142,9 @@ namespace Tests
 			if (!string.IsNullOrEmpty(logLevel))
 				if (!Enum.TryParse(logLevel, true, out traceLevel))
 					traceLevel = TraceLevel.Info;
+
+			if (!string.IsNullOrEmpty(testSettings.NoLinqService))
+				BaseDataContextSourceAttribute.NoLinqService = ConvertTo<bool>.From(testSettings.NoLinqService);
 
 			DataConnection.TurnTraceSwitchOn(traceLevel);
 
@@ -264,6 +269,7 @@ namespace Tests
 		}
 
 		public static readonly HashSet<string> UserProviders;
+		public static readonly HashSet<string> SkipCategories;
 
 		public static readonly List<string> Providers = new List<string>
 		{
@@ -278,6 +284,9 @@ namespace Tests
 			ProviderName.OracleManaged,
 			ProviderName.SqlCe,
 			ProviderName.SQLiteClassic,
+#endif
+#if !NETSTANDARD1_6
+			ProviderName.SybaseManaged,
 #endif
 			ProviderName.Firebird,
 			ProviderName.SqlServer2008,
@@ -1184,7 +1193,44 @@ namespace Tests
 		{
 			return Providers.Where(TestBase.UserProviders.Contains);
 		}
-
 	}
 
+	public class SQLiteDataSourcesAttribute : IncludeDataSourcesAttribute
+	{
+		public SQLiteDataSourcesAttribute(bool includeLinqService = false) : base(includeLinqService, 
+			ProviderName.SQLiteClassic, ProviderName.SQLite, ProviderName.SQLiteMS)
+		{
+		}
+	}
+
+	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+	public class SkipCategoryAttribute : NUnitAttribute, IApplyToTest
+	{
+		public SkipCategoryAttribute(string category)
+		{
+			Category = category;
+		}
+
+		public SkipCategoryAttribute(string category, string providerName)
+		{
+			Category     = category;
+			ProviderName = providerName;
+		}
+
+		public string Category     { get; }
+		public string ProviderName { get; }
+
+		public void ApplyToTest(Test test)
+		{
+			if (test.RunState == RunState.NotRunnable || test.RunState == RunState.Explicit || ProviderName != null)
+				return;
+
+			if (TestBase.SkipCategories.Contains(Category))
+			{
+				test.RunState = RunState.Explicit;
+				test.Properties.Set(PropertyNames.Category, Category);
+				test.Properties.Set(PropertyNames.SkipReason, $"Skip category '{Category}'");
+			}
+		}
+	}
 }

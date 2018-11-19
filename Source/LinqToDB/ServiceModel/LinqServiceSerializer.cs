@@ -65,7 +65,7 @@ namespace LinqToDB.ServiceModel
 
 			static string ConvertToString(Type type, object value)
 			{
-				switch (type.GetTypeCodeEx())
+				switch (type.ToNullableUnderlying().GetTypeCodeEx())
 				{
 					case TypeCode.Decimal  : return ((decimal) value).ToString(CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return ((double)  value).ToString(CultureInfo.InvariantCulture);
@@ -494,7 +494,7 @@ namespace LinqToDB.ServiceModel
 				if (str == null)
 					return null;
 
-				switch (type.GetTypeCodeEx())
+				switch (type.ToNullableUnderlying().GetTypeCodeEx())
 				{
 					case TypeCode.Decimal  : return decimal. Parse(str, CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return double.  Parse(str, CultureInfo.InvariantCulture);
@@ -664,6 +664,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Precision);
 							Append(elem.Scale);
 							Append(elem.CreateFormat);
+							Append(elem.CreateOrder);
 
 							break;
 						}
@@ -1049,7 +1050,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Name);
 							Append(elem.Body);
 							Append(elem.ObjectType);
-							Append(elem.Fields.Values);
+							Append(elem.Fields);
 							Append(elem.IsRecursive);
 
 							break;
@@ -1281,6 +1282,7 @@ namespace LinqToDB.ServiceModel
 							var precision        = ReadNullableInt();
 							var scale            = ReadNullableInt();
 							var createFormat     = ReadString();
+							var createOrder      = ReadNullableInt();
 
 							obj = new SqlField
 							{
@@ -1299,6 +1301,7 @@ namespace LinqToDB.ServiceModel
 								Precision       = precision,
 								Scale           = scale,
 								CreateFormat    = createFormat,
+								CreateOrder     = createOrder,
 							};
 
 							break;

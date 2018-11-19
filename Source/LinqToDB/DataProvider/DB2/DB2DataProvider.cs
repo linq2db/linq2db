@@ -20,9 +20,10 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			Version = version;
 
-			SqlProviderFlags.AcceptsTakeAsParameter       = false;
-			SqlProviderFlags.AcceptsTakeAsParameterIfSkip = true;
-			SqlProviderFlags.IsDistinctOrderBySupported   = version != DB2Version.zOS;
+			SqlProviderFlags.AcceptsTakeAsParameter            = false;
+			SqlProviderFlags.AcceptsTakeAsParameterIfSkip      = true;
+			SqlProviderFlags.IsDistinctOrderBySupported        = false;
+			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 
 			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
 

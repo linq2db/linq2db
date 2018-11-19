@@ -169,13 +169,14 @@
 			"DB2"                 : { "Provider" : "IBM.Data.DB2",                    "ConnectionString" : "Server=DBHost:50001;Database=TESTDATA;UID=Administrator;PWD=TestPassword;" },
 			"Firebird"            : {                                                 "ConnectionString" : "DataSource=dbhost;Database=C:\\Data\\TestData.fdb;User Id=SYSDBA;Password=masterkey" },
 			"Informix"            : { "Provider" : "IBM.Data.Informix",               "ConnectionString" : "Host=DBHost;Service=9088;Server=ol_informix1170;Protocol=onsoctcp;Database=TestData;UID=informix;PWD=TestPassword;" },
-			"MySql"               : { "Provider" : "MySql.Data.MySqlClient",          "ConnectionString" : "Server=DBHost;Port=3306;Database=testdata;Uid=root;Pwd=TestPassword;charset=utf8;" },
-			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient",          "ConnectionString" : "Server=DBHost;Port=3306;Database=testdata;Uid=root;Pwd=TestPassword;charset=utf8;" },
-			"MariaDB"             : { "Provider" : "MySql.Data.MySqlClient",          "ConnectionString" : "Server=DBHost;Port=3307;Database=testdata;Uid=root;Pwd=TestPassword;charset=utf8;" },
+			"MySql"               : { "Provider" : "MySql.Data.MySqlClient",          "ConnectionString" : "Server=DBHost;Port=3306;Database=testdata;Uid=root;Pwd=TestPassword;charset=utf8;Allow User Variables=True;" },
+			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient",          "ConnectionString" : "Server=DBHost;Port=3306;Database=testdata;Uid=root;Pwd=TestPassword;charset=utf8;Allow User Variables=True;" },
+			"MariaDB"             : { "Provider" : "MySql.Data.MySqlClient",          "ConnectionString" : "Server=DBHost;Port=3307;Database=testdata;Uid=root;Pwd=TestPassword;charset=utf8;Allow User Variables=True;" },
 			"Oracle.Native"       : { "Provider" : "Oracle.DataAccess.Client",        "ConnectionString" : "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=DBHost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=TestData)));User Id=TestUser;Password=TestPassword;" },
 			"Oracle.Managed"      : { "Provider" : "Oracle.ManagedDataAccess.Client", "ConnectionString" : "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=DBHost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=TestData)));User Id=TestUser;Password=TestPassword;" },
 			"PostgreSQL"          : { "Provider" : "Npgsql",                          "ConnectionString" : "Server=DBHost;Port=5433;Database=TestData;User Id=postgres;Password=TestPassword;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
 			"Sybase"              : { "Provider" : "Sybase.Data.AseClient",           "ConnectionString" : "Data Source=DBHost;Port=5000;Database=TestData;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;" },
+			"Sybase.Managed"      : { "Provider" : "AdoNetCore.AseClient",            "ConnectionString" : "Data Source=DBHost;Port=5000;Database=TestDataCore;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;" },
 			"SapHana"             : { "Provider" : "Sap.Data.Hana",                   "ConnectionString" : "Server=hanahost:port;Current Schema=TEST;UserID=Test;Password=TestPassword;"      },
 			"Northwind"           : { "Provider" : "System.Data.SqlClient",           "ConnectionString" : "Server=DBHost\\SQLSERVER2012;Database=Northwind;User Id=sa;Password=TestPassword" }
 		}
@@ -186,7 +187,7 @@
 		"BasedOn"     : "CommonConnectionStrings",
 		"Connections" :
 		{
-			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=TestData;Uid=root;Pwd=Password12!;charset=utf8;" },
+			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;" },
 			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=localhost;Port=5432;Database=TestData;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
 			"Northwind"           : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=Northwind;User Id=sa;Password=Password12!;" },
 			"SqlServer"           : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestData;User Id=sa;Password=Password12!;" },
@@ -199,7 +200,7 @@
 		"BasedOn"     : "CommonConnectionStrings",
 		"Connections" :
 		{
-			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Database=TestData;Uid=root;Pwd=;charset=utf8;" },
+			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Database=TestData;Uid=root;Pwd=;charset=utf8;Allow User Variables=True;" },
 			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=localhost;Database=testdata;User Id=postgres;Password=;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
 			"SQLite.MS"           : { "Provider" : "SQLite.MS",              "ConnectionString" : "Data Source=Database/TestData.MS.sqlite" },
 			"SQLite.MS.Data"      : { "Provider" : "Microsoft.Data.Sqlite",  "ConnectionString" : "Data Source=Database/Data/TestData.MS.sqlite" },
@@ -238,6 +239,7 @@
 			"Oracle.Managed",
 			"PostgreSQL",
 			"Sybase",
+			"Sybase.Managed",
 			"SapHana",
 			"Northwind",
 			"TestNoopProvider"

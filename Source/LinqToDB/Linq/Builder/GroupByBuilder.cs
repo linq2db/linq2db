@@ -425,7 +425,9 @@ namespace LinqToDB.Linq.Builder
 
 						if (arg.Method.Name == "Select")
 						{
-							if (arg.Arguments[0].NodeType != ExpressionType.Call)
+							var arg0 = arg.Arguments[0].SkipPathThrough();
+
+							if (arg0.NodeType != ExpressionType.Call)
 							{
 								var l     = (LambdaExpression)arg.Arguments[1].Unwrap();
 								var largs = l.Type.GetGenericArgumentsEx();

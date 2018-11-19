@@ -13,10 +13,10 @@ using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.UserTests
 {
-	using Tests.Model;
 
 	[TestFixture]
 	public class Issue278Tests : TestBase
