@@ -665,6 +665,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Precision);
 							Append(elem.Scale);
 							Append(elem.CreateFormat);
+							Append(elem.CreateOrder);
 
 							break;
 						}
@@ -1311,6 +1312,7 @@ namespace LinqToDB.ServiceModel
 							var precision        = ReadNullableInt();
 							var scale            = ReadNullableInt();
 							var createFormat     = ReadString();
+							var createOrder      = ReadNullableInt();
 
 							obj = new SqlField
 							{
@@ -1329,6 +1331,7 @@ namespace LinqToDB.ServiceModel
 								Precision       = precision,
 								Scale           = scale,
 								CreateFormat    = createFormat,
+								CreateOrder     = createOrder,
 							};
 
 							break;

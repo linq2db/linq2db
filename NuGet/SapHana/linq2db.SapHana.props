@@ -1,4 +1,4 @@
-<Project>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
 		<LinqToDBT4SapHanaTemplatesDirectory>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SapHanaTemplatesDirectory>
 		<LinqToDBT4SapHanaToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SapHanaToolsDirectory>
