@@ -14,6 +14,11 @@ namespace LinqToDB
 	public class LinqToDBException : Exception
 	{
 		/// <summary>
+		/// The Column Name on which the Exception occurs
+		/// </summary>
+		public string ColumnName { get; set; }
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="LinqToDBException"/> class.
 		/// </summary>
 		/// <remarks>
