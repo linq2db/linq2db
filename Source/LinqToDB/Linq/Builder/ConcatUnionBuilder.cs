@@ -242,6 +242,14 @@ namespace LinqToDB.Linq.Builder
 						{
 							var tableContext = new TableBuilder.TableContext(Builder,
 								new BuildInfo((IBuildContext) null, Expression, new SelectQuery()), type);
+
+							var indexes = ConvertToIndex(null, level, ConvertFlags.All);
+							if (Parent != null)
+							{
+								for (int i = 0; i < indexes.Length - 1; i++)
+									Parent.ConvertToParentIndex(indexes[i].Index, this);
+							}
+
 							var ex = tableContext.BuildExpression(null, 0, enforceServerSide);
 							return ex;
 						}
