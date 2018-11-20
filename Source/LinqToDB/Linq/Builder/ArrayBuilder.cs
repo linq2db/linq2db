@@ -47,12 +47,12 @@ namespace LinqToDB.Linq.Builder
 					}
 
 				case ExpressionType.NewArrayInit:
-				{
-					var newArray = (NewArrayExpression) expression;
-					if (newArray.Expressions.Count > 0)
-						return action(3, newArray.Expressions[0].Type);
-					break;
-				}
+					{
+						var newArray = (NewArrayExpression)expression;
+						if (newArray.Expressions.Count > 0)
+							return action(3, newArray.Expressions[0].Type);
+						break;
+					}
 
 				case ExpressionType.Parameter:
 					{
@@ -65,12 +65,7 @@ namespace LinqToDB.Linq.Builder
 
 		static IEnumerable<ISqlExpression> BuildElements(ExpressionBuilder builder, BuildInfo buildInfo, IEnumerable<Expression> elements)
 		{
-			foreach (var itemExpr in elements)
-			{
-				var ctx = builder.GetContext(buildInfo.Parent, itemExpr) ?? buildInfo.Parent;
-
-				yield return ctx.ConvertToSql(itemExpr, 0, ConvertFlags.Field)[0].Sql;
-			}
+			return elements.Select(e => builder.ConvertToSql(buildInfo.Parent, e));
 		}
 
 		static IEnumerable<ISqlExpression> BuildElements(Type type, IEnumerable elements)

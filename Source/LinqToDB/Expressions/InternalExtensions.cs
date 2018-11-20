@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -392,6 +393,25 @@ namespace LinqToDB.Expressions
 					info.Visited.Add(eq1);
 					return eq1.EqualsTo(eq2, info);
 				}
+			}
+			else if (expr1.Value is IEnumerable list1 && expr2.Value is IEnumerable list2)
+			{
+				var enum1 = list1.GetEnumerator();
+				var enum2 = list2.GetEnumerator();
+				using (enum1 as IDisposable)
+				using (enum2 as IDisposable)
+				{
+					while (enum1.MoveNext())
+					{
+						if (!enum2.MoveNext() || !object.Equals(enum1.Current, enum2.Current))
+							return false;
+					}
+
+					if (enum2.MoveNext())
+						return false;
+				}
+
+				return true;
 			}
 
 			return !info.CompareConstantValues || expr1.Value == expr2.Value;

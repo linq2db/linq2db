@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -3031,6 +3032,40 @@ namespace LinqToDB
 		}
 
 		#endregion
+
+		#region AsQueryable
+
+	    /// <summary>Converts a generic <see cref="T:System.Collections.Generic.IEnumerable`1" /> to Linq To DB query.</summary>
+	    /// <param name="source">A sequence to convert.</param>
+		/// <param name="dataContext">Database connection context.</param>
+	    /// <typeparam name="TElement">The type of the elements of <paramref name="source" />.</typeparam>
+	    /// <returns>An <see cref="T:System.Linq.IQueryable`1" /> that represents the input sequence.</returns>
+	    /// <exception cref="T:System.ArgumentNullException">
+	    /// <paramref name="source" /> is <see langword="null" />.</exception>
+		public static IQueryable<TElement> AsQueryable<TElement>(
+			[SqlQueryDependent] [NotNull] this IEnumerable<TElement> source, 
+			[NotNull]                          IDataContext          dataContext)
+		{
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+
+			if (source is IQueryable<TElement> already)
+				return already;
+
+			var query = new ExpressionQueryImpl<TElement>(dataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsQueryable, source, dataContext),
+					Expression.NewArrayInit(typeof(TElement),
+						source.Select(i => Expression.Constant(i, typeof(TElement)))),
+					Expression.Constant(dataContext)
+				));
+
+			return query;
+		}
+
+		#endregion
+
 
 		#region Tests
 
