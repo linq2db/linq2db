@@ -83,6 +83,9 @@ namespace LinqToDB
 			if (source is ExpressionQuery<TSource> query)
 				return query.GetForEachAsync(action, token);
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.ForEachAsync(source, action, token);
+
 			return GetActionTask(() =>
 			{
 				foreach (var item in source)
@@ -142,6 +145,9 @@ namespace LinqToDB
 				return list;
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToListAsync(source, token);
+
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(), token);
 		}
 
@@ -165,7 +171,18 @@ namespace LinqToDB
 				var list = new List<TSource>();
 				await query.GetForEachAsync(list.Add, token);
 				return list.ToArray();
+
+//				var list = new List<TSource>();
+//
+//				using (var enumerator = query.GetAsyncEnumerable().GetEnumerator())
+//					while (await enumerator.MoveNext(token))
+//						list.Add(enumerator.Current);
+//
+//				return list.ToArray();
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToArrayAsync(source, token);
 
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(), token);
 		}
@@ -195,6 +212,9 @@ namespace LinqToDB
 				return dic;
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, token);
+
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector), token);
 		}
 
@@ -220,6 +240,9 @@ namespace LinqToDB
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token);
 				return dic;
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, comparer, token);
 
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, comparer), token);
 		}
@@ -247,6 +270,9 @@ namespace LinqToDB
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token);
 				return dic;
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, elementSelector, token);
 
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector), token);
 		}
@@ -277,9 +303,13 @@ namespace LinqToDB
 				return dic;
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, elementSelector, comparer, token);
+
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer), token);
 		}
 
 		#endregion
+
 	}
 }

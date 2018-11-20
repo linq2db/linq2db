@@ -156,19 +156,21 @@ namespace LinqToDB.DataProvider
 #endif
 		}
 
-		protected void TraceAction(DataConnection dataConnection, string commandText, Func<int> action)
+		protected void TraceAction(DataConnection dataConnection, Func<string> commandText, Func<int> action)
 		{
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 			{
 				dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = dataConnection,
-					CommandText    = commandText,
+					CommandText    = commandText(),
+					StartTime      = now,
 				});
 			}
-
-			var now = DateTime.Now;
 
 			try
 			{
@@ -180,8 +182,9 @@ namespace LinqToDB.DataProvider
 					{
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = dataConnection,
-						CommandText     = commandText,
-						ExecutionTime   = DateTime.Now - now,
+						CommandText     = commandText(),
+						StartTime       = now,
+						ExecutionTime   = sw.Elapsed,
 						RecordsAffected = count,
 					});
 				}
@@ -194,8 +197,9 @@ namespace LinqToDB.DataProvider
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = dataConnection,
-						CommandText    = commandText,
-						ExecutionTime  = DateTime.Now - now,
+						CommandText    = commandText(),
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 					});
 				}

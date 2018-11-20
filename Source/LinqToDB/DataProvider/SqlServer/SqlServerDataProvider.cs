@@ -29,6 +29,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			Version = version;
 
+			SqlProviderFlags.IsDistinctOrderBySupported = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported = false;
+
 			if (version == SqlServerVersion.v2000)
 			{
 				SqlProviderFlags.AcceptsTakeAsParameter   = false;
@@ -72,9 +75,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				SetProviderField<IDataReader,SqlString  ,SqlString  >((r,i) => r.GetString  (i));
 			}
 
-			_sqlOptimizer              = new SqlServerSqlOptimizer    (SqlProviderFlags);
 			_sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
 			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
+			_sqlServer2008SqlOptimizer = new SqlServerSqlOptimizer    (SqlProviderFlags);
+			_sqlServer2012SqlOptimizer = new SqlServer2012SqlOptimizer(SqlProviderFlags);
 
 			SetField<IDataReader,decimal>((r,i) => r.GetDecimal(i));
 			SetField<IDataReader,decimal>("money",      (r,i) => SqlServerTools.DataReaderGetMoney  (r, i));
@@ -137,9 +141,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new InvalidOperationException();
 		}
 
-		readonly ISqlOptimizer _sqlOptimizer;
 		readonly ISqlOptimizer _sqlServer2000SqlOptimizer;
 		readonly ISqlOptimizer _sqlServer2005SqlOptimizer;
+		readonly ISqlOptimizer _sqlServer2008SqlOptimizer;
+		readonly ISqlOptimizer _sqlServer2012SqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
@@ -147,9 +152,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				case SqlServerVersion.v2000 : return _sqlServer2000SqlOptimizer;
 				case SqlServerVersion.v2005 : return _sqlServer2005SqlOptimizer;
+				case SqlServerVersion.v2008 : return _sqlServer2008SqlOptimizer;
+				case SqlServerVersion.v2012 : return _sqlServer2012SqlOptimizer;
 			}
 
-			return _sqlOptimizer;
+			return _sqlServer2008SqlOptimizer;
 		}
 
 		public override bool IsCompatibleConnection(IDbConnection connection)
@@ -204,7 +211,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						string s;
 						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
 							if (parameter is SqlParameter)
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETSTANDARD1_6
 								((SqlParameter)parameter).TypeName = s;
 #else
 								((SqlParameter)parameter).UdtTypeName = s;
@@ -212,6 +219,29 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					}
 
+					break;
+				case DataType.NText:
+					if (value is DateTimeOffset) value = ((DateTimeOffset)value).ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
+					else if (value is DateTime)
+					{
+						var dt = (DateTime)value;
+						value = dt.ToString(
+							dt.Millisecond == 0
+								? "yyyy-MM-ddTHH:mm:ss"
+								: "yyyy-MM-ddTHH:mm:ss.fff");
+					}
+					else if (value is TimeSpan)
+					{
+						var ts = (TimeSpan)value;
+						value = ts.ToString(
+							ts.Days > 0
+								? ts.Milliseconds > 0
+									? "d\\.hh\\:mm\\:ss\\.fff"
+									: "d\\.hh\\:mm\\:ss"
+								: ts.Milliseconds > 0
+									? "hh\\:mm\\:ss\\.fff"
+									: "hh\\:mm\\:ss");
+					}
 					break;
 			}
 

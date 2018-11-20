@@ -14,42 +14,30 @@ namespace Tests.xUpdate
 	public class BulkCopyTests : TestBase
 	{
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
-		[Table("alltypes", Configuration = ProviderName.PostgreSQL)]
 		[Table("AllTypes")]
 		public class TestTable1
 		{
 			[Identity]
-			[Column("id", Configuration = ProviderName.PostgreSQL)]
 			public int ID { get; set; }
 
 			[Column("intDataType")]
 			[Column("Value", Configuration = ProviderName.DB2)]
-			[Column("intdatatype", Configuration = ProviderName.PostgreSQL)]
 			public int Value { get; set; }
-
-			[Column("bitDataType", Configuration = ProviderName.Sybase)]
-			public bool ThisIsSYBASE;
 		}
 
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
-		[Table("alltypes", Configuration = ProviderName.PostgreSQL)]
 		[Table("AllTypes")]
 		public class TestTable2
 		{
 			[Identity, Column(SkipOnInsert = true)]
-			[Column("id", Configuration = ProviderName.PostgreSQL)]
 			public int ID { get; set; }
 
 			[Column("intDataType")]
 			[Column("Value", Configuration = ProviderName.DB2)]
-			[Column("intdatatype", Configuration = ProviderName.PostgreSQL)]
 			public int Value { get; set; }
-
-			[Column("bitDataType", Configuration = ProviderName.Sybase)]
-			public bool ThisIsSYBASE;
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void KeepIdentity_SkipOnInsertTrue(
 			[DataSources(false)]string context,
 			[Values(null, true, false)]bool? keepIdentity,
@@ -113,7 +101,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Combinatorial]
+		[ActiveIssue("Unsupported column datatype", Configuration = ProviderName.OracleNative)]
+		[Test]
 		public void KeepIdentity_SkipOnInsertFalse(
 			[DataSources(false)]string context,
 			[Values(null, true, false)]bool? keepIdentity,

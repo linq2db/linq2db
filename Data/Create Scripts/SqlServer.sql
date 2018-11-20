@@ -927,12 +927,14 @@ GO
 
 CREATE TABLE [TestSchema].[TestSchemaB]
 (
-	[TestSchemaBID]       INT NOT NULL,
-	[OriginTestSchemaAID] INT NOT NULL,
-	[TargetTestSchemaAID] INT NOT NULL,
+	[TestSchemaBID]           INT NOT NULL,
+	[OriginTestSchemaAID]     INT NOT NULL,
+	[TargetTestSchemaAID]     INT NOT NULL,
+	[Target_Test_Schema_A_ID] INT NOT NULL,
 	CONSTRAINT [PK_TestSchema_TestSchemaB] PRIMARY KEY (TestSchemaBID),
-	CONSTRAINT [FK_TestSchema_TestSchemaBY_OriginTestSchemaA] FOREIGN KEY (OriginTestSchemaAID) REFERENCES [TestSchema].[TestSchemaA] ([TestSchemaAID]),
-	CONSTRAINT [FK_TestSchema_TestSchemaBY_TargetTestSchemaA] FOREIGN KEY (TargetTestSchemaAID) REFERENCES [TestSchema].[TestSchemaA] ([TestSchemaAID])
+	CONSTRAINT [FK_TestSchema_TestSchemaBY_OriginTestSchemaA]  FOREIGN KEY (OriginTestSchemaAID)       REFERENCES [TestSchema].[TestSchemaA] ([TestSchemaAID]),
+	CONSTRAINT [FK_TestSchema_TestSchemaBY_TargetTestSchemaA]  FOREIGN KEY (TargetTestSchemaAID)       REFERENCES [TestSchema].[TestSchemaA] ([TestSchemaAID]),
+	CONSTRAINT [FK_TestSchema_TestSchemaBY_TargetTestSchemaA2] FOREIGN KEY ([Target_Test_Schema_A_ID]) REFERENCES [TestSchema].[TestSchemaA] ([TestSchemaAID])
 );
 GO
 
@@ -946,4 +948,18 @@ BEGIN
 END
 GO
 GRANT EXEC ON AddIssue792Record TO PUBLIC
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Issue1144') AND type in (N'U'))
+BEGIN DROP TABLE Issue1144 END
+GO
+CREATE TABLE Issue1144
+(
+	id	INT
+	CONSTRAINT PK_Issue1144 PRIMARY KEY CLUSTERED (id ASC)
+)
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Column description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'COLUMN',@level2name=N'id'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Index description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'INDEX',@level2name=N'PK_Issue1144'
+
 GO

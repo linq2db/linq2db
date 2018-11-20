@@ -14,6 +14,7 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Collections.Generic;
 	using System.Globalization;
 
 	using Model;
@@ -21,9 +22,10 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SybaseTests : TestBase
 	{
-		const string CurrentProvider = ProviderName.Sybase;
+		const string CurrentProvider     = ProviderName.Sybase;
+		const string CurrentProviderCore = ProviderName.SybaseManaged;
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -54,7 +56,7 @@ namespace Tests.DataProvider
 			Assert.That(actualValue, Is.EqualTo(expectedValue));
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -150,7 +152,7 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType, "bit");
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestNumerics(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -204,7 +206,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestDate(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -218,7 +220,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestSmallDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -233,7 +235,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -249,7 +251,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestTimeSpan(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -266,7 +268,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestChar(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -310,47 +312,92 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestString(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char)"),          Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),      Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"),      Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char)"),                       Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),                   Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),                   Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"),                   Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar)"),       Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),   Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),   Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar)"),                    Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),                Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),                Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),          Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),          Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),                       Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),                       Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"),         Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"),     Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nchar(20))"),     Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"),                      Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"),                  Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nchar(20))"),                  Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar)"),      Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(20))"),  Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(20))"),  Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar)"),                   Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(20))"),               Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(20))"),               Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as unitext)"),       Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as unitext)"),       Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as unitext)"),                    Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as unitext)"),                    Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Text    ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NChar   ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NVarChar("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Text    ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NChar   ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NVarChar("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", "123")),      Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string)null)), Is.EqualTo(null));
-				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string)null)),         Is.EqualTo(null));
+				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }),   Is.EqualTo("1"));
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		public static IEnumerable<Tuple<string, string>> StringTestCases
+		{
+			get
+			{
+				yield return Tuple.Create("'\u2000\u2001\u2002\u2003\uabab\u03bctесt", "u&'''\\2000\\2001\\2002\\2003\\abab\\03bctесt'");
+				// this case fails for parameters, because driver terminates parameter value at \0 character
+				//yield return Tuple.Create("\0test", "char(0) + 'test'");
+			}
+		}
+
+		[Test]
+		public void TestUnicodeString(
+			[IncludeDataSources(false, CurrentProvider, CurrentProviderCore)] string context,
+			[ValueSource(nameof(StringTestCases))] Tuple<string, string> testCase)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var value = testCase.Item1;
+				var literal = testCase.Item2;
+				
+				// test raw literals queries
+				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as char)"),               Is.EqualTo(value));
+				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as varchar)"),            Is.EqualTo(value));
+				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as text)"),               Is.EqualTo(value));
+				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as nchar)"),              Is.EqualTo(value));
+				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as nvarchar)"),           Is.EqualTo(value));
+				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as unitext)"),            Is.EqualTo(value));
+
+				// test parameters
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", value)), Is.EqualTo(value));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", value)), Is.EqualTo(value));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Text    ("p", value)), Is.EqualTo(value));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NChar   ("p", value)), Is.EqualTo(value));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NVarChar("p", value)), Is.EqualTo(value));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", value)), Is.EqualTo(value));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", value)), Is.EqualTo(value));
+
+				// test default linq2db behavior for parameter and literal
+				Assert.That(conn.Select(() => value), Is.EqualTo(value));
+				conn.InlineParameters = true;
+				Assert.That(conn.Select(() => value), Is.EqualTo(value));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestBinary(string context)
 		{
 			var arr1 = new byte[] { 57, 48        };
@@ -381,7 +428,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestGuid(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -401,7 +448,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestTimestamp(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -413,7 +460,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -439,7 +486,7 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -451,7 +498,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -465,7 +512,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void BulkCopyLinqTypes(string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })

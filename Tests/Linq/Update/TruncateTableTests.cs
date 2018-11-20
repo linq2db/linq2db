@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using JetBrains.Annotations;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -14,6 +14,7 @@ namespace Tests.xUpdate
 	public class TruncateTableTests : TestBase
 	{
 		[Table]
+		[UsedImplicitly]
 		class TestTrun
 		{
 			[Column, PrimaryKey] public int     ID;
@@ -40,6 +41,7 @@ namespace Tests.xUpdate
 			[Column]                       public decimal Field1;
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.Informix)]
 		public void TruncateIdentityTest(string context)
 		{

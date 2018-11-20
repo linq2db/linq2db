@@ -50,5 +50,16 @@ namespace Tests.Linq
 					.TableName("Parent")
 					.ToList();
 		}
+
+		[Test, DataContextSource]
+		public void GetTableNameTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var tableName = db.GetTable<ParenTable>().TableName;
+
+				Assert.That(tableName, Is.Not.Null);
+			}
+		}
 	}
 }

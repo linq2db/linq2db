@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -26,7 +27,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : ICloneable
+	public partial class DataConnection : ICloneable, IEntityServices
 	{
 		#region .ctor
 
@@ -281,9 +282,8 @@ namespace LinqToDB.Data
 				if (!_id.HasValue)
 				{
 					var key = MappingSchema.ConfigurationID + "." + (ConfigurationString ?? ConnectionString ?? Connection.ConnectionString);
-					int id;
 
-					if (!_configurationIDs.TryGetValue(key, out id))
+					if (!_configurationIDs.TryGetValue(key, out var id))
 						_configurationIDs[key] = id = Interlocked.Increment(ref _maxID);
 
 					_id = id;
@@ -365,8 +365,8 @@ namespace LinqToDB.Data
 				case TraceInfoStep.AfterExecute:
 					WriteTraceLine(
 						info.RecordsAffected != null
-							? $"Query Execution Time ({info.TraceInfoStep}) {(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
-							: $"Query Execution Time ({info.TraceInfoStep}) {(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
+							? $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
+							: $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
 						TraceSwitch.DisplayName);
 					break;
 
@@ -640,6 +640,51 @@ namespace LinqToDB.Data
 			return GetConfigurationInfo(configurationString).DataProvider;
 		}
 
+		/// <summary>
+		/// Returns database provider associated with provider name, configuration and connection string.
+		/// </summary>
+		/// <param name="providerName">Provider name.</param>
+		/// <param name="configurationString">Connection configuration name.</param>
+		/// <param name="connectionString">Connection string.</param>
+		/// <returns>Database provider.</returns>
+		public static IDataProvider GetDataProvider(
+			[JetBrains.Annotations.NotNull] string providerName,
+			[JetBrains.Annotations.NotNull] string configurationString,
+			[JetBrains.Annotations.NotNull] string connectionString)
+		{
+			InitConfig();
+
+			return ConfigurationInfo.GetDataProvider(
+				new ConnectionStringSettings(configurationString, connectionString, providerName),
+				connectionString);
+		}
+
+		/// <summary>
+		/// Returns database provider associated with provider name and connection string.
+		/// </summary>
+		/// <param name="providerName">Provider name.</param>
+		/// <param name="connectionString">Connection string.</param>
+		/// <returns>Database provider.</returns>
+		public static IDataProvider GetDataProvider(
+			[JetBrains.Annotations.NotNull] string providerName,
+			[JetBrains.Annotations.NotNull] string connectionString)
+		{
+			InitConfig();
+
+			return ConfigurationInfo.GetDataProvider(
+				new ConnectionStringSettings(providerName, connectionString, providerName),
+				connectionString);
+		}
+
+		/// <summary>
+		/// Returns registered database providers.
+		/// </summary>
+		/// <returns>
+		/// Returns copy of registered providers"
+		/// </returns>
+		public static IReadOnlyDictionary<string, IDataProvider> GetRegisteredProviders() =>
+			_dataProviders.ToDictionary(p => p.Key, p => p.Value);
+
 		class ConfigurationInfo
 		{
 			private readonly bool   _dataProviderSetted;
@@ -660,7 +705,7 @@ namespace LinqToDB.Data
 			}
 
 			private string _connectionString;
-			public  string ConnectionString
+			public  string  ConnectionString
 			{
 				get => _connectionString;
 				set
@@ -688,7 +733,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
+			public static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
 			{
 				var configuration = css.Name;
 				var providerName  = css.ProviderName;
@@ -773,10 +818,12 @@ namespace LinqToDB.Data
 			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-			_configurations[configuration] = new ConfigurationInfo(
+			var info = new ConfigurationInfo(
 				configuration,
 				connectionString,
 				dataProvider ?? FindProvider(configuration, _dataProviders, _dataProviders[DefaultDataProvider]));
+
+			_configurations.AddOrUpdate(configuration, info, (s,i) => info);
 		}
 
 		class ConnectionStringSettings : IConnectionStringSettings
@@ -872,6 +919,7 @@ namespace LinqToDB.Data
 				{
 					_connection.Open();
 					_closeConnection = true;
+					OnConnectionOpened?.Invoke(this, _connection);
 				}
 
 				return _connection;
@@ -886,6 +934,19 @@ namespace LinqToDB.Data
 		/// Event, triggered after connection closed using <see cref="Close"/> method.
 		/// </summary>
 		public event EventHandler OnClosed;
+
+		/// <inheritdoc />
+		public Action<EntityCreatedEventArgs> OnEntityCreated    { get; set; }
+
+		/// <summary>
+		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> method.
+		/// </summary>
+		public event Action<DataConnection, IDbConnection> OnConnectionOpened;
+
+		/// <summary>
+		/// Event, triggered right after connection opened using <see cref="DbConnection.OpenAsync()"/> methods.
+		/// </summary>
+		public event Func<DataConnection, IDbConnection, CancellationToken, Task> OnConnectionOpenedAsync;
 
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
@@ -927,7 +988,7 @@ namespace LinqToDB.Data
 
 		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints)
 		{
-			if (queryHints != null && queryHints.Count > 0)
+			if (queryHints?.Count > 0)
 			{
 				var sqlProvider = DataProvider.CreateSqlBuilder();
 				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
@@ -945,7 +1006,12 @@ namespace LinqToDB.Data
 		public  int   CommandTimeout
 		{
 			get => _commandTimeout ?? 0;
-			set => _commandTimeout = value;
+			set
+			{
+				_commandTimeout = value;
+				if (_command != null)
+					_command.CommandTimeout = value;
+			}
 		}
 
 		private IDbCommand _command;
@@ -992,6 +1058,9 @@ namespace LinqToDB.Data
 				using (DataProvider.ExecuteScope())
 					return Command.ExecuteNonQuery();
 
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (TraceSwitch.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
@@ -999,10 +1068,10 @@ namespace LinqToDB.Data
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
 					Command        = Command,
+					StartTime      = now,
 				});
 			}
 
-			var now = DateTime.Now;
 
 			try
 			{
@@ -1017,7 +1086,8 @@ namespace LinqToDB.Data
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = this,
 						Command         = Command,
-						ExecutionTime   = DateTime.Now - now,
+						StartTime       = now,
+						ExecutionTime   = sw.Elapsed,
 						RecordsAffected = ret,
 					});
 				}
@@ -1033,7 +1103,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 					});
 				}
@@ -1047,17 +1118,19 @@ namespace LinqToDB.Data
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				return Command.ExecuteScalar();
 
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (TraceSwitch.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
-					Command        = Command
+					Command        = Command,
+					StartTime      = now,
 				});
 			}
-
-			var now = DateTime.Now;
 
 			try
 			{
@@ -1070,7 +1143,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 					});
 				}
 
@@ -1085,7 +1159,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 					});
 				}
@@ -1105,6 +1180,9 @@ namespace LinqToDB.Data
 				using (DataProvider.ExecuteScope())
 					return Command.ExecuteReader(GetCommandBehavior(commandBehavior));
 
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (TraceSwitch.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
@@ -1112,10 +1190,9 @@ namespace LinqToDB.Data
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
 					Command        = Command,
+					StartTime      = now,
 				});
 			}
-
-			var now = DateTime.Now;
 
 			try
 			{
@@ -1131,7 +1208,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 					});
 				}
 
@@ -1146,7 +1224,8 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 					});
 				}
@@ -1179,8 +1258,7 @@ namespace LinqToDB.Data
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			if (Transaction != null)
-				Transaction.Dispose();
+			Transaction?.Dispose();
 
 			// Create new transaction object.
 			//
@@ -1205,8 +1283,7 @@ namespace LinqToDB.Data
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			if (Transaction != null)
-				Transaction.Dispose();
+			Transaction?.Dispose();
 
 			// Create new transaction object.
 			//
@@ -1322,9 +1399,9 @@ namespace LinqToDB.Data
 		public object Clone()
 		{
 			var connection =
-				_connection == null       ? null :
-				_connection is ICloneable ? (IDbConnection)((ICloneable)_connection).Clone() :
-				                            null;
+				_connection == null                 ? null :
+				_connection is ICloneable cloneable ? (IDbConnection)cloneable.Clone() :
+				                                      null;
 
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}

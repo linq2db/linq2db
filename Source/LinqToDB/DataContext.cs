@@ -5,6 +5,8 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB
 {
 	using Data;
@@ -16,7 +18,8 @@ namespace LinqToDB
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
-	public class DataContext : IDataContext
+	[PublicAPI]
+	public class DataContext : IDataContext, IEntityServices
 	{
 		/// <summary>
 		/// Creates data context using default database configuration.
@@ -33,10 +36,10 @@ namespace LinqToDB
 		/// In case of <c>null</c> value, context will use default configuration.
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </param>
-		public DataContext(string configurationString)
+		public DataContext([CanBeNull] string configurationString)
 		{
-			DataProvider        = DataConnection.GetDataProvider(configurationString);
 			ConfigurationString = configurationString ?? DataConnection.DefaultConfiguration;
+			DataProvider        = DataConnection.GetDataProvider(ConfigurationString);
 			ContextID           = DataProvider.Name;
 			MappingSchema       = DataProvider.MappingSchema;
 		}
@@ -83,6 +86,12 @@ namespace LinqToDB
 		/// Contains text of last command, sent to database using current context.
 		/// </summary>
 		public string        LastQuery           { get; set; }
+
+		/// <summary>
+		/// Gets or sets trace handler, used for data connection instance.
+		/// </summary>
+		[CanBeNull]
+		public Action<TraceInfo> OnTraceConnection { get; set; } 
 
 		private bool _keepConnectionAlive;
 		/// <summary>
@@ -191,6 +200,9 @@ namespace LinqToDB
 					_dataConnection.NextQueryHints.AddRange(_nextQueryHints);
 					_nextQueryHints = null;
 				}
+
+				if (OnTraceConnection != null)
+					_dataConnection.OnTraceConnection = OnTraceConnection;
 			}
 
 			return _dataConnection;
@@ -269,6 +281,9 @@ namespace LinqToDB
 		/// </summary>
 		public event EventHandler OnClosing;
 
+		/// <inheritdoc />
+		public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+
 		void IDisposable.Dispose()
 		{
 			Close();
@@ -281,8 +296,7 @@ namespace LinqToDB
 		{
 			if (_dataConnection != null)
 			{
-				if (OnClosing != null)
-					OnClosing(this, EventArgs.Empty);
+				OnClosing?.Invoke(this, EventArgs.Empty);
 
 				if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints);
 				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints);
@@ -387,8 +401,6 @@ namespace LinqToDB
 			public IDataContext DataContext      { get => _queryRunner.DataContext;      set => _queryRunner.DataContext      = value; }
 			public Expression   Expression       { get => _queryRunner.Expression;       set => _queryRunner.Expression       = value; }
 			public object[]     Parameters       { get => _queryRunner.Parameters;       set => _queryRunner.Parameters       = value; }
-			public Func<int>    SkipAction       { get => _queryRunner.SkipAction;       set => _queryRunner.SkipAction       = value; }
-			public Func<int>    TakeAction       { get => _queryRunner.TakeAction;       set => _queryRunner.TakeAction       = value; }
 			public Expression   MapperExpression { get => _queryRunner.MapperExpression; set => _queryRunner.MapperExpression = value; }
 			public int          RowsCount        { get => _queryRunner.RowsCount;        set => _queryRunner.RowsCount        = value; }
 			public int          QueryNumber      { get => _queryRunner.QueryNumber;      set => _queryRunner.QueryNumber      = value; }

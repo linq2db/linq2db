@@ -1801,7 +1801,7 @@ namespace Tests.Linq
 			return id;
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void GroupByCustomEntity2(string context)
 		{
 			var rand = new Random().Next(5);

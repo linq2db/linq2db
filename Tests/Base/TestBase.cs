@@ -25,6 +25,7 @@ using LinqToDB.ServiceModel;
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
+using NUnit.Framework.Internal;
 
 //[assembly: Parallelizable]
 
@@ -132,7 +133,8 @@ namespace Tests
 				File.Copy(file, destination, true);
 			}
 
-			UserProviders = new HashSet<string>(testSettings.Providers, StringComparer.OrdinalIgnoreCase);
+			UserProviders  = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+			SkipCategories = new HashSet<string>(testSettings.Skip      ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
 
 			var logLevel   = testSettings.TraceLevel;
 			var traceLevel = TraceLevel.Info;
@@ -140,6 +142,9 @@ namespace Tests
 			if (!string.IsNullOrEmpty(logLevel))
 				if (!Enum.TryParse(logLevel, true, out traceLevel))
 					traceLevel = TraceLevel.Info;
+
+			if (!string.IsNullOrEmpty(testSettings.NoLinqService))
+				BaseDataContextSourceAttribute.NoLinqService = ConvertTo<bool>.From(testSettings.NoLinqService);
 
 			DataConnection.TurnTraceSwitchOn(traceLevel);
 
@@ -264,6 +269,7 @@ namespace Tests
 		}
 
 		public static readonly HashSet<string> UserProviders;
+		public static readonly HashSet<string> SkipCategories;
 
 		public static readonly List<string> Providers = new List<string>
 		{
@@ -278,6 +284,9 @@ namespace Tests
 			ProviderName.OracleManaged,
 			ProviderName.SqlCe,
 			ProviderName.SQLiteClassic,
+#endif
+#if !NETSTANDARD1_6
+			ProviderName.SybaseManaged,
 #endif
 			ProviderName.Firebird,
 			ProviderName.SqlServer2008,
@@ -860,54 +869,36 @@ namespace Tests
 
 		#endregion
 
-		[Sql.Function("VERSION", ServerSideOnly = true)]
-		private static string MySqlVersion()
-		{
-			throw new InvalidOperationException();
-		}
-
 		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
 		{
-			if (db.ContextID == "MySql" || db.ContextID == "MySql.LinqService")
+			if (db.ProviderNeedsTimeFix(db.ContextID))
 			{
-				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
-				// them from expected data too
-				var version = db.Types.Select(_ => MySqlVersion()).First();
-				var match = new Regex(@"^\d+\.\d+.\d+").Match(version);
-				if (match.Success)
+				var adjusted = new List<LinqDataTypes2>();
+				foreach (var record in data)
 				{
-					var versionParts = match.Value.Split('.').Select(_ => int.Parse(_)).ToArray();
-
-					if (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604)
+					var copy = new LinqDataTypes2()
 					{
-						var adjusted = new List<LinqDataTypes2>();
-						foreach (var record in data)
-						{
-							var copy = new LinqDataTypes2()
-							{
-								ID             = record.ID,
-								MoneyValue     = record.MoneyValue,
-								DateTimeValue  = record.DateTimeValue,
-								DateTimeValue2 = record.DateTimeValue2,
-								BoolValue      = record.BoolValue,
-								GuidValue      = record.GuidValue,
-								SmallIntValue  = record.SmallIntValue,
-								IntValue       = record.IntValue,
-								BigIntValue    = record.BigIntValue,
-								StringValue    = record.StringValue
-							};
+						ID             = record.ID,
+						MoneyValue     = record.MoneyValue,
+						DateTimeValue  = record.DateTimeValue,
+						DateTimeValue2 = record.DateTimeValue2,
+						BoolValue      = record.BoolValue,
+						GuidValue      = record.GuidValue,
+						SmallIntValue  = record.SmallIntValue,
+						IntValue       = record.IntValue,
+						BigIntValue    = record.BigIntValue,
+						StringValue    = record.StringValue
+					};
 
-							if (copy.DateTimeValue != null)
-							{
-								copy.DateTimeValue = copy.DateTimeValue.Value.AddMilliseconds(-copy.DateTimeValue.Value.Millisecond);
-							}
-
-							adjusted.Add(copy);
-						}
-
-						return adjusted;
+					if (copy.DateTimeValue != null)
+					{
+						copy.DateTimeValue = copy.DateTimeValue.Value.AddMilliseconds(-copy.DateTimeValue.Value.Millisecond);
 					}
+
+					adjusted.Add(copy);
 				}
+
+				return adjusted;
 			}
 
 			return data;
@@ -1114,33 +1105,9 @@ namespace Tests
 		}
 	}
 
-	public class LocalTable<T> : IDisposable
-	{
-		private IDataContext _db;
-
-		public LocalTable(IDataContext db)
-		{
-			try
-			{
-				_db = db;
-				_db.CreateTable<T>();
-			}
-			catch
-			{
-				_db.DropTable<T>();
-				_db.CreateTable<T>();
-			}
-		}
-
-		public void Dispose()
-		{
-			_db.DropTable<T>();
-		}
-	}
-
 	public class DeletePerson : IDisposable
 	{
-		IDataContext _db;
+		readonly IDataContext _db;
 
 		public DeletePerson(IDataContext db)
 		{
@@ -1153,7 +1120,7 @@ namespace Tests
 			Delete(_db);
 		}
 
-		private readonly Func<IDataContext, int> Delete =
+		readonly Func<IDataContext,int> Delete =
 			CompiledQuery.Compile<IDataContext, int>(db => db.GetTable<Person>().Delete(_ => _.ID > TestBase.MaxPersonID));
 
 	}
@@ -1172,12 +1139,12 @@ namespace Tests
 		}
 	}
 
-	public abstract class DataSourcesBase : DataAttribute, IParameterDataSource
+	public abstract class DataSourcesBaseAttribute : DataAttribute, IParameterDataSource
 	{
-		public bool IncludeLinqService { get; private set; }
-		public string[] Providers { get; private set; }
+		public bool     IncludeLinqService { get; }
+		public string[] Providers          { get; }
 
-		public DataSourcesBase(bool includeLinqService, string[] providers)
+		protected DataSourcesBaseAttribute(bool includeLinqService, string[] providers)
 		{
 			IncludeLinqService = includeLinqService;
 			Providers = providers;
@@ -1195,13 +1162,13 @@ namespace Tests
 	}
 
 	[AttributeUsage(AttributeTargets.Parameter)]
-	public class DataSources : DataSourcesBase
+	public class DataSourcesAttribute : DataSourcesBaseAttribute
 	{
-		public DataSources(params string[] excludeProviders) : base(true, excludeProviders)
+		public DataSourcesAttribute(params string[] excludeProviders) : base(true, excludeProviders)
 		{
 		}
 
-		public DataSources(bool includeLinqService, params string[] excludeProviders) : base(includeLinqService, excludeProviders)
+		public DataSourcesAttribute(bool includeLinqService, params string[] excludeProviders) : base(includeLinqService, excludeProviders)
 		{
 		}
 
@@ -1212,13 +1179,13 @@ namespace Tests
 	}
 
 	[AttributeUsage(AttributeTargets.Parameter)]
-	public class IncludeDataSources : DataSourcesBase
+	public class IncludeDataSourcesAttribute : DataSourcesBaseAttribute
 	{
-		public IncludeDataSources(params string[] includeProviders) : base(true, includeProviders)
+		public IncludeDataSourcesAttribute(params string[] includeProviders) : base(true, includeProviders)
 		{
 		}
 
-		public IncludeDataSources(bool includeLinqService, params string[] includeProviders) : base(includeLinqService, includeProviders)
+		public IncludeDataSourcesAttribute(bool includeLinqService, params string[] includeProviders) : base(includeLinqService, includeProviders)
 		{
 		}
 
@@ -1226,7 +1193,44 @@ namespace Tests
 		{
 			return Providers.Where(TestBase.UserProviders.Contains);
 		}
-
 	}
 
+	public class SQLiteDataSourcesAttribute : IncludeDataSourcesAttribute
+	{
+		public SQLiteDataSourcesAttribute(bool includeLinqService = false) : base(includeLinqService, 
+			ProviderName.SQLiteClassic, ProviderName.SQLite, ProviderName.SQLiteMS)
+		{
+		}
+	}
+
+	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+	public class SkipCategoryAttribute : NUnitAttribute, IApplyToTest
+	{
+		public SkipCategoryAttribute(string category)
+		{
+			Category = category;
+		}
+
+		public SkipCategoryAttribute(string category, string providerName)
+		{
+			Category     = category;
+			ProviderName = providerName;
+		}
+
+		public string Category     { get; }
+		public string ProviderName { get; }
+
+		public void ApplyToTest(Test test)
+		{
+			if (test.RunState == RunState.NotRunnable || test.RunState == RunState.Explicit || ProviderName != null)
+				return;
+
+			if (TestBase.SkipCategories.Contains(Category))
+			{
+				test.RunState = RunState.Explicit;
+				test.Properties.Set(PropertyNames.Category, Category);
+				test.Properties.Set(PropertyNames.SkipReason, $"Skip category '{Category}'");
+			}
+		}
+	}
 }

@@ -238,10 +238,47 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
+		protected override void BuildDeleteQuery(SqlDeleteStatement deleteStatement)
+		{
+			if (deleteStatement.With?.Clauses.Count > 0)
+			{
+				BuildDeleteQuery2(deleteStatement);
+			}
+			else
+			{
+				base.BuildDeleteQuery(deleteStatement);
+			}
+		}
+
+		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
+		{
+			if (statement is SqlStatementWithQueryBase withQuery && withQuery.With?.Clauses.Count > 0)
+			{
+				BuildInsertQuery2(statement, insertClause, addAlias);
+			}
+			else
+			{
+				base.BuildInsertQuery(statement, insertClause, addAlias);
+			}
+		}
+
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
 			if (!statement.IsUpdate())
 				base.BuildFromClause(statement, selectQuery);
+		}
+
+		protected sealed override bool IsReserved(string word)
+		{
+			// TODO: now we use static 11g list
+			// proper solution will be use version-based list or load it from V$RESERVED_WORDS (needs research)
+			// right now list is a merge of two lists:
+			// SQL reserved words: https://docs.oracle.com/database/121/SQLRF/ap_keywd001.htm
+			// PL/SQL reserved words: https://docs.oracle.com/cd/B28359_01/appdev.111/b28370/reservewords.htm
+			// keywords are not included as they are keywords :)
+			//
+			// V$RESERVED_WORDS: https://docs.oracle.com/cd/B28359_01/server.111/b28320/dynviews_2126.htm
+			return ReservedWords.IsReserved(word, ProviderName.Oracle);
 		}
 
 		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
@@ -265,12 +302,52 @@ namespace LinqToDB.DataProvider.Oracle
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
+		/// <summary>
+		/// Check if identifier is valid without quotation. Expects non-zero length string as input.
+		/// </summary>
+		private bool IsValidIdentifier(string name)
+		{
+			// https://docs.oracle.com/cd/B28359_01/server.111/b28286/sql_elements008.htm#SQLRF00223
+			// TODO: "Nonquoted identifiers can contain only alphanumeric characters from your database character set"
+			// now we check only for latin letters
+			// Also we should allow only uppercase letters:
+			// "Nonquoted identifiers are not case sensitive. Oracle interprets them as uppercase"
+			return !IsReserved(name) &&
+				((OracleTools.DontEscapeLowercaseIdentifiers && name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z')) &&
+				name.All(c =>
+					(OracleTools.DontEscapeLowercaseIdentifiers && c >= 'a' && c <= 'z') ||
+					(c >= 'A' && c <= 'Z') ||
+					(c >= '0' && c <= '9') ||
+					c == '$' ||
+					c == '#' ||
+					c == '_');
+		}
+
 		public override object Convert(object value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
 					return ":" + value;
+				// needs proper list of reserved words and name validation
+				// something like we did for Firebird
+				// right now reserved words list contains garbage
+				case ConvertType.NameToQueryFieldAlias:
+				case ConvertType.NameToQueryField:
+				case ConvertType.NameToQueryTable:
+					if (value != null)
+					{
+						var name = value.ToString();
+
+						if (!IsValidIdentifier(name))
+						{
+							return '"' + name + '"';
+						}
+
+						return name;
+					}
+
+					break;
 			}
 
 			return value;
@@ -303,7 +380,7 @@ namespace LinqToDB.DataProvider.Oracle
 			switch (statement)
 			{
 				case SqlTruncateTableStatement truncateTable:
-					return truncateTable.ResetIdentity ? 2 : 1;
+					return truncateTable.ResetIdentity && truncateTable.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
 
 				case SqlCreateTableStatement createTable:
 					_identityField = createTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);

@@ -12,9 +12,13 @@ Visit our [blog](http://blog.linq2db.com/) and see [Github.io documentation](htt
 
 Code examples and demos can be found [here](https://github.com/linq2db/examples) or in [tests](https://github.com/linq2db/linq2db/tree/master/Tests/Linq).
 
+T4 model generation help is [here](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.Templates/README.md).
+
+[Releases and Roadmap](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap).
+
 ## How to help the project
 
-No, this is not the donate link. We do need something really more valuable - your **time**. If you really want to help us please read this [post](https://linq2db.github.io/articles/How-can-i-help.html).
+No, this is not the donate link. We do need something really more valuable - your **time**. If you really want to help us please read this [post](https://linq2db.github.io/articles/project/How-can-i-help.html).
 
 ## Project Build Status
 
@@ -26,7 +30,7 @@ No, this is not the donate link. We do need something really more valuable - you
 
 ## Feeds
 
-* NuGet [![NuGet](https://img.shields.io/nuget/vpre/linq2db.svg)](https://www.nuget.org/packages?q=linq2db)
+* NuGet [![NuGet](https://img.shields.io/nuget/vpre/linq2db.svg)](https://www.nuget.org/profiles/LinqToDB)
 * MyGet [![MyGet](https://img.shields.io/myget/linq2db/vpre/linq2db.svg)](https://www.myget.org/gallery/linq2db)
   * V2 `https://www.myget.org/F/linq2db/api/v2`
   * V3 `https://www.myget.org/F/linq2db/api/v3/index.json`
@@ -34,8 +38,7 @@ No, this is not the donate link. We do need something really more valuable - you
 ## Let's get started
 
 From **NuGet**:
-* `Install-Package linq2db` - .NET
-* `Install-Package linq2db.core` - .NET Core
+* `Install-Package linq2db` - .NET & .NET Core
 
 ## Configuring connection strings
 
@@ -66,7 +69,7 @@ public class ConnectionStringSettings : IConnectionStringSettings
 
 public class MySettings : ILinqToDBSettings
 {
-    public IEnumerable<IDataProviderSettings> DataProviders => yield break;
+    public IEnumerable<IDataProviderSettings> DataProviders => Enumerable.Empty<IDataProviderSettings>();
 
     public string DefaultConfiguration => "SqlServer";
     public string DefaultDataProvider => "SqlServer";
@@ -88,7 +91,7 @@ public class MySettings : ILinqToDBSettings
 
 ```
 
-And later just set:
+And later just set on program startup before the first query is done (Startup.cs for example):
 
 ```cs
 DataConnection.DefaultSettings = new MySettings();
@@ -98,7 +101,7 @@ You can also use same for regular .NET.
 
 ## Now let's create a **POCO** class
 
-Important: you also can generate those classes from your database using [T4 templates](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB.Templates#t4-models). Demonstration video could be found [here](https://github.com/linq2db/linq2db/wiki).
+Important: you also can generate those classes from your database using [T4 templates](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB.Templates#t4-models). Demonstration video could be found [here](https://linq2db.github.io/articles/general/Video.html).
 
 ```c#
 using System;
@@ -152,7 +155,7 @@ public static List<Product> All()
 }
 ```
 
-Make sure you **always** wrap your `DataConnection` class (in our case `DbNorthwind`) in a `using` statement. This is required for proper resource management, like releasing the database connections back into the pool. [More details](https://linq2db.github.io/articles/Managing-data-connection.html)
+Make sure you **always** wrap your `DataConnection` class (in our case `DbNorthwind`) in a `using` statement. This is required for proper resource management, like releasing the database connections back into the pool. [More details](https://linq2db.github.io/articles/general/Managing-data-connection.html)
 
 ## Selecting Columns
 
@@ -260,7 +263,7 @@ select new Product
 };
 ```
 
-[More samples are here](https://linq2db.github.io/articles/Join-Operators.html)
+[More samples are here](https://linq2db.github.io/articles/sql/Join-Operators.html)
 
 ## Creating your POCOs
 
@@ -471,11 +474,11 @@ using (var transaction = new TransactionScope())
 
 ## Merge
 
-[Here](https://linq2db.github.io/articles/Merge-API.html) you can read about MERGE support.
+[Here](https://linq2db.github.io/articles/sql/merge/Merge-API.html) you can read about MERGE support.
 
 ## Window (Analytic) Functions
 
-[Here](https://linq2db.github.io/articles/Window-Functions-%28Analytic-Functions%29.html) you can read about Window (Analytic) Functions support.
+[Here](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html) you can read about Window (Analytic) Functions support.
 
 ## MiniProfiler
 

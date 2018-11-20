@@ -54,9 +54,9 @@ namespace LinqToDB.DataProvider.SqlCe
 					;
 			}
 			else
-			{
-				StringBuilder.AppendLine("SELECT @@IDENTITY");
-			}
+		{
+			StringBuilder.AppendLine("SELECT @@IDENTITY");
+		}
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -89,27 +89,6 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			if (!statement.IsUpdate())
 				base.BuildFromClause(statement, selectQuery);
-		}
-
-		protected override void BuildOrderByClause(SelectQuery selectQuery)
-		{
-			if (selectQuery.OrderBy.Items.Count == 0 && selectQuery.Select.SkipValue != null)
-			{
-				AppendIndent();
-
-				StringBuilder.Append("ORDER BY").AppendLine();
-
-				Indent++;
-
-				AppendIndent();
-
-				BuildExpression(selectQuery.Select.Columns[0].Expression);
-				StringBuilder.AppendLine();
-
-				Indent--;
-			}
-			else
-				base.BuildOrderByClause(selectQuery);
 		}
 
 		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)

@@ -1,9 +1,7 @@
 # Mapping
-
 ## How can I use calculated fields?
 
-The only you need is to say that you do not want to insert or update property, and you can do it with `ColumnAttribute`
-
+You need to mark them to be ignored during insert or update operations, e.g. using `ColumnAttribute` attribute:
 ```cs
 public class MyEntity
 {

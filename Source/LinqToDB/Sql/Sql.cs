@@ -28,7 +28,7 @@ namespace LinqToDB
 		[Sql.Expression("*", ServerSideOnly = true)]
 		public static object[] AllColumns()
 		{
-			throw new LinqException("'FreeText' is only server-side method.");
+			throw new LinqException("'AllColumns' is only server-side method.");
 		}
 
 		[CLSCompliant(false)]
@@ -135,7 +135,7 @@ namespace LinqToDB
 		/// <param name="propertyName">Name of the property.</param>
 		/// <returns></returns>
 		/// <exception cref="LinqException">'Property' is only server-side method.</exception>
-		public static T Property<T>(object entity, string propertyName)
+		public static T Property<T>(object entity, [SqlQueryDependent] string propertyName)
 		{
 			throw new LinqException("'Property' is only server-side method.");
 		}

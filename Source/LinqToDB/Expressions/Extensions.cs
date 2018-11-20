@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.Expressions
 {
+	using LinqToDB.Extensions;
+
 	public static class Extensions
 	{
 		#region GetDebugView
@@ -221,20 +224,20 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.MemberInit:
 					{
-						Action<MemberBinding> visit = null; visit = b =>
+						void MemberVisit(MemberBinding b)
 						{
 							switch (b.BindingType)
 							{
-								case MemberBindingType.Assignment    : Visit(((MemberAssignment)b). Expression,   func);                          break;
-								case MemberBindingType.ListBinding   : Visit(((MemberListBinding)b).Initializers, p => Visit(p.Arguments, func)); break;
-								case MemberBindingType.MemberBinding : Visit(((MemberMemberBinding)b).Bindings,   visit);                        break;
+								case MemberBindingType.Assignment    : Visit(((MemberAssignment)b). Expression,   func);                             break;
+								case MemberBindingType.ListBinding   : Visit(((MemberListBinding)b).Initializers, p => Visit(p.Arguments, func));    break;
+								case MemberBindingType.MemberBinding : Visit(((MemberMemberBinding)b).Bindings, (Action<MemberBinding>)MemberVisit); break;
 							}
-						};
+						}
 
 						var e = (MemberInitExpression)expr;
 
 						Visit(e.NewExpression, func);
-						Visit(e.Bindings,      visit);
+						Visit(e.Bindings,      (Action<MemberBinding>)MemberVisit);
 
 						break;
 					}
@@ -501,22 +504,22 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.MemberInit:
 					{
-						Func<MemberBinding,bool> modify = null; modify = b =>
+						bool Modify(MemberBinding b)
 						{
 							switch (b.BindingType)
 							{
 								case MemberBindingType.Assignment    : Visit(((MemberAssignment)b). Expression,   func);                          break;
 								case MemberBindingType.ListBinding   : Visit(((MemberListBinding)b).Initializers, p => Visit(p.Arguments, func)); break;
-								case MemberBindingType.MemberBinding : Visit(((MemberMemberBinding)b).Bindings,   modify);                        break;
+								case MemberBindingType.MemberBinding : Visit(((MemberMemberBinding)b).Bindings,   Modify);                        break;
 							}
 
 							return true;
-						};
+						}
 
 						var e = (MemberInitExpression)expr;
 
 						Visit(e.NewExpression, func);
-						Visit(e.Bindings,      modify);
+						Visit(e.Bindings,      Modify);
 
 						break;
 					}
@@ -799,23 +802,23 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.MemberInit:
 					{
-						Func<MemberBinding,Expression> find = null; find = b =>
+						Expression MemberFind(MemberBinding b)
 						{
 							switch (b.BindingType)
 							{
 								case MemberBindingType.Assignment    : return Find(((MemberAssignment)b).   Expression,   func);
 								case MemberBindingType.ListBinding   : return Find(((MemberListBinding)b).  Initializers, p => Find(p.Arguments, func));
-								case MemberBindingType.MemberBinding : return Find(((MemberMemberBinding)b).Bindings,     find);
+								case MemberBindingType.MemberBinding : return Find(((MemberMemberBinding)b).Bindings,     MemberFind);
 							}
 
 							return null;
-						};
+						}
 
 						var e = (MemberInitExpression)expr;
 
 						return
 							Find(e.NewExpression, func) ??
-							Find(e.Bindings,      find);
+							Find(e.Bindings,      MemberFind);
 					}
 
 				case ExpressionType.New            : return Find(((NewExpression)       expr).Arguments,   func);
@@ -978,7 +981,7 @@ namespace LinqToDB.Expressions
 		/// replace expression with the returned value of the given <paramref name="func"/>.
 		/// </summary>
 		/// <returns>The modified expression.</returns>
-		public static Expression Transform(this Expression expr, Func<Expression,Expression> func)
+		public static Expression Transform(this Expression expr, [InstantHandle] Func<Expression,Expression> func)
 		{
 			if (expr == null)
 				return null;
@@ -1144,6 +1147,7 @@ namespace LinqToDB.Expressions
 			throw new InvalidOperationException();
 		}
 
+		// ReSharper disable once InconsistentNaming
 		static Expression TransformXE(Expression expr, Func<Expression,Expression> func)
 		{
 			return expr;
@@ -1205,8 +1209,7 @@ namespace LinqToDB.Expressions
 
 		static Expression TransformX(MemberInitExpression e, Func<Expression,Expression> func)
 		{
-			Func<MemberBinding, MemberBinding> modify = null;
-			modify = b =>
+			MemberBinding Modify(MemberBinding b)
 			{
 				switch (b.BindingType)
 				{
@@ -1219,7 +1222,7 @@ namespace LinqToDB.Expressions
 					case MemberBindingType.ListBinding:
 					{
 						var ml = (MemberListBinding) b;
-						var i = Transform(ml.Initializers, p =>
+						var i  = Transform(ml.Initializers, p =>
 						{
 							var args = Transform(p.Arguments, func);
 							return args != p.Arguments ? Expression.ElementInit(p.AddMethod, args) : p;
@@ -1234,7 +1237,7 @@ namespace LinqToDB.Expressions
 					case MemberBindingType.MemberBinding:
 					{
 						var mm = (MemberMemberBinding) b;
-						var bs = Transform(mm.Bindings, modify);
+						var bs = Transform(mm.Bindings, Modify);
 
 						if (bs != mm.Bindings)
 							mm = Expression.MemberBind(mm.Member);
@@ -1244,11 +1247,11 @@ namespace LinqToDB.Expressions
 				}
 
 				return b;
-			};
+			}
 
 			return e.Update(
 				(NewExpression) Transform(e.NewExpression, func),
-				Transform(e.Bindings, modify));
+				Transform(e.Bindings, Modify));
 		}
 
 		static Expression TransformX(MemberExpression e, Func<Expression,Expression> func)
@@ -1488,7 +1491,7 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.MemberInit:
 					{
-						Func<MemberBinding,MemberBinding> modify = null; modify = b =>
+						MemberBinding Modify(MemberBinding b)
 						{
 							switch (b.BindingType)
 							{
@@ -1526,7 +1529,7 @@ namespace LinqToDB.Expressions
 								case MemberBindingType.MemberBinding:
 									{
 										var mm = (MemberMemberBinding)b;
-										var bs = Transform(mm.Bindings, modify);
+										var bs = Transform(mm.Bindings, Modify);
 
 										if (bs != mm.Bindings)
 											mm = Expression.MemberBind(mm.Member);
@@ -1536,11 +1539,11 @@ namespace LinqToDB.Expressions
 							}
 
 							return b;
-						};
+						}
 
 						var e  = (MemberInitExpression)expr;
 						var ne = Transform (e.NewExpression, func);
-						var bb = Transform2(e.Bindings,      modify);
+						var bb = Transform2(e.Bindings,      Modify);
 
 						return e.Update((NewExpression)ne, bb);
 					}

@@ -369,7 +369,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit1X(CteClause sc)
 		{
-			foreach (var c in sc.Fields.Values) Visit1(c);
+			foreach (var c in sc.Fields) Visit1(c);
 			Visit1(sc.Body);
 		}
 
@@ -831,7 +831,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit2X(CteClause sc)
 		{
-			foreach (var c in sc.Fields.Values) Visit2(c);
+			foreach (var c in sc.Fields) Visit2(c);
 			Visit2(sc.Body);
 		}
 
@@ -1471,8 +1471,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.InsertStatement:
 					{
 						var s = (SqlInsertStatement)element;
-						var insert      = s.Insert      != null ? (SqlInsertClause)ConvertInternal(s.Insert,      action) : null;
 						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertInternal(s.SelectQuery, action) : null;
+						var insert      = s.Insert      != null ? (SqlInsertClause)ConvertInternal(s.Insert,      action) : null;
 						var ps          = ConvertSafe(s.Parameters, action);
 
 						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
@@ -1492,8 +1492,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.UpdateStatement:
 					{
 						var s = (SqlUpdateStatement)element;
-						var update      = s.Update      != null ? (SqlUpdateClause) ConvertInternal(s.Update, action) : null;
-						var selectQuery = s.SelectQuery != null ? (SelectQuery)     ConvertInternal(s.SelectQuery, action) : null;
+						var update      = s.Update      != null ? (SqlUpdateClause)ConvertInternal(s.Update, action) : null;
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertInternal(s.SelectQuery, action) : null;
 						var ps          = ConvertSafe(s.Parameters, action);
 
 						if (update      != null && !ReferenceEquals(s.Update,      update)       ||
@@ -1513,9 +1513,10 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.InsertOrUpdateStatement:
 					{
 						var s = (SqlInsertOrUpdateStatement)element;
-						var insert      = s.Insert      != null ? (SqlInsertClause) ConvertInternal(s.Insert, action) : null;
-						var update      = s.Update      != null ? (SqlUpdateClause) ConvertInternal(s.Update, action) : null;
-						var selectQuery = s.SelectQuery != null ? (SelectQuery)     ConvertInternal(s.SelectQuery, action) : null;
+
+						var insert      = s.Insert      != null ? (SqlInsertClause)ConvertInternal(s.Insert, action) : null;
+						var update      = s.Update      != null ? (SqlUpdateClause)ConvertInternal(s.Update, action) : null;
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertInternal(s.SelectQuery, action) : null;
 						var ps          = ConvertSafe(s.Parameters, action);
 
 						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||

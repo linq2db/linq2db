@@ -13,7 +13,7 @@ namespace Tests.Model
 {
 	public class TestDataConnection : DataConnection, ITestDataContext
 	{
-		static int _counter;
+		//static int _counter;
 
 		public TestDataConnection(string configString)
 			: base(configString)
@@ -28,22 +28,22 @@ namespace Tests.Model
 
 		static object _sync = new object();
 
-		[Table("AllTypes")]
-		class AllTypes
-		{
-			[Column("ID")] public int ID;
-		}
+//		[Table("AllTypes")]
+//		class AllTypes
+//		{
+//			[Column("ID")] public int ID;
+//		}
 
 		void TestDataConnection_OnClosing(object sender, EventArgs e)
 		{
-			lock (_sync)
-			using (var db = new DataConnection(ProviderName.SqlServer2008))
-			{
-				var n = db.GetTable<AllTypes>().Count();
-				if (n == 0)
-				{
-				}
-			}
+//			lock (_sync)
+//			using (var db = new DataConnection(ProviderName.SqlServer2008))
+//			{
+//				var n = db.GetTable<AllTypes>().Count();
+//				if (n == 0)
+//				{
+//				}
+//			}
 		}
 
 		public ITable<Person>                 Person                 { get { return GetTable<Person>();                 } }

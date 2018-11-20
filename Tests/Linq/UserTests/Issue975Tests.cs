@@ -10,7 +10,7 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	[ActiveIssue(975)]
+	[TestFixture]
 	public class Issue975Tests : TestBase
 	{
 		public static class SqlServer
@@ -67,21 +67,17 @@ namespace Tests.UserTests
 			[Column,     NotNull    ] public int       TargetId    { get; set; } // Int
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
-		public void Test(string context)
+		[Test]
+		public void Test(
+			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context
+		)
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.DropTable<Task>();
-				db.DropTable<TaskStage>();
-				db.DropTable<Assignment>();
-
-				try
+				using (db.CreateLocalTable<Task>())
+				using (db.CreateLocalTable<TaskStage>())
+				using (db.CreateLocalTable<Assignment>())
 				{
-					db.CreateTable<Task>();
-					db.CreateTable<TaskStage>();
-					db.CreateTable<Assignment>();
-
 					var directionId = Guid.NewGuid();
 					var taskId = db.GetTable<Task>().InsertWithInt32Identity(() => new Task
 					{
@@ -123,12 +119,6 @@ namespace Tests.UserTests
 #pragma warning restore CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
 
 					var zz = query.ToArray();
-				}
-				finally
-				{
-					db.DropTable<Task>();
-					db.DropTable<TaskStage>();
-					db.DropTable<Assignment>();
 				}
 			}
 		}

@@ -2,8 +2,8 @@
 <#@ output extension=".generated.cs"                                                        #>
 <#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.Sybase.ttinclude"                #>
 <#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude"           #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\Sybase.AdoNet45.AseClient.dll" #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\linq2db.dll"                   #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\Sybase.AdoNet45.AseClient.dll"  #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\linq2db.dll"                    #>
 <#
 	NamespaceName = "SybaseDataContext";
 

@@ -1,0 +1,7 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+		<LinqToDBT4OracleTemplatesDirectory>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4OracleTemplatesDirectory>
+		<LinqToDBT4OracleToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4OracleToolsDirectory>
+		<LinqToDBT4ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ToolsDirectory>
+	</PropertyGroup>
+</Project>

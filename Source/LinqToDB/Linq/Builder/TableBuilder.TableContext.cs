@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -163,40 +164,53 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (member.MemberInfo.DeclaringType.IsAssignableFrom(objectType))
 					{
-					var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
+						var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
 
-					if (member.NextLoadWith.Count > 0)
-					{
-						var table = FindTable(ma, 1, false, true);
-						table.Table.LoadWith = member.NextLoadWith;
-					}
+						if (member.NextLoadWith.Count > 0)
+						{
+							var table = FindTable(ma, 1, false, true);
+							table.Table.LoadWith = member.NextLoadWith;
+						}
 
-					var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(), member.MemberInfo);
+						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(), member.MemberInfo);
+						var ex   = BuildExpression(ma, 1, parentObject);
 
-					var ex = BuildExpression(ma, 1, parentObject);
-					if (member.MemberInfo.IsDynamicColumnPropertyEx())
-					{
-						var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedTypeEx());
-						var setter = new MemberAccessor(typeAcc, member.MemberInfo).SetterExpression;
+						if (member.MemberInfo.IsDynamicColumnPropertyEx())
+						{
+							var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedTypeEx());
+							var setter  = new MemberAccessor(typeAcc, member.MemberInfo).SetterExpression;
 
-						exprs.Add(Expression.Invoke(setter, parentObject, ex));
-					}
-					else
-					{
-						exprs.Add(Expression.Assign(
-							attr?.Storage != null
-								? Expression.PropertyOrField(parentObject, attr.Storage)
-								: Expression.MakeMemberAccess(parentObject, member.MemberInfo),
-							ex));
+							exprs.Add(Expression.Invoke(setter, parentObject, ex));
+						}
+						else
+						{
+							exprs.Add(Expression.Assign(
+								attr?.Storage != null
+									? Expression.PropertyOrField(parentObject, attr.Storage)
+									: Expression.MakeMemberAccess(parentObject, member.MemberInfo),
+								ex));
+						}
 					}
 				}
-			}
 			}
 
 			static bool IsRecord(Attribute[] attrs)
 			{
 				return attrs.Any(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute")
 					&& attrs.All(attr => attr.GetType().FullName != "Microsoft.FSharp.Core.CLIMutableAttribute");
+			}
+
+			bool IsAnonymous(Type type)
+			{
+				if (!type.IsPublicEx() &&
+					 type.IsGenericTypeEx() &&
+					(type.Name.StartsWith("<>f__AnonymousType", StringComparison.Ordinal) ||
+					 type.Name.StartsWith("VB$AnonymousType",   StringComparison.Ordinal)))
+				{
+					return Builder.MappingSchema.GetAttribute<CompilerGeneratedAttribute>(type) != null;
+				}
+
+				return false;
 			}
 
 			ParameterExpression _variable;
@@ -208,20 +222,73 @@ namespace LinqToDB.Linq.Builder
 
 				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
-				var isRecord = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(objectType));
+				// choosing type that can be instantiated
+				if ((objectType.IsInterfaceEx() || objectType.IsAbstractEx()) && !(ObjectType.IsInterfaceEx() || ObjectType.IsAbstractEx()))
+				{
+					objectType = ObjectType;
+				}
 
-				var expr = isRecord == false
-					? BuildDefaultConstructor(entityDescriptor, objectType, index)
-					: BuildRecordConstructor (entityDescriptor, objectType, index);
+				var expr =
+					IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(objectType)) ?
+						BuildRecordConstructor (entityDescriptor, objectType, index, true) :
+					IsAnonymous(objectType) ?
+						BuildRecordConstructor (entityDescriptor, objectType, index, false) :
+						BuildDefaultConstructor(entityDescriptor, objectType, index);
 
 				expr = BuildCalculatedColumns(entityDescriptor, expr);
-
 				expr = ProcessExpression(expr);
+				expr = NotifyEntityCreated(expr);
 
 				if (!buildBlock)
 					return expr;
 
 				return _variable = Builder.BuildVariable(expr);
+			}
+
+			static object OnEntityCreated(IDataContext context, object entity)
+			{
+				var onEntityCreated = ((IEntityServices)context).OnEntityCreated;
+
+				if (onEntityCreated != null)
+				{
+					var args = new EntityCreatedEventArgs
+					{
+						Entity      = entity,
+						DataContext = context
+					};
+
+					onEntityCreated(args);
+
+					return args.Entity;
+				}
+
+				return entity;
+			}
+
+			Expression NotifyEntityCreated(Expression expr)
+			{
+				if (Builder.DataContext is IEntityServices)
+				{
+//					var cex = Expression.Convert(ExpressionBuilder.DataContextParam, typeof(INotifyEntityCreated));
+//
+//					expr =
+//						Expression.Convert(
+//							Expression.Call(
+//								cex,
+//								MemberHelper.MethodOf((INotifyEntityCreated n) => n.EntityCreated(null)),
+//								expr),
+//							expr.Type);
+					expr =
+						Expression.Convert(
+							Expression.Call(
+								MemberHelper.MethodOf(() => OnEntityCreated(null, null)),
+								ExpressionBuilder.DataContextParam,
+								expr),
+							expr.Type);
+				}
+
+
+				return expr;
 			}
 
 			Expression BuildCalculatedColumns(EntityDescriptor entityDescriptor, Expression expr)
@@ -244,7 +311,7 @@ namespace LinqToDB.Linq.Builder
 					var accessExpression    = Expression.MakeMemberAccess(variable, member.MemberInfo);
 					var convertedExpression = Builder.ConvertExpressionTree(accessExpression);
 					var selectorLambda      = Expression.Lambda(convertedExpression, variable);
-					var context             = new SelectContext(null, selectorLambda, this);
+					var context             = new SelectContext(Parent, selectorLambda, this);
 					var expression          = context.BuildExpression(null, 0, false);
 
 					expressions.Add(Expression.Assign(accessExpression, expression));
@@ -320,11 +387,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				var members = isRecordType ?
 					typeAccessor.Members.Where(m =>
-						IsRecord( Builder.MappingSchema.GetAttributes<Attribute>(typeAccessor.Type, m.MemberInfo))) :
+						IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(typeAccessor.Type, m.MemberInfo))) :
 					typeAccessor.Members;
 
-				var loadWith = GetLoadWith();
+				var loadWith      = GetLoadWith();
 				var loadWithItems = loadWith == null ? new List<LoadWithItem>() : GetLoadWith(loadWith);
+
 				foreach (var member in members)
 				{
 					var column = columns.FirstOrDefault(c => !c.IsComplex && c.Name == member.Name);
@@ -336,7 +404,8 @@ namespace LinqToDB.Linq.Builder
 					else
 					{
 						var assocAttr = Builder.MappingSchema.GetAttributes<AssociationAttribute>(typeAccessor.Type, member.MemberInfo).FirstOrDefault();
-						bool isAssociation = assocAttr != null;
+						var isAssociation = assocAttr != null;
+
 						if (isAssociation)
 						{
 							var loadWithItem = loadWithItems.FirstOrDefault(_ => _.MemberInfo == member.MemberInfo);
@@ -405,15 +474,15 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index)
+			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index, bool isRecord)
 			{
 				var ctor = objectType.GetConstructorsEx().Single();
 
-				var exprs = GetExpressions(entityDescriptor.TypeAccessor, true,
+				var exprs = GetExpressions(entityDescriptor.TypeAccessor, isRecord,
 					(
 						from idx in index.Select((n,i) => new { n, i })
 						where idx.n >= 0
-						let   cd   = entityDescriptor.Columns[idx.i]
+						let   cd = entityDescriptor.Columns[idx.i]
 						select new ColumnInfo
 						{
 							IsComplex  = cd.MemberAccessor.IsComplex,
@@ -958,7 +1027,7 @@ namespace LinqToDB.Linq.Builder
 				throw new InvalidOperationException();
 			}
 
-			public SqlStatement GetResultStatement()
+			public virtual SqlStatement GetResultStatement()
 			{
 				return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
 			}
@@ -967,9 +1036,9 @@ namespace LinqToDB.Linq.Builder
 
 			#region ConvertToParentIndex
 
-			public int ConvertToParentIndex(int index, IBuildContext context)
+			public virtual int ConvertToParentIndex(int index, IBuildContext context)
 			{
-				return Parent == null ? index : Parent.ConvertToParentIndex(index, this);
+				return Parent?.ConvertToParentIndex(index, this) ?? index;
 			}
 
 			#endregion
@@ -1038,9 +1107,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (EntityDescriptor.Aliases != null)
 					{
-						if (EntityDescriptor.Aliases.ContainsKey(memberExpression.Member.Name))
+						if (EntityDescriptor.Aliases.TryGetValue(memberExpression.Member.Name, out var aliasName))
 						{
-							var alias = EntityDescriptor[memberExpression.Member.Name];
+							var alias = EntityDescriptor[aliasName];
 
 							if (alias == null)
 							{
@@ -1147,6 +1216,30 @@ namespace LinqToDB.Linq.Builder
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
 
+								if (memberExpression.Member.IsDynamicColumnPropertyEx())
+								{
+									var fieldName = memberExpression.Member.Name;
+
+									// do not add association columns
+									if (EntityDescriptor.Associations.All(a => a.MemberInfo != memberExpression.Member))
+									{
+										if (!SqlTable.Fields.TryGetValue(fieldName, out var newField))
+										{
+											newField = new SqlField
+											{
+												Name             = fieldName,
+												PhysicalName     = fieldName,
+												ColumnDescriptor = new ColumnDescriptor(Builder.MappingSchema, new ColumnAttribute(fieldName),
+													new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member))
+											};
+
+											SqlTable.Add(newField);
+										}
+
+										return newField;
+									}
+								}
+
 							}
 
 							if (throwException &&
@@ -1220,7 +1313,7 @@ namespace LinqToDB.Linq.Builder
 					).ToList();
 
 				AssociatedTableContext tableAssociation = null;
-						var isNew = false;
+				var isNew = false;
 
 				if (levelExpression.NodeType == ExpressionType.Call)
 				{
@@ -1229,17 +1322,17 @@ namespace LinqToDB.Linq.Builder
 
 					if (aa != null)
 						tableAssociation = new AssociatedTableContext(
-								Builder,
-								this,
-								new AssociationDescriptor(
-									EntityDescriptor.ObjectType,
-									mc.Method,
-									aa.GetThisKeys(),
-									aa.GetOtherKeys(),
-									aa.ExpressionPredicate,
-									aa.Predicate,
-									aa.Storage,
-									aa.CanBeNull))
+							Builder,
+							this,
+							new AssociationDescriptor(
+								EntityDescriptor.ObjectType,
+								mc.Method,
+								aa.GetThisKeys(),
+								aa.GetOtherKeys(),
+								aa.ExpressionPredicate,
+								aa.Predicate,
+								aa.Storage,
+								aa.CanBeNull))
 							{ Parent = Parent };
 
 					isNew = true;

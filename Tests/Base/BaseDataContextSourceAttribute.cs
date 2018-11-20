@@ -25,6 +25,8 @@ namespace Tests
 		readonly bool     _includeLinqService;
 		readonly string[] _providerNames;
 
+		public static bool NoLinqService;
+
 		internal const string ProviderProperty      = "linq2db.provider";
 		internal const string ConfigurationProperty = "linq2db.configuration";
 		internal const string IsLinqServiceProperty = "linq2db.is.wcf";
@@ -91,6 +93,10 @@ namespace Tests
 //				explic.Add(timeout ?? new TimeoutAttribute(10000));
 //#endif
 
+			var skipAttrs = method.GetCustomAttributes<SkipCategoryAttribute>(true)
+				.Where(a => a.ProviderName != null)
+				.ToDictionary(a => a.ProviderName, a => a.Category);
+
 			var builder = new NUnitTestCaseBuilder();
 
 			TestMethod test = null;
@@ -98,9 +104,13 @@ namespace Tests
 
 			foreach (var provider in _providerNames)
 			{
-				var isIgnore = !TestBase.UserProviders.Contains(provider);
-
+				var isIgnore   = !TestBase.UserProviders.Contains(provider);
 				var caseNumber = 0;
+
+				if (!isIgnore)
+					if (skipAttrs.TryGetValue(provider, out var category))
+						isIgnore = TestBase.SkipCategories.Contains(category);
+
 				foreach (var parameters in GetParameters(provider))
 				{
 					var data = new TestCaseParameters(parameters.Item1);
@@ -142,7 +152,7 @@ namespace Tests
 				}
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
-				if (!isIgnore && _includeLinqService)
+				if (!isIgnore && _includeLinqService && !NoLinqService)
 				{
 					var linqCaseNumber = 0;
 					var providerBase = provider;

@@ -43,12 +43,12 @@ Projects:
 | Project                                          |.NET 4.5 | .NET 4.5.2 | .NET 4.6 | .NET 4.6.2 | .NET Standard 1.6 | .NET Standard 2.0 | .NET Core 1.0 | .NET Core 2.0 |
 |-------------------------------------------------:|:-------:|:----------:|:--------:|:----------:|:-----------------:|:-----------------:|:-------------:|:-------------:|
 | `.\Source\LinqToDB\LinqToDB.csproj`              |    √    |            |          |            |         √         |         √         |               |       √       |
-| `.\Tests\Linq\Tests.Base.csproj`                 |    √    |            |          |            |                   |                   |       √       |       √       |
+| `.\Tests\Linq\Tests.Base.csproj`                 |         |     √      |          |            |                   |                   |       √       |       √       |
 | `.\Tests\IBM.Core\Tests.IBM.Core.csproj`         |         |            |          |     √      |                   |                   |               |       √       |
-| `.\Tests\Linq\Tests.csproj`                      |         |     √      |          |            |                   |                   |       √       |       √       |
+| `.\Tests\Linq\Tests.csproj`                      |         |            |    √     |            |                   |                   |       √       |       √       |
 | `.\Tests\FSharp\Tests.FSharp.fsproj`             |         |     √      |          |            |                   |                   |       √       |       √       |
 | `.\Tests\Model\Tests.Model.csproj`               |    √    |            |          |            |         √         |                   |               |               |
-| `.\Tests\T4.Linq\Tests.T4.Linq.csproj`           |         |     √      |          |            |                   |                   |               |       √       |
+| `.\Tests\T4.Linq\Tests.T4.Linq.csproj`           |         |            |    √     |            |                   |                   |               |       √       |
 | `.\Tests\T4.Model\Tests.T4.Model.csproj`         |    √    |            |          |            |                   |                   |               |               |
 | `.\Tests\T4.Wpf\Tests.T4.Wpf.csproj`             |         |     √      |          |            |                   |                   |               |               |
 | `.\Tests\TestApp\TestApp.csproj`                 |         |     √      |          |            |                   |                   |               |               |
@@ -164,7 +164,15 @@ The `[User]DataProviders.json` is a regular JSON file:
             "Sybase",
             "Northwind",
             "TestNoopProvider"
-        ]
+        ],
+
+        // list of test skip categories, disabled for current test configuration
+	// to set test skip category, use SkipCategoryAttribute on test method, class or whole assembly
+        "Skip"                 :
+	[
+	    "Access.12"
+	]
+
     },
 
     // .net core 1.0 test configuration
@@ -268,13 +276,15 @@ If you want to skip building commit by CI (for example you have changed *.md fil
 
 ## Building releases
 
-1. Update `.\NuGet\Readme.txt` file (append release notes)
+1. Update [Release Notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap) and create empty entry for vNext release
 1. Create PR from `master` to `release` branch, in comments add [@testers](https://github.com/linq2db/linq2db/wiki/How-can-i-help#testing-how-to) to notify all testers that we are ready to release
 1. Wait few days for feedback from testers and approval from contributors
 1. Merge PR
 1. [Tag release](https://github.com/linq2db/linq2db/releases)
 1. Update versions in `master` branch (this will lead to publish all next `master` builds as new version RC):
    * in [.\appveyor.yml](https://github.com/linq2db/linq2db/blob/master/appveyor.yml) set `assemblyVersion` parameter
+   * in *.nuspec files update linq2db dependency version
+   * in issue template update default linq2db version
 
 ## Process
 

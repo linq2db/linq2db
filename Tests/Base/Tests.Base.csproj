@@ -2,7 +2,7 @@
 	<Import Project="..\..\Build\linq2db.Default.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net45;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
+		<TargetFrameworks>net452;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
 		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
 		<AssemblyName>linq2db.Tests.Base</AssemblyName>
 		<Configurations>Debug;Release;AppVeyor;Travis</Configurations>
@@ -27,16 +27,16 @@
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 
 		<PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-		<PackageReference Include="NUnit" Version="3.9.0" />
-		<PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+		<PackageReference Include="NUnit" Version="3.10.1" />
+		<PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
 	</ItemGroup>
 
 
 	<!-- .NET Framework -->
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net45' ">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net452' ">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System" />
 		<Reference Include="System.Configuration" />
@@ -94,7 +94,7 @@
 		<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
 		<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
 		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
 
 		<PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />

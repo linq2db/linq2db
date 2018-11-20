@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
+	using Async;
 	using Extensions;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>
@@ -91,6 +92,12 @@ namespace LinqToDB.Linq
 			return (TResult)value;
 		}
 
+		IAsyncEnumerable<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression)
+		{
+			return Query<TResult>.GetQuery(DataContext, ref expression)
+				.GetIAsyncEnumerable(DataContext, expression, Parameters);
+		}
+
 		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
 		{
 			var expression = Expression;
@@ -106,6 +113,12 @@ namespace LinqToDB.Linq
 			var expression = Expression;
 			return GetQuery(ref expression, true)
 				.GetForEachAsync(DataContext, expression, Parameters, func, cancellationToken);
+		}
+
+		public IAsyncEnumerable<T> GetAsyncEnumerable()
+		{
+			var expression = Expression;
+			return GetQuery(ref expression, true).GetIAsyncEnumerable(DataContext, expression, Parameters);
 		}
 
 		#endregion

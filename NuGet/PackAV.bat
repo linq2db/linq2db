@@ -2,7 +2,6 @@
 del *.nupkg
 
 ..\Redist\NuGet Pack linq2db.nuspec
-..\Redist\NuGet Pack linq2db.t4models.nuspec
 
 ..\Redist\NuGet Pack linq2db.Access.nuspec
 ..\Redist\NuGet Pack linq2db.DB2.nuspec
@@ -15,5 +14,8 @@ del *.nupkg
 ..\Redist\NuGet Pack linq2db.SapHana.nuspec
 ..\Redist\NuGet Pack linq2db.SqlCe.nuspec
 ..\Redist\NuGet Pack linq2db.SQLite.nuspec
+..\Redist\NuGet Pack linq2db.SQLite.MS.nuspec
 ..\Redist\NuGet Pack linq2db.SqlServer.nuspec
 ..\Redist\NuGet Pack linq2db.Sybase.nuspec
+..\Redist\NuGet Pack linq2db.Sybase.DataAction.nuspec
+..\Redist\NuGet Pack linq2db.t4models.nuspec

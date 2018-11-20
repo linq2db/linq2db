@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 namespace LinqToDB.Linq
@@ -8,17 +9,84 @@ namespace LinqToDB.Linq
 	{
 		public Table(IDataContext dataContext)
 		{
-			Init(dataContext, null);
+			InitTable(dataContext, null);
 		}
 
 		public Table(IDataContext dataContext, Expression expression)
 		{
-			Init(dataContext, expression);
+			InitTable(dataContext, expression);
 		}
 
-		public string DatabaseName { get; set; }
-		public string SchemaName   { get; set; }
-		public string TableName    { get; set; }
+		void InitTable(IDataContext dataContext, Expression expression)
+		{
+			Init(dataContext, expression);
+
+			var ed = dataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+
+			_databaseName = ed.DatabaseName;
+			_schemaName   = ed.SchemaName;
+			_tableName    = ed.TableName;
+		}
+
+		// ReSharper disable StaticMemberInGenericType
+		static MethodInfo _databaseNameMethodInfo;
+		static MethodInfo _schemaNameMethodInfo;
+		static MethodInfo _tableNameMethodInfo;
+		// ReSharper restore StaticMemberInGenericType
+
+		private string _databaseName;
+		public  string  DatabaseName
+		{
+			get => _databaseName;
+			set
+			{
+				if (_databaseName != value)
+				{
+					Expression = Expression.Call(
+						null,
+						_databaseNameMethodInfo ?? (_databaseNameMethodInfo = LinqExtensions.DatabaseNameMethodInfo.MakeGenericMethod(typeof(T))),
+						new[] { Expression, Expression.Constant(value) });
+
+					_databaseName = value;
+				}
+			}
+		}
+
+		private string _schemaName;
+		public  string  SchemaName
+		{
+			get => _schemaName;
+			set
+			{
+				if (_schemaName != value)
+				{
+					Expression = Expression.Call(
+						null,
+						_schemaNameMethodInfo ?? (_schemaNameMethodInfo = LinqExtensions.SchemaNameMethodInfo.MakeGenericMethod(typeof(T))),
+						new[] { Expression, Expression.Constant(value) });
+
+					_schemaName = value;
+				}
+			}
+		}
+
+		private string _tableName;
+		public  string  TableName
+		{
+			get => _tableName;
+			set
+			{
+				if (_tableName != value)
+				{
+					Expression = Expression.Call(
+						null,
+						_tableNameMethodInfo ?? (_tableNameMethodInfo = LinqExtensions.TableNameMethodInfo.MakeGenericMethod(typeof(T))),
+						new[] { Expression, Expression.Constant(value) });
+
+					_tableName = value;
+				}
+			}
+		}
 
 		public string GetTableName() =>
 			DataContext.CreateSqlProvider()
@@ -29,7 +97,7 @@ namespace LinqToDB.Linq
 
 		public override string ToString()
 		{
-			return "Table(" + typeof(T).Name + ")";
+			return $"Table({GetTableName()})";
 		}
 
 		#endregion

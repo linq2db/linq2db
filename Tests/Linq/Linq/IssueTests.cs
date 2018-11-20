@@ -75,7 +75,7 @@ namespace Tests.Linq
 			using (var db = new DataConnection(context))
 			{
 				var sp       = db.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(db);
+				var dbSchema = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				var q =
 					from t in dbSchema.Tables
@@ -432,6 +432,7 @@ namespace Tests.Linq
 			};
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void Issue376(string context)
 		{
@@ -577,6 +578,54 @@ namespace Tests.Linq
 
 				AreEqual(expected, actual);
 			}
+		}
+
+		[Table("AllTypes")]
+		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		private class InsertIssueTest
+		{
+			[Column("smallintDataType")]
+			[Column("SMALLINTDATATYPE", Configuration = ProviderName.DB2)]
+			public short ID;
+
+			[Column]
+			[Column("INTDATATYPE", Configuration = ProviderName.DB2)]
+			public int? intDataType;
+
+			[Association(ThisKey = nameof(ID), OtherKey = nameof(intDataType), CanBeNull = true)]
+			public IQueryable<InsertIssueTest> Association => throw new InvalidOperationException();
+		}
+
+		// Sybase: we need to get rid of bit field from AllTypes table as it creates a lot of issues with testing
+		[Test, DataContextSource(ProviderName.Sybase)]
+		public void InsertFromSelectWithNullableFilter(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Query(true);
+				Query(false);
+
+				void Query(bool isNull)
+				{
+					db.GetTable<InsertIssueTest>()
+						.Where(_ => _.ID == GetId(isNull))
+						.SelectMany(_ => _.Association)
+						.Select(_ => _.ID)
+						.Distinct()
+						.Insert(
+							db.GetTable<InsertIssueTest>(),
+							_ => new InsertIssueTest()
+							{
+								ID = 123,
+								intDataType = _
+							});
+				}
+			}
+		}
+
+		private short? GetId(bool isNull)
+		{
+			return isNull ? (short?)null : 1234;
 		}
 
 	}

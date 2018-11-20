@@ -24,10 +24,7 @@ namespace LinqToDB.Linq.Builder
 			var collectionSelector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var resultSelector     = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
-			if (!sequence.SelectQuery.GroupBy.IsEmpty         ||
-				sequence.SelectQuery.Select.TakeValue != null ||
-				sequence.SelectQuery.Select.SkipValue != null ||
-				sequence.SelectQuery.Select .IsDistinct)
+			if (sequence.SelectQuery.HasUnion || !sequence.SelectQuery.IsSimple)
 			{
 				sequence = new SubQueryContext(sequence);
 			}
@@ -68,7 +65,7 @@ namespace LinqToDB.Linq.Builder
 
 							collection.SelectQuery.Where.ConcatSearchCondition(foundJoin.Condition);
 
-							((ISqlExpressionWalkable)collection.SelectQuery.Where).Walk(false, e =>
+							((ISqlExpressionWalkable) collection.SelectQuery.Where).Walk(false, e =>
 							{
 								if (e is SqlColumn column)
 								{
@@ -155,7 +152,7 @@ namespace LinqToDB.Linq.Builder
 					var isApplyJoin =
 						//Common.Configuration.Linq.PrefereApply    ||
 						collection.SelectQuery.Select.HasModifier ||
-						table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0;
+					                  table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0;
 
 					joinType = isApplyJoin
 						? (leftJoin ? JoinType.OuterApply : JoinType.CrossApply)

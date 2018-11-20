@@ -518,10 +518,17 @@ namespace LinqToDB.Data
 
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
-			if (Parameters != null && Parameters.Length > 0)
+			var hasParameters = Parameters != null && Parameters.Length > 0;
+
+			if (hasParameters)
 				SetParameters(DataConnection, Parameters);
 
-			return await DataConnection.ExecuteNonQueryAsync(cancellationToken);
+			var commandResult = await DataConnection.ExecuteNonQueryAsync(cancellationToken);
+
+			if (hasParameters)
+				RebindParameters(DataConnection, Parameters);
+
+			return commandResult;
 		}
 
 		#endregion
@@ -905,11 +912,10 @@ namespace LinqToDB.Data
 			if (parameters is DataParameter)
 				return new[] { (DataParameter)parameters };
 
-			Func<object,DataParameter[]> func;
 			var type = parameters.GetType();
 			var key  = new ParamKey(type, dataConnection.ID);
 
-			if (!_parameterReaders.TryGetValue(key, out func))
+			if (!_parameterReaders.TryGetValue(key, out Func<object, DataParameter[]> func))
 			{
 				var td  = dataConnection.MappingSchema.GetEntityDescriptor(type);
 				var p   = Expression.Parameter(typeof(object), "p");

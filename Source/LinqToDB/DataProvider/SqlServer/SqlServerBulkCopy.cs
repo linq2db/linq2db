@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
+using LinqToDB.Configuration;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -25,68 +27,71 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
-			var connection = dataConnection.Connection as SqlConnection;
-
-			if (connection != null)
+			if (dataConnection.Connection is DbConnection)
 			{
-				var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-				var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-				var sb      = _dataProvider.CreateSqlBuilder();
-				var rd      = new BulkCopyReader(_dataProvider, dataConnection.MappingSchema, columns, source);
-				var sqlopt  = SqlBulkCopyOptions.Default;
-				var rc      = new BulkCopyRowsCopied();
+				var connection = Proxy.GetUnderlyingObject((DbConnection)dataConnection.Connection) as SqlConnection;
 
-				if (options.CheckConstraints       == true) sqlopt |= SqlBulkCopyOptions.CheckConstraints;
-				if (options.KeepIdentity           == true) sqlopt |= SqlBulkCopyOptions.KeepIdentity;
-				if (options.TableLock              == true) sqlopt |= SqlBulkCopyOptions.TableLock;
-				if (options.KeepNulls              == true) sqlopt |= SqlBulkCopyOptions.KeepNulls;
-				if (options.FireTriggers           == true) sqlopt |= SqlBulkCopyOptions.FireTriggers;
-				if (options.UseInternalTransaction == true) sqlopt |= SqlBulkCopyOptions.UseInternalTransaction;
-
-				using (var bc = new SqlBulkCopy(connection, sqlopt, (SqlTransaction)dataConnection.Transaction))
+				if (connection != null)
 				{
-					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-					{
-						bc.NotifyAfter = options.NotifyAfter;
+					var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+					var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+					var sb      = _dataProvider.CreateSqlBuilder();
+					var rd      = new BulkCopyReader(_dataProvider, dataConnection.MappingSchema, columns, source);
+					var sqlopt  = SqlBulkCopyOptions.Default;
+					var rc      = new BulkCopyRowsCopied();
 
-						bc.SqlRowsCopied += (sender,e) =>
+					if (options.CheckConstraints       == true) sqlopt |= SqlBulkCopyOptions.CheckConstraints;
+					if (options.KeepIdentity           == true) sqlopt |= SqlBulkCopyOptions.KeepIdentity;
+					if (options.TableLock              == true) sqlopt |= SqlBulkCopyOptions.TableLock;
+					if (options.KeepNulls              == true) sqlopt |= SqlBulkCopyOptions.KeepNulls;
+					if (options.FireTriggers           == true) sqlopt |= SqlBulkCopyOptions.FireTriggers;
+					if (options.UseInternalTransaction == true) sqlopt |= SqlBulkCopyOptions.UseInternalTransaction;
+
+					using (var bc = new SqlBulkCopy(connection, sqlopt, (SqlTransaction)dataConnection.Transaction))
+					{
+						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 						{
-							rc.RowsCopied = e.RowsCopied;
-							options.RowsCopiedCallback(rc);
-							if (rc.Abort)
-								e.Abort = true;
-						};
+							bc.NotifyAfter = options.NotifyAfter;
+
+							bc.SqlRowsCopied += (sender,e) =>
+							{
+								rc.RowsCopied = e.RowsCopied;
+								options.RowsCopiedCallback(rc);
+								if (rc.Abort)
+									e.Abort = true;
+							};
+						}
+
+						if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
+						if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+
+						var sqlBuilder = _dataProvider.CreateSqlBuilder();
+						var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+						var tableName  = GetTableName(sqlBuilder, options, descriptor);
+
+						bc.DestinationTableName = tableName;
+
+						for (var i = 0; i < columns.Count; i++)
+							bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(
+								i,
+								sb.Convert(columns[i].ColumnName, ConvertType.NameToQueryField).ToString()));
+
+						TraceAction(
+							dataConnection,
+							() => "INSERT BULK " + tableName + "("+ string.Join(", ", bc.ColumnMappings.Cast<SqlBulkCopyColumnMapping>().Select(x=>x.DestinationColumn)) + Environment.NewLine,
+							() => { bc.WriteToServer(rd); return rd.Count; });
 					}
 
-					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
-					if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+					if (rc.RowsCopied != rd.Count)
+					{
+						rc.RowsCopied = rd.Count;
 
-					var sqlBuilder = _dataProvider.CreateSqlBuilder();
-					var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-					var tableName  = GetTableName(sqlBuilder, options, descriptor);
+						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+							options.RowsCopiedCallback(rc);
+					}
 
-					bc.DestinationTableName = tableName;
-
-					for (var i = 0; i < columns.Count; i++)
-						bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(
-							i,
-							sb.Convert(columns[i].ColumnName, ConvertType.NameToQueryField).ToString()));
-
-					TraceAction(
-						dataConnection,
-						"INSERT BULK " + tableName + Environment.NewLine,
-						() => { bc.WriteToServer(rd); return rd.Count; });
+					return rc;
 				}
-
-				if (rc.RowsCopied != rd.Count)
-				{
-					rc.RowsCopied = rd.Count;
-
-					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-						options.RowsCopiedCallback(rc);
-				}
-
-				return rc;
 			}
 
 			return MultipleRowsCopy(dataConnection, options, source);

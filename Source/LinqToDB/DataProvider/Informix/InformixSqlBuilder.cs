@@ -151,10 +151,43 @@ namespace LinqToDB.DataProvider.Informix
 				base.BuildFromClause(statement, selectQuery);
 		}
 
+		/// <summary>
+		/// Check if identifier is valid without quotation. Expects non-zero length string as input.
+		/// </summary>
+		private bool IsValidIdentifier(string name)
+		{
+			// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1660.htm
+			// TODO: add informix-specific reserved words list
+			// TODO: Letter definitions is: In the default locale, must be an ASCII character in the range A to Z or a to z
+			// add support for other locales later
+			return !IsReserved(name) &&
+				((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z') || name[0] == '_') &&
+				name.All(c =>
+					(c >= 'a' && c <= 'z') ||
+					(c >= 'A' && c <= 'Z') ||
+					(c >= '0' && c <= '9') ||
+					c == '$' ||
+					c == '_');
+		}
+
 		public override object Convert(object value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
+				case ConvertType.NameToQueryFieldAlias:
+				case ConvertType.NameToQueryField:
+				case ConvertType.NameToQueryTable:
+					if (value != null)
+					{
+						var name = value.ToString();
+						if (name.Length > 0 && !IsValidIdentifier(name))
+						{
+							// I wonder what to do if identifier has " in name?
+							return '"' + name + '"';
+						}
+					}
+
+					break;
 				case ConvertType.NameToQueryParameter   : return "?";
 				case ConvertType.NameToCommandParameter :
 				case ConvertType.NameToSprocParameter   : return ":" + value;

@@ -30,6 +30,8 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsGroupByExpressionSupported      = false;
 			SqlProviderFlags.IsCrossJoinSupported              = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
@@ -53,19 +55,19 @@ namespace LinqToDB.DataProvider.Informix
 
 		static float GetFloat(IDataReader dr, int idx)
 		{
-			using (new InformixCultureFixRegion())
+			using (new InvariantCultureRegion())
 				return dr.GetFloat(idx);
 		}
 
 		static double GetDouble(IDataReader dr, int idx)
 		{
-			using (new InformixCultureFixRegion())
+			using (new InvariantCultureRegion())
 				return dr.GetDouble(idx);
 		}
 
 		static decimal GetDecimal(IDataReader dr, int idx)
 		{
-			using (new InformixCultureFixRegion())
+			using (new InvariantCultureRegion())
 				return dr.GetDecimal(idx);
 		}
 
@@ -77,7 +79,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override IDisposable ExecuteScope()
 		{
-			return new InformixCultureFixRegion();
+			return new InvariantCultureRegion();
 		}
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
@@ -128,10 +130,10 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		public    override string ConnectionNamespace { get { return "IBM.Data.Informix"; } }
-		protected override string ConnectionTypeName  { get { return "IBM.Data.Informix.IfxConnection, IBM.Data.Informix"; } }
-		protected override string DataReaderTypeName  { get { return "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix"; } }
-		
+		public    override string ConnectionNamespace => "IBM.Data.Informix";
+		protected override string ConnectionTypeName  => "IBM.Data.Informix.IfxConnection, IBM.Data.Informix";
+		protected override string DataReaderTypeName  => "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix";
+
 		public override ISqlBuilder CreateSqlBuilder()
 		{
 			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
@@ -162,8 +164,7 @@ namespace LinqToDB.DataProvider.Informix
 			}
 			else if (value is Guid || value == null && dataType == DataType.Guid)
 			{
-				if (value != null)
-				value    = value.ToString();
+				value    = value?.ToString();
 				dataType = DataType.Char;
 			}
 			else if (value is bool)
