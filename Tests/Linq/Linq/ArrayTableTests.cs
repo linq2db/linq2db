@@ -10,8 +10,10 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ArrayTableTests : TestBase
 	{
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
-		public void ApplyJoinArray(string context)
+		[Test]
+		public void ApplyJoinArray(
+			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)] 
+			string context)
 		{
 			var doe = "Doe";
 			using (var db = GetDataContext(context))
