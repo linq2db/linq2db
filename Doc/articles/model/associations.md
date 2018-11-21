@@ -11,12 +11,14 @@ Associations is powerful mechanism in `LINQ To DB` and it is not so limited as i
 ## In this article
 
 One-To-One Associations
+
 One-To-Many Associations
+
 Associations as Extension Methods
 
 ## One-To-One Associations
 
-It is simple relation between two entities and can be defined using AssociationAttribute.
+It is simple relation between two entities and can be defined using `AssociationAttribute`.
 In the following example shown how to define One-To-One association betwwen `Order` and `Employee` entities.
 
 ```cs
@@ -43,7 +45,7 @@ var query = from order in db.Orders
 
 ## One-To-Many Associations
 
-This association simplifies queries from `Main` entity to `Related` entities. Usually it is property with `IEnumerable` type. It also can be `List` or `Array`.
+This association simplifies queries from `Main` entity to `Related` entities. Usually it is property with `IEnumerable` type, which can be `List` or `Array` also.
 
 ```cs
 public partial class Order
@@ -53,7 +55,7 @@ public partial class Order
 }
 ```
 
-It helps write the following kind of queries
+It helps to write the following kind of queries
 
 ```cs
    var query = from order in db.Orders
@@ -66,7 +68,7 @@ It helps write the following kind of queries
 
 ```
 
-Asscociations not only selects entities using appropriate keys, but there is possiblity to make custom predicate. It is needed to define satic filter function. Function should return Expression which shows how entities related to each other. It should be expression with two parameters `Main` and `Related` and returns `bool`.
+Asscociations not only select entities using appropriate keys, but there is possiblity to make custom predicate. It is needed to define satic filter function which should return `Expression` predicate. It should be expression with two parameters `Main` and `Related` and returns `bool`.
 
 ```cs
 public partial class Order
@@ -81,7 +83,7 @@ public partial class Order
 }
 ```
 
-In this sample `ThisKey` and `OtherKey` has beed removed but, if they are defined, predicate will be extended with their equality.
+In this sample `ThisKey` and `OtherKey` has beed removed but, if they are defined, predicate will be combined with keys.
 
 And previous query can be rewtitten using this new property
 
@@ -97,8 +99,8 @@ var query = from order in db.Orders
 
 ## Associations as Extension Methods
 
-There are situations when changing model is not allowed and it is located in separate library and it is not possible to extend class using `partial` definition.
-In this case `LINQ To DB` has ability to define associations as Extension methods.
+There are situations when changing model is not allowed or it is located in separate library. In this case it is not possible to extend class using `partial` definition.
+For this case `LINQ To DB` has ability to define associations as Extension methods.
 Previous samples can be rewritten to use Extension methods.
 
 ```cs
