@@ -54,8 +54,8 @@ This association simplifies queries from `Main` entity to `Related` entities. Us
 public partial class Order
 {
     [Association(
-	     ThisKey  = nameof(OrderID),
-		  OtherKey = nameof(OrderDetail.OrderID))]
+	ThisKey  = nameof(OrderID),
+        OtherKey = nameof(OrderDetail.OrderID))]
     public IEnumerable<OrderDetail> Details { get; set; }
 }
 ```
@@ -112,17 +112,17 @@ Previous examples can be rewritten to use extension methods:
 public static class NorthwindExtensions
 {
     [Association(
-	     ThisKey   = nameof(Order.EmployeeID),
-		  OtherKey  = nameof(Models.Employee.EmployeeID),
-		  CanBeNull = true)]
+        ThisKey   = nameof(Order.EmployeeID),
+        OtherKey  = nameof(Models.Employee.EmployeeID),
+        CanBeNull = true)]
     public static Employee Employee(this Order order)
     {
         throw new InvalidOperationException("Called outside of query");
     }
 
     [Association(
-	     ThisKey  = nameof(Order.OrderID),
-		  OtherKey = nameof(OrderDetail.OrderID))]
+        ThisKey  = nameof(Order.OrderID),
+        OtherKey = nameof(OrderDetail.OrderID))]
     public static IEnumerable<OrderDetail> Details(this Order order)
     {
         throw new InvalidOperationException("Called outside of query");
@@ -150,7 +150,9 @@ Extension method should return `IQueryable<T>` interface.
 ```cs
 public static class NorthwindExtensions
 {
-    [Association(ThisKey = nameof(Order.OrderID), OtherKey = nameof(OrderDetail.OrderID))]
+    [Association(
+        ThisKey = nameof(Order.OrderID),
+        OtherKey = nameof(OrderDetail.OrderID))]
     public static IQueryable<OrderDetail> DetailsQuery(this Order order, IDataContext db)
     {
         return db.GetTable<OrderDetail>().Where(d => d.OrderID == order.OrderID);
