@@ -314,6 +314,28 @@ GO
 GRANT EXEC ON Person_SelectByName TO PUBLIC
 GO
 
+-- VariableResults
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'VariableResults')
+BEGIN DROP Procedure VariableResults END
+GO
+CREATE PROCEDURE VariableResults 
+	@ReturnFullRow bit = 1
+AS
+BEGIN
+	IF @ReturnFullRow = 1 
+	BEGIN
+		SELECT 
+			1      as Code,
+			'Val1' as Value1,
+			'Val2' as Value2 
+	END
+	ELSE 
+        SELECT 
+			'v' as Value1,
+			2   as Code
+END
+GO
 
 -- OutRefTest
 

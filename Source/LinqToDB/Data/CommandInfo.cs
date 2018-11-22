@@ -6,6 +6,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -1017,15 +1018,20 @@ namespace LinqToDB.Data
 
 		struct QueryKey : IEquatable<QueryKey>
 		{
-			public QueryKey(Type type, int configID, string sql)
+			public QueryKey(Type type, int configID, string sql, string fields)
 			{
 				_type     = type;
 				_configID = configID;
 				_sql      = sql;
+				_fields   = fields;
 
 				unchecked
 				{
-					_hashCode = -1521134295 * (-1521134295 * (-1521134295 * 639348056 + _type.GetHashCode()) + _configID.GetHashCode()) + _sql.GetHashCode();
+					var hashCode = _type.GetHashCode();
+					hashCode = (hashCode * 397) ^ _configID;
+					hashCode = (hashCode * 397) ^ (_sql?.GetHashCode() ?? 0);
+					hashCode = (hashCode * 397) ^ (_fields?.GetHashCode() ?? 0);
+					_hashCode = hashCode;
 				}
 			}
 
@@ -1038,6 +1044,7 @@ namespace LinqToDB.Data
 			readonly Type   _type;
 			readonly int    _configID;
 			readonly string _sql;
+			readonly string _fields;
 
 			public override int GetHashCode()
 			{
@@ -1047,8 +1054,9 @@ namespace LinqToDB.Data
 			public bool Equals(QueryKey other)
 			{
 				return
-					_type     == other._type &&
-					_sql      == other._sql  &&
+					_type     == other._type   &&
+					_sql      == other._sql    &&
+					_fields   == other._fields &&
 					_configID == other._configID
 					;
 			}
@@ -1065,9 +1073,24 @@ namespace LinqToDB.Data
 			_parameterReaders.Clear();
 		}
 
+		static string GetFieldsKey(IDataReader dataReader)
+		{
+			var sb = new StringBuilder();
+
+			for (int i = 0; i < dataReader.FieldCount; i++)
+			{
+				sb.Append(dataReader.GetName(i))
+					.Append(',')
+					.Append(dataReader.GetFieldType(i))
+					.Append(';');
+			}
+
+			return sb.ToString();
+		}
+
 		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader, string sql)
 		{
-			var key = new QueryKey(typeof(T), dataConnection.ID, sql);
+			var key = new QueryKey(typeof(T), dataConnection.ID, sql, GetFieldsKey(dataReader));
 
 			if (!_objectReaders.TryGetValue(key, out var func))
 			{
@@ -1080,7 +1103,7 @@ namespace LinqToDB.Data
 
 		static Func<IDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader, string sql)
 		{
-			var key = new QueryKey(typeof(T), dataConnection.ID, sql);
+			var key = new QueryKey(typeof(T), dataConnection.ID, sql, GetFieldsKey(dataReader));
 
 			var func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
 				new ConvertFromDataReaderExpression(type, idx, dataReaderExpr, dataConnection).Reduce());
