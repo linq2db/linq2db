@@ -73,8 +73,6 @@ namespace LinqToDB.Common
 					if (name.IsNullOrEmpty())
 						name = "t";
 
-					var original = name;
-
 					var digitCount = 0;
 					while (char.IsDigit(name[name.Length - 1 - digitCount]))
 					{
