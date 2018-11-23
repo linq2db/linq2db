@@ -15,6 +15,7 @@
     <Compile Include="..\Linq\Linq\AssociationTests.cs" Link="AssociationTests.cs" />
     <Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
     <Compile Include="..\Linq\Linq\CteTests.cs" Link="CteTests.cs" />
+    <Compile Include="..\Linq\Linq\IdlTests.cs" Link="IdlTests.cs" />
     <Compile Include="..\Linq\Linq\OrderByTests.cs" Link="OrderByTests.cs" />
     <Compile Include="..\Linq\Linq\ParserTests.cs" Link="ParserTests.cs" />
     <Compile Include="..\Linq\Linq\SelectManyTests.cs" Link="SelectManyTests.cs" />
@@ -23,6 +24,7 @@
     <Compile Include="..\Linq\Linq\SubQueryTests.cs" Link="SubQueryTests.cs" />
     <Compile Include="..\Linq\UserTests\GroupBySubqueryTests.cs" Link="GroupBySubqueryTests.cs" />
     <Compile Include="..\Linq\UserTests\Issue1284Tests.cs" Link="Issue1284Tests.cs" />
+    <Compile Include="..\Linq\UserTests\Issue1347Tests.cs" Link="Issue1347Tests.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -292,7 +292,10 @@ namespace LinqToDB.Linq.Builder
 							arguments.Add(a);
 						}
 
-						ne = ne.Update(arguments);
+						if (arguments.Count > 0)
+						{
+							ne = ne.Update(arguments);
+						}
 
 						return new TransformInfo(ne, true);
 					}
