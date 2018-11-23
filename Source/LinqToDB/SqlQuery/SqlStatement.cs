@@ -366,7 +366,14 @@ namespace LinqToDB.SqlQuery
 								IsParameterDependent = true;
 
 							var isRootQuery = query.ParentSelect == null;
-							if (isRootQuery && !Common.Configuration.Sql.GenerateFinalAliases && !query.HasUnion && query.From.Tables.Count > 0 && !query.KeepAliases)
+							var removeAliases = isRootQuery
+							                    && !Common.Configuration.Sql.GenerateFinalAliases
+							                    && !query.HasUnion && query.From.Tables.Count > 0
+							                    && !query.KeepAliases
+							                    && !query.OrderBy.IsEmpty
+							                    && !query.Having.IsEmpty;
+
+							if (removeAliases)
 							{
 								// Removing aliases from root query
 								foreach (var c in query.Select.Columns.Where(c => c.Alias != "*"))
@@ -379,11 +386,7 @@ namespace LinqToDB.SqlQuery
 								if (query.Select.Columns.Count > 0)
 								{
 									Utils.MakeUniqueNames(query.Select.Columns.Where(c => c.Alias != "*"),
-										n => !ReservedWords.IsReserved(n), c => c.Alias, (c, n) =>
-										{
-											allAliases.Add(n);
-											c.Alias = n;
-										},
+										n => !ReservedWords.IsReserved(n), c => c.Alias, (c, n) => c.Alias = n,
 										c =>
 										{
 											var a = c.Alias;

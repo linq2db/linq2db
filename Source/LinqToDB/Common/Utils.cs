@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Linq;
 using JetBrains.Annotations;
 
 namespace LinqToDB.Common
@@ -45,63 +45,68 @@ namespace LinqToDB.Common
 			if (nameSetter    == null) throw new ArgumentNullException(nameof(nameSetter));
 			if (defaultName   == null) throw new ArgumentNullException(nameof(defaultName));
 
-			var currentNames = new HashSet<string>(comparer);
-			List<T> conflicted = null;
+			var duplicates = items.ToLookup(i => nameFunc(i) ?? string.Empty, comparer);
 
-			foreach (var item in items)
-			{
-				var name = nameFunc(item);
-				if (name.IsNullOrEmpty() || currentNames.Contains(name) || !validatorFunc(name))
-				{
-					if (conflicted == null)
-						conflicted = new List<T>();
-					conflicted.Add(item);
-				}
-				else
-				{
-					// notify that name is ok
-					nameSetter(item, name);
-					currentNames.Add(name);
-				}
-			}
+			if (duplicates.Count == 0)
+				return;
 
-			if (conflicted != null)
+			var currentNames    = new HashSet<string>(comparer);
+			var currentCounters = new Dictionary<string, int>(comparer);
+
+			foreach (var pair in duplicates)
 			{
-				foreach (var item in conflicted)
+				var groupItems = pair.ToArray();
+
+				if (pair.Key != string.Empty && groupItems.Length == 1 && !currentNames.Contains(pair.Key) && validatorFunc(pair.Key))
 				{
-					var	name = defaultName(item);
+					currentNames.Add(pair.Key);
+					nameSetter(groupItems[0], pair.Key);
+					continue;
+				}
+
+				foreach (var groupItem in groupItems)
+				{
+					var name = defaultName(groupItem);
+
 					if (name.IsNullOrEmpty())
-						name = nameFunc(item);
+						name = nameFunc(groupItem);
 					if (name.IsNullOrEmpty())
 						name = "t";
 
-					var newName = name;
+					var original = name;
 
-					if (currentNames.Contains(newName) || !validatorFunc(newName))
+					var digitCount = 0;
+					while (char.IsDigit(name[name.Length - 1 - digitCount]))
 					{
-						var digitCount = 0;
-						while (char.IsDigit(name[name.Length - 1 - digitCount]))
-						{
-							++digitCount;
-						}
-
-						var startDigit = 0;
-						if (digitCount > 0)
-						{
-							digitCount = Math.Min(6, digitCount);
-							startDigit = int.Parse(name.Substring(name.Length - digitCount, digitCount));
-							name = name.Remove(name.Length - digitCount);
-						}
-
-						do
-						{
-							++startDigit;
-							newName = name + startDigit;
-						} while (currentNames.Contains(newName));
+						++digitCount;
 					}
 
-					nameSetter(item, newName);
+					var startDigit = 0;
+					if (digitCount > 0)
+					{
+						digitCount = Math.Min(6, digitCount);
+						var prevName = name;
+						name = name.Remove(name.Length - digitCount);
+
+						if (!currentCounters.TryGetValue(name, out startDigit))
+						{
+							startDigit = int.Parse(prevName.Substring(prevName.Length - digitCount, digitCount));
+						}
+					}
+
+					string newName;
+					do
+					{
+						newName = name + startDigit;
+						++startDigit;
+					} while (duplicates.Contains(newName) || currentNames.Contains(newName) ||
+					         !validatorFunc(newName));
+
+					nameSetter(groupItem, newName);
 					currentNames.Add(newName);
+
+					currentCounters.Remove(name);
+					currentCounters.Add(name, startDigit);
 				}
 			}
 		}
