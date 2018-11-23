@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -36,9 +36,20 @@ namespace LinqToDB
 		/// Creates instance of attribute.
 		/// </summary>
 		/// <param name="methodName">Name of method in the same class that returns substitution expression.</param>
-		public ExpressionMethodAttribute(string methodName)
+		public ExpressionMethodAttribute([NotNull] string methodName)
 		{
+			if (string.IsNullOrEmpty(methodName))
+				throw new ArgumentException("Value cannot be null or empty.", nameof(methodName));
 			MethodName = methodName;
+		}
+
+		/// <summary>
+		/// Creates instance of attribute.
+		/// </summary>
+		/// <param name="expression">Substitution expression.</param>
+		public ExpressionMethodAttribute([NotNull] LambdaExpression expression)
+		{
+			Expression = expression ?? throw new ArgumentNullException(nameof(expression));
 		}
 
 		/// <summary>
@@ -65,9 +76,14 @@ namespace LinqToDB
 		public string MethodName    { get; set; }
 
 		/// <summary>
-		/// Indicates whether a property should be mapped with this expression Method. </summary>
-		/// <value>
-		/// True if the property should be mapped with this expression Method. </value>
+		/// Substitution expression.
+		/// </summary>
+		public LambdaExpression Expression { get; set; }
+
+		/// <summary>
+		/// Gets or sets calculated column flag. When applied to property and set to <c>true</c>, Linq To DB will
+		/// load data into property using expression during entity materialization.
+		/// </summary>
 		public bool IsColumn { get; set; }
 
 	}

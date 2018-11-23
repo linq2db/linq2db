@@ -146,7 +146,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
 				if (Parent != null)
-					ConvertToParentIndex(index, Parent);
+					index = ConvertToParentIndex(index, Parent);
 				return BuildExpression(index);
 			}
 
