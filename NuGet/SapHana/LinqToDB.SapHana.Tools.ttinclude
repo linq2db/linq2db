@@ -1,3 +1,2 @@
-<#@ assembly name="$(LinqToDBT4SapHanaToolsDirectory)Sap.Data.Hana.v4.5.dll" #>
 <#@ include file="LinqToDB.Tools.ttinclude" #>
 <#@ include file="LinqToDB.SapHana.ttinclude" #>

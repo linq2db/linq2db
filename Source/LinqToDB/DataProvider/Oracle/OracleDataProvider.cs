@@ -68,55 +68,7 @@ namespace LinqToDB.DataProvider.Oracle
 		Type _oracleXmlStream;
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
-		private Type _dataReaderType;
-		private volatile Type _connectionType;
-
-		public override Type DataReaderType
-		{
-			get
-			{
-				if (Name == ProviderName.OracleNative)
-				{
-					if (_dataReaderType != null)
-						return _dataReaderType;
-
-					_dataReaderType = Type.GetType(DataReaderTypeName, false);
-
-					if (_dataReaderType == null)
-					{
-						var assembly = DbProviderFactories.GetFactory(AssemblyName + ".Client").GetType().Assembly;
-						_dataReaderType = assembly.GetType(DataReaderTypeNameWithoutAssembly, true);
-					}
-
-					return _dataReaderType;
-				}
-
-				return base.DataReaderType;
-			}
-		}
-
-		protected override Type GetConnectionType()
-		{
-			if (Name == ProviderName.OracleNative)
-			{
-				if (_connectionType == null)
-					lock (SyncRoot)
-						if (_connectionType == null)
-						{
-							_connectionType = Type.GetType(ConnectionTypeName, false);
-
-							if (_connectionType == null)
-								using (var db = DbProviderFactories.GetFactory(AssemblyName + ".Client").CreateConnection())
-									_connectionType = db.GetType();
-
-							OnConnectionTypeCreated(_connectionType);
-						}
-
-				return _connectionType;
-			}
-
-			return base.GetConnectionType();
-		}
+		public override string DbFactoryProviderName => Name == ProviderName.OracleNative ? "Oracle.DataAccess.Client" : null;
 #endif
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
@@ -451,8 +403,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public    override string ConnectionNamespace               => $"{AssemblyName}.Client";
 		protected override string ConnectionTypeName                => $"{AssemblyName}.Client.OracleConnection, {AssemblyName}";
-		protected override string DataReaderTypeName                => $"{DataReaderTypeNameWithoutAssembly}, {AssemblyName}";
-		private            string DataReaderTypeNameWithoutAssembly => $"{AssemblyName}.Client.OracleDataReader";
+		protected override string DataReaderTypeName                => $"{AssemblyName}.Client.OracleDataReader, {AssemblyName}";
 
 		public             bool   IsXmlTypeSupported  => _oracleXmlType != null;
 
