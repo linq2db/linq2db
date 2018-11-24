@@ -29,7 +29,7 @@ namespace Tests
 	using Model;
 	using Tools;
 
-	[Order(1000)]
+//	[Order(1000)]
 	public class TestBase
 	{
 		static TestBase()

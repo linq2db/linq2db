@@ -18,7 +18,7 @@ namespace Tests.xUpdate
 	using Model;
 
 	[TestFixture]
-	[Order(10000)]
+//	[Order(10000)]
 	public class UpdateTests : TestBase
 	{
 		[Test]
