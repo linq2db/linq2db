@@ -16,7 +16,8 @@ namespace LinqToDB.DataProvider.Access
 
 		protected AccessMappingSchema(string configuration) : base(configuration)
 		{
-			SetDataType(typeof(DateTime), DataType.DateTime);
+			SetDataType(typeof(DateTime),  DataType.DateTime);
+			SetDataType(typeof(DateTime?), DataType.DateTime);
 
 			SetValueToSqlConverter(typeof(bool),     (sb,dt,v) => sb.Append(v));
 			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => sb.Append("'").Append(((Guid)v).ToString("B")).Append("'"));

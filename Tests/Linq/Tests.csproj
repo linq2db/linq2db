@@ -75,6 +75,7 @@
 		<PackageReference Include="Mono.Cecil" Version="0.10.0" />
 		<PackageReference Include="MySql.Data" Version="6.10.6" />
 		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
+		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
 
 
