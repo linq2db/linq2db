@@ -69,7 +69,7 @@ namespace Tests.xUpdate
 			Value2 = 30
 		}
 
-		// TODO: add more cases
+		// TODO: add more cases: other types, different DataType values
 		// TODO: add length validation to fields with length (text/binary)
 		static IEnumerable<(ColumnBuilder, ValueBuilder, DefaultValueBuilder, Func<string, bool>, Func<string, bool>)> TestCases
 		{
@@ -103,9 +103,12 @@ namespace Tests.xUpdate
 				// Sybase roundtrips empty string to " " (WAT?)
 				yield return (e => e.Property (_ => _.String).IsNullable(false).HasLength(10), v => v.String             = "test 10"                           , (ctx, v) => { if (ctx.Contains("Oracle") || ctx.Contains("Sybase")) { v.String = " "; } else { v.String = string.Empty; } }, null,                            null);
 				yield return (e => e.Property (_ => _.String).HasLength(10),                   v => v.String = "test 10 n"                                     , null,                                                                                                                        null,                            null);
-
+				// https://github.com/linq2db/linq2db/issues/1032 with DataType specified
 				yield return (e => e.Property(_ => _.StringConverted).IsNullable(false).HasDataType(DataType.NVarChar), v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                             null,                            null);
 				yield return (e => e.Property(_ => _.StringConverted).HasDataType(DataType.NVarChar), v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                                               null,                            null);
+				// https://github.com/linq2db/linq2db/issues/1032 without DataType specified
+				yield return (e => e.Property(_ => _.StringConverted).IsNullable(false),       v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                                                      null,                            null);
+				yield return (e => e.HasColumn(_ => _.StringConverted),                        v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                                                      null,                            null);
 			}
 		}
 
