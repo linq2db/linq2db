@@ -28,7 +28,7 @@ namespace Tests.xUpdate
 			public double?     DoubleNullable     { get; set; }
 			public bool        Boolean            { get; set; }
 			public bool?       BooleanNullable    { get; set; }
-			public DateTime    DateTime           { get; set; }
+			public DateTime    DateTime           { get; set; } = new DateTime(2000, 1, 1);
 			public DateTime?   DateTimeNullable   { get; set; }
 			public IntEnum     IntEnum            { get; set; }
 			public IntEnum?    IntEnumNullable    { get; set; }
@@ -60,36 +60,56 @@ namespace Tests.xUpdate
 
 		// TODO: add more cases
 		// TODO: add length validation to fields with length (text/binary)
-		static IEnumerable<(ColumnBuilder columnBuilder, ValueBuilder valueBuilder, DefaultValueBuilder defaultValueBuilder)> TestCases
+		static IEnumerable<(ColumnBuilder, ValueBuilder, DefaultValueBuilder, Func<string, bool>, Func<string, bool>)> TestCases
 		{
 			get
 			{
-				yield return (e => e.HasColumn(_ => _.Int32),                       v => v.Int32              = 1                                  , null);
-				yield return (e => e.HasColumn(_ => _.Int32Nullable),               v => v.Int32Nullable      = 2                                  , null);
-				yield return (e => e.HasColumn(_ => _.Int64),                       v => v.Int64              = 3                                  , null);
-				yield return (e => e.HasColumn(_ => _.Int64Nullable),               v => v.Int64Nullable      = 4                                  , null);
-				yield return (e => e.HasColumn(_ => _.Double),                      v => v.Double             = 3.14                               , null);
-				yield return (e => e.HasColumn(_ => _.DoubleNullable),              v => v.DoubleNullable     = 4.13                               , null);
-				yield return (e => e.HasColumn(_ => _.Boolean),                     v => v.Boolean            = true                               , null);
-				yield return (e => e.HasColumn(_ => _.BooleanNullable),             v => v.BooleanNullable    = true                               , (ctx, v) => { if (ctx.Contains("Sybase")) { v.BooleanNullable = false; } });
-				yield return (e => e.HasColumn(_ => _.DateTime),                    v => v.DateTime           = new DateTime(2018, 11, 24, 1, 2, 3), null);
-				yield return (e => e.HasColumn(_ => _.DateTimeNullable),            v => v.DateTimeNullable   = new DateTime(2018, 11, 25, 1, 2, 3), null);
-				yield return (e => e.HasColumn(_ => _.IntEnum),                     v => v.IntEnum            = IntEnum.Value                      , null);
-				yield return (e => e.HasColumn(_ => _.IntEnumNullable),             v => v.IntEnumNullable    = IntEnum.Value                      , null);
-				yield return (e => e.HasColumn(_ => _.StringEnum),                  v => v.StringEnum         = StringEnum.Value1                  , null);
-				yield return (e => e.HasColumn(_ => _.StringEnumNullable),          v => v.StringEnumNullable = StringEnum.Value2                  , null);
-				yield return (e => e.HasColumn(_ => _.String),                      v => v.String             = "test max value"                   , null);
-				yield return (e => e.Property (_ => _.StringNullable).IsNullable(), v => v.StringNullable     = "test max value nullable"          , null);
-				yield return (e => e.Property (_ => _.String).HasLength(10),        v => v.String             = "test 10"                          , null);
-				yield return (e => e.Property (_ => _.StringNullable).HasLength(10).IsNullable(), v => v.StringNullable = "test 10 n"              , null);
+				yield return (e => e.HasColumn(_ => _.Int32),                                  v => v.Int32              = 1                                   , null,                                                                                                                        null,                            null);
+				yield return (e => e.HasColumn(_ => _.Int32Nullable),                          v => v.Int32Nullable      = 2                                   , null,                                                                                                                        null,                            null);
+				// Access doesn't have 64bit integer type
+				yield return (e => e.HasColumn(_ => _.Int64),                                  v => v.Int64              = 3                                   , null,                                                                                                                        null,                            ctx => ctx.Contains("Access"));
+				// Access doesn't have 64bit integer type
+				yield return (e => e.HasColumn(_ => _.Int64Nullable),                          v => v.Int64Nullable      = 4                                   , null,                                                                                                                        null,                            ctx => ctx.Contains("Access"));
+				// Firebird looses precision of double
+				yield return (e => e.HasColumn(_ => _.Double),                                 v => v.Double             = 3.14                                , null,                                                                                                                        ctx => ctx.Contains("Firebird"), null);
+				// Firebird looses precision of double
+				yield return (e => e.HasColumn(_ => _.DoubleNullable),                         v => v.DoubleNullable     = 4.13                                , null,                                                                                                                        ctx => ctx.Contains("Firebird"), null);
+				yield return (e => e.HasColumn(_ => _.Boolean),                                v => v.Boolean            = true                                , null,                                                                                                                        null,                            null);
+				// Sybase doesn't support nullable bits
+				// Access allows you to define nullable bits, but returns null as false
+				yield return (e => e.HasColumn(_ => _.BooleanNullable),                        v => v.BooleanNullable    = true                                , (ctx, v) => { if (ctx.Contains("Access")) { v.BooleanNullable = false; } },                                                  null,                            ctx => ctx.Contains("Sybase"));
+				yield return (e => e.HasColumn(_ => _.DateTime),                               v => v.DateTime           = new DateTime(2018, 11, 24 , 1, 2, 3), null,                                                                                                                        null,                            null);
+				yield return (e => e.HasColumn(_ => _.DateTimeNullable),                       v => v.DateTimeNullable   = new DateTime(2018, 11, 25 , 1, 2, 3), null,                                                                                                                        null,                            null);
+				yield return (e => e.HasColumn(_ => _.IntEnum),                                v => v.IntEnum            = IntEnum.Value                       , null,                                                                                                                        null,                            null);
+				yield return (e => e.HasColumn(_ => _.IntEnumNullable),                        v => v.IntEnumNullable    = IntEnum.Value                       , null,                                                                                                                        null,                            null);
+				yield return (e => e.HasColumn(_ => _.StringEnum),                             v => v.StringEnum         = StringEnum.Value1                   , null,                                                                                                                        null,                            null);
+				yield return (e => e.HasColumn(_ => _.StringEnumNullable),                     v => v.StringEnumNullable = StringEnum.Value2                   , null,                                                                                                                        null,                            null);
+				// Oracle treats empty string as null in this context
+				// Sybase roundtrips empty string to " " (WAT?)
+				yield return (e => e.Property(_ => _.String).IsNullable(false),                v => v.String             = "test max value"                    , (ctx, v) => { if (ctx.Contains("Oracle") || ctx.Contains("Sybase")) { v.String = " "; } else { v.String = string.Empty; } }, null,                            null);
+				yield return (e => e.Property (_ => _.StringNullable).IsNullable(),            v => v.StringNullable     = "test max value nullable"           , null,                                                                                                                        null,                            null);
+				// Oracle treats empty string as null in this context
+				// Sybase roundtrips empty string to " " (WAT?)
+				yield return (e => e.Property (_ => _.String).IsNullable(false).HasLength(10), v => v.String             = "test 10"                           , (ctx, v) => { if (ctx.Contains("Oracle") || ctx.Contains("Sybase")) { v.String = " "; } else { v.String = string.Empty; } }, null,                            null);
+				yield return (e => e.Property (_ => _.StringNullable).HasLength(10),           v => v.StringNullable     = "test 10 n"                         , null,                                                                                                                        null,                            null);
 			}
 		}
 
 		[Test]
 		public void TestCreateTableColumnType(
 			[DataSources] string context,
-			[ValueSource(nameof(TestCases))] (ColumnBuilder columnBuilder, ValueBuilder valueBuilder, DefaultValueBuilder defaultValueBuilder) testCase)
+			[ValueSource(nameof(TestCases))] (
+				ColumnBuilder columnBuilder,
+				ValueBuilder valueBuilder,
+				DefaultValueBuilder defaultValueBuilder,
+				Func<string, bool> skipAssert,
+				Func<string, bool> skipCase) testCase)
 		{
+			if (testCase.skipCase?.Invoke(context) == true)
+			{
+				Assert.Ignore("test case is not valid");
+			}
+
 			Query.ClearCaches();
 
 			var ms = new MappingSchema();
@@ -110,7 +130,8 @@ namespace Tests.xUpdate
 				db.Insert(defaultValue);
 				db.Insert(testValue);
 
-				AreEqual(new[] { defaultValue, testValue }, table.OrderBy(_ => _.Id), CreateTableTypes.Comparer);
+				if (testCase.skipAssert?.Invoke(context) != true)
+					AreEqual(new[] { defaultValue, testValue }, table.OrderBy(_ => _.Id), CreateTableTypes.Comparer);
 			}
 		}
 	}

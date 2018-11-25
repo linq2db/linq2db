@@ -85,15 +85,6 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
-		{
-			// Sybase doesn't support nullable bit fields
-			if (field.CanBeNull && field.DataType == DataType.Boolean)
-				field.CanBeNull = false;
-
-			base.BuildCreateTableNullAttribute(field, defaultNullable);
-		}
-
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			var selectQuery = deleteStatement.SelectQuery;
