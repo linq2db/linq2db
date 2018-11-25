@@ -119,7 +119,7 @@ namespace LinqToDB.DataProvider.SapHana
 					{
 						StringBuilder
 							.Append(type.DataType)
-							.Append("(Max)");
+							.Append("(5000)");
 						return;
 					}
 					break;
