@@ -115,7 +115,7 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.NVarChar:
 				case DataType.VarChar:
 				case DataType.VarBinary:
-					if (type.Length == int.MaxValue || type.Length < 0)
+					if (type.Length == null || type.Length > 5000 || type.Length < 1)
 					{
 						StringBuilder
 							.Append(type.DataType)

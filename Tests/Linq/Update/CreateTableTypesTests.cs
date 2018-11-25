@@ -1,6 +1,8 @@
 ﻿using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -28,16 +30,25 @@ namespace Tests.xUpdate
 			public double?     DoubleNullable     { get; set; }
 			public bool        Boolean            { get; set; }
 			public bool?       BooleanNullable    { get; set; }
-			public DateTime    DateTime           { get; set; } = new DateTime(2000, 1, 1);
+			public DateTime    DateTime           { get; set; } = new DateTime(2000, 1, 1); // to support narrow-ranged types
 			public DateTime?   DateTimeNullable   { get; set; }
 			public IntEnum     IntEnum            { get; set; }
 			public IntEnum?    IntEnumNullable    { get; set; }
 			public StringEnum  StringEnum         { get; set; }
 			public StringEnum? StringEnumNullable { get; set; }
 			public string      String             { get; set; }
-			public string      StringNullable     { get; set; }
+
+			// converters test
+			// see https://github.com/linq2db/linq2db/issues/1032
+			public List<(uint field1, string field2)> StringConverted;
 
 			public static IEqualityComparer<CreateTableTypes> Comparer = ComparerBuilder<CreateTableTypes>.GetEqualityComparer();
+
+			public static List<(uint, string)> StringConvertedTestValue = new List<(uint, string)>
+			{
+				(1, "one"),
+				(2, "two")
+			};
 		}
 
 		public enum IntEnum
@@ -87,11 +98,14 @@ namespace Tests.xUpdate
 				// Oracle treats empty string as null in this context
 				// Sybase roundtrips empty string to " " (WAT?)
 				yield return (e => e.Property(_ => _.String).IsNullable(false),                v => v.String             = "test max value"                    , (ctx, v) => { if (ctx.Contains("Oracle") || ctx.Contains("Sybase")) { v.String = " "; } else { v.String = string.Empty; } }, null,                            null);
-				yield return (e => e.Property (_ => _.StringNullable).IsNullable(),            v => v.StringNullable     = "test max value nullable"           , null,                                                                                                                        null,                            null);
+				yield return (e => e.Property (_ => _.String).IsNullable(),                    v => v.String = "test max value nullable"                       , null,                                                                                                                        null,                            null);
 				// Oracle treats empty string as null in this context
 				// Sybase roundtrips empty string to " " (WAT?)
 				yield return (e => e.Property (_ => _.String).IsNullable(false).HasLength(10), v => v.String             = "test 10"                           , (ctx, v) => { if (ctx.Contains("Oracle") || ctx.Contains("Sybase")) { v.String = " "; } else { v.String = string.Empty; } }, null,                            null);
-				yield return (e => e.Property (_ => _.StringNullable).HasLength(10),           v => v.StringNullable     = "test 10 n"                         , null,                                                                                                                        null,                            null);
+				yield return (e => e.Property (_ => _.String).HasLength(10),                   v => v.String = "test 10 n"                                     , null,                                                                                                                        null,                            null);
+
+				yield return (e => e.Property(_ => _.StringConverted).IsNullable(false).HasDataType(DataType.NVarChar), v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null, null, null);
+				yield return (e => e.Property(_ => _.StringConverted).HasDataType(DataType.NVarChar), v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null, null, null);
 			}
 		}
 
@@ -117,6 +131,15 @@ namespace Tests.xUpdate
 				.Entity<CreateTableTypes>()
 				.HasColumn(e => e.Id);
 			testCase.columnBuilder(entity);
+
+			MappingSchema.Default.SetConverter<List<(uint, string)>, string>(JsonConvert.SerializeObject);
+			MappingSchema.Default.SetConverter<List<(uint, string)>, DataParameter>(x =>
+				new DataParameter()
+				{
+					Value = JsonConvert.SerializeObject(x),
+					DataType = DataType.NVarChar
+				});
+			MappingSchema.Default.SetConverter<string, List<(uint, string)>>(JsonConvert.DeserializeObject<List<(uint, string)>>);
 
 			using (var db = GetDataContext(context, ms))
 			using (var table = db.CreateLocalTable<CreateTableTypes>())
