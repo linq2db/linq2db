@@ -198,5 +198,10 @@ namespace LinqToDB.Expressions
 			readonly int           _columnIndex;
 			readonly object        _defaultValue;
 		}
+
+		public override string ToString()
+		{
+			return $"ConvertFromDataReaderExpression<{_type.Name}>({_idx})";
+		}
 	}
 }

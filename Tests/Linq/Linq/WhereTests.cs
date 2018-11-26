@@ -1269,7 +1269,7 @@ namespace Tests.Linq
 			public static readonly IEqualityComparer<WhereCases> Comparer = Tools.ComparerBuilder<WhereCases>.GetEqualityComparer();
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void WhereBooleanTest2([DataSources(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Firebird, TestProvName.Firebird3)] string context)
 		{
 			void AreEqualLocal(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases,bool>> predicate)
@@ -1330,7 +1330,7 @@ namespace Tests.Linq
 				AreEqualLocal(local, table, t => !(t.NullableBoolValue != true) && t.Id > 0);
 				AreEqualLocal(local, table, t => t.NullableBoolValue == true && t.Id > 0);
 
-				if (context != ProviderName.Access)
+				if (!context.StartsWith(ProviderName.Access))
 				{
 					AreEqualLocal(local, table, t => t.NullableBoolValue == null && t.Id > 0);
 					AreEqualLocal(local, table, t => t.NullableBoolValue != null && t.Id > 0);

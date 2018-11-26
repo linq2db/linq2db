@@ -418,6 +418,9 @@ namespace LinqToDB.SqlQuery
 						{
 							var sql = (SelectQuery)expr;
 
+							if (sql.IsParameterDependent)
+								IsParameterDependent = true;
+
 							if (sql.HasUnion)
 							{
 								for (var i = 0; i < sql.Select.Columns.Count; i++)

@@ -369,7 +369,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit1X(CteClause sc)
 		{
-			foreach (var c in sc.Fields.Values) Visit1(c);
+			foreach (var c in sc.Fields) Visit1(c);
 			Visit1(sc.Body);
 		}
 
@@ -831,7 +831,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit2X(CteClause sc)
 		{
-			foreach (var c in sc.Fields.Values) Visit2(c);
+			foreach (var c in sc.Fields) Visit2(c);
 			Visit2(sc.Body);
 		}
 

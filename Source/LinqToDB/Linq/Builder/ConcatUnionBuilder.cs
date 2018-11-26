@@ -214,26 +214,35 @@ namespace LinqToDB.Linq.Builder
 						if (nctor != null)
 						{
 							var members = nctor.Members
-								.Select(m => m is MethodInfo ? ((MethodInfo)m).GetPropertyInfo() : m)
+								.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
 								.ToList();
 
 							expr = Expression.New(
 								nctor.Constructor,
 								members.Select(m => Expression.PropertyOrField(_unionParameter, m.Name)),
 								members);
+
+							var ex = Builder.BuildExpression(this, expr, enforceServerSide);
+							return ex;
 						}
-						else
+
+						var isNew = Expression.Find(e => e is NewExpression && e.Type == type) != null;
+						if (isNew)
 						{
 							var ta = TypeAccessor.GetAccessor(type);
 
 							expr = Expression.MemberInit(
 								Expression.New(ta.Type),
-								_members.Select(m => Expression.Bind(m.Value.MemberExpression.Member, m.Value.MemberExpression)));
+								_members.Select(m =>
+									Expression.Bind(m.Value.MemberExpression.Member, m.Value.MemberExpression)));
+							var ex = Builder.BuildExpression(this, expr, enforceServerSide);
+							return ex;
 						}
-
-						var ex = Builder.BuildExpression(this, expr, enforceServerSide);
-
-						return ex;
+						else
+						{
+							var ex = _sequence1.BuildExpression(null, level, enforceServerSide);
+							return ex;
+						}
 					}
 
 					if (level == 0 || level == 1)
@@ -317,17 +326,15 @@ namespace LinqToDB.Linq.Builder
 
 						case ConvertFlags.Field :
 
-							if (expression != null && (level == 0 || level == 1) && expression.NodeType == ExpressionType.MemberAccess)
+							if (expression != null && expression.NodeType == ExpressionType.MemberAccess)
 							{
-								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
+								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level == 0 ? 1 : level);
 
 								if (expression == levelExpression)
 								{
 									var ma = (MemberExpression)expression;
 
-									Member member;
-
-									if (!_members.TryGetValue(ma.Member, out member))
+									if (!_members.TryGetValue(ma.Member, out var member))
 									{
 										var ed = Builder.MappingSchema.GetEntityDescriptor(_type);
 
@@ -346,8 +353,7 @@ namespace LinqToDB.Linq.Builder
 									}
 
 									if (member == null)
-										throw new LinqToDBException(
-											string.Format("Expression '{0}' is not a field.", expression));
+										throw new LinqToDBException($"Expression '{expression}' is not a field.");
 
 									if (member.SqlQueryInfo == null)
 									{

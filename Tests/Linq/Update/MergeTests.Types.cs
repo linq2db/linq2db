@@ -351,6 +351,7 @@ namespace Tests.xUpdate
 		// Expected: '*'
 		// But was:  '4'
 		// at Tests.Merge.MergeTests.AssertChar
+		[ActiveIssue("ORA-22053: overflow error", Configuration = ProviderName.OracleNative)]
 		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
 		public void TestMergeTypes(string context)
 		{
@@ -384,7 +385,7 @@ namespace Tests.xUpdate
 			if (context != ProviderName.Access)
 				Assert.AreEqual(expected.FieldInt64, actual.FieldInt64);
 
-			if (context != ProviderName.Sybase)
+			if (context != ProviderName.Sybase && context != ProviderName.SybaseManaged)
 				if (context != ProviderName.Access)
 					Assert.AreEqual(expected.FieldBoolean, actual.FieldBoolean);
 				else
@@ -440,7 +441,7 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (context == ProviderName.Sybase)
+				if (context == ProviderName.Sybase || context == ProviderName.SybaseManaged)
 					expected = expected.TrimEnd(' ');
 			}
 
@@ -460,7 +461,7 @@ namespace Tests.xUpdate
 
 			if (expected != null)
 			{
-				if (context == ProviderName.Sybase)
+				if (context == ProviderName.Sybase || context == ProviderName.SybaseManaged)
 				{
 					while (expected.Length > 1 && expected[expected.Length - 1] == 0)
 						expected = expected.Take(expected.Length - 1).ToArray();
@@ -505,6 +506,7 @@ namespace Tests.xUpdate
 				&& context != ProviderName.SQLiteClassic
 				&& context != ProviderName.SQLiteMS
 				&& context != ProviderName.Sybase
+				&& context != ProviderName.SybaseManaged
 				&& context != ProviderName.DB2
 				&& context != ProviderName.SapHana)
 				Assert.AreEqual(expected, actual);
@@ -545,7 +547,7 @@ namespace Tests.xUpdate
 				if (context == TestProvName.MySql57 && expected.Value.Millisecond > 500)
 					expected = expected.Value.AddSeconds(1);
 
-				if (context == ProviderName.Sybase)
+				if (context == ProviderName.Sybase || context == ProviderName.SybaseManaged)
 				{
 					switch (expected.Value.Millisecond % 10)
 					{
@@ -584,6 +586,7 @@ namespace Tests.xUpdate
 				switch (context)
 				{
 					case ProviderName.Sybase:
+					case ProviderName.SybaseManaged:
 						expected = expected.TrimEnd(' ');
 						break;
 					case ProviderName.Informix:
@@ -618,6 +621,7 @@ namespace Tests.xUpdate
 				switch (context)
 				{
 					case ProviderName.Sybase:
+					case ProviderName.SybaseManaged:
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000) * 10000);
 						switch (expected.Value.Milliseconds % 10)
 						{

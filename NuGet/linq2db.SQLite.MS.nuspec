@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.SQLite.MS</id>
-		<version>2.4.0</version>
+		<version>2.6.0</version>
 		<title>LINQ to SQLite</title>
 		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
 		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
@@ -18,7 +18,7 @@
 		</summary>
 		<tags>linq linq2db SQLite LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db"                version="2.4.0"/>
+			<dependency id="linq2db"                version="2.6.0"/>
 			<dependency id="Microsoft.Data.Sqlite"  version="2.1.0"/>
 		</dependencies>
 		<contentFiles>

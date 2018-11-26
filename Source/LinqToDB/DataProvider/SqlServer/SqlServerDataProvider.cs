@@ -212,7 +212,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						string s;
 						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
 							if (parameter is SqlParameter)
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETSTANDARD1_6
 								((SqlParameter)parameter).TypeName = s;
 #else
 								((SqlParameter)parameter).UdtTypeName = s;

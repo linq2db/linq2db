@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
+	using System.Data.Linq;
 
 	public class OracleMappingSchema : MappingSchema
 	{
@@ -33,6 +34,19 @@ namespace LinqToDB.DataProvider.Oracle
 			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
 
 			SetValueToSqlConverter(typeof(double), (sb, dt, v) => sb.Append(((double)v).ToString("G17", NumberFormatInfo.InvariantInfo)).Append("D"));
+
+			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+		}
+
+		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
+		{
+			stringBuilder.Append("HEXTORAW('");
+
+			foreach (var b in value)
+				stringBuilder.Append(b.ToString("X2"));
+
+			stringBuilder.Append("')");
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)

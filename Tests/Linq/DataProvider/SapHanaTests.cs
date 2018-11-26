@@ -90,9 +90,9 @@ namespace Tests.DataProvider
 				Assert.That(TestType<DateTime?>(conn, "seconddateDataType", DataType.DateTime), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
 				Assert.That(TestType<DateTime?>(conn, "timestampDataType", DataType.Timestamp), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 123)));
 
-				Assert.That(TestType<char?>(conn, "charDataType", DataType.Char), Is.EqualTo('a'));
-				Assert.That(TestType<string>(conn, "charDataType", DataType.Char), Is.EqualTo("a"));
-				Assert.That(TestType<string>(conn, "charDataType", DataType.NChar), Is.EqualTo("a"));
+				Assert.That(TestType<char?>(conn, "charDataType", DataType.Char), Is.EqualTo('1'));
+				Assert.That(TestType<string>(conn, "charDataType", DataType.Char), Is.EqualTo("1"));
+				Assert.That(TestType<string>(conn, "charDataType", DataType.NChar), Is.EqualTo("1"));
 				Assert.That(TestType<string>(conn, "varcharDataType", DataType.VarChar), Is.EqualTo("bcd"));
 				Assert.That(TestType<string>(conn, "varcharDataType", DataType.NVarChar), Is.EqualTo("bcd"));
 
@@ -480,6 +480,7 @@ namespace Tests.DataProvider
 		}
 
 
+		[ActiveIssue("SAP HANA 1 only?", Configuration = CurrentProvider)]
 		[Test, IncludeDataContextSource(CurrentProvider)]
 		public void CalculationViewLinqQuery(string context)
 		{

@@ -339,6 +339,10 @@ namespace LinqToDB.SqlProvider
 				{
 					AppendIndent();
 					StringBuilder.Append("WITH ");
+	
+					if (IsRecursiveCteKeywordRequired && with.Clauses.Any(c => c.IsRecursive))
+						StringBuilder.Append("RECURSIVE ");
+
 					first = false;
 				}
 				else
@@ -346,9 +350,6 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(',').AppendLine();
 					AppendIndent();
 				}
-
-				if (IsRecursiveCteKeywordRequired && cte.IsRecursive)
-					StringBuilder.Append("RECURSIVE ");
 
 				ConvertTableName(StringBuilder, null, null, cte.Name);
 
@@ -359,7 +360,7 @@ namespace LinqToDB.SqlProvider
 					++Indent;
 
 					var firstField = true;
-					foreach (var field in cte.Fields.Values)
+					foreach (var field in cte.Fields)
 					{
 						if (!firstField)
 							StringBuilder.AppendLine(", ");
@@ -377,7 +378,7 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(" (");
 
 					var firstField = true;
-					foreach (var field in cte.Fields.Values)
+					foreach (var field in cte.Fields)
 					{
 						if (!firstField)
 							StringBuilder.Append(", ");
@@ -961,7 +962,9 @@ namespace LinqToDB.SqlProvider
 			AppendIndent().Append("(");
 			Indent++;
 
-			var fields = table.Fields.Select(f => new CreateFieldInfo { Field = f.Value, StringBuilder = new StringBuilder() }).ToList();
+			// Order columns by the Order field. Positive first then negative.
+			var orderedFields = table.Fields.Values.OrderBy(_ => _.CreateOrder >= 0 ? 0 : (_.CreateOrder == null ? 1 : 2)).ThenBy(_ => _.CreateOrder);
+			var fields = orderedFields.Select(f => new CreateFieldInfo { Field = f, StringBuilder = new StringBuilder() }).ToList();
 			var maxlen = 0;
 
 			void AppendToMax(bool addCreateFormat)

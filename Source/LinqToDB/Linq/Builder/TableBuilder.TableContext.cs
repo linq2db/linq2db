@@ -1027,7 +1027,7 @@ namespace LinqToDB.Linq.Builder
 				throw new InvalidOperationException();
 			}
 
-			public SqlStatement GetResultStatement()
+			public virtual SqlStatement GetResultStatement()
 			{
 				return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
 			}
@@ -1036,7 +1036,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region ConvertToParentIndex
 
-			public int ConvertToParentIndex(int index, IBuildContext context)
+			public virtual int ConvertToParentIndex(int index, IBuildContext context)
 			{
 				return Parent?.ConvertToParentIndex(index, this) ?? index;
 			}
@@ -1107,9 +1107,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (EntityDescriptor.Aliases != null)
 					{
-						if (EntityDescriptor.Aliases.ContainsKey(memberExpression.Member.Name))
+						if (EntityDescriptor.Aliases.TryGetValue(memberExpression.Member.Name, out var aliasName))
 						{
-							var alias = EntityDescriptor[memberExpression.Member.Name];
+							var alias = EntityDescriptor[aliasName];
 
 							if (alias == null)
 							{
