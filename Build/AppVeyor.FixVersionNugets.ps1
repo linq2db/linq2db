@@ -12,6 +12,8 @@ if ($nugetVersion) {
 	$authors = 'Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko'
 	$ns = @{ns=$nsUri}
 	$dotlessVersion = $nugetVersion -replace '\.',''
+	$commit = (git rev-parse HEAD)
+	$branch = (git rev-parse --abbrev-ref HEAD)
 
 	Get-ChildItem $path | ForEach {
 		$xmlPath = Resolve-Path $_.FullName
@@ -45,6 +47,21 @@ if ($nugetVersion) {
 
 		$child = $xml.CreateElement('owners', $nsUri)
 		$child.InnerText = $authors
+		$xml.package.metadata.AppendChild($child)
+
+		$child = $xml.CreateElement('repository', $nsUri)
+		$attr = $xml.CreateAttribute('type')
+		$attr.Value = 'git'
+		$child.Attributes.Append($attr)
+		$attr = $xml.CreateAttribute('url')
+		$attr.Value = 'https://github.com/linq2db/linq2db.git'
+		$child.Attributes.Append($attr)
+		$attr = $xml.CreateAttribute('branch')
+		$attr.Value = $branch
+		$child.Attributes.Append($attr)
+		$attr = $xml.CreateAttribute('commit')
+		$attr.Value = $commit
+		$child.Attributes.Append($attr)
 		$xml.package.metadata.AppendChild($child)
 
 		Write-Host "Patched $xmlPath"

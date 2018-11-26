@@ -13,7 +13,6 @@
 		<tags>
 			linq linq2db LinqToDB ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
-		<repository type="git" url="https://github.com/linq2db/linq2db.git" />
 		<dependencies>
 			<group targetFramework=".NETFramework4.5" />
 			<group targetFramework=".NETStandard1.6">

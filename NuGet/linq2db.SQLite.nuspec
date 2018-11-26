@@ -15,7 +15,6 @@
 			This package includes a T4 template to generate data models for SQLite database and references to the linq2db and System.Data.SQLite nugets.
 		</summary>
 		<tags>linq linq2db SQLite LinqToDB ORM database DB SQL</tags>
-		<repository type="git" url="https://github.com/linq2db/linq2db.git" />
 		<dependencies>
 			<dependency id="linq2db"                  version="2.6.0"/>
 			<dependency id="System.Data.SQLite.Core"  version="1.0.107"/>

@@ -16,7 +16,6 @@
 			Oracle data provider for .NET will still need to be installed on the production or development machine in order to connect to Oracle.
 		</summary>
 		<tags>linq linq2db Oracle ODP LinqToDB ORM database DB SQL</tags>
-		<repository type="git" url="https://github.com/linq2db/linq2db.git" />
 		<dependencies>
 			<dependency id="linq2db" version="2.6.0"/>
 		</dependencies>

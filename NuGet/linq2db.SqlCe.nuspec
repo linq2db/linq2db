@@ -15,7 +15,6 @@
 			This package includes a T4 template to generate data models for SqlCe database and references to the linq2db and Microsoft.SqlServer.Compact nugets.
 		</summary>
 		<tags>linq linq2db SqlCe SqlServerCe SqlServer Compact LinqToDB ORM database DB SQL</tags>
-		<repository type="git" url="https://github.com/linq2db/linq2db.git" />
 		<dependencies>
 			<dependency id="linq2db" version="2.6.0"/>
 		</dependencies>

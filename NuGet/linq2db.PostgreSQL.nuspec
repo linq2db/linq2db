@@ -15,7 +15,6 @@
 			This package includes a T4 template to generate data models for PostgreSQL database and references to the linq2db and Npgsql nugets.
 		</summary>
 		<tags>linq linq2db Npgsql PostgreSQL LinqToDB ORM database DB SQL</tags>
-		<repository type="git" url="https://github.com/linq2db/linq2db.git" />
 		<dependencies>
 			<dependency id="Npgsql"  version="3.2.5" />
 			<dependency id="linq2db" version="2.6.0" />

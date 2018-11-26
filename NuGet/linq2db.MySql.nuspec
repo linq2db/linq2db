@@ -15,7 +15,6 @@
 			This package includes a T4 template to generate data models for MySql database and references to the linq2db and MySql.Data nugets.
 		</summary>
 		<tags>linq linq2db MySql LinqToDB ORM database DB SQL</tags>
-		<repository type="git" url="https://github.com/linq2db/linq2db.git" />
 		<dependencies>
 			<dependency id="MySql.Data" version="6.10.6"   />
 			<dependency id="linq2db"    version="2.6.0"/>
