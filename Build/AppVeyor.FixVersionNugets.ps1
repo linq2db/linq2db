@@ -49,6 +49,22 @@ if ($nugetVersion) {
 		$child.InnerText = $authors
 		$xml.package.metadata.AppendChild($child)
 
+		$child = $xml.CreateElement('licenseUrl', $nsUri)
+		$child.InnerText = 'https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt'
+		$xml.package.metadata.AppendChild($child)
+
+		$child = $xml.CreateElement('projectUrl', $nsUri)
+		$child.InnerText = 'https://github.com/linq2db/linq2db'
+		$xml.package.metadata.AppendChild($child)
+
+		$child = $xml.CreateElement('iconUrl', $nsUri)
+		$child.InnerText = 'http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320'
+		$xml.package.metadata.AppendChild($child)
+
+		$child = $xml.CreateElement('requireLicenseAcceptance', $nsUri)
+		$child.InnerText = 'false'
+		$xml.package.metadata.AppendChild($child)
+
 		$child = $xml.CreateElement('repository', $nsUri)
 		$attr = $xml.CreateAttribute('type')
 		$attr.Value = 'git'
