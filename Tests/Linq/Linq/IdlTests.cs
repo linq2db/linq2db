@@ -21,6 +21,7 @@ namespace Tests.Linq
 		{
 			public IdlProvidersAttribute()
 				: base(
+					ProviderName.Access,
 					ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
 					ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)
 			{
@@ -518,7 +519,7 @@ namespace Tests.Linq
 		[Test, IdlProviders]
 		public void TestUpdateWithTargetByAssociationProperty(string context)
 		{
-			TestUpdateByAssociationProperty(context,true);
+			TestUpdateByAssociationProperty(context, true);
 		}
 
 		[Test, IdlProviders]

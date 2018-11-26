@@ -14,6 +14,7 @@
     <Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
     <Compile Include="..\Linq\Update\UpdateFromTests.cs" Link="UpdateFromTests.cs" />
     <Compile Include="..\Linq\Update\UpdateTests.cs" Link="UpdateTests.cs" />
+    <Compile Include="..\Linq\UserTests\SelectManyUpdateTests.cs" Link="SelectManyUpdateTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
