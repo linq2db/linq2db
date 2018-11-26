@@ -4,13 +4,10 @@
 		<id>linq2db.t4models</id>
 		<version>2.6.0</version>
 		<title>LINQ to DB T4 Models</title>
-		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
-		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
 		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
 		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
 		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<releaseNotes></releaseNotes>
 		<description>T4 templates to generate data models for LINQ to DB SQL</description>
 		<summary />
 		<tags>

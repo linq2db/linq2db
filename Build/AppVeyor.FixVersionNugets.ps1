@@ -8,7 +8,9 @@ Set-StrictMode -Version Latest
 
 if ($nugetVersion) {
 
-	$ns = @{ns='http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd'}
+	$nsUri = 'http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd'
+	$authors = 'Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko'
+	$ns = @{ns=$nsUri}
 	$dotlessVersion = $nugetVersion -replace '\.',''
 
 	Get-ChildItem $path | ForEach {
@@ -29,9 +31,21 @@ if ($nugetVersion) {
 		Select -expand node |
 		ForEach { $_.Value = $nugetVersion }
 
-		Select-Xml -Xml $xml -XPath '//ns:releaseNotes' -Namespace $ns |
-		Select -expand node |
-		ForEach { $_.InnerText = 'https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap#release-' + $dotlessVersion }
+		$child = $xml.CreateElement('releaseNotes', $nsUri)
+		$child.InnerText = 'https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-' + $dotlessVersion
+		$xml.package.metadata.AppendChild($child)
+
+		$child = $xml.CreateElement('copyright', $nsUri)
+		$child.InnerText = 'Copyright (c) 2018 ' + $authors
+		$xml.package.metadata.AppendChild($child)
+
+		$child = $xml.CreateElement('authors', $nsUri)
+		$child.InnerText = $authors
+		$xml.package.metadata.AppendChild($child)
+
+		$child = $xml.CreateElement('owners', $nsUri)
+		$child.InnerText = $authors
+		$xml.package.metadata.AppendChild($child)
 
 		Write-Host "Patched $xmlPath"
 		$xml.Save($xmlPath)
