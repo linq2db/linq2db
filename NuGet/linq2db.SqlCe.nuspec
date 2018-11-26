@@ -2,7 +2,6 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.SqlCe</id>
-		<version>2.6.0</version>
 		<title>LINQ to SqlCe</title>
 		<description>
 			LINQ to SqlCe is a data access technology that provides a run-time infrastructure for managing relational data as objects.

@@ -2,7 +2,6 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.Sybase.DataAction</id>
-		<version>2.6.0</version>
 		<title>LINQ to SAP/Sybase ASE DataAction AdoNetCore.AseClient managed provider</title>
 		<description>
 			LINQ to Sybase ASE is a data access technology that provides a run-time infrastructure for managing relational data as objects.

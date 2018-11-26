@@ -2,7 +2,6 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.t4models</id>
-		<version>2.6.0</version>
 		<title>LINQ to DB T4 Models</title>
 		<description>T4 templates to generate data models for LINQ to DB SQL</description>
 		<summary />

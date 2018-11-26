@@ -2,7 +2,6 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db</id>
-		<version>2.6.0</version>
 		<title>LINQ to DB</title>
 		<description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</description>
 		<summary />

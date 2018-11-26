@@ -2,7 +2,6 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.Oracle.Unmanaged</id>
-		<version>2.6.0</version>
 		<title>LINQ to Oracle (ODP.NET) unmanaged</title>
 		<description>
 			LINQ to Oracle is a data access technology that provides a run-time infrastructure for managing relational data as objects.

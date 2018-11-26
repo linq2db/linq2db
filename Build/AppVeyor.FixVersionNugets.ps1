@@ -33,6 +33,10 @@ if ($nugetVersion) {
 		Select -expand node |
 		ForEach { $_.Value = $nugetVersion }
 
+		$child = $xml.CreateElement('version', $nsUri)
+		$child.InnerText = $nugetVersion
+		$xml.package.metadata.AppendChild($child)
+
 		$child = $xml.CreateElement('releaseNotes', $nsUri)
 		$child.InnerText = 'https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-' + $dotlessVersion
 		$xml.package.metadata.AppendChild($child)
