@@ -10,12 +10,14 @@
 		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
 		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<releaseNotes></releaseNotes>
 		<description>T4 templates to generate data models for LINQ to DB SQL</description>
 		<summary />
 		<tags>
 			linq linq2db LinqToDB ORM database DB T4 datamodel SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase
 			Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
+		<repository type="git" url="https://github.com/linq2db/linq2db.git" />
 		<dependencies>
 			<dependency id="linq2db" version="2.6.0"/>
 		</dependencies>

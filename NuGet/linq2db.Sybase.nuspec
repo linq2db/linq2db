@@ -10,6 +10,7 @@
 		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
 		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<releaseNotes></releaseNotes>
 		<description>
 			LINQ to Sybase ASE is a data access technology that provides a run-time infrastructure for managing relational data as objects.
 		</description>
@@ -18,6 +19,7 @@
 			Sybase data provider for .NET will still need to be installed on the production or development machine in order to connect to ASE.
 		</summary>
 		<tags>linq linq2db SAP/Sybase LinqToDB ORM database DB SQL</tags>
+		<repository type="git" url="https://github.com/linq2db/linq2db.git" />
 		<dependencies>
 			<dependency id="linq2db" version="2.6.0"/>
 		</dependencies>
