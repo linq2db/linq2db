@@ -170,7 +170,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray6([DataSources(ProviderName.Access)] string context)
+		public void InnerJoinArray6([DataSources(ProviderName.Access, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -189,6 +189,30 @@ namespace Tests.Linq
 				AreEqual(expected, result);
 			}
 		}
+
+		[ActiveIssue("PosgreSql needs type for literals. We have to rewise literals generation.")]
+		[Test]
+		public void InnerJoinArray6Postgres([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)] 
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Person
+					join n in new[] { "Doe" } on p.LastName equals n
+					select p;
+
+				var result = q.ToList();
+
+				var expected =
+					from p in Person
+					join n in new[] { "Doe" } on p.LastName equals n
+					select p;
+
+				AreEqual(expected, result);
+			}
+		}
+
 
 		[ActiveIssue(Details = "It is more complicated and needs analysis")]
 		[Test]

@@ -82,6 +82,9 @@ namespace LinqToDB.Linq.Builder
 
 				query.Select.From.Table(innerQuery);
 
+				if (!builder.MappingSchema.IsScalarType(type))
+					throw new LinqToDBException("Non-scalar IEnumerable sources currently not supported");
+
 				var array = new ArrayContext(builder, buildInfo, query, type);
 
 				IEnumerable<ISqlExpression> elements;

@@ -212,9 +212,6 @@ namespace LinqToDB.Linq.Builder
 					MoveSearchConditionsToJoin(join);
 				}
 
-				if (joinType == JoinType.CrossApply)
-					join.JoinedTable.CanConvertApply = false;
-
 				sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
 				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
