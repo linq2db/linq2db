@@ -26,7 +26,6 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Redist\IBM\IBM.Data.Informix.dll"                           target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"              target="tools" />
 		
 		<file src="Informix\linq2db.Informix.props"                               target="build" />

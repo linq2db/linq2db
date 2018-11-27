@@ -240,9 +240,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var tableContext = new TableBuilder.TableContext(Builder,
-								new BuildInfo(Parent, Expression, new SelectQuery()), type);
-							var ex = tableContext.BuildExpression(null, 0, enforceServerSide);
+							var ex = _sequence1.BuildExpression(null, level, enforceServerSide);
 							return ex;
 						}
 					}

@@ -208,6 +208,16 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Adds member mapping to current entity.
+		/// </summary>
+		/// <param name="func">Column mapping property or field getter expression.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Member(Expression<Func<T,object>> func)
+		{
+			return new PropertyMappingBuilder<T>(this, func);
+		}
+
+		/// <summary>
 		/// Adds association mapping to current entity.
 		/// </summary>
 		/// <typeparam name="S">Association member type.</typeparam>

@@ -30,29 +30,81 @@ namespace LinqToDB.DataProvider
 
 		volatile Type _connectionType;
 
-		protected virtual Type GetConnectionType()
-		{
-			if (_connectionType == null)
-				lock (SyncRoot)
-					if (_connectionType == null)
-					{
-						var connectionType = Type.GetType(ConnectionTypeName, true);
-
-						OnConnectionTypeCreated(connectionType);
-
-						_connectionType = connectionType;
-					}
-
-			return _connectionType;
-		}
-
 		public override bool IsCompatibleConnection(IDbConnection connection)
 		{
 			return GetConnectionType().IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
 		}
 
 		private         Type _dataReaderType;
-		public override Type  DataReaderType => _dataReaderType ?? (_dataReaderType = Type.GetType(DataReaderTypeName, true));
+
+		// DbProviderFactories supported added to netcoreapp2.1/netstandard2.1, but we don't build those targets yet
+#if NETSTANDARD1_6 || NETSTANDARD2_0
+		public override Type DataReaderType => _dataReaderType ?? (_dataReaderType = Type.GetType(DataReaderTypeName, true));
+
+		protected virtual Type GetConnectionType()
+		{
+			if (_connectionType == null)
+				lock (SyncRoot)
+					if (_connectionType == null)
+					{
+						_connectionType = Type.GetType(ConnectionTypeName, true);
+
+						OnConnectionTypeCreated(_connectionType);
+					}
+
+			return _connectionType;
+		}
+#else
+		public virtual string DbFactoryProviderName => null;
+
+		public override Type DataReaderType
+		{
+			get
+			{
+				if (_dataReaderType != null)
+					return _dataReaderType;
+
+				if (DbFactoryProviderName == null)
+					return _dataReaderType = Type.GetType(DataReaderTypeName, true);
+
+				_dataReaderType = Type.GetType(DataReaderTypeName, false);
+
+				if (_dataReaderType == null)
+				{
+					var assembly = DbProviderFactories.GetFactory(DbFactoryProviderName).GetType().Assembly;
+
+					var idx = 0;
+					var dataReaderTypeName = (idx = DataReaderTypeName.IndexOf(',')) != -1 ? DataReaderTypeName.Substring(0, idx) : DataReaderTypeName;
+					_dataReaderType = assembly.GetType(dataReaderTypeName, true);
+				}
+
+				return _dataReaderType;
+			}
+		}
+
+		protected virtual Type GetConnectionType()
+		{
+			if (_connectionType == null)
+				lock (SyncRoot)
+					if (_connectionType == null)
+					{
+						if (DbFactoryProviderName == null)
+							_connectionType = Type.GetType(ConnectionTypeName, true);
+						else
+						{
+							_connectionType = Type.GetType(ConnectionTypeName, false);
+
+							if (_connectionType == null)
+								using (var db = DbProviderFactories.GetFactory(DbFactoryProviderName).CreateConnection())
+									_connectionType = db.GetType();
+						}
+
+						OnConnectionTypeCreated(_connectionType);
+					}
+
+			return _connectionType;
+		}
+#endif
 
 		Func<string,IDbConnection> _createConnection;
 

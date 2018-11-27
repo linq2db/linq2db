@@ -959,7 +959,9 @@ namespace LinqToDB.SqlProvider
 			AppendIndent().Append("(");
 			Indent++;
 
-			var fields = table.Fields.Select(f => new CreateFieldInfo { Field = f.Value, StringBuilder = new StringBuilder() }).ToList();
+			// Order columns by the Order field. Positive first then negative.
+			var orderedFields = table.Fields.Values.OrderBy(_ => _.CreateOrder >= 0 ? 0 : (_.CreateOrder == null ? 1 : 2)).ThenBy(_ => _.CreateOrder);
+			var fields = orderedFields.Select(f => new CreateFieldInfo { Field = f, StringBuilder = new StringBuilder() }).ToList();
 			var maxlen = 0;
 
 			void AppendToMax(bool addCreateFormat)

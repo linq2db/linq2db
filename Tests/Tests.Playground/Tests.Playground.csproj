@@ -70,9 +70,6 @@
     <Reference Include="IBM.Data.Informix">
       <HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
     </Reference>
-    <Reference Include="Sybase.AdoNet45.AseClient">
-      <HintPath>..\..\Redist\Sybase\Sybase.AdoNet45.AseClient.dll</HintPath>
-    </Reference>
 
     <None Include="..\..\Data\*">
         <Link>Database/%(FileName)%(Extension)</Link>
