@@ -145,6 +145,8 @@ namespace LinqToDB.SqlQuery
 			};
 
 			items.AddRange(selectQuery.Select.Columns);
+			if (!selectQuery.Where.IsEmpty)
+				items.Add(selectQuery.Where);
 
 			foreach (var item in items)
 			{
