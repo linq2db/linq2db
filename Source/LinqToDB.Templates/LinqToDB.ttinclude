@@ -671,7 +671,7 @@ void GenerateTypesFromMetadata()
 
 			var proc = new MemberGroup { Region = p.Name };
 
-			     if (!p.IsFunction)     addProcs(proc);
+				 if (!p.IsFunction)     addProcs(proc);
 			else if (p.IsTableFunction) addTabfs(proc);
 			else                        addFuncs(proc);
 
@@ -892,6 +892,7 @@ void GenerateTypesFromMetadata()
 			DataContextObject.Members.Add(tabfs);
 
 		MakeTypeMembersNamesUnique(DataContextObject);
+		MakeMembersNamesUnique(Model.Types, "Table");
 		foreach (var type in Model.Types.OfType<Class>())
 			MakeTypeMembersNamesUnique(type);
 
@@ -939,9 +940,14 @@ void GenerateTypesFromMetadata()
 
 void MakeTypeMembersNamesUnique(Class type, string defaultName = "Member")
 {
+	MakeMembersNamesUnique(GetAllClassMembers(type.Members), defaultName, type.Name, "InitDataContext", "InitMappingSchema");
+}
+
+void MakeMembersNamesUnique(IEnumerable<IClassMember> members, string defaultName, params string[] reservedNames)
+{
 	LinqToDB.Common.Utils.MakeUniqueNames(
-		GetAllClassMembers(type.Members),
-		new [] { type.Name, "InitDataContext", "InitMappingSchema" },
+		members,
+		reservedNames,
 		m => m is TypeBase t ? t.Name : ((MemberBase)m).Name,
 		(m, newName) =>
 		{
