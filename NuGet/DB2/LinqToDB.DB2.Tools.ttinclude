@@ -1,3 +1,2 @@
-<#@ assembly name="$(LinqToDBT4DB2ToolsDirectory)IBM.Data.DB2.dll" #>
 <#@ include file="LinqToDB.Tools.ttinclude" #>
 <#@ include file="LinqToDB.DB2.ttinclude" #>

@@ -123,6 +123,10 @@ namespace LinqToDB.DataProvider.DB2
 		protected override string ConnectionTypeName  => DB2Tools.AssemblyName + ".DB2Connection, " + DB2Tools.AssemblyName;
 		protected override string DataReaderTypeName  => DB2Tools.AssemblyName + ".DB2DataReader, " + DB2Tools.AssemblyName;
 
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+		public override string DbFactoryProviderName => "IBM.Data.DB2";
+#endif
+
 		public DB2Version Version { get; }
 
 		static class MappingSchemaInstance
