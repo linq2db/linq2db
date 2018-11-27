@@ -146,7 +146,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 						IsPrimaryKey    = c.IsPrimaryKey,
 						PrimaryKeyOrder = c.PrimaryKeyOrder,
 						MemberName      = CheckType(c.SystemType, c.MemberName),
-						Type            = ConvertTableColumnMemberType(t, c),
+						TypeBuilder     = () => ConvertTableColumnMemberType(t, c),
 						SkipOnInsert    = c.SkipOnInsert,
 						SkipOnUpdate    = c.SkipOnUpdate,
 						Description     = c.Description,
@@ -283,7 +283,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 								IsPrimaryKey    = c.IsPrimaryKey,
 								PrimaryKeyOrder = c.PrimaryKeyOrder,
 								MemberName      = CheckColumnName(CheckType(c.SystemType, c.MemberName)),
-								Type            = ConvertProcedureColumnMemberType(p, c),
+								TypeBuilder     = () => ConvertProcedureColumnMemberType(p, c),
 								SkipOnInsert    = c.SkipOnInsert,
 								SkipOnUpdate    = c.SkipOnUpdate,
 								Description     = c.Description,
@@ -665,7 +665,7 @@ public class TableContext
 		var c = Transformation.GetColumn(TableName, columnName);
 
 		if (MemberName  != null) c.MemberName  = MemberName;
-		if (Type        != null) c.Type        = Type;
+		if (Type        != null) c.TypeBuilder = () => Type;
 		if (IsNullable  != null) c.IsNullable  = IsNullable.Value;
 		if (Conditional != null) c.Conditional = Conditional;
 

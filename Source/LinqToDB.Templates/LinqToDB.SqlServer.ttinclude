@@ -36,8 +36,8 @@ void DoGenerateSqlServerFreeText()
 						IsCompact = true,
 						Members   =
 						{
-							new Field("T",   "Key"),
-							new Field("int", "Rank")
+							new Field(() => "T",   "Key"),
+							new Field(() => "int", "Rank")
 						}
 					})
 				{
@@ -45,16 +45,16 @@ void DoGenerateSqlServerFreeText()
 					IsPartial        = false
 				},
 
-				new Field("MethodInfo", "_freeTextTableMethod1")
+				new Field(() => "MethodInfo", "_freeTextTableMethod1")
 				{
 					AccessModifier = AccessModifier.Private,
 					IsStatic       = true,
 					InitValue      = "typeof(" + DataContextObject.Name + ").GetMethod(\"FreeTextTable\", new Type[] { typeof(string), typeof(string) })"
 				},
 
-				new Method("ITable<FreeTextKey<TKey>>", "FreeTextTable",
+				new Method(() => "ITable<FreeTextKey<TKey>>", "FreeTextTable",
 					new[] { "string field", "string text" },
-					new[]
+					() => new[]
 					{
 						"return this.GetTable<FreeTextKey<TKey>>(",
 						"	this,",
@@ -67,7 +67,7 @@ void DoGenerateSqlServerFreeText()
 					Attributes = { new Attribute("FreeTextTableExpression") }
 				},
 
-				new Field("MethodInfo", "_freeTextTableMethod2")
+				new Field(() => "MethodInfo", "_freeTextTableMethod2")
 				{
 					AccessModifier = AccessModifier.Private,
 					IsStatic       = true,
@@ -79,9 +79,9 @@ void DoGenerateSqlServerFreeText()
 					"		.Single()"
 				},
 
-				new Method("ITable<FreeTextKey<TKey>>", "FreeTextTable",
+				new Method(() => "ITable<FreeTextKey<TKey>>", "FreeTextTable",
 					new[] { "Expression<Func<TTable,string>> fieldSelector", "string text" },
-					new[]
+					() => new[]
 					{
 						"return this.GetTable<FreeTextKey<TKey>>(",
 						"	this,",

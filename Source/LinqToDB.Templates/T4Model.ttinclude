@@ -373,7 +373,7 @@ public abstract partial class MemberBase : IClassMember
 	public string          ID;
 	public AccessModifier  AccessModifier = AccessModifier.Public;
 	public string          Name;
-	public string          Type;
+	public Func<string> TypeBuilder;
 	public List<string>    Comment = new List<string>();
 	public string          EndLineComment;
 	public List<Attribute> Attributes = new List<Attribute>();
@@ -386,6 +386,8 @@ public abstract partial class MemberBase : IClassMember
 	public int NameLen;
 	public int ParamLen;
 	public int BodyLen;
+
+	public string BuildType() { return TypeBuilder?.Invoke(); }
 
 	public virtual  int  CalcModifierLen() { return 0; }
 	public abstract int  CalcBodyLen    ();
@@ -474,7 +476,7 @@ public partial class MemberGroup : MemberBase
 				foreach (var m in allMembers)
 					m.ModifierLen = max;
 
-				max = allMembers.Max(m => (m.Type ?? "").Length);
+				max = allMembers.Max(m => (m.BuildType() ?? "").Length);
 				foreach (var m in allMembers)
 					m.TypeLen = max;
 
@@ -815,9 +817,9 @@ static Action<GeneratedTextTransformation,Field> WriteField = (tt,f) =>
 		(f.IsReadonly ? " readonly" : "") ;
 
 	tt.Write("{0}{1}{2}{3} {4}{5} {6}",
-		am,     LenDiff(f.AccessModifierLen, am),
-		mdf,    LenDiff(f.ModifierLen,       mdf),
-		f.Type, LenDiff(f.TypeLen,           f.Type),
+		am,            LenDiff(f.AccessModifierLen, am),
+		mdf,           LenDiff(f.ModifierLen,       mdf),
+		f.BuildType(), LenDiff(f.TypeLen,           f.BuildType()),
 		f.Name);
 
 	if (f.InitValue != null)
@@ -847,9 +849,9 @@ public partial class Field : MemberBase
 	{
 	}
 
-	public Field(string type, string name)
+	public Field(Func<string> typeBuilder, string name)
 	{
-		Type = type;
+		TypeBuilder = typeBuilder;
 		Name = name;
 	}
 
@@ -877,9 +879,9 @@ static Action<GeneratedTextTransformation,Event> WriteEvent = (tt,m) =>
 		" event";
 
 	tt.Write("{0}{1}{2}{3} {4}{5} {6};",
-		am,     LenDiff(m.AccessModifierLen, am),
-		mdf,    LenDiff(m.ModifierLen,       mdf),
-		m.Type, LenDiff(m.TypeLen,           m.Type),
+		am,            LenDiff(m.AccessModifierLen, am),
+		mdf,           LenDiff(m.ModifierLen,       mdf),
+		m.BuildType(), LenDiff(m.TypeLen,           m.BuildType()),
 		m.Name);
 
 	if (!string.IsNullOrEmpty(m.EndLineComment))
@@ -901,9 +903,9 @@ public partial class Event : MemberBase
 	{
 	}
 
-	public Event(string type, string name)
+	public Event(Func<string> typeBuilder, string name)
 	{
-		Type = type;
+		TypeBuilder = typeBuilder;
 		Name = name;
 	}
 
@@ -930,9 +932,9 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 	var mdf = p.IsAbstract ? " abstract" : p.IsVirtual ? " virtual" : p.IsOverride ? " override" : p.IsStatic ? " static" : "";
 
 	tt.Write("{0}{1}{2}{3} {4}{5} {6}",
-		am,     LenDiff(p.AccessModifierLen, am),
-		mdf,    LenDiff(p.ModifierLen,       mdf),
-		p.Type, LenDiff(p.TypeLen,           p.Type),
+		am,            LenDiff(p.AccessModifierLen, am),
+		mdf,           LenDiff(p.ModifierLen,       mdf),
+		p.BuildType(), LenDiff(p.TypeLen,           p.BuildType()),
 		p.Name);
 
 	Action writeComment = () =>
@@ -985,7 +987,7 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 			if (p.HasGetter)
 			{
 				tt.Write("get { ");
-				foreach (var t in p.GetBody)
+				foreach (var t in p.BuildGetBody())
 					tt.Write("{0} ", t);
 				tt.Write("} ");
 			}
@@ -993,7 +995,7 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 			if (p.HasSetter)
 			{
 				tt.Write("set { ");
-				foreach (var t in p.SetBody)
+				foreach (var t in p.BuildSetBody())
 					tt.Write("{0} ", t);
 				tt.Write("} ");
 			}
@@ -1013,9 +1015,10 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 
 			if (p.HasGetter)
 			{
-				if (p.GetBody.Count == 1)
+				var getBody = p.BuildGetBody().ToArray();
+				if (getBody.Length == 1)
 				{
-					tt.WriteLine("get {{ {0} }}", p.GetBody[0]);
+					tt.WriteLine("get {{ {0} }}", getBody[0]);
 				}
 				else
 				{
@@ -1023,7 +1026,7 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 					tt.WriteLine("{");
 					tt.PushIndent("\t");
 
-					foreach (var t in p.GetBody)
+					foreach (var t in getBody)
 						tt.WriteLine(t);
 
 					tt.PopIndent();
@@ -1033,9 +1036,10 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 
 			if (p.HasSetter)
 			{
-				if (p.SetBody.Count == 1)
+				var setBody = p.BuildGetBody().ToArray();
+				if (setBody.Length == 1)
 				{
-					tt.WriteLine("set {{ {0} }}", p.SetBody[0]);
+					tt.WriteLine("set {{ {0} }}", setBody[0]);
 				}
 				else
 				{
@@ -1043,7 +1047,7 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 					tt.WriteLine("{");
 					tt.PushIndent("\t");
 
-					foreach (var t in p.SetBody)
+					foreach (var t in setBody)
 						tt.WriteLine(t);
 
 					tt.PopIndent();
@@ -1067,8 +1071,8 @@ public partial class Property : MemberBase
 	public bool         IsStatic;
 	public bool         HasGetter = true;
 	public bool         HasSetter = true;
-	public List<string> GetBody   = new List<string>();
-	public List<string> SetBody   = new List<string>();
+	public List<Func<IEnumerable<string>>> GetBodyBuilders = new List<Func<IEnumerable<string>>>();
+	public List<Func<IEnumerable<string>>> SetBodyBuilders = new List<Func<IEnumerable<string>>>();
 
 	public int GetterLen = 5;
 	public int SetterLen = 5;
@@ -1077,12 +1081,12 @@ public partial class Property : MemberBase
 	{
 	}
 
-	public Property(string type, string name, IEnumerable<string> getBody = null, IEnumerable<string> setBody = null)
+	public Property(Func<string> typeBuilder, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
 	{
-		Type = type;
+		TypeBuilder = typeBuilder;
 		Name = name;
 
-		InitBody(getBody, setBody);
+		InitBody(getBodyBuilder, setBodyBuilder);
 	}
 
 	public override int CalcModifierLen()
@@ -1100,7 +1104,7 @@ public partial class Property : MemberBase
 		if (HasGetter)
 		{
 			len += " get {".Length;
-			foreach (var t in GetBody)
+			foreach (var t in BuildGetBody())
 				len += 1 + t.Length;
 			len += " }".Length;
 		}
@@ -1108,7 +1112,7 @@ public partial class Property : MemberBase
 		if (HasSetter)
 		{
 			len += " set {".Length;
-			foreach (var t in SetBody)
+			foreach (var t in BuildSetBody())
 				len += 1 + t.Length;
 			len += " }".Length;
 		}
@@ -1120,43 +1124,58 @@ public partial class Property : MemberBase
 
 	public override void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
-		if (!IsAuto && HasGetter && GetBody.Count == 1)
+		if (!IsAuto && HasGetter)
 		{
-			var t = GetBody[GetBody.Count - 1];
-
-			if (!t.StartsWith("return"))
+			var getBody = BuildGetBody().ToArray();
+			if (getBody.Length == 1)
 			{
-				t = "return " + t;
+				var t = getBody[0];
 
-				if (!t.EndsWith(";"))
-					t += ";";
+				if (!t.StartsWith("return"))
+				{
+					t = "return " + t;
 
-				GetBody[GetBody.Count - 1] = t;
+					if (!t.EndsWith(";"))
+						t += ";";
+
+					GetBodyBuilders.Clear();
+					GetBodyBuilders.Add(() => new [] { t });
+				}
 			}
 		}
 
 		WriteProperty(tt, this, isCompact);
 	}
 
-	public Property InitBody(IEnumerable<string> getBody = null, IEnumerable<string> setBody = null)
+	public Property InitBody(Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
 	{
-		IsAuto = getBody == null && setBody == null;
+		IsAuto = getBodyBuilder == null && setBodyBuilder == null;
 
-		if (getBody != null) GetBody.AddRange(getBody);
-		if (setBody != null) SetBody.AddRange(setBody);
+		if (getBodyBuilder != null) GetBodyBuilders.Add(getBodyBuilder);
+		if (setBodyBuilder != null) SetBodyBuilders.Add(setBodyBuilder);
 
 		if (!IsAuto)
 		{
-			HasGetter = getBody != null;
-			HasSetter = setBody != null;
+			HasGetter = getBodyBuilder != null;
+			HasSetter = setBodyBuilder != null;
 		}
 
 		return this;
 	}
 
-	public Property InitGetter(params string[] getBody)
+	public Property InitGetter(Func<IEnumerable<string>> getBodyBuilder)
 	{
-		return InitBody(getBody, null);
+		return InitBody(getBodyBuilder, null);
+	}
+
+	public IEnumerable<string> BuildGetBody()
+	{
+		return GetBodyBuilders.SelectMany(builder => builder?.Invoke() ?? Array.Empty<string>());
+	}
+
+	public IEnumerable<string> BuildSetBody()
+	{
+		return SetBodyBuilders.SelectMany(builder => builder?.Invoke() ?? Array.Empty<string>());
 	}
 }
 
@@ -1178,11 +1197,11 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 	}
 
 	tt.Write("{0}{1}{2}{3}{4}{5}{6}{7}{8} {9}{10}",
-		am1,    LenDiff(len1, am1),
-		mdf,    LenDiff(mlen, mdf),
-		am2,    LenDiff(len2, am2),
-		m.Type == null ? "" : " ",
-		m.Type, LenDiff(m.TypeLen,     m.Type ?? ""),
+		am1,           LenDiff(len1, am1),
+		mdf,           LenDiff(mlen, mdf),
+		am2,           LenDiff(len2, am2),
+		m.BuildType() == null ? "" : " ",
+		m.BuildType(), LenDiff(m.TypeLen,     m.BuildType() ?? ""),
 		m.Name,
 		m.GenericArguments.Count > 0 ? $"<{string.Join(", ", m.GenericArguments)}>" : string.Empty);
 
@@ -1240,7 +1259,7 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 
 			tt.Write(" {");
 
-			foreach (var t in m.Body)
+			foreach (var t in m.BuildBody())
 				tt.Write(" {0}", t);
 
 			tt.Write(" }");
@@ -1263,7 +1282,7 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 		tt.WriteLine("{");
 		tt.PushIndent("\t");
 
-		foreach (var t in m.Body)
+		foreach (var t in m.BuildBody())
 		{
 			if (t.Length > 1 && t[0] == '#')
 			{
@@ -1287,19 +1306,24 @@ public partial class Method : MemberBase
 	public List<string> GenericArguments = new List<string>();
 	public List<string> AfterSignature   = new List<string>();
 	public List<string> Parameters       = new List<string>();
-	public List<string> Body             = new List<string>();
+	public List<Func<IEnumerable<string>>> BodyBuilders = new List<Func<IEnumerable<string>>>();
 
 	public Method()
 	{
 	}
 
-	public Method(string type, string name, IEnumerable<string> parameters = null, IEnumerable<string> body = null)
+	public Method(Func<string> typeBuilder, string name, IEnumerable<string> parameters = null, params Func<IEnumerable<string>>[] bodyBuilders)
 	{
-		Type = type;
+		TypeBuilder = typeBuilder;
 		Name = name;
 
-		if (parameters != null) Parameters.AddRange(parameters);
-		if (body       != null) Body.      AddRange(body);
+		if (parameters  != null) Parameters.AddRange(parameters);
+		if (bodyBuilders!= null) BodyBuilders.AddRange(bodyBuilders);
+	}
+
+	public IEnumerable<string> BuildBody()
+	{
+		return BodyBuilders.SelectMany(builder => builder?.Invoke() ?? Array.Empty<string>());
 	}
 
 	public override int CalcModifierLen()
@@ -1317,7 +1341,7 @@ public partial class Method : MemberBase
 
 		var len = " {".Length;
 
-		foreach (var t in Body)
+		foreach (var t in BuildBody())
 			len += 1 + t.Length;
 
 		len += " }".Length;

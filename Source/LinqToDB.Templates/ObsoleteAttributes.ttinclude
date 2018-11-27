@@ -61,8 +61,8 @@
 
 				foreach (var cm in GetTreeNodes(Model)
 					.OfType<MemberBase>()
-					.Where(t => t.Type != null)
-					.Where(t => t.Type == name || t.Type.Contains("<" + name + ">")))
+					.Where(t => t.BuildType() != null)
+					.Where(t => t.BuildType() == name || t.BuildType().Contains("<" + name + ">")))
 				{
 					// check schema
 
