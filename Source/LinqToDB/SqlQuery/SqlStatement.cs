@@ -365,50 +365,34 @@ namespace LinqToDB.SqlQuery
 							if (query.IsParameterDependent)
 								IsParameterDependent = true;
 
-							var isRootQuery = query.ParentSelect == null;
-							var removeAliases = isRootQuery
-							                    && !Common.Configuration.Sql.GenerateFinalAliases
-							                    && !query.HasUnion && query.From.Tables.Count > 0
-							                    && !query.KeepAliases
-							                    && !query.OrderBy.IsEmpty
-							                    && !query.Having.IsEmpty;
-
-							if (removeAliases)
+							if (query.Select.Columns.Count > 0)
 							{
-								// Removing aliases from root query
-								foreach (var c in query.Select.Columns.Where(c => c.Alias != "*"))
-								{
-									c.RawAlias = string.Empty;
-								}
-							}
-							else
-							{
-								if (query.Select.Columns.Count > 0)
-								{
-									Utils.MakeUniqueNames(query.Select.Columns.Where(c => c.Alias != "*"),
-										n => !ReservedWords.IsReserved(n), c => c.Alias, (c, n) => c.Alias = n,
-										c =>
-										{
-											var a = c.Alias;
-											return a.IsNullOrEmpty() ? "c1" : a + "_1";
-										},
-										StringComparer.OrdinalIgnoreCase);
-
-									if (query.HasUnion)
+								Utils.MakeUniqueNames(query.Select.Columns.Where(c => c.Alias != "*"),
+									n => !ReservedWords.IsReserved(n), c => c.Alias, (c, n) => c.Alias = n,
+									c =>
 									{
-										for (var i = 0; i < query.Select.Columns.Count; i++)
-										{
-											var col = query.Select.Columns[i];
+										var a = c.Alias;
+										return a.IsNullOrEmpty()
+											? "c1"
+											: a + (a.EndsWith("_") ? string.Empty : "_") + "1";
+									},
+									StringComparer.OrdinalIgnoreCase);
 
-											foreach (var t in query.Unions)
-											{
-												var union = t.SelectQuery.Select;
-												union.Columns[i].Alias = col.Alias;
-											}
+								if (query.HasUnion)
+								{
+									for (var i = 0; i < query.Select.Columns.Count; i++)
+									{
+										var col = query.Select.Columns[i];
+
+										foreach (var t in query.Unions)
+										{
+											var union = t.SelectQuery.Select;
+											union.Columns[i].Alias = col.Alias;
 										}
 									}
 								}
 							}
+
 							break;
 						}
 					case QueryElementType.SqlParameter:
@@ -443,8 +427,9 @@ namespace LinqToDB.SqlQuery
 				ts =>
 				{
 					var a = ts.Alias;
-					return a.IsNullOrEmpty() ? "t1" : a + "_1";
-				}, StringComparer.OrdinalIgnoreCase);
+					return a.IsNullOrEmpty() ? "t1" : a + (a.EndsWith("_") ? string.Empty : "_") + "1";
+				},
+				StringComparer.OrdinalIgnoreCase);
 
 			Utils.MakeUniqueNames(Parameters,
 				n => !allAliases.Contains(n) && !ReservedWords.IsReserved(n), p => p.Name, (p, n) =>
@@ -452,7 +437,8 @@ namespace LinqToDB.SqlQuery
 					allAliases.Add(n);
 					p.Name = n;
 				},
-				ts => ts.Name ?? "p1", StringComparer.OrdinalIgnoreCase);
+				ts => ts.Name ?? "p1",
+				StringComparer.OrdinalIgnoreCase);
 
 			_aliases = allAliases;
 		}

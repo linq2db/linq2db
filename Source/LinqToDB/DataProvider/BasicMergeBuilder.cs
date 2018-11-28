@@ -1538,7 +1538,6 @@ namespace LinqToDB.DataProvider
 
 			public Context(IBuildContext context) : base(context)
 			{
-				SelectQuery.KeepAliases = true;
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)

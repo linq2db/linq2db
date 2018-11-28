@@ -370,9 +370,5 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		/// <summary>
-		/// Workaround for Merge functionality. Should be removed after Merge refactoring
-		/// </summary>
-		internal bool KeepAliases { get; set; }
 	}
 }
