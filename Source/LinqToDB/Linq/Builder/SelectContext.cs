@@ -10,6 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 	using SqlQuery;
+	using Common;
 
 	// This class implements double functionality (scalar and member type selects)
 	// and could be implemented as two different classes.
@@ -866,6 +867,10 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void SetAlias(string alias)
 		{
+			if (!alias.IsNullOrEmpty() && !alias.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
+			{
+				SelectQuery.Select.From.Tables[0].Alias = alias;
+			}
 		}
 
 		#endregion
