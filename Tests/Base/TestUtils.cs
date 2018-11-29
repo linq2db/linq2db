@@ -80,6 +80,12 @@ namespace Tests
 				case ProviderName.OracleNative:
 				case ProviderName.OracleManaged:
 				case ProviderName.PostgreSQL:
+				case ProviderName.PostgreSQL92:
+				case ProviderName.PostgreSQL93:
+				case ProviderName.PostgreSQL95:
+				case TestProvName.PostgreSQL10:
+				case TestProvName.PostgreSQL11:
+				case TestProvName.PostgreSQLLatest:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
@@ -155,6 +161,12 @@ namespace Tests
 				case TestProvName.MariaDB:
 				case TestProvName.MySql57:
 				case ProviderName.PostgreSQL:
+				case ProviderName.PostgreSQL92:
+				case ProviderName.PostgreSQL93:
+				case ProviderName.PostgreSQL95:
+				case TestProvName.PostgreSQL10:
+				case TestProvName.PostgreSQL11:
+				case TestProvName.PostgreSQLLatest:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:

@@ -41,7 +41,6 @@ namespace Tests.OrmBattle
 
 			using (new DisableLogging())
 			{
-				// LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
 				db = new NorthwindDB(context);
 
 				Customers = db.Customer.ToList();
@@ -65,8 +64,8 @@ namespace Tests.OrmBattle
 		[TearDown]
 		protected void TearDown()
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 			_currentContext = null;
+
 			using (db)
 				db = null;
 		}

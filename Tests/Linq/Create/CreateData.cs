@@ -241,22 +241,28 @@ namespace Tests._Create
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird)]      public void Firebird         (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird", FirebirdAction); }
-		[Test, IncludeDataContextSource(TestProvName.Firebird3)]     public void Firebird3        (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird", FirebirdAction); }
-		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]    public void PostgreSQL       (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
-		[Test, IncludeDataContextSource(ProviderName.MySql)]         public void MySql            (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");                    }
-		[Test, IncludeDataContextSource(TestProvName.MySql57)]       public void MySql57          (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");                    }
-		[Test, IncludeDataContextSource(TestProvName.MariaDB)]       public void MariaDB          (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");                    }
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2000)] public void Sql2000          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer2000");            }
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2005)] public void Sql2005          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");                }
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)] public void Sql2008          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");                }
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)] public void Sql2012          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");                }
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2014)] public void Sql2014          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");                }
-		[Test, IncludeDataContextSource(TestProvName.SqlAzure)]      public void SqlAzure2012     (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");                }
-		[Test, IncludeDataContextSource(ProviderName.SQLiteMS)]      public void SQLiteMS         (string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction);   }
-		[Test, IncludeDataContextSource(ProviderName.SQLiteMS)]      public void SQLiteMSData     (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction); }
+		[Test, IncludeDataContextSource(ProviderName.Firebird)]         public void Firebird         (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird", FirebirdAction); }
+		[Test, IncludeDataContextSource(TestProvName.Firebird3)]        public void Firebird3        (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird", FirebirdAction); }
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]       public void PostgreSQL       (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL92)]     public void PostgreSQL92     (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL93)]     public void PostgreSQL93     (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL95)]     public void PostgreSQL95     (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
+		[Test, IncludeDataContextSource(TestProvName.PostgreSQL10)]     public void PostgreSQL10     (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
+		[Test, IncludeDataContextSource(TestProvName.PostgreSQL11)]     public void PostgreSQL11     (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
+		[Test, IncludeDataContextSource(TestProvName.PostgreSQLLatest)] public void PostgreSQLLatest (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
+		[Test, IncludeDataContextSource(ProviderName.MySql)]            public void MySql            (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");                    }
+		[Test, IncludeDataContextSource(TestProvName.MySql57)]          public void MySql57          (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");                    }
+		[Test, IncludeDataContextSource(TestProvName.MariaDB)]          public void MariaDB          (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");                    }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000)]    public void Sql2000          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer2000");            }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2005)]    public void Sql2005          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");                }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]    public void Sql2008          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");                }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]    public void Sql2012          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");                }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2014)]    public void Sql2014          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");                }
+		[Test, IncludeDataContextSource(TestProvName.SqlAzure)]         public void SqlAzure2012     (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");                }
+		[Test, IncludeDataContextSource(ProviderName.SQLiteMS)]         public void SQLiteMS         (string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction);   }
+		[Test, IncludeDataContextSource(ProviderName.SQLiteMS)]         public void SQLiteMSData     (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction); }
 #if !NETSTANDARD1_6
-		[Test, IncludeDataContextSource(ProviderName.OracleManaged)] public void OracleManaged    (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle"); }
+		[Test, IncludeDataContextSource(ProviderName.OracleManaged)]    public void OracleManaged    (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle"); }
 #endif
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0

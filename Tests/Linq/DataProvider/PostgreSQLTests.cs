@@ -42,9 +42,7 @@ namespace Tests.DataProvider
 			GetValueSql  = "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 2";
 		}
 
-		const string CurrentProvider = ProviderName.PostgreSQL;
-
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -205,7 +203,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, TestDataType(CurrentProvider)]
+		[Test, TestDataType(ProviderName.PostgreSQL)]
 		public void TestDataTypes(string typeName, int id, TypeTestData data, string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -264,7 +262,7 @@ namespace Tests.DataProvider
 			TestNumeric(conn, (T?)null, dataType);
 		}
 
-		//[Test, IncludeDataContextSource(CurrentProvider)]
+		//[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.Npgsql4)]
 		public void TestNumerics(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -313,7 +311,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void TestDate(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -331,7 +329,7 @@ namespace Tests.DataProvider
 		/// Ensure we can pass data as Json parameter type and get
 		/// same value back out equivalent in value
 		/// </summary>
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void TestJson(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -346,7 +344,7 @@ namespace Tests.DataProvider
 		/// Ensure we can pass data as binary json and have things handled
 		/// with values coming back as being equivalent in value
 		/// </summary>
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void TestJsonb(string context)
 		{
 			var json = new { name = "bob", age = 10 };
@@ -362,7 +360,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -378,7 +376,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void TestChar(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -414,7 +412,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void TestString(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -441,7 +439,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void TestBinary(string context)
 		{
 			var arr1 = new byte[] { 48, 57 };
@@ -462,7 +460,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void TestGuid(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -482,7 +480,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -508,7 +506,7 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -520,7 +518,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -534,7 +532,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void SequenceInsert1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -550,7 +548,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void SequenceInsert2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -566,7 +564,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void SequenceInsert3(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -582,7 +580,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void SequenceInsertWithIdentity1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -600,7 +598,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void SequenceInsertWithIdentity2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -618,7 +616,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void SequenceInsertWithIdentity3(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -636,7 +634,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void SequenceInsertWithIdentity4(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -652,7 +650,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void SequenceInsertWithIdentity5(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -668,7 +666,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void BulkCopyLinqTypes(string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
@@ -699,7 +697,7 @@ namespace Tests.DataProvider
 			public string cdni_cd_cod_numero_item1;
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void Issue140(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -717,7 +715,7 @@ namespace Tests.DataProvider
 			public Guid Guid;
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void CreateTableTest(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -740,7 +738,7 @@ namespace Tests.DataProvider
 		}
 
 #if !NPGSQL226
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 		public void NpgsqlDateTimeTest(string context)
 		{
 			PostgreSQLTools.GetDataProvider().CreateConnection(DataConnection.GetConnectionString(context));
@@ -797,16 +795,22 @@ namespace Tests.DataProvider
 			[Column]                                   public NpgsqlPath?    pathDataType               { get; set; }
 			[Column]                                   public NpgsqlPolygon? polygonDataType            { get; set; }
 			[Column]                                   public NpgsqlCircle?  circleDataType             { get; set; }
+			[NotColumn(Configuration = ProviderName.PostgreSQL92)]
+			[NotColumn(Configuration = ProviderName.PostgreSQL93)]
 			[Column]                                   public NpgsqlLine?    lineDataType               { get; set; }
 			// inet types
 			[Column]                                   public IPAddress       inetDataType              { get; set; }
 			[Column  (DbType = "cidr")]                public NpgsqlInet?     cidrDataType              { get; set; }
 			[Column  (DbType = "macaddr")]             public PhysicalAddress macaddrDataType           { get; set; }
 			// PGSQL10+
-			/*[Column(DbType = "macaddr8")]*/
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL10)]
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL11)]
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQLLatest)]
 			                                           public PhysicalAddress macaddr8DataType          { get; set; }
 			// json
 			[Column]                                   public string jsonDataType                       { get; set; }
+			[NotColumn(Configuration = ProviderName.PostgreSQL92)]
+			[NotColumn(Configuration = ProviderName.PostgreSQL93)]
 			[Column  (DataType = DataType.BinaryJson)] public string jsonbDataType                      { get; set; }
 
 			public static IEqualityComparer<AllTypes> Comparer = Tools.ComparerBuilder<AllTypes>.GetEqualityComparer();
@@ -821,8 +825,11 @@ namespace Tests.DataProvider
 
 		// test that native bulk copy method inserts data properly
 		[Test]
-		public void BulkCopyTest([Values]BulkTestMode mode, [IncludeDataSources(false, CurrentProvider)] string context)
+		public void BulkCopyTest([Values]BulkTestMode mode, [IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
+			var macaddr8Supported = context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11) || context.Contains(TestProvName.PostgreSQLLatest);
+			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL92);
+			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var testData = new[]
 			{
 				// test null values
@@ -869,14 +876,14 @@ namespace Tests.DataProvider
 					inetDataType        = IPAddress.Parse("2001:0db8:0000:0042:0000:8a2e:0370:7334"),
 					cidrDataType        = new NpgsqlInet("::ffff:1.2.3.0/120"),
 					macaddrDataType     = PhysicalAddress.Parse("08-00-2B-01-02-03"),
-					//macaddr8DataType    = PhysicalAddress.Parse("08-00-2B-FF-FE-01-02-03"),
+					macaddr8DataType    = PhysicalAddress.Parse("08-00-2B-FF-FE-01-02-03"),
 
 					jsonDataType        = "{\"test\": 1}",
 					jsonbDataType       = "{\"test\": 2}"
 				}
 			};
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(context, new MappingSchema(context)))
 			{
 				DataConnectionTransaction ts = null;
 
@@ -929,10 +936,13 @@ namespace Tests.DataProvider
 
 					AreEqual(
 						r => {
-							r.ID = 0;
+							r.ID             = 0;
 							r.binaryDataType = null;
-							r.bitDataType = null;
+							r.bitDataType    = null;
 							r.varBitDataType = null;
+							if (!lineSupported)     r.lineDataType     = null;
+							if (!jsonbSupported)    r.jsonbDataType    = null;
+							if (!macaddr8Supported) r.macaddr8DataType = null;
 							return r;
 						},
 						testData,
@@ -1668,7 +1678,7 @@ namespace Tests.DataProvider
 
 #if !NETSTANDARD1_6
 		public void SchemaProceduresLoadedTest(
-			[IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)] string context)
+			[IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1683,9 +1693,10 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void ProceduresSchemaProviderTest(
-			[IncludeDataSources(false, ProviderName.PostgreSQL)] string context,
+			[IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context,
 			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
 		{
+			var jsonbSupported = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
@@ -1765,11 +1776,15 @@ namespace Tests.DataProvider
 					Assert.IsNotNull(actualTable.ForeignKeys);
 					Assert.IsEmpty(actualTable.ForeignKeys);
 
-					Assert.AreEqual(expectedTable.Columns.Count, actualTable.Columns.Count);
+					var expectedColumns = expectedTable.Columns;
+					if (!jsonbSupported)
+						expectedColumns = expectedColumns.Where(_ => _.ColumnType != "jsonb").ToList();
+
+					Assert.AreEqual(expectedColumns.Count, actualTable.Columns.Count);
 
 					foreach (var actualColumn in actualTable.Columns)
 					{
-						var expectedColumn = expectedTable.Columns
+						var expectedColumn = expectedColumns
 							.Where(_ => _.ColumnName == actualColumn.ColumnName)
 							.SingleOrDefault();
 
@@ -1809,7 +1824,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestVoidFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestVoidFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1822,7 +1837,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestCustomAggregate([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestCustomAggregate([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1844,7 +1859,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestCustomAggregateNotNullable([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestCustomAggregateNotNullable([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1866,21 +1881,21 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, new MappingSchema(context)))
 			{
 				var result = new TestPgFunctions(db).GetAllTypes().ToList();
 
 				var res1 = db.GetTable<AllTypes>().OrderBy(_ => _.ID).ToArray()[1];
-				var res2 = result.OrderBy(_ => _.ID).ToArray()[1];
+				var res2 = result                 .OrderBy(_ => _.ID).ToArray()[1];
 
 				var c1 = res1.binaryDataType.GetHashCode() == res2.binaryDataType.GetHashCode();
-				var c2 = res1.bitDataType.GetHashCode() == res2.bitDataType.GetHashCode();
+				var c2 = res1.bitDataType   .GetHashCode() == res2.bitDataType   .GetHashCode();
 				var c3 = res1.varBitDataType.GetHashCode() == res2.varBitDataType.GetHashCode();
 
 				var e1 = res1.binaryDataType.Equals(res2.binaryDataType);
-				var e2 = res1.bitDataType.Equals(res2.bitDataType);
+				var e2 = res1.bitDataType   .Equals(res2.bitDataType);
 				var e3 = res1.varBitDataType.Equals(res2.varBitDataType);
 
 				AreEqual(db.GetTable<AllTypes>().OrderBy(_ => _.ID), result.OrderBy(_ => _.ID), AllTypes.Comparer);
@@ -1888,7 +1903,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestParametersFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestParametersFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1904,7 +1919,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestScalarTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestScalarTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1919,7 +1934,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestRecordTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestRecordTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1935,7 +1950,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestScalarFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestScalarFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1946,7 +1961,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestSingleOutParameterFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestSingleOutParameterFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1958,7 +1973,7 @@ namespace Tests.DataProvider
 
 		[ActiveIssue("Functionality not implemented yet")]
 		[Test]
-		public void TestDynamicRecordFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestDynamicRecordFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1977,7 +1992,7 @@ namespace Tests.DataProvider
 
 		[ActiveIssue("Functionality not implemented yet")]
 		[Test]
-		public void TestDynamicTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestDynamicTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -17,7 +17,9 @@ namespace Tests.xUpdate
 	public class OldMergeTests : TestBase
 	{
 		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, TestProvName.Firebird3,
+			ProviderName.Access, ProviderName.Informix, ProviderName.MySql,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+			TestProvName.Firebird3,
 			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana)]
 		public void Merge(string context)
@@ -42,7 +44,8 @@ namespace Tests.xUpdate
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3, ProviderName.SapHana,
-			ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void MergeWithDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -54,7 +57,8 @@ namespace Tests.xUpdate
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana, TestProvName.Firebird3,
-			ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void MergeWithDeletePredicate1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -66,7 +70,8 @@ namespace Tests.xUpdate
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana, TestProvName.Firebird3,
-			ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void MergeWithDeletePredicate2(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -78,7 +83,8 @@ namespace Tests.xUpdate
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana, TestProvName.Firebird3,
-			ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public async Task MergeWithDeletePredicate2Async(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -90,7 +96,8 @@ namespace Tests.xUpdate
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3, ProviderName.SapHana,
-			ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void MergeWithDeletePredicate3(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -103,7 +110,8 @@ namespace Tests.xUpdate
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3, ProviderName.SapHana,
-			ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void MergeWithDeletePredicate4(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -118,7 +126,8 @@ namespace Tests.xUpdate
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3, ProviderName.SapHana,
-			ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void MergeWithDeletePredicate5(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -138,7 +147,8 @@ namespace Tests.xUpdate
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana,
-			ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void MergeChar1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -163,7 +173,8 @@ namespace Tests.xUpdate
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana,
-			ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void MergeChar2(string context)
 		{
 			using (var db = new TestDataConnection(context))
