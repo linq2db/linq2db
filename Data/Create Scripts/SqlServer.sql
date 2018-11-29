@@ -1,6 +1,9 @@
 ﻿IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.SameTableName') AND type in (N'U'))
 BEGIN DROP TABLE dbo.SameTableName END
 GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.TestSchema_SameTableName') AND type in (N'U'))
+BEGIN DROP TABLE dbo.TestSchema_SameTableName END
+GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.SameTableName') AND type in (N'U'))
 BEGIN DROP TABLE TestSchema.SameTableName END
 GO
@@ -970,6 +973,11 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Index descript
 
 GO
 CREATE TABLE dbo.SameTableName
+(
+	id	INT
+)
+GO
+CREATE TABLE dbo.TestSchema_SameTableName
 (
 	id	INT
 )
