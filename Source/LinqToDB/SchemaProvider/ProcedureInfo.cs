@@ -29,13 +29,17 @@ namespace LinqToDB.SchemaProvider
 		/// </summary>
 		public bool   IsFunction;
 		/// <summary>
-		/// Gets or sets flag to distinguish table function from aggregate and scalar functions.
+		/// Gets or sets flag to distinguish table function from other functions.
 		/// </summary>
 		public bool   IsTableFunction;
 		/// <summary>
-		/// Gets or sets flag to distinguish aggregate function from table and scalar functions.
+		/// Gets or sets flag to distinguish aggregate function from other functions.
 		/// </summary>
 		public bool   IsAggregateFunction;
+		/// <summary>
+		/// Gets or sets flag to distinguish window function from other functions.
+		/// </summary>
+		public bool   IsWindowFunction;
 		/// <summary>
 		/// Get or sets flag, indicating that procedure belongs to default schema/owner.
 		/// </summary>

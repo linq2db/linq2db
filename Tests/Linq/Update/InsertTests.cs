@@ -24,7 +24,7 @@ namespace Tests.xUpdate
 	public class InsertTests : TestBase
 	{
 		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11,
 			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void DistinctInsert1(string context)
 		{
@@ -57,7 +57,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11,
 			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void DistinctInsert2(string context)
 		{

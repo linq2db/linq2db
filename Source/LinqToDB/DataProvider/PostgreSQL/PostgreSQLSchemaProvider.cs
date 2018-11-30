@@ -404,29 +404,30 @@ SELECT	r.ROUTINE_CATALOG,
 					{
 						var catalog       = rd.GetString(0);
 						var schema        = rd.GetString(1);
-						var isTableResult = Converter.ChangeTypeTo<bool>(rd[7]);
+						var isTableResult = Converter.ChangeTypeTo<bool>(rd[6]);
+						var kind          = Converter.ChangeTypeTo<char>(rd[5]);
 
 						return new ProcedureInfo()
 						{
-							ProcedureID         = catalog + "." + schema + "." + rd.GetString(5),
+							ProcedureID         = catalog + "." + schema + "." + rd.GetString(4),
 							CatalogName         = catalog,
 							SchemaName          = schema,
 							ProcedureName       = rd.GetString(2),
 							// versions prior 11 doesn't support procedures but support functions with void return type
 							// still, we report them as function in metadata. Just without return parameter
-							IsFunction          = rd.GetString(3) == "FUNCTION",
+							IsFunction          = kind != 'p',
 							IsTableFunction     = isTableResult,
 							// this is only diffrence starting from v11
-							IsAggregateFunction = Converter.ChangeTypeTo<char>(rd[6]) == 'a',
+							IsAggregateFunction = kind == 'a',
+							IsWindowFunction    = kind == 'w',
 							IsDefaultSchema     = schema == "public",
-							ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[4]),
-							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && Converter.ChangeTypeTo<int>(rd[9]) == 0
+							ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[3]),
+							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[7]) == "record" && Converter.ChangeTypeTo<int>(rd[8]) == 0
 						};
 					}, @"
 SELECT	r.ROUTINE_CATALOG,
 		r.ROUTINE_SCHEMA,
 		r.ROUTINE_NAME,
-		r.ROUTINE_TYPE,
 		r.ROUTINE_DEFINITION,
 		r.SPECIFIC_NAME,
 		p.prokind,

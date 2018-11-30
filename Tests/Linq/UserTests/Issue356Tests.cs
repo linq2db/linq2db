@@ -10,7 +10,7 @@ namespace Tests.UserTests
 	public class Issue356Tests : TestBase
 	{
 		[Test, DataContextSource(ProviderName.Sybase,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10)]
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL11)]
 		public void Test1(string context)
 		{
 			using (var db = GetDataContext(context))
