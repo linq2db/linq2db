@@ -219,4 +219,14 @@
 	    <Version>2.18.3</Version>
 	  </PackageReference>
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="npgsql4\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\..\Redist\npgsql4\Npgsql.dll" Link="npgsql4\Npgsql.dll">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
 </Project>

@@ -249,7 +249,6 @@ namespace Tests._Create
 		[Test, IncludeDataContextSource(ProviderName.PostgreSQL95)]     public void PostgreSQL95     (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
 		[Test, IncludeDataContextSource(TestProvName.PostgreSQL10)]     public void PostgreSQL10     (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
 		[Test, IncludeDataContextSource(TestProvName.PostgreSQL11)]     public void PostgreSQL11     (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
-		[Test, IncludeDataContextSource(TestProvName.PostgreSQLLatest)] public void PostgreSQLLatest (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
 		[Test, IncludeDataContextSource(ProviderName.MySql)]            public void MySql            (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");                    }
 		[Test, IncludeDataContextSource(TestProvName.MySql57)]          public void MySql57          (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");                    }
 		[Test, IncludeDataContextSource(TestProvName.MariaDB)]          public void MariaDB          (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");                    }
@@ -267,6 +266,7 @@ namespace Tests._Create
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 
+		[Test, IncludeDataContextSource(TestProvName.PostgreSQLLatest)] public void PostgreSQLLatest (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
 		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)] public void SQLiteClassic    (string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction);                  }
 		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)] public void SQLiteClassicData(string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);                  }
 		[Test, IncludeDataContextSource(ProviderName.Sybase)]        public void Sybase           (string ctx) { RunScript(ctx,          "\nGO\n",  "Sybase",   null,          "TestData");     }

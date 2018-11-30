@@ -302,7 +302,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.DB2, ProviderName.Informix,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest, TestProvName.PostgreSQLLatest,
 			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void NewGuid1(string context)
 		{
@@ -313,7 +313,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
 			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void NewGuid2(string context)
 		{
