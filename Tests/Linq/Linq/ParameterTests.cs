@@ -48,7 +48,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10,
 			ProviderName.Informix, ProviderName.DB2, ProviderName.SapHana)]
 		public void CharAsSqlParameter1(string context)
 		{
@@ -62,7 +62,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10,
 			ProviderName.Informix, ProviderName.Informix, ProviderName.DB2, ProviderName.SapHana)]
 		public void CharAsSqlParameter2(string context)
 		{
@@ -76,7 +76,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(ProviderName.SqlCe,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10,
 			ProviderName.Informix, ProviderName.Informix, ProviderName.DB2, ProviderName.SQLiteMS, ProviderName.SapHana)]
 		public void CharAsSqlParameter3(string context)
 		{
@@ -102,7 +102,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10,
 			ProviderName.Informix, ProviderName.Informix, ProviderName.DB2)]
 		public void CharAsSqlParameter5(string context)
 		{

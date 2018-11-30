@@ -1329,6 +1329,16 @@ namespace Tests.DataProvider
 							},
 							new ColumnSchema()
 							{
+								ColumnName = "macaddr8DataType",
+								ColumnType = "macaddr8",
+								MemberName = "macaddr8DataType",
+								MemberType = "PhysicalAddress",
+								SystemType = typeof(PhysicalAddress),
+								IsNullable = true,
+								DataType   = DataType.Udt
+							},
+							new ColumnSchema()
+							{
 								ColumnName = "jsonDataType",
 								ColumnType = "json",
 								MemberName = "jsonDataType",
@@ -1696,7 +1706,8 @@ namespace Tests.DataProvider
 			[IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context,
 			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
 		{
-			var jsonbSupported = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
+			var macaddr8Supported =  context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11) || context.Contains(TestProvName.PostgreSQLLatest);
+			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
@@ -1779,6 +1790,8 @@ namespace Tests.DataProvider
 					var expectedColumns = expectedTable.Columns;
 					if (!jsonbSupported)
 						expectedColumns = expectedColumns.Where(_ => _.ColumnType != "jsonb").ToList();
+					if (!macaddr8Supported)
+						expectedColumns = expectedColumns.Where(_ => _.ColumnType != "macaddr8").ToList();
 
 					Assert.AreEqual(expectedColumns.Count, actualTable.Columns.Count);
 

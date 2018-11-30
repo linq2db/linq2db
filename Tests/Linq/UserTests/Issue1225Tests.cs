@@ -100,12 +100,15 @@ namespace Tests.UserTests
 										.AsQueryable()
 										.Sum(_ => (_.ActualStage == null)? null: (int?)_.ActualStage.Id)
 								}
-							});
+							})
+							.OrderBy(_ => _.GroupByContainer.Value);
 					var res = query.ToArray();
 
 					Assert.AreEqual(2, res.Length);
 					Assert.IsNotNull(res[0].Container);
 					Assert.AreEqual(2, res[0].Container.Value);
+					Assert.IsNotNull(res[1].Container);
+					Assert.IsNull(res[1].Container.Value);
 				}
 			}
 		}

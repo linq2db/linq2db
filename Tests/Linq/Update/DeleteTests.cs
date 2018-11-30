@@ -157,7 +157,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10,
 			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana)]
 		public void DeleteMany1(string context)
 		{
@@ -188,7 +188,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10,
 			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana
 			)]
 		public void DeleteMany2(string context)
@@ -229,7 +229,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10,
 			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana
 			)]
 		public void DeleteMany3(string context)
@@ -273,7 +273,7 @@ namespace Tests.xUpdate
 			ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.Informix,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10,
 			ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,

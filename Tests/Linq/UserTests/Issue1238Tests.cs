@@ -23,7 +23,7 @@ namespace Tests.UserTests
 
 		// PostgreSQL disabled because it needs real primary key on database side
 		[ActiveIssue(1239, Configuration = ProviderName.DB2)]
-		[Test, DataContextSource(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL95)]
+		[Test, DataContextSource(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10)]
 		public void TestInsertOrUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -64,7 +64,7 @@ namespace Tests.UserTests
 		}
 
 		// PostgreSQL disabled because it needs real primary key on database side
-		[Test, DataContextSource(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL95)]
+		[Test, DataContextSource(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10)]
 		public void TestInsertOrReplace(string context)
 		{
 			using (var db = new TestDataConnection(context))
