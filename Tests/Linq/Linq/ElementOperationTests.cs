@@ -152,7 +152,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93)]
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)]
 		public void NestedFirstOrDefault4(string context)
 		{
 			using (new AllowMultipleQuery())

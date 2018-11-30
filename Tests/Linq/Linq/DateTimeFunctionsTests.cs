@@ -542,7 +542,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
 			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void SubDateDay(string context)
 		{
@@ -554,7 +554,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
 			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void DateDiffDay(string context)
 		{
@@ -566,7 +566,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
 			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void SubDateHour(string context)
 		{
@@ -578,7 +578,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
 			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void DateDiffHour(string context)
 		{
@@ -590,7 +590,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
 			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void SubDateMinute(string context)
 		{
@@ -602,7 +602,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
 			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void DateDiffMinute(string context)
 		{
@@ -614,7 +614,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
 			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void SubDateSecond(string context)
 		{
@@ -626,7 +626,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
 			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void DateDiffSecond(string context)
 		{
@@ -638,7 +638,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
 			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void SubDateMillisecond(string context)
 		{
@@ -650,7 +650,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
 			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void DateDiffMillisecond(string context)
 		{
@@ -781,7 +781,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
 			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void DateTimeSum(string context)
 		{

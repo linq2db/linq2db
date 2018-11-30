@@ -462,7 +462,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93)]
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)]
 		public void ToDefaultChar(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -499,7 +499,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, TestProvName.Firebird3, TestProvName.Firebird3,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93)]
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)]
 		public void ToDefaultNChar(string context)
 		{
 			using (var db = GetDataContext(context))
