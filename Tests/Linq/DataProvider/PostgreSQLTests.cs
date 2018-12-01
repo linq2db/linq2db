@@ -946,7 +946,7 @@ namespace Tests.DataProvider
 							if (!macaddr8Supported) r.macaddr8DataType = null;
 							// npgsql4 returns 2/1/1 instead of 1/1/1 as date part
 							if (r.timeTZDataType != null && !context.Contains(TestProvName.PostgreSQLLatest))
-								r.timeTZDataType = r.timeTZDataType.Value.AddDays(1);
+								r.timeTZDataType = r.timeTZDataType.Value.AddDays(-1);
 							return r;
 						},
 						testData,
