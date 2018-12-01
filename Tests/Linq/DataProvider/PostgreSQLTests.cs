@@ -945,8 +945,8 @@ namespace Tests.DataProvider
 							if (!jsonbSupported)    r.jsonbDataType    = null;
 							if (!macaddr8Supported) r.macaddr8DataType = null;
 							// npgsql4 returns 2/1/1 instead of 1/1/1 as date part
-							if (r.timestampTZDataType != null && !context.Contains(TestProvName.PostgreSQLLatest))
-								r.timestampTZDataType = r.timestampTZDataType.Value.AddDays(1);
+							if (r.timeTZDataType != null && !context.Contains(TestProvName.PostgreSQLLatest))
+								r.timeTZDataType = r.timeTZDataType.Value.AddDays(1);
 							return r;
 						},
 						testData,
