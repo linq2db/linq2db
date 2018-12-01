@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Linq;
 using LinqToDB.Reflection;
 
 namespace Tests.Tools
@@ -21,16 +22,16 @@ namespace Tests.Tools
 		/// Returns GetEqualsFunc function for type T to compare.
 		/// </summary>
 		/// <returns>GetEqualsFunc function.</returns>
-		public static Func<T, T, bool> GetEqualsFunc()
-			=> GetEqualsFunc(TypeAccessor.GetAccessor<T>().Members);
+		public static Func<T, T, bool> GetEqualsFunc(bool assertOnFail = false)
+			=> GetEqualsFunc(TypeAccessor.GetAccessor<T>().Members, assertOnFail);
 
 		/// <summary>
 		/// Returns GetEqualsFunc function for provided members for type T to compare.
 		/// </summary>
 		/// <param name="members">Members to compare.</param>
 		/// <returns>GetEqualsFunc function.</returns>
-		public static Func<T, T, bool> GetEqualsFunc(IEnumerable<MemberAccessor> members)
-			=> CreateEqualsFunc(members.Select(m => m.GetterExpression));
+		public static Func<T, T, bool> GetEqualsFunc(IEnumerable<MemberAccessor> members, bool assertOnFail = false)
+			=> CreateEqualsFunc(members.Select(m => m.GetterExpression), assertOnFail);
 
 		/// <summary>
 		/// Returns GetEqualsFunc function for provided members for type T to compare.
@@ -85,14 +86,20 @@ namespace Tests.Tools
 		}
 
 		private static Comparer _equalityComparer;
+		private static Comparer _assertingEqualityComparer;
 
 		/// <summary>
 		/// Returns implementations of the <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> generic interface
 		/// based on object public members equality.
 		/// </summary>
 		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
-		public static IEqualityComparer<T> GetEqualityComparer()
-			=> _equalityComparer ?? (_equalityComparer = new Comparer(GetEqualsFunc(), GetGetHashCodeFunc()));
+		public static IEqualityComparer<T> GetEqualityComparer(bool assertOnFail = false)
+		{
+			if (assertOnFail)
+				return _assertingEqualityComparer ?? (_assertingEqualityComparer = new Comparer(GetEqualsFunc(true),  GetGetHashCodeFunc()));
+			else
+				return _equalityComparer          ?? (_equalityComparer          = new Comparer(GetEqualsFunc(false), GetGetHashCodeFunc()));
+		}
 
 		/// <summary>
 		/// Returns implementations of the <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> generic interface
@@ -117,7 +124,7 @@ namespace Tests.Tools
 			return new Comparer(GetEqualsFunc(members), GetGetHashCodeFunc(members));
 		}
 
-		private static Func<T, T, bool> CreateEqualsFunc(IEnumerable<LambdaExpression> membersToCompare)
+		private static Func<T, T, bool> CreateEqualsFunc(IEnumerable<LambdaExpression> membersToCompare, bool assertOnFail = false)
 		{
 			var x = Expression.Parameter(typeof(T), "x");
 			var y = Expression.Parameter(typeof(T), "y");
@@ -131,7 +138,18 @@ namespace Tests.Tools
 				var mi = eq.GetMethodsEx().Single(m => m.IsPublic && m.Name == "Equals" && m.GetParameters().Length == 2);
 
 				Debug.Assert(pi != null, "pi != null");
-				return (Expression)Expression.Call(Expression.Property(null, pi), mi, arg0, arg1);
+				Expression expr = Expression.Call(Expression.Property(null, pi), mi, arg0, arg1);
+
+				if (assertOnFail)
+				{
+					expr = Expression.Call(
+						MethodHelper.GetMethodInfo(Assert, true, (object)null, (object)null),
+						expr,
+						Expression.Convert(arg0, typeof(object)),
+						Expression.Convert(arg1, typeof(object)));
+				}
+
+				return expr;
 			});
 
 			var expression = expressions
@@ -141,6 +159,14 @@ namespace Tests.Tools
 			return Expression
 				.Lambda<Func<T, T, bool>>(expression, x, y)
 				.Compile();
+		}
+
+		private static bool Assert(bool isEqual, object left, object right)
+		{
+			if (!isEqual)
+				NUnit.Framework.Assert.Fail($"Equality check failed: {left} not equals {right}");
+
+			return isEqual;
 		}
 
 		private static Type GetEqualityComparer(Type type)

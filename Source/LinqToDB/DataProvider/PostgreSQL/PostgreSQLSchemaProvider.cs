@@ -59,8 +59,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).       AssemblyQualifiedName, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
 				
 				new DataTypeInfo { TypeName = "timestamptz",                 DataType = typeof(DateTimeOffset).AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "timestamp with time zone",    DataType = typeof(DateTimeOffset).AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
 				
 				new DataTypeInfo { TypeName = "timestamp",                   DataType = typeof(DateTime).      AssemblyQualifiedName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).      AssemblyQualifiedName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
 			}.ToList();
 
 			var provider = (PostgreSQLDataProvider)dataConnection.DataProvider;
@@ -77,10 +79,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (provider.NpgsqlIntervalType   != null) list.Add(new DataTypeInfo { TypeName = "interval"                   , DataType = provider.NpgsqlIntervalType.  AssemblyQualifiedName, CreateFormat = "interval({0})",                     CreateParameters = "precision" });
 			if (provider.NpgsqlDateType       != null) list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.NpgsqlDateType.      AssemblyQualifiedName });
 			else                                       list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = typeof(DateTime).             AssemblyQualifiedName });
-			if (provider.NpgsqlDateTimeType   != null) list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = provider.NpgsqlDateTimeType.  AssemblyQualifiedName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
-			else                                       list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).             AssemblyQualifiedName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
-			if (provider.NpgsqlDateTimeType   != null) list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = provider.NpgsqlDateTimeType.  AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" });
-			else                                       list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = typeof(DateTimeOffset).       AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" });
 			if (provider.NpgsqlTimeType       != null) list.Add(new DataTypeInfo { TypeName = "time with time zone"        , DataType = provider.NpgsqlTimeType.      AssemblyQualifiedName, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
 			else                                       list.Add(new DataTypeInfo { TypeName = "time with time zone"        , DataType = typeof(DateTimeOffset).       AssemblyQualifiedName, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
 			if (provider.NpgsqlTimeType       != null) list.Add(new DataTypeInfo { TypeName = "timetz"                     , DataType = provider.NpgsqlTimeType.      AssemblyQualifiedName, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
@@ -328,7 +326,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "time without time zone"      : return _provider.NpgsqlTimeType    ?.Name;
 				case "timetz"                      :
 				case "time with time zone"         : return _provider.NpgsqlTimeTZType  ?.Name;
-				case "timestamp with time zone":
+				case "timestamp"                   :
+				case "timestamptz"                 :
+				case "timestamp with time zone"    :
 				case "timestamp without time zone" :
 				case "date"                        : return _provider.NpgsqlDateType    ?.Name;
 				case "point"                       : return _provider.NpgsqlPointType   ?.Name;
@@ -338,7 +338,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "path"                        : return _provider.NpgsqlPathType    ?.Name;
 				case "polygon"                     : return _provider.NpgsqlPolygonType ?.Name;
 				case "line"                        : return _provider.NpgsqlLineType    ?.Name;
-				case "cidr":
+				case "cidr"                        :
 				case "inet"                        : return _provider.NpgsqlInetType    ?.Name;
 				case "geometry "                   : return "PostgisGeometry";
 			}
@@ -532,7 +532,8 @@ SELECT	r.ROUTINE_CATALOG,
 					// AllowDBNull not set even with KeyInfo behavior suggested here:
 					// https://github.com/npgsql/npgsql/issues/1693
 					let isNullable   = r.IsNull("AllowDBNull")      ? true       : r.Field<bool>("AllowDBNull")
-					let length       = r.IsNull("ColumnSize")       ? (int?)null : r.Field<int>("ColumnSize")
+					// see https://github.com/npgsql/npgsql/issues/2243
+					let length       = r.IsNull("ColumnSize")       ? (int?)null : (r.Field<int>("ColumnSize") == -1 && columnType == "character" ? 1 : r.Field<int>("ColumnSize"))
 					let precision    = r.IsNull("NumericPrecision") ? (int?)null : r.Field<int>("NumericPrecision")
 					let scale        = r.IsNull("NumericScale")     ? (int?)null : r.Field<int>("NumericScale")
 					let providerType = r.IsNull("DataType")         ? null       : r.Field<Type>("DataType")

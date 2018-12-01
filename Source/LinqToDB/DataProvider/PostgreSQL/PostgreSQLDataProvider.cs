@@ -41,11 +41,24 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 
-			SetCharFieldToType<char>("bpchar", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("bpchar",    (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("character", (r, i) => DataTools.GetChar(r, i));
 
-			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("bpchar",    (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("character", (r,i) => r.GetString(i).TrimEnd(' '));
 
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
+		}
+
+		protected override string NormalizeTypeName(string typeName)
+		{
+			if (typeName == null)
+				return null;
+
+			if (typeName.StartsWith("character("))
+				return "character";
+
+			return typeName;
 		}
 
 		public PostgreSQLVersion Version { get; private set; }
@@ -231,6 +244,25 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							_npgsqlTimeStampTZ),
 						dataReaderParameter,
 						indexParameter);
+			}
+
+			if (NpgsqlInetType != null)
+			{
+				var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
+				var indexParameter      = Expression.Parameter(typeof(int), "i");
+
+				// npgsql4 obsoletes NpgsqlInetType and returns ValueTuple<IPAddress, int>
+				// still while it is here, we should be able to map it properly
+				var from = typeof((IPAddress, int));
+				var p = Expression.Parameter(from, "p");
+				MappingSchema.SetConvertExpression(from, NpgsqlInetType,
+					Expression.Lambda(
+						Expression.New(
+							NpgsqlInetType.GetConstructorEx(new[] { typeof(IPAddress), typeof(int) }),
+							Expression.Field(p, "Item1"),
+							Expression.Field(p, "Item2")),
+						p));
+
 			}
 
 			_setMoney     = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Money");

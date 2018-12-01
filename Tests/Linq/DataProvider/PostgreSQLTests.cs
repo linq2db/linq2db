@@ -813,7 +813,7 @@ namespace Tests.DataProvider
 			[NotColumn(Configuration = ProviderName.PostgreSQL93)]
 			[Column  (DataType = DataType.BinaryJson)] public string jsonbDataType                      { get; set; }
 
-			public static IEqualityComparer<AllTypes> Comparer = Tools.ComparerBuilder<AllTypes>.GetEqualityComparer();
+			public static IEqualityComparer<AllTypes> Comparer = Tools.ComparerBuilder<AllTypes>.GetEqualityComparer(true);
 		}
 
 		public enum BulkTestMode
@@ -849,7 +849,7 @@ namespace Tests.DataProvider
 					timestampTZDataType = new DateTimeOffset(2011, 3, 22, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
 					dateDataType        = new NpgsqlDate(2010, 5, 30),
 					timeDataType        = new TimeSpan(0, 1, 2, 3, 4),
-					timeTZDataType      = new DateTimeOffset(1, 1, 1, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
+					timeTZDataType      = new DateTimeOffset(1, 1, 2, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
 					intervalDataType    = TimeSpan.FromTicks(-123456780),
 
 					charDataType        = 'ы',
@@ -885,6 +885,11 @@ namespace Tests.DataProvider
 
 			using (var db = new DataConnection(context, new MappingSchema(context)))
 			{
+				// color enum type will not work without this call if _create test was run in the same session
+				// More details here: https://github.com/npgsql/npgsql/issues/1357
+				// must be called before transaction opened due to: https://github.com/npgsql/npgsql/issues/2244
+				((dynamic)db.Connection).ReloadTypes();
+
 				DataConnectionTransaction ts = null;
 
 				if (mode != BulkTestMode.WithoutTransaction)
@@ -893,10 +898,6 @@ namespace Tests.DataProvider
 				int[] ids = null;
 				try
 				{
-					// color enum type will not work without this call if _create test was run in the same session
-					// More details here: https://github.com/npgsql/npgsql/issues/1357
-					((dynamic)db.Connection).ReloadTypes();
-
 					var result = db.BulkCopy(new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific }, testData);
 
 					Assert.AreEqual(testData.Length, result.RowsCopied);
@@ -943,6 +944,9 @@ namespace Tests.DataProvider
 							if (!lineSupported)     r.lineDataType     = null;
 							if (!jsonbSupported)    r.jsonbDataType    = null;
 							if (!macaddr8Supported) r.macaddr8DataType = null;
+							// npgsql4 returns 2/1/1 instead of 1/1/1 as date part
+							if (r.timestampTZDataType != null && !context.Contains(TestProvName.PostgreSQLLatest))
+								r.timestampTZDataType = r.timestampTZDataType.Value.AddDays(1);
 							return r;
 						},
 						testData,
@@ -1068,23 +1072,25 @@ namespace Tests.DataProvider
 							},
 							new ColumnSchema()
 							{
-								ColumnName = "timestampDataType",
-								ColumnType = "timestamp (0) without time zone",
-								MemberName = "timestampDataType",
-								MemberType = "DateTime?",
-								SystemType = typeof(DateTime),
-								IsNullable = true,
-								DataType   = DataType.DateTime2
+								ColumnName           = "timestampDataType",
+								ColumnType           = "timestamp (0) without time zone",
+								MemberName           = "timestampDataType",
+								MemberType           = "DateTime?",
+								SystemType           = typeof(DateTime),
+								ProviderSpecificType = "NpgsqlDate",
+								IsNullable           = true,
+								DataType             = DataType.DateTime2
 							},
 							new ColumnSchema()
 							{
-								ColumnName = "timestampTZDataType",
-								ColumnType = "timestamp (0) with time zone",
-								MemberName = "timestampTZDataType",
-								MemberType = "DateTimeOffset?",
-								SystemType = typeof(DateTimeOffset),
-								IsNullable = true,
-								DataType   = DataType.DateTimeOffset
+								ColumnName           = "timestampTZDataType",
+								ColumnType           = "timestamp (0) with time zone",
+								MemberName           = "timestampTZDataType",
+								MemberType           = "DateTimeOffset?",
+								SystemType           = typeof(DateTimeOffset),
+								ProviderSpecificType = "NpgsqlDate",
+								IsNullable           = true,
+								DataType             = DataType.DateTimeOffset
 							},
 							new ColumnSchema()
 							{
@@ -1191,7 +1197,7 @@ namespace Tests.DataProvider
 							new ColumnSchema()
 							{
 								ColumnName = "bitDataType",
-								ColumnType = "bit(-1)", // TODO: must be 3, but npgsql doesn't return it
+								ColumnType = "bit(-1)", // TODO: must be 3, but npgsql3 doesn't return it (npgsql4 do)
 								MemberName = "bitDataType",
 								MemberType = "BitArray",
 								SystemType = typeof(BitArray),
@@ -1803,7 +1809,27 @@ namespace Tests.DataProvider
 
 						Assert.IsNotNull(expectedColumn);
 
-						Assert.AreEqual(expectedColumn.ColumnType, actualColumn.ColumnType);
+						// npgsql4 uses more standard names like 'integer' instead of 'int4'
+						// and we don't have proper type synonyms support/normalization in 2.x
+						if (expectedColumn.ColumnType == "int4")
+							Assert.Contains(actualColumn.ColumnType, new[] { "int4", "integer" });
+						else if (expectedColumn.ColumnType == "int8")
+							Assert.Contains(actualColumn.ColumnType, new[] { "int8", "bigint" });
+						else if (expectedColumn.ColumnType == "int2")
+							Assert.Contains(actualColumn.ColumnType, new[] { "int2", "smallint" });
+						else if (expectedColumn.ColumnType == "float8")
+							Assert.Contains(actualColumn.ColumnType, new[] { "float8", "double precision" });
+						else if (expectedColumn.ColumnType == "float4")
+							Assert.Contains(actualColumn.ColumnType, new[] { "float4", "real" });
+						else if (expectedColumn.ColumnType == "character(1)")
+							Assert.Contains(actualColumn.ColumnType, new[] { "character(1)", "character" });
+						else if (expectedColumn.ColumnType == "bit(-1)")
+							Assert.Contains(actualColumn.ColumnType, new[] { "bit(-1)", "bit(3)" });
+						else if (expectedColumn.ColumnType == "bool")
+							Assert.Contains(actualColumn.ColumnType, new[] { "bool", "boolean" });
+						else
+							Assert.AreEqual(expectedColumn.ColumnType, actualColumn.ColumnType);
+
 						Assert.AreEqual(expectedColumn.IsNullable, actualColumn.IsNullable);
 						Assert.AreEqual(expectedColumn.IsIdentity, actualColumn.IsIdentity);
 						Assert.AreEqual(expectedColumn.IsPrimaryKey, actualColumn.IsPrimaryKey);

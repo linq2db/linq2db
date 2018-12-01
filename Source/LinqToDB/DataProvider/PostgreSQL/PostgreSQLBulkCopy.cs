@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			// https://github.com/npgsql/npgsql/issues/1646
 			// npgsql 4.0 will revert logic by removing explicit Cancel() and add explicit Complete()
-			var hasCancel = writer.GetType().GetMethod("Cancel") != null;
+			var hasCancel   = writer.GetType().GetMethod("Cancel")   != null;
 			var hasComplete = writer.GetType().GetMethod("Complete") != null;
 			try
 			{
