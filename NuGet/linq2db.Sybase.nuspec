@@ -26,7 +26,6 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Redist\Sybase\Sybase.AdoNet45.AseClient.dll"     target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"   target="tools" />
 		
 		<file src="Sybase\linq2db.Sybase.props"                        target="build" />

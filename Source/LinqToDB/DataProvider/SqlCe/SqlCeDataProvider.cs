@@ -43,6 +43,10 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.SqlCeConnection, {ConnectionNamespace}";
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.SqlCeDataReader, {ConnectionNamespace}";
 
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+		public override string DbFactoryProviderName => "System.Data.SqlServerCe.4.0";
+#endif
+
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
 			_setNText     = GetSetParameter(connectionType, SqlDbType.NText);
