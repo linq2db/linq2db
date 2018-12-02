@@ -18,11 +18,13 @@ namespace Tests.UserTests
 				var resultUnion = db.Child.Union(db.Child).Distinct();
 				var result = db.Parent
 					.SelectMany(x => resultUnion.Where(c => c.ParentID == x.ParentID).Select(z => new {x.ParentID, z.ChildID}))
+					.OrderBy(_ => _.ParentID).ThenBy(_ => _.ChildID)
 					.Take(10);
 
 				var expectedUnion = Child.Union(Child).Distinct();
 				var expected = Parent
 					.SelectMany(x => expectedUnion.Where(c => c.ParentID == x.ParentID).Select(z => new {x.ParentID, z.ChildID}))
+					.OrderBy(_ => _.ParentID).ThenBy(_ => _.ChildID)
 					.Take(10);
 
 				AreEqual(expected, result);
