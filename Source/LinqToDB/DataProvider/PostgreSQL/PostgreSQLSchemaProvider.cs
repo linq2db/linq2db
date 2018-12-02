@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using System.Data;
 	using System.Data.Common;
 
-	class PostgreSQLSchemaProvider : SchemaProviderBase
+	public class PostgreSQLSchemaProvider : SchemaProviderBase
 	{
 		private readonly PostgreSQLDataProvider _provider;
 

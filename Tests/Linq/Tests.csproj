@@ -75,6 +75,7 @@
 		<PackageReference Include="Mono.Cecil" Version="0.10.0" />
 		<PackageReference Include="MySql.Data" Version="6.10.6" />
 		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" />
 	</ItemGroup>
 
 
@@ -221,11 +222,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="npgsql4\" />
+	  <Folder Include="npgsql4\net451\" />
+	  <Folder Include="npgsql4\netstandard2.0\" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="..\..\Redist\npgsql4\Npgsql.dll" Link="npgsql4\Npgsql.dll">
+	  <None Include="..\..\Redist\npgsql4\net451\Npgsql.dll" Link="npgsql4\net451\Npgsql.dll">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\..\Redist\npgsql4\netstandard2.0\Npgsql.dll" Link="npgsql4\netstandard2.0\Npgsql.dll">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>

@@ -849,7 +849,8 @@ namespace Tests.DataProvider
 					timestampTZDataType = new DateTimeOffset(2011, 3, 22, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
 					dateDataType        = new NpgsqlDate(2010, 5, 30),
 					timeDataType        = new TimeSpan(0, 1, 2, 3, 4),
-					timeTZDataType      = new DateTimeOffset(1, 1, 2, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
+					// npgsql4 uses 2/1/1 instead of 1/1/1 as date part
+					timeTZDataType      = new DateTimeOffset(1, 1, !context.Contains(TestProvName.PostgreSQLLatest) ? 1 : 2, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
 					intervalDataType    = TimeSpan.FromTicks(-123456780),
 
 					charDataType        = 'ы',
@@ -944,9 +945,6 @@ namespace Tests.DataProvider
 							if (!lineSupported)     r.lineDataType     = null;
 							if (!jsonbSupported)    r.jsonbDataType    = null;
 							if (!macaddr8Supported) r.macaddr8DataType = null;
-							// npgsql4 returns 2/1/1 instead of 1/1/1 as date part
-							if (r.timeTZDataType != null && !context.Contains(TestProvName.PostgreSQLLatest))
-								r.timeTZDataType = r.timeTZDataType.Value.AddDays(-1);
 							return r;
 						},
 						testData,
@@ -1830,22 +1828,22 @@ namespace Tests.DataProvider
 						else
 							Assert.AreEqual(expectedColumn.ColumnType, actualColumn.ColumnType);
 
-						Assert.AreEqual(expectedColumn.IsNullable, actualColumn.IsNullable);
-						Assert.AreEqual(expectedColumn.IsIdentity, actualColumn.IsIdentity);
-						Assert.AreEqual(expectedColumn.IsPrimaryKey, actualColumn.IsPrimaryKey);
-						Assert.AreEqual(expectedColumn.PrimaryKeyOrder, actualColumn.PrimaryKeyOrder);
-						Assert.AreEqual(expectedColumn.Description, actualColumn.Description);
-						Assert.AreEqual(expectedColumn.MemberName, actualColumn.MemberName);
-						Assert.AreEqual(expectedColumn.MemberType, actualColumn.MemberType);
+						Assert.AreEqual(expectedColumn.IsNullable          , actualColumn.IsNullable);
+						Assert.AreEqual(expectedColumn.IsIdentity          , actualColumn.IsIdentity);
+						Assert.AreEqual(expectedColumn.IsPrimaryKey        , actualColumn.IsPrimaryKey);
+						Assert.AreEqual(expectedColumn.PrimaryKeyOrder     , actualColumn.PrimaryKeyOrder);
+						Assert.AreEqual(expectedColumn.Description         , actualColumn.Description);
+						Assert.AreEqual(expectedColumn.MemberName          , actualColumn.MemberName);
+						Assert.AreEqual(expectedColumn.MemberType          , actualColumn.MemberType);
 						Assert.AreEqual(expectedColumn.ProviderSpecificType, actualColumn.ProviderSpecificType);
-						Assert.AreEqual(expectedColumn.SystemType, actualColumn.SystemType);
-						Assert.AreEqual(expectedColumn.DataType, actualColumn.DataType);
-						Assert.AreEqual(expectedColumn.SkipOnInsert, actualColumn.SkipOnInsert);
-						Assert.AreEqual(expectedColumn.SkipOnUpdate, actualColumn.SkipOnUpdate);
-						Assert.AreEqual(expectedColumn.Length, actualColumn.Length);
-						Assert.AreEqual(expectedColumn.Precision, actualColumn.Precision);
-						Assert.AreEqual(expectedColumn.Scale, actualColumn.Scale);
-						Assert.AreEqual(actualTable, actualColumn.Table);
+						Assert.AreEqual(expectedColumn.SystemType          , actualColumn.SystemType);
+						Assert.AreEqual(expectedColumn.DataType            , actualColumn.DataType);
+						Assert.AreEqual(expectedColumn.SkipOnInsert        , actualColumn.SkipOnInsert);
+						Assert.AreEqual(expectedColumn.SkipOnUpdate        , actualColumn.SkipOnUpdate);
+						Assert.AreEqual(expectedColumn.Length              , actualColumn.Length);
+						Assert.AreEqual(expectedColumn.Precision           , actualColumn.Precision);
+						Assert.AreEqual(expectedColumn.Scale               , actualColumn.Scale);
+						Assert.AreEqual(actualTable                        , actualColumn.Table);
 					}
 
 					Assert.IsNotNull(procedure.SimilarTables);
