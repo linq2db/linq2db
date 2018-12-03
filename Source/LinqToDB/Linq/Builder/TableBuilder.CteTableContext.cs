@@ -184,14 +184,8 @@ namespace LinqToDB.Linq.Builder
 				if (queryContext == null)
 					return base.BuildExpression(expression, level, enforceServerSide);
 
-				ConvertToIndex(null, 0, ConvertFlags.All);
-
-				//TODO: igor-tkachev, review this.
-				var result = Parent == null
-					? queryContext.BuildExpression(expression, level, enforceServerSide)
-					: base.BuildExpression(expression, level, enforceServerSide);
-
-				return result;
+				queryContext.Parent = this;
+				return queryContext.BuildExpression(expression, level, true);
 			}
 
 			public override SqlStatement GetResultStatement()
