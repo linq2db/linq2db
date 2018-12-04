@@ -623,7 +623,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 						{
-							var ex = ConvertIQueriable(expr);
+							var ex = ConvertIQueryable(expr);
 
 							if (!ReferenceEquals(ex, expr))
 								return new TransformInfo(ConvertExpressionTree(ex));
@@ -672,7 +672,7 @@ namespace LinqToDB.Linq.Builder
 
 								if (attr == null)
 								{
-									var ex = ConvertIQueriable(expr);
+									var ex = ConvertIQueryable(expr);
 
 									if (!ReferenceEquals(ex, expr))
 										return new TransformInfo(ConvertExpressionTree(ex));
@@ -1410,9 +1410,9 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region ConvertIQueriable
+		#region ConvertIQueryable
 
-		Expression ConvertIQueriable(Expression expression)
+		Expression ConvertIQueryable(Expression expression)
 		{
 			if (expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
 			{
