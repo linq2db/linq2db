@@ -24,6 +24,16 @@ namespace LinqToDB.DataProvider.MySql
 		protected override bool IsRecursiveCteKeywordRequired   => true;
 		public    override bool IsNestedJoinParenthesisRequired => true;
 
+		protected override bool CanSkipRootAliases(SqlStatement statement)
+		{
+			if (statement.SelectQuery != null)
+			{
+				return statement.SelectQuery.From.Tables.Count > 0;
+			}
+
+			return true;
+		}
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement.NeedsIdentity() ? 2 : 1;

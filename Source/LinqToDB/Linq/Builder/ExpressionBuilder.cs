@@ -1243,7 +1243,7 @@ namespace LinqToDB.Linq.Builder
 			public Expression AddElementSelectorQ()
 			{
 				Expression<Func<IQueryable<TSource>,IEnumerable<TCollection>,IQueryable<TCollection>>> func = (source,col) => source
-					.SelectMany(colParam => col, (s,c) => c)
+					.SelectMany(cp => col, (s,c) => c)
 					;
 
 				var body   = func.Body.Unwrap();
@@ -1255,7 +1255,7 @@ namespace LinqToDB.Linq.Builder
 			public Expression AddElementSelectorE()
 			{
 				Expression<Func<IEnumerable<TSource>,IEnumerable<TCollection>,IEnumerable<TCollection>>> func = (source,col) => source
-					.SelectMany(colParam => col, (s,c) => c)
+					.SelectMany(cp => col, (s,c) => c)
 					;
 
 				var body   = func.Body.Unwrap();
