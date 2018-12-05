@@ -42,9 +42,9 @@ namespace Tests.UserTests
 				predicate = predicate.And(p => p.ParentID <= 4);
 				
 				var q = db.Parent.Where(predicate); 
-				var e = Parent   .Where(predicate.Compile()); 
+				var e = Parent   .Where(predicate.Compile());
 
-				AreEqual(e, q, ComparerBuilder<Parent>.GetEqualityComparer(), src => src.OrderBy(p => p.ParentID));
+				AreEqual(r => new Parent() { ParentID = r.ParentID, Value1 = r.Value1 }, e, q, ComparerBuilder<Parent>.GetEqualityComparer(), src => src.OrderBy(p => p.ParentID));
 			}
 		}
 
@@ -76,7 +76,7 @@ namespace Tests.UserTests
 				var q = db.Parent.Where(predicate); 
 				var e = Parent   .Where(predicate.Compile());
 
-				AreEqual(e, q, ComparerBuilder<Parent>.GetEqualityComparer(), src => src.OrderBy(p => p.ParentID));
+				AreEqual(r => new Parent() { ParentID = r.ParentID, Value1 = r.Value1 }, e, q, ComparerBuilder<Parent>.GetEqualityComparer(), src => src.OrderBy(p => p.ParentID));
 			}
 		}
 
@@ -92,7 +92,7 @@ namespace Tests.UserTests
 				var q = db.Parent.Where(predicate); 
 				var e = Parent   .Where(predicate.Compile());
 
-				AreEqual(e, q, ComparerBuilder<Parent>.GetEqualityComparer(), src => src.OrderBy(p => p.ParentID));
+				AreEqual(r => new Parent() { ParentID = r.ParentID, Value1 = r.Value1 }, e, q, ComparerBuilder<Parent>.GetEqualityComparer(), src => src.OrderBy(p => p.ParentID));
 			}
 		}
 	}
