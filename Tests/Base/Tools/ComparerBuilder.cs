@@ -177,6 +177,9 @@ namespace Tests.Tools
 			if (type == typeof(BitArray))
 				return typeof(BitArrayEqualityComparer);
 
+			if (type != typeof(string) && typeof(IEnumerable).IsAssignableFromEx(type))
+				return typeof(EnumerableEqualityComparer);
+
 			return typeof(EqualityComparer<>).MakeGenericType(type);
 		}
 

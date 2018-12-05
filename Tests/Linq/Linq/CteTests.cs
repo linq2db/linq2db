@@ -100,7 +100,7 @@ namespace Tests.Linq
 				var expectedStr = expected.ToString();
 				var resultdStr  = result.ToString();
 
-				// Looks like we do not populate needed field for CTE. It is aproblem thta needs to be solved
+				// Looks like we do not populate needed field for CTE. It is aproblem that needs to be solved
 				AreEqual(expected, result);
 			}
 		}
@@ -784,6 +784,129 @@ namespace Tests.Linq
 
 					Assert.DoesNotThrow(() => Console.WriteLine(query.ToString()));
 				}
+			}
+		}
+
+		private class TestWrapper
+		{
+			public Child Child { get; set; }
+
+			protected bool Equals(TestWrapper other)
+			{
+				return Equals(Child, other.Child);
+			}
+
+			public override bool Equals(object obj)
+			{
+				if (ReferenceEquals(null, obj)) return false;
+				if (ReferenceEquals(this, obj)) return true;
+				if (obj.GetType() != this.GetType()) return false;
+				var result = Equals((TestWrapper)obj);
+				return result;
+			}
+
+			public override int GetHashCode()
+			{
+				return (Child != null ? Child.GetHashCode() : 0);
+			}
+		}
+
+		private class TestWrapper2
+		{
+			public Child Child   { get; set; }
+			public Parent Parent { get; set; }
+
+			protected bool Equals(TestWrapper2 other)
+			{
+				return Equals(Child, other.Child) && Equals(Parent, other.Parent);
+			}
+
+			public override bool Equals(object obj)
+			{
+				if (ReferenceEquals(null, obj)) return false;
+				if (ReferenceEquals(this, obj)) return true;
+				if (obj.GetType() != this.GetType()) return false;
+				return Equals((TestWrapper2)obj);
+			}
+
+			public override int GetHashCode()
+			{
+				unchecked
+				{
+					return ((Child != null ? Child.GetHashCode() : 0) * 397) ^ (Parent != null ? Parent.GetHashCode() : 0);
+				}
+			}
+		}
+
+		[Test]
+		public void TestWithWrapper([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cteQuery = db.GetTable<Child>()
+					.Select(child => new TestWrapper()
+					{
+						Child = child
+					});
+
+				var cte1 = cteQuery.AsCte();
+
+				var query = from p in db.Parent
+					join c in cte1 on p.ParentID equals c.Child.ParentID
+					select new {p, c};
+
+				var result = query.ToArray();
+
+				var expected =
+					from p in db.Parent
+					join c in cteQuery on p.ParentID equals c.Child.ParentID
+					select new {p, c};
+
+				Assert.AreEqual(expected, result);
+			}
+		}
+
+		[Test]
+		public void TestWithWrapperUnion([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cte1 = db.GetTable<Child>()
+					.Select(child => new TestWrapper2()
+					{
+						Child = child,
+						Parent = child.Parent
+					})
+					.AsCte();
+
+				var simpleQuery = db.Child.Select(child => new TestWrapper2
+				{
+					Parent = child.Parent,
+					Child = child
+				});
+
+				var query1 = simpleQuery.Union(cte1);
+				var query2 = cte1.Union(simpleQuery);
+
+				var cte1_ = Child
+					.Select(child => new TestWrapper2()
+					{
+						Child = child,
+						Parent = child.Parent
+					});
+
+				var simpleQuery_ = Child.Select(child => new TestWrapper2
+				{
+					Parent = child.Parent,
+					Child = child
+				});
+
+				var query1_ = simpleQuery_.Union(cte1_);
+				var query2_ = cte1_.Union(simpleQuery_);
+
+
+				AreEqual(query1_, query1);
+				AreEqual(query2_, query2);
 			}
 		}
 

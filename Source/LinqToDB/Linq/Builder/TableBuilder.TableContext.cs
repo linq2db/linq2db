@@ -1050,7 +1050,7 @@ namespace LinqToDB.Linq.Builder
 				if (alias == null)
 					return;
 
-				if (alias.Contains('<'))
+				if (!alias.Contains('<'))
 					if (SqlTable.Alias == null)
 						SqlTable.Alias = alias;
 			}
@@ -1332,7 +1332,8 @@ namespace LinqToDB.Linq.Builder
 								aa.ExpressionPredicate,
 								aa.Predicate,
 								aa.Storage,
-								aa.CanBeNull))
+								aa.CanBeNull,
+								aa.AliasName))
 							{ Parent = Parent };
 
 					isNew = true;
