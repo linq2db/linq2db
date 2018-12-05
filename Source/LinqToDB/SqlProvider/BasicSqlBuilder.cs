@@ -64,8 +64,10 @@ namespace LinqToDB.SqlProvider
 
 		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0)
 		{
-			BuildSql(commandNumber, statement, sb, startIndent, false);
+			BuildSql(commandNumber, statement, sb, startIndent, CanSkipRootAliases(statement));
 		}
+
+		protected virtual bool CanSkipRootAliases(SqlStatement statement) => true;
 
 		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
 		{
@@ -443,7 +445,7 @@ namespace LinqToDB.SqlProvider
 				AppendIndent();
 				BuildColumnExpression(selectQuery, col.Expression, col.Alias, ref addAlias);
 
-				if (!SkipAlias && addAlias && col.Alias != null)
+				if (!SkipAlias && addAlias && !col.Alias.IsNullOrEmpty())
 					StringBuilder.Append(" as ").Append(Convert(col.Alias, ConvertType.NameToQueryFieldAlias));
 			}
 

@@ -99,7 +99,7 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqToDBException("Invalid Aggregate function implementation");
 
 			context.Sql        = context.SelectQuery;
-			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression);
+			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodCall.Method.Name);
 
 			return context;
 		}

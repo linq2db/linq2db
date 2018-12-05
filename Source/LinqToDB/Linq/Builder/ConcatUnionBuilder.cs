@@ -146,6 +146,9 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
+				var aliases1 = _sequence1.SelectQuery.Select.Columns.ToLookup(c => c.Expression, c => c.Alias);
+				var aliases2 = _sequence2.SelectQuery.Select.Columns.ToLookup(c => c.Expression, c => c.Alias);
+
 				_sequence1.SelectQuery.Select.Columns.Clear();
 				_sequence2.SelectQuery.Select.Columns.Clear();
 
@@ -177,8 +180,15 @@ namespace LinqToDB.Linq.Builder
 						};
 					}
 
-					_sequence1.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence1.SelectQuery, member.Info1.Sql));
-					_sequence2.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence2.SelectQuery, member.Info2.Sql));
+					string GetAlias(ILookup<ISqlExpression, string> aliases, ISqlExpression expression)
+					{
+						if (aliases.Contains(expression))
+							return aliases[expression].FirstOrDefault();
+						return null;
+					}
+
+					_sequence1.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence1.SelectQuery, member.Info1.Sql, GetAlias(aliases1, member.Info1.Sql)));
+					_sequence2.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence2.SelectQuery, member.Info2.Sql, GetAlias(aliases2, member.Info2.Sql)));
 
 					member.Member.SequenceInfo.Index = i;
 

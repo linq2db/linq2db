@@ -65,6 +65,10 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void SetAlias(string alias)
 		{
+			if (SelectQuery.Select.Columns.Count == 1)
+			{
+				SelectQuery.Select.Columns[0].Alias = alias;
+			}
 		}
 
 		public virtual ISqlExpression GetSubQuery(IBuildContext context)
