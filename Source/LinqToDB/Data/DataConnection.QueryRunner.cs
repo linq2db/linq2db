@@ -473,7 +473,7 @@ namespace LinqToDB.Data
 					foreach (var p in _preparedQuery.Parameters)
 						_dataConnection.Command.Parameters.Add(p);
 
-				var dataReader = await _dataConnection.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken);
+				var dataReader = await _dataConnection.ExecuteReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken);
 
 				return new DataReaderAsync(dataReader);
 			}
