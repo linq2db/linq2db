@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 		/// <summary>
 		/// Returns information about expression according to <paramref name="requestFlag"/>. 
 		/// </summary>
-		/// <param name="expression">Analysed expression.</param>
+		/// <param name="expression">Analyzed expression.</param>
 		/// <param name="level">Member level.</param>
 		/// <param name="requestFlag">Which test or request has to be performed.</param>
 		/// <returns><see cref="IsExpressionResult"/> instance.</returns>
