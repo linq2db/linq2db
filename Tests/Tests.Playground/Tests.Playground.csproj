@@ -12,10 +12,6 @@
 
   <ItemGroup>
     <Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-    <Compile Include="..\Linq\Linq\ArrayTableTests.cs" Link="ArrayTableTests.cs" />
-    <Compile Include="..\Linq\Linq\AssociationTests.cs" Link="AssociationTests.cs" />
-    <Compile Include="..\Linq\Linq\ParserTests.cs" Link="ParserTests.cs" />
-    <Compile Include="..\Linq\Linq\SelectScalarTests.cs" Link="SelectScalarTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
