@@ -32,7 +32,12 @@ public class TestsInitialization
 
 		// register test providers
 		TestNoopProvider.Init();
+
+		// disabled for core, as default loader doesn't allow multiple assemblies with same name
+		// https://github.com/dotnet/coreclr/blob/master/Documentation/design-docs/assemblyloadcontext.md
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		Npgsql4PostgreSQLDataProvider.Init();
+#endif
 	}
 
 	[OneTimeTearDown]

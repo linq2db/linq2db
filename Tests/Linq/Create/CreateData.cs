@@ -266,7 +266,7 @@ namespace Tests._Create
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 
-		[Test, IncludeDataContextSource(TestProvName.PostgreSQLLatest)] public void PostgreSQLLatest (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");               }
+		[Test, IncludeDataContextSource(TestProvName.PostgreSQLLatest)] public void PostgreSQLLatest (string ctx) { RunScript(ctx,       "\nGO\n",  "PostgreSQL");                              }
 		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)] public void SQLiteClassic    (string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction);                  }
 		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)] public void SQLiteClassicData(string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);                  }
 		[Test, IncludeDataContextSource(ProviderName.Sybase)]        public void Sybase           (string ctx) { RunScript(ctx,          "\nGO\n",  "Sybase",   null,          "TestData");     }

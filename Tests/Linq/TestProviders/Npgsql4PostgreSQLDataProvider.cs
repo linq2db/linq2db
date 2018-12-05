@@ -63,7 +63,7 @@ namespace Tests
 			PostgreSQLVersion.v95)
 		{
 #if !NETSTANDARD1_6
-			_assembly = Assembly.LoadFrom(path);
+			_assembly = Assembly.LoadFrom(Path.GetFullPath(path));
 #endif
 		}
 
