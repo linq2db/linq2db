@@ -2460,6 +2460,9 @@ namespace LinqToDB.SqlProvider
 				case DataType.Int32  : StringBuilder.Append("Int");      return;
 				case DataType.Int64  : StringBuilder.Append("BigInt");   return;
 				case DataType.Boolean: StringBuilder.Append("Bit");      return;
+				case DataType.Undefined:
+					// give some hint to user that it is expected situation and he need to fix something on his side
+					throw new LinqToDBException("Database type cannot be determined automatically and must be specified explicitly");
 			}
 
 			StringBuilder.Append(type.DataType);

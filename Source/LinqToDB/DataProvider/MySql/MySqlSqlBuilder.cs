@@ -98,9 +98,11 @@ namespace LinqToDB.DataProvider.MySql
 				case DataType.Single        : base.BuildDataType(SqlDataType.Decimal, createDbType); break;
 				case DataType.VarChar       :
 				case DataType.NVarChar      :
-					StringBuilder.Append("Char");
-					if (type.Length > 0)
-						StringBuilder.Append('(').Append(type.Length).Append(')');
+					// yep, char(0) is allowed
+					if (type.Length == null || type.Length > 255 || type.Length < 0)
+						StringBuilder.Append("Char(255)");
+					else
+						StringBuilder.Append($"Char({type.Length})");
 					break;
 				default: base.BuildDataType(type, createDbType);                                     break;
 			}
