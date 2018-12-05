@@ -106,6 +106,11 @@ namespace LinqToDB.Mapping
 		public Relationship Relationship        { get; set; }
 
 		/// <summary>
+		/// Gets or sets alias for association. Used in SQL generation process.
+		/// </summary>
+		public string       AliasName           { get; set; }
+
+		/// <summary>
 		/// Returns <see cref="ThisKey"/> value as a list of key member names.
 		/// </summary>
 		/// <returns>List of key members.</returns>

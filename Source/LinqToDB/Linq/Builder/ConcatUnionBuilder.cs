@@ -146,6 +146,9 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
+				var aliases1 = _sequence1.SelectQuery.Select.Columns.ToLookup(c => c.Expression, c => c.Alias);
+				var aliases2 = _sequence2.SelectQuery.Select.Columns.ToLookup(c => c.Expression, c => c.Alias);
+
 				_sequence1.SelectQuery.Select.Columns.Clear();
 				_sequence2.SelectQuery.Select.Columns.Clear();
 
@@ -177,8 +180,15 @@ namespace LinqToDB.Linq.Builder
 						};
 					}
 
-					_sequence1.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence1.SelectQuery, member.Info1.Sql));
-					_sequence2.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence2.SelectQuery, member.Info2.Sql));
+					string GetAlias(ILookup<ISqlExpression, string> aliases, ISqlExpression expression)
+					{
+						if (aliases.Contains(expression))
+							return aliases[expression].FirstOrDefault();
+						return null;
+					}
+
+					_sequence1.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence1.SelectQuery, member.Info1.Sql, GetAlias(aliases1, member.Info1.Sql)));
+					_sequence2.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence2.SelectQuery, member.Info2.Sql, GetAlias(aliases2, member.Info2.Sql)));
 
 					member.Member.SequenceInfo.Index = i;
 
@@ -226,8 +236,53 @@ namespace LinqToDB.Linq.Builder
 							return ex;
 						}
 
-						var isNew = Expression.Find(e => e is NewExpression && e.Type == type) != null;
-						if (isNew)
+						var new1 = Expression.Find(e => e.NodeType == ExpressionType.MemberInit && e.Type == type);
+						var needsRewrite = false;
+						if (new1 != null)
+						{
+							var new2 = _sequence2.Expression.Find(e => e.NodeType == ExpressionType.MemberInit && e.Type == type);
+							if (new2 == null)
+								needsRewrite = true;
+							else
+							{
+								// Comparing bindings
+
+								var init1 = (MemberInitExpression)new1;
+								var init2 = (MemberInitExpression)new2;
+								needsRewrite = init1.Bindings.Count != init2.Bindings.Count;
+								if (!needsRewrite)
+								{
+									var accessorDic = new Dictionary<Expression, QueryableAccessor>();
+
+									foreach (var binding in init1.Bindings)
+									{
+										if (binding.BindingType != MemberBindingType.Assignment)
+										{
+											needsRewrite = true;
+											break;
+										}
+
+										var foundBinding = init2.Bindings.FirstOrDefault(b => b.Member == binding.Member);
+										if (foundBinding == null || foundBinding.BindingType != MemberBindingType.Assignment)
+										{
+											needsRewrite = true;
+											break;
+										}
+
+										var assignment1 = (MemberAssignment)binding;
+										var assignment2 = (MemberAssignment)foundBinding;
+
+										if (!assignment1.Expression.EqualsTo(assignment2.Expression, accessorDic))
+										{
+											needsRewrite = true;
+											break;
+										}
+									}
+								}
+							}
+						}
+
+						if (needsRewrite)
 						{
 							var ta = TypeAccessor.GetAccessor(type);
 

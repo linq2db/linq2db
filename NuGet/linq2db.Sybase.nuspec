@@ -2,14 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.Sybase</id>
-		<version>2.6.0</version>
 		<title>LINQ to SAP/Sybase ASE</title>
-		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
-		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
-		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
-		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
-		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
-		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>
 			LINQ to Sybase ASE is a data access technology that provides a run-time infrastructure for managing relational data as objects.
 		</description>
@@ -26,7 +19,6 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Redist\Sybase\Sybase.AdoNet45.AseClient.dll"     target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"   target="tools" />
 		
 		<file src="Sybase\linq2db.Sybase.props"                        target="build" />

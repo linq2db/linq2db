@@ -293,10 +293,19 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
 				case DataType.Variant   : StringBuilder.Append("Sql_Variant");      return;
 				case DataType.NVarChar  :
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					{
+						StringBuilder
+							.Append(type.DataType)
+							.Append("(Max)");
+						return;
+					}
+
+					break;
+
 				case DataType.VarChar   :
 				case DataType.VarBinary :
-
-					if (type.Length == int.MaxValue || type.Length < 0)
+					if (type.Length == null || type.Length > 8000 || type.Length < 1)
 					{
 						StringBuilder
 							.Append(type.DataType)

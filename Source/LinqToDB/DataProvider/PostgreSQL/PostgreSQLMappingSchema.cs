@@ -17,8 +17,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-			SetDataType(typeof(string), DataType.Undefined);
-
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
 			SetValueToSqlConverter(typeof(bool),   (sb,dt,v) => sb.Append(v));

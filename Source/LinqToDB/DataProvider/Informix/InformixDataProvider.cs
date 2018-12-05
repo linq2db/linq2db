@@ -134,6 +134,10 @@ namespace LinqToDB.DataProvider.Informix
 		protected override string ConnectionTypeName  => "IBM.Data.Informix.IfxConnection, IBM.Data.Informix";
 		protected override string DataReaderTypeName  => "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix";
 
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+		public override string DbFactoryProviderName => "IBM.Data.Informix";
+#endif
+
 		public override ISqlBuilder CreateSqlBuilder()
 		{
 			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);

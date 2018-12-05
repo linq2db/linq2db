@@ -27,6 +27,10 @@ namespace LinqToDB.SqlQuery
 			[JetBrains.Annotations.NotNull] CteClause cte) : base(mappingSchema, cte.ObjectType, cte.Name)
 		{
 			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
+
+			// CTE has it's own names even there is mapping
+			foreach (var field in Fields.Values)
+				field.PhysicalName = field.Name;
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields, [JetBrains.Annotations.NotNull] CteClause cte)
