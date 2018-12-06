@@ -1050,6 +1050,21 @@ namespace Tests
 		}
 	}
 
+	public class AvoidSpecificDataProviderAPI : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.AvoidSpecificDataProviderAPI;
+
+		public AvoidSpecificDataProviderAPI(bool value)
+		{
+			Configuration.AvoidSpecificDataProviderAPI = value;
+		}
+
+		public void Dispose()
+		{
+			Configuration.AvoidSpecificDataProviderAPI = _oldValue;
+		}
+	}
+
 	public class GuardGrouping : IDisposable
 	{
 		public GuardGrouping()
