@@ -62,6 +62,11 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
+		internal void BuildSqlWithAliases(int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0)
+		{
+			BuildSql(commandNumber, statement, sb, startIndent, false);
+		}
+
 		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0)
 		{
 			BuildSql(commandNumber, statement, sb, startIndent, CanSkipRootAliases(statement));
