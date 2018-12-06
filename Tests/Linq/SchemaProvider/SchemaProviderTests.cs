@@ -181,8 +181,11 @@ namespace Tests.SchemaProvider
 			[PrimaryKey(2)] public int ID2;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]
-		public void PostgreSQLTest(string context)
+		[Test]
+		public void PostgreSQLTest(
+			[IncludeDataSources(
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{

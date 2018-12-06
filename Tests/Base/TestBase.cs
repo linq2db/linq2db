@@ -295,6 +295,12 @@ namespace Tests
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			ProviderName.PostgreSQL,
+			ProviderName.PostgreSQL92,
+			ProviderName.PostgreSQL93,
+			ProviderName.PostgreSQL95,
+			TestProvName.PostgreSQL10,
+			TestProvName.PostgreSQL11,
+			TestProvName.PostgreSQLLatest,
 			ProviderName.MySql,
 			TestProvName.SqlAzure,
 			TestProvName.MySql57,
@@ -909,9 +915,19 @@ namespace Tests
 			AreEqual(t => t, expected, result, EqualityComparer<T>.Default);
 		}
 
+		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, Func<IEnumerable<T>, IEnumerable<T>> sort)
+		{
+			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, sort);
+		}
+
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
 		{
 			AreEqual(t => t, expected, result, comparer);
+		}
+
+		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, Func<IEnumerable<T>, IEnumerable<T>> sort)
+		{
+			AreEqual(t => t, expected, result, comparer, sort);
 		}
 
 		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result)
@@ -919,10 +935,26 @@ namespace Tests
 			AreEqual(fixSelector, expected, result, EqualityComparer<T>.Default);
 		}
 
-		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
+		protected void AreEqual<T>(Func<T, T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
+		{
+			AreEqual<T>(fixSelector, expected, result, comparer, null);
+		}
+
+		protected void AreEqual<T>(
+			Func<T,T> fixSelector,
+			IEnumerable<T> expected,
+			IEnumerable<T> result,
+			IEqualityComparer<T> comparer,
+			Func<IEnumerable<T>, IEnumerable<T>> sort)
 		{
 			var resultList   = result.  Select(fixSelector).ToList();
 			var expectedList = expected.Select(fixSelector).ToList();
+
+			if (sort != null)
+			{
+				resultList   = sort(resultList)  .ToList();
+				expectedList = sort(expectedList).ToList();
+			}
 
 			Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
 			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");

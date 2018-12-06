@@ -19,7 +19,7 @@ namespace Tests.Linq
 		{
 			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
 			ProviderName.Firebird,
-			ProviderName.PostgreSQL,
+			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
 			ProviderName.DB2,
 			ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative
