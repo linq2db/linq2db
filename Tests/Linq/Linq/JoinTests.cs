@@ -1008,6 +1008,7 @@ namespace Tests.Linq
 		[Test]
 		public void ApplyJoin(
 			[IncludeDataSources(
+				false,
 				ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 			string context)

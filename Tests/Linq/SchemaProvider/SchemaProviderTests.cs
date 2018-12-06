@@ -184,6 +184,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void PostgreSQLTest(
 			[IncludeDataSources(
+				false,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 			string context)
 		{
