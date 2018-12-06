@@ -367,8 +367,15 @@ namespace LinqToDB.SqlQuery
 
 							if (query.Select.Columns.Count > 0)
 							{
+								var isRootQuery = query.ParentSelect == null;
+
 								Utils.MakeUniqueNames(query.Select.Columns.Where(c => c.Alias != "*"),
-									n => !ReservedWords.IsReserved(n), c => c.Alias, (c, n) => c.Alias = n,
+									n => !ReservedWords.IsReserved(n), c => c.Alias, (c, n) =>
+									{
+										if (isRootQuery)
+											allAliases.Add(n);
+										c.Alias = n;
+									},
 									c =>
 									{
 										var a = c.Alias;

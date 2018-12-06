@@ -109,6 +109,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (NeedSkip(selectQuery))
 			{
+				SkipAlias = false;
+
 				var aliases = GetTempAliases(2, "t");
 
 				if (_rowNumberAlias == null)
@@ -151,6 +153,8 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 			else if (NeedTake(selectQuery) && (!selectQuery.OrderBy.IsEmpty || !selectQuery.Having.IsEmpty))
 			{
+				SkipAlias = false;
+
 				var aliases = GetTempAliases(1, "t");
 
 				AppendIndent().AppendFormat("SELECT {0}.*", aliases[0]).AppendLine();
