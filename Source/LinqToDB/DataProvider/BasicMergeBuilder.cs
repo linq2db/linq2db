@@ -428,7 +428,7 @@ namespace LinqToDB.DataProvider
 
 				SaveParameters(statement.Parameters);
 
-				SqlBuilder.BuildSql(0, statement, Command, startIndent : 1);
+				SqlBuilder.BuildSqlWithAliases(0, statement, Command, startIndent : 1);
 
 				var cs = new [] { ' ', '\t', '\r', '\n' };
 
