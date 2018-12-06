@@ -5,7 +5,7 @@
 		<TargetFrameworks>net46;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
 		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
 		<AssemblyName>linq2db.Tests</AssemblyName>
-		<Configurations>Debug;Release;AppVeyor;NET.45;CORE.1;CORE.2</Configurations>
+		<Configurations>AppVeyor;NET.46;CORE.1;CORE.2</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'AppVeyor' ">
@@ -22,7 +22,7 @@
 		<Optimize>true</Optimize>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(Configuration)' == 'NET.45' ">
+	<PropertyGroup Condition=" '$(Configuration)' == 'NET.46' ">
 		<TargetFrameworks>net46</TargetFrameworks>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 		<DebugSymbols>true</DebugSymbols>
