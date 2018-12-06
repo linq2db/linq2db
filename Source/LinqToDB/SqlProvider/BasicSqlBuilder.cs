@@ -676,6 +676,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildInsertOrUpdateQueryAsMerge(SqlInsertOrUpdateStatement insertOrUpdate, string fromDummyTable)
 		{
+			SkipAlias = false;
+
 			var table       = insertOrUpdate.Insert.Into;
 			var targetAlias = Convert(insertOrUpdate.SelectQuery.From.Tables[0].Alias, ConvertType.NameToQueryTableAlias).ToString();
 			var sourceAlias = Convert(GetTempAliases(1, "s")[0],        ConvertType.NameToQueryTableAlias).ToString();
@@ -2577,6 +2579,8 @@ namespace LinqToDB.SqlProvider
 			var selectQuery = Statement.SelectQuery;
 			if (selectQuery != null && NeedSkip(selectQuery))
 			{
+				SkipAlias = false;
+
 				var aliases  = GetTempAliases(2, "t");
 				var rnaliase = GetTempAliases(1, "rn")[0];
 
@@ -2746,6 +2750,8 @@ namespace LinqToDB.SqlProvider
 			if (selectQuery == null)
 				return;
 
+			SkipAlias = false;
+
 			AppendIndent().Append("ORDER BY").AppendLine();
 
 			var obys = GetTempAliases(selectQuery.OrderBy.Items.Count, "oby");
@@ -2775,6 +2781,8 @@ namespace LinqToDB.SqlProvider
 		{
 			foreach (var col in columnSelector())
 				yield return col;
+
+			SkipAlias = false;
 
 			var obys = GetTempAliases(selectQuery.OrderBy.Items.Count, "oby");
 
