@@ -540,11 +540,16 @@ namespace Tests.Linq
 
 		#region DateDiff
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void SubDateDay(string context)
+		[Test]
+		public void SubDateDay(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -552,11 +557,16 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddHours(100) - t.DateTimeValue).TotalDays));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DateDiffDay(string context)
+		[Test]
+		public void DateDiffDay(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -564,11 +574,16 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void SubDateHour(string context)
+		[Test]
+		public void SubDateHour(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -576,11 +591,16 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddHours(100) - t.DateTimeValue).TotalHours));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DateDiffHour(string context)
+		[Test]
+		public void DateDiffHour(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -588,11 +608,16 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Hour, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void SubDateMinute(string context)
+		[Test]
+		public void SubDateMinute(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -600,11 +625,16 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalMinutes));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DateDiffMinute(string context)
+		[Test]
+		public void DateDiffMinute(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -612,11 +642,16 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Minute, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void SubDateSecond(string context)
+		[Test]
+		public void SubDateSecond(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -624,11 +659,16 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalSeconds));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-			ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DateDiffSecond(string context)
+		[Test]
+		public void DateDiffSecond(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -636,11 +676,16 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Second, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void SubDateMillisecond(string context)
+		[Test]
+		public void SubDateMillisecond(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -648,11 +693,16 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DateDiffMillisecond(string context)
+		[Test]
+		public void DateDiffMillisecond(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -779,11 +829,16 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DateTimeSum(string context)
+		[Test]
+		public void DateTimeSum(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -9,9 +9,12 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue356Tests : TestBase
 	{
-		[Test, DataContextSource(ProviderName.Sybase,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
-		public void Test1(string context)
+		[Test]
+		public void Test1(
+			[DataSources(
+				ProviderName.Sybase,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
