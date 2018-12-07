@@ -566,7 +566,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (dbType.StartsWith("numeric(") || dbType.StartsWith("decimal"))
 				dbType = "numeric";
 
-			if (dbType.StartsWith("varchar varying(") || dbType.StartsWith("varchar(") || dbType.StartsWith("character varying("))
+			if (dbType.StartsWith("varchar(") || dbType.StartsWith("character varying("))
 				dbType = "character varying";
 
 			if (dbType.StartsWith("char(") || dbType.StartsWith("character("))
