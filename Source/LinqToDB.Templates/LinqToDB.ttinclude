@@ -770,7 +770,7 @@ void GenerateTypesFromMetadata()
 				var outputParameters     = p.ProcParameters.Where(pp => pp.IsOut).           ToList();
 				var inOrOutputParameters = p.ProcParameters.Where(pp => pp.IsIn || pp.IsOut).ToList();
 
-				spName += inputParameters.Count == 0 ? ");" : ",";
+				spName += inOrOutputParameters.Count == 0 ? ");" : ",";
 
 				var retName = "ret";
 				var retNo   = 0;
