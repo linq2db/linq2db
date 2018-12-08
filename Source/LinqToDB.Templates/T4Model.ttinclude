@@ -1036,7 +1036,7 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 
 			if (p.HasSetter)
 			{
-				var setBody = p.BuildGetBody().ToArray();
+				var setBody = p.BuildSetBody().ToArray();
 				if (setBody.Length == 1)
 				{
 					tt.WriteLine("set {{ {0} }}", setBody[0]);

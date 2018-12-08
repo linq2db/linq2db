@@ -39,7 +39,7 @@ void EditableObjectImpl()
 		}
 
 		var name = prop.Name.Trim();
-		var type = prop.Type.Trim();
+		var type = prop.BuildType().Trim();
 
 		if (gr == null)
 		{
@@ -56,7 +56,7 @@ void EditableObjectImpl()
 			parentMembers.Insert  (index, gr);
 		}
 
-		var originalField = new Field(type, "_original" + name)
+		var originalField = new Field(() => type, "_original" + name)
 		{
 			AccessModifier       = AccessModifier.Private,
 			InsertBlankLineAfter = false,
@@ -64,7 +64,7 @@ void EditableObjectImpl()
 
 		gr.Members.Insert(0, originalField);
 
-		var currentField = new Field(type, " _current" + name)
+		var currentField = new Field(() => type, " _current" + name)
 		{
 			AccessModifier       = AccessModifier.Private,
 			InsertBlankLineAfter = false,
@@ -75,17 +75,17 @@ void EditableObjectImpl()
 
 		gr.Members.Insert(0, currentField);
 
-		prop.Name   = "         " + name;
-		prop.Type   = " " + type;
-		prop.IsAuto = false;
+		prop.Name        = "         " + name;
+		prop.TypeBuilder = () => " " + type;
+		prop.IsAuto      = false;
 
-		if (prop.HasGetter) prop.GetBody.Add("return " + currentField.Name.Trim() + ";");
-		if (prop.HasSetter) prop.SetBody.Add(currentField.Name.Trim() + " = value;");
+		if (prop.HasGetter) prop.GetBodyBuilders.Add(() => new [] { "return " + currentField.Name.Trim() + ";" });
+		if (prop.HasSetter) prop.SetBodyBuilders.Add(() => new [] { currentField.Name.Trim() + " = value;" });
 
-		var ac = new Method  ("void", "Accept" + name + "Changes", null, new[] { string.Format("_original{0} = _current{0};", name) });
-		var rc = new Method  ("void", "Reject" + name + "Changes", null, new[] { string.Format("{0} = _original{0};", name) });
-		var id = new Property("bool", "Is" + name + "Dirty")
-			.InitGetter(string.Format(prop.IsDirtyText, "_current" + name, "_original" + name));
+		var ac = new Method  (() => "void", "Accept" + name + "Changes", null, () => new[] { string.Format("_original{0} = _current{0};", name) });
+		var rc = new Method  (() => "void", "Reject" + name + "Changes", null, () => new[] { string.Format("{0} = _original{0};", name) });
+		var id = new Property(() => "bool", "Is" + name + "Dirty")
+			.InitGetter(() => new [] { string.Format(prop.IsDirtyText, "_current" + name, "_original" + name) });
 
 		gr.Members.Add(new MemberGroup
 		{
@@ -114,35 +114,50 @@ void EditableObjectImpl()
 					cl.Members.Insert(0, ctor);
 				}
 
-				ctor.Body.Add("AcceptChanges();");
+				ctor.BodyBuilders.Add(() => new [] { "AcceptChanges();" });
 			}
 
 			var maxLen = props.Max(p => p.Name.Trim().Length);
 
-			var ac = new Method("void", "AcceptChanges") { IsVirtual = true };
-			var rc = new Method("void", "RejectChanges") { IsVirtual = true };
-			var id = new Property("bool", "IsDirty") { IsAuto = false, HasSetter = false, IsVirtual = true };
+			var ac = new Method(() => "void", "AcceptChanges") { IsVirtual = true };
+			var rc = new Method(() => "void", "RejectChanges") { IsVirtual = true };
+			var id = new Property(() => "bool", "IsDirty") { IsAuto = false, HasSetter = false, IsVirtual = true };
 
-			ac.Body.Add("BeforeAcceptChanges();");
-			ac.Body.Add("");
-			rc.Body.Add("BeforeRejectChanges();");
-			rc.Body.Add("");
-			id.GetBody.Add("return");
+			ac.BodyBuilders.Add(() => new []
+			{
+				"BeforeAcceptChanges();",
+				""
+			});
+			rc.BodyBuilders.Add(() => new []
+			{
+				"BeforeRejectChanges();",
+				""
+			});
+			id.GetBodyBuilders.Add(() => new [] { "return" });
 
 			foreach (var p in props)
 			{
 				var name = p.Name.Trim();
 
-				ac.Body.Add(string.Format("Accept{0}Changes();", name));
-				rc.Body.Add(string.Format("Reject{0}Changes();", name));
-				id.GetBody.Add(string.Format("\tIs{0}Dirty{1} ||", name, LenDiff(maxLen, name)));
+				ac.BodyBuilders.Add(() => new [] { string.Format("Accept{0}Changes();", name) });
+				rc.BodyBuilders.Add(() => new [] { string.Format("Reject{0}Changes();", name) });
+				id.GetBodyBuilders.Add(() => new [] { string.Format("\tIs{0}Dirty{1} ||", name, LenDiff(maxLen, name)) });
 			}
 
-			ac.Body.Add("");
-			ac.Body.Add("AfterAcceptChanges();");
-			rc.Body.Add("");
-			rc.Body.Add("AfterRejectChanges();");
-			id.GetBody[id.GetBody.Count - 1] = id.GetBody[id.GetBody.Count - 1].Trim(' ' , '|') + ";";
+			ac.BodyBuilders.Add(() => new[]
+			{
+				"",
+				"AfterAcceptChanges();"
+			});
+			rc.BodyBuilders.Add(() => new[]
+			{
+				"",
+				"AfterRejectChanges();"
+			});
+			var getBody = id.BuildGetBody().ToArray();
+			getBody[getBody.Length - 1] = getBody[getBody.Length - 1].Trim(' ' , '|') + ";";
+			id.GetBodyBuilders.Clear();
+			id.GetBodyBuilders.Add(() => getBody);
 
 			cl.Members.Add(new MemberGroup
 			{
@@ -154,8 +169,8 @@ void EditableObjectImpl()
 						IsCompact = true,
 						Members   =
 						{
-							new Method("void", "BeforeAcceptChanges") { AccessModifier = AccessModifier.Partial },
-							new Method("void", "AfterAcceptChanges")  { AccessModifier = AccessModifier.Partial },
+							new Method(() => "void", "BeforeAcceptChanges") { AccessModifier = AccessModifier.Partial },
+							new Method(() => "void", "AfterAcceptChanges")  { AccessModifier = AccessModifier.Partial },
 						}
 					},
 					ac,
@@ -164,8 +179,8 @@ void EditableObjectImpl()
 						IsCompact = true,
 						Members   =
 						{
-							new Method("void", "BeforeRejectChanges") { AccessModifier = AccessModifier.Partial },
-							new Method("void", "AfterRejectChanges")  { AccessModifier = AccessModifier.Partial },
+							new Method(() => "void", "BeforeRejectChanges") { AccessModifier = AccessModifier.Partial },
+							new Method(() => "void", "AfterRejectChanges")  { AccessModifier = AccessModifier.Partial },
 						}
 					},
 					rc,
@@ -190,8 +205,8 @@ void EditableObjectImpl()
 							IsCompact = true,
 							Members   =
 							{
-								new Field   ("bool", "_isEditing") { AccessModifier = AccessModifier.Private },
-								new Property("bool", " IsEditing").InitGetter("_isEditing"),
+								new Field   (() => "bool", "_isEditing") { AccessModifier = AccessModifier.Private },
+								new Property(() => "bool", " IsEditing").InitGetter(() => new [] { "_isEditing" }),
 							}
 						},
 						new MemberGroup
@@ -199,9 +214,9 @@ void EditableObjectImpl()
 							IsCompact = true,
 							Members   =
 							{
-								new Method("void", "BeginEdit",  null, new[] { "AcceptChanges();", "_isEditing = true;"   }) { IsVirtual = true },
-								new Method("void", "CancelEdit", null, new[] { "_isEditing = false;", "RejectChanges();", }) { IsVirtual = true },
-								new Method("void", "EndEdit",    null, new[] { "_isEditing = false;", "AcceptChanges();", }) { IsVirtual = true },
+								new Method(() => "void", "BeginEdit",  null, () => new[] { "AcceptChanges();", "_isEditing = true;"   }) { IsVirtual = true },
+								new Method(() => "void", "CancelEdit", null, () => new[] { "_isEditing = false;", "RejectChanges();", }) { IsVirtual = true },
+								new Method(() => "void", "EndEdit",    null, () => new[] { "_isEditing = false;", "AcceptChanges();", }) { IsVirtual = true },
 							}
 						},
 					}
@@ -227,7 +242,7 @@ class EditableProperty : Property
 	}
 
 	public EditableProperty(string type, string name)
-		: base(type, name, null, null)
+		: base(() => type, name, null, null)
 	{
 		IsEditable = true;
 	}

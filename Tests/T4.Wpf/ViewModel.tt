@@ -9,7 +9,7 @@
 		new Class("ViewModel",
 			new NotifyingProperty("double", "NotifiedProp1", "NotifiedProp1", "NotifiedBrush1"),
 			new NotifyingProperty("int",    "NotifiedProp2", "NotifiedProp1", "NotifiedProp2") { InitValue = "500" },
-			new NotifyingProperty("Brush",  "NotifiedBrush1").InitGetter("GetBrush()")));
+			new NotifyingProperty("Brush",  "NotifiedBrush1").InitGetter(() => new [] { "GetBrush()" })));
 
 	GenerateModel();
 #>
