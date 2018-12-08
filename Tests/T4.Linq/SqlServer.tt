@@ -3,9 +3,10 @@
 <#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"             #>
 <#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude"           #>
 <#@ include file="..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude"             #>
+<#@ include file="Settings.ttinclude"                                                       #>
 <#@ include file="SqlServer.ttinclude"                                                      #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\NET.46\net46\Microsoft.SqlServer.Types.dll"  #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\NET.46\net46\linq2db.dll"                    #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\NET.46\net46\Microsoft.SqlServer.Types.dll" #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\NET.46\net46\linq2db.dll"                   #>
 <#
 //	NamespaceName   = "DataContext";
 //	DataContextName = "NorthwindDB";
@@ -29,7 +30,7 @@
 
 	SchemaNameMapping.Add("TestSchema", "MySchema");
 
-	LoadSqlServerMetadata(@"Server=DBHost\SQLSERVER2012;Database=Northwind;User Id=sa;Password=TestPassword");
+	LoadSqlServerMetadata(GetConnectionString("Northwind"));
 
 	Tables["Order Details"].Columns["OrderID"]. MemberName = "ID";
 
@@ -47,6 +48,6 @@
 
 	//GenerateConstructors = false;
 
-	LoadSqlServerMetadata(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.2014"));
 	GenerateModel();
 #>
