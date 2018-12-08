@@ -158,12 +158,23 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime  : StringBuilder.Append("timestamp");             break;
-				case DataType.DateTime2 : StringBuilder.Append("timestamp");             break;
-				case DataType.Boolean   : StringBuilder.Append("smallint");              break;
-				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); break;
-				default                 : base.BuildDataType(type, createDbType);        break;
+				case DataType.DateTime  : StringBuilder.Append("timestamp");             return;
+				case DataType.DateTime2 : StringBuilder.Append("timestamp");             return;
+				case DataType.Boolean   : StringBuilder.Append("smallint");              return;
+				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); return;
+				case DataType.NVarChar:
+					if (type.Length == null || type.Length > 8168 || type.Length < 1)
+					{
+						StringBuilder
+							.Append(type.DataType)
+							.Append("(8168)");
+						return;
+					}
+
+					break;
 			}
+
+			base.BuildDataType(type, createDbType);
 		}
 
 		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;

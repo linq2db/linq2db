@@ -16,6 +16,11 @@ namespace LinqToDB.Linq
 		{
 			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
+			static InsertOrReplace()
+			{
+				Linq.Query.CacheCleaners.Add(() => _queryCache.Clear());
+			}
+
 			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();

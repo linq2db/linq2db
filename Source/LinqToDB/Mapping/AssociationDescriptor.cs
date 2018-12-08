@@ -25,6 +25,7 @@ namespace LinqToDB.Mapping
 		/// <param name="predicate">Optional predicate expresssion.</param>
 		/// <param name="storage">Optional association value storage field or property name.</param>
 		/// <param name="canBeNull">If <c>true</c>, association will generate outer join, otherwise - inner join.</param>
+		/// <param name="aliasName">Optional alias for representation in SQL.</param>
 		public AssociationDescriptor(
 			[JNotNull] Type       type,
 			[JNotNull] MemberInfo memberInfo,
@@ -33,7 +34,8 @@ namespace LinqToDB.Mapping
 			           string     expressionPredicate,
 			           Expression predicate,
 			           string     storage,
-			           bool       canBeNull)
+			           bool       canBeNull,
+					   string     aliasName)
 		{
 			if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
 			if (thisKey    == null) throw new ArgumentNullException(nameof(thisKey));
@@ -55,6 +57,7 @@ namespace LinqToDB.Mapping
 			Predicate           = predicate;
 			Storage             = storage;
 			CanBeNull           = canBeNull;
+			AliasName           = aliasName;
 		}
 
 		/// <summary>
@@ -86,6 +89,10 @@ namespace LinqToDB.Mapping
 		/// If <c>true</c>, association will generate outer join, otherwise - inner join.
 		/// </summary>
 		public bool       CanBeNull           { get; set; }
+		/// <summary>
+		/// Gets or sets alias for association. Used in SQL generation process.
+		/// </summary>
+		public string     AliasName           { get; set; }
 
 		/// <summary>
 		/// Parse comma-separated list of association key column members into string array.

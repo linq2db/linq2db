@@ -5,7 +5,7 @@
 		<TargetFrameworks>net46;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
 		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
 		<AssemblyName>linq2db.Tests</AssemblyName>
-		<Configurations>Debug;Release;AppVeyor;NET.45;CORE.1;CORE.2</Configurations>
+		<Configurations>AppVeyor;NET.46;CORE.1;CORE.2</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'AppVeyor' ">
@@ -22,7 +22,7 @@
 		<Optimize>true</Optimize>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(Configuration)' == 'NET.45' ">
+	<PropertyGroup Condition=" '$(Configuration)' == 'NET.46' ">
 		<TargetFrameworks>net46</TargetFrameworks>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 		<DebugSymbols>true</DebugSymbols>
@@ -75,6 +75,8 @@
 		<PackageReference Include="Mono.Cecil" Version="0.10.0" />
 		<PackageReference Include="MySql.Data" Version="6.10.6" />
 		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" />
+		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
 
 
@@ -218,5 +220,19 @@
 	  <PackageReference Include="Oracle.ManagedDataAccess.Core">
 	    <Version>2.18.3</Version>
 	  </PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="npgsql4\net451\" />
+	  <Folder Include="npgsql4\netstandard2.0\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\..\Redist\npgsql4\net451\Npgsql.dll" Link="npgsql4\net451\Npgsql.dll">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\..\Redist\npgsql4\netstandard2.0\Npgsql.dll" Link="npgsql4\netstandard2.0\Npgsql.dll">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 </Project>

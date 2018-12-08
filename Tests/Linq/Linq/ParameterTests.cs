@@ -47,8 +47,16 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.DB2, ProviderName.SapHana)]
-		public void CharAsSqlParameter1(string context)
+		[Test]
+		public void CharAsSqlParameter1(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest, TestProvName.PostgreSQLLatest,
+				ProviderName.Informix,
+				ProviderName.DB2,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var  db = GetDataContext(context))
 			{
@@ -59,8 +67,16 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2, ProviderName.SapHana)]
-		public void CharAsSqlParameter2(string context)
+		[Test]
+		public void CharAsSqlParameter2(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.Informix,
+				ProviderName.DB2,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var  db = GetDataContext(context))
 			{
@@ -71,8 +87,16 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2, ProviderName.SQLiteMS, ProviderName.SapHana)]
-		public void CharAsSqlParameter3(string context)
+		[Test]
+		public void CharAsSqlParameter3(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.Informix,
+				ProviderName.DB2,
+				ProviderName.SQLiteMS,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var  db = GetDataContext(context))
 			{
@@ -95,8 +119,13 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2)]
-		public void CharAsSqlParameter5(string context)
+		[Test]
+		public void CharAsSqlParameter5(
+			[DataSources(
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.Informix,
+				ProviderName.DB2)]
+			string context)
 		{
 			using (var  db = GetDataContext(context))
 			{
@@ -196,9 +225,9 @@ namespace Tests.Linq
 			{
 				int id1 = 1, id2 = 10000;
 
-				var parent1 = db.Parent.FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
+				var parent1 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
 				id1++;
-				var parent2 = db.Parent.FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
+				var parent2 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
 
 				Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
 			}

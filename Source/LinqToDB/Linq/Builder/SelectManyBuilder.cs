@@ -30,10 +30,15 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var context        = new SelectManyContext(buildInfo.Parent, collectionSelector, sequence);
+			context.SetAlias(collectionSelector.Parameters[0].Name);
+
 			var expr           = collectionSelector.Body.Unwrap();
 
 			var collectionInfo = new BuildInfo(context, expr, new SelectQuery());
 			var collection     = builder.BuildSequence(collectionInfo);
+			if (resultSelector.Parameters.Count > 1)
+				collection.SetAlias(resultSelector.Parameters[1].Name);
+
 			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext || collectionInfo.JoinType == JoinType.Left;
 			var sql            = collection.SelectQuery;
 
