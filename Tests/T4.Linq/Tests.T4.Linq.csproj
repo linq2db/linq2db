@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Npgsql" Version="3.2.7" />
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
