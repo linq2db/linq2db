@@ -34,19 +34,15 @@ namespace LinqToDB.Linq.Builder
 				format    = (string)mc.Arguments[0].EvaluateExpression();
 				arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
 
-			} else
+			} 
+			else
 			{
 				var evaluatedSql = sqlExpr.EvaluateExpression();
 #if !NET45
 				if (evaluatedSql is FormattableString formattable)
 				{
 					format    = formattable.Format;
-					arguments = formattable.GetArguments()
-						.Select((o, i) => Expression.Call(sqlExpr,
-							_getArgumentMethodInfo,
-							Expression.Constant(i))
-						);
-					//arguments = formattable.GetArguments().Select(Expression.Constant);
+					arguments = formattable.GetArguments().Select(Expression.Constant);
 				}
 				else
 #endif
@@ -56,12 +52,7 @@ namespace LinqToDB.Linq.Builder
 					format        = rawSqlString.Format;
 					var arrayExpr = methodCall.Arguments[2];
 					var array     = (object[])arrayExpr.EvaluateExpression();
-					//arrayExpr = Expression.Constant(array);
-
-					arguments = array
-						.Select((o, i) => Expression.ArrayIndex(arrayExpr,
-							Expression.Constant(i))
-						);
+					arguments     = array.Select(Expression.Constant);
 				}
 			}
 

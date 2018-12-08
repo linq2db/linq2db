@@ -1330,36 +1330,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = new ValueTypeExpression() { DataTypeExpression = Expression.Constant(DataType.Undefined) };
 
-			if (expression.NodeType == ExpressionType.ArrayIndex && expression.Type == typeof(object))
+			var unwrapped = expression.Unwrap();
+			if (unwrapped.NodeType == ExpressionType.MemberAccess)
 			{
-				var canEvaluate = null == expression.Find(e => e.NodeType == ExpressionType.Parameter);
-
-				if (canEvaluate)
-				{
-					var value = expression.EvaluateExpression();
-					if (value is DataParameter dataParameter)
-						setName(dataParameter.Name);
-					else
-					{
-						var arrayIndex = (BinaryExpression)expression;
-						var index = (int)arrayIndex.Right.EvaluateExpression();
-						var array = arrayIndex.Left as NewArrayExpression;
-						var arrayItem = array?.Expressions[index].Unwrap();
-
-						if (arrayItem?.NodeType == ExpressionType.MemberAccess)
-							setName(((MemberExpression)arrayItem).Member.Name);
-					}
-				}
-
-				result.DataTypeExpression =
-					Expression.Condition(Expression.TypeIs(expression, typeof(DataParameter)),
-						Expression.Property(Expression.Convert(expression, typeof(DataParameter)), "DataType"),
-						Expression.Constant(DataType.Undefined));
-
-				expression =
-					Expression.Condition(Expression.TypeIs(expression, typeof(DataParameter)),
-						Expression.Property(Expression.Convert(expression, typeof(DataParameter)), "Value"),
-						expression);
+				var ma = (MemberExpression)unwrapped;
+				setName(ma.Member.Name);
 			}
 
 			result.ValueExpression = expression.Transform(expr =>
@@ -2099,7 +2074,10 @@ namespace LinqToDB.Linq.Builder
 
 			LambdaExpression expr = null;
 			if (buildParameterType != BuildParameterType.InPredicate)
-				expr = dataContext.MappingSchema.GetConvertExpression(type, typeof(DataParameter), createDefault: false);
+			{
+				expr = dataContext.MappingSchema.GetConvertExpression(type, typeof(DataParameter),
+					createDefault: false);
+			}
 
 			if (expr != null)
 			{
@@ -2110,12 +2088,24 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
-
-				if (defaultType != null)
+				if (type == typeof(DataParameter))
 				{
-					var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
-					accessorExpression = enumMapExpr.GetBody(accessorExpression);
+					var dp = expression.EvaluateExpression() as DataParameter;
+					if (dp?.Name?.IsNullOrEmpty() == false)
+						name = dp.Name;
+
+					dataTypeAccessorExpression = Expression.PropertyOrField(accessorExpression, "DataType");
+					accessorExpression         = Expression.PropertyOrField(accessorExpression, "Value");
+				}
+				else
+				{
+					var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
+
+					if (defaultType != null)
+					{
+						var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
+						accessorExpression = enumMapExpr.GetBody(accessorExpression);
+					}
 				}
 			}
 
