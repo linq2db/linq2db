@@ -2,6 +2,8 @@
 <#@ output extension=".generated.cs"                                               #>
 <#@ include file="..\..\Source\LinqToDB.Templates\T4Model.ttinclude"               #>
 <#@ include file="..\..\Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude" #>
+<#@ include file="..\..\Source\LinqToDB.Templates\Validation.ttinclude"            #>
+<#@ include file="..\..\Source\LinqToDB.Templates\NotifyDataErrorInfo.ttinclude"   #>
 <#
 	Model.Usings.Add("System.Windows.Media");
 	Model.Namespace.Name = "Tests.T4.Wpf";
