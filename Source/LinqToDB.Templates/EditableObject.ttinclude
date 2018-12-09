@@ -106,7 +106,7 @@ void EditableObjectImpl()
 			{
 				var ctor = GetTreeNodes(cl)
 					.OfType<Method>()
-					.FirstOrDefault(m => m.Name == cl.Name && m.Parameters.Count == 0);
+					.FirstOrDefault(m => m.Name == cl.Name && m.ParameterBuilders.Count == 0);
 
 				if (ctor == null)
 				{

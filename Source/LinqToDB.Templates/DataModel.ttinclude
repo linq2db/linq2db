@@ -483,6 +483,8 @@ void LoadMetadata(DataConnection dataConnection)
 
 	foreach (var proc in Procedures.Values)
 	{
+	    proc.Name = ConvertToCompilable(proc.Name, false);
+
 		if (KeyWords.Contains(proc.Name))
 			proc.Name = "@" + proc.Name;
 

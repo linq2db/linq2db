@@ -9,7 +9,7 @@
 		var method = new Method(
 			() => string.Format("ITable<{0}>", t.TypeName),
 			t.DataContextPropertyName,
-			t.Parameters.Select(p => p.ParameterType + " " + p.ParameterName),
+			t.Parameters.Select(p => (Func<string>)(() => p.ParameterType + " " + p.ParameterName)),
 			() => new []
 			{
 				String.Concat("return GetTable<",t.TypeName,">(this, (MethodInfo) MethodBase.GetCurrentMethod(),"),

@@ -48,10 +48,10 @@ void NotifyDataErrorInfoImpl()
 							Attributes     = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
 						},
 						new Method(() => "void", "AddError",
-							new[]
+							new Func<string>[]
 							{
-								"string propertyName",
-								"string error"
+								() => "string propertyName",
+								() => "string error"
 							},
 							() => new[]
 							{
@@ -74,9 +74,9 @@ void NotifyDataErrorInfoImpl()
 							AccessModifier = AccessModifier.Public
 						},
 						new Method(() => "void", "RemoveError",
-							new[]
+							new Func<string>[]
 							{
-								"string propertyName",
+								() => "string propertyName",
 							},
 							() => new[]
 							{
@@ -92,9 +92,9 @@ void NotifyDataErrorInfoImpl()
 							AccessModifier = AccessModifier.Public
 						},
 						new Method(() => "void", "OnErrorsChanged",
-							new[]
+							new Func<string>[]
 							{
-								"string propertyName",
+								() => "string propertyName",
 							},
 							() => new[]
 							{
@@ -111,9 +111,9 @@ void NotifyDataErrorInfoImpl()
 							AccessModifier = AccessModifier.Protected
 						},
 						new Method(() => "IEnumerable", "GetErrors",
-							new[]
+							new Func<string>[]
 							{
-								"string propertyName",
+								() => "string propertyName",
 							},
 							() => new[]
 							{

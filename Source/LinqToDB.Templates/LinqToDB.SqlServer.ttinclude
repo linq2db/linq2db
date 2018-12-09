@@ -53,7 +53,7 @@ void DoGenerateSqlServerFreeText()
 				},
 
 				new Method(() => "ITable<FreeTextKey<TKey>>", "FreeTextTable",
-					new[] { "string field", "string text" },
+					new Func<string>[] { () => "string field", () => "string text" },
 					() => new[]
 					{
 						"return this.GetTable<FreeTextKey<TKey>>(",
@@ -80,7 +80,7 @@ void DoGenerateSqlServerFreeText()
 				},
 
 				new Method(() => "ITable<FreeTextKey<TKey>>", "FreeTextTable",
-					new[] { "Expression<Func<TTable,string>> fieldSelector", "string text" },
+					new Func<string>[] { () => "Expression<Func<TTable,string>> fieldSelector", () => "string text" },
 					() => new[]
 					{
 						"return this.GetTable<FreeTextKey<TKey>>(",

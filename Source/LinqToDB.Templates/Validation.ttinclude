@@ -25,7 +25,7 @@ void ValidationImpl()
 			if (!Model.Usings.Contains("System.Collections.Generic"))
 				Model.Usings.Add("System.Collections.Generic");
 
-			var isValid      = new Method(() => "bool", "IsValid", new[] { cl.Name + " obj" }) { IsStatic = true };
+			var isValid      = new Method(() => "bool", "IsValid", new Func<string>[] { () => cl.Name + " obj" }) { IsStatic = true };
 			var validator    = new Class("CustomValidator", isValid) { IsStatic = true, };
 			var partialGroup = new MemberGroup { IsCompact = true };
 
@@ -65,7 +65,7 @@ void ValidationImpl()
 				ret += (i == 0 ? "" : " || ") + "flag" + i;
 
 				var validate = new Method(() => "ValidationResult", mname,
-					new[] { cl.Name + " obj", p.BuildType().Trim() + " value" }) { IsStatic = true };
+					new Func<string>[] { () => cl.Name + " obj", () => p.BuildType().Trim() + " value" }) { IsStatic = true };
 
 				validate.BodyBuilders.Add(() => new [] 
 				{
@@ -96,10 +96,10 @@ void ValidationImpl()
 				partialGroup.Members.Add(new Method(
 					() => "void",
 					mname,
-					new[]
+					new Func<string>[]
 					{
-						p.BuildType().Trim() + " value",
-						"List<ValidationResult> validationResults",
+						() => p.BuildType().Trim() + " value",
+						() => "List<ValidationResult> validationResults",
 					})
 					{
 						AccessModifier = AccessModifier.Partial,

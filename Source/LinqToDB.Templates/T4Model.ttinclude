@@ -1220,11 +1220,11 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 	{
 		tt.Write("(");
 
-		for (int i = 0; i < m.Parameters.Count; i++)
+		for (int i = 0; i < m.ParameterBuilders.Count; i++)
 		{
 			if (i > 0)
 				tt.Write(", ");
-			tt.Write(m.Parameters[i]);
+			tt.Write(m.ParameterBuilders[i]());
 		}
 
 		tt.Write(")");
@@ -1303,22 +1303,22 @@ public partial class Method : MemberBase
 	public bool         IsVirtual;
 	public bool         IsOverride;
 	public bool         IsStatic;
-	public List<string> GenericArguments = new List<string>();
-	public List<string> AfterSignature   = new List<string>();
-	public List<string> Parameters       = new List<string>();
+	public List<string> GenericArguments        = new List<string>();
+	public List<string> AfterSignature          = new List<string>();
+	public List<Func<string>> ParameterBuilders = new List<Func<string>>();
 	public List<Func<IEnumerable<string>>> BodyBuilders = new List<Func<IEnumerable<string>>>();
 
 	public Method()
 	{
 	}
 
-	public Method(Func<string> typeBuilder, string name, IEnumerable<string> parameters = null, params Func<IEnumerable<string>>[] bodyBuilders)
+	public Method(Func<string> typeBuilder, string name, IEnumerable<Func<string>> parameterBuilders = null, params Func<IEnumerable<string>>[] bodyBuilders)
 	{
 		TypeBuilder = typeBuilder;
 		Name = name;
 
-		if (parameters  != null) Parameters.AddRange(parameters);
-		if (bodyBuilders!= null) BodyBuilders.AddRange(bodyBuilders);
+		if (parameterBuilders  != null) ParameterBuilders.AddRange(parameterBuilders);
+		if (bodyBuilders       != null) BodyBuilders.AddRange(bodyBuilders);
 	}
 
 	public IEnumerable<string> BuildBody()
@@ -1351,7 +1351,7 @@ public partial class Method : MemberBase
 
 	public override int CalcParamLen()
 	{
-		return Parameters.Sum(p => p.Length + 2);
+		return ParameterBuilders.Sum(p => p().Length + 2);
 	}
 
 	public override void Render(GeneratedTextTransformation tt, bool isCompact)

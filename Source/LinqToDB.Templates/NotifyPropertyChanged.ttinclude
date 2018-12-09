@@ -185,7 +185,7 @@ void NotifyPropertyChangedImpl()
 				IsCompact = true,
 				Members   =
 				{
-					new Method(() => "void", "Before" + name + "Changed", new[] { type + " newValue" }) { AccessModifier = AccessModifier.Partial },
+					new Method(() => "void", "Before" + name + "Changed", new Func<string>[] { () => type + " newValue" }) { AccessModifier = AccessModifier.Partial },
 					new Method(() => "void", "After"  + name + "Changed") { AccessModifier = AccessModifier.Partial },
 				}
 			});
@@ -219,11 +219,11 @@ void NotifyPropertyChangedImpl()
 							IsVirtual  = true,
 							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
 						},
-						new Method(() => "void", "OnPropertyChanged", new[] { "string propertyName" }, () => OnPropertyChangedBody)
+						new Method(() => "void", "OnPropertyChanged", new Func<string>[] { () => "string propertyName" }, () => OnPropertyChangedBody)
 						{
 							AccessModifier = AccessModifier.Protected
 						},
-						new Method(() => "void", "OnPropertyChanged", new[] { "PropertyChangedEventArgs arg" }, () => OnPropertyChangedArgBody)
+						new Method(() => "void", "OnPropertyChanged", new Func<string>[] { () => "PropertyChangedEventArgs arg" }, () => OnPropertyChangedArgBody)
 						{
 							AccessModifier = AccessModifier.Protected
 						},
@@ -248,11 +248,11 @@ void NotifyPropertyChangedImpl()
 							IsVirtual  = true,
 							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
 						},
-						new Method(() => "void", "OnPropertyChanging", new[] { "string propertyName" }, () => OnPropertyChangingBody)
+						new Method(() => "void", "OnPropertyChanging", new Func<string>[] { () => "string propertyName" }, () => OnPropertyChangingBody)
 						{
 							AccessModifier = AccessModifier.Protected
 						},
-						new Method(() => "void", "OnPropertyChanging", new[] { "PropertyChangingEventArgs arg" }, () => OnPropertyChangingArgBody)
+						new Method(() => "void", "OnPropertyChanging", new Func<string>[] { () => "PropertyChangingEventArgs arg" }, () => OnPropertyChangingArgBody)
 						{
 							AccessModifier = AccessModifier.Protected
 						},
