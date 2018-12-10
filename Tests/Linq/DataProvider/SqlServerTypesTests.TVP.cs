@@ -111,18 +111,17 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Sql.TableExpression("select * from {0}")]
-		private static ITable<TRecord> TableValue<TRecord>(DataParameter p)
+		[Sql.TableExpression("select * from {1}")]
+		private static ITable<TVPRecord> TableValue(DataParameter p)
 		{
 			throw new InvalidOperationException();
 		}
 
-		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => TableValue<object>(null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => TableValue(null));
 
-		public static ITable<TRecord> TableValue<TRecord>(IDataContext ctx, DataParameter p)
-			where TRecord : class
+		public static ITable<TVPRecord> TableValue(IDataContext ctx, DataParameter p)
 		{
-			return ctx.GetTable<TRecord>(null, _methodInfo.MakeGenericMethod(typeof(TRecord)), p);
+			return ctx.GetTable<TVPRecord>(null, _methodInfo, p);
 		}
 
 		[Test]
@@ -163,8 +162,7 @@ namespace Tests.DataProvider
 			using (var external = new DataConnection(context))
 			using (var db = new DataConnection(context))
 			{
-				// extra select is not required and just demonstrates how we can combine fromsql with linq query
-				var result = from record in TableValue<TVPRecord>(db, parameterGetter(external))
+				var result = from record in TableValue(db, parameterGetter(external))
 							 select new TVPRecord() { Id = record.Id, Name = record.Name };
 
 				AreEqual(TestData, result, ComparerBuilder<TVPRecord>.GetEqualityComparer(true));
