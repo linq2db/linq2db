@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		static Action<IDbDataParameter> _setBlob;
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value, string dbType)
 		{
 			if (value is sbyte)
 			{
@@ -236,12 +236,12 @@ namespace LinqToDB.DataProvider.DB2
 					}
 					break;
 				case DataType.Blob       :
-					base.SetParameter(parameter, "@" + name, dataType, value);
+					base.SetParameter(parameter, "@" + name, dataType, value, dbType);
 					_setBlob(parameter);
 					return;
 			}
 
-			base.SetParameter(parameter, "@" + name, dataType, value);
+			base.SetParameter(parameter, "@" + name, dataType, value, dbType);
 		}
 
 		#region BulkCopy

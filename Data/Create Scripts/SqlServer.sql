@@ -331,7 +331,7 @@ BEGIN
 			'Val2' as Value2 
 	END
 	ELSE 
-        SELECT 
+		SELECT 
 			'v' as Value1,
 			2   as Code
 END
@@ -983,5 +983,27 @@ CREATE TABLE Issue1144
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Column description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'COLUMN',@level2name=N'id'
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Index description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'INDEX',@level2name=N'PK_Issue1144'
-
 GO
+
+-- SKIP SqlServer.2005 BEGIN
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'TableTypeTestProc')
+DROP PROC TableTypeTestProc
+GO
+IF EXISTS (SELECT * FROM sys.types WHERE name = 'TestTableType')
+DROP TYPE TestTableType
+GO
+CREATE TYPE TestTableType AS TABLE
+(
+	Id   INT,
+	Name NVARCHAR(10)
+)
+GO
+CREATE PROC TableTypeTestProc (
+	@table TestTableType READONLY
+)
+AS
+BEGIN
+	SELECT * FROM @table AS Result
+END
+GO
+-- SKIP SqlServer.2005 END

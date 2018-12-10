@@ -484,7 +484,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		Func<DateTimeOffset,string,object> _createOracleTimeStampTZ;
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value, string dbType)
 		{
 			switch (dataType)
 			{
@@ -518,7 +518,7 @@ namespace LinqToDB.DataProvider.Oracle
 				dataType = DataType.NText;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(parameter, name, dataType, value, dbType);
 		}
 
 		public override Type ConvertParameterType(Type type, DataType dataType)

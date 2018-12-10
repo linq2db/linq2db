@@ -272,7 +272,7 @@ namespace LinqToDB.DataProvider
 
 		#region SetParameter
 
-		public virtual void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public virtual void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value, string dbType)
 		{
 			switch (dataType)
 			{

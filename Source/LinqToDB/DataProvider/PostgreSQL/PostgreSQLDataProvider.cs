@@ -408,14 +408,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static Action<IDbDataParameter> _setJsonb;
 		static Action<IDbDataParameter> _setJson;
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value, string dbType)
 		{
 			if (value is IDictionary && dataType == DataType.Undefined)
 			{
 				dataType = DataType.Dictionary;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(parameter, name, dataType, value, dbType);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)

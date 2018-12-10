@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider
 		object             GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?              IsDBNullAllowed       (IDataReader reader, int idx);
-		void               SetParameter          (IDbDataParameter parameter, string name, DataType dataType, object value);
+		void               SetParameter          (IDbDataParameter parameter, string name, DataType dataType, object value, string dbType);
 		Type               ConvertParameterType  (Type type, DataType dataType);
 		bool               IsCompatibleConnection(IDbConnection connection);
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);

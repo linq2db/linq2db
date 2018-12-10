@@ -19,6 +19,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Microsoft.SqlServer.Server;
 
 	public class SqlServerDataProvider : DataProviderBase
 	{
@@ -202,7 +203,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return null;
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value, string dbType)
 		{
 			switch (dataType)
 			{
@@ -243,15 +244,32 @@ namespace LinqToDB.DataProvider.SqlServer
 									: "hh\\:mm\\:ss");
 					}
 					break;
+
+				case DataType.Undefined:
+					if (value is DataTable
+						|| value is DbDataReader
+						|| value is IEnumerable<SqlDataRecord>
+						|| value is IEnumerable<DbDataRecord>)
+					{
+						dataType = DataType.Structured;
+					}
+
+					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(parameter, name, dataType, value, dbType);
 
 			if (parameter is SqlParameter param)
 			{
 				// Setting for NVarChar and VarChar constant size. It reduces count of cached plans.
 				switch (param.SqlDbType)
 				{
+					case SqlDbType.Structured:
+						{
+							if (dbType != null)
+								param.TypeName = dbType;
+							break;
+						}
 					case SqlDbType.VarChar:
 						{
 							if (value is string strValue && strValue.Length > 8000)
@@ -305,6 +323,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.SmallDateTime : ((SqlParameter)parameter).SqlDbType = SqlDbType.SmallDateTime; break;
 				case DataType.Timestamp     : ((SqlParameter)parameter).SqlDbType = SqlDbType.Timestamp;     break;
 				case DataType.Xml           : ((SqlParameter)parameter).SqlDbType = SqlDbType.Xml;           break;
+				case DataType.Structured    : ((SqlParameter)parameter).SqlDbType = SqlDbType.Structured;    break;
 				default                     : base.SetParameterType(parameter, dataType);                    break;
 			}
 		}

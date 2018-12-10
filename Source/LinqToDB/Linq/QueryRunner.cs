@@ -120,10 +120,14 @@ namespace LinqToDB.Linq
 				// combining with dynamically created parameters
 
 				parameters = parameters.Concat(
-					runtime.Select(p => new ParameterAccessor(Expression.Constant(p.Value), (e, o) => p.Value,
+					runtime.Select(p => new ParameterAccessor(
+						Expression.Constant(p.Value),
+						(e, o) => p.Value,
 						(e, o) => p.DataType != DataType.Undefined || p.Value == null
 							? p.DataType
-							: query.MappingSchema.GetDataType(p.Value.GetType()).DataType, p))
+							: query.MappingSchema.GetDataType(p.Value.GetType()).DataType,
+						(e, o) => p.DbType,
+						p))
 				);
 
 				sql.Parameters = parameters.ToList();
@@ -207,6 +211,11 @@ namespace LinqToDB.Linq
 
 				if (dataType != DataType.Undefined)
 					p.SqlParameter.DataType = dataType;
+
+				var dbType = p.DbTypeAccessor(expression, parameters);
+
+				if (dbType != null)
+					p.SqlParameter.DbType = dbType;
 			}
 		}
 
@@ -223,6 +232,7 @@ namespace LinqToDB.Linq
 			getter = field.ColumnDescriptor.MemberAccessor.GetterExpression.GetBody(getter);
 
 			Expression dataTypeExpression = Expression.Constant(DataType.Undefined);
+			Expression typeNameExpression = Expression.Constant(null, typeof(string));
 
 			var expr = dataContext.MappingSchema.GetConvertExpression(field.SystemType, typeof(DataParameter), createDefault: false);
 
@@ -232,10 +242,11 @@ namespace LinqToDB.Linq
 
 				getter             = Expression.PropertyOrField(body, "Value");
 				dataTypeExpression = Expression.PropertyOrField(body, "DataType");
+				typeNameExpression = Expression.PropertyOrField(body, "DbType");
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, getter, dataTypeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
+				dataContext, getter, dataTypeExpression, typeNameExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
 
 			return param;
 		}

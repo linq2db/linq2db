@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		Func<TimeSpan,object> _newIfxTimeSpan;
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value, string dbType)
 		{
 			if (value is TimeSpan)
 			{
@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider.Informix
 				dataType = DataType.Char;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(parameter, name, dataType, value, dbType);
 		}
 
 		static Action<IDbDataParameter> _setText;

@@ -247,7 +247,7 @@ namespace LinqToDB.Data
 							parm.SystemType).DataType;
 				}
 
-				dataConnection.DataProvider.SetParameter(p, name, dataType, parmValue);
+				dataConnection.DataProvider.SetParameter(p, name, dataType, parmValue, parm.DbType);
 
 				parms.Add(p);
 			}

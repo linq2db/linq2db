@@ -204,7 +204,7 @@ namespace Tests.xUpdate
 
 				Task<int> IDataProvider.MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token) => throw new NotImplementedException();
 
-				void IDataProvider.SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value) => throw new NotImplementedException();
+				void IDataProvider.SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value, string dbType) => throw new NotImplementedException();
 			}
 
 			private bool _bySourceOperationsSupported = false;

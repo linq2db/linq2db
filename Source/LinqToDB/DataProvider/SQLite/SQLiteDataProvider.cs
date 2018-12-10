@@ -105,14 +105,14 @@ namespace LinqToDB.DataProvider.SQLite
 			return base.IsDBNullAllowed(reader, idx);
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value, string dbType)
 		{
 			if (Name == ProviderName.SQLiteMS && value is char)
 			{
 				value = value.ToString();
 			}
 
-			base.SetParameter(parameter, "@" + name, dataType, value);
+			base.SetParameter(parameter, "@" + name, dataType, value, dbType);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)

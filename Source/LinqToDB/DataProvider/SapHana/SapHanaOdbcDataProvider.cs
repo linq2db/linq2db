@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value, string dbType)
 		{
 			switch (dataType)
 			{
@@ -115,7 +115,7 @@ namespace LinqToDB.DataProvider.SapHana
 					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(parameter, name, dataType, value, dbType);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)

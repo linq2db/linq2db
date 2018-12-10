@@ -15,7 +15,7 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	[TestFixture]
-	public class SqlServerTypesTests : DataProviderTestBase
+	public partial class SqlServerTypesTests : DataProviderTestBase
 	{
 		[SetUp]
 		public void SetUp()

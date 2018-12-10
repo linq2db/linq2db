@@ -86,7 +86,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return true;
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value, string dbType)
 		{
 			if (value is bool)
 			{
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.Firebird
 				dataType = DataType.Char;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(parameter, name, dataType, value, dbType);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
