@@ -5,6 +5,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -251,6 +252,35 @@ namespace Tests.Linq
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
+			}
+		}
+
+		[Test]
+		public void TestTableValueFunction(
+			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2012)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from t in db.Child
+					from p in db.FromSql<Parent>($"GetParentByID({t.ParentID})")
+					select new
+					{
+						t,
+						p
+					};
+
+				var expected =
+					from t in db.Child
+					from p in db.Parent.Where(p => p.ParentID == t.ParentID)
+					select new
+					{
+						t,
+						p
+					};
+
+				AreEqual(expected, query);
 			}
 		}
 

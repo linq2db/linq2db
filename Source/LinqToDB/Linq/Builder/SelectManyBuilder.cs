@@ -157,7 +157,8 @@ namespace LinqToDB.Linq.Builder
 					var isApplyJoin =
 						//Common.Configuration.Linq.PrefereApply    ||
 						collection.SelectQuery.Select.HasModifier ||
-					                  table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0;
+						table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0 ||
+						table.SqlTable is SqlRawSqlTable rawTable && rawTable.Parameters.Length > 0;
 
 					joinType = isApplyJoin
 						? (leftJoin ? JoinType.OuterApply : JoinType.CrossApply)
