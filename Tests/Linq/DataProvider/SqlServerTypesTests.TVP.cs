@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Tests.Tools;
 
 namespace Tests.DataProvider
@@ -69,7 +68,7 @@ namespace Tests.DataProvider
 				// as IEnumerable<SqlDataRecord>
 				yield return _ => GetSqlDataRecords();
 
-				// TODO: doesn't work now as it converted to Lst<object> of DbDataRecordInternal somewhere in linq2db
+				// TODO: doesn't work now as DbDataReader converted to Lst<object> of DbDataRecordInternal somewhere in linq2db
 				// before we can pass it to provider
 				// as DbDataReader
 				//var sql = new StringBuilder();
@@ -113,16 +112,17 @@ namespace Tests.DataProvider
 		}
 
 		[Sql.TableExpression("select * from {0}")]
-		private static ITable<TVPRecord> TableValue(object p)
+		private static ITable<TRecord> TableValue<TRecord>(DataParameter p)
 		{
 			throw new InvalidOperationException();
 		}
 
-		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => TableValue(null));
+		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => TableValue<object>(null)).GetGenericMethodDefinition();
 
-		public static ITable<TVPRecord> TableValue(IDataContext ctx, object p)
+		public static ITable<TRecord> TableValue<TRecord>(IDataContext ctx, DataParameter p)
+			where TRecord : class
 		{
-			return ctx.GetTable<TVPRecord>(null, _methodInfo, p);
+			return ctx.GetTable<TRecord>(null, _methodInfo.MakeGenericMethod(typeof(TRecord)), p);
 		}
 
 		[Test]
@@ -164,7 +164,7 @@ namespace Tests.DataProvider
 			using (var db = new DataConnection(context))
 			{
 				// extra select is not required and just demonstrates how we can combine fromsql with linq query
-				var result = from record in TableValue(db, parameterGetter(external))
+				var result = from record in TableValue<TVPRecord>(db, parameterGetter(external))
 							 select new TVPRecord() { Id = record.Id, Name = record.Name };
 
 				AreEqual(TestData, result, ComparerBuilder<TVPRecord>.GetEqualityComparer(true));
