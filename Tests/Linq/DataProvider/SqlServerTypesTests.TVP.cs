@@ -111,7 +111,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Sql.TableExpression("select * from {1}")]
+		[Sql.TableExpression("select * from {0}")]
 		private static ITable<TVPRecord> TableValue(DataParameter p)
 		{
 			throw new InvalidOperationException();
