@@ -231,6 +231,9 @@ namespace LinqToDB.Mapping
 				var ex = TypeAccessor[attr.MemberName];
 				var cd = new ColumnDescriptor(mappingSchema, attr, ex);
 
+				if (_columnNames.Remove(attr.MemberName))
+					Columns.RemoveAll(c => c.MemberName == attr.MemberName);
+
 				Columns.Add(cd);
 				_columnNames.Add(attr.MemberName, cd);
 			}
@@ -240,6 +243,9 @@ namespace LinqToDB.Mapping
 
 				if (!string.IsNullOrWhiteSpace(attr.MemberName))
 				{
+					if (_columnNames.Remove(attr.MemberName))
+						Columns.RemoveAll(c => c.MemberName == attr.MemberName);
+
 					Columns.Add(cd);
 					_columnNames.Add(attr.MemberName, cd);
 				}
