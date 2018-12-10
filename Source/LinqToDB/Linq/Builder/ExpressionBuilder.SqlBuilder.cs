@@ -1357,6 +1357,13 @@ namespace LinqToDB.Linq.Builder
 				DbTypeExpression   = Expression.Constant(null, typeof(string))
 			};
 
+			var unwrapped = expression.Unwrap();
+			if (unwrapped.NodeType == ExpressionType.MemberAccess)
+			{
+				var ma = (MemberExpression)unwrapped;
+				setName(ma.Member.Name);
+			}
+
 			result.ValueExpression = expression.Transform(expr =>
 			{
 				if (expr.NodeType == ExpressionType.Constant)
@@ -2136,12 +2143,24 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
-
-				if (defaultType != null)
+				if (type == typeof(DataParameter))
 				{
-					var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
-					accessorExpression = enumMapExpr.GetBody(accessorExpression);
+					var dp = expression.EvaluateExpression() as DataParameter;
+					if (dp?.Name?.IsNullOrEmpty() == false)
+						name = dp.Name;
+
+					dataTypeAccessorExpression = Expression.PropertyOrField(accessorExpression, "DataType");
+					accessorExpression         = Expression.PropertyOrField(accessorExpression, "Value");
+				}
+				else
+				{
+					var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
+
+					if (defaultType != null)
+					{
+						var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
+						accessorExpression = enumMapExpr.GetBody(accessorExpression);
+					}
 				}
 			}
 

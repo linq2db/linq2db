@@ -1050,7 +1050,7 @@ namespace LinqToDB.Linq.Builder
 				if (alias == null)
 					return;
 
-				if (alias.Contains('<'))
+				if (!alias.Contains('<'))
 					if (SqlTable.Alias == null)
 						SqlTable.Alias = alias;
 			}
@@ -1107,9 +1107,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (EntityDescriptor.Aliases != null)
 					{
-						if (EntityDescriptor.Aliases.ContainsKey(memberExpression.Member.Name))
+						if (EntityDescriptor.Aliases.TryGetValue(memberExpression.Member.Name, out var aliasName))
 						{
-							var alias = EntityDescriptor[memberExpression.Member.Name];
+							var alias = EntityDescriptor[aliasName];
 
 							if (alias == null)
 							{
@@ -1332,7 +1332,8 @@ namespace LinqToDB.Linq.Builder
 								aa.ExpressionPredicate,
 								aa.Predicate,
 								aa.Storage,
-								aa.CanBeNull))
+								aa.CanBeNull,
+								aa.AliasName))
 							{ Parent = Parent };
 
 					isNew = true;

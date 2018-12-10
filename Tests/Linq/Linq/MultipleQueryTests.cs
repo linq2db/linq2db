@@ -46,8 +46,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
-					from p in    Parent select p.Children.Select(c => c.ChildID),
-					from p in db.Parent select p.Children.Select(c => c.ChildID));
+					from p in    Parent.OrderBy(p => p.ParentID) select p.Children.Select(c => c.ChildID),
+					from p in db.Parent.OrderBy(p => p.ParentID) select p.Children.Select(c => c.ChildID));
 			}
 		}
 

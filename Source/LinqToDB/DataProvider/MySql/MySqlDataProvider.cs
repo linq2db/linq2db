@@ -98,6 +98,8 @@ namespace LinqToDB.DataProvider.MySql
 						value = _mySqlDateTimeValueGetter(value);
 					break;
 				case DataType.Char       :
+				case DataType.VarChar    :
+				case DataType.NVarChar   :
 				case DataType.NChar      :
 					if (value is char)
 						value = value.ToString();

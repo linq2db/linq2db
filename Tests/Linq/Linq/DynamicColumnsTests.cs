@@ -505,10 +505,10 @@ namespace Tests.Linq
 					if (!string.Equals(x.Description, y.Description))
 						return false;
 
-					if (x.ExtendedProperties == null && x.ExtendedProperties == null)
+					if (x.ExtendedProperties == null && y.ExtendedProperties == null)
 						return true;
 
-					if (x.ExtendedProperties == null || x.ExtendedProperties == null)
+					if (x.ExtendedProperties == null || y.ExtendedProperties == null)
 						return false;
 
 					bool CompareValues(IDictionary<string, object> values1, IDictionary<string, object> values2)
