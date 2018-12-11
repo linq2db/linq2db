@@ -2,5 +2,31 @@
 	<PropertyGroup>
 		<LinqToDBT4ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ToolsDirectory>
 		<LinqToDBT4TemplatesDirectory>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4TemplatesDirectory>
+
+		<LinqToDBT4AccessTemplatesDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4AccessTemplatesDirectory>
+		<LinqToDBT4AccessToolsDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4AccessToolsDirectory>
+		<LinqToDBT4DB2TemplatesDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4DB2TemplatesDirectory>
+		<LinqToDBT4DB2ToolsDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4DB2ToolsDirectory>
+		<LinqToDBT4FirebirdTemplatesDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4FirebirdTemplatesDirectory>
+		<LinqToDBT4FirebirdToolsDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4FirebirdToolsDirectory>
+		<LinqToDBT4InformixTemplatesDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4InformixTemplatesDirectory>
+		<LinqToDBT4InformixToolsDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4InformixToolsDirectory>
+		<LinqToDBT4MySqlTemplatesDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4MySqlTemplatesDirectory>
+		<LinqToDBT4MySqlToolsDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4MySqlToolsDirectory>
+		<LinqToDBT4OracleTemplatesDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4OracleTemplatesDirectory>
+		<LinqToDBT4OracleToolsDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4OracleToolsDirectory>
+		<LinqToDBT4PostgreSQLTemplatesDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4PostgreSQLTemplatesDirectory>
+		<LinqToDBT4PostgreSQLToolsDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4PostgreSQLToolsDirectory>
+		<LinqToDBT4SapHanaTemplatesDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4SapHanaTemplatesDirectory>
+		<LinqToDBT4SapHanaToolsDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4SapHanaToolsDirectory>
+		<LinqToDBT4SqlCeTemplatesDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4SqlCeTemplatesDirectory>
+		<LinqToDBT4SqlCeToolsDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4SqlCeToolsDirectory>
+		<LinqToDBT4SQLiteTemplatesDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4SQLiteTemplatesDirectory>
+		<LinqToDBT4SQLiteToolsDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4SQLiteToolsDirectory>
+		<LinqToDBT4SqlServerTemplatesDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4SqlServerTemplatesDirectory>
+		<LinqToDBT4SqlServerToolsDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4SqlServerToolsDirectory>
+		<LinqToDBT4SybaseTemplatesDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4SybaseTemplatesDirectory>
+		<LinqToDBT4SybaseToolsDirectory>$(LinqToDBT4ToolsDirectory)</LinqToDBT4SybaseToolsDirectory>
+
 	</PropertyGroup>
 </Project>
