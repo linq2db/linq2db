@@ -170,7 +170,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 				select new ColumnSchema
 				{
-					ColumnType           = GetDbType(columnType, dataType, length, precision, scale),
+					ColumnType           = GetDbType(columnType, dataType, length, precision, scale, null, null, null),
 					ColumnName           = columnName,
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),

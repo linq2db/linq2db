@@ -268,6 +268,11 @@ namespace LinqToDB.DataProvider.SqlServer
 						{
 							if (dbType != null)
 								param.TypeName = dbType;
+
+							// TVP doesn't support DBNull
+							if (param.Value is DBNull)
+								param.Value = null;
+
 							break;
 						}
 					case SqlDbType.VarChar:

@@ -1,6 +1,8 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
 	{
+		GenerateProcedureDbType = p => p.DataType == "Structured" && p.SchemaType != null;
+
 		var afterGenerateLinqToDBModel = AfterGenerateLinqToDBModel;
 		AfterGenerateLinqToDBModel = () =>
 		{

@@ -321,7 +321,7 @@ namespace LinqToDB.DataProvider.MySql
 				select new ColumnSchema
 				{
 					ColumnName           = columnName,
-					ColumnType           = GetDbType(columnType, dataType, length, precision, scale),
+					ColumnType           = GetDbType(columnType, dataType, length, precision, scale, null, null, null),
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),

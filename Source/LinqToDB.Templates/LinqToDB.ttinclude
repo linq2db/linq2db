@@ -12,6 +12,7 @@ Action BeforeGenerateLinqToDBModel = () => {};
 Action AfterGenerateLinqToDBModel  = () => {};
 
 Func<Table,MemberBase> GenerateProviderSpecificTable = t => null;
+Func<Parameter, bool>  GenerateProcedureDbType       = p => false;
 
 bool   GenerateObsoleteAttributeForAliases = false;
 bool   GenerateFindExtensions    = true;
@@ -815,12 +816,13 @@ void GenerateTypesFromMetadata()
 					var str = string.Format(
 						!pr.IsIn && pr.IsOut
 							? "\tnew DataParameter(\"{0}\", null, {3}{4})"
-							: "\tnew DataParameter(\"{0}\", {1}{2}, {3}{4})",
+							: "\tnew DataParameter(\"{0}\", {1}{2}, {3}{4})" + (GenerateProcedureDbType(pr) ? "{{ DbType = \"{5}\" }}" : null),
 						pr.SchemaName,
 						LenDiff(maxLenSchema, pr.SchemaName),
 						pr.ParameterName,
 						LenDiff(maxLenParam, pr.ParameterName),
-						"DataType." + pr.DataType);
+						"DataType." + pr.DataType,
+						pr.SchemaType);
 
 					if (pr.IsOut)
 					{

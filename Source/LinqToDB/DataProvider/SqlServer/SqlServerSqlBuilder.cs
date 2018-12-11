@@ -207,9 +207,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 						if (name.Length > 0 && name[0] == '[')
 							return value;
-					}
 
-					return "[" + value + "]";
+						return SqlServerTools.QuoteIdentifier(name);
+					}
 
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.SqlServer
 //						if (name.IndexOf('.') > 0)
 //							value = string.Join("].[", name.Split('.'));
 
-						return "[" + value + "]";
+						return SqlServerTools.QuoteIdentifier(name);
 					}
 
 					break;

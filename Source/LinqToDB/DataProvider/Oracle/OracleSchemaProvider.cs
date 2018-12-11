@@ -276,7 +276,7 @@ namespace LinqToDB.DataProvider.Oracle
 			).ToList();
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale)
+		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
 		{
 			switch (columnType)
 			{
@@ -285,7 +285,7 @@ namespace LinqToDB.DataProvider.Oracle
 					break;
 			}
 
-			return base.GetDbType(columnType, dataType, length, prec, scale);
+			return base.GetDbType(columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
 
 		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
