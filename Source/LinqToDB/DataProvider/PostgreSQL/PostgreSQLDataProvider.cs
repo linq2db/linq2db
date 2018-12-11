@@ -449,7 +449,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.BinaryJson : if (_setJsonb     != null) _setJsonb(parameter);     else base.SetParameterType(parameter, dataType); break;
 				default :     
 				{
-					if (!string.IsNullOrEmpty(dataType.DbType))
+					if (_setNativeParameterType != null && !string.IsNullOrEmpty(dataType.DbType))
 					{
 						var nativeType = GetNativeType(dataType.DbType);
 						if (nativeType != null)
