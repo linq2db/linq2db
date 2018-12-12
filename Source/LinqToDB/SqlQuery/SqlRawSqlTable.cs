@@ -6,7 +6,7 @@ using LinqToDB.Mapping;
 namespace LinqToDB.SqlQuery
 {
 	//TODO: Investigate how to implement only ISqlTableSource interface 
-	public class SqlRawSqlTable : SqlTable
+	public class SqlRawSqlTable : SqlTable, IQueryElement
 	{
 		[JetBrains.Annotations.NotNull]
 		public string SQL { get; }
@@ -54,13 +54,18 @@ namespace LinqToDB.SqlQuery
 
 		public override QueryElementType ElementType  => QueryElementType.SqlRawSqlTable;
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			return sb
 				.AppendLine("(")
 				.Append(SQL)
 				.Append(")")
 				.AppendLine();
+		}
+
+		public override string ToString()
+		{
+			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
 		}
 
 		#region IQueryElement Members
