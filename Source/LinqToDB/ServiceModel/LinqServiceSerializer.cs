@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -522,19 +523,35 @@ namespace LinqToDB.ServiceModel
 					if (str == "System.Data.Linq.Binary")
 						return typeof(System.Data.Linq.Binary);
 
-					type = LinqService.TypeResolver(str);
+					try
+					{
+						foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+						{
+							type = assembly.GetType(str);
+							if (type != null)
+								break;
+						}
+					}
+					catch 
+					{
+						// ignore errors
+					}
 
 					if (type == null)
 					{
-						if (Configuration.LinqService.ThrowUnresolvedTypeException)
-							throw new LinqToDBException(
-								$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
+						type = LinqService.TypeResolver(str);
+						if (type == null)
+						{
+							if (Configuration.LinqService.ThrowUnresolvedTypeException)
+								throw new LinqToDBException(
+									$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
 
-						UnresolvedTypes.Add(str);
+							UnresolvedTypes.Add(str);
 
-						Debug.WriteLine(
-							$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.",
-							"LinqServiceSerializer");
+							Debug.WriteLine(
+								$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.",
+								"LinqServiceSerializer");
+						}
 					}
 				}
 
@@ -690,6 +707,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
 							Append((int)elem.DataType);
+							Append(elem.DbType);
 							Append(elem.DbSize);
 							Append(elem.LikeStart);
 							Append(elem.LikeEnd);
@@ -742,6 +760,10 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlValue :
 						{
 							var elem = (SqlValue)e;
+
+							Append((int)elem.ValueType.DataType);
+							Append(elem.ValueType.DbType);
+
 							Append(elem.SystemType, elem.Value);
 							break;
 						}
@@ -751,6 +773,7 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlDataType)e;
 
 							Append((int)elem.DataType);
+							Append(elem.DbType);
 							Append(elem.Type);
 							Append(elem.Length);
 							Append(elem.Precision);
@@ -1354,7 +1377,8 @@ namespace LinqToDB.ServiceModel
 						{
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
-							var dbType           = (DataType)ReadInt();
+							var dataType         = (DataType)ReadInt();
+							var dbType           = ReadString();
 							var dbSize           = ReadInt();
 							var likeStart        = ReadString();
 							var likeEnd          = ReadString();
@@ -1366,7 +1390,8 @@ namespace LinqToDB.ServiceModel
 							obj = new SqlParameter(systemType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
-								DataType         = dbType,
+								DataType         = dataType,
+								DbType           = dbType,
 								DbSize           = dbSize,
 								LikeStart        = likeStart,
 								LikeEnd          = likeEnd,
@@ -1403,23 +1428,27 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlValue :
 						{
+							var dataType   = (DataType)ReadInt();
+							var dbType     = ReadString();
+
 							var systemType = Read<Type>();
 							var value      = ReadValue(systemType);
 
-							obj = new SqlValue(systemType, value);
+							obj = new SqlValue(new DbDataType(systemType, dataType, dbType), value);
 
 							break;
 						}
 
 					case QueryElementType.SqlDataType :
 						{
-							var dbType     = (DataType)ReadInt();
+							var dataType   = (DataType)ReadInt();
+							var dbType     = ReadString();
 							var systemType = Read<Type>();
 							var length     = ReadNullableInt();
 							var precision  = ReadNullableInt();
 							var scale      = ReadNullableInt();
 
-							obj = new SqlDataType(dbType, systemType, length, precision, scale);
+							obj = new SqlDataType(dataType, systemType, length, precision, scale, dbType);
 
 							break;
 						}

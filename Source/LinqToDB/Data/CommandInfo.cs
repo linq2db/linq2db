@@ -831,9 +831,10 @@ namespace LinqToDB.Data
 
 			foreach (var parameter in parameters)
 			{
-				var p        = dataConnection.Command.CreateParameter();
-				var dataType = parameter.DataType;
-				var value    = parameter.Value;
+				var p         = dataConnection.Command.CreateParameter();
+				var dataType  = parameter.DataType;
+				var dbType    = parameter.DbType;
+				var value     = parameter.Value;
 
 				if (dataType == DataType.Undefined && value != null)
 					dataType = dataConnection.MappingSchema.GetDataType(value.GetType()).DataType;
@@ -841,7 +842,7 @@ namespace LinqToDB.Data
 				if (parameter.Direction != null) p.Direction = parameter.Direction.Value;
 				if (parameter.Size      != null) p.Size      = parameter.Size.     Value;
 
-				dataConnection.DataProvider.SetParameter(p, parameter.Name, dataType, value);
+				dataConnection.DataProvider.SetParameter(p, parameter.Name, new DbDataType(value != null ? value.GetType() : typeof(object), dataType, dbType), value);
 				dataConnection.Command.Parameters.Add(p);
 			}
 		}
@@ -908,6 +909,7 @@ namespace LinqToDB.Data
 
 		static readonly PropertyInfo _dataParameterName     = MemberHelper.PropertyOf<DataParameter>(p => p.Name);
 		static readonly PropertyInfo _dataParameterDataType = MemberHelper.PropertyOf<DataParameter>(p => p.DataType);
+		static readonly PropertyInfo _dataParameterDbType   = MemberHelper.PropertyOf<DataParameter>(p => p.DbType);
 		static readonly PropertyInfo _dataParameterValue    = MemberHelper.PropertyOf<DataParameter>(p => p.Value);
 
 		static DataParameter[] GetDataParameters(DataConnection dataConnection, object parameters)
@@ -938,9 +940,9 @@ namespace LinqToDB.Data
 							Expression.Assign(obj, Expression.Convert(p, type)),
 							Expression.NewArrayInit(
 								typeof(DataParameter),
-								td.Columns.Select(m =>
+								td.Columns.Select(column =>
 								{
-									if (m.MemberType == typeof(DataParameter))
+									if (column.MemberType == typeof(DataParameter))
 									{
 										var pobj = Expression.Parameter(typeof(DataParameter));
 
@@ -948,17 +950,20 @@ namespace LinqToDB.Data
 											new[] { pobj },
 											new Expression[]
 											{
-												Expression.Assign(pobj, Expression.PropertyOrField(obj, m.MemberName)),
+												Expression.Assign(pobj, Expression.PropertyOrField(obj, column.MemberName)),
 												Expression.MemberInit(
 													Expression.New(typeof(DataParameter)),
 													Expression.Bind(
 														_dataParameterName,
 														Expression.Coalesce(
 															Expression.MakeMemberAccess(pobj, _dataParameterName),
-															Expression.Constant(m.ColumnName))),
+															Expression.Constant(column.ColumnName))),
 													Expression.Bind(
 														_dataParameterDataType,
 														Expression.MakeMemberAccess(pobj, _dataParameterDataType)),
+													Expression.Bind(
+														_dataParameterDbType,
+														Expression.MakeMemberAccess(pobj, _dataParameterDbType)),
 													Expression.Bind(
 														_dataParameterValue,
 														Expression.Convert(
@@ -967,8 +972,8 @@ namespace LinqToDB.Data
 											});
 									}
 
-									var memberType  = m.MemberType.ToNullableUnderlying();
-									var valueGetter = Expression.PropertyOrField(obj, m.MemberName) as Expression;
+									var memberType  = column.MemberType.ToNullableUnderlying();
+									var valueGetter = Expression.PropertyOrField(obj, column.MemberName) as Expression;
 									var mapper      = dataConnection.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
 
 									if (mapper != null)
@@ -976,13 +981,13 @@ namespace LinqToDB.Data
 										return Expression.Call(
 											MemberHelper.MethodOf(() => PrepareDataParameter(null, null)),
 											mapper.GetBody(valueGetter),
-											Expression.Constant(m.ColumnName));
+											Expression.Constant(column.ColumnName));
 									}
 
 									if (memberType.IsEnumEx())
 									{
 										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType);
-										var convExpr = dataConnection.MappingSchema.GetConvertExpression(m.MemberType, mapType);
+										var convExpr = dataConnection.MappingSchema.GetConvertExpression(column.MemberType, mapType);
 
 										memberType  = mapType;
 										valueGetter = convExpr.GetBody(valueGetter);
@@ -992,10 +997,13 @@ namespace LinqToDB.Data
 										Expression.New(typeof(DataParameter)),
 										Expression.Bind(
 											_dataParameterName,
-											Expression.Constant(m.ColumnName)),
+											Expression.Constant(column.ColumnName)),
 										Expression.Bind(
 											_dataParameterDataType,
-											Expression.Constant(dataConnection.MappingSchema.GetDataType(memberType).DataType)),
+											Expression.Constant(column.DataType != DataType.Undefined ? column.DataType : dataConnection.MappingSchema.GetDataType(memberType).DataType)),
+										Expression.Bind(
+											_dataParameterDbType,
+											Expression.Constant(column.DbType, typeof(string))),
 										Expression.Bind(
 											_dataParameterValue,
 											Expression.Convert(valueGetter, typeof(object))));

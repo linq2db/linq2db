@@ -103,7 +103,9 @@ namespace LinqToDB.Linq
 					runtime.Select(p => new ParameterAccessor(Expression.Constant(p.Value), (e, o) => p.Value,
 						(e, o) => p.DataType != DataType.Undefined || p.Value == null
 							? p.DataType
-							: query.MappingSchema.GetDataType(p.Value.GetType()).DataType, p))
+							: query.MappingSchema.GetDataType(p.Value.GetType()).DataType,
+						(e, o) => p.DbType
+						, p))
 				);
 
 				sql.Parameters = parameters.ToList();
@@ -187,6 +189,12 @@ namespace LinqToDB.Linq
 
 				if (dataType != DataType.Undefined)
 					p.SqlParameter.DataType = dataType;
+
+				var dbType = p.DbTypeAccessor(expression, parameters);
+
+				if (!string.IsNullOrEmpty(dbType))
+					p.SqlParameter.DbType = dbType;
+
 			}
 		}
 
@@ -203,19 +211,21 @@ namespace LinqToDB.Linq
 			getter = field.ColumnDescriptor.MemberAccessor.GetterExpression.GetBody(getter);
 
 			Expression dataTypeExpression = Expression.Constant(DataType.Undefined);
+			Expression dbTypeExpression   = Expression.Constant(null, typeof(string));
 
-			var expr = dataContext.MappingSchema.GetConvertExpression(field.SystemType, typeof(DataParameter), createDefault: false);
+			var convertExpression = dataContext.MappingSchema.GetConvertExpression(new DbDataType(field.SystemType, field.DataType, field.DbType), 
+				new DbDataType(typeof(DataParameter), field.DataType, field.DbType), createDefault: false);
 
-			if (expr != null)
+			if (convertExpression != null)
 			{
-				var body = expr.GetBody(getter);
-
+				var body           = convertExpression.GetBody(getter);
 				getter             = Expression.PropertyOrField(body, "Value");
 				dataTypeExpression = Expression.PropertyOrField(body, "DataType");
+				dbTypeExpression   = Expression.PropertyOrField(body, "DbType");
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, getter, dataTypeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
+				dataContext, getter, dataTypeExpression, dbTypeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'), expr: convertExpression);
 
 			return param;
 		}
