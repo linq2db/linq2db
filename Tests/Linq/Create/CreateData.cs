@@ -279,7 +279,9 @@ namespace Tests._Create
 		[Test, IncludeDataContextSource(ProviderName.Access)]        public void Access           (string ctx) { RunScript(ctx,          "\nGO\n",  "Access",   AccessAction);                  }
 		[Test, IncludeDataContextSource(ProviderName.Access)]        public void AccessData       (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access",   AccessAction);                  }
 		[Test, IncludeDataContextSource(ProviderName.SapHana)]       public void SapHana          (string ctx) { RunScript(ctx,          ";;\n"  ,  "SapHana");                                 }
-		[Test, IncludeDataContextSource(ProviderName.OracleNative)]  public void OracleNative     (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle"); }
+		// underscore allows this test to run first and avoid strange issue, when oracle native provider
+		// fails to load if there is another native provider loaded
+		[Test, IncludeDataContextSource(ProviderName.OracleNative)]  public void _OracleNative    (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle"); }
 
 		static void AccessAction(IDbConnection connection)
 		{

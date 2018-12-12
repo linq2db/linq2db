@@ -61,13 +61,13 @@ static class Pluralization
 		if (string.IsNullOrWhiteSpace(str))
 			return string.Empty;
 
-		var i       = str.Length - 1;
+		var i = str.Length - 1;
 		var isLower = char.IsLower(str[i]);
 
-		while (i > 0 && char.IsLower(str[i-1]) == isLower)
+		while (i > 0 && char.IsLetter(str[i - 1]) && char.IsLower(str[i - 1]) == isLower)
 			i--;
 
-		return str.Substring(isLower && i > 0 ? i - 1 : i);
+		return str.Substring(isLower && i > 0 && char.IsLetter(str[i - 1]) ? i - 1 : i);
 	}
 
 	public static string ToPlural(string str)
@@ -85,7 +85,7 @@ static class Pluralization
 		if (string.Compare(word, newWord, true) != 0)
 		{
 			if (char.IsUpper(word[0]))
-				newWord = char.ToUpper(newWord[0]) + newWord.Substring(1, newWord.Length - 1);
+				newWord = char.ToUpper(newWord[0]) + newWord.Substring(1, newWord.Length - 1).ToLower();
 
 			return word == str ? newWord : str.Substring(0, str.Length - word.Length) + newWord;
 		}
