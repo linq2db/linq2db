@@ -146,8 +146,7 @@ namespace Tests.DataProvider
 			using (var external = new DataConnection(context))
 			using (var db = new DataConnection(context))
 			{
-				// extra select is not required and just demonstrates how we can combine fromsql with linq query
-				var result = from record in db.FromSql<TVPRecord>($"select * from  {parameterGetter(external)}")
+				var result = from record in db.FromSql<TVPRecord>($"{parameterGetter(external)}")
 							 select new TVPRecord() { Id = record.Id, Name = record.Name };
 
 				AreEqual(TestData, result, ComparerBuilder<TVPRecord>.GetEqualityComparer(true));
