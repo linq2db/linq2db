@@ -188,7 +188,7 @@ void GenerateTypesFromMetadata()
 		var aliases               = defAliases;
 		var tableExtensions       = defTableExtensions;
 
-		if (t.IsView && !GenerateViews){
+		if (t.IsView && !GenerateViews) {
 			continue;
 		}
 
@@ -504,21 +504,21 @@ void GenerateTypesFromMetadata()
 
 					Func<string> builder = () =>
 					{
-					var sb = new StringBuilder();
-					sb
-						.Append("return db.GetTable<")
-						.Append(key.OtherTable.TypePrefix + key.OtherTable.TypeName)
-						.Append(">().Where(c => ");
-					for (var i = 0; i < key.OtherColumns.Count; i++)
-					{
-						sb.Append("c.")
-							.Append(key.OtherColumns[i].MemberName)
-							.Append(" == obj.")
-							.Append(key.ThisColumns[i].MemberName)
-							.Append(" && ");
-					}
-					sb.Length -= 4;
-					sb.Append(");");
+						var sb = new StringBuilder();
+						sb
+							.Append("return db.GetTable<")
+							.Append(key.OtherTable.TypePrefix + key.OtherTable.TypeName)
+							.Append(">().Where(c => ");
+						for (var i = 0; i < key.OtherColumns.Count; i++)
+						{
+							sb.Append("c.")
+								.Append(key.OtherColumns[i].MemberName)
+								.Append(" == obj.")
+								.Append(key.ThisColumns[i].MemberName)
+								.Append(" && ");
+						}
+						sb.Length -= 4;
+						sb.Append(");");
 
 						return sb.ToString();
 					};
@@ -544,12 +544,12 @@ void GenerateTypesFromMetadata()
 						single.BodyBuilders.Add(() =>
 						{
 							var sb = new StringBuilder(builder());
-						sb.Length -= 1;
+							sb.Length -= 1;
 
-						if (key.CanBeNull)
-							sb.Append(".FirstOrDefault();");
-						else
-							sb.Append(".First();");
+							if (key.CanBeNull)
+								sb.Append(".FirstOrDefault();");
+							else
+								sb.Append(".First();");
 
 							return new [] { sb.ToString() };
 						});
@@ -681,7 +681,7 @@ void GenerateTypesFromMetadata()
 
 			var proc = new MemberGroup { Region = p.Name };
 
-			     if (!p.IsFunction)     addProcs(proc);
+			if (!p.IsFunction)          addProcs(proc);
 			else if (p.IsTableFunction) addTabfs(proc);
 			else                        addFuncs(proc);
 
@@ -725,13 +725,13 @@ void GenerateTypesFromMetadata()
 			}
 			else if (p.IsFunction)
 			{
-				p.IsStatic = true;
+				p.IsStatic    = true;
 				p.TypeBuilder = () => p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
 				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + (p.Schema != null ? p.Schema + "." : null)  + p.ProcedureName + "\"", "ServerSideOnly=true"));
 			}
 			else
 			{
-				p.IsStatic = true;
+				p.IsStatic    = true;
 				p.TypeBuilder = () => p.ResultTable == null ? "int" : "IEnumerable<" + p.ResultTable.TypeName + ">";
 				p.ParameterBuilders.Add(() => "this DataConnection dataConnection");
 			}
@@ -802,7 +802,7 @@ void GenerateTypesFromMetadata()
 						});
 
 						var n          = 0;
-						var maxNameLen = p.ResultTable.Columns.Values.Max(c => (int?)c.MemberName.Length) ?? 0;
+						var maxNameLen = p.ResultTable.Columns.Values.Max(c => (int?)c.MemberName .Length) ?? 0;
 						var maxTypeLen = p.ResultTable.Columns.Values.Max(c => (int?)c.BuildType().Length) ?? 0;
 
 						foreach (var c in p.ResultTable.Columns.Values)
@@ -830,31 +830,31 @@ void GenerateTypesFromMetadata()
 
 					p.BodyBuilders.Add(() =>
 					{
-					var str = string.Format(
-						!pr.IsIn && pr.IsOut
-							? "\tnew DataParameter(\"{0}\", null, {3}{4})"
-							: "\tnew DataParameter(\"{0}\", {1}{2}, {3}{4})" + (GenerateProcedureDbType(pr) ? "{{ DbType = \"{5}\" }}" : null),
-						pr.SchemaName,
-						LenDiff(maxLenSchema, pr.SchemaName),
-						pr.ParameterName,
-						LenDiff(maxLenParam, pr.ParameterName),
-						"DataType." + pr.DataType,
-						pr.SchemaType);
+						var str = string.Format(
+							!pr.IsIn && pr.IsOut
+								? "\tnew DataParameter(\"{0}\", null, {3}{4})"
+								: "\tnew DataParameter(\"{0}\", {1}{2}, {3}{4})" + (GenerateProcedureDbType(pr) ? "{{ DbType = \"{5}\" }}" : null),
+							pr.SchemaName,
+							LenDiff(maxLenSchema, pr.SchemaName),
+							pr.ParameterName,
+							LenDiff(maxLenParam, pr.ParameterName),
+							"DataType." + pr.DataType,
+							pr.SchemaType);
 
-					if (pr.IsOut)
-					{
-						str += LenDiff(maxLenType, "DataType." + pr.DataType);
-						str += " { Direction = " + (pr.IsIn ? "ParameterDirection.InputOutput" : "ParameterDirection.Output");
+						if (pr.IsOut)
+						{
+							str += LenDiff(maxLenType, "DataType." + pr.DataType);
+							str += " { Direction = " + (pr.IsIn ? "ParameterDirection.InputOutput" : "ParameterDirection.Output");
 
-						if (pr.Size != null && pr.Size.Value != 0)
-							str += ", Size = " + pr.Size.Value;
+							if (pr.Size != null && pr.Size.Value != 0)
+								str += ", Size = " + pr.Size.Value;
 
-						str += " }";
-					}
+							str += " }";
+						}
 
-					// we need to call ToList(), because otherwise output parameters will not be updated
-					// with values. See https://msdn.microsoft.com/en-us/library/ms971497#gazoutas_topic6
-					str += i + 1 == inOrOutputParameters.Count ? (outputParameters.Count > 0 && p.ResultTable != null ? ").ToList();" : ");") : ",";
+						// we need to call ToList(), because otherwise output parameters will not be updated
+						// with values. See https://msdn.microsoft.com/en-us/library/ms971497#gazoutas_topic6
+						str += i + 1 == inOrOutputParameters.Count ? (outputParameters.Count > 0 && p.ResultTable != null ? ").ToList();" : ");") : ",";
 
 						return new [] { str };
 					});

@@ -236,9 +236,9 @@ namespace LinqToDB.Data
 
 			static void AddParameter(DataConnection dataConnection, ICollection<IDbDataParameter> parms, string name, SqlParameter parm)
 			{
-				var p         = dataConnection.Command.CreateParameter();
+				var p          = dataConnection.Command.CreateParameter();
 				var systemType = parm.SystemType;
-				var dataType  = parm.DataType;
+				var dataType   = parm.DataType;
 				var dbType     = parm.DbType;
 				var paramValue = parm.Value;
 

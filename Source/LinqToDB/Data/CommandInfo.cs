@@ -833,7 +833,7 @@ namespace LinqToDB.Data
 			{
 				var p        = dataConnection.Command.CreateParameter();
 				var dataType = parameter.DataType;
-				var dbType    = parameter.DbType;
+				var dbType   = parameter.DbType;
 				var value    = parameter.Value;
 
 				if (dataType == DataType.Undefined && value != null)
