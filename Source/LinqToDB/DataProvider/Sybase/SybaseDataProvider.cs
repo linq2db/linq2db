@@ -50,6 +50,10 @@ namespace LinqToDB.DataProvider.Sybase
 		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.AseConnection, {AssemblyName}";
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.AseDataReader, {AssemblyName}";
 
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+		public override string DbFactoryProviderName => "Sybase.Data.AseClient";
+#endif
+
 		static DateTime GetDateTime(IDataReader dr, int idx)
 		{
 			var value = dr.GetDateTime(idx);

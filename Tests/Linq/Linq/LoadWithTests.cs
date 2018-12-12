@@ -232,8 +232,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(ProviderName.Access)]
 		public void LoadWith11(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =

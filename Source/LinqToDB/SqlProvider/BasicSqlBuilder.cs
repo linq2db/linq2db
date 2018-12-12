@@ -62,10 +62,17 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
-		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0)
+		internal void BuildSqlWithAliases(int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0)
 		{
 			BuildSql(commandNumber, statement, sb, startIndent, false);
 		}
+
+		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0)
+		{
+			BuildSql(commandNumber, statement, sb, startIndent, CanSkipRootAliases(statement));
+		}
+
+		protected virtual bool CanSkipRootAliases(SqlStatement statement) => true;
 
 		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
 		{
@@ -443,7 +450,7 @@ namespace LinqToDB.SqlProvider
 				AppendIndent();
 				BuildColumnExpression(selectQuery, col.Expression, col.Alias, ref addAlias);
 
-				if (!SkipAlias && addAlias && col.Alias != null)
+				if (!SkipAlias && addAlias && !col.Alias.IsNullOrEmpty())
 					StringBuilder.Append(" as ").Append(Convert(col.Alias, ConvertType.NameToQueryFieldAlias));
 			}
 
@@ -669,6 +676,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildInsertOrUpdateQueryAsMerge(SqlInsertOrUpdateStatement insertOrUpdate, string fromDummyTable)
 		{
+			SkipAlias = false;
+
 			var table       = insertOrUpdate.Insert.Into;
 			var targetAlias = Convert(insertOrUpdate.SelectQuery.From.Tables[0].Alias, ConvertType.NameToQueryTableAlias).ToString();
 			var sourceAlias = Convert(GetTempAliases(1, "s")[0],        ConvertType.NameToQueryTableAlias).ToString();
@@ -1274,6 +1283,14 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlCteTable  :
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
+					break;
+
+				case QueryElementType.SqlRawSqlTable :
+					StringBuilder.Append("(").AppendLine();
+					var rawSqlTable = (SqlRawSqlTable)table;
+					BuildFormatValues(IdentText(rawSqlTable.SQL, Indent + 1), rawSqlTable.Parameters, () => Precedence.Primary);
+					StringBuilder.AppendLine();
+					AppendIndent().Append(")");
 					break;
 
 				default                          :
@@ -2226,25 +2243,8 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlExpression:
 					{
 						var e = (SqlExpression)expr;
-						var s = new StringBuilder();
 
-						if (e.Parameters == null || e.Parameters.Length == 0)
-							StringBuilder.Append(e.Expr);
-						else
-						{
-							var values = new object[e.Parameters.Length];
-
-							for (var i = 0; i < values.Length; i++)
-							{
-								var value = e.Parameters[i];
-
-								s.Length = 0;
-								WithStringBuilder(s, () => BuildExpression(GetPrecedence(e), value));
-								values[i] = s.ToString();
-							}
-
-							StringBuilder.AppendFormat(e.Expr, values);
-						}
+						BuildFormatValues(e.Expr, e.Parameters, () => GetPrecedence(e));
 					}
 
 					break;
@@ -2298,6 +2298,46 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return StringBuilder;
+		}
+
+		void BuildFormatValues(string format, IReadOnlyList<ISqlExpression> parameters, Func<int> getPrecedence)
+		{
+			if (parameters == null || parameters.Count == 0)
+				StringBuilder.Append(format);
+			else
+			{
+				StringBuilder s = new StringBuilder();
+				var values = new object[parameters.Count];
+
+				for (var i = 0; i < values.Length; i++)
+				{
+					var value = parameters[i];
+
+					s.Length = 0;
+					WithStringBuilder(s, () => BuildExpression(getPrecedence(), value));
+					values[i] = s.ToString();
+				}
+
+				StringBuilder.AppendFormat(format, values);
+			}
+		}
+
+		string IdentText(string text, int ident)
+		{
+			if (text.IsNullOrEmpty())
+				return text;
+
+	        var strArray = text.Split('\n');
+	        var sb = new StringBuilder();
+			for (var i = 0; i < strArray.Length; i++)
+			{
+				var s = strArray[i];
+				sb.Append('\t', ident).Append(s);
+				if (i < strArray.Length - 1)
+					sb.AppendLine();
+			}
+
+			return sb.ToString();
 		}
 
 		void BuildExpression(int parentPrecedence, ISqlExpression expr, string alias, ref bool addAlias)
@@ -2458,6 +2498,9 @@ namespace LinqToDB.SqlProvider
 				case DataType.Int32  : StringBuilder.Append("Int");      return;
 				case DataType.Int64  : StringBuilder.Append("BigInt");   return;
 				case DataType.Boolean: StringBuilder.Append("Bit");      return;
+				case DataType.Undefined:
+					// give some hint to user that it is expected situation and he need to fix something on his side
+					throw new LinqToDBException("Database type cannot be determined automatically and must be specified explicitly");
 			}
 
 			StringBuilder.Append(type.DataType);
@@ -2536,6 +2579,8 @@ namespace LinqToDB.SqlProvider
 			var selectQuery = Statement.SelectQuery;
 			if (selectQuery != null && NeedSkip(selectQuery))
 			{
+				SkipAlias = false;
+
 				var aliases  = GetTempAliases(2, "t");
 				var rnaliase = GetTempAliases(1, "rn")[0];
 
@@ -2705,6 +2750,8 @@ namespace LinqToDB.SqlProvider
 			if (selectQuery == null)
 				return;
 
+			SkipAlias = false;
+
 			AppendIndent().Append("ORDER BY").AppendLine();
 
 			var obys = GetTempAliases(selectQuery.OrderBy.Items.Count, "oby");
@@ -2734,6 +2781,8 @@ namespace LinqToDB.SqlProvider
 		{
 			foreach (var col in columnSelector())
 				yield return col;
+
+			SkipAlias = false;
 
 			var obys = GetTempAliases(selectQuery.OrderBy.Items.Count, "oby");
 

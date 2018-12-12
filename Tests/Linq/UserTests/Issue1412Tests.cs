@@ -26,9 +26,61 @@ namespace Tests.UserTests
 		public abstract class WmsBasicWithoutCustomFieldsDTO<T> : BasicDTOwithExtensionData
 		{ }
 
+		public enum ResourceStatus
+		{
+			Undefined = 0,
+			Captured = 10
+		}
+
 		public class WmsLoadCarrierDTO : WmsBasicDTO<WmsLoadCarrierDTO>
 		{
+			public ResourceStatus Status { get; set; }
+
+			public string ResourceLabel { get; set; }
+
+			public string ResourceLabelNVE { get; set; }
+
+			public Guid? ParentResourceID { get; set; }
+
 			public Guid? TypeID { get; set; }
+
+			public int? HeightClass { get; set; }
+
+			public Decimal? CurrentWeightOfResource { get; set; }
+
+			public int? WidthClass { get; set; }
+
+			public int? LengthClass { get; set; }
+
+			public Guid? OriginalResourceID { get; set; }
+
+			public Guid? LastGlobalTaskID { get; set; }
+
+			public DateTime? WashingDate { get; set; }
+
+			public Guid? ResourcePointID { get; set; }
+
+			public decimal? Height { get; set; }
+
+			public decimal? Width { get; set; }
+
+			public decimal? Length { get; set; }
+
+			public string TechnicalValues { get; set; }
+
+			public int RearrangementCount { get; set; }
+
+			public bool IsVirtual { get; set; }
+
+			public string ErrorMessage { get; set; }
+
+			public decimal? FillingDegree { get; set; }
+
+			public DateTime? LastInventoryCheckTimeStamp { get; set; }
+
+			public string Segmentation { get; set; }
+
+			public bool DontTouch { get; set; }
 
 			protected bool Equals(WmsLoadCarrierDTO other)
 			{

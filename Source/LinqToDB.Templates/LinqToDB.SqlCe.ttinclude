@@ -1,8 +1,4 @@
 <#@ include file="LinqToDB.ttinclude" #>
-<#
-	LinqToDB.DataProvider.SqlCe.SqlCeTools.ResolveSqlCe(
-		typeof(System.Data.SqlServerCe.SqlCeConnection).Assembly);
-#>
 <#+
 LinqToDB.Data.DataConnection GetSqlCeConnection(string connectionString)
 {

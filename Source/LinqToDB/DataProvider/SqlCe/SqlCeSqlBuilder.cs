@@ -74,15 +74,26 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			switch (type.DataType)
 			{
-				case DataType.Char          : base.BuildDataType(new SqlDataType(DataType.NChar,    type.Length), createDbType); break;
-				case DataType.VarChar       : base.BuildDataType(new SqlDataType(DataType.NVarChar, type.Length), createDbType); break;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");                                             break;
+				case DataType.Char          : base.BuildDataType(new SqlDataType(DataType.NChar,    type.Length), createDbType); return;
+				case DataType.VarChar       : base.BuildDataType(new SqlDataType(DataType.NVarChar, type.Length), createDbType); return;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");                                             return;
 				case DataType.DateTime2     :
 				case DataType.Time          :
 				case DataType.Date          :
-				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                  break;
-				default                     : base.BuildDataType(type, createDbType);                                            break;
+				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                  return;
+				case DataType.NVarChar:
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					{
+						StringBuilder
+							.Append(type.DataType)
+							.Append("(4000)");
+						return;
+					}
+
+					break;
 			}
+
+			base.BuildDataType(type, createDbType);
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)

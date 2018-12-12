@@ -1,9 +1,6 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#@ import namespace="LinqToDB.DataProvider.SapHana"   #>
 <#
-	LinqToDB.DataProvider.SapHana.SapHanaTools.ResolveSapHana(
-		typeof(Sap.Data.Hana.HanaConnection).Assembly);
-
 	Model.Usings.Add("LinqToDB.DataProvider.SapHana");
 	Model.Usings.Add("System.Reflection");
 

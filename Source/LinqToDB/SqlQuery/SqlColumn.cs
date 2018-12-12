@@ -39,8 +39,14 @@ namespace LinqToDB.SqlQuery
 				{
 					switch (Expression)
 					{
-						case SqlField  field  : return field.Alias ?? field.PhysicalName;
-						case SqlColumn column : return column.Alias;
+						case SqlField    field  : return field.Alias ?? field.PhysicalName;
+						case SqlColumn   column : return column.Alias;
+						case SelectQuery query:
+							{
+								if (query.Select.Columns.Count == 1 && query.Select.Columns[0].Alias != "*")
+									return query.Select.Columns[0].Alias;
+								break;
+							}
 					}
 				}
 
