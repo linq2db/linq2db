@@ -158,14 +158,16 @@ namespace LinqToDB.Expressions
 				catch (LinqToDBConvertException ex)
 				{
 					ex.ColumnName = dataReader.GetName(_columnIndex);
-					throw ex;
+					throw;
 				}
 				catch (Exception ex)
 				{
 					var name = dataReader.GetName(_columnIndex);
-					throw new LinqToDBException(
+					throw new LinqToDBConvertException(
 							$"Mapping of column {name} value failed, see inner exception for details", ex)
-						{ColumnName = name};
+					{
+						ColumnName = name
+					};
 				}
 
 				/*
