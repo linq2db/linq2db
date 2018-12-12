@@ -205,7 +205,7 @@ namespace LinqToDB.SqlQuery
 					DbSize           = DbSize,
 					LikeStart        = LikeStart,
 					LikeEnd          = LikeEnd,
-					ReplaceLike      = ReplaceLike,
+					ReplaceLike      = ReplaceLike
 				};
 
 				objectTree.Add(this, clone = p);

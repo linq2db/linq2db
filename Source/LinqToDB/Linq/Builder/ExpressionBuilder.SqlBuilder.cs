@@ -2150,6 +2150,7 @@ namespace LinqToDB.Linq.Builder
 						name = dp.Name;
 
 					dataTypeAccessorExpression = Expression.PropertyOrField(accessorExpression, "DataType");
+					dbTypeAccessorExpression   = Expression.PropertyOrField(accessorExpression, "DbType");
 					accessorExpression         = Expression.PropertyOrField(accessorExpression, "Value");
 				}
 				else
@@ -2348,7 +2349,8 @@ namespace LinqToDB.Linq.Builder
 						LikeStart        = start,
 						LikeEnd          = end,
 						ReplaceLike      = p.ReplaceLike,
-						IsQueryParameter = !(DataContext.InlineParameters && ep.Expression.Type.IsScalar(false))
+						IsQueryParameter = !(DataContext.InlineParameters && ep.Expression.Type.IsScalar(false)),
+						DbType           = p.DbType
 					}
 				);
 

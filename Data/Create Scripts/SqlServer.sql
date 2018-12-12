@@ -340,7 +340,7 @@ BEGIN
 			'Val2' as Value2 
 	END
 	ELSE 
-		SELECT 
+        SELECT 
 			'v' as Value1,
 			2   as Code
 END
@@ -1019,5 +1019,26 @@ CREATE TABLE Issue1115
 	id    hierarchyid    NOT NULL CONSTRAINT PK_Issue1115 PRIMARY KEY CLUSTERED
 
 )
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'TableTypeTestProc')
+DROP PROC TableTypeTestProc
+GO
+IF EXISTS (SELECT * FROM sys.types WHERE name = 'TestTableType')
+DROP TYPE TestTableType
+GO
+CREATE TYPE TestTableType AS TABLE
+(
+	Id   INT,
+	Name NVARCHAR(10)
+)
+GO
+CREATE PROC TableTypeTestProc (
+	@table TestTableType READONLY
+)
+AS
+BEGIN
+	SELECT * FROM @table AS Result
+END
 GO
 -- SKIP SqlServer.2005 END

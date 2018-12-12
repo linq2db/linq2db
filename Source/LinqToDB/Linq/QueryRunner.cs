@@ -72,7 +72,7 @@ namespace LinqToDB.Linq
 					_mapper = _expression.Compile();
 
 					_isFaulted = true;
-					
+
 					return _mapper(queryRunner, dataReader);
 				}
 			}

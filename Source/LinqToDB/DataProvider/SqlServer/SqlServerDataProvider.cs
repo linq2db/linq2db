@@ -19,6 +19,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Microsoft.SqlServer.Server;
 
 	public class SqlServerDataProvider : DataProviderBase
 	{
@@ -243,6 +244,17 @@ namespace LinqToDB.DataProvider.SqlServer
 									: "hh\\:mm\\:ss");
 					}
 					break;
+
+				case DataType.Undefined:
+					if (value is DataTable
+						|| value is DbDataReader
+						|| value is IEnumerable<SqlDataRecord>
+						|| value is IEnumerable<DbDataRecord>)
+					{
+						dataType = dataType.WithDataType(DataType.Structured);
+					}
+
+					break;
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
@@ -252,6 +264,17 @@ namespace LinqToDB.DataProvider.SqlServer
 				// Setting for NVarChar and VarChar constant size. It reduces count of cached plans.
 				switch (param.SqlDbType)
 				{
+					case SqlDbType.Structured:
+						{
+							if (!dataType.DbType.IsNullOrEmpty())
+								param.TypeName = dataType.DbType;
+
+							// TVP doesn't support DBNull
+							if (param.Value is DBNull)
+								param.Value = null;
+
+							break;
+						}
 					case SqlDbType.VarChar:
 						{
 							if (value is string strValue && strValue.Length > 8000)
@@ -305,6 +328,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.SmallDateTime : ((SqlParameter)parameter).SqlDbType = SqlDbType.SmallDateTime; break;
 				case DataType.Timestamp     : ((SqlParameter)parameter).SqlDbType = SqlDbType.Timestamp;     break;
 				case DataType.Xml           : ((SqlParameter)parameter).SqlDbType = SqlDbType.Xml;           break;
+				case DataType.Structured    : ((SqlParameter)parameter).SqlDbType = SqlDbType.Structured;    break;
 				default                     : base.SetParameterType(parameter, dataType);                    break;
 			}
 		}

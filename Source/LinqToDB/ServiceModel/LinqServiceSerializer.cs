@@ -539,20 +539,20 @@ namespace LinqToDB.ServiceModel
 
 					if (type == null)
 					{
-						type = LinqService.TypeResolver(str);
-						if (type == null)
-						{
-							if (Configuration.LinqService.ThrowUnresolvedTypeException)
-								throw new LinqToDBException(
-									$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
+					type = LinqService.TypeResolver(str);
+					if (type == null)
+					{
+						if (Configuration.LinqService.ThrowUnresolvedTypeException)
+							throw new LinqToDBException(
+								$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
 
-							UnresolvedTypes.Add(str);
+						UnresolvedTypes.Add(str);
 
-							Debug.WriteLine(
-								$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.",
-								"LinqServiceSerializer");
-						}
+						Debug.WriteLine(
+							$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.",
+							"LinqServiceSerializer");
 					}
+				}
 				}
 
 				return type;

@@ -831,10 +831,10 @@ namespace LinqToDB.Data
 
 			foreach (var parameter in parameters)
 			{
-				var p         = dataConnection.Command.CreateParameter();
-				var dataType  = parameter.DataType;
-				var dbType    = parameter.DbType;
-				var value     = parameter.Value;
+				var p        = dataConnection.Command.CreateParameter();
+				var dataType = parameter.DataType;
+				var dbType   = parameter.DbType;
+				var value    = parameter.Value;
 
 				if (dataType == DataType.Undefined && value != null)
 					dataType = dataConnection.MappingSchema.GetDataType(value.GetType()).DataType;
