@@ -340,7 +340,7 @@ BEGIN
 			'Val2' as Value2 
 	END
 	ELSE 
-        SELECT 
+		SELECT 
 			'v' as Value1,
 			2   as Code
 END
@@ -1009,3 +1009,15 @@ CREATE TABLE TestSchema.SameTableName
 	id	INT
 )
 GO
+-- SKIP SqlServer.2005 BEGIN
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.Issue1115') AND type in (N'U'))
+BEGIN DROP TABLE dbo.Issue1115 END
+GO
+
+CREATE TABLE Issue1115
+(
+	id    hierarchyid    NOT NULL CONSTRAINT PK_Issue1115 PRIMARY KEY CLUSTERED
+
+)
+GO
+-- SKIP SqlServer.2005 END

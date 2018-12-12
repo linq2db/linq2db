@@ -31,6 +31,11 @@ Dictionary<string,string> SchemaNameMapping = new Dictionary<string,string>();
 
 Func<string,string,IEnumerable<Method>> GetConstructors =  (conf, name) => GetConstructorsImpl(conf, name);
 
+Func<Column, string, string, bool, string> BuildColumnComparison = (c, padding1, padding2, last) =>
+{
+	return string.Format("\tt.{0}{1} == {0}{3}{2}", c.MemberName, padding1, last ? ");" : " &&", last ? "" : padding2);
+};
+
 static IEnumerable<Method> GetConstructorsImpl(string defaultConfiguration, string name)
 {
 	if (defaultConfiguration == null)
@@ -581,8 +586,7 @@ void GenerateTypesFromMetadata()
 							if (c.Conditional != null)
 								ss.Add("#if " + c.Conditional);
 
-							ss.Add(string.Format("\tt.{0}{1} == {0}{3}{2}",
-								c.MemberName, LenDiff(maxNameLen1, c.MemberName), i == nPKs - 1 ? ");" : " &&", i == nPKs - 1 ? "" : LenDiff(maxNameLen2, c.MemberName)));
+							ss.Add(BuildColumnComparison(c, LenDiff(maxNameLen1, c.MemberName), LenDiff(maxNameLen2, c.MemberName), i == nPKs - 1));
 
 							if (c.Conditional != null)
 							{
