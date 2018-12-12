@@ -129,12 +129,6 @@ namespace LinqToDB.Data
 		/// </returns>
 		public object Value { get; set; }
 
-		/// <summary>
-		/// Database type name.
-		/// E.g. name of type, created by SQL Server's CREATE TYPE statement.
-		/// </summary>
-		public string DbType { get; set; }
-
 		public static DataParameter Char          (string name, char           value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }
 		public static DataParameter Char          (string name, string         value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }
 		public static DataParameter VarChar       (string name, char           value) { return new DataParameter { DataType = DataType.VarChar,        Name = name, Value = value, }; }

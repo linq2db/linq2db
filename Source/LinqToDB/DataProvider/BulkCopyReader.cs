@@ -63,7 +63,7 @@ namespace LinqToDB.DataProvider
 		{
 			var value = _columns[i].GetValue(_mappingSchema, _enumerator.Current);
 
-			_dataProvider.SetParameter(_valueConverter, string.Empty, _columnTypes[i], value, null);
+			_dataProvider.SetParameter(_valueConverter, string.Empty, _columnTypes[i], value);
 
 			return _valueConverter.Value;
 		}
@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider
 			for (var it = 0; it < count; ++it)
 			{
 				var value = _columns[it].GetValue(_mappingSchema, obj);
-				_dataProvider.SetParameter(_valueConverter, string.Empty, _columnTypes[it], value, null);
+				_dataProvider.SetParameter(_valueConverter, string.Empty, _columnTypes[it], value);
 				values[it] = _valueConverter.Value;
 			}
 

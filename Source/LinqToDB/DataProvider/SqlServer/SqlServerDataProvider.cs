@@ -251,7 +251,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						|| value is IEnumerable<SqlDataRecord>
 						|| value is IEnumerable<DbDataRecord>)
 					{
-						dataType = DataType.Structured;
+						dataType = dataType.WithDataType(DataType.Structured);
 					}
 
 					break;
@@ -266,8 +266,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					case SqlDbType.Structured:
 						{
-							if (dbType != null)
-								param.TypeName = dbType;
+							if (!dataType.DbType.IsNullOrEmpty())
+								param.TypeName = dataType.DbType;
 
 							// TVP doesn't support DBNull
 							if (param.Value is DBNull)

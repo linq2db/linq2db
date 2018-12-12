@@ -30,7 +30,7 @@ namespace Tests.Playground
 		public void SampleSelectTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var users = db.CreateLocalTable<TestTemplate.User>())
+			using (var users = db.CreateLocalTable<User>())
 			{
 				var query = users.Select(u => u.Residence.City);
 				Assert.AreEqual(1, query.GetSelectQuery().Select.Columns.Count);

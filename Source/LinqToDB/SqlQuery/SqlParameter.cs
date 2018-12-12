@@ -30,7 +30,6 @@ namespace LinqToDB.SqlQuery
 		public string   LikeStart        { get; set; }
 		public string   LikeEnd          { get; set; }
 		public bool     ReplaceLike      { get; set; }
-		public string   DbType           { get; set; }
 
 		private object _value;
 		public  object  Value
@@ -206,8 +205,7 @@ namespace LinqToDB.SqlQuery
 					DbSize           = DbSize,
 					LikeStart        = LikeStart,
 					LikeEnd          = LikeEnd,
-					ReplaceLike      = ReplaceLike,
-					DbType           = DbType
+					ReplaceLike      = ReplaceLike
 				};
 
 				objectTree.Add(this, clone = p);
