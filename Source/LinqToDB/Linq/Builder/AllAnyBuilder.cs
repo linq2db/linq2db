@@ -98,7 +98,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
 				if (Parent != null)
-					index = ConvertToParentIndex(index, Parent);
+					ConvertToParentIndex(index, Parent);
 				return Builder.BuildSql(typeof(bool), index);
 			}
 

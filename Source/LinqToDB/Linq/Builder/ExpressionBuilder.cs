@@ -694,34 +694,27 @@ namespace LinqToDB.Linq.Builder
 
 			if (attr != null)
 			{
-				if (attr.Expression != null)
-					return attr.Expression;
+				Expression expr;
 
-				if (!string.IsNullOrEmpty(attr.MethodName))
+				if (mi is MethodInfo method && method.IsGenericMethod)
 				{
-					Expression expr;
+					var args  = method.GetGenericArguments();
+					var names = args.Select(t => (object)t.Name).ToArray();
+					var name  = string.Format(attr.MethodName, names);
 
-					if (mi is MethodInfo method && method.IsGenericMethod)
-					{
-						var args  = method.GetGenericArguments();
-						var names = args.Select(t => (object)t.Name).ToArray();
-						var name  = string.Format(attr.MethodName, names);
-
-						expr = Expression.Call(
-							mi.DeclaringType,
-							name,
-							name != attr.MethodName ? Array<Type>.Empty : args);
-					}
-					else
-					{
-						expr = Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty);
-					}
-
-					var call = Expression.Lambda<Func<LambdaExpression>>(Expression.Convert(expr,
-						typeof(LambdaExpression)));
-
-					return call.Compile()();
+					expr = Expression.Call(
+						mi.DeclaringType,
+						name,
+						name != attr.MethodName ? Array<Type>.Empty : args);
 				}
+				else
+				{
+					expr = Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty);
+				}
+
+				var call = Expression.Lambda<Func<LambdaExpression>>(Expression.Convert(expr, typeof(LambdaExpression)));
+
+				return call.Compile()();
 			}
 
 			return null;

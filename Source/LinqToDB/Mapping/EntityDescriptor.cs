@@ -105,14 +105,10 @@ namespace LinqToDB.Mapping
 		public Dictionary<string, string> Aliases { get; private set; }
 
 		/// <summary>
-		/// Gets list of calculated column members (properties with <see cref="ExpressionMethodAttribute.IsColumn"/> set to <c>true</c>).
+		/// Gets list of calculated members. Members with attribute MethodExpression and IsColumn flag
 		/// </summary>
 		public List<MemberAccessor> CalculatedMembers { get; private set; }
 
-		/// <summary>
-		/// Returns <c>true</c>, if entity has calculated columns.
-		/// Also see <seealso cref="CalculatedMembers"/>.
-		/// </summary>
 		public bool HasCalculatedMembers => CalculatedMembers != null && CalculatedMembers.Count > 0;
 
 		private List<InheritanceMapping> _inheritanceMappings;
@@ -190,15 +186,17 @@ namespace LinqToDB.Mapping
 					Columns.Add(cd);
 					_columnNames.Add(member.Name, cd);
 				}
-
-				var caa = mappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
-
-				if (caa != null)
+				else
 				{
-					if (Aliases == null)
-						Aliases = new Dictionary<string, string>();
+					var caa = mappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
-					Aliases.Add(member.Name, caa.MemberName);
+					if (caa != null)
+					{
+						if (Aliases == null)
+							Aliases = new Dictionary<string, string>();
+
+						Aliases.Add(member.Name, caa.MemberName);
+					}
 				}
 
 				var ma = mappingSchema.GetAttribute<ExpressionMethodAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);

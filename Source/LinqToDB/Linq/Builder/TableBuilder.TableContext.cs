@@ -1110,9 +1110,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (EntityDescriptor.Aliases != null)
 					{
-						if (EntityDescriptor.Aliases.TryGetValue(memberExpression.Member.Name, out var aliasName))
+						if (EntityDescriptor.Aliases.ContainsKey(memberExpression.Member.Name))
 						{
-							var alias = EntityDescriptor[aliasName];
+							var alias = EntityDescriptor[memberExpression.Member.Name];
 
 							if (alias == null)
 							{

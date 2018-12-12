@@ -1,4 +1,4 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
 	<PropertyGroup>
 		<LinqToDBT4DB2TemplatesDirectory>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4DB2TemplatesDirectory>
 		<LinqToDBT4DB2ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4DB2ToolsDirectory>
