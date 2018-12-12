@@ -154,6 +154,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[ActiveIssue("DataParameter not supported by TableExpressionAttribute")]
 		[Test]
 		public void TableValuedParameterInQueryUsingTableMethodTest(
 			[IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context,
