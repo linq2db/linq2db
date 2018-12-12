@@ -103,7 +103,6 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.FSharp", "Tests\FShar
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "t4models", "t4models", "{3294F9A3-2530-4ACE-BE44-0C1182DB34C9}"
 	ProjectSection(SolutionItems) = preProject
-		NuGet\t4models\CopyMe.tt.txt = NuGet\t4models\CopyMe.tt.txt
 		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
 		NuGet\t4models\linq2db.t4models.props = NuGet\t4models\linq2db.t4models.props
 		NuGet\t4models\LinqToDB.Tools.ttinclude = NuGet\t4models\LinqToDB.Tools.ttinclude

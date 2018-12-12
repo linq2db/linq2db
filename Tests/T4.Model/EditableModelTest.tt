@@ -20,7 +20,7 @@
 			new EditableProperty("int",    "EditableInt1")    { },
 			new EditableProperty("int",    "EditableInt3")    { },
 			new EditableProperty("double", "EditableDouble1") { IsDirtyText = "Math.Abs({0} - {1}) <= 16 * Double.Epsilon * Math.Max(Math.Abs({0}), Math.Abs({1}))" },
-			new Field { Type = "List<string>", Name = "Field4" },
+			new Field { TypeBuilder = () => "List<string>", Name = "Field4" },
 		}
 	});
 

@@ -7,10 +7,10 @@
 	GenerateProviderSpecificTable = t =>
 	{
 		var method = new Method(
-			String.Format("ITable<{0}>", t.TypeName),
+			() => string.Format("ITable<{0}>", t.TypeName),
 			t.DataContextPropertyName,
-			t.Parameters.Select(p => p.ParameterType + " " + p.ParameterName),
-			new []
+			t.Parameters.Select(p => (Func<string>)(() => p.ParameterType + " " + p.ParameterName)),
+			() => new []
 			{
 				String.Concat("return GetTable<",t.TypeName,">(this, (MethodInfo) MethodBase.GetCurrentMethod(),"),
 				String.Join(",", t.Parameters.Select(p => p.ParameterName)),
@@ -49,7 +49,7 @@
 					IsPrimaryKey    = c.IsPrimaryKey,
 					PrimaryKeyOrder = c.PrimaryKeyOrder,
 					MemberName      = CheckType(c.SystemType, c.MemberName),
-					Type            = c.MemberType,
+					TypeBuilder     = () => c.MemberType,
 					SkipOnInsert    = c.SkipOnInsert,
 					SkipOnUpdate    = c.SkipOnUpdate,
 					Description     = c.Description,

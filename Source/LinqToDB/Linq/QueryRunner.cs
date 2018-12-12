@@ -55,27 +55,7 @@ namespace LinqToDB.Linq
 				{
 					return _mapper(queryRunner, dataReader);
 				}
-				catch (FormatException ex)
-				{
-					if (_isFaulted)
-						throw;
-
-					if (DataConnection.TraceSwitch.TraceInfo)
-						DataConnection.WriteTraceLine(
-							$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
-							DataConnection.TraceSwitch.DisplayName);
-
-					var qr = QueryRunner;
-					if (qr != null)
-						qr.MapperExpression = _mapperExpression;
-
-					_mapper = _expression.Compile();
-
-					_isFaulted = true;
-
-					return _mapper(queryRunner, dataReader);
-				}
-				catch (InvalidCastException ex)
+				catch (Exception ex) when (ex is FormatException || ex is InvalidCastException || ex is LinqToDBConvertException)
 				{
 					if (_isFaulted)
 						throw;
@@ -120,14 +100,12 @@ namespace LinqToDB.Linq
 				// combining with dynamically created parameters
 
 				parameters = parameters.Concat(
-					runtime.Select(p => new ParameterAccessor(
-						Expression.Constant(p.Value),
-						(e, o) => p.Value,
+					runtime.Select(p => new ParameterAccessor(Expression.Constant(p.Value), (e, o) => p.Value,
 						(e, o) => p.DataType != DataType.Undefined || p.Value == null
 							? p.DataType
 							: query.MappingSchema.GetDataType(p.Value.GetType()).DataType,
-						(e, o) => p.DbType,
-						p))
+						(e, o) => p.DbType
+						, p))
 				);
 
 				sql.Parameters = parameters.ToList();
@@ -214,8 +192,9 @@ namespace LinqToDB.Linq
 
 				var dbType = p.DbTypeAccessor(expression, parameters);
 
-				if (dbType != null)
+				if (!string.IsNullOrEmpty(dbType))
 					p.SqlParameter.DbType = dbType;
+
 			}
 		}
 
@@ -232,21 +211,21 @@ namespace LinqToDB.Linq
 			getter = field.ColumnDescriptor.MemberAccessor.GetterExpression.GetBody(getter);
 
 			Expression dataTypeExpression = Expression.Constant(DataType.Undefined);
-			Expression typeNameExpression = Expression.Constant(null, typeof(string));
+			Expression dbTypeExpression   = Expression.Constant(null, typeof(string));
 
-			var expr = dataContext.MappingSchema.GetConvertExpression(field.SystemType, typeof(DataParameter), createDefault: false);
+			var convertExpression = dataContext.MappingSchema.GetConvertExpression(new DbDataType(field.SystemType, field.DataType, field.DbType), 
+				new DbDataType(typeof(DataParameter), field.DataType, field.DbType), createDefault: false);
 
-			if (expr != null)
+			if (convertExpression != null)
 			{
-				var body = expr.GetBody(getter);
-
+				var body           = convertExpression.GetBody(getter);
 				getter             = Expression.PropertyOrField(body, "Value");
 				dataTypeExpression = Expression.PropertyOrField(body, "DataType");
-				typeNameExpression = Expression.PropertyOrField(body, "DbType");
+				dbTypeExpression   = Expression.PropertyOrField(body, "DbType");
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, getter, dataTypeExpression, typeNameExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
+				dataContext, getter, dataTypeExpression, dbTypeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'), expr: convertExpression);
 
 			return param;
 		}

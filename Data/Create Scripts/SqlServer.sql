@@ -1,4 +1,13 @@
-﻿IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Doctor') AND type in (N'U'))
+﻿IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.SameTableName') AND type in (N'U'))
+BEGIN DROP TABLE dbo.SameTableName END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.TestSchema_SameTableName') AND type in (N'U'))
+BEGIN DROP TABLE dbo.TestSchema_SameTableName END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.SameTableName') AND type in (N'U'))
+BEGIN DROP TABLE TestSchema.SameTableName END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Doctor') AND type in (N'U'))
 BEGIN DROP TABLE Doctor END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Patient') AND type in (N'U'))
@@ -331,7 +340,7 @@ BEGIN
 			'Val2' as Value2 
 	END
 	ELSE 
-		SELECT 
+        SELECT 
 			'v' as Value1,
 			2   as Code
 END
@@ -983,9 +992,35 @@ CREATE TABLE Issue1144
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Column description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'COLUMN',@level2name=N'id'
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Index description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'INDEX',@level2name=N'PK_Issue1144'
+
+GO
+CREATE TABLE dbo.SameTableName
+(
+	id	INT
+)
+GO
+CREATE TABLE dbo.TestSchema_SameTableName
+(
+	id	INT
+)
+GO
+CREATE TABLE TestSchema.SameTableName
+(
+	id	INT
+)
+GO
+-- SKIP SqlServer.2005 BEGIN
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.Issue1115') AND type in (N'U'))
+BEGIN DROP TABLE dbo.Issue1115 END
 GO
 
--- SKIP SqlServer.2005 BEGIN
+CREATE TABLE Issue1115
+(
+	id    hierarchyid    NOT NULL CONSTRAINT PK_Issue1115 PRIMARY KEY CLUSTERED
+
+)
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'TableTypeTestProc')
 DROP PROC TableTypeTestProc
 GO

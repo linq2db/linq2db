@@ -348,11 +348,11 @@ namespace LinqToDB.Linq
 	class ParameterAccessor
 	{
 		public ParameterAccessor(
-			Expression                           expression,
-			Func<Expression,object[],object>     accessor,
-			Func<Expression,object[],DataType>   dataTypeAccessor,
-			Func<Expression,object[],string>     dbTypeAccessor,
-			SqlParameter                         sqlParameter)
+			Expression                         expression,
+			Func<Expression,object[],object>   accessor,
+			Func<Expression,object[],DataType> dataTypeAccessor,
+			Func<Expression,object[],string>   dbTypeAccessor,
+			SqlParameter                       sqlParameter)
 		{
 			Expression       = expression;
 			Accessor         = accessor;

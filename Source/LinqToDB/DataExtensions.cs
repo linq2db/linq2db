@@ -785,6 +785,7 @@ namespace LinqToDB
 		/// <typeparam name="TEntity">Source query record type.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="sql"> The interpolated string representing a SQL query. </param>
+		/// <remarks>Additional parentheses will be added to the query if first word in raw query is 'SELECT', otherwise users are responsible to add them themselves.</remarks>
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
@@ -827,6 +828,7 @@ namespace LinqToDB
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="sql">The raw SQL query</param>
 		/// <param name="parameters"> The values to be assigned to parameters. </param>
+		/// <remarks>Additional parentheses will be added to the query if first word in raw query is 'SELECT', otherwise users are responsible to add them themselves.</remarks>
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(

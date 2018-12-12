@@ -5,6 +5,7 @@ using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlProvider
 {
@@ -1266,6 +1267,8 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
+		private static Regex _selectDetector = new Regex(@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
 		protected void BuildPhysicalTable(ISqlTableSource table, string alias)
 		{
 			switch (table.ElementType)
@@ -1286,11 +1289,24 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlRawSqlTable :
-					StringBuilder.Append("(").AppendLine();
+
 					var rawSqlTable = (SqlRawSqlTable)table;
-					BuildFormatValues(IdentText(rawSqlTable.SQL, Indent + 1), rawSqlTable.Parameters, () => Precedence.Primary);
-					StringBuilder.AppendLine();
-					AppendIndent().Append(")");
+
+					var appendParentheses = _selectDetector.IsMatch(rawSqlTable.SQL);
+					var multiLine         = appendParentheses || rawSqlTable.SQL.Contains('\n');
+
+					if (appendParentheses)
+						StringBuilder.Append("(");
+					if (multiLine)
+						StringBuilder.AppendLine();
+
+					BuildFormatValues(IdentText(rawSqlTable.SQL, multiLine ? Indent + 1 : 0), rawSqlTable.Parameters, () => Precedence.Primary);
+
+					if (multiLine)
+						StringBuilder.AppendLine();
+					if (appendParentheses)
+						AppendIndent().Append(")");
+					
 					break;
 
 				default                          :
@@ -2228,14 +2244,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlValue:
 					var sqlval = (SqlValue)expr;
-					var dt = sqlval.SystemType == null ? null : new SqlDataType(sqlval.SystemType);
-
-					if (sqlval.DataType != null)
-					{
-						dt = sqlval.SystemType == null
-							? new SqlDataType(sqlval.DataType.Value)
-							: new SqlDataType(sqlval.DataType.Value, sqlval.SystemType);
-					}
+					var dt     = new SqlDataType(sqlval.ValueType);
 
 					BuildValue(dt, sqlval.Value);
 					break;
@@ -2269,7 +2278,7 @@ namespace LinqToDB.SqlProvider
 						}
 						else
 						{
-							BuildValue(new SqlDataType(parm.DataType, parm.SystemType, 0, 0, 0), parm.Value);
+							BuildValue(new SqlDataType(parm.DataType, parm.SystemType, 0, 0, 0, parm.DbType), parm.Value);
 						}
 					}
 
@@ -2503,7 +2512,10 @@ namespace LinqToDB.SqlProvider
 					throw new LinqToDBException("Database type cannot be determined automatically and must be specified explicitly");
 			}
 
-			StringBuilder.Append(type.DataType);
+			if (!string.IsNullOrEmpty(type.DbType))
+				StringBuilder.Append(type.DbType);
+			else
+				StringBuilder.Append(type.DataType);
 
 			if (type.Length > 0)
 				StringBuilder.Append('(').Append(type.Length).Append(')');

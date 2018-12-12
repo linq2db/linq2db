@@ -1,12 +1,13 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"                       #>
 <#@ output extension=".generated.cs"                                              #>
-<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.Informix.ttinclude"    #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.MySql.ttinclude"       #>
 <#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude" #>
 <#@ include file="Settings.ttinclude"                                             #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\NET.46\net46\MySql.Data.dll"      #>
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\NET.46\net46\linq2db.dll"         #>
 <#
-	NamespaceName = "InformixDataContext";
+	NamespaceName = "MariaDBDataContext";
 
-	LoadInformixMetadata(GetConnectionString("Informix"));
+	LoadMySqlMetadata(GetConnectionString("MariaDB"));
 	GenerateModel();
 #>

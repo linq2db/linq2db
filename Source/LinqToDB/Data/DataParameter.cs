@@ -30,6 +30,22 @@ namespace LinqToDB.Data
 			DataType = dataType;
 		}
 
+		public DataParameter(string name, object value, DataType dataType, string dbType)
+		{
+			Name     = name;
+			Value    = value;
+			DataType = dataType;
+			DbType   = dbType;
+		}
+
+		public DataParameter(string name, object value, string dbType)
+		{
+			Name     = name;
+			Value    = value;
+			DataType = DataType.Undefined;
+			DbType   = dbType;
+		}
+
 		/// <summary>
 		/// Gets or sets the <see cref="T:LinqToDB.DataType"/> of the parameter.
 		/// </summary>
@@ -37,6 +53,14 @@ namespace LinqToDB.Data
 		/// One of the <see cref="T:LinqToDB.DataType"/> values. The default is <see cref="F:LinqToDB.DataType.Undefined"/>.
 		/// </returns>
 		public DataType DataType { get; set; }
+
+		/// <summary>
+		/// Gets or sets Database Type name of the parameter.
+		/// </summary>
+		/// <returns>
+		/// Name of Database Type or empty string.
+		/// </returns>
+		public string DbType { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating whether the parameter is input-only, output-only, bidirectional, or a stored procedure return value parameter.

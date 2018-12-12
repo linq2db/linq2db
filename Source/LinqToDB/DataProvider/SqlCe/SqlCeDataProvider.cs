@@ -10,6 +10,7 @@ using LinqToDB.Extensions;
 namespace LinqToDB.DataProvider.SqlCe
 {
 	using Data;
+	using Common;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -109,12 +110,12 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 #endif
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value, string dbType)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Xml :
-					dataType = DataType.NVarChar;
+					dataType = dataType.WithDataType(DataType.NVarChar);
 
 					if (value is SqlXml)
 					{
@@ -127,12 +128,12 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value, dbType);
+			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.SByte      : parameter.DbType    = DbType.Int16;   break;
 				case DataType.UInt16     : parameter.DbType    = DbType.Int32;   break;

@@ -117,7 +117,10 @@ namespace LinqToDB.SqlQuery
 					{
 						try
 						{
-							var converter = mappingSchema.GetConverter(field.SystemType, typeof(DataParameter), true);
+							var converter = mappingSchema.GetConverter(
+								new DbDataType(field.SystemType, field.DataType, field.DbType),
+								new DbDataType(typeof(DataParameter)), true);
+
 							if (converter != null && converter.ConvertValueToParameter != null)
 							{
 								var parameter = converter.ConvertValueToParameter(DefaultValue.GetValue(field.SystemType, mappingSchema));

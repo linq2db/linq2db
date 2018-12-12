@@ -6,6 +6,7 @@ using LinqToDB.Tools;
 namespace LinqToDB.DataProvider.MySql
 {
 	using Data;
+	using Common;
 	using Extensions;
 	using Mapping;
 	using Reflection;
@@ -81,9 +82,9 @@ namespace LinqToDB.DataProvider.MySql
 		}
 #endif
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value, string dbType)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Decimal    :
 				case DataType.VarNumeric :
@@ -105,10 +106,10 @@ namespace LinqToDB.DataProvider.MySql
 					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value, dbType);
+			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 		}
 
