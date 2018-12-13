@@ -31,7 +31,7 @@ namespace Tests.Linq
 		private static string Fix(string sql, string context)
 		{
 			if (context.Contains("DB2") || context.Contains("SapHana"))
-				return sql.Replace(" sample_class ", " \"sample_class\" ").Replace(" id ", " \"id\" ");
+				return sql.Replace("sample_class", "\"sample_class\"").Replace(" id ", " \"id\" ");
 			return sql;
 		}
 
