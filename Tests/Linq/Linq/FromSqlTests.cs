@@ -286,7 +286,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestTableValueFunction(
-			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2012)]
+			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
