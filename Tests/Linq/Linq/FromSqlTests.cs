@@ -313,5 +313,17 @@ namespace Tests.Linq
 			}
 		}
 
+
+		[Test]
+		public void TestScalar(
+			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.Throws<LinqToDBException>(() => db.FromSql<int>("select 1 as value").ToArray());
+			}
+		}
+
 	}
 }

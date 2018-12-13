@@ -790,7 +790,7 @@ namespace LinqToDB
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
 			[NotNull]  this               IDataContext      dataContext,
-			[NotNull, SqlQueryDependent]  FormattableString sql)
+			[NotNull]                     FormattableString sql)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (sql         == null) throw new ArgumentNullException(nameof(sql));
@@ -832,9 +832,9 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			[NotNull] this                IDataContext dataContext,
-			[NotNull, SqlQueryDependent]  RawSqlString   sql,
-			[NotNull] params              object[]     parameters)
+			[NotNull] this       IDataContext dataContext,
+			[SqlQueryDependent]  RawSqlString sql,
+			[NotNull] params     object[]     parameters)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 

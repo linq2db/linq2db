@@ -21,6 +21,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
 
+			if (builder.MappingSchema.IsScalarType(methodCall.Method.GetGenericArguments()[0]))
+				throw new LinqToDBException("Selection of scalar types not supported by FromSql method. Use mapping class with one column for scalar values");
+
 			string                  format;
 			IEnumerable<Expression> arguments;
 
