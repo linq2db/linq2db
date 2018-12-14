@@ -453,10 +453,7 @@ namespace LinqToDB.Expressions
 
 					if (dependentAttribute != null)
 					{
-						var obj1 = expr1.Arguments[i].EvaluateExpression();
-						var obj2 = expr2.Arguments[i].EvaluateExpression();
-
-						if (!dependentAttribute.ObjectsEqual(obj1, obj2))
+						if (!dependentAttribute.ExpressionsEqual(expr1.Arguments[i], expr2.Arguments[i], (e1, e2) => e1.EqualsTo(e2, info)))
 							return false;
 					}
 					else

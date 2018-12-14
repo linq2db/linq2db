@@ -768,6 +768,29 @@ namespace LinqToDB
 
 #if !NET45
 		/// <summary>
+		/// Compares two FormattableString parameters
+		/// </summary>
+		public class SqlFormattableComparerAttribute : SqlQueryDependentAttribute
+		{
+			public override bool ExpressionsEqual(Expression expr1, Expression expr2, Func<Expression, Expression, bool> comparer)
+			{
+				if (expr1.NodeType != expr2.NodeType)
+					return false;
+
+				if (expr1.NodeType == ExpressionType.Call)
+				{
+					var mc1 = (MethodCallExpression)expr1;
+					var mc2 = (MethodCallExpression)expr2;
+					if (!ObjectsEqual(mc1.Arguments[0].EvaluateExpression(), mc2.Arguments[0].EvaluateExpression()))
+						return false;
+					return comparer(mc1.Arguments[1], mc2.Arguments[1]);
+				}
+
+				return base.ExpressionsEqual(expr1, expr2, comparer);
+			}
+		}
+
+		/// <summary>
 		///     <para>
 		///         Creates a LINQ query based on an interpolated string representing a SQL query.
 		///     </para>
@@ -789,8 +812,8 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			[NotNull]  this               IDataContext      dataContext,
-			[NotNull]                     FormattableString sql)
+			[NotNull]  this                   IDataContext      dataContext,
+			[NotNull, SqlFormattableComparer] FormattableString sql)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (sql         == null) throw new ArgumentNullException(nameof(sql));
