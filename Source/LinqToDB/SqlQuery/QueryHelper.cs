@@ -12,7 +12,7 @@ namespace LinqToDB.SqlQuery
 		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement> ignore = null)
 		{
 			var hash       = new HashSet<ISqlTableSource>(sources);
-			var hashIgnore = new HashSet<IQueryElement>(ignore ?? Enumerable.Empty<IQueryElement>());
+			var hashIgnore = new HashSet<IQueryElement  >(ignore ?? Enumerable.Empty<IQueryElement>());
 
 			new QueryVisitor().VisitParentFirst(root, e =>
 			{

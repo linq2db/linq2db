@@ -100,13 +100,19 @@ namespace LinqToDB.DataProvider.Firebird
 				case DataType.DateTime      : StringBuilder.Append("TimeStamp");       break;
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
-					if (type.Length > 0)
-						StringBuilder.Append('(').Append(type.Length).Append(')');
+
+					// 10921 is implementation  limit for UNICODE_FSS encoding
+					if (type.Length == null || type.Length > 10921 || type.Length < 1)
+						StringBuilder.Append("(10921)");
+					else
+						StringBuilder.Append($"({type.Length})");
+
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
 					break;
-				case DataType.VarBinary     :
-					StringBuilder.Append("BLOB");
-					break;
+				case DataType.VarBinary     : StringBuilder.Append("BLOB");            break;
+				// BOOLEAN type available since FB 3.0, but FirebirdDataProvider.SetParameter converts boolean to '1'/'0'
+				// so for now we will use type, compatible with SetParameter by default
+				case DataType.Boolean       : StringBuilder.Append("CHAR");            break;
 				default: base.BuildDataType(type, createDbType); break;
 			}
 		}

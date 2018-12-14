@@ -461,8 +461,13 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.Char(20), t.MoneyValue).ToInvariantString());
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.PostgreSQL)]
-		public void ToDefaultChar(string context)
+		[Test]
+		public void ToDefaultChar(
+			[DataSources(
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -497,8 +502,13 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.NChar(20), t.MoneyValue).ToInvariantString());
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, TestProvName.Firebird3, TestProvName.Firebird3, ProviderName.PostgreSQL)]
-		public void ToDefaultNChar(string context)
+		[Test]
+		public void ToDefaultNChar(
+			[DataSources(
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
+		string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

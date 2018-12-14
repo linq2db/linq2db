@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Data
 {
 	using Linq;
+	using Common;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -235,19 +236,28 @@ namespace LinqToDB.Data
 
 			static void AddParameter(DataConnection dataConnection, ICollection<IDbDataParameter> parms, string name, SqlParameter parm)
 			{
-				var p         = dataConnection.Command.CreateParameter();
-				var dataType  = parm.DataType;
-				var parmValue = parm.Value;
+				var p          = dataConnection.Command.CreateParameter();
+				var systemType = parm.SystemType;
+				var dataType   = parm.DataType;
+				var dbType     = parm.DbType;
+				var paramValue = parm.Value;
+
+				if (systemType == null)
+				{
+					if (paramValue != null)
+						systemType = paramValue.GetType();
+				}
 
 				if (dataType == DataType.Undefined)
 				{
 					dataType = dataConnection.MappingSchema.GetDataType(
-						parm.SystemType == typeof(object) && parmValue != null ?
-							parmValue.GetType() :
-							parm.SystemType).DataType;
+						parm.SystemType == typeof(object) && paramValue != null ?
+							paramValue.GetType() :
+							systemType).DataType;
 				}
 
-				dataConnection.DataProvider.SetParameter(p, name, dataType, parmValue);
+
+				dataConnection.DataProvider.SetParameter(p, name, new DbDataType(systemType, dataType, dbType), paramValue);
 
 				parms.Add(p);
 			}
@@ -473,7 +483,7 @@ namespace LinqToDB.Data
 					foreach (var p in _preparedQuery.Parameters)
 						_dataConnection.Command.Parameters.Add(p);
 
-				var dataReader = await _dataConnection.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken);
+				var dataReader = await _dataConnection.ExecuteReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken);
 
 				return new DataReaderAsync(dataReader);
 			}

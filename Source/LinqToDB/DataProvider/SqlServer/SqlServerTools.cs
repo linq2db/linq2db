@@ -18,6 +18,10 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		#region Init
 
+#if !NETSTANDARD1_6
+		private static readonly SqlCommandBuilder _commandBuilder = new SqlCommandBuilder();
+#endif
+
 		static readonly SqlServerDataProvider _sqlServerDataProvider2000 = new SqlServerDataProvider(ProviderName.SqlServer2000, SqlServerVersion.v2000);
 		static readonly SqlServerDataProvider _sqlServerDataProvider2005 = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005);
 		static readonly SqlServerDataProvider _sqlServerDataProvider2008 = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008);
@@ -37,6 +41,15 @@ namespace LinqToDB.DataProvider.SqlServer
 			DataConnection.AddDataProvider(_sqlServerDataProvider2000);
 
 			DataConnection.AddProviderDetector(ProviderDetector);
+		}
+
+		internal static string QuoteIdentifier(string identifier)
+		{
+#if !NETSTANDARD1_6
+			return _commandBuilder.QuoteIdentifier(identifier);
+#else
+			return '[' + identifier.Replace("]", "]]") + ']';
+#endif
 		}
 
 		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
@@ -135,9 +148,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return null;
 		}
 
-		#endregion
+#endregion
 
-		#region Public Members
+#region Public Members
 
 		public static IDataProvider GetDataProvider(SqlServerVersion version = SqlServerVersion.v2008)
 		{
@@ -193,9 +206,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlGeometryType    = sqlGeometryType;
 		}
 
-		#endregion
+#endregion
 
-		#region CreateDataConnection
+#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, SqlServerVersion version = SqlServerVersion.v2008)
 		{
@@ -233,9 +246,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new DataConnection(_sqlServerDataProvider2008, transaction);
 		}
 
-		#endregion
+#endregion
 
-		#region BulkCopy
+#region BulkCopy
 
 		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.ProviderSpecific;
 		public  static BulkCopyType  DefaultBulkCopyType
@@ -277,16 +290,16 @@ namespace LinqToDB.DataProvider.SqlServer
 				}, source);
 		}
 
-		#endregion
+#endregion
 
-		#region Extensions
+#region Extensions
 
 		public static void SetIdentityInsert<T>(this DataConnection dataConnection, ITable<T> table, bool isOn)
 		{
 			dataConnection.Execute("SET IDENTITY_INSERT ");
 		}
 
-		#endregion
+#endregion
 
 		public static class Sql
 		{

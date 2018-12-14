@@ -302,22 +302,19 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix,
-			ProviderName.SqlCe,
-			ProviderName.DB2,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
-			ProviderName.OracleNative,
-			ProviderName.OracleManaged,
-			ProviderName.MySql,
-			TestProvName.MariaDB,
-			TestProvName.MySql57,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
-			ProviderName.Access,
-			ProviderName.SapHana)]
-		public void Update9(string context)
+		[Test]
+		public void Update9(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.SqlCe,
+				ProviderName.DB2,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -345,22 +342,19 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix,
-			ProviderName.SqlCe,
-			ProviderName.DB2,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
-			ProviderName.OracleNative,
-			ProviderName.OracleManaged,
-			ProviderName.MySql,
-			TestProvName.MariaDB,
-			TestProvName.MySql57,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
-			ProviderName.Access,
-			ProviderName.SapHana)]
-		public void Update10(string context)
+		[Test]
+		public void Update10(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.SqlCe,
+				ProviderName.DB2,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -403,10 +397,17 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.SapHana)]
-		public void Update12(string context)
+		[Test]
+		public void Update12(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -420,10 +421,17 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.SapHana)]
-		public async Task Update12Async(string context)
+		[Test]
+		public async Task Update12Async(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.OracleNative, ProviderName.OracleManaged,			
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -437,10 +445,17 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.SapHana)]
-		public void Update13(string context)
+		[Test]
+		public void Update13(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -758,19 +773,19 @@ namespace Tests.xUpdate
 #pragma warning restore 649
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access,
-			ProviderName.DB2,
-			ProviderName.Firebird,
-			ProviderName.PostgreSQL,
-			ProviderName.Informix,
-			ProviderName.OracleNative,
-			ProviderName.OracleManaged,
-			ProviderName.SqlCe,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
-			ProviderName.SapHana)]
-		public void UpdateAssociation5(string context)
+		[Test]
+		public void UpdateAssociation5(
+			[DataSources(
+				false,
+				ProviderName.Access,
+				ProviderName.DB2,
+				ProviderName.Firebird,
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -818,18 +833,18 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access,
-			ProviderName.DB2,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
-			ProviderName.Informix,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
-			ProviderName.SqlCe,
-			ProviderName.SqlServer2000,
-			ProviderName.SapHana)]
-		public void UpdateTop(string context)
+		[Test]
+		public void UpdateTop(
+			[DataSources(
+				ProviderName.Access,
+				ProviderName.DB2,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.Informix,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.SqlCe,
+				ProviderName.SqlServer2000,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -858,25 +873,21 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access,
-			ProviderName.DB2,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
-			ProviderName.Informix,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
-			ProviderName.SqlCe,
-			ProviderName.SqlServer2000,
-			ProviderName.SapHana,
-			ProviderName.MySql,
-			TestProvName.MySql57,
-			TestProvName.MariaDB,
-			ProviderName.Sybase,
-			ProviderName.SybaseManaged,
-			ProviderName.OracleNative,
-			ProviderName.OracleManaged)]
-		public void TestUpdateTakeOrdered(string context)
+		[Test]
+		public void TestUpdateTakeOrdered(
+			[DataSources(
+				ProviderName.Access,
+				ProviderName.DB2,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.Informix,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.SqlCe,
+				ProviderName.SqlServer2000,
+				ProviderName.SapHana,
+				ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB,
+				ProviderName.Sybase, ProviderName.SybaseManaged,
+				ProviderName.OracleNative, ProviderName.OracleManaged)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -908,25 +919,21 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access,
-			ProviderName.DB2,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
-			ProviderName.Informix,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
-			ProviderName.SqlCe,
-			ProviderName.SqlServer2000,
-			ProviderName.SapHana,
-			ProviderName.MySql,
-			TestProvName.MySql57,
-			TestProvName.MariaDB,
-			ProviderName.Sybase,
-			ProviderName.SybaseManaged,
-			ProviderName.OracleNative,
-			ProviderName.OracleManaged)]
-		public void TestUpdateSkipTake(string context)
+		[Test]
+		public void TestUpdateSkipTake(
+			[DataSources(
+				ProviderName.Access,
+				ProviderName.DB2,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.Informix,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.SqlCe,
+				ProviderName.SqlServer2000,
+				ProviderName.SapHana,
+				ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB,
+				ProviderName.Sybase, ProviderName.SybaseManaged,
+				ProviderName.OracleNative, ProviderName.OracleManaged)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -961,19 +968,18 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access,
-			ProviderName.DB2,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
-			ProviderName.Informix,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
-			ProviderName.SqlCe,
-			ProviderName.SqlServer2000,
-			ProviderName.SapHana
-		 )]
-		public void TestUpdateTakeNotOrdered(string context)
+		[Test]
+		public void TestUpdateTakeNotOrdered(
+			[DataSources(
+				ProviderName.Access,
+				ProviderName.DB2,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.Informix,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.SqlCe,
+				ProviderName.SqlServer2000,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1028,10 +1034,17 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access, ProviderName.Informix, ProviderName.Firebird,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.Firebird3, ProviderName.SapHana)]
-		public void UpdateIssue319Regression(string context)
+		[Test]
+		public void UpdateIssue319Regression(
+			[DataSources(
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access,
+				ProviderName.Informix,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.Sybase, ProviderName.SybaseManaged,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{

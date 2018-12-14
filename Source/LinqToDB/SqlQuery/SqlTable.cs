@@ -7,6 +7,8 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
+	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using Mapping;
 
 	public class SqlTable : ISqlTableSource
@@ -109,6 +111,27 @@ namespace LinqToDB.SqlQuery
 					}
 
 					field.DataType = dataType.DataType;
+
+					// try to get type from converter
+					if (field.DataType == DataType.Undefined)
+					{
+						try
+						{
+							var converter = mappingSchema.GetConverter(
+								new DbDataType(field.SystemType, field.DataType, field.DbType),
+								new DbDataType(typeof(DataParameter)), true);
+
+							if (converter != null && converter.ConvertValueToParameter != null)
+							{
+								var parameter = converter.ConvertValueToParameter(DefaultValue.GetValue(field.SystemType, mappingSchema));
+								field.DataType = parameter.DataType;
+							}
+						}
+						catch
+						{
+							// converter cannot handle default value?
+						}
+					}
 
 					if (field.Length == null)
 						field.Length = dataType.Length;

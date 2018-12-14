@@ -46,7 +46,7 @@ namespace LinqToDB.Common
 		/// the current exception.</param>
 		/// <seealso cref="Exception.Message"/>
 		/// <seealso cref="Exception.InnerException"/>
-		public LinqToDBConvertException(string message, Exception innerException) 
+		public LinqToDBConvertException(string message, Exception innerException)
 			: base(message, innerException)
 		{
 		}
@@ -58,7 +58,7 @@ namespace LinqToDB.Common
 		/// <param name="innerException">The InnerException, if any, that threw
 		/// the current exception.</param>
 		/// <seealso cref="Exception.InnerException"/>
-		public LinqToDBConvertException(Exception innerException) 
+		public LinqToDBConvertException(Exception innerException)
 			: base(innerException.Message, innerException)
 		{
 		}
@@ -80,5 +80,10 @@ namespace LinqToDB.Common
 		}
 
 #endif
+
+		/// <summary>
+		/// Gets name of misconfigured column, which caused exception.
+		/// </summary>
+		public string ColumnName { get; internal set; }
 	}
 }

@@ -15,6 +15,7 @@ using System.Xml.Linq;
 namespace LinqToDB.DataProvider
 {
 	using Data;
+	using Common;
 	using Expressions;
 	using Mapping;
 	using SchemaProvider;
@@ -273,9 +274,9 @@ namespace LinqToDB.DataProvider
 
 		#region SetParameter
 
-		public virtual void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public virtual void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Char      :
 				case DataType.NChar     :
@@ -325,9 +326,9 @@ namespace LinqToDB.DataProvider
 			parameter.Value = value ?? DBNull.Value;
 		}
 
-		public virtual Type ConvertParameterType(Type type, DataType dataType)
+		public virtual Type ConvertParameterType(Type type, DbDataType dataType)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Char      :
 				case DataType.NChar     :
@@ -360,11 +361,11 @@ namespace LinqToDB.DataProvider
 		public abstract ISchemaProvider GetSchemaProvider     ();
 #endif
 
-		protected virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected virtual void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			DbType dbType;
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Char           : dbType = DbType.AnsiStringFixedLength; break;
 				case DataType.VarChar        : dbType = DbType.AnsiString;            break;

@@ -2,11 +2,12 @@
 <#@ output extension=".generated.cs"                                              #>
 <#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.MySql.ttinclude"       #>
 <#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude" #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\MySql.Data.dll"       #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\linq2db.dll"          #>
+<#@ include file="Settings.ttinclude"                                             #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\NET.46\net46\MySql.Data.dll"      #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\NET.46\net46\linq2db.dll"         #>
 <#
 	NamespaceName = "MySqlDataContext";
 
-	LoadMySqlMetadata("DBHost", "TestData", "root", "TestPassword");
+	LoadMySqlMetadata(GetConnectionString("MySql"));
 	GenerateModel();
 #>

@@ -489,7 +489,7 @@ namespace Tests.xUpdate
 					expected = expected.Value.AddTicks(-trimmable);
 				}
 
-				if (context == ProviderName.PostgreSQL)
+				if (context.Contains(ProviderName.PostgreSQL))
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
 			}
 
@@ -652,6 +652,12 @@ namespace Tests.xUpdate
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
 						break;
 					case ProviderName.PostgreSQL:
+					case ProviderName.PostgreSQL92:
+					case ProviderName.PostgreSQL93:
+					case ProviderName.PostgreSQL95:
+					case TestProvName.PostgreSQL10:
+					case TestProvName.PostgreSQL11:
+					case TestProvName.PostgreSQLLatest:
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10) * 10);
 						break;
 					case ProviderName.DB2:

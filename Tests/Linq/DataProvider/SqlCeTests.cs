@@ -514,7 +514,7 @@ namespace Tests.DataProvider
 						.Where(_ => (_.DateTimeValue ?? SqlDateTime.MinValue.Value) <= DateTime.Now)
 						.ToList();
 
-					Assert.True(db.LastQuery.Contains(", @p") != inline);
+					Assert.True(db.LastQuery.Contains(", @") != inline);
 				}
 			}
 			finally

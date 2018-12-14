@@ -151,8 +151,13 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.Select(c => c.ParentID).Distinct().FirstOrDefault());
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL)]
-		public void NestedFirstOrDefault4(string context)
+		[Test]
+		public void NestedFirstOrDefault4(
+			[DataSources(
+				ProviderName.Informix,
+				ProviderName.Firebird,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)]
+			string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))

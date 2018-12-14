@@ -44,7 +44,7 @@ void FixRecordResultFunctions()
 			var mappings = new List<string>();
 			foreach (var outParam in proc.ProcParameters.Where(_ => _.IsOut))
 			{
-				result.Members.Add(new Property(outParam.ParameterType, outParam.ParameterName, null, null));
+				result.Members.Add(new Property(() => outParam.ParameterType, outParam.ParameterName, null, null));
 				mappings.Add($"{outParam.ParameterName} = ({outParam.ParameterType})tuple[{mappings.Count}]");
 
 				if (outParam.IsIn)
@@ -53,7 +53,7 @@ void FixRecordResultFunctions()
 
 			proc.ProcParameters = proc.ProcParameters.Where(_ => !_.IsOut).ToList();
 
-			initMappingSchema.Body.Add($"MappingSchema.SetConvertExpression<object[], {result.Name}>(tuple => new {result.Name}() {{ {string.Join(", ", mappings)} }});");
+			initMappingSchema.BodyBuilders.Add(() => new [] { $"MappingSchema.SetConvertExpression<object[], {result.Name}>(tuple => new {result.Name}() {{ {string.Join(", ", mappings)} }});" });
 		}
 		else // one parameter
 		{

@@ -210,7 +210,7 @@ namespace LinqToDB.DataProvider.Access
 						if (value != null)
 						{
 							value     = value.Replace("[", "[[]").Replace("~%", "[%]").Replace("~_", "[_]").Replace("~~", "[~]");
-							p         = new SqlParameter(p.SystemType, p.Name, value) { DbSize = p.DbSize, DataType = p.DataType, IsQueryParameter = p.IsQueryParameter };
+							p         = new SqlParameter(p.SystemType, p.Name, value) { DbSize = p.DbSize, DataType = p.DataType, IsQueryParameter = p.IsQueryParameter, DbType = p.DbType };
 							predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, p, null);
 						}
 					}

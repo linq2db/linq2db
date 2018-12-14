@@ -379,5 +379,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
 	}
 }

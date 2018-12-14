@@ -148,8 +148,7 @@ namespace Tests.Linq
 		private static CharTestTable[] GetCharData(string context)
 		{
 			// filter out null-character test cases for servers/providers without support
-			if (   context == ProviderName.PostgreSQL
-				|| context == ProviderName.PostgreSQL + ".LinqService"
+			if (   context.Contains(ProviderName.PostgreSQL)
 				|| context == ProviderName.DB2
 				|| context == ProviderName.DB2        + ".LinqService"
 				|| context == ProviderName.SqlCe
@@ -176,8 +175,7 @@ namespace Tests.Linq
 		private static StringTestTable[] GetStringData(string context)
 		{
 			// filter out null-character test cases for servers/providers without support
-			if (   context == ProviderName.PostgreSQL
-				|| context == ProviderName.PostgreSQL    + ".LinqService"
+			if (context.Contains(ProviderName.PostgreSQL)
 				|| context == ProviderName.DB2
 				|| context == ProviderName.DB2           + ".LinqService"
 				|| context == ProviderName.SQLiteClassic
@@ -312,8 +310,7 @@ namespace Tests.Linq
 				|| context == ProviderName.SqlCe      + ".LinqService"
 				|| context == ProviderName.DB2
 				|| context == ProviderName.DB2        + ".LinqService"
-				|| context == ProviderName.PostgreSQL
-				|| context == ProviderName.PostgreSQL + ".LinqService"
+				|| context.Contains(ProviderName.PostgreSQL)
 				|| context == ProviderName.MySql
 				|| context == ProviderName.MySql      + ".LinqService"
 				|| context == TestProvName.MySql57
