@@ -99,7 +99,7 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqToDBException("Invalid Aggregate function implementation");
 
 			context.Sql        = context.SelectQuery;
-			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression);
+			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodCall.Method.Name);
 
 			return context;
 		}
@@ -146,7 +146,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
 				if (Parent != null)
-					ConvertToParentIndex(index, Parent);
+					index = ConvertToParentIndex(index, Parent);
 				return BuildExpression(index);
 			}
 

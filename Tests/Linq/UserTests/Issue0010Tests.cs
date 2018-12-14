@@ -19,8 +19,8 @@ namespace Tests.UserTests
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 
 				// call twice to ensure connection is still in good shape after call
-				var schema = schemaProvider.GetSchema(db);
-				schema     = schemaProvider.GetSchema(db);
+				var schema = schemaProvider.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				schema     = schemaProvider.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				// and query known table to be completely sure connection is not broken
 				db.Execute("SELECT * FROM CLONECODE");

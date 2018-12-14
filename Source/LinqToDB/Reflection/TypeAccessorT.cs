@@ -42,11 +42,7 @@ namespace LinqToDB.Reflection
 				}
 			}
 
-			foreach (var memberInfo in type.GetPublicInstanceMembersEx())
-			{
-				if (memberInfo.IsFieldEx() || memberInfo.IsPropertyEx() && ((PropertyInfo)memberInfo).GetIndexParameters().Length == 0)
-					_members.Add(memberInfo);
-			}
+			_members.AddRange(type.GetPublicInstanceValueMembers());
 
 			// Add explicit interface implementation properties support
 			// Or maybe we should support all private fields/properties?

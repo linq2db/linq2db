@@ -96,10 +96,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					if (type.Length > 0)
 						StringBuilder.Append('(').Append(type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
 					break;
-				case DataType.Undefined      :
-					if (type.Type == typeof(string))
-						goto case DataType.NVarChar;
-					break;
 				case DataType.Json           : StringBuilder.Append("json");           break;
 				case DataType.BinaryJson     : StringBuilder.Append("jsonb");          break;
 				case DataType.Guid           : StringBuilder.Append("uuid");           break;

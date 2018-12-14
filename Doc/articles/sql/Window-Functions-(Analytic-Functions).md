@@ -129,7 +129,7 @@ REGR_SXY                                                                        
 [VAR_SAMP](https://docs.oracle.com/cd/E11882_01/server.112/e41084/functions231.htm)                            | `Sql.Ext.VarSamp()`
 [VARIANCE](https://docs.oracle.com/cd/E11882_01/server.112/e41084/functions232.htm)                            | `Sql.Ext.Variance()`
 
->If you have found that your database supports function that is not listed in table above, you can easily create your own extension. Code samples are located in [Sql.Analytic.cs](https://github.com/linq2db/linq2db/blob/master/Source/Sql/Sql.Analytic.cs#L399)
+>If you have found that your database supports function that is not listed in table above, you can easily create your own extension. Code samples are located in [Sql.Analytic.cs](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Sql/Sql.Analytic.cs)
 
 #### Engines that support Window Functions
 - [Oracle](https://docs.oracle.com/cd/E11882_01/server.112/e41084/functions004.htm)

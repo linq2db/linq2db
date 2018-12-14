@@ -25,8 +25,15 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class InsertTests : TestBase
 	{
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DistinctInsert1(string context)
+		[Test]
+		public void DistinctInsert1(
+			[DataSources(
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -56,8 +63,15 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DistinctInsert2(string context)
+		[Test]
+		public void DistinctInsert2(
+			[DataSources(
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1548,6 +1562,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test, DataContextSource]
 		public void InsertByTableName(string context)
 		{
@@ -1592,6 +1607,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test, DataContextSource]
 		public async Task InsertByTableNameAsync(string context)
 		{

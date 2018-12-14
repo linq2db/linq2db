@@ -8,29 +8,89 @@ namespace LinqToDB.Data
 {
 	using System.Data;
 
+	/// <summary>
+	/// Tracing information for the <see cref="DataConnection"/> events.
+	/// </summary>
 	public class TraceInfo
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="TraceInfo"/> class.
+		/// </summary>
+		/// <param name="traceInfoStep">Trace execution step.</param>
 		public TraceInfo(TraceInfoStep traceInfoStep)
 		{
 			TraceInfoStep = traceInfoStep;
 		}
 
-		public TraceInfoStep  TraceInfoStep    { get; private set; }
-		public TraceLevel     TraceLevel       { get; set; }
-		public DataConnection DataConnection   { get; set; }
-		public IDbCommand     Command          { get; set; }
-		public TimeSpan?      ExecutionTime    { get; set; }
-		public int?           RecordsAffected  { get; set; }
-		public Exception      Exception        { get; set; }
-		public string         CommandText      { get; set; }
-		public Expression     MapperExpression { get; set; }
-		public bool           IsAsync          { get; set; }
+		/// <summary>
+		/// Gets the tracing execution step, <see cref="TraceInfoStep"/>.
+		/// </summary>
+		public TraceInfoStep TraceInfoStep { get; private set; }
 
+		/// <summary>
+		/// Gets or sets the tracing detail level, <see cref="TraceLevel"/>.
+		/// </summary>
+		public TraceLevel TraceLevel { get; set; }
+
+		/// <summary>
+		/// Gets or sets the <see cref="DataConnection"/> that produced the tracing event.
+		/// </summary>
+		public DataConnection DataConnection { get; set; }
+
+		/// <summary>
+		/// Gets or sets the <see cref="IDbCommand"/> associated with the tracing event.
+		/// </summary>
+		public IDbCommand Command { get; set; }
+
+		/// <summary>
+		/// Gets or sets the starting <see cref="DateTime"/> of the operation (UTC).
+		/// </summary>
+		public DateTime? StartTime { get; set; }
+
+		/// <summary>
+		/// Gets or sets the execution time for <see cref="TraceInfoStep.AfterExecute"/>,
+		/// <see cref="TraceInfoStep.Completed"/>, and <see cref="TraceInfoStep.Error"/> steps.
+		/// </summary>
+		public TimeSpan? ExecutionTime { get; set; }
+
+		/// <summary>
+		/// Gets or sets the number of rows affected by the command
+		/// or the number of rows produced by the <see cref="DataReader"/>.
+		/// </summary>
+		public int? RecordsAffected { get; set; }
+
+		/// <summary>
+		/// Gets or sets the <see cref="Exception"/> for <see cref="TraceInfoStep.Error"/> step.
+		/// </summary>
+		public Exception Exception { get; set; }
+
+		/// <summary>
+		/// Gets or sets the text of the command.
+		/// </summary>
+		public string CommandText { get; set; }
+
+		/// <summary>
+		/// Gets or sets the expression used by the results mapper.
+		/// </summary>
+		public Expression MapperExpression { get; set; }
+
+		/// <summary>
+		/// Gets or sets a flag indicating whether the command was executed asynchronously.
+		/// </summary>
+		public bool IsAsync { get; set; }
+
+		/// <summary>
+		/// Gets a flag indicating whether this step was executed before the operation.
+		/// </summary>
 		[Obsolete("Use TraceInfoStep instead.")]
-		public bool BeforeExecute              { get { return TraceInfoStep == TraceInfoStep.BeforeExecute; } }
+		public bool BeforeExecute { get { return TraceInfoStep == TraceInfoStep.BeforeExecute; } }
 
 		private string _sqlText;
-		public  string  SqlText
+
+		/// <summary>
+		/// Gets the formatted SQL text of the command.
+		/// </summary>
+		public string SqlText
 		{
 			get
 			{

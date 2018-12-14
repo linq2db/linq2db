@@ -16,6 +16,7 @@ namespace Tests.UserTests
 				ProviderName.DB2,
 				ProviderName.SqlCe,
 				TestProvName.MySql57,
+				ProviderName.SapHana,
 				ProviderName.SQLiteMS, ProviderName.SqlServer2000, TestProvName.MariaDB)
 			{
 			}

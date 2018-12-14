@@ -426,6 +426,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void ToLowerInvariantTest(string context)
 		{

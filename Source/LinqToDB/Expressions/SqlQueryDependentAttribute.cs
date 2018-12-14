@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
@@ -12,7 +13,7 @@ namespace LinqToDB.Expressions
 	{
 		/// <summary>
 		/// Compares two objects during expression tree comparison. Handles sequences also.
-		/// Has to be overriden if specific comparison required
+		/// Has to be overriden if specific comparison required.
 		/// </summary>
 		/// <param name="obj1"></param>
 		/// <param name="obj2"></param>
@@ -43,6 +44,20 @@ namespace LinqToDB.Expressions
 			}
 
 			return obj1.Equals(obj2);
+		}
+
+		/// <summary>
+		/// Compares two expressions during expression tree comparison. 
+		/// Has to be overriden if specific comparison required.
+		/// </summary>
+		/// <param name="expr1"></param>
+		/// <param name="expr2"></param>
+		/// <param name="comparer">Default function for comparing expressions.</param>
+		/// <returns>Result of comparison</returns>
+		public virtual bool ExpressionsEqual(Expression expr1, Expression expr2,
+			Func<Expression, Expression, bool> comparer)
+		{
+			return ObjectsEqual(expr1.EvaluateExpression(), expr2.EvaluateExpression());
 		}
 	}
 }

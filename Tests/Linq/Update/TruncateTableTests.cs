@@ -41,6 +41,7 @@ namespace Tests.xUpdate
 			[Column]                       public decimal Field1;
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.Informix)]
 		public void TruncateIdentityTest(string context)
 		{

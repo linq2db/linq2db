@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 
 			var body = lambda.Body.Unwrap();
 
-			if (body.NodeType == ExpressionType	.MemberInit)
+			if (body.NodeType == ExpressionType.MemberInit)
 			{
 				var mi = (MemberInitExpression)body;
 				bool throwExpr;

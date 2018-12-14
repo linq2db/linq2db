@@ -244,7 +244,7 @@ WHERE
 				.ToList();
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale)
+		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
 		{
 			var type = DataTypes.FirstOrDefault(dt => dt.TypeName == columnType);
 
@@ -279,7 +279,7 @@ WHERE
 				}
 			}
 
-			return base.GetDbType(columnType, dataType, length, prec, scale);
+			return base.GetDbType(columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
 
 		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)

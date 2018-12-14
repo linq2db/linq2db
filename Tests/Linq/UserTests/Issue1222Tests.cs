@@ -46,8 +46,10 @@ namespace Tests.UserTests
 			[Column("inIdMain"), NotNull]          public int InIdMain { get; set; } // int
 		}
 
-		[Test, Combinatorial]
-		public void Test([DataSources] string context)
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[Test, DataContextSource]
+		public void Test(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -208,18 +208,18 @@ namespace LinqToDB.DataProvider
 			// avoid parameters in source due to low limits for parameters number in providers
 			if (!valueConverter.TryConvert(Command, columnType, value))
 			{
-				AddSourceValueAsParameter(column.DataType, value);
+				AddSourceValueAsParameter(column.DataType, column.DbType, value);
 			}
 		}
 
-		protected void AddSourceValueAsParameter(DataType dataType, object value)
+		protected void AddSourceValueAsParameter(DataType dataType, string dbType, object value)
 		{
 			var name     = GetNextParameterName();
 			var fullName = SqlBuilder.Convert(name, ConvertType.NameToQueryParameter).ToString();
 
 			Command.Append(fullName);
 
-			AddParameter(new DataParameter(name, value, dataType));
+			AddParameter(new DataParameter(name, value, dataType, dbType));
 		}
 
 		private void BuildAsSourceClause(IEnumerable<string> columnNames)
@@ -428,7 +428,7 @@ namespace LinqToDB.DataProvider
 
 				SaveParameters(statement.Parameters);
 
-				SqlBuilder.BuildSql(0, statement, Command, startIndent : 1);
+				SqlBuilder.BuildSqlWithAliases(0, statement, Command, startIndent : 1);
 
 				var cs = new [] { ' ', '\t', '\r', '\n' };
 
@@ -728,26 +728,29 @@ namespace LinqToDB.DataProvider
 				});
 
 			var qry = Query<int>.GetQuery(DataContext, ref insertExpression);
-			var statement = qry.Queries[0].Statement;
+			lock (qry)
+			{
+				var statement = qry.Queries[0].Statement;
 
-			// we need InsertOrUpdate for sql builder to generate values clause
-			var newInsert = new SqlInsertOrUpdateStatement(statement.SelectQuery) { Insert = statement.GetInsertClause(), Update = statement.GetUpdateClause() };
-			newInsert.Parameters.AddRange(statement.Parameters);
-			newInsert.Insert.Into.Alias = TargetAlias;
+				// we need InsertOrUpdate for sql builder to generate values clause
+				var newInsert = new SqlInsertOrUpdateStatement(statement.SelectQuery) { Insert = statement.GetInsertClause(), Update = statement.GetUpdateClause() };
+				newInsert.Parameters.AddRange(statement.Parameters);
+				newInsert.Insert.Into.Alias = TargetAlias;
 
-			var tables = MoveJoinsToSubqueries(newInsert, SourceAlias, null, QueryElement.InsertSetter);
-			SetSourceColumnAliases(newInsert.Insert, tables.Item1.Source);
+				var tables = MoveJoinsToSubqueries(newInsert, SourceAlias, null, QueryElement.InsertSetter);
+				SetSourceColumnAliases(newInsert.Insert, tables.Item1.Source);
 
-			qry.Queries[0].Statement = newInsert;
-			QueryRunner.SetParameters(qry, DataContext, insertExpression, null, 0);
+				qry.Queries[0].Statement = newInsert;
+				QueryRunner.SetParameters(qry, DataContext, insertExpression, null, 0);
 
-			SaveParameters(newInsert.Parameters);
+				SaveParameters(newInsert.Parameters);
 
-			if (IsIdentityInsertSupported
-				&& newInsert.Insert.Items.Any(_ => _.Column is SqlField field && field.IsIdentity))
-				OnInsertWithIdentity();
+				if (IsIdentityInsertSupported
+					&& newInsert.Insert.Items.Any(_ => _.Column is SqlField field && field.IsIdentity))
+					OnInsertWithIdentity();
 
-			SqlBuilder.BuildInsertClauseHelper(newInsert, Command);
+				SqlBuilder.BuildInsertClauseHelper(newInsert, Command);
+			}
 		}
 
 		protected void BuildDefaultInsert()
@@ -859,20 +862,23 @@ namespace LinqToDB.DataProvider
 				new[] { updateQuery.Expression, target.Expression, Expression.Quote(predicate) });
 
 			var qry   = Query<int>.GetQuery(DataContext, ref updateExpression);
-			var statement = qry.Queries[0].Statement;
-
-			if (ProviderUsesAlternativeUpdate)
-				BuildAlternativeUpdateQuery(statement);
-			else
+			lock (qry)
 			{
-				var tables = MoveJoinsToSubqueries(statement, TargetAlias, SourceAlias, QueryElement.UpdateSetter);
-				SetSourceColumnAliases(statement.RequireUpdateClause(), tables.Item2.Source);
+				var statement = qry.Queries[0].Statement;
+
+				if (ProviderUsesAlternativeUpdate)
+					BuildAlternativeUpdateQuery(statement);
+				else
+				{
+					var tables = MoveJoinsToSubqueries(statement, TargetAlias, SourceAlias, QueryElement.UpdateSetter);
+					SetSourceColumnAliases(statement.RequireUpdateClause(), tables.Item2.Source);
+				}
+
+				QueryRunner.SetParameters(qry, DataContext, updateExpression, null, 0);
+				SaveParameters(statement.Parameters);
+
+				SqlBuilder.BuildUpdateSetHelper((SqlUpdateStatement)statement, Command);
 			}
-
-			QueryRunner.SetParameters(qry, DataContext, updateExpression, null, 0);
-			SaveParameters(statement.Parameters);
-
-			SqlBuilder.BuildUpdateSetHelper((SqlUpdateStatement)statement, Command);
 		}
 
 		private void BuildAlternativeUpdateQuery(SqlStatement statement)
@@ -1140,15 +1146,18 @@ namespace LinqToDB.DataProvider
 				new[] { _connection.GetTable<TTarget>().Expression, Expression.Quote(update) });
 
 			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
-			var statement = (SqlUpdateStatement)qry.Queries[0].Statement;
+			lock (qry)
+			{
+				var statement = (SqlUpdateStatement)qry.Queries[0].Statement;
 
-			MoveJoinsToSubqueries(statement, TargetAlias, null, QueryElement.UpdateSetter);
+				MoveJoinsToSubqueries(statement, TargetAlias, null, QueryElement.UpdateSetter);
 
-			QueryRunner.SetParameters(qry, DataContext, updateExpression, null, 0);
+				QueryRunner.SetParameters(qry, DataContext, updateExpression, null, 0);
 
-			SaveParameters(statement.Parameters);
+				SaveParameters(statement.Parameters);
 
-			SqlBuilder.BuildUpdateSetHelper(statement, Command);
+				SqlBuilder.BuildUpdateSetHelper(statement, Command);
+			}
 		}
 		#endregion
 
@@ -1181,7 +1190,7 @@ namespace LinqToDB.DataProvider
 			{
 				param.Name = GetNextParameterName();
 
-				AddParameter(new DataParameter(param.Name, param.Value, param.DataType));
+				AddParameter(new DataParameter(param.Name, param.Value, param.DataType, param.DbType));
 			}
 		}
 		#endregion

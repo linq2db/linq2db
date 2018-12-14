@@ -155,10 +155,19 @@ namespace LinqToDB.Expressions
 				{
 					return func(dataReader);
 				}
+				catch (LinqToDBConvertException ex)
+				{
+					ex.ColumnName = dataReader.GetName(_columnIndex);
+					throw;
+				}
 				catch (Exception ex)
 				{
 					var name = dataReader.GetName(_columnIndex);
-					throw new LinqToDBException($"Mapping of column {name} value failed, see inner exception for details", ex);
+					throw new LinqToDBConvertException(
+							$"Mapping of column {name} value failed, see inner exception for details", ex)
+					{
+						ColumnName = name
+					};
 				}
 
 				/*
@@ -197,6 +206,11 @@ namespace LinqToDB.Expressions
 			readonly Type          _columnType;
 			readonly int           _columnIndex;
 			readonly object        _defaultValue;
+		}
+
+		public override string ToString()
+		{
+			return $"ConvertFromDataReaderExpression<{_type.Name}>({_idx})";
 		}
 	}
 }

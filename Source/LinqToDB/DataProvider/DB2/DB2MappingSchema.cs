@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.DB2
 {
 	using Mapping;
 	using SqlQuery;
+	using System.Data.Linq;
 
 	public class DB2MappingSchema : MappingSchema
 	{
@@ -20,6 +21,18 @@ namespace LinqToDB.DataProvider.DB2
 
 			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
 			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+		}
+
+		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
+		{
+			stringBuilder.Append("BX'");
+
+			foreach (var b in value)
+				stringBuilder.Append(b.ToString("X2"));
+
+			stringBuilder.Append("'");
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)

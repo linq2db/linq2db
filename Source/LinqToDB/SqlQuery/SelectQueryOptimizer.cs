@@ -810,7 +810,11 @@ namespace LinqToDB.SqlQuery
 			var map = new Dictionary<ISqlExpression,ISqlExpression>(query.Select.Columns.Count);
 
 			foreach (var c in query.Select.Columns)
+			{
 				map.Add(c, c.Expression);
+				if (c.RawAlias != null && c.Expression is SqlColumn clmn && clmn.RawAlias == null)
+					clmn.RawAlias = c.RawAlias;
+			}
 
 			var top = _statement ?? (IQueryElement)_selectQuery.RootQuery();
 

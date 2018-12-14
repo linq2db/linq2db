@@ -8,6 +8,7 @@ namespace LinqToDB.SqlQuery
 		SystemTable,
 		Function,
 		Expression,
-		Cte
+		Cte,
+		RawSql
 	}
 }

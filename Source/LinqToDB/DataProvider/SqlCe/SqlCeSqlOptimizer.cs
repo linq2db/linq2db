@@ -82,6 +82,17 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
+			if (SqlCeConfiguration.InlineFunctionParameters && expr is SqlFunction sqlFunction)
+			{
+				foreach (var parameter in sqlFunction.Parameters)
+				{
+					if (parameter.ElementType == QueryElementType.SqlParameter && parameter is SqlParameter sqlParameter)
+					{
+						sqlParameter.IsQueryParameter = false;
+					}
+				}
+			}
+
 			expr = base.ConvertExpression(expr);
 
 			switch (expr)

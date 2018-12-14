@@ -4,15 +4,10 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Extensions;
-
 	public class SqlParameter : ISqlExpression, IValueContainer
 	{
 		public SqlParameter(Type systemType, string name, object value)
 		{
-			if (systemType.ToNullableUnderlying().IsEnumEx())
-				throw new ArgumentException();
-
 			IsQueryParameter = true;
 			Name             = name;
 			SystemType       = systemType;
@@ -30,6 +25,7 @@ namespace LinqToDB.SqlQuery
 		public Type     SystemType       { get; set; }
 		public bool     IsQueryParameter { get; set; }
 		public DataType DataType         { get; set; }
+		public string   DbType           { get; set; }
 		public int      DbSize           { get; set; }
 		public string   LikeStart        { get; set; }
 		public string   LikeEnd          { get; set; }
@@ -205,10 +201,11 @@ namespace LinqToDB.SqlQuery
 				{
 					IsQueryParameter = IsQueryParameter,
 					DataType         = DataType,
+					DbType           = DbType,
 					DbSize           = DbSize,
 					LikeStart        = LikeStart,
 					LikeEnd          = LikeEnd,
-					ReplaceLike      = ReplaceLike,
+					ReplaceLike      = ReplaceLike
 				};
 
 				objectTree.Add(this, clone = p);

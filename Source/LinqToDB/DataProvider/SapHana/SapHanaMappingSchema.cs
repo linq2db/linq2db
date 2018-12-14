@@ -2,6 +2,7 @@
 {
 	using Mapping;
 	using SqlQuery;
+	using System.Data.Linq;
 	using System.Text;
 
 	public class SapHanaMappingSchema : MappingSchema
@@ -17,6 +18,7 @@
 			SetValueToSqlConverter(typeof(string), (sb, dt, v) => ConvertStringToSql(sb, v.ToString()));
 			SetValueToSqlConverter(typeof(char)  , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)

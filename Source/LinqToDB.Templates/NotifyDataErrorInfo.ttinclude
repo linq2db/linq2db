@@ -35,25 +35,25 @@ void NotifyDataErrorInfoImpl()
 					Region  = "INotifyDataErrorInfo support",
 					Members =
 					{
-						new Event("EventHandler<DataErrorsChangedEventArgs>", "ErrorsChanged")
+						new Event(() => "EventHandler<DataErrorsChangedEventArgs>", "ErrorsChanged")
 						{
 							IsVirtual  = true,
 							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
 						},
-						new Field("Dictionary<string,List<string>>", "_validationErrors")
+						new Field(() => "Dictionary<string,List<string>>", "_validationErrors")
 						{
 							InitValue      = "new Dictionary<string,List<string>>()",
 							AccessModifier = AccessModifier.Private,
 							IsReadonly     = true,
 							Attributes     = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
 						},
-						new Method("void", "AddError",
-							new[]
+						new Method(() => "void", "AddError",
+							new Func<string>[]
 							{
-								"string propertyName",
-								"string error"
+								() => "string propertyName",
+								() => "string error"
 							},
-							new[]
+							() => new[]
 							{
 								"List<string> errors;",
 								"",
@@ -73,12 +73,12 @@ void NotifyDataErrorInfoImpl()
 						{
 							AccessModifier = AccessModifier.Public
 						},
-						new Method("void", "RemoveError",
-							new[]
+						new Method(() => "void", "RemoveError",
+							new Func<string>[]
 							{
-								"string propertyName",
+								() => "string propertyName",
 							},
-							new[]
+							() => new[]
 							{
 								"List<string> errors;",
 								"",
@@ -91,12 +91,12 @@ void NotifyDataErrorInfoImpl()
 						{
 							AccessModifier = AccessModifier.Public
 						},
-						new Method("void", "OnErrorsChanged",
-							new[]
+						new Method(() => "void", "OnErrorsChanged",
+							new Func<string>[]
 							{
-								"string propertyName",
+								() => "string propertyName",
 							},
-							new[]
+							() => new[]
 							{
 								"if (ErrorsChanged != null)",
 								"{",
@@ -110,12 +110,12 @@ void NotifyDataErrorInfoImpl()
 						{
 							AccessModifier = AccessModifier.Protected
 						},
-						new Method("IEnumerable", "GetErrors",
-							new[]
+						new Method(() => "IEnumerable", "GetErrors",
+							new Func<string>[]
 							{
-								"string propertyName",
+								() => "string propertyName",
 							},
-							new[]
+							() => new[]
 							{
 								"List<string> errors;",
 								"return propertyName != null && _validationErrors.TryGetValue(propertyName, out errors) ? errors : null;",
@@ -123,7 +123,7 @@ void NotifyDataErrorInfoImpl()
 						{
 							AccessModifier = AccessModifier.Public
 						},
-						new Property("bool", "HasErrors").InitGetter("_validationErrors.Values.Any(e => e.Count > 0)")
+						new Property(() => "bool", "HasErrors").InitGetter(() => new [] { "_validationErrors.Values.Any(e => e.Count > 0)" })
 					}
 				});
 			}

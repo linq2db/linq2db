@@ -64,6 +64,12 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.SqlRawSqlTable:
+					{
+						Visit1X((SqlRawSqlTable)element);
+						break;
+					}
+
 				case QueryElementType.OutputClause:
 					{
 						Visit1X(((SqlOutputClause)element).SourceTable);
@@ -382,7 +388,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit1X(CteClause sc)
 		{
-			foreach (var c in sc.Fields.Values) Visit1(c);
+			foreach (var c in sc.Fields) Visit1(c);
 			Visit1(sc.Body);
 		}
 
@@ -434,6 +440,15 @@ namespace LinqToDB.SqlQuery
 				foreach (var a in table.TableArguments) Visit1(a);
 
 //			Visit1(table.CTE);
+		}
+
+		void Visit1X(SqlRawSqlTable table)
+		{
+			Visit1(table.All);
+			foreach (var field in table.Fields.Values) Visit1(field);
+
+			if (table.Parameters != null)
+				foreach (var a in table.Parameters) Visit1(a);
 		}
 
 		void Visit1X(SqlExpression element)
@@ -501,6 +516,12 @@ namespace LinqToDB.SqlQuery
 						_visitedElements.Add(element, element);
 
 						Visit2X((SqlCteTable)element);
+						break;
+					}
+
+				case QueryElementType.SqlRawSqlTable:
+					{
+						Visit2X((SqlRawSqlTable)element);
 						break;
 					}
 
@@ -857,7 +878,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit2X(CteClause sc)
 		{
-			foreach (var c in sc.Fields.Values) Visit2(c);
+			foreach (var c in sc.Fields) Visit2(c);
 			Visit2(sc.Body);
 		}
 
@@ -893,6 +914,15 @@ namespace LinqToDB.SqlQuery
 
 			if (table.TableArguments != null)
 				foreach (var a in table.TableArguments) Visit2(a);
+		}
+
+		void Visit2X(SqlRawSqlTable table)
+		{
+			Visit2(table.All);
+			foreach (var field in table.Fields.Values) Visit2(field);
+
+			if (table.Parameters != null)
+				foreach (var a in table.Parameters) Visit2(a);
 		}
 
 		void Visit2X(SqlWithClause element)
@@ -1002,6 +1032,14 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlCteTable)element).Fields.Values,  find) ??
 							Find(((SqlCteTable)element).TableArguments, find) ??
 							Find(((SqlCteTable)element).Cte, find);
+					}
+
+				case QueryElementType.SqlRawSqlTable:
+					{
+						return
+							Find(((SqlRawSqlTable)element).All,            find) ??
+							Find(((SqlRawSqlTable)element).Fields.Values,  find) ??
+							Find(((SqlRawSqlTable)element).Parameters,     find);
 					}
 
 				case QueryElementType.OutputClause:
@@ -1256,6 +1294,41 @@ namespace LinqToDB.SqlQuery
 							newElement = new SqlCteTable(table, fields2, cte);
 
 							_visitedElements[((SqlCteTable)newElement).All] = table.All;
+						}
+
+						break;
+					}
+
+				case QueryElementType.SqlRawSqlTable:
+					{
+						var table   = (SqlRawSqlTable)element;
+						var fields1 = ToArray(table.Fields);
+						var fields2 = Convert(fields1, action, f => new SqlField(f));
+						var targs   = table.Parameters == null || table.Parameters.Length == 0 ?
+							null : Convert(table.Parameters, action);
+
+						var fe = fields2 != null && !ReferenceEquals(fields1, fields2);
+						var ta = targs   != null && !ReferenceEquals(table.Parameters, targs);
+
+						if (fe || ta)
+						{
+							if (!fe)
+							{
+								fields2 = fields1;
+
+								for (var i = 0; i < fields2.Length; i++)
+								{
+									var field = fields2[i];
+
+									fields2[i] = new SqlField(field);
+
+									_visitedElements[field] = fields2[i];
+								}
+							}
+
+							newElement = new SqlRawSqlTable(table, fields2, targs ?? table.Parameters);
+
+							_visitedElements[((SqlRawSqlTable)newElement).All] = table.All;
 						}
 
 						break;

@@ -15,7 +15,7 @@ namespace Tests.Playground
 			[Column] public int Value { get; set; }
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void SampleSelectTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

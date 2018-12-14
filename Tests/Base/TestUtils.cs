@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using LinqToDB.Data;
 using System.Threading;
 using Tests.Model;
+using LinqToDB.SchemaProvider;
 
 namespace Tests
 {
@@ -79,6 +80,12 @@ namespace Tests
 				case ProviderName.OracleNative:
 				case ProviderName.OracleManaged:
 				case ProviderName.PostgreSQL:
+				case ProviderName.PostgreSQL92:
+				case ProviderName.PostgreSQL93:
+				case ProviderName.PostgreSQL95:
+				case TestProvName.PostgreSQL10:
+				case TestProvName.PostgreSQL11:
+				case TestProvName.PostgreSQLLatest:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
@@ -92,6 +99,35 @@ namespace Tests
 			}
 
 			return NO_SCHEMA_NAME;
+		}
+
+		public static GetSchemaOptions GetDefaultSchemaOptions(string context, GetSchemaOptions baseOptions = null)
+		{
+			if (context.Contains("SapHana"))
+			{
+				// SAP HANA provider throws C++ assertions when we try to load schema for some functions
+				var options = baseOptions ?? new GetSchemaOptions();
+
+				var oldLoad = options.LoadProcedure;
+				if (oldLoad != null)
+					options.LoadProcedure = p => oldLoad(p) && loadCheck(p);
+				else
+					options.LoadProcedure = loadCheck;
+
+				bool loadCheck(ProcedureSchema p)
+				{
+					return p.ProcedureName != "SERIES_GENERATE_TIME"
+						&& p.ProcedureName != "SERIES_DISAGGREGATE_TIME"
+						// just too slow
+						&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP"
+						&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP_WITH_PARAMETERS"
+						&& p.ProcedureName != "FULL_SYSTEM_INFO_DUMP_CREATE";
+				}
+
+				return options;
+			}
+
+			return baseOptions;
 		}
 
 		private static string GetContextName(IDataContext db)
@@ -125,6 +161,12 @@ namespace Tests
 				case TestProvName.MariaDB:
 				case TestProvName.MySql57:
 				case ProviderName.PostgreSQL:
+				case ProviderName.PostgreSQL92:
+				case ProviderName.PostgreSQL93:
+				case ProviderName.PostgreSQL95:
+				case TestProvName.PostgreSQL10:
+				case TestProvName.PostgreSQL11:
+				case TestProvName.PostgreSQLLatest:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:

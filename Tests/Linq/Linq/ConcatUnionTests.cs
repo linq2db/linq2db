@@ -2,8 +2,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using LinqToDB;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
+using Tests.Tools;
 
 namespace Tests.Linq
 {
@@ -836,5 +837,54 @@ namespace Tests.Linq
 				AreEqual(expected, actual);
 			}
 		}
+
+		[Table("ConcatTest")]
+		[InheritanceMapping(Code = 0, Type = typeof(BaseEntity), IsDefault = true)]
+		[InheritanceMapping(Code = 1, Type = typeof(DerivedEntity))]
+		class BaseEntity
+		{
+			[Column]
+			public int EntityId { get; set; }
+			[Column(IsDiscriminator = true)]
+			public int Discr { get; set; }
+			[Column]
+			public string Value { get; set; }
+		}
+
+		[Table("ConcatTest")]
+		class DerivedEntity : BaseEntity
+		{
+		}
+
+		[Test]
+		public void TestConcatInheritance([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			var testData = new BaseEntity[]
+			{
+				new BaseEntity { Discr = 0, EntityId = 1, Value = "VBase1" },
+				new BaseEntity { Discr = 0, EntityId = 2, Value = "VBase2" },
+				new BaseEntity { Discr = 0, EntityId = 3, Value = "VBase3" },
+
+				new DerivedEntity { Discr = 1, EntityId = 10, Value = "Derived1" },
+				new DerivedEntity { Discr = 1, EntityId = 20, Value = "Derived2" },
+				new DerivedEntity { Discr = 1, EntityId = 30, Value = "Derived3" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData))
+			{
+				var result = db.GetTable<BaseEntity>().OfType<BaseEntity>()
+					.Concat(db.GetTable<BaseEntity>().OfType<DerivedEntity>())
+					.ToArray();
+
+				var expected = testData.Where(t => t.GetType() == typeof(BaseEntity))
+					.Concat(testData.OfType<DerivedEntity>())
+					.ToArray();
+
+				AreEqual(expected, result, ComparerBuilder<BaseEntity>.GetEqualityComparer());
+			}
+
+		}
+
 	}
 }

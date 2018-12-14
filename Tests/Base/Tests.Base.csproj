@@ -94,7 +94,7 @@
 		<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
 		<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
 		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
 
 		<PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />

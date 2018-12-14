@@ -30,7 +30,7 @@ namespace Tests.UserTests
 		}
 
 
-		[Test, Combinatorial]
+		[Test]
 		public void InsertWithDynamicColumn(
 			[IncludeDataSources(ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] 
 		string context)

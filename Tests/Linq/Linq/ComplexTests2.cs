@@ -412,6 +412,7 @@ namespace Tests.ComplexTests2
 			}
 		}
 
+		[ActiveIssue("cnt = -1", Configuration = ProviderName.OracleNative)]
 		[Test, DataContextSource]
 		public void TestInsertUsingDerivedObjectUsingFluentMapping(string context)
 		{
@@ -457,6 +458,7 @@ namespace Tests.ComplexTests2
 			}
 		}
 
+		[ActiveIssue("cnt = -1", Configuration = ProviderName.OracleNative)]
 		[Test, DataContextSource]
 		public void TestInheritanceByBaseType(string context)
 		{

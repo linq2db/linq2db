@@ -440,6 +440,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[ActiveIssue("ArgumentNullException: Value cannot be null. Parameter name: connection", Configuration = ProviderName.OracleNative)]
 		[Test, IncludeDataContextSource(ProviderName.OracleNative)]
 		public void TestOracleNativeTypes(string context)
 		{
@@ -1943,20 +1944,21 @@ namespace Tests.DataProvider
 			public string StringValue;
 		}
 
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test, OracleDataContext]
-		[SkipCategory("Oracle.Native.New", ProviderName.OracleNative)]
 		public void Issue723Test1(string context)
 		{
 			var ms = new MappingSchema();
-			using (var db = new TestDataConnection(context))
+			using (var db = (DataConnection)GetDataContext(context, ms))
 			{
-				db.AddMappingSchema(ms);
-
 				var currentUser = db.Execute<string>("SELECT user FROM dual");
 				db.Execute("GRANT CREATE ANY TRIGGER TO " + currentUser);
 				db.Execute("GRANT CREATE ANY SEQUENCE TO " + currentUser);
 				db.Execute("GRANT DROP ANY TRIGGER TO " + currentUser);
 				db.Execute("GRANT DROP ANY SEQUENCE TO " + currentUser);
+
+				try {db.Execute("DROP USER Issue723Schema CASCADE");} catch { }
+				
 				db.Execute("CREATE USER Issue723Schema IDENTIFIED BY password");
 
 				try
@@ -1994,8 +1996,8 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test, OracleDataContext]
-		[SkipCategory("Oracle.Native.New", ProviderName.OracleNative)]
 		public void Issue723Test2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -2239,7 +2241,10 @@ namespace Tests.DataProvider
 
 					Query.ClearCaches();
 					OracleTools.DontEscapeLowercaseIdentifiers = false;
-					Assert.Throws<OracleException>(() => db.GetTable<TestIdentifiersTable1>().ToList());
+
+					// no specific exception type as it differ for managed and native providers
+					Assert.That(() => db.GetTable<TestIdentifiersTable1>().ToList(), Throws.Exception.With.Message.Contains("ORA-00942"));
+
 					db.GetTable<TestIdentifiersTable2>().ToList();
 				}
 				finally

@@ -270,11 +270,22 @@ CREATE TABLE "AllTypes"
 	"inetDataType"        inet                     NULL,
 	"cidrDataType"        cidr                     NULL,
 	"macaddrDataType"     macaddr                  NULL,
-	--PGSQL 10+
-	--"macaddr8DataType"  macaddr8                 NULL,
+-- SKIP PostgreSQL.9.2 BEGIN
+-- SKIP PostgreSQL.9.3 BEGIN
+-- SKIP PostgreSQL.9.5 BEGIN
+-- SKIP PostgreSQL BEGIN
+	"macaddr8DataType"  macaddr8                   NULL,
+-- SKIP PostgreSQL.9.2 END
+-- SKIP PostgreSQL.9.3 END
+-- SKIP PostgreSQL.9.5 END
+-- SKIP PostgreSQL END
 
 	"jsonDataType"        json                     NULL,
-	"jsonbDataType"       jsonb                    NULL,
+-- SKIP PostgreSQL.9.2 BEGIN
+-- SKIP PostgreSQL.9.3 BEGIN
+"jsonbDataType"       jsonb                    NULL,
+-- SKIP PostgreSQL.9.2 END
+-- SKIP PostgreSQL.9.3 END
 
 	"xmlDataType"         xml                      NULL,
 	"varBitDataType"      varbit                   NULL
@@ -561,4 +572,8 @@ CREATE AGGREGATE test_avg(float8)
 	initcond = '{0,0,0}'
 );
 
+GO
+
+CREATE OR REPLACE FUNCTION "bool"(param INT) RETURNS VARCHAR(20)
+AS $$ BEGIN RETURN 'issue1295test'; END $$ LANGUAGE PLPGSQL;
 GO

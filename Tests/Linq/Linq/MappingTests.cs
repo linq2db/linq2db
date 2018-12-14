@@ -96,6 +96,7 @@ namespace Tests.Linq
 					where p.Value1 == TypeValue.Value1 select p);
 		}
 
+		[ActiveIssue(Configuration = ProviderName.SapHana)]
 		[Test, DataContextSource]
 		public void Enum7(string context)
 		{
@@ -421,6 +422,45 @@ namespace Tests.Linq
 
 				Assert.AreEqual(1, results.Count);
 				Assert.AreEqual(32, results[0].ChildID);
+			}
+		}
+
+		[Table("Person")]
+		public class BadMapping
+		{
+			[Column("FirstName")]
+			public int NotInt { get; set; }
+
+			[Column("LastName")]
+			public BadEnum BadEnum { get; set; }
+		}
+
+		public enum BadEnum
+		{
+			[MapValue("SOME_VALUE")]
+			Value = 1
+		}
+
+		[Test]
+		public void ColumnMappingException1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
+
+				// field name casing depends on database
+				Assert.AreEqual("firstname", ex.ColumnName.ToLower());
+			}
+		}
+
+		[Test]
+		public void ColumnMappingException2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
+
+				Assert.AreEqual("lastname", ex.ColumnName.ToLower());
 			}
 		}
 	}

@@ -754,7 +754,7 @@ namespace LinqToDB.Linq.Builder
 							if (table.Field != null)
 								return new[]
 								{
-									new SqlInfo(table.Field.ColumnDescriptor.MemberInfo) { Sql = table.Field }
+									new SqlInfo(QueryHelper.GetUnderlyingField(table.Field)?.ColumnDescriptor.MemberInfo) { Sql = table.Field }
 								};
 
 							if (expression == null)
@@ -797,7 +797,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			public SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public virtual SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
 			{
 				switch (flags)
 				{
@@ -1011,6 +1011,9 @@ namespace LinqToDB.Linq.Builder
 
 							if (association.IsList)
 							{
+								if (association.InnerContext != null)
+									return new SubQueryContext(association);
+
 								var ma     = expression.NodeType == ExpressionType.MemberAccess
 												? ((MemberExpression)buildInfo.Expression).Expression
 												: expression.NodeType == ExpressionType.Call
@@ -1046,7 +1049,7 @@ namespace LinqToDB.Linq.Builder
 				throw new InvalidOperationException();
 			}
 
-			public SqlStatement GetResultStatement()
+			public virtual SqlStatement GetResultStatement()
 			{
 				return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
 			}
@@ -1055,7 +1058,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region ConvertToParentIndex
 
-			public int ConvertToParentIndex(int index, IBuildContext context)
+			public virtual int ConvertToParentIndex(int index, IBuildContext context)
 			{
 				return Parent?.ConvertToParentIndex(index, this) ?? index;
 			}
@@ -1069,7 +1072,7 @@ namespace LinqToDB.Linq.Builder
 				if (alias == null)
 					return;
 
-				if (alias.Contains('<'))
+				if (!alias.Contains('<'))
 					if (SqlTable.Alias == null)
 						SqlTable.Alias = alias;
 			}
@@ -1118,7 +1121,7 @@ namespace LinqToDB.Linq.Builder
 				return LoadWith;
 			}
 
-			SqlField GetField(Expression expression, int level, bool throwException)
+			protected virtual ISqlExpression GetField(Expression expression, int level, bool throwException)
 			{
 				if (expression.NodeType == ExpressionType.MemberAccess)
 				{
@@ -1126,9 +1129,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (EntityDescriptor.Aliases != null)
 					{
-						if (EntityDescriptor.Aliases.ContainsKey(memberExpression.Member.Name))
+						if (EntityDescriptor.Aliases.TryGetValue(memberExpression.Member.Name, out var aliasName))
 						{
-							var alias = EntityDescriptor[memberExpression.Member.Name];
+							var alias = EntityDescriptor[aliasName];
 
 							if (alias == null)
 							{
@@ -1281,10 +1284,10 @@ namespace LinqToDB.Linq.Builder
 
 			class TableLevel
 			{
-				public TableContext Table;
-				public SqlField     Field;
-				public int          Level;
-				public bool         IsNew;
+				public TableContext   Table;
+				public ISqlExpression Field;
+				public int            Level;
+				public bool           IsNew;
 			}
 
 			TableLevel FindTable(Expression expression, int level, bool throwException, bool throwExceptionForNull)
@@ -1350,8 +1353,11 @@ namespace LinqToDB.Linq.Builder
 								aa.GetOtherKeys(),
 								aa.ExpressionPredicate,
 								aa.Predicate,
+								aa.QueryExpressionMethod,
+								aa.QueryExpression,
 								aa.Storage,
-								aa.CanBeNull))
+								aa.CanBeNull,
+								aa.AliasName))
 							{ Parent = Parent };
 
 					isNew = true;

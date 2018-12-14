@@ -251,6 +251,11 @@ namespace LinqToDB
 		/// <summary>
 		/// Binary type utilized postgres provider (jsonb).
 		/// </summary>
-		BinaryJson
+		BinaryJson,
+
+		/// <summary>
+		/// SQL Server 2008+ table-valued parameter type (TVP).
+		/// </summary>
+		Structured,
 	}
 }
