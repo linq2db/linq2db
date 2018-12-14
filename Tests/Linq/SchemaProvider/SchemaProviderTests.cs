@@ -181,8 +181,12 @@ namespace Tests.SchemaProvider
 			[PrimaryKey(2)] public int ID2;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]
-		public void PostgreSQLTest(string context)
+		[Test]
+		public void PostgreSQLTest(
+			[IncludeDataSources(
+				false,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -351,7 +355,7 @@ namespace Tests.SchemaProvider
 				table = s.Tables.Single(t => t.TableName == "TestSchemaB");
 				fks   = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();
 
-				Assert.That(fks, Is.EqualTo(new[] { "OriginTestSchemaA", "TargetTestSchemaA", "Target_Test_Schema_A" }));
+				AreEqual(fks, new[] { "OriginTestSchemaA", "TargetTestSchemaA", "Target_Test_Schema_A" }, _ => _);
 			}
 		}
 

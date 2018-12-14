@@ -1,3 +1,2 @@
-<#@ assembly name="$(LinqToDBT4InformixToolsDirectory)IBM.Data.Informix.dll" #>
 <#@ include file="LinqToDB.Tools.ttinclude" #>
 <#@ include file="LinqToDB.Informix.ttinclude" #>

@@ -1,3 +1,2 @@
-<#@ assembly name="$(LinqToDBT4SqlCeToolsDirectory)System.Data.SqlServerCe.dll" #>
 <#@ include file="LinqToDB.Tools.ttinclude" #>
 <#@ include file="LinqToDB.SqlCe.ttinclude" #>

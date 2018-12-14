@@ -59,7 +59,6 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string       ExpressionPredicate { get; set; }
 
-
 		/// <summary>
 		/// Specifies predicate expression. This predicate will be used together with
 		/// <see cref="ThisKey"/>/<see cref="OtherKey"/> join keys, if they are specified.
@@ -67,9 +66,47 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public Expression   Predicate           { get; set; }
 
+
+		/// <summary>
+		/// Specifies static property or method without parameters, that returns IQueryable expression. If is set, other association keys are ignored.
+		/// Result of query method should be lambda which takes two parameters: this record, IDataContext and returns IQueryable result.
+		/// <para>
+		/// <example>
+		/// <code>
+		/// public class SomeEntity
+		/// {
+		///     [Association(ExpressionQueryMethod = nameof(OtherImpl), CanBeNull = true)]
+		///     public SomeOtherEntity Other { get; set; }
+		/// 
+		///     public static Expression&lt;Func&lt;SomeEntity, IDataContext, IQueryable&lt;SomeOtherEntity&gt;&gt;&gt; OtherImpl()
+		///     {
+		///         return (e, db) =&gt; db.GetTable&lt;SomeOtherEntity&gt;().Where(se =&gt; se.Id == e.Id);
+		///     }
+		/// }
+		/// </code>
+		/// </example>
+		/// </para>
+		/// </summary>
+		public string       QueryExpressionMethod { get; set; }
+
+		/// <summary>
+		/// Specifies query expression. If is set, other association keys are ignored.
+		/// Lambda function takes two parameters: this record, IDataContext and returns IQueryable result.
+		/// <para>
+		/// <example>
+		/// <code>
+		/// var Expression&lt;Func&lt;SomeEntity, IDataContext, IQueryable&lt;SomeOtherEntity&gt;&gt;&gt; associationQuery;
+		/// <para />
+		/// associationQuery = (e, db) =&gt; db.GetTable&lt;SomeOtherEntity&gt;().Where(se =&gt; se.Id == e.Id);
+		/// </code>
+		/// </example>
+		/// </para>
+		/// </summary>
+		public Expression   QueryExpression       { get; set; }
+
 		/// <summary>
 		/// Specify name of property or field to store association value, loaded using <see cref="LinqExtensions.LoadWith{T}(ITable{T}, System.Linq.Expressions.Expression{Func{T, object}})"/> method.
-		/// When not specified, current association memeber will be used.
+		/// When not specified, current association member will be used.
 		/// </summary>
 		public string       Storage             { get; set; }
 
@@ -104,6 +141,11 @@ namespace LinqToDB.Mapping
 		/// This property is not used by linq2db.
 		/// </summary>
 		public Relationship Relationship        { get; set; }
+
+		/// <summary>
+		/// Gets or sets alias for association. Used in SQL generation process.
+		/// </summary>
+		public string       AliasName           { get; set; }
 
 		/// <summary>
 		/// Returns <see cref="ThisKey"/> value as a list of key member names.

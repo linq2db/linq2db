@@ -26,7 +26,7 @@
 			new EditableProperty ("double", "EditableDouble1") { IsDirtyText = "Math.Abs({0} - {1}) <= 16 * Double.Epsilon * Math.Max(Math.Abs({0}), Math.Abs({1}))" },
 			new NotifyingProperty("string", "NotifiedProp1", "NotifiedProp2", "NotifiedProp3"),
 			new NotifyingProperty("int",    "NotifiedProp2")   { InitValue = "1" },
-			new NotifyingProperty("long",   "NotifiedProp3").InitGetter("1"),
+			new NotifyingProperty("long",   "NotifiedProp3").InitGetter(() => new [] { "1" }),
 			new NotifyingProperty("string", "IDProp3"),
 			new MemberGroup
 			{
@@ -36,17 +36,17 @@
 				{
 					new Field
 					{
-						Type       = "int",
-						Name       = "Field1",
-						Comment    = { "/ <summary>", "/ 123", "/ </summary>" },
-						Attributes =
+						TypeBuilder = () => "int",
+						Name        = "Field1",
+						Comment     = { "/ <summary>", "/ 123", "/ </summary>" },
+						Attributes  =
 						{
 							new Attribute("XmlArrayItem", "typeof(int)", "DataType=\"List\""),
 						}
 					},
 					new Field
 					{
-						Type        = "string",
+						TypeBuilder = () => "string",
 						Name        = "Field2",
 						Conditional = "AAA",
 						Attributes  =
@@ -56,9 +56,9 @@
 					},
 					new Field
 					{
-						Type       = "string",
-						Name       = "Field21",
-						Attributes =
+						TypeBuilder = () => "string",
+						Name        = "Field21",
+						Attributes  =
 						{
 							new Attribute("XmlArray",     "\"Name21\""),
 							new Attribute("XmlArrayItem", "typeof(int)",  "DataType=\"List\""),
@@ -67,9 +67,9 @@
 					},
 					new Property
 					{
-						Type       = "string",
-						Name       = "Field221",
-						Attributes =
+						TypeBuilder = () => "string",
+						Name        = "Field221",
+						Attributes  =
 						{
 							new Attribute("XmlAttribute", "\"Name1\"",  "typeof(int)"),
 							new Attribute("XmlArray",     "\"N2\""),
@@ -77,23 +77,23 @@
 					},
 					new Field
 					{
-						Type       = "string",
-						Name       = "Field2212",
+						TypeBuilder = () => "string",
+						Name        = "Field2212",
 					},
 					new Field
 					{
-						Type       = "string",
-						Name       = "Field23",
-						Attributes =
+						TypeBuilder = () => "string",
+						Name        = "Field23",
+						Attributes  =
 						{
 							new Attribute("XmlAttribute", "\"Nm1\"",  "typeof(int)"),
 						}
 					},
 					new Field
 					{
-						Type       = "string",
-						Name       = "Field23a",
-						Attributes =
+						TypeBuilder = () => "string",
+						Name        = "Field23a",
+						Attributes  =
 						{
 							new Attribute("XmlElement", "\"Nm1\"",  "typeof(int)"),
 							new Attribute("XmlElement"),
@@ -107,18 +107,18 @@
 				IsCompact = true,
 				Members   =
 				{
-					new Field   ("int",    "Field12") { EndLineComment = "Field3 comnt" },
-					new Field   ("string", "Field22_____"),
-					new Property("string", "PField121"),
-					new Property("string", "PField221", new[] { "var a = 1;", "return null;" }),
-					new Property("string", "PField222", new[] { "return null;" }) { EndLineComment = "Field3 comment" },
-					new Property("string", "PField23",  new[] { "return null;" }, new[] { "value.ToString();" }) { EndLineComment = "Fieomment" },
+					new Field   (() => "int",    "Field12") { EndLineComment = "Field3 comnt" },
+					new Field   (() => "string", "Field22_____"),
+					new Property(() => "string", "PField121"),
+					new Property(() => "string", "PField221", () => new[] { "var a = 1;", "return null;" }),
+					new Property(() => "string", "PField222", () => new[] { "return null;" }) { EndLineComment = "Field3 comment" },
+					new Property(() => "string", "PField23",  () => new[] { "return null;" }, () => new[] { "value.ToString();" }) { EndLineComment = "Fieomment" },
 				}
 			},
 			new Field
 			{
 				Comment        = { "/ <summary>", "/ 456", "/ </summary>" },
-				Type           = "List<int>",
+				TypeBuilder    = () => "List<int>",
 				Name           = "Field3",
 				EndLineComment = "Field3 comment",
 				Conditional    = "AAA",
@@ -128,13 +128,13 @@
 					new Attribute("XmlArrayItem", "typeof(int)", "DataType=\"List\""),
 				}
 			},
-			new Property("char", "Property1",
-				new[]
+			new Property(() => "char", "Property1",
+				() => new[]
 				{
 					"int a = 1;",
 					"return 'a';"
 				},
-				new[]
+				() => new[]
 				{
 					"var a = value;",
 					"a.ToString();"
@@ -148,20 +148,20 @@
 					new Attribute("XmlArrayItem", "typeof(int)", "DataType=\"List\""),
 				}
 			},
-			new Property("char", "Property11",
-				new[] { "'a'" },
-				new[] { "var a = value;" }),
+			new Property(() => "char", "Property11",
+				() => new[] { "'a'" },
+				() => new[] { "var a = value;" }),
 			new Field
 			{
-				Type = "List<int>",
-				Name = "Field31"
+				TypeBuilder = () => "List<int>",
+				Name        = "Field31"
 			},
 			new MemberGroup
 			{
 				Members =
 				{
-					new Field("double",    "Field5"),
-					new Field("List<int>", "Field6"),
+					new Field(() => "double",    "Field5"),
+					new Field(() => "List<int>", "Field6"),
 				}
 			},
 			new MemberGroup
@@ -169,15 +169,15 @@
 				IsCompact = true,
 				Members   =
 				{
-					new Field   ("double",       "Fld7")          { EndLineComment = "Fld7" },
-					new Field   ("List<int>",    "Field8"),
-					new Field   ("DateTime",     "FieldLongName") { EndLineComment = "field long name" },
-					new Property("List<string>", "Property2")     { EndLineComment = "Property2" },
-					new Property("List<int?>",   "Property3")     { EndLineComment = "Property3", HasSetter = false },
-					new Property("int?",         "Prop1")         { EndLineComment = "Prop1" },
+					new Field   (() => "double",       "Fld7")          { EndLineComment = "Fld7" },
+					new Field   (() => "List<int>",    "Field8"),
+					new Field   (() => "DateTime",     "FieldLongName") { EndLineComment = "field long name" },
+					new Property(() => "List<string>", "Property2")     { EndLineComment = "Property2" },
+					new Property(() => "List<int?>",   "Property3")     { EndLineComment = "Property3", HasSetter = false },
+					new Property(() => "int?",         "Prop1")         { EndLineComment = "Prop1" },
 				}
 			},
-			new Field { Type = "List<string>", Name = "Field4" },
+			new Field { TypeBuilder = () => "List<string>", Name = "Field4" },
 		}
 	});
 

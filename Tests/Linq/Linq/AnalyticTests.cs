@@ -8,9 +8,14 @@
 	[TestFixture]
 	public class AnalyticTests : TestBase
 	{
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
-		public void Test(string context)
+		[Test]
+		public void Test(
+			[IncludeDataSources(
+				true,
+				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+				ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -47,9 +52,14 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			 ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
-		public void TestSubqueryOptimization(string context)
+		[Test]
+		public void TestSubqueryOptimization(
+			[IncludeDataSources(
+				true,
+				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+				ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{

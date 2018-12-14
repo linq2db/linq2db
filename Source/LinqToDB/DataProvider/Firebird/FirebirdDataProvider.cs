@@ -86,26 +86,26 @@ namespace LinqToDB.DataProvider.Firebird
 			return true;
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			if (value is bool)
 			{
 				value = (bool)value ? "1" : "0";
-				dataType = DataType.Char;
+				dataType = dataType.WithDataType(DataType.Char);
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
-				case DataType.SByte      : dataType = DataType.Int16;   break;
-				case DataType.UInt16     : dataType = DataType.Int32;   break;
-				case DataType.UInt32     : dataType = DataType.Int64;   break;
-				case DataType.UInt64     : dataType = DataType.Decimal; break;
-				case DataType.VarNumeric : dataType = DataType.Decimal; break;
+				case DataType.SByte      : dataType = dataType.WithDataType(DataType.Int16);   break;
+				case DataType.UInt16     : dataType = dataType.WithDataType(DataType.Int32);   break;
+				case DataType.UInt32     : dataType = dataType.WithDataType(DataType.Int64);   break;
+				case DataType.UInt64     : dataType = dataType.WithDataType(DataType.Decimal); break;
+				case DataType.VarNumeric : dataType = dataType.WithDataType(DataType.Decimal); break;
 				case DataType.DateTime   :
 				case DataType.DateTime2  : _setTimeStamp(parameter);    return;
 			}
