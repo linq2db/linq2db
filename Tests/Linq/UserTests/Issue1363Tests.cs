@@ -26,6 +26,7 @@ namespace Tests.UserTests
 		[ActiveIssue("CreateTable(Guid)", Configuration = ProviderName.Access)]
 		[ActiveIssue("CreateTable(Guid)", Configuration = ProviderName.SqlCe)]
 		[ActiveIssue("CreateTable(Guid)", Configuration = ProviderName.MySql)]
+		[ActiveIssue("CreateTable(Guid)", Configuration = ProviderName.MySqlConnector)]
 		[ActiveIssue("CreateTable(Guid)", Configuration = TestProvName.MariaDB)]
 		[ActiveIssue("CreateTable(Guid)", Configuration = TestProvName.MySql57)]
 		[ActiveIssue("CreateTable(Guid)", Configuration = ProviderName.DB2)]

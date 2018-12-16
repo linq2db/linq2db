@@ -158,6 +158,7 @@ namespace Tests
 					return "Database\\TestData";
 				case ProviderName.SapHana:
 				case ProviderName.MySql:
+				case ProviderName.MySqlConnector:
 				case TestProvName.MariaDB:
 				case TestProvName.MySql57:
 				case ProviderName.PostgreSQL:

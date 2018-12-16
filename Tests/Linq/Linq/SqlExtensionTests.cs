@@ -440,7 +440,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Second, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void DatePartMillisecond(string context)
 		{
 			using (var db = GetDataContext(context))

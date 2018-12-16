@@ -296,7 +296,7 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				ProviderName.Firebird, TestProvName.Firebird3,
 				ProviderName.Informix,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.SqlCe,

@@ -167,7 +167,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.Second, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void DatePartMillisecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -248,7 +248,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Second));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void Millisecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -388,7 +388,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, 41, t.DateTimeValue)).Value.Second);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void DateAddMillisecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -449,7 +449,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddSeconds(-35)).Second);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void AddMilliseconds(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -682,7 +682,7 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql,
+				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.MySqlConnector,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.Access)]
 			string context)
@@ -699,7 +699,7 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql,
+				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.MySqlConnector,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.Access)]
 			string context)
@@ -835,7 +835,7 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql,
+				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.MySqlConnector,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.Access)]
 			string context)

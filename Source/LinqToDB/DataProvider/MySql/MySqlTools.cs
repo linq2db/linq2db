@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Reflection;
 
 using JetBrains.Annotations;
+using LinqToDB.Common;
+using LinqToDB.Configuration;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -11,45 +15,109 @@ namespace LinqToDB.DataProvider.MySql
 
 	public static class MySqlTools
 	{
-		static readonly MySqlDataProvider _mySqlDataProvider = new MySqlDataProvider();
+		public static string AssemblyName;
+		
+		static readonly MySqlDataProvider _mySqlDataProvider  				= new MySqlDataProvider(ProviderName.MySql);
+		static readonly MySqlDataProvider _mySqlConnectorDataProvider       = new MySqlDataProvider(ProviderName.MySqlConnector);
 
 		static MySqlTools()
 		{
 			DataConnection.AddDataProvider(_mySqlDataProvider);
+			DataConnection.AddDataProvider(_mySqlConnectorDataProvider);
+			
+			DataConnection.AddProviderDetector(ProviderDetector);
+		}
+		
+		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
+		{
+			if (css.IsGlobal)
+				return null;
+
+			switch (css.ProviderName)
+			{
+				case ""                                :
+				case null                              :
+
+					if (css.Name.Contains("MySql"))
+						goto case "MySql";
+					break;
+				case "MySql.Data"            : return _mySqlDataProvider;
+				case "MySqlConnector"        : return _mySqlConnectorDataProvider;
+				case "MySql"                 :
+
+					if (css.Name.Contains("MySqlConnector"))
+						return _mySqlConnectorDataProvider;
+
+					if (css.Name.Contains("MySql"))
+						return _mySqlDataProvider;
+
+					return DetectedProvider;
+			}
+
+			return null;
 		}
 
 		public static IDataProvider GetDataProvider()
 		{
 			return _mySqlDataProvider;
 		}
+		
+		static string _detectedProviderName;
+		
+		public static string  DetectedProviderName =>
+			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
+
+		static MySqlDataProvider DetectedProvider =>
+			DetectedProviderName != ProviderName.MySqlConnector ? _mySqlDataProvider : _mySqlConnectorDataProvider;
+
+		static string DetectProviderName()
+		{
+			try
+			{
+				var path = typeof(MySqlTools).AssemblyEx().GetPath();
+
+				if (!File.Exists(Path.Combine(path, "MySql.Data.dll")))
+					if (File.Exists(Path.Combine(path, "MySqlConnector.dll")))
+						return ProviderName.MySqlConnector;
+			}
+			catch (Exception)
+			{
+			}
+			
+			return ProviderName.MySql;
+		}
 
 		public static void ResolveMySql([NotNull] string path)
 		{
 			if (path == null) throw new ArgumentNullException("path");
-			new AssemblyResolver(path, "MySql.Data");
+			new AssemblyResolver(path, AssemblyName);
 		}
 
 		public static void ResolveMySql([NotNull] Assembly assembly)
 		{
 			if (assembly == null) throw new ArgumentNullException("assembly");
-			new AssemblyResolver(assembly, "MySql.Data");
+			new AssemblyResolver(assembly, AssemblyName);
 		}
 
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)
 		{
-			return new DataConnection(_mySqlDataProvider, connectionString);
+			return new DataConnection(DetectedProvider, connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(IDbConnection connection)
 		{
-			return new DataConnection(_mySqlDataProvider, connection);
+			return new DataConnection(
+				connection.GetType().AssemblyEx().FullName.Contains("MySql.Data") ? _mySqlDataProvider : _mySqlConnectorDataProvider,
+				connection);
 		}
 
 		public static DataConnection CreateDataConnection(IDbTransaction transaction)
 		{
-			return new DataConnection(_mySqlDataProvider, transaction);
+			return new DataConnection(
+				transaction.GetType().AssemblyEx().FullName.Contains("MySql.Data") ? _mySqlDataProvider : _mySqlConnectorDataProvider,
+				transaction);
 		}
 
 		#endregion

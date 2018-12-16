@@ -15,7 +15,8 @@ namespace Tests.SchemaProvider
 	[TestFixture]
 	public class SchemaProviderTests : TestBase
 	{
-		[Test, DataContextSource(false, ProviderName.SQLiteMS
+		[Test, DataContextSource(false, ProviderName.SQLiteMS,
+			 ProviderName.MySqlConnector
 #if NETSTANDARD2_0
 			, ProviderName.MySql, TestProvName.MySql57
 #endif
@@ -227,7 +228,8 @@ namespace Tests.SchemaProvider
 			Assert.AreEqual("_1", SchemaProviderBase.ToValidName("\t1\t"));
 		}
 
-		[Test, DataContextSource(false, ProviderName.SQLiteMS
+		[Test, DataContextSource(false, ProviderName.SQLiteMS,
+			 ProviderName.MySqlConnector
 #if NETSTANDARD2_0
 			, ProviderName.MySql, TestProvName.MySql57
 #endif
@@ -248,7 +250,8 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.SQLiteMS
+		[Test, DataContextSource(false, ProviderName.SQLiteMS,
+			 ProviderName.MySqlConnector
 #if NETSTANDARD2_0
 			, ProviderName.MySql, TestProvName.MySql57
 #endif
@@ -312,7 +315,8 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.SQLiteMS
+		[Test, DataContextSource(false, ProviderName.SQLiteMS,
+			 ProviderName.MySqlConnector
 #if NETSTANDARD2_0
 			, ProviderName.MySql, TestProvName.MySql57
 #endif

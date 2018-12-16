@@ -62,7 +62,7 @@ namespace Tests.UserTests
 		/// Confirm that tables creation uses the <see cref="ColumnAttribute.Order"/> field correctly.
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
-		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 		public void TestAttributeMapping(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -93,7 +93,7 @@ namespace Tests.UserTests
 		/// Confirm that tables creation uses the <see cref="ColumnAttribute.Order"/> field correctly.
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
-		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 		public void TestFluentMapping(string context)
 		{
 			using (var db = new DataConnection(context))

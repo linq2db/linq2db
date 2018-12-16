@@ -65,6 +65,7 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
 			[Column(IsColumn = false, Configuration = ProviderName.Access)]
 			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
+			[Column(IsColumn = false, Configuration = ProviderName.MySqlConnector)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
 			[Column(IsColumn = false, Configuration = ProviderName.SapHana)]
 			[Column("FieldDateTime2")]
@@ -101,6 +102,7 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
 			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
+			[Column(IsColumn = false, Configuration = ProviderName.MySqlConnector)]
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
 			[Column(IsColumn = false, Configuration = ProviderName.OracleManaged)]
 			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
@@ -500,6 +502,7 @@ namespace Tests.xUpdate
 				&& context != ProviderName.Firebird
 				&& context != TestProvName.Firebird3
 				&& context != ProviderName.MySql
+				&& context != ProviderName.MySqlConnector
 				&& context != TestProvName.MySql57
 				&& context != TestProvName.MariaDB
 				&& context != ProviderName.Access
@@ -518,6 +521,7 @@ namespace Tests.xUpdate
 			{
 				if (expected == ' '
 					&& (   context == ProviderName.MySql
+					    || context == ProviderName.MySqlConnector
 						|| context == TestProvName.MariaDB
 						|| context == TestProvName.MySql57))
 					expected = '\0';
@@ -532,6 +536,7 @@ namespace Tests.xUpdate
 			{
 				if (expected == ' '
 					&& (context == ProviderName.MySql
+					    || context == ProviderName.MySqlConnector
 						|| context == TestProvName.MariaDB
 						|| context == TestProvName.MySql57))
 					expected = '\0';
@@ -568,6 +573,7 @@ namespace Tests.xUpdate
 				}
 
 				if (   context == ProviderName.MySql
+				    || context == ProviderName.MySqlConnector
 					|| context == TestProvName.MariaDB
 					|| context == TestProvName.MySql57
 					|| context == ProviderName.Oracle
@@ -609,6 +615,7 @@ namespace Tests.xUpdate
 				|| context == ProviderName.SQLiteClassic
 				|| context == ProviderName.SQLiteMS
 				|| context == ProviderName.MySql
+				|| context == ProviderName.MySqlConnector
 				// MySql57 and MariaDB work, but column is disabled...
 				|| context == TestProvName.MySql57
 				|| context == TestProvName.MariaDB
