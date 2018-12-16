@@ -203,7 +203,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, TestDataType(CurrentProvider)]
+		[Test, TestDataType(ProviderName.PostgreSQL)]
 		public void TestDataTypes(string typeName, int id, TypeTestData data, string context)
 		{
 			using (var conn = new DataConnection(context))
