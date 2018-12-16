@@ -51,10 +51,11 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
+			_mySqlDateTimeType = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDateTime", true);
+			
 			if (Name != ProviderName.MySqlConnector)
 			{
-				_mySqlDateTimeType = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDateTime", true);
-				_mySqlDecimalType  = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDecimal" , true);
+				_mySqlDecimalType  = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDecimal", true);
 
 				_mySqlDateTimeValueGetter = TypeAccessor.GetAccessor(_mySqlDateTimeType)["Value"].Getter;
 				_mySqlDecimalValueGetter  = TypeAccessor.GetAccessor(_mySqlDecimalType) ["Value"].Getter;
@@ -65,8 +66,9 @@ namespace LinqToDB.DataProvider.MySql
 				SetToTypeField(_mySqlDateTimeType,   "GetMySqlDateTime");
 				
 				MappingSchema.SetDataType(_mySqlDecimalType,  DataType.Decimal);
-				MappingSchema.SetDataType(_mySqlDateTimeType, DataType.DateTime2);
 			}
+			
+			MappingSchema.SetDataType(_mySqlDateTimeType, DataType.DateTime2);
 		}
 
 #if !NETSTANDARD1_6

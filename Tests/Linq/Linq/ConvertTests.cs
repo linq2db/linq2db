@@ -39,7 +39,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Convert<int,decimal>(t.MoneyValue)));
 		}
 
-		[Test, DataContextSource(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
+		[Test, DataContextSource(ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void ToBigInt(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -48,7 +48,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.BigInt, t.MoneyValue));
 		}
 
-		[Test, DataContextSource(ProviderName.MySql)]
+		[Test, DataContextSource(ProviderName.MySql, ProviderName.MySqlConnector)]
 		public void ToInt64(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -57,7 +57,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select (Int64)t.MoneyValue where p > 0 select p);
 		}
 
-		[Test, DataContextSource(ProviderName.MySql, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.SQLiteMS)]
 		public void ConvertToInt64(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -151,7 +151,7 @@ namespace Tests.Linq
 
 		#region UInts
 
-		[Test, DataContextSource(ProviderName.MySql)]
+		[Test, DataContextSource(ProviderName.MySql, ProviderName.MySqlConnector)]
 		public void ToUInt1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -160,7 +160,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.ConvertTo<uint>.From(t.MoneyValue)));
 		}
 
-		[Test, DataContextSource(ProviderName.MySql)]
+		[Test, DataContextSource(ProviderName.MySql, ProviderName.MySqlConnector)]
 		public void ToUInt2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -169,7 +169,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Convert<uint,decimal>(t.MoneyValue)));
 		}
 
-		[Test, DataContextSource(ProviderName.MySql)]
+		[Test, DataContextSource(ProviderName.MySql, ProviderName.MySqlConnector)]
 		public void ToUInt64(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -178,7 +178,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select (UInt64)t.MoneyValue where p > 0 select p);
 		}
 
-		[Test, DataContextSource(ProviderName.MySql, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.SQLiteMS)]
 		public void ConvertToUInt64(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -187,7 +187,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select Convert.ToUInt64(t.MoneyValue) where p > 0 select p);
 		}
 
-		[Test, DataContextSource(ProviderName.MySql)]
+		[Test, DataContextSource(ProviderName.MySql, ProviderName.MySqlConnector)]
 		public void ToUInt32(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -196,7 +196,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select (UInt32)t.MoneyValue where p > 0 select p);
 		}
 
-		[Test, DataContextSource(ProviderName.MySql, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.SQLiteMS)]
 		public void ConvertToUInt32(string context)
 		{
 			using (var db = GetDataContext(context))

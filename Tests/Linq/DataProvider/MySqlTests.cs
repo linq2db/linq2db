@@ -107,6 +107,10 @@ namespace Tests.DataProvider
 								TestType<MySqlDataDecimal?>(conn, "decimalDataType", DataType.Decimal);
 					Assert.That(TestType<MySqlDataDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlDataDateTime(2012, 12, 12, 12, 12, 12, 0)));
 				}
+				else
+				{
+					Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
+				}
 			}
 		}
 
