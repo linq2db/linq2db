@@ -469,7 +469,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeSkipJoin([IncludeDataSources(ProviderName.Sybase, ProviderName.SybaseManaged)]
+		public void TakeSkipJoin([DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

@@ -156,7 +156,7 @@
 
 		[Test]
 		public void TestAvgOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -237,7 +237,7 @@
 
 		[Test]
 		public void TestCorrOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -344,7 +344,7 @@
 
 		[Test]
 		public void TestCovarPopOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -382,7 +382,7 @@
 
 		[Test]
 		public void TestCovarSampOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -420,7 +420,7 @@
 
 		[Test]
 		public void TestCumeDistOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -896,7 +896,7 @@
 
 		[Test]
 		public void TestPercentRatioToReportOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -991,7 +991,7 @@
 
 		[Test]
 		public void TestStdDevOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1021,7 +1021,7 @@
 
 		[Test]
 		public void TestStdDev([IncludeDataSources(
-			true, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged,
 			ProviderName.OracleNative)]
 			string context)
@@ -1052,7 +1052,7 @@
 
 		[Test]
 		public void TestStdDevPopOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1089,7 +1089,7 @@
 
 		[Test]
 		public void TestStdDevSampOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1158,7 +1158,7 @@
 
 		[Test]
 		public void TestVarPopOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1195,7 +1195,7 @@
 
 		[Test]
 		public void TestVarSampOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1233,7 +1233,7 @@
 
 		[Test]
 		public void TestVarianceOracle([IncludeDataSources(
-			true, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

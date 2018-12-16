@@ -273,23 +273,24 @@ namespace Tests
 			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Informix,
-			TestProvName.MariaDB,
 			ProviderName.Sybase,
 			ProviderName.SapHana,
 			ProviderName.OracleNative,
-			ProviderName.OracleManaged,
 			ProviderName.SqlCe,
 			ProviderName.SQLiteClassic,
 #endif
 #if !NETSTANDARD1_6
 			ProviderName.SybaseManaged,
+			ProviderName.OracleManaged,
 #endif
 			ProviderName.Firebird,
+			TestProvName.Firebird3,
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
 			ProviderName.SqlServer2014,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
+			TestProvName.SqlAzure,
 			ProviderName.PostgreSQL,
 			ProviderName.PostgreSQL92,
 			ProviderName.PostgreSQL93,
@@ -298,10 +299,9 @@ namespace Tests
 			TestProvName.PostgreSQL11,
 			TestProvName.PostgreSQLLatest,
 			ProviderName.MySql,
-			TestProvName.SqlAzure,
 			TestProvName.MySql57,
-			ProviderName.SQLiteMS,
-			TestProvName.Firebird3
+			TestProvName.MariaDB,
+			ProviderName.SQLiteMS
 		};
 
 		protected ITestDataContext GetDataContext(string configuration, MappingSchema ms = null)
