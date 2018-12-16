@@ -23,9 +23,14 @@ namespace Tests.UserTests
 		}
 
 		// PostgreSQL disabled because it needs real primary key on database side
+		// DB2 needs merge api + arraycontext features from 3.0
 		[ActiveIssue(1239, Configurations = new[] { ProviderName.DB2 })]
 		[Test]
-		public void TestInsertOrUpdate([DataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestInsertOrUpdate(
+			[DataSources(
+				false,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -66,7 +71,11 @@ namespace Tests.UserTests
 
 		// PostgreSQL disabled because it needs real primary key on database side
 		[Test]
-		public void TestInsertOrReplace([DataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestInsertOrReplace(
+			[DataSources(
+				false,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())

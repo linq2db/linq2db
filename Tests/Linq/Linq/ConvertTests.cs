@@ -460,9 +460,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToDefaultChar([DataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird,
-			TestProvName.Firebird3, ProviderName.PostgreSQL)]
+		public void ToDefaultChar(
+			[DataSources(
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -502,10 +504,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToDefaultNChar([DataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird,
-			TestProvName.Firebird3, TestProvName.Firebird3, ProviderName.PostgreSQL)]
-			string context)
+		public void ToDefaultNChar(
+			[DataSources(
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
+		string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -643,7 +647,7 @@ namespace Tests.Linq
 			}
 		}
 
-		static void AssertConvert<TTo,TFrom>(Model.ITestDataContext db, TTo expected, TFrom value)
+		static void AssertConvert<TTo, TFrom>(Model.ITestDataContext db, TTo expected, TFrom value)
 		{
 			var r = db.Types.Select(_ => ServerConvert<TTo, TFrom>(value)).First();
 

@@ -304,20 +304,16 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update9([DataSources(
+		public void Update9(
+			[DataSources(
 			ProviderName.Informix,
 			ProviderName.SqlCe,
 			ProviderName.DB2,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
-			ProviderName.OracleNative,
-			ProviderName.OracleManaged,
-			ProviderName.PostgreSQL,
-			ProviderName.MySql,
-			TestProvName.MariaDB,
-			TestProvName.MySql57,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			ProviderName.Access,
 			ProviderName.SapHana)]
 			string context)
@@ -349,20 +345,16 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update10([DataSources(
+		public void Update10(
+			[DataSources(
 			ProviderName.Informix,
 			ProviderName.SqlCe,
 			ProviderName.DB2,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
-			ProviderName.OracleNative,
-			ProviderName.OracleManaged,
-			ProviderName.PostgreSQL,
-			ProviderName.MySql,
-			TestProvName.MariaDB,
-			TestProvName.MySql57,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			ProviderName.Access,
 			ProviderName.SapHana)]
 			string context)
@@ -409,11 +401,16 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update12([DataSources(
-			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird,
-			TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.SapHana)]
+		public void Update12(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest, TestProvName.PostgreSQLLatest,
+				ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -429,11 +426,16 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task Update12Async([DataSources(
-			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird,
-			TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.SapHana)]
+		public async Task Update12Async(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -449,11 +451,16 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update13([DataSources(
-			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird,
-			TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.SapHana)]
+		public void Update13(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -779,17 +786,17 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation5([DataSources(false,
+		public void UpdateAssociation5(
+			[DataSources(
+				false,
 			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Firebird,
 			ProviderName.Informix,
-			ProviderName.OracleNative,
-			ProviderName.OracleManaged,
-			ProviderName.PostgreSQL,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
 			ProviderName.SqlCe,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			ProviderName.SapHana)]
 			string context)
 		{
@@ -869,15 +876,14 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateTop([DataSources(
+		public void UpdateTop(
+			[DataSources(
 			ProviderName.Access,
 			ProviderName.DB2,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
+				ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.Informix,
-			ProviderName.PostgreSQL,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
 			ProviderName.SapHana)]
@@ -911,25 +917,20 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestUpdateTakeOrdered([DataSources(
+		public void TestUpdateTakeOrdered(
+			[DataSources(
 			ProviderName.Access,
 			ProviderName.DB2,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
+				ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.Informix,
-			ProviderName.PostgreSQL,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
 			ProviderName.SapHana,
-			ProviderName.MySql,
-			TestProvName.MySql57,
-			TestProvName.MariaDB,
-			ProviderName.Sybase,
-			ProviderName.SybaseManaged,
-			ProviderName.OracleNative,
-			ProviderName.OracleManaged)]
+				ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB,
+				ProviderName.Sybase, ProviderName.SybaseManaged,
+				ProviderName.OracleNative, ProviderName.OracleManaged)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -963,25 +964,20 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestUpdateSkipTake([DataSources(
+		public void TestUpdateSkipTake(
+			[DataSources(
 			ProviderName.Access,
 			ProviderName.DB2,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
+				ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.Informix,
-			ProviderName.PostgreSQL,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
 			ProviderName.SapHana,
-			ProviderName.MySql,
-			TestProvName.MySql57,
-			TestProvName.MariaDB,
-			ProviderName.Sybase,
-			ProviderName.SybaseManaged,
-			ProviderName.OracleNative,
-			ProviderName.OracleManaged)]
+				ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB,
+				ProviderName.Sybase, ProviderName.SybaseManaged,
+				ProviderName.OracleNative, ProviderName.OracleManaged)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1018,18 +1014,17 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestUpdateTakeNotOrdered([DataSources(
+		public void TestUpdateTakeNotOrdered(
+			[DataSources(
 			ProviderName.Access,
 			ProviderName.DB2,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
+				ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.Informix,
-			ProviderName.PostgreSQL,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
-			ProviderName.SapHana)]
+				ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1088,11 +1083,16 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateIssue319Regression([DataSources(
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access,
-			ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase,
-			ProviderName.SybaseManaged, TestProvName.Firebird3, ProviderName.SapHana)]
+		public void UpdateIssue319Regression(
+			[DataSources(
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access,
+				ProviderName.Informix,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.Sybase, ProviderName.SybaseManaged,
+				ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

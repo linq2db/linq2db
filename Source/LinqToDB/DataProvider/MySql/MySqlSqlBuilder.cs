@@ -24,6 +24,16 @@ namespace LinqToDB.DataProvider.MySql
 		protected override bool IsRecursiveCteKeywordRequired   => true;
 		public    override bool IsNestedJoinParenthesisRequired => true;
 
+		protected override bool CanSkipRootAliases(SqlStatement statement)
+		{
+			if (statement.SelectQuery != null)
+			{
+				return statement.SelectQuery.From.Tables.Count > 0;
+			}
+
+			return true;
+		}
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement.NeedsIdentity() ? 2 : 1;
@@ -88,9 +98,11 @@ namespace LinqToDB.DataProvider.MySql
 				case DataType.Single        : base.BuildDataType(SqlDataType.Decimal, createDbType); break;
 				case DataType.VarChar       :
 				case DataType.NVarChar      :
-					StringBuilder.Append("Char");
-					if (type.Length > 0)
-						StringBuilder.Append('(').Append(type.Length).Append(')');
+					// yep, char(0) is allowed
+					if (type.Length == null || type.Length > 255 || type.Length < 0)
+						StringBuilder.Append("Char(255)");
+					else
+						StringBuilder.Append($"Char({type.Length})");
 					break;
 				default: base.BuildDataType(type, createDbType);                                     break;
 			}

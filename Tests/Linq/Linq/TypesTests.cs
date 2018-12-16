@@ -195,10 +195,15 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewGuid([DataSources(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird,
-			TestProvName.Firebird3, ProviderName.PostgreSQL, ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS, ProviderName.Access, ProviderName.SapHana)]
+		public void NewGuid(
+			[DataSources(
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access,
+				ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -250,10 +255,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InsertBinary1([DataSources(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird,
-			ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.Access)]
+		public void InsertBinary1(
+			[DataSources(
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.Firebird,
+				ProviderName.PostgreSQL,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -342,12 +351,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTime22([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2,
-			ProviderName.Informix, ProviderName.Firebird, ProviderName.OracleNative,
-			ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SqlServer2000,
-			ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3)]
+		public void DateTime22(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.Access,
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.Sybase, ProviderName.SybaseManaged,
+				ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -366,12 +382,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTime23([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2,
-			ProviderName.Informix, ProviderName.Firebird, ProviderName.OracleNative,
-			ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SqlServer2000,
-			ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3)]
+		public void DateTime23(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.Access,
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.Sybase, ProviderName.SybaseManaged,
+				ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -393,13 +416,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTime24([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2,
-			ProviderName.Informix, ProviderName.Firebird, ProviderName.OracleNative,
-			ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql,
-			TestProvName.MariaDB, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.MySql57,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SqlServer2000,
-			ProviderName.SapHana, TestProvName.Firebird3)]
+		public void DateTime24(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.Access,
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQL11, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.Sybase, ProviderName.SybaseManaged,
+				ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

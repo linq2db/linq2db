@@ -249,6 +249,11 @@ namespace Tests._Create
 				case ProviderName.Firebird      : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);       break;
 				case TestProvName.Firebird3     : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);       break;
 				case ProviderName.PostgreSQL    : RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
+				case ProviderName.PostgreSQL92  : RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
+				case ProviderName.PostgreSQL93  : RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
+				case ProviderName.PostgreSQL95  : RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
+				case TestProvName.PostgreSQL10  : RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
+				case TestProvName.PostgreSQL11  : RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
 				case ProviderName.MySql         : RunScript(context,          "\nGO\n",  "MySql");                          break;
 				case TestProvName.MySql57       : RunScript(context,          "\nGO\n",  "MySql");                          break;
 				case TestProvName.MariaDB       : RunScript(context,          "\nGO\n",  "MySql");                          break;
@@ -262,12 +267,13 @@ namespace Tests._Create
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
 #if !NETSTANDARD1_6
 				case ProviderName.OracleManaged : RunScript(context,          "\n/\n",   "Oracle");                         break;
+				case ProviderName.SybaseManaged : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestDataCore"); break;
 #endif
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
+				case TestProvName.PostgreSQLLatest: RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
 				case ProviderName.SQLiteClassic : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
 				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
-				case ProviderName.SybaseManaged : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestDataCore"); break;
 				case ProviderName.DB2           : RunScript(context,          "\nGO\n",  "DB2");                            break;
 				case ProviderName.Informix      : RunScript(context,          "\nGO\n",  "Informix", InformixAction);       break;
 				case ProviderName.SqlCe         : RunScript(context,          "\nGO\n",  "SqlCe");

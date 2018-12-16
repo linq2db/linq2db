@@ -157,7 +157,9 @@ namespace LinqToDB.Mapping
 				if (aa != null)
 				{
 					Associations.Add(new AssociationDescriptor(
-						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(), aa.ExpressionPredicate, aa.Predicate, aa.Storage, aa.CanBeNull));
+						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(),
+						aa.ExpressionPredicate, aa.Predicate, aa.QueryExpressionMethod, aa.QueryExpression, aa.Storage, aa.CanBeNull,
+						aa.AliasName));
 					continue;
 				}
 
@@ -231,6 +233,9 @@ namespace LinqToDB.Mapping
 				var ex = TypeAccessor[attr.MemberName];
 				var cd = new ColumnDescriptor(mappingSchema, attr, ex);
 
+				if (_columnNames.Remove(attr.MemberName))
+					Columns.RemoveAll(c => c.MemberName == attr.MemberName);
+
 				Columns.Add(cd);
 				_columnNames.Add(attr.MemberName, cd);
 			}
@@ -240,6 +245,9 @@ namespace LinqToDB.Mapping
 
 				if (!string.IsNullOrWhiteSpace(attr.MemberName))
 				{
+					if (_columnNames.Remove(attr.MemberName))
+						Columns.RemoveAll(c => c.MemberName == attr.MemberName);
+
 					Columns.Add(cd);
 					_columnNames.Add(attr.MemberName, cd);
 				}

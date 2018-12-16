@@ -735,7 +735,7 @@ namespace LinqToDB.Linq.Builder
 							if (table.Field != null)
 								return new[]
 								{
-									new SqlInfo(table.Field.ColumnDescriptor.MemberInfo) { Sql = table.Field }
+									new SqlInfo(QueryHelper.GetUnderlyingField(table.Field)?.ColumnDescriptor.MemberInfo) { Sql = table.Field }
 								};
 
 							if (expression == null)
@@ -778,7 +778,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			public SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public virtual SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
 			{
 				switch (flags)
 				{
@@ -992,6 +992,9 @@ namespace LinqToDB.Linq.Builder
 
 							if (association.IsList)
 							{
+								if (association.InnerContext != null)
+									return new SubQueryContext(association);
+
 								var ma     = expression.NodeType == ExpressionType.MemberAccess
 												? ((MemberExpression)buildInfo.Expression).Expression
 												: expression.NodeType == ExpressionType.Call
@@ -1050,7 +1053,7 @@ namespace LinqToDB.Linq.Builder
 				if (alias == null)
 					return;
 
-				if (alias.Contains('<'))
+				if (!alias.Contains('<'))
 					if (SqlTable.Alias == null)
 						SqlTable.Alias = alias;
 			}
@@ -1099,7 +1102,7 @@ namespace LinqToDB.Linq.Builder
 				return LoadWith;
 			}
 
-			SqlField GetField(Expression expression, int level, bool throwException)
+			protected virtual ISqlExpression GetField(Expression expression, int level, bool throwException)
 			{
 				if (expression.NodeType == ExpressionType.MemberAccess)
 				{
@@ -1262,10 +1265,10 @@ namespace LinqToDB.Linq.Builder
 
 			class TableLevel
 			{
-				public TableContext Table;
-				public SqlField     Field;
-				public int          Level;
-				public bool         IsNew;
+				public TableContext   Table;
+				public ISqlExpression Field;
+				public int            Level;
+				public bool           IsNew;
 			}
 
 			TableLevel FindTable(Expression expression, int level, bool throwException, bool throwExceptionForNull)
@@ -1331,8 +1334,11 @@ namespace LinqToDB.Linq.Builder
 								aa.GetOtherKeys(),
 								aa.ExpressionPredicate,
 								aa.Predicate,
+								aa.QueryExpressionMethod,
+								aa.QueryExpression,
 								aa.Storage,
-								aa.CanBeNull))
+								aa.CanBeNull,
+								aa.AliasName))
 							{ Parent = Parent };
 
 					isNew = true;

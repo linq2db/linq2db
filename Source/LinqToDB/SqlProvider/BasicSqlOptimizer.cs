@@ -126,7 +126,8 @@ namespace LinqToDB.SqlProvider
 
 					var ordered = TopoSorting.TopoSort(foundCte.Keys, i => foundCte[i]).ToList();
 
-					Utils.MakeUniqueNames(ordered, c => c.Name, (c, n) => c.Name = n, "CTE_1");
+					Utils.MakeUniqueNames(ordered, n => !ReservedWords.IsReserved(n), c => c.Name, (c, n) => c.Name = n,
+						c => "CTE_1", StringComparer.OrdinalIgnoreCase);
 
 					select.With = new SqlWithClause();
 					select.With.Clauses.AddRange(ordered);
@@ -856,7 +857,10 @@ namespace LinqToDB.SqlProvider
 								innerExpr = c.Expression;
 
 							if (innerExpr is SqlField field)
+							{
 								parameterExpr2.DataType = field.DataType;
+								parameterExpr2.DbType   = field.DbType;
+							}
 						}
 
 						if (expr.Expr1 is SqlParameter parameterExpr1 && parameterExpr1.DataType == DataType.Undefined)
@@ -867,7 +871,10 @@ namespace LinqToDB.SqlProvider
 								innerExpr = c.Expression;
 
 							if (innerExpr is SqlField field)
+							{
 								parameterExpr1.DataType = field.DataType;
+								parameterExpr1.DbType   = field.DbType;
+							}
 						}
 
 						if (expr.Operator == SqlPredicate.Operator.Equal &&
@@ -1168,7 +1175,7 @@ namespace LinqToDB.SqlProvider
 				var newLength = maxLength >= 0 ? Math.Min(to.Length ?? 0, maxLength) : to.Length;
 
 				if (to.Length != newLength)
-					to = new SqlDataType(to.DataType, to.Type, newLength, null, null);
+					to = new SqlDataType(to.DataType, to.Type, newLength, null, null, to.DbType);
 			}
 			else if (from.Type == typeof(short) && to.Type == typeof(int))
 				return func.Parameters[2];

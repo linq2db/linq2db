@@ -157,11 +157,17 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteMany1([DataSources(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
-			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana)]
+		public void DeleteMany1(
+			[DataSources(
+				ProviderName.Access,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -190,11 +196,17 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteMany2([DataSources(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
-			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana)]
+		public void DeleteMany2(
+			[DataSources(
+				ProviderName.Access,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -232,11 +244,17 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteMany3([DataSources(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
-			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana)]
+		public void DeleteMany3(
+			[DataSources(
+				ProviderName.Access,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.SapHana)]
 			string context)
 		{
 			var ids = new[] { 1001 };
@@ -273,12 +291,18 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteTop([DataSources(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird,
-			TestProvName.Firebird3, ProviderName.Informix, ProviderName.MySql,
-			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.PostgreSQL,
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlCe,
-			ProviderName.SqlServer2000, ProviderName.SapHana)]
+		public void DeleteTop(
+			[DataSources(
+			ProviderName.Access,
+			ProviderName.DB2,
+				ProviderName.Firebird, TestProvName.Firebird3,
+			ProviderName.Informix,
+				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
+				ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

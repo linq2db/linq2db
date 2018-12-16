@@ -16,7 +16,7 @@ namespace Tests.Linq
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TResult>(
 			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
 			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner,
-			                                SqlJoinType                   joinType,
+			                                SqlJoinType                   joinType, 
 			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, bool>    predicate,
 			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, TResult> resultSelector)
 		{
@@ -51,9 +51,9 @@ namespace Tests.Linq
 
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TKey, TResult>(
 			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
-			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner,
+			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner, 
 			                                SqlJoinType                   joinType,
-			[JetBrains.Annotations.NotNull] Func<TOuter, TKey>            outerKeySelector,
+			[JetBrains.Annotations.NotNull] Func<TOuter, TKey>            outerKeySelector, 
 			[JetBrains.Annotations.NotNull] Func<TInner, TKey>            innerKeySelector,
 			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, TResult> resultSelector)
 		{
@@ -1009,9 +1009,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ApplyJoin([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
+		public void ApplyJoin(
+			[IncludeDataSources(
+				false,
+				ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1159,8 +1161,9 @@ namespace Tests.Linq
 
 		public class AllJoinsSourceAttribute : IncludeDataSourcesAttribute
 		{
-			public AllJoinsSourceAttribute() : base(true, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
-				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird, ProviderName.PostgreSQL)
+			public AllJoinsSourceAttribute() : base(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)
 			{
 			}
 		}
@@ -1334,7 +1337,7 @@ namespace Tests.Linq
 					select new { ParentID = p.p == null ? (int?)null : p.p.ParentID, ChildID = p.c == null ? (int?)null : p.c.ChildID };
 
 				var actual = db.Parent.Where(p => p.ParentID > 0).Take(10)
-					.Join(db.Child, joinType, (p, c) => p.ParentID == c.ParentID,
+					.Join(db.Child, joinType, (p, c) => p.ParentID == c.ParentID, 
 						(p, c) => new { ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID });
 
 				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),

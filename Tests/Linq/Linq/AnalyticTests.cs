@@ -9,9 +9,12 @@
 	public class AnalyticTests : TestBase
 	{
 		[Test]
-		public void Test([IncludeDataSources(true,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
+		public void Test(
+			[IncludeDataSources(
+				true,
+				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+				ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -50,9 +53,12 @@
 		}
 
 		[Test]
-		public void TestSubqueryOptimization([IncludeDataSources(true,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
+		public void TestSubqueryOptimization(
+			[IncludeDataSources(
+				true,
+				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+				ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -78,7 +84,7 @@
 
 		[Test]
 		public void TestExtensionsOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -120,7 +126,7 @@
 
 		[Test]
 		public void TestAvg([IncludeDataSources(
-			ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			true, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleNative)]
 			string context)
 		{
@@ -150,7 +156,7 @@
 
 		[Test]
 		public void TestAvgOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -231,7 +237,7 @@
 
 		[Test]
 		public void TestCorrOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -306,7 +312,7 @@
 
 		[Test]
 		public void TestCount([IncludeDataSources(
-			ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			true, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
 			string context)
 		{
@@ -338,7 +344,7 @@
 
 		[Test]
 		public void TestCovarPopOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -348,11 +354,11 @@
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						CovarPop1 = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						CovarPop2 = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						CovarPop3 = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().ToValue(),
+						CovarPop1    = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						CovarPop2    = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						CovarPop3    = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().ToValue(),
 
-						CovarPop4 = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						CovarPop4    = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
@@ -376,7 +382,7 @@
 
 		[Test]
 		public void TestCovarSampOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -386,11 +392,11 @@
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						CovarSamp1 = Sql.Ext.CovarSamp(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						CovarSamp2 = Sql.Ext.CovarSamp(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						CovarSamp3 = Sql.Ext.CovarSamp(p.Value1, c.ChildID).Over().ToValue(),
+						CovarSamp1    = Sql.Ext.CovarSamp(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						CovarSamp2    = Sql.Ext.CovarSamp(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						CovarSamp3    = Sql.Ext.CovarSamp(p.Value1, c.ChildID).Over().ToValue(),
 
-						CovarSamp4 = Sql.Ext.CovarSamp(p.Value1, c.ChildID).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						CovarSamp4   = Sql.Ext.CovarSamp(p.Value1, c.ChildID).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
@@ -414,7 +420,7 @@
 
 		[Test]
 		public void TestCumeDistOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -424,8 +430,8 @@
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						CumeDist1 = Sql.Ext.CumeDist<decimal>().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
-						CumeDist2 = Sql.Ext.CumeDist<decimal>().Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
+						CumeDist1     = Sql.Ext.CumeDist<decimal>().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
+						CumeDist2     = Sql.Ext.CumeDist<decimal>().Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
 				Assert.IsNotEmpty(q.ToArray());
 
@@ -434,8 +440,8 @@
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						CumeDist1 = Sql.Ext.CumeDist<decimal>(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
-						CumeDist2 = Sql.Ext.CumeDist<decimal>(2, 3).WithinGroup.OrderByDesc(p.Value1).ThenBy(c.ChildID).ToValue(),
+						CumeDist1     = Sql.Ext.CumeDist<decimal>(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
+						CumeDist2     = Sql.Ext.CumeDist<decimal>(2, 3).WithinGroup.OrderByDesc(p.Value1).ThenBy(c.ChildID).ToValue(),
 					};
 				Assert.IsNotEmpty(q2.ToArray());
 			}
@@ -453,8 +459,8 @@
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						DenseRank1 = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
-						DenseRank2 = Sql.Ext.DenseRank().Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
+						DenseRank1     = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
+						DenseRank2     = Sql.Ext.DenseRank().Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
 				Assert.IsNotEmpty(q.ToArray());
 
@@ -463,7 +469,7 @@
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						DenseRank1 = Sql.Ext.DenseRank(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
+						DenseRank1     = Sql.Ext.DenseRank(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
 				Assert.IsNotEmpty(q2.ToArray());
 			}
@@ -624,7 +630,7 @@
 
 		[Test]
 		public void TestMax([IncludeDataSources(
-			ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			true, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012, ProviderName.Oracle)]
 			string context)
 		{
@@ -719,7 +725,7 @@
 
 		[Test]
 		public void TestMin([IncludeDataSources(
-			ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			true, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
 			string context)
 		{
@@ -890,7 +896,7 @@
 
 		[Test]
 		public void TestPercentRatioToReportOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -957,7 +963,7 @@
 
 		[Test]
 		public void TestRegrOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -985,7 +991,7 @@
 
 		[Test]
 		public void TestStdDevOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1015,7 +1021,7 @@
 
 		[Test]
 		public void TestStdDev([IncludeDataSources(
-			ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			true, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged,
 			ProviderName.OracleNative)]
 			string context)
@@ -1046,7 +1052,7 @@
 
 		[Test]
 		public void TestStdDevPopOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1083,7 +1089,7 @@
 
 		[Test]
 		public void TestStdDevSampOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1152,7 +1158,7 @@
 
 		[Test]
 		public void TestVarPopOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1189,7 +1195,7 @@
 
 		[Test]
 		public void TestVarSampOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1227,7 +1233,7 @@
 
 		[Test]
 		public void TestVarianceOracle([IncludeDataSources(
-			ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1276,7 +1282,7 @@
 
 		[Test]
 		public void TestKeepFirstOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1298,7 +1304,7 @@
 
 		[Test]
 		public void TestKeepLastOracle([IncludeDataSources(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
