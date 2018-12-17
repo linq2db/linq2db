@@ -276,7 +276,7 @@ namespace Tests.Linq
 			return new TimeSpan(ts.Hours, ts.Minutes, ts.Seconds + (ts.Milliseconds >= 500 ? 1 : 0));
 		}
 
-		[Test, DataContextSource(TestProvName.MySql57)]
+		[Test, DataContextSource(ProviderName.MySqlConnector, TestProvName.MySql57)]
 		public void TimeOfDay1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -285,7 +285,7 @@ namespace Tests.Linq
 					from t in db.Types select TruncMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
 		}
 
-		[Test, IncludeDataContextSource(TestProvName.MySql57)]
+		[Test, IncludeDataContextSource(ProviderName.MySqlConnector, TestProvName.MySql57)]
 		public void TimeOfDay2(string context)
 		{
 			using (var db = GetDataContext(context))

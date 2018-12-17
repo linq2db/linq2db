@@ -17,11 +17,14 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		public static string AssemblyName;
 		
-		static readonly MySqlDataProvider _mySqlDataProvider  				= new MySqlDataProvider(ProviderName.MySql);
+		static readonly MySqlDataProvider _mySqlDataProvider  				= new MySqlDataProvider(ProviderName.MySqlOfficial);
 		static readonly MySqlDataProvider _mySqlConnectorDataProvider       = new MySqlDataProvider(ProviderName.MySqlConnector);
 
 		static MySqlTools()
 		{
+			AssemblyName = DetectedProviderName == ProviderName.MySqlConnector ? "MySqlConnector" : "MySql.Data";
+
+			DataConnection.AddDataProvider(ProviderName.MySql, DetectedProvider);
 			DataConnection.AddDataProvider(_mySqlDataProvider);
 			DataConnection.AddDataProvider(_mySqlConnectorDataProvider);
 			
@@ -59,7 +62,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public static IDataProvider GetDataProvider()
 		{
-			return _mySqlDataProvider;
+			return DetectedProvider;
 		}
 		
 		static string _detectedProviderName;
@@ -109,14 +112,14 @@ namespace LinqToDB.DataProvider.MySql
 		public static DataConnection CreateDataConnection(IDbConnection connection)
 		{
 			return new DataConnection(
-				connection.GetType().AssemblyEx().FullName.Contains("MySql.Data") ? _mySqlDataProvider : _mySqlConnectorDataProvider,
+				connection.GetType().AssemblyEx().FullName.Contains("MySqlConnector") ? _mySqlConnectorDataProvider : _mySqlDataProvider,
 				connection);
 		}
 
 		public static DataConnection CreateDataConnection(IDbTransaction transaction)
 		{
 			return new DataConnection(
-				transaction.GetType().AssemblyEx().FullName.Contains("MySql.Data") ? _mySqlDataProvider : _mySqlConnectorDataProvider,
+				transaction.GetType().AssemblyEx().FullName.Contains("MySqlConnector") ? _mySqlConnectorDataProvider : _mySqlDataProvider,
 				transaction);
 		}
 
