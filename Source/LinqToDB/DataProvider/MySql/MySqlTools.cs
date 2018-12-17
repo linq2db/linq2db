@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		public static string AssemblyName;
 		
-		static readonly MySqlDataProvider _mySqlDataProvider  				= new MySqlDataProvider(ProviderName.MySqlOfficial);
+		static readonly MySqlDataProvider _mySqlDataProvider  	            = new MySqlDataProvider(ProviderName.MySqlOfficial);
 		static readonly MySqlDataProvider _mySqlConnectorDataProvider       = new MySqlDataProvider(ProviderName.MySqlConnector);
 
 		static MySqlTools()
@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 			}
 			
-			return ProviderName.MySql;
+			return ProviderName.MySqlOfficial;
 		}
 
 		public static void ResolveMySql([NotNull] string path)

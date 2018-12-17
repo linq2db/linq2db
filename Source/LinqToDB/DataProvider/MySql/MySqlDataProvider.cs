@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				_mySqlDecimalType         = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDecimal", true);
 
-				_mySqlDecimalValueGetter  = TypeAccessor.GetAccessor(_mySqlDecimalType)["Value"].Getter;
+				_mySqlDecimalValueGetter  = TypeAccessor.GetAccessor(_mySqlDecimalType) ["Value"].Getter;
 				_mySqlDateTimeValueGetter = TypeAccessor.GetAccessor(_mySqlDateTimeType)["Value"].Getter;
 
 				SetProviderField(_mySqlDecimalType, "GetMySqlDecimal");
