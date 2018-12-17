@@ -163,6 +163,10 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
 		<Compile Remove="SchemaProvider\SchemaProviderTests.cs" />
 		<Compile Remove="DataProvider\OracleTests.cs" />
+		<Compile Remove="Linq\DynamicColumnsTests.cs" />
+		<Compile Remove="Mapping\FluentDynamicMappingTests.cs" />
+		<Compile Remove="Update\DynamicColumnsTests.cs" />
+		<Compile Remove="UserTests\Issue1268Tests.cs" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<None Update="x64\**\*">
 			<Link>x64/%(FileName)%(Extension)</Link>
