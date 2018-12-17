@@ -38,15 +38,16 @@ namespace LinqToDB.DataProvider.MySql
 
 			switch (css.ProviderName)
 			{
-				case ""                                :
-				case null                              :
+				case ""                                          :
+				case null                                        :
 
 					if (css.Name.Contains("MySql"))
 						goto case "MySql";
 					break;
-				case "MySql.Data"            : return _mySqlDataProvider;
-				case "MySqlConnector"        : return _mySqlConnectorDataProvider;
-				case "MySql"                 :
+				case "MySql.Data"                                : return _mySqlDataProvider;
+				case "MySqlConnector"                            : return _mySqlConnectorDataProvider;
+				case "MySql"                                     :
+				case var provider when provider.Contains("MySql"):
 
 					if (css.Name.Contains("MySqlConnector"))
 						return _mySqlConnectorDataProvider;

@@ -163,7 +163,7 @@ namespace Tests.ComplexTests2
 		{
 			var cnt = TestUtils.GetNext().ToString();
 
-			var ms = new MappingSchema();
+			var ms = new MappingSchema(cnt);
 
 			ms.SetConverter<AnimalType, string>       (obj => obj.ToString());
 			ms.SetConverter<AnimalType, DataParameter>(obj => new DataParameter { Value = obj.ToString() });
