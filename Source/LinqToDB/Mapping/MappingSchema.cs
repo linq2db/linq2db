@@ -9,6 +9,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -58,6 +59,8 @@ namespace LinqToDB.Mapping
 		{
 		}
 
+		static long _configurationCounter;
+
 		/// <summary>
 		/// Creates mapping schema with specified configuration name and base mapping schemas.
 		/// </summary>
@@ -66,6 +69,9 @@ namespace LinqToDB.Mapping
 		/// <param name="schemas">Base mapping schemas.</param>
 		public MappingSchema(string configuration, params MappingSchema[] schemas)
 		{
+			if (configuration.IsNullOrEmpty() && (schemas == null || schemas.Length == 0))
+				configuration = Interlocked.Increment(ref _configurationCounter).ToString();
+
 			var schemaInfo = new MappingSchemaInfo(configuration);
 
 			if (schemas == null || schemas.Length == 0)
