@@ -70,7 +70,7 @@ namespace LinqToDB.Mapping
 		public MappingSchema(string configuration, params MappingSchema[] schemas)
 		{
 			if (configuration.IsNullOrEmpty() && (schemas == null || schemas.Length == 0))
-				configuration = Interlocked.Increment(ref _configurationCounter).ToString();
+				configuration = "auto_" + Interlocked.Increment(ref _configurationCounter);
 
 			var schemaInfo = new MappingSchemaInfo(configuration);
 
