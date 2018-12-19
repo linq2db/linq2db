@@ -2,7 +2,6 @@
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -353,9 +352,9 @@ namespace Tests.xUpdate
 		// Expected: '*'
 		// But was:  '4'
 		// at Tests.Merge.MergeTests.AssertChar
-		[ActiveIssue("ORA-22053: overflow error", Configuration = ProviderName.OracleNative)]
-		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
-		public void TestMergeTypes(string context)
+		[ActiveIssue("ORA-22053: overflow error", Configurations = new[] { ProviderName.OracleNative })]
+		[Test]
+		public void TestMergeTypes([DataSources(false, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -678,8 +677,10 @@ namespace Tests.xUpdate
 			Assert.AreEqual(expected, actual);
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void TestTypesInsertByMerge(string context)
+		[Test]
+		public void TestTypesInsertByMerge([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

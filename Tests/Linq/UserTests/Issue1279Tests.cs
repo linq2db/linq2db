@@ -16,9 +16,9 @@ namespace Tests.UserTests
 			public char CharFld { get; set; }
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
-		[Test, DataContextSource]
-		public void Test(string context)
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[Test]
+		public void Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<Issue1279Table>())

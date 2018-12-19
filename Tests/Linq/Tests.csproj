@@ -58,6 +58,7 @@
 			<Link>Database/Create Scripts/%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
@@ -153,6 +154,7 @@
 			<Private>false</Private>
 		</Reference>
 
+		<PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />
 		<PackageReference Include="Oracle.ManagedDataAccess" Version="12.2.1100" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
@@ -174,6 +176,10 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
 		<Compile Remove="SchemaProvider\SchemaProviderTests.cs" />
 		<Compile Remove="DataProvider\OracleTests.cs" />
+		<Compile Remove="Linq\DynamicColumnsTests.cs" />
+		<Compile Remove="Mapping\FluentDynamicMappingTests.cs" />
+		<Compile Remove="Update\DynamicColumnsTests.cs" />
+		<Compile Remove="UserTests\Issue1268Tests.cs" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<None Update="x64\**\*">
 			<Link>x64/%(FileName)%(Extension)</Link>

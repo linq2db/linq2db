@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
+
 using Tests.Model;
 
 using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -11,8 +11,8 @@ namespace Tests.xUpdate
 {
 	public partial class MergeTests
 	{
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceAssociationInDeleteBySourcePredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceAssociationInDeleteBySourcePredicate([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -40,9 +40,12 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void OtherSourceAssociationInDeletePredicate(string context)
+		[Test]
+		public void OtherSourceAssociationInDeletePredicate([MergeDataContextSource(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -69,9 +72,12 @@ namespace Tests.xUpdate
 
 		// ASE: server dies
 		// Oracle: associations in insert setter
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void OtherSourceAssociationInInsertCreate(string context)
+		[Test]
+		public void OtherSourceAssociationInInsertCreate([MergeDataContextSource(
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -115,9 +121,11 @@ namespace Tests.xUpdate
 		// Oracle: associations in insert setters
 		// Informix: associations doesn't work right now
 		// SAP: associations doesn't work right now
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test]
+		public void OtherSourceAssociationInInsertCreate2([MergeDataContextSource(
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
-		public void OtherSourceAssociationInInsertCreate2(string context)
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -158,8 +166,11 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: server dies
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void OtherSourceAssociationInInsertPredicate(string context)
+		[Test]
+		public void OtherSourceAssociationInInsertPredicate([MergeDataContextSource(
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -201,8 +212,10 @@ namespace Tests.xUpdate
 
 		// ASE, DB2: Associations in match not supported
 		// Informix: associations doesn't work right now
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void OtherSourceAssociationInMatch(string context)
+		[Test]
+		public void OtherSourceAssociationInMatch([MergeDataContextSource(
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -244,8 +257,10 @@ namespace Tests.xUpdate
 
 		// ASE: server dies
 		// Informix: associations doesn't work right now
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void OtherSourceAssociationInUpdate(string context)
+		[Test]
+		public void OtherSourceAssociationInUpdate([MergeDataContextSource(
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -284,8 +299,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceAssociationInUpdateBySource(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceAssociationInUpdateBySource([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -325,8 +340,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceAssociationInUpdateBySourcePredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceAssociationInUpdateBySourcePredicate(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -366,8 +382,11 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: server dies
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void OtherSourceAssociationInUpdatePredicate(string context)
+		[Test]
+		public void OtherSourceAssociationInUpdatePredicate([MergeDataContextSource(
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -407,8 +426,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceAssociationInDeleteBySourcePredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceAssociationInDeleteBySourcePredicate(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -436,9 +456,12 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void SameSourceAssociationInDeletePredicate(string context)
+		[Test]
+		public void SameSourceAssociationInDeletePredicate([MergeDataContextSource(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -465,9 +488,12 @@ namespace Tests.xUpdate
 
 		// ASE: server dies
 		// Oracle: associations in instert setters
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void SameSourceAssociationInInsertCreate(string context)
+		[Test]
+		public void SameSourceAssociationInInsertCreate([MergeDataContextSource(
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -513,9 +539,11 @@ namespace Tests.xUpdate
 		// Oracle: associations in instert setters
 		// Informix: associations doesn't work right now
 		// SAP: associations doesn't work right now
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test]
+		public void SameSourceAssociationInInsertCreate2([MergeDataContextSource(
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
-		public void SameSourceAssociationInInsertCreate2(string context)
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -556,8 +584,11 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: server dies
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void SameSourceAssociationInInsertPredicate(string context)
+		[Test]
+		public void SameSourceAssociationInInsertPredicate([MergeDataContextSource(
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -601,8 +632,10 @@ namespace Tests.xUpdate
 
 		// ASE, DB2: Associations in match not supported
 		// Informix: associations doesn't work right now
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void SameSourceAssociationInMatch(string context)
+		[Test]
+		public void SameSourceAssociationInMatch([MergeDataContextSource(
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -644,8 +677,10 @@ namespace Tests.xUpdate
 
 		// ASE: server dies
 		// Informix: associations doesn't work right now
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void SameSourceAssociationInUpdate(string context)
+		[Test]
+		public void SameSourceAssociationInUpdate([MergeDataContextSource(
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -684,8 +719,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceAssociationInUpdateBySource(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceAssociationInUpdateBySource([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -726,8 +761,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceAssociationInUpdateBySourcePredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceAssociationInUpdateBySourcePredicate(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -768,8 +804,11 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: server dies
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void SameSourceAssociationInUpdatePredicate(string context)
+		[Test]
+		public void SameSourceAssociationInUpdatePredicate([MergeDataContextSource(
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -809,8 +848,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void TestAssociationsData(string context)
+		[Test]
+		public void TestAssociationsData([DataSources(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -844,8 +883,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeUpdateWithDeleteDataContextSource]
-		public void SameSourceAssociationInUpdateWithDeleteDeletePredicate(string context)
+		[Test]
+		public void SameSourceAssociationInUpdateWithDeleteDeletePredicate(
+			[MergeUpdateWithDeleteDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -878,8 +918,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeUpdateWithDeleteDataContextSource]
-		public void OtherSourceAssociationInUpdateWithDeleteDeletePredicate(string context)
+		[Test]
+		public void OtherSourceAssociationInUpdateWithDeleteDeletePredicate(
+			[MergeUpdateWithDeleteDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())

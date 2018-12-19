@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
+
 using NUnit.Framework;
+
 using Tests.Model;
 using Tests.xUpdate;
 
@@ -23,13 +24,12 @@ namespace Tests.UserTests
 
 		// PostgreSQL disabled because it needs real primary key on database side
 		// DB2 needs merge api + arraycontext features from 3.0
-		//[ActiveIssue(1239, Configuration = ProviderName.DB2)]
+		[ActiveIssue(1239, Configurations = new[] { ProviderName.DB2 })]
 		[Test]
 		public void TestInsertOrUpdate(
 			[DataSources(
 				false,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.DB2)]
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -99,8 +99,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, MergeTests.MergeDataContextSource]
-		public void TestMerge(string context)
+		[Test]
+		public void TestMerge([MergeTests.MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -136,8 +136,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, MergeTests.MergeDataContextSource]
-		public void TestMergeOnExplicit(string context)
+		[Test]
+		public void TestMergeOnExplicit([MergeTests.MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())

@@ -11,8 +11,8 @@ namespace Tests.xUpdate
 
 	public partial class MergeTests
 	{
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceDeleteBySource(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceDeleteBySource([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -38,8 +38,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceDeleteBySourceWithPredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceDeleteBySourceWithPredicate([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -66,8 +66,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceDeleteBySource(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceDeleteBySource([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -92,8 +92,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceDeleteBySourceWithPredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceDeleteBySourceWithPredicate([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -120,8 +120,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void AnonymousSourceDeleteBySourceWithPredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void AnonymousSourceDeleteBySourceWithPredicate(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -151,8 +152,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void AnonymousListSourceDeleteBySourceWithPredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void AnonymousListSourceDeleteBySourceWithPredicate(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -182,8 +184,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void DeleteBySourceReservedAndCaseNames(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void DeleteBySourceReservedAndCaseNames([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -214,8 +216,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void DeleteBySourceReservedAndCaseNamesFromList(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void DeleteBySourceReservedAndCaseNamesFromList(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -246,8 +249,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void DeleteBySourceFromPartialSourceProjection(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void DeleteBySourceFromPartialSourceProjection(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
