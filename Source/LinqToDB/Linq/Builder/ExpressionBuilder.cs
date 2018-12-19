@@ -382,6 +382,9 @@ namespace LinqToDB.Linq.Builder
 
 		internal static Expression ExpandExpression(Expression expression)
 		{
+			if (Configuration.Linq.UseBinaryAggregateExpression)
+				expression = AggregateExpression(expression);
+
 			return expression.Transform(expr =>
 			{
 				switch (expr.NodeType)
@@ -401,7 +404,8 @@ namespace LinqToDB.Linq.Builder
 									if (argUnwrapped.NodeType == ExpressionType.MemberAccess ||
 									    argUnwrapped.NodeType == ExpressionType.Call)
 									{
-										newArg = argUnwrapped.EvaluateExpression() as LambdaExpression;
+										if (argUnwrapped.EvaluateExpression() is LambdaExpression lambda)
+											newArg = ExpandExpression(lambda);
 									}
 								}
 
@@ -425,7 +429,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
 								{
-									return lambda;
+									return ExpandExpression(lambda);
 								}
 							}
 							

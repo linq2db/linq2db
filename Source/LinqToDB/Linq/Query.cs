@@ -221,9 +221,6 @@ namespace LinqToDB.Linq
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
-			if (Configuration.Linq.UseBinaryAggregateExpression)
-				expr = ExpressionBuilder.AggregateExpression(expr);
-
 			if (Configuration.Linq.DisableQueryCache)
 				return CreateQuery(dataContext, expr);
 
