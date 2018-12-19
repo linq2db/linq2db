@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using LinqToDB;
 using NUnit.Framework;
 
@@ -7,7 +8,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue269Tests : TestBase
 	{
-		class TestDataContextSourceAttribute : DataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		class TestDataContextSourceAttribute : DataSourcesAttribute
 		{
 			public TestDataContextSourceAttribute() : base(
 				ProviderName.Access, ProviderName.SQLiteClassic, ProviderName.Oracle,
@@ -22,8 +24,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, TestDataContextSource]
-		public void TestTake(string context)
+		[Test]
+		public void TestTake([TestDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -47,8 +49,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, TestDataContextSource]
-		public void TestDistinct(string context)
+		[Test]
+		public void TestDistinct([TestDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -75,8 +77,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, TestDataContextSource]
-		public void TestSkipDistinct(string context)
+		[Test]
+		public void TestSkipDistinct([TestDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -102,8 +104,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, TestDataContextSource]
-		public void TestDistinctSkip(string context)
+		[Test]
+		public void TestDistinctSkip([TestDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -129,8 +131,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, TestDataContextSource]
-		public void TestSkip(string context)
+		[Test]
+		public void TestSkip([TestDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -153,6 +155,5 @@ namespace Tests.UserTests
 				AreEqual(e, q);
 			}
 		}
-
 	}
 }

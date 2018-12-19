@@ -322,7 +322,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit1X(SelectQuery q)
 		{
-					Visit1(q.Select);
+			Visit1(q.Select);
 			Visit1(q.From);
 			Visit1(q.Where);
 			Visit1(q.GroupBy);
@@ -769,7 +769,6 @@ namespace LinqToDB.SqlQuery
 			foreach (var element in elements)
 				_action2(element);
 		}
-
 
 		void Visit2X(SelectQuery q)
 		{

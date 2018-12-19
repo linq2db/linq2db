@@ -1,12 +1,16 @@
-﻿using LinqToDB;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
+
+using LinqToDB;
+
+using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.xUpdate
 {
 	[TestFixture]
+	[Order(10000)]
 	public class DropTableTests : TestBase
 	{
 		class DropTableTest
@@ -14,8 +18,8 @@ namespace Tests.xUpdate
 			public int ID { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void DropCurrentDatabaseTableTest(string context)
+		[Test]
+		public void DropCurrentDatabaseTableTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -40,8 +44,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.SapHana)]
-		public void DropSpecificDatabaseTableTest(string context)
+		[Test]
+		public void DropSpecificDatabaseTableTest([DataSources(false, ProviderName.SapHana)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

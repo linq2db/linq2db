@@ -24,8 +24,9 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class FirebirdTests : DataProviderTestBase
 	{
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestParameters(string context)
+		[Test]
+		public void TestParameters([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -38,8 +39,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestDataTypes(string context)
+		[Test]
+		public void TestDataTypes([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -131,8 +133,9 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestNumerics(string context)
+		[Test]
+		public void TestNumerics([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -182,8 +185,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestDateTime(string context)
+		[Test]
+		public void TestDateTime([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -198,8 +202,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestChar(string context)
+		[Test]
+		public void TestChar([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -231,8 +236,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestString(string context)
+		[Test]
+		public void TestString([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -258,8 +264,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestBinary(string context)
+		[Test]
+		public void TestBinary([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			var arr1 = new byte[] { 50, 51         };
 			var arr2 = new byte[] { 49, 50, 51, 52 };
@@ -286,8 +293,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestGuid(string context)
+		[Test]
+		public void TestGuid([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -306,8 +314,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestGuid2(string context)
+		[Test]
+		public void TestGuid2([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -324,8 +333,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestXml(string context)
+		[Test]
+		public void TestXml([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -350,8 +360,9 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestEnum1(string context)
+		[Test]
+		public void TestEnum1([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -362,8 +373,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestEnum2(string context)
+		[Test]
+		public void TestEnum2([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -376,8 +388,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void SequenceInsert(string context)
+		[Test]
+		public void SequenceInsert([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -392,8 +405,10 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void SequenceInsertWithIdentity(string context)
+		[Test]
+		public void SequenceInsertWithIdentity([IncludeDataSources(
+				ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -416,8 +431,9 @@ namespace Tests.DataProvider
 			[Column]     public DateTime timestampDataType { get; set; } // TIMESTAMP
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void DataProviderTest(string context)
+		[Test]
+		public void DataProviderTest([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var con = new FbConnection(DataConnection.GetConnectionString(context)))
 			using (var dbm = new DataConnection(new FirebirdDataProvider(), con))
@@ -433,8 +449,10 @@ namespace Tests.DataProvider
 			public byte[] BinaryValue { get; set; }
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void ForcedInlineParametersInSelectClauseTest(string context)
+		[Test]
+		public void ForcedInlineParametersInSelectClauseTest([IncludeDataSources(
+				ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -445,8 +463,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void BulkCopyLinqTypes(string context)
+		[Test]
+		public void BulkCopyLinqTypes([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
@@ -474,15 +493,16 @@ namespace Tests.DataProvider
 		[Table]
 		public class Issue76Entity
 		{
-			[Column] public long   Id        { get; set; } 
-			[Column] public string Caption   { get; set; } 
-			[Column] public long?  ParentId  { get; set; } 
+			[Column] public long   Id         { get; set; }
+			[Column] public string Caption    { get; set; }
+			[Column] public long?  ParentId   { get; set; }
 
-					 public bool HasChildren { get; set; }
+			         public bool   HasChildren { get; set; }
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void Issue76(string context)
+		[Test]
+		public void Issue76([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)]
+			string context)
 		{
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Quote))
 			using (var db = GetDataContext(context))
@@ -522,7 +542,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void DropTableTest(
-			[IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)] string context,
+			[IncludeDataSources(true, ProviderName.Firebird, TestProvName.Firebird3)] string context,
 			[Values] FirebirdIdentifierQuoteMode quoteMode,
 			[Values] bool withIdentity,
 			[Values] bool throwIfNotExists)

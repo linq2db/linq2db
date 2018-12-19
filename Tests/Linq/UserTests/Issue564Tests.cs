@@ -47,9 +47,9 @@ namespace Tests.UserTests
 			public int IntValue { get; set; }
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
-		[Test, DataContextSource(false)]
-		public void Test(string context)
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[Test]
+		public void Test([DataSources(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.CreateLocalTable<Parent564>())

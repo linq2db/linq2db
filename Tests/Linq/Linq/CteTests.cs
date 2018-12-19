@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using Humanizer;
+
 using LinqToDB;
 using LinqToDB.Expressions;
 
 using NUnit.Framework;
-using Tests.Tools;
 
 namespace Tests.Linq
 {
 	using Model;
+	using Tools;
 
 	public class CteTests : TestBase
 	{
@@ -129,8 +129,8 @@ namespace Tests.Linq
 			return source.Provider.CreateQuery<TSource>(newExpr);
 		}
 
-		[Test, NorthwindDataContext]
-		public void ProductAndCategoryNamesOverTenDollars(string context)
+		[Test]
+		public void ProductAndCategoryNamesOverTenDollars([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -161,8 +161,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void ProductAndCategoryNamesOverTenDollars2(string context)
+		[Test]
+		public void ProductAndCategoryNamesOverTenDollars2([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -203,8 +203,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void ProductsOverTenDollars(string context)
+		[Test]
+		public void ProductsOverTenDollars([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -254,8 +254,8 @@ namespace Tests.Linq
 		}
 
 
-		[Test, NorthwindDataContext]
-		public void EmployeeSubordinatesReport(string context)
+		[Test]
+		public void EmployeeSubordinatesReport([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -314,8 +314,8 @@ namespace Tests.Linq
 			public int HierarchyLevel;
 		}
 
-		[Test, NorthwindDataContext(true)]
-		public void EmployeeHierarchy(string context)
+		[Test]
+		public void EmployeeHierarchy([NorthwindDataContext(true)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -605,7 +605,7 @@ namespace Tests.Linq
 				new HierarchyTree { Id = 2, ParentId = null },
 
 				// level 1
-				
+
 				new HierarchyTree { Id = 10, ParentId = 1 },
 				new HierarchyTree { Id = 11, ParentId = 1 },
 

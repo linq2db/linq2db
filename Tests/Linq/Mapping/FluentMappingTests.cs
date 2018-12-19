@@ -318,8 +318,8 @@ namespace Tests.Mapping
 			public string LastName  { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void FluentInheritance(string context)
+		[Test]
+		public void FluentInheritance([DataSources] string context)
 		{
 			var ms = MappingSchema.Default; // new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -343,8 +343,8 @@ namespace Tests.Mapping
 			}
 		}
 
-		[Test, DataContextSource]
-		public void FluentInheritance2(string context)
+		[Test]
+		public void FluentInheritance2([DataSources] string context)
 		{
 			var ms = MappingSchema.Default; // new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -441,7 +441,7 @@ namespace Tests.Mapping
 
 		}
 
-		[Test] 
+		[Test]
 		public void InterfaceInheritance()
 		{
 			var ms = new MappingSchema();

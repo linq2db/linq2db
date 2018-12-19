@@ -10,8 +10,8 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class InheritanceTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

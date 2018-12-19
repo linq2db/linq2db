@@ -46,13 +46,7 @@ namespace Tests.Linq
 			private DateTime? _date;
 
 			[Column("DateTimeValue", Storage = "_date")]
-			DateTime? IDate.Date
-			{
-				get
-				{
-					return _date;
-				}
-			}
+			DateTime? IDate.Date => _date;
 		}
 
 		[Table("LinqDataTypes")]

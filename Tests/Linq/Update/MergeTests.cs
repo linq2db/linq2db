@@ -12,9 +12,11 @@ namespace Tests.xUpdate
 	using Model;
 
 	[TestFixture]
+//	[Order(10101)]
 	public partial class MergeTests : TestBase
 	{
-		public class MergeUpdateWithDeleteDataContextSourceAttribute : IncludeDataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		public class MergeUpdateWithDeleteDataContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public MergeUpdateWithDeleteDataContextSourceAttribute()
 				: base(false, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)
@@ -22,18 +24,19 @@ namespace Tests.xUpdate
 			}
 		}
 
-		public class MergeBySourceDataContextSourceAttribute : IncludeDataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		public class MergeBySourceDataContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public MergeBySourceDataContextSourceAttribute()
 				: base(false, TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)
 			{
-				ParallelScope = ParallelScope.None;
 			}
 		}
 
-		public class MergeDataContextSourceAttribute : DataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		public class MergeDataContextSourceAttribute : DataSourcesAttribute
 		{
-			static string[] Unsupported = new []
+			static string[] Unsupported =
 			{
 				ProviderName.Access,
 				ProviderName.SqlCe,
@@ -56,11 +59,11 @@ namespace Tests.xUpdate
 			public MergeDataContextSourceAttribute(params string[] except)
 				: base(false, Unsupported.Concat(except).ToArray())
 			{
-				ParallelScope = ParallelScope.None;
 			}
 		}
 
-		public class IdentityInsertMergeDataContextSourceAttribute : IncludeDataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		public class IdentityInsertMergeDataContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			static string[] Supported = new[]
 			{
@@ -74,7 +77,6 @@ namespace Tests.xUpdate
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
 				: base(false, Supported.Except(except).ToArray())
 			{
-				ParallelScope = ParallelScope.None;
 			}
 		}
 
@@ -217,8 +219,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void TestDataGenerationTest(string context)
+		[Test]
+		public void TestDataGenerationTest([DataSources(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

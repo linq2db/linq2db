@@ -14,8 +14,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class OrderByTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void OrderBy1(string context)
+		[Test]
+		public void OrderBy1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -33,8 +33,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderBy2(string context)
+		[Test]
+		public void OrderBy2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -43,7 +43,7 @@ namespace Tests.Linq
 					orderby ch.ParentID descending, ch.ChildID ascending
 					select ch;
 
-				var result = 
+				var result =
 					from ch in db.Child
 					orderby ch.ParentID descending, ch.ChildID ascending
 					select ch;
@@ -52,8 +52,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderBy3(string context)
+		[Test]
+		public void OrderBy3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -77,8 +77,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderBy4(string context)
+		[Test]
+		public void OrderBy4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -102,8 +102,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderBy5(string context)
+		[Test]
+		public void OrderBy5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -121,8 +121,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void ConditionOrderBy(string context)
+		[Test]
+		public void ConditionOrderBy([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -140,8 +140,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void OrderBy6(string context)
+		[Test]
+		public void OrderBy6([DataSources(false)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
@@ -158,8 +158,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderBy7(string context)
+		[Test]
+		public void OrderBy7([DataSources] string context)
 		{
 			try
 			{
@@ -189,8 +189,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderBy8(string context)
+		[Test]
+		public void OrderBy8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -211,15 +211,15 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderBy9(string context)
+		[Test]
+		public void OrderBy9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 
 				var expected =
 					from ch in Child
-					orderby ch.ChildID%2, ch.ChildID descending 
+					orderby ch.ChildID%2, ch.ChildID descending
 					select ch;
 
 				var qry =
@@ -233,8 +233,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderBy10(string context)
+		[Test]
+		public void OrderBy10([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -246,7 +246,7 @@ namespace Tests.Linq
 
 				var qry =
 					from ch in db.Child
-					orderby ch.ChildID%2 
+					orderby ch.ChildID%2
 					select new {ch};
 
 				var result = qry.ThenOrByDescending(x => x.ch.ChildID).Select(x => x.ch);
@@ -255,8 +255,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderBy11(string context)
+		[Test]
+		public void OrderBy11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -268,7 +268,7 @@ namespace Tests.Linq
 
 				var qry =
 					from ch in db.Child
-					orderby ch.ChildID%2 
+					orderby ch.ChildID%2
 					select ch;
 
 				var result = qry.ThenOrByDescending(x => x.ChildID).Select(x => x);
@@ -277,8 +277,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderBy12(string context)
+		[Test]
+		public void OrderBy12([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -298,8 +298,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderBySelf1(string context)
+		[Test]
+		public void OrderBySelf1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -309,8 +309,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderBySelf2(string context)
+		[Test]
+		public void OrderBySelf2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -320,8 +320,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void OrderBySelectMany1(string context)
+		[Test]
+		public void OrderBySelectMany1([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -341,8 +341,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderBySelectMany2(string context)
+		[Test]
+		public void OrderBySelectMany2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -362,8 +362,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void OrderBySelectMany3(string context)
+		[Test]
+		public void OrderBySelectMany3([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -383,8 +383,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void OrderAscDesc(string context)
+		[Test]
+		public void OrderAscDesc([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -394,8 +394,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Count1(string context)
+		[Test]
+		public void Count1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -403,8 +403,8 @@ namespace Tests.Linq
 					db.Parent.OrderBy(p => p.ParentID).Count());
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void Count2(string context)
+		[Test]
+		public void Count2([DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -412,8 +412,8 @@ namespace Tests.Linq
 					db.Parent.OrderBy(p => p.ParentID).Take(3).Count());
 		}
 
-		[Test, DataContextSource]
-		public void Min1(string context)
+		[Test]
+		public void Min1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -421,8 +421,8 @@ namespace Tests.Linq
 					db.Parent.OrderBy(p => p.ParentID).Min(p => p.ParentID));
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void Min2(string context)
+		[Test]
+		public void Min2([DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -430,8 +430,10 @@ namespace Tests.Linq
 					db.Parent.OrderBy(p => p.ParentID).Take(3).Min(p => p.ParentID));
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void Min3(string context)
+		[Test]
+		public void Min3([DataSources(
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -439,8 +441,8 @@ namespace Tests.Linq
 					db.Parent.OrderBy(p => p.Value1).Take(3).Min(p => p.ParentID));
 		}
 
-		[Test, DataContextSource]
-		public void Distinct(string context)
+		[Test]
+		public void Distinct([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -455,8 +457,8 @@ namespace Tests.Linq
 					select p).Distinct().OrderBy(p => p.ParentID));
 		}
 
-		[Test, DataContextSource]
-		public void Take(string context)
+		[Test]
+		public void Take([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

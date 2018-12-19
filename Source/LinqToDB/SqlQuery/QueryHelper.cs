@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.SqlQuery
@@ -16,8 +17,7 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().VisitParentFirst(root, e =>
 			{
-				var source = e as ISqlTableSource;
-				if (source != null && hash.Contains(source) || hashIgnore.Contains(e))
+				if (e is ISqlTableSource source && hash.Contains(source) || hashIgnore.Contains(e))
 					return false;
 
 				switch (e.ElementType)
@@ -198,7 +198,6 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-
 		/// <summary>
 		/// Detects when we can remove order
 		/// </summary>
@@ -236,7 +235,6 @@ namespace LinqToDB.SqlQuery
 
 			return false;
 		}
-
 		/// <summary>
 		/// Returns SqlField from specific expression. Usually from SqlColumn.
 		/// Complex expressions ignored.
