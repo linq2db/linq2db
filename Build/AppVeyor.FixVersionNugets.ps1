@@ -1,6 +1,7 @@
-Param(
+﻿Param(
 	[Parameter(Mandatory=$true)][string]$path,
-	[Parameter(Mandatory=$true)][string]$nugetVersion
+	[Parameter(Mandatory=$true)][string]$nugetVersion,
+	[Parameter(Mandatory=$false)][string]$branch
 )
 
 $ErrorActionPreference = "Stop"
@@ -13,7 +14,9 @@ if ($nugetVersion) {
 	$ns = @{ns=$nsUri}
 	$dotlessVersion = $nugetVersion -replace '\.',''
 	$commit = (git rev-parse HEAD)
-	$branch = (git rev-parse --abbrev-ref HEAD)
+	if (-not $branch) {
+		$branch = (git rev-parse --abbrev-ref HEAD)
+	}
 
 	Get-ChildItem $path | ForEach {
 		$xmlPath = Resolve-Path $_.FullName
@@ -42,7 +45,7 @@ if ($nugetVersion) {
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('copyright', $nsUri)
-		$child.InnerText = 'Copyright (c) 2018 ' + $authors
+		$child.InnerText = 'Copyright © 2018 ' + $authors
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('authors', $nsUri)
@@ -58,7 +61,7 @@ if ($nugetVersion) {
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('projectUrl', $nsUri)
-		$child.InnerText = 'https://github.com/linq2db/linq2db'
+		$child.InnerText = 'https://linq2db.com'
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('iconUrl', $nsUri)
