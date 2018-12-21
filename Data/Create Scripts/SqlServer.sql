@@ -18,6 +18,10 @@ BEGIN DROP TABLE InheritanceParent END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('InheritanceChild') AND type in (N'U'))
 BEGIN DROP TABLE InheritanceChild END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'TestProcedure' AND schema_id = SCHEMA_ID('TestSchema'))
+	DROP PROCEDURE TestSchema.TestProcedure
+GO
 
 CREATE TABLE InheritanceParent
 (
@@ -1042,3 +1046,9 @@ BEGIN
 END
 GO
 -- SKIP SqlServer.2005 END
+CREATE PROCEDURE TestSchema.TestProcedure
+AS
+BEGIN
+	SELECT 1
+END
+GO
