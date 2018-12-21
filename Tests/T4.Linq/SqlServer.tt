@@ -13,7 +13,8 @@
 	DatabaseName    = null;//"Northwind";
 	GenerateDatabaseName = true;
 	OneToManyAssociationType = "List<{0}>";
-
+	GenerateSchemaAsType = true;
+	GenerateAssociationExtensions = true;
 //	BaseEntityClass = "object";
 
 //	GenerateBackReferences = false;
