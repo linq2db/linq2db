@@ -1,0 +1,352 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                           #>
+<#@ import namespace="System.Collections.Concurrent" #>
+<#@ import namespace="LinqToDB.Mapping" #>
+<#+
+
+	public bool IsUpdateSequenceNameAttribute;//Add SequenceNameAttribute if name of sequence is diffrent by autogeneration algoritm
+	public bool IsUpdateTableComments;//Add table comment
+	public bool IsUpdateColumnComments;//Add column comment
+	public bool IsUpdateDateTimeType;//Change all pSql dateTime type to System.DateTime for DTO-classes
+	public bool IsUpdateViewIsNotNull;//Change property IsNullable to false for all DTO-view-object
+	public bool Is_Id_FirstColumnInView;
+	public Func<string, string, bool> CanChangeNotNull = (table, column) => true;
+	private static readonly StringComparer _pSqlComparer = StringComparer.InvariantCultureIgnoreCase;
+
+	//         schema,            table              column, sequences
+	ConcurrentDictionary<string, PSqlSctructInfo> _pSqlExSchemas = 
+		new ConcurrentDictionary<string, PSqlSctructInfo>(_pSqlComparer);
+
+
+#region commands txt
+	const string getSequencesPsqlCommand =
+		@"  SELECT sch.nspname as ""schema_name"",
+ tab.relname as ""table_name"",
+ col.attname as ""col_name"",
+ seqs.relname as ""sqs_name""
+            FROM pg_attribute col
+				join pg_class tab on col.attrelid = tab.oid
+				join pg_namespace sch on tab.relnamespace = sch.oid
+				left join pg_attrdef def on tab.oid = def.adrelid and col.attnum = def.adnum
+				left join pg_depend deps on def.oid = deps.objid and deps.deptype = 'n'
+				left join pg_class seqs on deps.refobjid = seqs.oid and seqs.relkind = 'S'
+				where sch.nspname != 'information_schema' and sch.nspname not like 'pg_%' -- won't work if you have user schemas matching pg_
+					and col.attnum > 0
+					and seqs.relname is not null -- TO ONLY VIEW SERIAL/BIGSERIAL COLUMNS
+					AND (1 = {1} or sch.nspname in ({0})) -- schema_name 
+            ORDER BY seqs.relname";
+
+	const string getColumnComments =
+		@"SELECT C.table_schema as ""schema_name"",
+	C.TABLE_NAME as ""table_name"",
+	C.COLUMN_NAME as ""col_name"",
+	pgd.description as column_description,
+	pg_catalog.obj_description((C.table_schema||'.""'||C.TABLE_NAME||'""')::regclass) as table_description
+FROM pg_catalog.pg_statio_all_tables AS st
+	INNER JOIN pg_catalog.pg_description pgd ON pgd.objoid = st.relid
+	INNER JOIN information_schema.COLUMNS C ON 
+				pgd.objsubid = C.ordinal_position 
+				AND C.table_schema = st.schemaname 
+				AND C.TABLE_NAME = st.relname
+		WHERE (1 = {1} OR C.table_schema in ({0}));";
+#endregion
+
+	#region Sequences
+
+	void LoadPSqlMetadataEx(string server, string port, string database, string uid, string password)
+	{
+		if (IsUpdateSequenceNameAttribute)
+		{
+			LoadSequences(server, port, database, uid, password);
+		}
+
+		if (IsUpdateTableComments || IsUpdateColumnComments)
+		{
+			LoadComments(server, port, database, uid, password);
+		}
+
+		UpdatePSqlMetadataEx();
+	}
+
+	void LoadSequences(string server, string port, string database, string uid, string password)
+	{
+		var dataConnection = GetPostgreSQLConnection(server, port, database, uid, password);
+
+		using (var cmd = dataConnection.CreateCommand())
+		{
+			cmd.CommandText = 
+				string.Format(getSequencesPsqlCommand, 
+							  '\'' +
+							  string.Join("','", GetSchemaOptions.IncludedSchemas) +
+							  '\'',
+							  GetSchemaOptions.IncludedSchemas?.Length > 0 ? 0 : 1);
+			var reader = cmd.ExecuteReader();
+			while (reader.Read()) // построчно считываем данные
+			{
+				_pSqlExSchemas.GetOrAdd(reader["schema_name"].ToString(),key => new PSqlSctructInfo(key, _pSqlComparer))
+							  .Add(new PSqlSctructInfo(reader["table_name"].ToString(), _pSqlComparer)) //tables
+							  .Add(new PSqlColumnInfo(reader["col_name"].ToString()))
+							  .AddSequence(reader["sqs_name"].ToString());
+			}
+
+			reader.Close();
+		}
+	}
+
+	void UpdatePSqlMetadataEx()
+	{
+		foreach (var table in Tables.Values)
+		{
+			UpdatePSqlComments(table);
+			int index = 0;
+			foreach (var column in table.Columns.Values)
+			{
+				UpdatePSqlSequence(table, column);
+				UpdatePSqlComments(table, column);
+				UpdatePSqlViewIsNotNull(table, column);
+				UpdatePSqlDateTimeType(column);
+				if (index == 0)
+				{
+					UpdateFirstColumnInView(table, column);
+				}
+
+				index++;
+			}
+		}
+	}
+
+	
+	void UpdatePSqlSequence(Table table, Column column)
+	{
+		if (!IsUpdateSequenceNameAttribute || !column.IsIdentity)
+		{
+			return;
+		}
+
+		if (!_pSqlExSchemas.TryGetValue(table.Schema, out PSqlSctructInfo schemaMap) ||
+			!schemaMap.TryGetValue<PSqlSctructInfo>(table.TableName, out var tableMap) ||
+			!tableMap.TryGetValue<PSqlColumnInfo>(column.ColumnName, out var columnMap))
+		{
+			return;
+		}
+
+		if (columnMap.Sequences.Count == 0)
+		{
+			Console.WriteLine("Warn: \"{0}\".\"{1}\".\"{2}\" not containse any sequences", table.Schema, table.TableName, column.ColumnName);
+			return;
+		}
+
+		var linq2dbAutogenerateSequence =
+			$"{table.TableName}_{column.ColumnName}_seq";
+
+		if (columnMap.Sequences.Contains(linq2dbAutogenerateSequence))
+		{
+			return;
+		}
+
+		if (columnMap.Sequences.Count > 1)
+		{
+			throw new Exception(string.Format("For \"{0}\".\"{1}\".\"{2}\" found many sequences", table.Schema, table.TableName, column.ColumnName));
+		}
+
+		column.Attributes.Add(new Attribute("Kostyil_AttrForChangeTo_ForignKeyAttribute_canBeReplaced"));
+
+		column.Attributes.Add(new Attribute(typeof(LinqToDB.Mapping.SequenceNameAttribute).FullName,
+											"LinqToDB.ProviderName.PostgreSQL",
+											'"' + columnMap.Sequences.First() + '"')
+							  {
+								  IsSeparated = true
+							  });
+	}
+
+	#endregion
+
+	#region Comments
+
+	void LoadComments(string server, string port, string database, string uid, string password)
+	{
+		var dataConnection = GetPostgreSQLConnection(server, port, database, uid, password);
+
+		using (var cmd = dataConnection.CreateCommand())
+		{
+			cmd.CommandText = 
+				string.Format(getColumnComments, 
+							  '\'' +
+							  string.Join("','", GetSchemaOptions.IncludedSchemas) +
+							  '\'',
+							  GetSchemaOptions.IncludedSchemas?.Length > 0 ? 0 : 1);
+			var reader = cmd.ExecuteReader();
+			while (reader.Read()) // построчно считываем данные
+			{
+				PSqlSctructInfo schemaMap = _pSqlExSchemas.GetOrAdd(reader["schema_name"].ToString(),key => new PSqlSctructInfo(key, _pSqlComparer));
+				PSqlSctructInfo tableMap = schemaMap.Add(new PSqlSctructInfo(reader["table_name"].ToString(), _pSqlComparer));
+				tableMap.Description = reader["table_description"]?.ToString();
+				PSqlColumnInfo culumnInfo = tableMap.Add(new PSqlColumnInfo(reader["col_name"].ToString()));
+				culumnInfo.Description = reader["column_description"]?.ToString();
+			}
+			reader.Close();
+		}
+	}
+
+	void UpdatePSqlComments(Table table)
+	{
+		if (IsUpdateTableComments)
+		{
+			if (!_pSqlExSchemas.TryGetValue(table.Schema, out var tableMap) ||
+				!tableMap.TryGetValue<PSqlSctructInfo>(table.TableName, out var tableMetadata))
+			{
+				return;
+			}
+
+			if (string.IsNullOrEmpty(table.Description) &&
+				!string.IsNullOrEmpty(tableMetadata.Description))
+			{
+				table.Description = tableMetadata.Description;
+			}
+		}
+	}
+
+	void UpdatePSqlComments(Table table, Column column)
+	{
+		if (IsUpdateColumnComments)
+		{
+			if (!_pSqlExSchemas.TryGetValue(table.Schema, out var tableMap) ||
+				!tableMap.TryGetValue<PSqlSctructInfo>(table.TableName, out var tableMetadata))
+			{
+				return;
+			}
+
+			if (!string.IsNullOrEmpty(column.Description))
+			{
+				return;
+			}
+			if (!tableMetadata.TryGetValue<PSqlColumnInfo>(column.ColumnName, out var columnMetadata) ||
+				string.IsNullOrEmpty(columnMetadata.Description))
+			{
+				return;
+			}
+			column.Description = columnMetadata.Description;
+		}
+	}
+
+	void UpdatePSqlDateTimeType(Column column)
+	{
+		if (IsUpdateDateTimeType)
+		{
+			var b = false;
+			switch (column.DbType)
+			{
+				case DbType.Date:
+				case DbType.DateTime:
+				case DbType.Time:
+				case DbType.DateTime2:
+				case DbType.DateTimeOffset:
+					b = true;
+					break;
+			}
+
+			if (!b)
+			{
+				b = column.DataType == "DataType.Date";
+			}
+
+			if (b)
+			{
+				column.Type = "System.DateTime";
+				if (column.IsNullable)
+				{
+					column.Type += "?";
+				}
+			}
+		}
+	}
+
+	void UpdatePSqlViewIsNotNull(Table table, Column column)
+	{
+		if (IsUpdateViewIsNotNull &&
+			table.IsView &&
+			column.IsNullable &&
+			CanChangeNotNull(table.TableName, column.ColumnName))
+		{
+			column.IsNullable = false;
+			if (column.Type.EndsWith("?"))
+			{
+				column.Type = column.Type.Remove(column.Type.Length - 1, 1);
+			}
+		}
+	}
+
+	void UpdateFirstColumnInView(Table table, Column column)
+	{
+		if (Is_Id_FirstColumnInView && 
+			table.IsView)
+		{
+			column.IsPrimaryKey = true;
+		}
+	}
+
+	#endregion
+	
+	abstract class PSqlSctructInfoBase
+	{
+		public readonly  string Name;
+		public string Description { get; set; }
+
+		public PSqlSctructInfoBase(string name)
+		{
+			Name = name;
+		}
+	}
+
+	class PSqlSctructInfo : PSqlSctructInfoBase
+	{
+		private readonly  ConcurrentDictionary<string, PSqlSctructInfoBase> _subs;
+		
+		public PSqlSctructInfo(string name, StringComparer comparer)
+			:base(name)
+		{
+			_subs = new ConcurrentDictionary<string, PSqlSctructInfoBase>(comparer);
+		}
+
+		public T Add<T>(T sub)
+			where T : PSqlSctructInfoBase
+		{
+			return _subs.GetOrAdd(sub.Name, key => sub) as T;
+		}
+
+		public bool TryGetValue<T>(string name, out T v)
+			where T : PSqlSctructInfoBase
+		{
+			
+			if (!_subs.TryGetValue(name, out var value))
+			{
+				v = default(T);
+				return false;
+			}
+
+			v = value as T;
+			if (v != null)
+			{
+				return true;
+			}
+			
+			throw new InvalidCastException("Expected " + typeof(T).FullName);
+		}
+	}
+
+	class PSqlColumnInfo : PSqlSctructInfo
+	{
+		public readonly  ISet<string> Sequences;
+
+		public PSqlColumnInfo(string name)
+			: base(name, StringComparer.Ordinal)
+		{
+			Sequences = new HashSet<string>();
+		}
+
+		public PSqlColumnInfo AddSequence(string sequence)
+		{
+			Sequences.Add(sequence);
+			return this;
+		}
+	}
+#>

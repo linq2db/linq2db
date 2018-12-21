@@ -1,4 +1,5 @@
 <#@ include file="LinqToDB.ttinclude" #>
+<#@ include file="PostgreSQL.SchemaExAnnotations.ttinclude" #>
 <#
 	LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.ResolvePostgreSQL(
 		typeof(Npgsql.NpgsqlConnection).Assembly);
@@ -133,11 +134,13 @@ void LoadPostgreSQLMetadata(string connectionString)
 {
 	var dataConnection = GetPostgreSQLConnection(connectionString);
 	LoadMetadata(dataConnection);
+	LoadPSqlMetadataEx(dataConnection);
 }
 
 void LoadPostgreSQLMetadata(string server, string port, string database, string uid, string password)
 {
 	var dataConnection = GetPostgreSQLConnection(server, port, database, uid, password);
 	LoadMetadata(dataConnection);
+	LoadPSqlMetadataEx(dataConnection);
 }
 #>
