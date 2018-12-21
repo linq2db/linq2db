@@ -61,7 +61,7 @@ if ($nugetVersion) {
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('projectUrl', $nsUri)
-		$child.InnerText = 'https://linq2db.com'
+		$child.InnerText = 'http://linq2db.com'
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('iconUrl', $nsUri)
