@@ -1539,7 +1539,7 @@ namespace LinqToDB.SqlProvider
 				BuildExpression(item.Expression);
 
 				if (item.IsDescending)
-					StringBuilder.Append(" DESC");
+					AppendDescendingBuilder(item);
 
 				if (i + 1 < selectQuery.OrderBy.Items.Count)
 					StringBuilder.Append(',');
@@ -1548,6 +1548,11 @@ namespace LinqToDB.SqlProvider
 			}
 
 			Indent--;
+		}
+
+		protected virtual void AppendDescendingBuilder(SqlOrderByItem item)
+		{
+			StringBuilder.Append(" DESC");
 		}
 
 		#endregion

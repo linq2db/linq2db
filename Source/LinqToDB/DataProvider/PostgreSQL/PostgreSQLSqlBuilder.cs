@@ -344,5 +344,22 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			StringBuilder.AppendLine();
 		}
+
+		#region Overrides of BasicSqlBuilder
+
+		/// <inheritdoc />
+		protected override void AppendDescendingBuilder(SqlOrderByItem item)
+		{
+			if (!PostgreSQLConfiguration.DescNullsLast)
+			{
+				base.AppendDescendingBuilder(item);
+			}
+			else
+			{
+				StringBuilder.Append(" DESC NULLS LAST");
+			}
+		}
+
+		#endregion
 	}
 }
