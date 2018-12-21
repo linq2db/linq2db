@@ -132,15 +132,19 @@ LinqToDB.Data.DataConnection GetPostgreSQLConnection(string server, string port,
 
 void LoadPostgreSQLMetadata(string connectionString)
 {
-	var dataConnection = GetPostgreSQLConnection(connectionString);
-	LoadMetadata(dataConnection);
-	LoadPSqlMetadataEx(dataConnection);
+	using (var dataConnection = GetPostgreSQLConnection(connectionString))
+	{
+		LoadMetadata(dataConnection);
+		LoadPSqlMetadataEx(dataConnection);
+	}
 }
 
 void LoadPostgreSQLMetadata(string server, string port, string database, string uid, string password)
 {
-	var dataConnection = GetPostgreSQLConnection(server, port, database, uid, password);
-	LoadMetadata(dataConnection);
-	LoadPSqlMetadataEx(dataConnection);
+	using (var dataConnection = GetPostgreSQLConnection(server, port, database, uid, password))
+	{
+		LoadMetadata(dataConnection);
+		LoadPSqlMetadataEx(dataConnection);
+	}
 }
 #>
