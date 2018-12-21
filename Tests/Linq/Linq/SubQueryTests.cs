@@ -13,8 +13,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class SubQueryTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -26,8 +26,8 @@ namespace Tests.Linq
 					select (from ch in db.Child where ch.ParentID == p.ParentID select ch.ChildID).Max());
 		}
 
-		[Test, DataContextSource]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -39,8 +39,8 @@ namespace Tests.Linq
 					select (from ch in db.Child where ch.ParentID == p.ParentID && ch.ChildID > 1 select ch.ChildID).Max());
 		}
 
-		[Test, DataContextSource]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -53,8 +53,8 @@ namespace Tests.Linq
 					select (from ch in db.Child where ch.ParentID == p.ParentID && ch.ChildID == ch.ParentID * 10 + 1 select ch.ChildID).SingleOrDefault());
 		}
 
-		[Test, DataContextSource]
-		public void Test4(string context)
+		[Test]
+		public void Test4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -68,8 +68,8 @@ namespace Tests.Linq
 
 		static int _testValue = 3;
 
-		[Test, DataContextSource]
-		public void Test5(string context)
+		[Test]
+		public void Test5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -81,7 +81,7 @@ namespace Tests.Linq
 					.Distinct();
 
 				var expected = eids.Select(id =>
-					new 
+					new
 					{
 						id,
 						Count1 = Child.Where(p => p.ParentID == id).Count(),
@@ -105,8 +105,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test6(string context)
+		[Test]
+		public void Test6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -145,8 +145,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test7(string context)
+		[Test]
+		public void Test7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -154,8 +154,8 @@ namespace Tests.Linq
 					from c in db.Child select new { Count = db.GrandChild.Where(g => g.ChildID == c.ChildID).Count() });
 		}
 
-		[Test, DataContextSource]
-		public void Test8(string context)
+		[Test]
+		public void Test8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -187,8 +187,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void ObjectCompare(string context)
+		[Test]
+		public void ObjectCompare([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -210,9 +210,13 @@ namespace Tests.Linq
 					select new { p.ParentID, c.ChildID });
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana, ProviderName.Access, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			 TestProvName.MySql57, ProviderName.DB2, TestProvName.MariaDB)]
-		public void Contains1(string context)
+		[Test]
+		public void Contains1([DataSources(
+			ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase,
+			ProviderName.SybaseManaged, ProviderName.SapHana, ProviderName.Access,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.MySql57, ProviderName.DB2, TestProvName.MariaDB)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -224,9 +228,13 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana, ProviderName.Access, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			 TestProvName.MySql57, ProviderName.DB2, TestProvName.MariaDB)]
-		public void Contains2(string context)
+		[Test]
+		public void Contains2([DataSources(
+			ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase,
+			ProviderName.SybaseManaged, ProviderName.SapHana, ProviderName.Access,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			TestProvName.MySql57, ProviderName.DB2, TestProvName.MariaDB)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -238,9 +246,12 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.MySql, ProviderName.Sybase)]
-		public void SubSub1(string context)
+		[Test]
+		public void SubSub1([DataSources(
+			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
+			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.MySql,
+			ProviderName.Sybase)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -274,10 +285,13 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.MySql,
-			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
-		public void SubSub2(string context)
+		[Test]
+		public void SubSub2([DataSources(
+			ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative,
+			ProviderName.OracleManaged, ProviderName.MySql, TestProvName.MariaDB,
+			TestProvName.MySql57, ProviderName.SqlServer2000, ProviderName.Sybase,
+			ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -319,8 +333,8 @@ namespace Tests.Linq
 					});
 		}
 
-		//[Test, DataContextSource]
-		public void SubSub201(string context)
+		//[Test]
+		public void SubSub201([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -362,9 +376,11 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.DB2, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.MySql, ProviderName.Sybase, ProviderName.Access)]
-		public void SubSub21(string context)
+		[Test]
+		public void SubSub21([DataSources(
+			ProviderName.SqlCe, ProviderName.DB2, ProviderName.OracleNative,
+			ProviderName.OracleManaged, ProviderName.MySql, ProviderName.Sybase, ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -406,9 +422,11 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.MySql, ProviderName.Sybase)]
-		public void SubSub211(string context)
+		[Test]
+		public void SubSub211([DataSources(
+			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative,
+			ProviderName.OracleManaged, ProviderName.MySql, ProviderName.Sybase)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -452,9 +470,11 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.MySql, ProviderName.Sybase)]
-		public void SubSub212(string context)
+		[Test]
+		public void SubSub212([DataSources(
+			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative,
+			ProviderName.OracleManaged, ProviderName.MySql, ProviderName.Sybase)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -496,9 +516,11 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.MySql, ProviderName.Sybase, ProviderName.SapHana)]
-		public void SubSub22(string context)
+		[Test]
+		public void SubSub22([DataSources(
+			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative,
+			ProviderName.OracleManaged, ProviderName.MySql, ProviderName.Sybase, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -542,8 +564,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Count1(string context)
+		[Test]
+		public void Count1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -567,8 +589,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Count2(string context)
+		[Test]
+		public void Count2([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -592,8 +614,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Count3(string context)
+		[Test]
+		public void Count3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

@@ -16,8 +16,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class VisualBasicTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void CompareString(string context)
+		[Test]
+		public void CompareString([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -25,8 +25,8 @@ namespace Tests.Linq
 					CompilerServices.CompareString(db));
 		}
 
-		[Test, DataContextSource]
-		public void CompareString1(string context)
+		[Test]
+		public void CompareString1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -35,8 +35,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SapHana)]
-		public void ParameterName(string context)
+		[Test]
+		public void ParameterName([DataSources(ProviderName.SapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -44,8 +44,8 @@ namespace Tests.Linq
 					VisualBasicCommon.ParamenterName(db));
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void SearchCondition1(string context)
+		[Test]
+		public void SearchCondition1([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -55,8 +55,8 @@ namespace Tests.Linq
 					VisualBasicCommon.SearchCondition1(db));
 		}
 
-		[Test, NorthwindDataContext]
-		public void SearchCondition2(string context)
+		[Test]
+		public void SearchCondition2([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -69,8 +69,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void SearchCondition3(string context)
+		[Test]
+		public void SearchCondition3([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -89,8 +89,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void SearchCondition4(string context)
+		[Test]
+		public void SearchCondition4([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{

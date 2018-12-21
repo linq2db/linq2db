@@ -10,8 +10,8 @@ branches:
     - /dev.*/
 
 environment:
-  assemblyVersion: 2.6.0
-  packageVersion: 2.6.0
+  assemblyVersion: 2.6.1
+  packageVersion: 2.6.1
   docfxuser: "ili"
   docfxmail: "docfx@linq2db.com"
   docfxsecret:
@@ -64,7 +64,7 @@ before_build:
     }
 
     .\Build\AppVeyor.FixVersionProps.ps1  -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
-    .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion
+    .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion $env:APPVEYOR_REPO_BRANCH
 
     $startPath = "$($env:appveyor_build_folder)\Data"
     $sqlInstance = "(local)\SQL2014"

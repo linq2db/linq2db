@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
+
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.ServiceModel;
 using System.ServiceModel.Description;
@@ -24,16 +23,13 @@ using LinqToDB.ServiceModel;
 #endif
 
 using NUnit.Framework;
-using NUnit.Framework.Interfaces;
-using NUnit.Framework.Internal;
-
-//[assembly: Parallelizable]
 
 namespace Tests
 {
 	using Model;
 	using Tools;
 
+//	[Order(1000)]
 	public class TestBase
 	{
 		static TestBase()
@@ -144,7 +140,7 @@ namespace Tests
 					traceLevel = TraceLevel.Info;
 
 			if (!string.IsNullOrEmpty(testSettings.NoLinqService))
-				BaseDataContextSourceAttribute.NoLinqService = ConvertTo<bool>.From(testSettings.NoLinqService);
+				DataSourcesBaseAttribute.NoLinqService = ConvertTo<bool>.From(testSettings.NoLinqService);
 
 			DataConnection.TurnTraceSwitchOn(traceLevel);
 
@@ -277,23 +273,24 @@ namespace Tests
 			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Informix,
-			TestProvName.MariaDB,
 			ProviderName.Sybase,
 			ProviderName.SapHana,
 			ProviderName.OracleNative,
-			ProviderName.OracleManaged,
 			ProviderName.SqlCe,
 			ProviderName.SQLiteClassic,
 #endif
 #if !NETSTANDARD1_6
 			ProviderName.SybaseManaged,
+			ProviderName.OracleManaged,
 #endif
 			ProviderName.Firebird,
+			TestProvName.Firebird3,
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
 			ProviderName.SqlServer2014,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
+			TestProvName.SqlAzure,
 			ProviderName.PostgreSQL,
 			ProviderName.PostgreSQL92,
 			ProviderName.PostgreSQL93,
@@ -302,10 +299,9 @@ namespace Tests
 			TestProvName.PostgreSQL11,
 			TestProvName.PostgreSQLLatest,
 			ProviderName.MySql,
-			TestProvName.SqlAzure,
 			TestProvName.MySql57,
-			ProviderName.SQLiteMS,
-			TestProvName.Firebird3
+			TestProvName.MariaDB,
+			ProviderName.SQLiteMS
 		};
 
 		protected ITestDataContext GetDataContext(string configuration, MappingSchema ms = null)
@@ -1172,9 +1168,9 @@ namespace Tests
 
 	}
 
-	public class WithoutComparasionNullCheck : IDisposable
+	public class WithoutComparisonNullCheck : IDisposable
 	{
-		public WithoutComparasionNullCheck()
+		public WithoutComparisonNullCheck()
 		{
 			Configuration.Linq.CompareNullsAsValues = false;
 		}
@@ -1183,101 +1179,6 @@ namespace Tests
 		{
 			Configuration.Linq.CompareNullsAsValues = true;
 			Query.ClearCaches();
-		}
-	}
-
-	public abstract class DataSourcesBaseAttribute : DataAttribute, IParameterDataSource
-	{
-		public bool     IncludeLinqService { get; }
-		public string[] Providers          { get; }
-
-		protected DataSourcesBaseAttribute(bool includeLinqService, string[] providers)
-		{
-			IncludeLinqService = includeLinqService;
-			Providers = providers;
-		}
-
-		public IEnumerable GetData(IParameterInfo parameter)
-		{
-			if (!IncludeLinqService)
-				return GetProviders();
-			var providers = GetProviders().ToArray();
-			return providers.Concat(providers.Select(p => p + ".LinqService"));
-		}
-
-		protected abstract IEnumerable<string> GetProviders();
-	}
-
-	[AttributeUsage(AttributeTargets.Parameter)]
-	public class DataSourcesAttribute : DataSourcesBaseAttribute
-	{
-		public DataSourcesAttribute(params string[] excludeProviders) : base(true, excludeProviders)
-		{
-		}
-
-		public DataSourcesAttribute(bool includeLinqService, params string[] excludeProviders) : base(includeLinqService, excludeProviders)
-		{
-		}
-
-		protected override IEnumerable<string> GetProviders()
-		{
-			return TestBase.UserProviders.Where(p => !Providers.Contains(p) && TestBase.Providers.Contains(p));
-		}
-	}
-
-	[AttributeUsage(AttributeTargets.Parameter)]
-	public class IncludeDataSourcesAttribute : DataSourcesBaseAttribute
-	{
-		public IncludeDataSourcesAttribute(params string[] includeProviders) : base(true, includeProviders)
-		{
-		}
-
-		public IncludeDataSourcesAttribute(bool includeLinqService, params string[] includeProviders) : base(includeLinqService, includeProviders)
-		{
-		}
-
-		protected override IEnumerable<string> GetProviders()
-		{
-			return Providers.Where(TestBase.UserProviders.Contains);
-		}
-	}
-
-	public class SQLiteDataSourcesAttribute : IncludeDataSourcesAttribute
-	{
-		public SQLiteDataSourcesAttribute(bool includeLinqService = false) : base(includeLinqService, 
-			ProviderName.SQLiteClassic, ProviderName.SQLite, ProviderName.SQLiteMS)
-		{
-		}
-	}
-
-	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-	public class SkipCategoryAttribute : NUnitAttribute, IApplyToTest
-	{
-		public SkipCategoryAttribute(string category)
-		{
-			Category = category;
-		}
-
-		public SkipCategoryAttribute(string category, string providerName)
-		{
-			Category     = category;
-			ProviderName = providerName;
-		}
-
-		public string Category     { get; }
-		public string ProviderName { get; }
-
-		public void ApplyToTest(Test test)
-		{
-			if (test.RunState == RunState.NotRunnable || test.RunState == RunState.Explicit || ProviderName != null)
-				return;
-
-			if (TestBase.SkipCategories.Contains(Category))
-			{
-				test.RunState = RunState.Explicit;
-				test.Properties.Set(PropertyNames.Category, Category);
-				test.Properties.Set(PropertyNames.SkipReason, $"Skip category '{Category}'");
-			}
 		}
 	}
 }

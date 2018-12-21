@@ -37,17 +37,17 @@ namespace Tests.UserTests
 		}
 
 		[Table(Name ="Assignments")]
-		class Assignment 
+		class Assignment
 		{
 			[PrimaryKey, Identity] public int Id { get; set; } // Int
-			[Column, NotNull] public Guid DirectionId { get; set; } 
+			[Column, NotNull] public Guid DirectionId { get; set; }
 			[Column, Nullable] public int TargetId { get; set; } // varchar(50)
 			[Column, Nullable] public DateTime? DateRevoke { get; set; } // varchar(50)
 		}
 
 		[Test]
 		public void TestAssociation(
-			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context
+			[IncludeDataSources(true, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context
 		)
 		{
 			using (var db = GetDataContext(context))
@@ -65,7 +65,7 @@ namespace Tests.UserTests
 						.Where(r => r.Id == 1002)
 						.Select(r => r.FirmInfo)
 						.SelectMany(r => r.Requests)
-						.Select(r => new 
+						.Select(r => new
 						{
 							Instance = r,
 							Instance2 = r.DocPrepareAssignment,
@@ -79,11 +79,11 @@ namespace Tests.UserTests
 						.Select(r => r.FirmInfo)
 						.SelectMany(r => r.Requests)
 						.Select(r => r.DocPrepareAssignment);
-  
+
 					var res2 = query.ToArray();
 				}
 			}
 		}
-		
+
 	}
 }

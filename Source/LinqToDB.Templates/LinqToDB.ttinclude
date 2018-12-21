@@ -493,7 +493,10 @@ void GenerateTypesFromMetadata()
 					associations.Members.Add(key);
 
 					var extension = new Method(() => string.Format("IQueryable<{0}>", key.OtherTable.TypePrefix + key.OtherTable.TypeName), GetAssociationExtensionPluralName(key));
-					extension.ParameterBuilders.Add(() => string.Format("this {0} obj", t.TypeName));
+					extension.Name = GetAssociationExtensionPluralName(key);
+
+					extension.ParameterBuilders.Add(() => string.Format("this {0}{1} obj", t.TypePrefix, t.TypeName));
+
 					extension.ParameterBuilders.Add(() => "IDataContext db");
 					extension.Attributes.Add(aa);
 					extension.IsStatic = true;
@@ -529,10 +532,10 @@ void GenerateTypesFromMetadata()
 
 					if (key.AssociationType != AssociationType.OneToMany)
 					{
-						extension.Name = GetAssociationExtensionPluralName(key);
+						var single = new Method(() => t.TypePrefix + t.TypeName, GetAssociationExtensionSinglularName(key));
+						
+						single.ParameterBuilders.Add(() => string.Format("this {0}{1} obj", key.OtherTable.TypePrefix, key.OtherTable.TypeName));
 
-						var single = new Method(() => key.OtherTable.TypePrefix + key.OtherTable.TypeName, GetAssociationExtensionSinglularName(key));
-						single.ParameterBuilders.Add(() => string.Format("this {0} obj", t.TypeName));
 						single.ParameterBuilders.Add(() => "IDataContext db");
 						single.Attributes.Add(aa);
 						single.IsStatic = true;
@@ -541,9 +544,30 @@ void GenerateTypesFromMetadata()
 						single.Comment.Add("/ " + key.KeyName);
 						single.Comment.Add("/ </summary>");
 
+						Func<string> builderSingle = () =>
+						{
+							var sb = new StringBuilder();
+							sb
+								.Append("return db.GetTable<")
+								.Append(t.TypePrefix + t.TypeName)
+								.Append(">().Where(c => ");
+							for (var i = 0; i < key.OtherColumns.Count; i++)
+							{
+								sb.Append("c.")
+									.Append(key.ThisColumns[i].MemberName)
+									.Append(" == obj.")
+									.Append(key.OtherColumns[i].MemberName)
+									.Append(" && ");
+							}
+							sb.Length -= 4;
+							sb.Append(");");
+
+							return sb.ToString();
+						};
+
 						single.BodyBuilders.Add(() =>
 						{
-							var sb = new StringBuilder(builder());
+							var sb = new StringBuilder(builderSingle());
 							sb.Length -= 1;
 
 							if (key.CanBeNull)
@@ -556,8 +580,6 @@ void GenerateTypesFromMetadata()
 
 						extensionAssociations.Members.Add(single);
 					}
-
-
 				}
 
 				if (GenerateAssociations)
@@ -733,7 +755,11 @@ void GenerateTypesFromMetadata()
 			{
 				p.IsStatic    = true;
 				p.TypeBuilder = () => p.ResultTable == null ? "int" : "IEnumerable<" + p.ResultTable.TypeName + ">";
-				p.ParameterBuilders.Add(() => "this DataConnection dataConnection");
+
+				if (p.IsDefaultSchema || !GenerateSchemaAsType)
+					p.ParameterBuilders.Add(() => "this DataConnection dataConnection");
+				else
+					p.ParameterBuilders.Add(() => "DataConnection dataConnection");
 			}
 
 			if (!p.IsAggregateFunction)
@@ -933,7 +959,9 @@ void GenerateTypesFromMetadata()
 	if (defTableExtensions.Members.Count > 0)
 	{
 		Model.Usings.Add("System.Linq");
-		Model.Types.Add(new Class("TableExtensions", defTableExtensions) { IsStatic = true });
+		var tableExtensions = new Class("TableExtensions", defTableExtensions) { IsStatic = true };
+		Model.Types.Add(tableExtensions);
+		MakeTypeMembersNamesUnique(tableExtensions);
 	}
 
 	foreach (var schema in schemas.Values)

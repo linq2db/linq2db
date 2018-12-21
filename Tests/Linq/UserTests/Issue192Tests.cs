@@ -63,8 +63,8 @@ namespace Tests.UserTests
 
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			var ms = new MappingSchema();
 

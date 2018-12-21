@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
 using NUnit.Framework;
 
-using LinqToDB;
 using LinqToDB.Data;
 
 namespace Tests.Data
@@ -49,8 +47,8 @@ namespace Tests.Data
 			return steps.ToDictionary(s => s.Enum, s => s.Value);
 		}
 
-		[Test, NorthwindDataContext]
-		public void TraceInfoStepsAreReportedForLinqQuery(string context)
+		[Test]
+		public void TraceInfoStepsAreReportedForLinqQuery([NorthwindDataContext] string context)
 		{
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
@@ -63,7 +61,7 @@ namespace Tests.Data
 					counters[e.TraceInfoStep]++;
 				};
 
-				db.GetTable<Northwind.Category>().ToList();
+				var _ = db.GetTable<Northwind.Category>().ToList();
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute].Command;
@@ -82,8 +80,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void TraceInfoStepsAreReportedForDataReader(string context)
+		[Test]
+		public void TraceInfoStepsAreReportedForDataReader([NorthwindDataContext] string context)
 		{
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
@@ -99,7 +97,7 @@ namespace Tests.Data
 
 				using (var reader = db.ExecuteReader(sql))
 				{
-					reader.Query<Northwind.Category>().ToList();
+					var _ = reader.Query<Northwind.Category>().ToList();
 				}
 
 				// the same command is reported on each step
@@ -119,8 +117,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public async Task TraceInfoStepsAreReportedForDataReaderAsync(string context)
+		[Test]
+		public async Task TraceInfoStepsAreReportedForDataReaderAsync([NorthwindDataContext] string context)
 		{
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);

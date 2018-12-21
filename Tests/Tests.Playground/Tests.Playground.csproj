@@ -10,16 +10,18 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+<!--
   <ItemGroup>
     <Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
   </ItemGroup>
+-->
 
   <ItemGroup>
 
     <ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
     <ProjectReference Include="..\Base\Tests.Base.csproj" />
     <ProjectReference Include="..\Model\Tests.Model.csproj" />
-  
+
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -76,6 +78,7 @@
         <Link>Database/Create Scripts/%(FileName)%(Extension)</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Include="..\Linq\Infrastructure\ActiveIssueConfigurationTests.cs" Link="ActiveIssueConfigurationTests.cs" />
 
     <!--
     <PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />

@@ -10,8 +10,8 @@ namespace Tests.Samples
 	[TestFixture]
 	public class JoinOperatorTests : TestBase
 	{
-		[Test, NorthwindDataContext]
-		public void InnerJoinOnSingleColumn(string context)
+		[Test]
+		public void InnerJoinOnSingleColumn([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -30,8 +30,8 @@ namespace Tests.Samples
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void InnerJoinOnMultipleColumns(string context)
+		[Test]
+		public void InnerJoinOnMultipleColumns([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
