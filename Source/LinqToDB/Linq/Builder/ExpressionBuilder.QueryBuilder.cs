@@ -207,8 +207,8 @@ namespace LinqToDB.Linq.Builder
 						if (expr.Type.IsConstantable())
 							break;
 
-						if (_expressionAccessors.ContainsKey(expr))
-							return new TransformInfo(Expression.Convert(_expressionAccessors[expr], expr.Type));
+						if (_expressionAccessors.TryGetValue(expr, out var accessor))
+							return new TransformInfo(Expression.Convert(accessor, expr.Type));
 
 						break;
 					}
