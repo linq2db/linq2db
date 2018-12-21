@@ -12,13 +12,13 @@ LinqToDB.Data.DataConnection GetInformixConnection(string host, string port, str
 
 void LoadInformixMetadata(string connectionString)
 {
-	var dataConnection = GetInformixConnection(connectionString);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetInformixConnection(connectionString))
+		LoadMetadata(dataConnection);
 }
 
 void LoadInformixMetadata(string host, string port, string server, string database, string uid, string password)
 {
-	var dataConnection = GetInformixConnection(host, port, server, database, uid, password);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetInformixConnection(host, port, server, database, uid, password))
+		LoadMetadata(dataConnection);
 }
 #>

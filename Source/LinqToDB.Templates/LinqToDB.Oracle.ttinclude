@@ -17,13 +17,13 @@ LinqToDB.Data.DataConnection GetOracleConnection(string server, string port, str
 
 void LoadOracleMetadata(string connectionString)
 {
-	var dataConnection = GetOracleConnection(connectionString);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetOracleConnection(connectionString))
+		LoadMetadata(dataConnection);
 }
 
 void LoadOracleMetadata(string server, string port, string database, string uid, string password)
 {
-	var dataConnection = GetOracleConnection(server, port, database, uid, password);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetOracleConnection(server, port, database, uid, password))
+		LoadMetadata(dataConnection);
 }
 #>

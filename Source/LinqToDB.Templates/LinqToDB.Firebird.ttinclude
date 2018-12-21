@@ -53,19 +53,19 @@ LinqToDB.Data.DataConnection GetFirebirdConnection(string server, string databas
 
 void LoadFirebirdMetadata(string connectionString)
 {
-	var dataConnection = GetFirebirdConnection(connectionString);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetFirebirdConnection(connectionString))
+		LoadMetadata(dataConnection);
 }
 
 void LoadFirebirdMetadata(string server, string database, string uid, string password)
 {
-	var dataConnection = GetFirebirdConnection(server, database, uid, password);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetFirebirdConnection(server, database, uid, password))
+		LoadMetadata(dataConnection);
 }
 
 void LoadFirebirdMetadata(string server, string database)
 {
-	var dataConnection = GetFirebirdConnection(server, database);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetFirebirdConnection(server, database))
+		LoadMetadata(dataConnection);
 }
 #>
