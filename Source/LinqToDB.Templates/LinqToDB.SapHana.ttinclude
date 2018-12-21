@@ -94,13 +94,13 @@
 
 	void LoadSapHanaMetadata(string connectionString)
 	{
-		var dataConnection = GetSapHanaConnection(connectionString);
-		LoadMetadata(dataConnection);
+		using (var dataConnection = GetSapHanaConnection(connectionString))
+			LoadMetadata(dataConnection);
 	}
 
 	void LoadSapHanaMetadata(string server, string schema, string uid, string password)
 	{
-		var dataConnection = GetSapHanaConnection(server, schema, uid, password);
-		LoadMetadata(dataConnection);
+		using (var dataConnection = GetSapHanaConnection(server, schema, uid, password))
+			LoadMetadata(dataConnection);
 	}
 #>

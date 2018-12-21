@@ -12,13 +12,13 @@ LinqToDB.Data.DataConnection GetDB2Connection(string server, string port, string
 
 void LoadDB2Metadata(string connectionString)
 {
-	var dataConnection = GetDB2Connection(connectionString);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetDB2Connection(connectionString))
+		LoadMetadata(dataConnection);
 }
 
 void LoadDB2Metadata(string server, string port, string database, string uid, string password)
 {
-	var dataConnection = GetDB2Connection(server, port, database, uid, password);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetDB2Connection(server, port, database, uid, password))
+		LoadMetadata(dataConnection);
 }
 #>
