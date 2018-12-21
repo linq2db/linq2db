@@ -380,6 +380,67 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		internal static Expression ExpandExpression(Expression expression)
+		{
+			if (Configuration.Linq.UseBinaryAggregateExpression)
+				expression = AggregateExpression(expression);
+
+			return expression.Transform(expr =>
+			{
+				switch (expr.NodeType)
+				{
+					case ExpressionType.Call:
+						{
+							var mc = (MethodCallExpression)expr;
+
+							List<Expression> newArgs = null;
+							for (var index = 0; index < mc.Arguments.Count; index++)
+							{
+								var arg = mc.Arguments[index];
+								Expression newArg = null;
+								if (typeof(LambdaExpression).IsSameOrParentOf(arg.Type))
+								{
+									var argUnwrapped = arg.Unwrap();
+									if (argUnwrapped.NodeType == ExpressionType.MemberAccess ||
+									    argUnwrapped.NodeType == ExpressionType.Call)
+									{
+										if (argUnwrapped.EvaluateExpression() is LambdaExpression lambda)
+											newArg = ExpandExpression(lambda);
+									}
+								}
+
+								if (newArg == null)
+									newArgs?.Add(arg);
+								else
+								{
+									if (newArgs == null)
+										newArgs = new List<Expression>(mc.Arguments.Take(index));
+									newArgs.Add(newArg);
+								}
+							}
+
+							if (newArgs != null)
+							{
+								mc = mc.Update(mc.Object, newArgs);
+							}
+
+
+							if (mc.Method.Name == "Compile" && typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
+							{
+								if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
+								{
+									return ExpandExpression(lambda);
+								}
+							}
+							
+							return mc;
+						}						
+				}
+
+				return expr;
+			});
+		}
+
 		Expression ConvertParameters(Expression expression)
 		{
 			return expression.Transform(expr =>
@@ -480,52 +541,6 @@ namespace LinqToDB.Linq.Builder
 							break;
 						}
 
-					case ExpressionType.Call:
-						{
-							var mc = (MethodCallExpression)expr;
-
-							List<Expression> newArgs = null;
-							for (var index = 0; index < mc.Arguments.Count; index++)
-							{
-								var arg = mc.Arguments[index];
-								Expression newArg = null;
-								if (typeof(LambdaExpression).IsSameOrParentOf(arg.Type))
-								{
-									var argUnwrapped = arg.Unwrap();
-									if (argUnwrapped.NodeType == ExpressionType.MemberAccess ||
-									    argUnwrapped.NodeType == ExpressionType.Call)
-									{
-										newArg = argUnwrapped.EvaluateExpression() as LambdaExpression;
-									}
-								}
-
-								if (newArg == null)
-									newArgs?.Add(arg);
-								else
-								{
-									if (newArgs == null)
-										newArgs = new List<Expression>(mc.Arguments.Take(index));
-									newArgs.Add(newArg);
-								}
-							}
-
-							if (newArgs != null)
-							{
-								mc = mc.Update(mc.Object, newArgs);
-							}
-
-
-							if (mc.Method.Name == "Compile" && typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
-							{
-								if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
-								{
-									return lambda;
-								}
-							}
-							
-							return mc;
-						}
-
 					case ExpressionType.Invoke:
 						{
 							var invocation = (InvocationExpression)expr;
@@ -624,7 +639,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 						{
-							var ex = ConvertIQueriable(expr);
+							var ex = ConvertIQueryable(expr);
 
 							if (!ReferenceEquals(ex, expr))
 								return new TransformInfo(ConvertExpressionTree(ex));
@@ -673,7 +688,7 @@ namespace LinqToDB.Linq.Builder
 
 								if (attr == null)
 								{
-									var ex = ConvertIQueriable(expr);
+									var ex = ConvertIQueryable(expr);
 
 									if (!ReferenceEquals(ex, expr))
 										return new TransformInfo(ConvertExpressionTree(ex));
@@ -1411,9 +1426,9 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region ConvertIQueriable
+		#region ConvertIQueryable
 
-		Expression ConvertIQueriable(Expression expression)
+		Expression ConvertIQueryable(Expression expression)
 		{
 			if (expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
 			{
