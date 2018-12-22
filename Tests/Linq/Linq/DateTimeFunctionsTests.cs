@@ -168,8 +168,8 @@ namespace Tests.Linq
 
 		[Test]
 		public void DatePartMillisecond([DataSources(
-			ProviderName.Informix, ProviderName.MySql, ProviderName.Access,
-			ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+				ProviderName.Informix, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Access,
+				ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -252,13 +252,13 @@ namespace Tests.Linq
 
 		[Test]
 		public void Millisecond([DataSources(
-			ProviderName.Informix, ProviderName.MySql, ProviderName.Access,
-			ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+				ProviderName.Informix, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Access,
+				ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           t.DateTimeValue.Millisecond,
+					from t in Types select t.DateTimeValue.Millisecond,
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Millisecond));
 		}
 
@@ -282,20 +282,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TimeOfDay1([DataSources(TestProvName.MySql57)] string context)
+		public void TimeOfDay1([DataSources(ProviderName.MySqlConnector, TestProvName.MySql57)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select TruncMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
+					from t in Types select TruncMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
 					from t in db.Types select TruncMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
 		}
 
 		[Test]
-		public void TimeOfDay2([IncludeDataSources(TestProvName.MySql57)] string context)
+		public void TimeOfDay2([IncludeDataSources(ProviderName.MySqlConnector, TestProvName.MySql57)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select RoundMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
+					from t in Types select RoundMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
 					from t in db.Types select TruncMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
 		}
 
@@ -392,11 +392,11 @@ namespace Tests.Linq
 					from t in    Types select           Sql.DateAdd(Sql.DateParts.Second, 41, t.DateTimeValue). Value.Second,
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, 41, t.DateTimeValue)).Value.Second);
 		}
-
+		
 		[Test]
 		public void DateAddMillisecond([DataSources(
-			ProviderName.Informix, ProviderName.MySql, ProviderName.Access,
-			ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+				ProviderName.Informix, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Access,
+				ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -459,8 +459,8 @@ namespace Tests.Linq
 
 		[Test]
 		public void AddMilliseconds([DataSources(
-			ProviderName.Informix, ProviderName.MySql, ProviderName.Access,
-			ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+				ProviderName.Informix, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Access,
+				ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -693,7 +693,7 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql,
+				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.MySqlConnector,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.Access)]
 			string context)
@@ -710,7 +710,7 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql,
+				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.MySqlConnector,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.Access)]
 			string context)
@@ -846,7 +846,7 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql,
+				TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.MySqlConnector,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.Access)]
 			string context)

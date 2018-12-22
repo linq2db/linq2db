@@ -73,13 +73,13 @@ namespace Tests.UserTests
 
 		[Test]
 		public void Millisecond([DataSources(
-			ProviderName.Informix, ProviderName.MySql, ProviderName.Access,
-			ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+				ProviderName.Informix, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Access,
+				ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           t.DateTimeValue.Millisecond % 7,
+					from t in Types select t.DateTimeValue.Millisecond % 7,
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Millisecond % 7));
 		}
 	}

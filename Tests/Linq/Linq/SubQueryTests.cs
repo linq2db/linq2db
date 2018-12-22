@@ -212,7 +212,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Contains1([DataSources(
-			ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase,
+			ProviderName.Informix, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Sybase,
 			ProviderName.SybaseManaged, ProviderName.SapHana, ProviderName.Access,
 			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			TestProvName.MySql57, ProviderName.DB2, TestProvName.MariaDB)]
@@ -221,7 +221,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-					where (from p1 in    Parent where p1.Value1 == p.Value1 select p.ParentID).Take(3).Contains(p.ParentID)
+					where (from p1 in Parent where p1.Value1 == p.Value1 select p.ParentID).Take(3).Contains(p.ParentID)
 					select p,
 					from p in db.Parent
 					where (from p1 in db.Parent where p1.Value1 == p.Value1 select p.ParentID).Take(3).Contains(p.ParentID)
@@ -230,7 +230,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Contains2([DataSources(
-			ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase,
+			ProviderName.Informix, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Sybase,
 			ProviderName.SybaseManaged, ProviderName.SapHana, ProviderName.Access,
 			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			TestProvName.MySql57, ProviderName.DB2, TestProvName.MariaDB)]
@@ -239,7 +239,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-					where (from p1 in    Parent where p1.Value1 == p.Value1 select p1.ParentID).Take(3).Contains(p.ParentID)
+					where (from p1 in Parent where p1.Value1 == p.Value1 select p1.ParentID).Take(3).Contains(p.ParentID)
 					select p,
 					from p in db.Parent
 					where (from p1 in db.Parent where p1.Value1 == p.Value1 select p1.ParentID).Take(3).Contains(p.ParentID)
@@ -249,7 +249,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub1([DataSources(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
-			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.MySql,
+			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.MySql, ProviderName.MySqlConnector,
 			ProviderName.Sybase)]
 			string context)
 		{
@@ -288,7 +288,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub2([DataSources(
 			ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative,
-			ProviderName.OracleManaged, ProviderName.MySql, TestProvName.MariaDB,
+			ProviderName.OracleManaged, ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB,
 			TestProvName.MySql57, ProviderName.SqlServer2000, ProviderName.Sybase,
 			ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
 			string context)
@@ -379,7 +379,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub21([DataSources(
 			ProviderName.SqlCe, ProviderName.DB2, ProviderName.OracleNative,
-			ProviderName.OracleManaged, ProviderName.MySql, ProviderName.Sybase, ProviderName.Access)]
+			ProviderName.OracleManaged, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Sybase, ProviderName.Access)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -425,7 +425,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub211([DataSources(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative,
-			ProviderName.OracleManaged, ProviderName.MySql, ProviderName.Sybase)]
+			ProviderName.OracleManaged, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Sybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -473,7 +473,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub212([DataSources(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative,
-			ProviderName.OracleManaged, ProviderName.MySql, ProviderName.Sybase)]
+			ProviderName.OracleManaged, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Sybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -519,7 +519,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub22([DataSources(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative,
-			ProviderName.OracleManaged, ProviderName.MySql, ProviderName.Sybase, ProviderName.SapHana)]
+			ProviderName.OracleManaged, ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Sybase, ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

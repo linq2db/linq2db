@@ -1,9 +1,11 @@
-﻿using System;
+﻿extern alias MySqlData;
+
+using System;
 using System.Linq;
 
 using LinqToDB;
 
-using MySql.Data.MySqlClient;
+using MySqlData::MySql.Data.MySqlClient;
 
 using NUnit.Framework;
 

@@ -14,7 +14,7 @@ namespace Tests.Linq
 	{
 		[Test]
 		public void Comment([DataSources(
-			ProviderName.Access, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
+				ProviderName.Access, ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

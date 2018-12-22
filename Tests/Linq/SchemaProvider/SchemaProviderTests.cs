@@ -16,15 +16,14 @@ namespace Tests.SchemaProvider
 	public class SchemaProviderTests : TestBase
 	{
 		[Test]
-		public void Test([DataSources(false, ProviderName.SQLiteMS
+		public void Test([DataSources(false, ProviderName.SQLiteMS,
+				ProviderName.MySqlConnector
 #if NETSTANDARD2_0
-			, ProviderName.MySql, TestProvName.MySql57
+				, ProviderName.MySql, TestProvName.MySql57
 #endif
 			)]
 			string context)
 		{
-			SqlServerTools.ResolveSqlTypes("");
-
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
@@ -233,9 +232,10 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS
+		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS,
+				ProviderName.MySqlConnector
 #if NETSTANDARD2_0
-			, ProviderName.MySql, TestProvName.MySql57
+				, ProviderName.MySql, TestProvName.MySql57
 #endif
 			)]
 			string context)
@@ -255,9 +255,10 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS
+		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS,
+				ProviderName.MySqlConnector
 #if NETSTANDARD2_0
-			, ProviderName.MySql, TestProvName.MySql57
+				, ProviderName.MySql, TestProvName.MySql57
 #endif
 			)]
 			string context)
@@ -321,9 +322,10 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS
+		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS,
+				ProviderName.MySqlConnector
 #if NETSTANDARD2_0
-			, ProviderName.MySql, TestProvName.MySql57
+				, ProviderName.MySql, TestProvName.MySql57
 #endif
 			)]
 			string context)

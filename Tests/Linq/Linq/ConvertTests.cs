@@ -39,29 +39,29 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToBigInt([DataSources(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)] string context)
+		public void ToBigInt([DataSources(ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select Sql.Convert(Sql.BigInt, t.MoneyValue),
+					from t in Types select Sql.Convert(Sql.BigInt, t.MoneyValue),
 					from t in db.Types select Sql.Convert(Sql.BigInt, t.MoneyValue));
 		}
 
 		[Test]
-		public void ToInt64([DataSources(ProviderName.MySql)] string context)
+		public void ToInt64([DataSources(ProviderName.MySql, ProviderName.MySqlConnector)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (Int64)t.MoneyValue where p > 0 select p,
+					from p in from t in Types select (Int64)t.MoneyValue where p > 0 select p,
 					from p in from t in db.Types select (Int64)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
-		public void ConvertToInt64([DataSources(ProviderName.MySql, ProviderName.SQLiteMS)] string context)
+		public void ConvertToInt64([DataSources(ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p,
+					from p in from t in Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p,
 					from p in from t in db.Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p);
 		}
 
@@ -151,29 +151,29 @@ namespace Tests.Linq
 		#region UInts
 
 		[Test]
-		public void ToUInt1([DataSources(ProviderName.MySql)] string context)
+		public void ToUInt1([DataSources(ProviderName.MySql, ProviderName.MySqlConnector)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.ConvertTo<uint>.From(t.MoneyValue),
+					from t in Types select Sql.ConvertTo<uint>.From(t.MoneyValue),
 					from t in db.Types select Sql.AsSql(Sql.ConvertTo<uint>.From(t.MoneyValue)));
 		}
 
 		[Test]
-		public void ToUInt2([DataSources(ProviderName.MySql)] string context)
+		public void ToUInt2([DataSources(ProviderName.MySql, ProviderName.MySqlConnector)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Convert<uint,decimal>(t.MoneyValue),
-					from t in db.Types select Sql.AsSql(Sql.Convert<uint,decimal>(t.MoneyValue)));
+					from t in Types select Sql.Convert<uint, decimal>(t.MoneyValue),
+					from t in db.Types select Sql.AsSql(Sql.Convert<uint, decimal>(t.MoneyValue)));
 		}
 
 		[Test]
-		public void ToUInt64([DataSources(ProviderName.MySql)] string context)
+		public void ToUInt64([DataSources(ProviderName.MySql, ProviderName.MySqlConnector)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (UInt64)t.MoneyValue where p > 0 select p,
+					from p in from t in Types select (UInt64)t.MoneyValue where p > 0 select p,
 					from p in from t in db.Types select (UInt64)t.MoneyValue where p > 0 select p);
 		}
 
@@ -182,16 +182,16 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select Convert.ToUInt64(t.MoneyValue) where p > 0 select p,
+					from p in from t in Types select Convert.ToUInt64(t.MoneyValue) where p > 0 select p,
 					from p in from t in db.Types select Convert.ToUInt64(t.MoneyValue) where p > 0 select p);
 		}
 
 		[Test]
-		public void ToUInt32([DataSources(ProviderName.MySql)] string context)
+		public void ToUInt32([DataSources(ProviderName.MySql, ProviderName.MySqlConnector)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (UInt32)t.MoneyValue where p > 0 select p,
+					from p in from t in Types select (UInt32)t.MoneyValue where p > 0 select p,
 					from p in from t in db.Types select (UInt32)t.MoneyValue where p > 0 select p);
 		}
 
@@ -200,9 +200,10 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select Convert.ToUInt32(t.MoneyValue) where p > 0 select p,
+					from p in from t in Types select Convert.ToUInt32(t.MoneyValue) where p > 0 select p,
 					from p in from t in db.Types select Convert.ToUInt32(t.MoneyValue) where p > 0 select p);
 		}
+
 
 		[Test]
 		public void ToUInt16([DataSources] string context)

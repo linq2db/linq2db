@@ -299,6 +299,7 @@ namespace Tests
 			TestProvName.PostgreSQL11,
 			TestProvName.PostgreSQLLatest,
 			ProviderName.MySql,
+			ProviderName.MySqlConnector,
 			TestProvName.MySql57,
 			TestProvName.MariaDB,
 			ProviderName.SQLiteMS

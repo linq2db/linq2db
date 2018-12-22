@@ -312,7 +312,7 @@ namespace Tests.xUpdate
 				ProviderName.Firebird, TestProvName.Firebird3,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			ProviderName.Access,
 			ProviderName.SapHana)]
@@ -353,7 +353,7 @@ namespace Tests.xUpdate
 				ProviderName.Firebird, TestProvName.Firebird3,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			ProviderName.Access,
 			ProviderName.SapHana)]
@@ -925,10 +925,10 @@ namespace Tests.xUpdate
 			ProviderName.Informix,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.SqlCe,
-			ProviderName.SqlServer2000,
-			ProviderName.SapHana,
-				ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB,
+				ProviderName.SqlCe,
+				ProviderName.SqlServer2000,
+				ProviderName.SapHana,
+				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MySql57, TestProvName.MariaDB,
 				ProviderName.Sybase, ProviderName.SybaseManaged,
 				ProviderName.OracleNative, ProviderName.OracleManaged)]
 			string context)
@@ -972,10 +972,10 @@ namespace Tests.xUpdate
 			ProviderName.Informix,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.SqlCe,
-			ProviderName.SqlServer2000,
-			ProviderName.SapHana,
-				ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB,
+				ProviderName.SqlCe,
+				ProviderName.SqlServer2000,
+				ProviderName.SapHana,
+				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MySql57, TestProvName.MariaDB,
 				ProviderName.Sybase, ProviderName.SybaseManaged,
 				ProviderName.OracleNative, ProviderName.OracleManaged)]
 			string context)
@@ -1090,7 +1090,7 @@ namespace Tests.xUpdate
 				ProviderName.Informix,
 				ProviderName.Firebird, TestProvName.Firebird3,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.Sybase, ProviderName.SybaseManaged,
 				ProviderName.SapHana)]
 			string context)

@@ -29,6 +29,7 @@ namespace Tests.UserTests
 			ProviderName.Access,
 			ProviderName.SqlCe,
 			ProviderName.MySql,
+			ProviderName.MySqlConnector,
 			TestProvName.MariaDB,
 			TestProvName.MySql57,
 			ProviderName.DB2,
