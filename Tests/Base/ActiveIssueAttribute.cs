@@ -98,36 +98,12 @@ namespace Tests
 				if (test.Arguments.Length == 0)
 					return;
 
-				var provider       = null as string;
-				var isLinqService  = false;
 				var hasLinqService = configurations.Any(c => c.EndsWith(".LinqService"));
-				var parameters     = test.Method.GetParameters();
 
-				for (var i = 0; i < parameters.Length; i++)
+				var (context, provider, isLinqService) = GetTestProperties(test);
+				if (context != null && hasLinqService && !configurations.Contains(context))
 				{
-					var attr = parameters[i].GetCustomAttributes<DataSourcesBaseAttribute>(true);
-
-					if (attr.Length != 0)
-					{
-						var context = (string)test.Arguments[i];
-
-						if (hasLinqService)
-						{
-							if (configurations.Contains(context))
-								break;
-							return;
-						}
-
-						provider = context;
-
-						if (provider.EndsWith(".LinqService"))
-						{
-							provider = provider.Replace(".LinqService", "");
-							isLinqService = true;
-						}
-
-						break;
-					}
+					return;
 				}
 
 				if (provider != null)
@@ -157,6 +133,40 @@ namespace Tests
 			test.RunState = RunState.Explicit;
 			test.Properties.Add(PropertyNames.Category, "ActiveIssue");
 			test.Properties.Set(PropertyNames.SkipReason, reason);
+		}
+
+		internal static (string context, string provider, bool isLinqService) GetTestProperties(Test test)
+		{
+			if (test.Method == null)
+				return default;
+
+			var parameters    = test.Method.GetParameters();
+
+			if (parameters.Length != test.Arguments.Length)
+				return default;
+
+			var isLinqService = false;
+
+			for (var i = 0; i < parameters.Length; i++)
+			{
+				var attr = parameters[i].GetCustomAttributes<DataSourcesBaseAttribute>(true);
+
+				if (attr.Length != 0)
+				{
+					var context = (string)test.Arguments[i];
+					var provider = context;
+
+					if (provider.EndsWith(".LinqService"))
+					{
+						provider = provider.Replace(".LinqService", "");
+						isLinqService = true;
+					}
+
+					return (context, provider, isLinqService);
+				}
+			}
+
+			return default;
 		}
 	}
 }

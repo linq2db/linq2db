@@ -1,8 +1,12 @@
 ﻿using NUnit.Framework;
+using NUnit.Framework.Internal;
+using NUnit.Framework.Internal.Execution;
 using System;
 using System.Data.Common;
 using System.Reflection;
 using Tests;
+
+[assembly: Parallelizable(ParallelScope.Children)]
 
 /// <summary>
 /// 1. Don't add namespace to this class! It's intentional
@@ -14,6 +18,11 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
+#if !NETSTANDARD1_6
+		if (TestExecutionContext.CurrentContext.Dispatcher is ParallelWorkItemDispatcher)
+			TestExecutionContext.CurrentContext.Dispatcher = new Linq2DbParallelDatabaseWorkItemDispatcher();
+#endif
+
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
