@@ -1,13 +1,17 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Linq
 {
+	using Model;
+
 	[TestFixture]
 	public class PreprocessorTests : TestBase
 	{
@@ -37,8 +41,8 @@ namespace Tests.Linq
 		}
 
 
-		[Test, DataContextSource(false)]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources(false)] string context)
 		{
 			using (var db = new PostProcessorDataConnection(context))
 			{

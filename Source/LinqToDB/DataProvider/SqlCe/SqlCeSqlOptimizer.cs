@@ -54,8 +54,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			((ISqlExpressionWalkable)selectQuery).Walk(false, e =>
 			{
-				var q = e as SelectQuery;
-				if (q != null && q.Select.SkipValue != null && q.OrderBy.IsEmpty)
+				if (e is SelectQuery q && q.Select.SkipValue != null && q.OrderBy.IsEmpty)
 				{
 					if (q.Select.Columns.Count == 0)
 					{
@@ -83,6 +82,17 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
+			if (SqlCeConfiguration.InlineFunctionParameters && expr is SqlFunction sqlFunction)
+			{
+				foreach (var parameter in sqlFunction.Parameters)
+				{
+					if (parameter.ElementType == QueryElementType.SqlParameter && parameter is SqlParameter sqlParameter)
+					{
+						sqlParameter.IsQueryParameter = false;
+					}
+				}
+			}
+
 			expr = base.ConvertExpression(expr);
 
 			switch (expr)

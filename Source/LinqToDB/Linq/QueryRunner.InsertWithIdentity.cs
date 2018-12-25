@@ -14,6 +14,11 @@ namespace LinqToDB.Linq
 		{
 			static readonly ConcurrentDictionary<object,Query<object>> _queryCache = new ConcurrentDictionary<object,Query<object>>();
 
+			static InsertWithIdentity()
+			{
+				Linq.Query.CacheCleaners.Add(() => _queryCache.Clear());
+			}
+
 			static Query<object> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
@@ -65,7 +70,10 @@ namespace LinqToDB.Linq
 
 				var type = GetType<T>(obj, dataContext);
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
-				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
+				var ei   = Common.Configuration.Linq.DisableQueryCache
+					? CreateQuery(dataContext, tableName, databaseName, schemaName, type)
+					: _queryCache.GetOrAdd(key,
+						o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				return ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -78,7 +86,10 @@ namespace LinqToDB.Linq
 
 				var type = GetType<T>(obj, dataContext);
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
-				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
+				var ei   = Common.Configuration.Linq.DisableQueryCache
+					? CreateQuery(dataContext, tableName, databaseName, schemaName, type)
+					: _queryCache.GetOrAdd(key,
+						o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				return await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 			}

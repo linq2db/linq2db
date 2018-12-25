@@ -89,8 +89,8 @@ namespace Tests.UserTests
 			return resultQuery;
 		}
 
-		[Test, DataContextSource]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

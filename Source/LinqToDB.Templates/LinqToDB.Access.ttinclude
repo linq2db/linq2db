@@ -14,13 +14,13 @@ LinqToDB.Data.DataConnection GetAccessConnection(string path, string database)
 
 void LoadAccessMetadata(string connectionString)
 {
-	var dataConnection = GetAccessConnection(connectionString);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetAccessConnection(connectionString))
+		LoadMetadata(dataConnection);
 }
 
 void LoadAccessMetadata(string path, string database)
 {
-	var dataConnection = GetAccessConnection(path, database);
-	LoadMetadata(dataConnection);
+	using(var dataConnection = GetAccessConnection(path, database))
+		LoadMetadata(dataConnection);
 }
 #>

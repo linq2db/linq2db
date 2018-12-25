@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.SqlQuery
@@ -16,8 +17,7 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().VisitParentFirst(root, e =>
 			{
-				var source = e as ISqlTableSource;
-				if (source != null && hash.Contains(source) || hashIgnore.Contains(e))
+				if (e is ISqlTableSource source && hash.Contains(source) || hashIgnore.Contains(e))
 					return false;
 
 				switch (e.ElementType)
@@ -133,8 +133,7 @@ namespace LinqToDB.SqlQuery
 				var currentGroupItems = new HashSet<ISqlExpression>(select.Select.GroupBy.Items);
 				select.Select.GroupBy.Items.AddRange(
 					select.Select.Columns.Select(c => c.Expression)
-						.Where(e => !currentGroupItems.Contains(e))
-				);
+						.Where(e => !currentGroupItems.Contains(e)));
 
 				select.Select.IsDistinct = false;
 
@@ -199,7 +198,6 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-
 		/// <summary>
 		/// Detects when we can remove order
 		/// </summary>
@@ -236,6 +234,54 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return false;
+		}
+		/// <summary>
+		/// Returns SqlField from specific expression. Usually from SqlColumn.
+		/// Complex expressions ignored.
+		/// </summary>
+		/// <param name="expression"></param>
+		/// <returns>Field instance associated with expression</returns>
+		public static SqlField GetUnderlyingField(ISqlExpression expression)
+		{
+			switch (expression)
+			{
+				case SqlField field:
+					return field;
+				case SqlColumn column:
+					return GetUnderlyingField(column.Expression, new HashSet<ISqlExpression>());
+			}
+			return null;
+		}
+
+ 		static SqlField GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
+		{
+			switch (expression)
+			{
+				case SqlField field:
+					return field;
+				case SqlColumn column:
+				{
+					if (visited.Contains(column))
+						return null;
+					visited.Add(column);
+					return GetUnderlyingField(column.Expression, visited);
+				}
+			}
+			return null;
+		}
+
+		public static bool IsEqualTables(SqlTable table1, SqlTable table2)
+		{
+			var result =
+				   table1              != null
+				&& table2              != null
+				&& table1.ObjectType   == table2.ObjectType
+				&& table1.Database     == table2.Database
+				&& table1.Schema       == table2.Schema
+				&& table1.Name         == table2.Name
+				&& table1.PhysicalName == table2.PhysicalName;
+
+			return result;
 		}
 
 	}

@@ -6,6 +6,7 @@
 		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
 		<AssemblyName>linq2db.Tests.Base</AssemblyName>
 		<Configurations>Debug;Release;AppVeyor;Travis</Configurations>
+		<RootNamespace>Tests</RootNamespace>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'AppVeyor' ">
@@ -94,7 +95,7 @@
 		<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
 		<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
 		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
 
 		<PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />

@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			if (!methodCall.IsQueryable("Join", "GroupJoin") || methodCall.Arguments.Count != 5)
+			if (methodCall.Method.DeclaringType == typeof(LinqExtensions) || !methodCall.IsQueryable("Join", "GroupJoin"))
 				return false;
 
 			// other overload for Join
@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 
 			var body = lambda.Body.Unwrap();
 
-			if (body.NodeType == ExpressionType	.MemberInit)
+			if (body.NodeType == ExpressionType.MemberInit)
 			{
 				var mi = (MemberInitExpression)body;
 				bool throwExpr;
@@ -261,7 +261,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var n = SelectQuery.Select.Add(idx.Sql);
 
-						return new SqlInfo(idx.Members)
+						return new SqlInfo(idx.MemberChain)
 						{
 							Sql   = SelectQuery.Select.Columns[n],
 							Index = n
@@ -328,9 +328,7 @@ namespace LinqToDB.Linq.Builder
 
 					var innerKey = context._innerKeyLambda.Body.Transform(e =>
 					{
-						int idx;
-
-						if (parameters.TryGetValue(e, out idx))
+						if (parameters.TryGetValue(e, out var idx))
 						{
 							return Expression.Convert(
 								Expression.ArrayIndex(paramArray, Expression.Constant(idx)),
@@ -360,7 +358,7 @@ namespace LinqToDB.Linq.Builder
 
 					return Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => GetGrouping(null, null, default(TKey), null)),
+						MemberHelper.MethodOf(() => GetGrouping(null, null, default, null)),
 						new[]
 						{
 							ExpressionBuilder.QueryRunnerParam,

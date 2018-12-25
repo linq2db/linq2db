@@ -96,6 +96,9 @@ namespace LinqToDB.Linq.Builder
 				case RequestFor.Field       :
 				case RequestFor.Expression  :
 					{
+						if (expression == null)
+							return IsExpressionResult.False;
+
 						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 						if (Lambda.Parameters.Count > 1)

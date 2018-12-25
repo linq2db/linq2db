@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Threading.Tasks;
 
 using NUnit.Framework;
 
@@ -20,8 +21,8 @@ namespace Tests.Data
 	[TestFixture]
 	public class DataConnectionTests : TestBase
 	{
-		[Test, NorthwindDataContext]
-		public void Test1(string context)
+		[Test]
+		public void Test1([NorthwindDataContext] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider = DataConnection.GetDataProvider(context);
@@ -43,14 +44,15 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, IncludeDataContextSource(
+		[Test]
+		public void Test3([IncludeDataSources(
 			ProviderName.SqlServer,
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2008 + ".1",
 			ProviderName.SqlServer2005,
 			ProviderName.SqlServer2005 + ".1",
 			ProviderName.Access)]
-		public void Test3(string context)
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -82,8 +84,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void CloneTest(string context)
+		[Test]
+		public void CloneTest([DataSources(false)] string context)
 		{
 			using (var con = new DataConnection(context))
 			{
@@ -95,9 +97,11 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, IncludeDataContextSource(false,
-			 ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void GetDataProviderTest(string context)
+		[Test]
+		public void GetDataProviderTest([IncludeDataSources(false,
+			ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 
@@ -189,6 +193,58 @@ namespace Tests.Data
 
 					break;
 				}
+			}
+		}
+
+		[Test]
+		public void TestOpenEvent()
+		{
+			var opened = false;
+			var openedAsync = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnConnectionOpened += (dc, cn) => opened = true;
+				conn.OnConnectionOpenedAsync += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
+				Assert.False(opened);
+				Assert.False(openedAsync);
+				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.True(opened);
+				Assert.False(openedAsync);
+			}
+		}
+
+		[Test]
+		public async Task TestAsyncOpenEvent()
+		{
+			var opened = false;
+			var openedAsync = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnConnectionOpened += (dc, cn) => opened = true;
+				conn.OnConnectionOpenedAsync += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
+				Assert.False(opened);
+				Assert.False(openedAsync);
+				await conn.SelectAsync(() => 1);
+				Assert.False(opened);
+				Assert.True(openedAsync);
+			}
+		}
+
+		[Test]
+		public void TestOpenEventWithoutHandlers()
+		{
+			using (var conn = new DataConnection())
+			{
+				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+			}
+		}
+
+		[Test]
+		public async Task TestAsyncOpenEventWithoutHandlers()
+		{
+			using (var conn = new DataConnection())
+			{
+				await conn.SelectAsync(() => 1);
 			}
 		}
 	}

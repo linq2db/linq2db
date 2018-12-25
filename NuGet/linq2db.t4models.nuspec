@@ -2,14 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.t4models</id>
-		<version>2.4.0</version>
 		<title>LINQ to DB T4 Models</title>
-		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
-		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
-		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
-		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
-		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
-		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>T4 templates to generate data models for LINQ to DB SQL</description>
 		<summary />
 		<tags>
@@ -17,21 +10,54 @@
 			Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
 		<dependencies>
-			<dependency id="linq2db" version="2.4.0"/>
+			<dependency id="linq2db" version="2.6.0"/>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="Init.ps1"                                         target="tools" />
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll" target="tools" />
+		<file src="Init.ps1"                                                                target="tools" />
+		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"                        target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\Npgsql.dll"                             target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\FirebirdSql.Data.FirebirdClient.dll"    target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\MySql.Data.dll"                         target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\Oracle.ManagedDataAccess.dll"           target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\Npgsql.dll"                             target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\System.Threading.Tasks.Extensions.dll"  target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\System.Data.SQLite.dll"                 target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\x86\SQLite.Interop.dll"                 target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\Microsoft.SqlServer.Types.dll"          target="tools" />
 
 		<file src="t4models\linq2db.t4models.props"                  target="build" />
 
+		<file src="Access\*.*"                                       target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="DB2\*.*"                                          target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="Firebird\*.*"                                     target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="Informix\*.*"                                     target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="MySql\*.*"                                        target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="Oracle\*.*"                                       target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="PostgreSQL\*.*"                                   target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="SapHana\*.*"                                      target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="SqlCe\*.*"                                        target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="SQLite\*.*"                                       target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="SqlServer\*.*"                                    target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="Sybase\*.*"                                       target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
 		<file src="..\Source\LinqToDB.Templates\*.*"                 target="contentFiles\any\any\LinqToDB.Templates" />
 		<file src="t4models\*.*"                                     target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
 
+		<file src="Access\*.*"                                       target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="DB2\*.*"                                          target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="Firebird\*.*"                                     target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="Informix\*.*"                                     target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="MySql\*.*"                                        target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="Oracle\*.*"                                       target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="PostgreSQL\*.*"                                   target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="SapHana\*.*"                                      target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="SqlCe\*.*"                                        target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="SQLite\*.*"                                       target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="SqlServer\*.*"                                    target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="Sybase\*.*"                                       target="content\LinqToDB.Templates" exclude="**\*.props" />
 		<file src="..\Source\LinqToDB.Templates\*.*"                 target="content\LinqToDB.Templates" />
 		<file src="t4models\*.*"                                     target="content\LinqToDB.Templates" exclude="**\*.props" />
 	</files>

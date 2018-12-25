@@ -208,18 +208,18 @@ namespace LinqToDB.DataProvider
 			// avoid parameters in source due to low limits for parameters number in providers
 			if (!valueConverter.TryConvert(Command, columnType, value))
 			{
-				AddSourceValueAsParameter(column.DataType, value);
+				AddSourceValueAsParameter(column.DataType, column.DbType, value);
 			}
 		}
 
-		protected void AddSourceValueAsParameter(DataType dataType, object value)
+		protected void AddSourceValueAsParameter(DataType dataType, string dbType, object value)
 		{
 			var name     = GetNextParameterName();
 			var fullName = SqlBuilder.Convert(name, ConvertType.NameToQueryParameter).ToString();
 
 			Command.Append(fullName);
 
-			AddParameter(new DataParameter(name, value, dataType));
+			AddParameter(new DataParameter(name, value, dataType, dbType));
 		}
 
 		private void BuildAsSourceClause(IEnumerable<string> columnNames)
@@ -300,7 +300,7 @@ namespace LinqToDB.DataProvider
 		{
 			Command.AppendLine("USING");
 
-			if (Merge.QueryableSource != null)
+			if (Merge.QueryableSource != null && SupportsSourceSubQuery)
 			{
 				//BuildSourceSubQuery(Merge.QueryableSource);
 			}
@@ -401,10 +401,10 @@ namespace LinqToDB.DataProvider
 
 		//		var statement = ctx.GetResultStatement();
 
-		//		foreach (var columnInfo in ctx.Columns)
-		//		{
-		//			var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == columnInfo.Members[0]);
-		//			var column           = statement.SelectQuery.Select.Columns[columnInfo.Index];
+				//foreach (var columnInfo in ctx.Columns)
+				//{
+					//var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == columnInfo.MemberChain[0]);
+					//var column           = statement.SelectQuery.Select.Columns[columnInfo.Index];
 
 		//			SetColumnAlias(column.Alias, columnDescriptor.ColumnName);
 		//		}
@@ -430,7 +430,7 @@ namespace LinqToDB.DataProvider
 
 		//		SaveParameters(statement.Parameters);
 
-		//		SqlBuilder.BuildSql(0, statement, Command, startIndent : 1);
+				//SqlBuilder.BuildSqlWithAliases(0, statement, Command, startIndent : 1);
 
 		//		var cs = new [] { ' ', '\t', '\r', '\n' };
 
@@ -640,6 +640,8 @@ namespace LinqToDB.DataProvider
 				});
 
 			var qry = Query<int>.GetQuery(DataContext, ref insertExpression);
+			lock (qry)
+			{
 			var statement = qry.Queries[0].Statement;
 
 			// we need InsertOrUpdate for sql builder to generate values clause
@@ -660,6 +662,7 @@ namespace LinqToDB.DataProvider
 				OnInsertWithIdentity();
 
 			SqlBuilder.BuildInsertClauseHelper(newInsert, Command);
+		}
 		}
 
 		protected void BuildDefaultInsert()
@@ -771,6 +774,8 @@ namespace LinqToDB.DataProvider
 				new[] { updateQuery.Expression, target.Expression, Expression.Quote(predicate) });
 
 			var qry   = Query<int>.GetQuery(DataContext, ref updateExpression);
+			lock (qry)
+			{
 			var statement = qry.Queries[0].Statement;
 
 			if (ProviderUsesAlternativeUpdate)
@@ -785,6 +790,7 @@ namespace LinqToDB.DataProvider
 			SaveParameters(statement.Parameters);
 
 			SqlBuilder.BuildUpdateSetHelper((SqlUpdateStatement)statement, Command);
+		}
 		}
 
 		private void BuildAlternativeUpdateQuery(SqlStatement statement)
@@ -1052,6 +1058,8 @@ namespace LinqToDB.DataProvider
 				new[] { _connection.GetTable<TTarget>().Expression, Expression.Quote(update) });
 
 			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
+			lock (qry)
+			{
 			var statement = (SqlUpdateStatement)qry.Queries[0].Statement;
 
 			MoveJoinsToSubqueries(statement, TargetAlias, null, QueryElement.UpdateSetter);
@@ -1061,6 +1069,7 @@ namespace LinqToDB.DataProvider
 			SaveParameters(statement.Parameters);
 
 			SqlBuilder.BuildUpdateSetHelper(statement, Command);
+		}
 		}
 		#endregion
 
@@ -1093,7 +1102,7 @@ namespace LinqToDB.DataProvider
 			{
 				param.Name = GetNextParameterName();
 
-				AddParameter(new DataParameter(param.Name, param.Value, param.DataType));
+				AddParameter(new DataParameter(param.Name, param.Value, param.DataType, param.DbType));
 			}
 		}
 		#endregion
@@ -1141,6 +1150,11 @@ namespace LinqToDB.DataProvider
 		protected BasicSqlBuilder SqlBuilder { get; private set;  }
 
 		/// <summary>
+		/// If true, provider allows to generate subquery as a source element of merge command.
+		/// </summary>
+		protected virtual bool SupportsSourceSubQuery => true;
+
+		/// <summary>
 		/// If true, provider supports column aliases specification after table alias.
 		/// E.g. as table_alias (column_alias1, column_alias2).
 		/// </summary>
@@ -1151,6 +1165,10 @@ namespace LinqToDB.DataProvider
 		/// </summary>
 		protected virtual bool SupportsSourceDirectValues => true;
 
+		/// <summary>
+		/// If false, parameters in source subquery select list must have type.
+		/// </summary>
+		protected virtual bool SupportsParametersInSource => true;
 
 		protected EntityDescriptor TargetDescriptor { get; private set; }
 

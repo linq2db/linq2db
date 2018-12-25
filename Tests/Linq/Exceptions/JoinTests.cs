@@ -47,8 +47,8 @@ namespace Tests.Exceptions
 			[Association(ThisKey = "ChildID", OtherKey = "ChildID")]
 			public Child Child;
 		}
-		[Test, DataContextSource]
-		public void InnerJoin(string context)
+		[Test]
+		public void InnerJoin([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -62,8 +62,8 @@ namespace Tests.Exceptions
 			}
 		}
 
-		[Test, DataContextSource]
-		public void MultiJoin1(string context)
+		[Test]
+		public void MultiJoin1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -89,8 +89,8 @@ namespace Tests.Exceptions
 			}
 		}
 
-		[Test, DataContextSource]
-		public void MultiJoin2(string context)
+		[Test]
+		public void MultiJoin2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -112,8 +112,8 @@ namespace Tests.Exceptions
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Issue498Test(string context)
+		[Test]
+		public void Issue498Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -139,8 +139,11 @@ namespace Tests.Exceptions
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlCe, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Issue589(string context)
+		[Test]
+		public void Issue589([IncludeDataSources(
+				ProviderName.SqlCe, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+				ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{

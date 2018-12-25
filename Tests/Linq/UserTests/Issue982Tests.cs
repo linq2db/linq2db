@@ -114,15 +114,14 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void Test(string context)
+		[Test]
+		public void Test([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
-			var oldProvider = DataConnection.GetDataProvider(context);
+			var oldProvider      = DataConnection.GetDataProvider(context);
 
 			try
 			{
-				
 				DataConnection.AddConfiguration(
 					context,
 					connectionString,
@@ -147,7 +146,7 @@ namespace Tests.UserTests
 
 					var str = query.ToString();
 					Assert.True(str.Contains("2147483647"));
-					var values = query.ToArray();
+					var _ = query.ToArray();
 				}
 			}
 			finally

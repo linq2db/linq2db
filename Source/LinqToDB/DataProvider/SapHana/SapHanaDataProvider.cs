@@ -50,45 +50,7 @@ namespace LinqToDB.DataProvider.SapHana
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.HanaDataReader, {SapHanaTools.AssemblyName}";
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
-		private          Type _dataReaderType;
-		private volatile Type _connectionType;
-
-		public override Type DataReaderType
-		{
-			get
-			{
-				if (_dataReaderType != null)
-					return _dataReaderType;
-
-				_dataReaderType = Type.GetType(DataReaderTypeName, false);
-
-				if (_dataReaderType == null)
-				{
-					var assembly = DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly;
-					_dataReaderType = Type.GetType($"{ConnectionNamespace}.HanaDataReader, {assembly.GetName()}", true);
-				}
-
-				return _dataReaderType;
-			}
-		}
-
-		protected override Type GetConnectionType()
-		{
-			if (_connectionType == null)
-				lock (SyncRoot)
-					if (_connectionType == null)
-					{
-						_connectionType = Type.GetType(ConnectionTypeName, false);
-
-						if (_connectionType == null)
-							using (var db = DbProviderFactories.GetFactory("Sap.Data.Hana").CreateConnection())
-								_connectionType = db.GetType();
-
-						OnConnectionTypeCreated(_connectionType);
-					}
-
-			return _connectionType;
-		}
+		public override string DbFactoryProviderName => "Sap.Data.Hana";
 #endif
 
 		static Action<IDbDataParameter> _setText;
@@ -126,12 +88,12 @@ namespace LinqToDB.DataProvider.SapHana
 			return _sqlOptimizer;
 		}
 
-		public override Type ConvertParameterType(Type type, DataType dataType)
+		public override Type ConvertParameterType(Type type, DbDataType dataType)
 		{
 			if (type.IsNullable())
 				type = type.ToUnderlying();
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.NChar:
 				case DataType.Char:
@@ -144,19 +106,19 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Boolean:
-					dataType = DataType.Byte;
+					dataType = dataType.WithDataType(DataType.Byte);
 					if (value is bool)
 						value = (bool)value ? (byte)1 : (byte)0;
 					break;
 				case DataType.Guid:
 					if (value != null)
 						value = value.ToString();
-					dataType = DataType.Char;
+					dataType = dataType.WithDataType(DataType.Char);
 					parameter.Size = 36;
 					break;
 			}
@@ -164,12 +126,12 @@ namespace LinqToDB.DataProvider.SapHana
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Text  : _setText(parameter);      break;
 				case DataType.Image : _setBlob(parameter);      break;

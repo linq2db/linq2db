@@ -1,19 +1,23 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
 	using Model;
+	using Tools;
+
 
 	[TestFixture]
 	public class ConcatUnionTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Concat1(string context)
+		[Test]
+		public void Concat1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -24,8 +28,8 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID == 2 select p)));
 		}
 
-		[Test, DataContextSource]
-		public async Task Concat1Async(string context)
+		[Test]
+		public async Task Concat1Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -38,8 +42,8 @@ namespace Tests.Linq
 					.ToListAsync());
 		}
 
-		[Test, DataContextSource]
-		public void Concat11(string context)
+		[Test]
+		public void Concat11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -49,8 +53,8 @@ namespace Tests.Linq
 					(from ch in db.Child where ch.ParentID == 2 select ch.Parent)));
 		}
 
-		[Test, DataContextSource]
-		public void Concat12(string context)
+		[Test]
+		public void Concat12([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -60,8 +64,8 @@ namespace Tests.Linq
 					(from ch in db.Child  where ch.ParentID == 2 select ch.Parent)));
 		}
 
-		[Test, DataContextSource]
-		public void Concat2(string context)
+		[Test]
+		public void Concat2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -74,8 +78,8 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID == 4 select p)));
 		}
 
-		[Test, DataContextSource]
-		public void Concat3(string context)
+		[Test]
+		public void Concat3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -88,8 +92,8 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID == 4 select p))));
 		}
 
-		[Test, DataContextSource]
-		public void Concat4(string context)
+		[Test]
+		public void Concat4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -102,8 +106,8 @@ namespace Tests.Linq
 					Where(c => c.ChildID != 1032));
 		}
 
-		[Test, DataContextSource]
-		public void Concat401(string context)
+		[Test]
+		public void Concat401([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -116,8 +120,8 @@ namespace Tests.Linq
 					Where(c => c.ChildID != 1032));
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix)]
-		public void Concat5(string context)
+		[Test]
+		public void Concat5([DataSources(ProviderName.DB2, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -130,8 +134,8 @@ namespace Tests.Linq
 					Where(c => c.ChildID != 1032));
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix)]
-		public void Concat501(string context)
+		[Test]
+		public void Concat501([DataSources(ProviderName.DB2, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -144,8 +148,8 @@ namespace Tests.Linq
 					Where(c => c.ParentID == 1));
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix)]
-		public void Concat502(string context)
+		[Test]
+		public void Concat502([DataSources(ProviderName.DB2, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -158,8 +162,8 @@ namespace Tests.Linq
 					Where(p => p.Value1.Value != 2));
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void Concat6(string context)
+		[Test]
+		public void Concat6([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -167,8 +171,8 @@ namespace Tests.Linq
 					db.Child.Where(c => c.GrandChildren.Count == 2).Concat(db.Child.Where(c => c.GrandChildren.Count() == 3)));
 		}
 
-		[Test, NorthwindDataContext]
-		public void Concat7(string context)
+		[Test]
+		public void Concat7([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -179,8 +183,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Concat81(string context)
+		[Test]
+		public void Concat81([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -190,8 +194,8 @@ namespace Tests.Linq
 					db.Child. Select(c => new { ID1 = c.ParentID, ID2 = c.ChildID,  })));
 		}
 
-		[Test, DataContextSource]
-		public void Concat82(string context)
+		[Test]
+		public void Concat82([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -201,8 +205,8 @@ namespace Tests.Linq
 					db.Parent.Select(c => new { ID1 = c.ParentID, ID2 = c.ParentID, })));
 		}
 
-		[Test, DataContextSource]
-		public void Concat83(string context)
+		[Test]
+		public void Concat83([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -212,8 +216,8 @@ namespace Tests.Linq
 					db.Child. Select(c => new { ID1 = c.ParentID, ID2 = c.ChildID,  ID3 = c.ParentID + 1, })));
 		}
 
-		[Test, DataContextSource]
-		public void Concat84(string context)
+		[Test]
+		public void Concat84([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -223,8 +227,8 @@ namespace Tests.Linq
 					db.Parent.Select(c => new { ID1 = c.ParentID, ID2 = c.ParentID, ID3 = c.Value1 ?? 0,  })));
 		}
 
-		[Test, DataContextSource]
-		public void Concat85(string context)
+		[Test]
+		public void Concat85([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -234,8 +238,8 @@ namespace Tests.Linq
 					db.Child. Select(c => new { ID1 = c.ParentID, ID2 = c.ParentID + 1, ID3 = c.ChildID,  })));
 		}
 
-		[Test, DataContextSource]
-		public void Concat851(string context)
+		[Test]
+		public void Concat851([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -245,8 +249,8 @@ namespace Tests.Linq
 					db.Child. Select(c => new { ID1 = c.ParentID, ID2 = c.ParentID + 1, ID3 = c.ChildID,  })));
 		}
 
-		[Test, DataContextSource]
-		public void Concat86(string context)
+		[Test]
+		public void Concat86([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -256,8 +260,8 @@ namespace Tests.Linq
 					db.Parent.Select(c => new { ID1 = c.ParentID, ID2 = c.Value1 ?? 0,  ID3 = c.ParentID, })));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Concat87(string context)
+		[Test]
+		public void Concat87([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -267,8 +271,8 @@ namespace Tests.Linq
 					db.Parent.Select(c => new Parent { Value1   = c.Value1   })));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Concat871(string context)
+		[Test]
+		public void Concat871([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -278,8 +282,8 @@ namespace Tests.Linq
 					db.Child. Select(c => new Parent { ParentID = c.ParentID })));
 		}
 
-		[Test, DataContextSource]
-		public void Concat88(string context)
+		[Test]
+		public void Concat88([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -289,8 +293,8 @@ namespace Tests.Linq
 					db.Parent.Select(c => new Parent { ParentID = c.ParentID, Value1   = c.Value1   })));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Concat89(string context)
+		[Test]
+		public void Concat89([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -300,8 +304,8 @@ namespace Tests.Linq
 					db.Parent.Select(c => new Parent { ParentID = c.ParentID                        })));
 		}
 
-		[Test, DataContextSource]
-		public void Union1(string context)
+		[Test]
+		public void Union1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -312,8 +316,8 @@ namespace Tests.Linq
 					(from ch in db.Child      join p  in db.Parent on ch.ParentID equals p.ParentID select ch)));
 		}
 
-		[Test, DataContextSource]
-		public void Union2(string context)
+		[Test]
+		public void Union2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -330,8 +334,8 @@ namespace Tests.Linq
 					select child);
 		}
 
-		[Test, DataContextSource]
-		public void Union3(string context)
+		[Test]
+		public void Union3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -342,8 +346,8 @@ namespace Tests.Linq
 					(from ch in db.Child  select new { id = ch.ParentID, val = false })));
 		}
 
-		[Test, DataContextSource]
-		public void Union4(string context)
+		[Test]
+		public void Union4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -356,8 +360,8 @@ namespace Tests.Linq
 					.Select(p => new { p.id, p.val }));
 		}
 
-		[Test, DataContextSource]
-		public void Union41(string context)
+		[Test]
+		public void Union41([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -370,8 +374,8 @@ namespace Tests.Linq
 					.Select(p => p));
 		}
 
-		[Test, DataContextSource]
-		public void Union42(string context)
+		[Test]
+		public void Union42([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -383,8 +387,8 @@ namespace Tests.Linq
 					.Select(p => p.val));
 		}
 
-		[Test, DataContextSource]
-		public void Union421(string context)
+		[Test]
+		public void Union421([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -398,8 +402,8 @@ namespace Tests.Linq
 					.Select(p => p.val));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Union5(string context)
+		[Test]
+		public void Union5([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -412,8 +416,8 @@ namespace Tests.Linq
 					.Select(p => new Parent { ParentID = p.ParentID, Value1 = p.Value1 }));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Union51(string context)
+		[Test]
+		public void Union51([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -424,8 +428,8 @@ namespace Tests.Linq
 					(from p2 in db.Parent select new Parent { ParentID = p2.ParentID })));
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix)]
-		public void Union52(string context)
+		[Test]
+		public void Union52([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -436,8 +440,8 @@ namespace Tests.Linq
 					(from p2 in db.Parent select p2)));
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix)]
-		public void Union521(string context)
+		[Test]
+		public void Union521([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -450,8 +454,8 @@ namespace Tests.Linq
 					.Select(p => p.Value1));
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix)]
-		public void Union522(string context)
+		[Test]
+		public void Union522([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -462,8 +466,8 @@ namespace Tests.Linq
 					(from p2 in db.Parent select p2)));
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix)]
-		public void Union523(string context)
+		[Test]
+		public void Union523([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -473,8 +477,8 @@ namespace Tests.Linq
 					(from p2 in db.Parent select p2)));
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix)]
-		public void Union53(string context)
+		[Test]
+		public void Union53([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -485,8 +489,8 @@ namespace Tests.Linq
 					(from p2 in db.Parent select new Parent { Value1   = p2.Value1   })));
 		}
 
-		//[Test, DataContextSource]
-		public void Union54(string context)
+		//[Test]
+		public void Union54([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -496,8 +500,8 @@ namespace Tests.Linq
 					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent)null, ch = p2.Children.First() })));
 		}
 
-		//[Test, DataContextSource]
-		public void Union541(string context)
+		//[Test]
+		public void Union541([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -510,8 +514,8 @@ namespace Tests.Linq
 					.Select(p => new { p.ParentID, p.p, p.ch }));
 		}
 
-		[Test, DataContextSource]
-		public void ObjectUnion1(string context)
+		[Test]
+		public void ObjectUnion1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -521,8 +525,8 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select p2)));
 		}
 
-		//////[Test, DataContextSource]
-		public void ObjectUnion2(string context)
+		//////[Test]
+		public void ObjectUnion2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -532,8 +536,8 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select (Parent)null)));
 		}
 
-		[Test, DataContextSource]
-		public void ObjectUnion3(string context)
+		[Test]
+		public void ObjectUnion3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -543,8 +547,8 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = p2 })));
 		}
 
-		//////[Test, DataContextSource]
-		public void ObjectUnion4(string context)
+		//////[Test]
+		public void ObjectUnion4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -554,8 +558,8 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = new { p = p2, p2.ParentID } })));
 		}
 
-		//////[Test, DataContextSource]
-		public void ObjectUnion5(string context)
+		//////[Test]
+		public void ObjectUnion5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -565,8 +569,8 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = new { p = p2, ParentID = p2.ParentID + 1 } })));
 		}
 
-		[Test, NorthwindDataContext]
-		public void ObjectUnion(string context)
+		[Test]
+		public void ObjectUnion([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -639,8 +643,8 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: [Test, DataContextSource]
-		public void AssociationUnion1(string context)
+		// TODO: [Test]
+		public void AssociationUnion1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -652,8 +656,8 @@ namespace Tests.Linq
 					select p.ParentID);
 		}
 
-		// TODO: [Test, DataContextSource]
-		public void AssociationUnion2(string context)
+		// TODO: [Test]
+		public void AssociationUnion2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -663,8 +667,8 @@ namespace Tests.Linq
 					select c.Parent.ParentID);
 		}
 
-		// TODO: [Test, DataContextSource]
-		public void AssociationConcat2(string context)
+		// TODO: [Test]
+		public void AssociationConcat2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -674,8 +678,8 @@ namespace Tests.Linq
 					select c.Parent.ParentID);
 		}
 
-		[Test, DataContextSource, Category("WindowsOnly")]
-		public void ConcatToString(string context)
+		[Test, Category("WindowsOnly")]
+		public void ConcatToString([DataSources] string context)
 		{
 			string pattern = "1";
 
@@ -688,8 +692,8 @@ namespace Tests.Linq
 					(from p in db.Person where p.ID.ToString().Contains(pattern) select p.FirstName)).Take(10));
 		}
 
-		[Test, DataContextSource]
-		public void ConcatWithUnion(string context)
+		[Test]
+		public void ConcatWithUnion([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -708,8 +712,8 @@ namespace Tests.Linq
 				);
 		}
 
-		[Test, DataContextSource]
-		public void UnionWithObjects(string context)
+		[Test]
+		public void UnionWithObjects([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -765,8 +769,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void UnionGroupByTest1(string context)
+		[Test]
+		public void UnionGroupByTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -804,8 +808,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource, Ignore("Failed")]
-		public void UnionGroupByTest2(string context)
+		[Test, Ignore("Failed")]
+		public void UnionGroupByTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -836,5 +840,54 @@ namespace Tests.Linq
 				AreEqual(expected, actual);
 			}
 		}
+
+		[Table("ConcatTest")]
+		[InheritanceMapping(Code = 0, Type = typeof(BaseEntity), IsDefault = true)]
+		[InheritanceMapping(Code = 1, Type = typeof(DerivedEntity))]
+		class BaseEntity
+		{
+			[Column]
+			public int EntityId { get; set; }
+			[Column(IsDiscriminator = true)]
+			public int Discr { get; set; }
+			[Column]
+			public string Value { get; set; }
+		}
+
+		[Table("ConcatTest")]
+		class DerivedEntity : BaseEntity
+		{
+		}
+
+		[Test]
+		public void TestConcatInheritance([IncludeDataSources(false, ProviderName.SQLiteClassic)] string context)
+		{
+			var testData = new[]
+			{
+				new BaseEntity { Discr = 0, EntityId = 1, Value = "VBase1" },
+				new BaseEntity { Discr = 0, EntityId = 2, Value = "VBase2" },
+				new BaseEntity { Discr = 0, EntityId = 3, Value = "VBase3" },
+
+				new DerivedEntity { Discr = 1, EntityId = 10, Value = "Derived1" },
+				new DerivedEntity { Discr = 1, EntityId = 20, Value = "Derived2" },
+				new DerivedEntity { Discr = 1, EntityId = 30, Value = "Derived3" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData))
+			{
+				var result = db.GetTable<BaseEntity>().OfType<BaseEntity>()
+					.Concat(db.GetTable<BaseEntity>().OfType<DerivedEntity>())
+					.ToArray();
+
+				var expected = testData.Where(t => t.GetType() == typeof(BaseEntity))
+					.Concat(testData.OfType<DerivedEntity>())
+					.ToArray();
+
+				AreEqual(expected, result, ComparerBuilder<BaseEntity>.GetEqualityComparer());
+			}
+
+		}
+
 	}
 }

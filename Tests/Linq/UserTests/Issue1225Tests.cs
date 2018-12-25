@@ -68,7 +68,8 @@ namespace Tests.UserTests
 			public LastInChain Container { get; set; }
 		}
 
-		[Test, Combinatorial]
+		[ActiveIssue("Unsupported by Informix?", Configurations = new[] { ProviderName.Informix })]
+		[Test]
 		public void Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -100,11 +101,13 @@ namespace Tests.UserTests
 										.Sum(_ => (_.ActualStage == null)? null: (int?)_.ActualStage.Id)
 								}
 							});
-					var res = query.ToArray();
+					var res = query.AsEnumerable().OrderBy(_ => _.GroupByContainer.Value).ToArray();
 
-					Assert.AreEqual(2, res.Length);
+					Assert.AreEqual (2, res.Length);
 					Assert.IsNotNull(res[0].Container);
-					Assert.AreEqual(2, res[0].Container.Value);
+					Assert.AreEqual (2, res[0].Container.Value);
+					Assert.IsNotNull(res[1].Container);
+					Assert.IsNull   (res[1].Container.Value);
 				}
 			}
 		}

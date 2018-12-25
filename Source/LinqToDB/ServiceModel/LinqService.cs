@@ -10,7 +10,7 @@ namespace LinqToDB.ServiceModel
 	using Common;
 	using Data;
 	using Linq;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using SqlQuery;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]

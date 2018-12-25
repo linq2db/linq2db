@@ -12,7 +12,7 @@ namespace Tests.UserTests
 		[Table("DynamicColumnTable")]
 		class FullClass
 		{
-			[Column, Identity] 
+			[Column, Identity]
 			         public int    Id        { get; set; }
 			[Column] public string Name      { get; set; }
 			[Column] public bool   IsDeleted { get; set; }
@@ -21,7 +21,7 @@ namespace Tests.UserTests
 		[Table("DynamicColumnTable")]
 		class RepresentTable
 		{
-			[Column, Identity] 
+			[Column, Identity]
 			         public int    Id        { get; set; }
 			[Column] public string Name      { get; set; }
 
@@ -30,9 +30,9 @@ namespace Tests.UserTests
 		}
 
 
-		[Test, Combinatorial]
+		[Test]
 		public void InsertWithDynamicColumn(
-			[IncludeDataSources(ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] 
+			[IncludeDataSources(true, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		string context)
 		{
 			var ms = new MappingSchema();

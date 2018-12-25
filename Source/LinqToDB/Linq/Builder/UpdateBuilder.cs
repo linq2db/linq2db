@@ -283,13 +283,13 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var info in sqlInfo)
 				{
-					if (info.Members.Count == 0)
+					if (info.MemberChain.Count == 0)
 						throw new LinqException("Object initializer expected for insert statement.");
 
-					if (info.Members.Count != 1)
+					if (info.MemberChain.Count != 1)
 						throw new InvalidOperationException();
 
-					var member = info.Members[0];
+					var member = info.MemberChain[0];
 					var pe     = Expression.MakeMemberAccess(bodyPath, member);
 					var column = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 					var expr   = info.Sql;

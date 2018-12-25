@@ -25,43 +25,43 @@ namespace LinqToDB.Linq.Builder
 
 		static List<ISequenceBuilder> _sequenceBuilders = new List<ISequenceBuilder>
 		{
-			new TableBuilder                             (),
-			new SelectBuilder                            (),
-			new SelectManyBuilder                        (),
-			new WhereBuilder                             (),
-			new OrderByBuilder                           (),
-			new GroupByBuilder                           (),
-			new JoinBuilder                              (),
-			new AllJoinsBuilder                          (),
-			new AllJoinsLinqBuilder                      (),
-			new TakeSkipBuilder                          (),
-			new DefaultIfEmptyBuilder                    (),
-			new DistinctBuilder                          (),
-			new FirstSingleBuilder                       (),
-			new AggregationBuilder                       (),
-			new ScalarSelectBuilder                      (),
-			new CountBuilder                             (),
-			new PassThroughBuilder                       (),
-			new TableAttributeBuilder                    (),
-			new InsertBuilder                            (),
-			new InsertBuilder.Into                       (),
-			new InsertBuilder.Value                      (),
-			new InsertOrUpdateBuilder                    (),
-			new UpdateBuilder                            (),
-			new UpdateBuilder.Set                        (),
-			new DeleteBuilder                            (),
-			new ContainsBuilder                          (),
-			new AllAnyBuilder                            (),
-			new ConcatUnionBuilder                       (),
-			new IntersectBuilder                         (),
-			new CastBuilder                              (),
-			new OfTypeBuilder                            (),
-			new AsUpdatableBuilder                       (),
-			new LoadWithBuilder                          (),
-			new DropBuilder                              (),
-			new TruncateBuilder                          (),
-			new ChangeTypeExpressionBuilder              (),
-			new WithTableExpressionBuilder               (),
+			new TableBuilder               (),
+			new SelectBuilder              (),
+			new SelectManyBuilder          (),
+			new WhereBuilder               (),
+			new OrderByBuilder             (),
+			new GroupByBuilder             (),
+			new JoinBuilder                (),
+			new AllJoinsBuilder            (),
+			new AllJoinsLinqBuilder        (),
+			new TakeSkipBuilder            (),
+			new DefaultIfEmptyBuilder      (),
+			new DistinctBuilder            (),
+			new FirstSingleBuilder         (),
+			new AggregationBuilder         (),
+			new ScalarSelectBuilder        (),
+			new CountBuilder               (),
+			new PassThroughBuilder         (),
+			new TableAttributeBuilder      (),
+			new InsertBuilder              (),
+			new InsertBuilder.Into         (),
+			new InsertBuilder.Value        (),
+			new InsertOrUpdateBuilder      (),
+			new UpdateBuilder              (),
+			new UpdateBuilder.Set          (),
+			new DeleteBuilder              (),
+			new ContainsBuilder            (),
+			new AllAnyBuilder              (),
+			new ConcatUnionBuilder         (),
+			new IntersectBuilder           (),
+			new CastBuilder                (),
+			new OfTypeBuilder              (),
+			new AsUpdatableBuilder         (),
+			new LoadWithBuilder            (),
+			new DropBuilder                (),
+			new TruncateBuilder            (),
+			new ChangeTypeExpressionBuilder(),
+			new WithTableExpressionBuilder (),
 			new MergeBuilder                             (),
 			new MergeBuilder.InsertWhenNotMatched        (),
 			new MergeBuilder.UpdateWhenMatched           (),
@@ -74,8 +74,9 @@ namespace LinqToDB.Linq.Builder
 			new MergeBuilder.MergeInto                   (),
 			new MergeBuilder.Using                       (),
 			new MergeBuilder.UsingTarget                 (),
-			new ContextParser                            (),
-			new MergeContextParser                       (),
+			new ContextParser              (),
+			new MergeContextParser         (),
+			new ArrayBuilder               ()
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
@@ -248,7 +249,6 @@ namespace LinqToDB.Linq.Builder
 			var expr = expression;
 
 			expr = ConvertParameters (expr);
-			expr = ExposeExpression  (expr);
 			expr = OptimizeExpression(expr);
 
 			var paramType   = expr.Type;
@@ -392,6 +392,67 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		internal static Expression ExpandExpression(Expression expression)
+		{
+			if (Configuration.Linq.UseBinaryAggregateExpression)
+				expression = AggregateExpression(expression);
+
+			return expression.Transform(expr =>
+			{
+				switch (expr.NodeType)
+				{
+					case ExpressionType.Call:
+						{
+							var mc = (MethodCallExpression)expr;
+
+							List<Expression> newArgs = null;
+							for (var index = 0; index < mc.Arguments.Count; index++)
+							{
+								var arg = mc.Arguments[index];
+								Expression newArg = null;
+								if (typeof(LambdaExpression).IsSameOrParentOf(arg.Type))
+								{
+									var argUnwrapped = arg.Unwrap();
+									if (argUnwrapped.NodeType == ExpressionType.MemberAccess ||
+									    argUnwrapped.NodeType == ExpressionType.Call)
+									{
+										if (argUnwrapped.EvaluateExpression() is LambdaExpression lambda)
+											newArg = ExpandExpression(lambda);
+									}
+								}
+
+								if (newArg == null)
+									newArgs?.Add(arg);
+								else
+								{
+									if (newArgs == null)
+										newArgs = new List<Expression>(mc.Arguments.Take(index));
+									newArgs.Add(newArg);
+								}
+							}
+
+							if (newArgs != null)
+							{
+								mc = mc.Update(mc.Object, newArgs);
+							}
+
+
+							if (mc.Method.Name == "Compile" && typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
+							{
+								if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
+								{
+									return ExpandExpression(lambda);
+								}
+							}
+							
+							return mc;
+						}						
+				}
+
+				return expr;
+			});
+		}
+
 		Expression ConvertParameters(Expression expression)
 		{
 			return expression.Transform(expr =>
@@ -491,6 +552,39 @@ namespace LinqToDB.Linq.Builder
 
 							break;
 						}
+
+					case ExpressionType.Invoke:
+						{
+							var invocation = (InvocationExpression)expr;
+							if (invocation.Expression.NodeType == ExpressionType.Call)
+							{
+								var mc = (MethodCallExpression)invocation.Expression;
+								if (mc.Method.Name == "Compile" &&
+								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
+								{
+									if (mc.Object.EvaluateExpression() is LambdaExpression lambds)
+									{
+										var map = new Dictionary<Expression, Expression>();
+										for (int i = 0; i < invocation.Arguments.Count; i++)
+										{
+											map.Add(lambds.Parameters[i], invocation.Arguments[i]);
+										}
+
+										var newBody = lambds.Body.Transform(se =>
+										{
+											if (se.NodeType == ExpressionType.Parameter &&
+											    map.TryGetValue(se, out var newExpr))
+												return newExpr;
+											return se;
+										});
+
+										return ExposeExpression(newBody);
+									}
+								}
+							}
+							break;
+						}
+
 				}
 
 				return expr;
@@ -514,7 +608,10 @@ namespace LinqToDB.Linq.Builder
 			if (_optimizedExpressions.TryGetValue(expression, out var expr))
 				return expr;
 
-			_optimizedExpressions[expression] = expr = expression.Transform((Func<Expression,TransformInfo>)OptimizeExpressionImpl);
+			expr = ExposeExpression(expression);
+			expr = expr.Transform((Func<Expression,TransformInfo>)OptimizeExpressionImpl);
+
+			_optimizedExpressions[expression] = expr;
 
 			return expr;
 		}
@@ -554,7 +651,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 						{
-							var ex = ConvertIQueriable(expr);
+							var ex = ConvertIQueryable(expr);
 
 							if (!ReferenceEquals(ex, expr))
 								return new TransformInfo(ConvertExpressionTree(ex));
@@ -603,7 +700,7 @@ namespace LinqToDB.Linq.Builder
 
 								if (attr == null)
 								{
-									var ex = ConvertIQueriable(expr);
+									var ex = ConvertIQueryable(expr);
 
 									if (!ReferenceEquals(ex, expr))
 										return new TransformInfo(ConvertExpressionTree(ex));
@@ -624,6 +721,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (attr != null)
 			{
+				if (attr.Expression != null)
+					return attr.Expression;
+
+				if (!string.IsNullOrEmpty(attr.MethodName))
+				{
 				Expression expr;
 
 				if (mi is MethodInfo method && method.IsGenericMethod)
@@ -642,9 +744,11 @@ namespace LinqToDB.Linq.Builder
 					expr = Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty);
 				}
 
-				var call = Expression.Lambda<Func<LambdaExpression>>(Expression.Convert(expr, typeof(LambdaExpression)));
+					var call = Expression.Lambda<Func<LambdaExpression>>(Expression.Convert(expr,
+						typeof(LambdaExpression)));
 
 				return call.Compile()();
+			}
 			}
 
 			return null;
@@ -1166,7 +1270,7 @@ namespace LinqToDB.Linq.Builder
 			public Expression AddElementSelectorQ()
 			{
 				Expression<Func<IQueryable<TSource>,IEnumerable<TCollection>,IQueryable<TCollection>>> func = (source,col) => source
-					.SelectMany(colParam => col, (s,c) => c)
+					.SelectMany(cp => col, (s,c) => c)
 					;
 
 				var body   = func.Body.Unwrap();
@@ -1178,7 +1282,7 @@ namespace LinqToDB.Linq.Builder
 			public Expression AddElementSelectorE()
 			{
 				Expression<Func<IEnumerable<TSource>,IEnumerable<TCollection>,IEnumerable<TCollection>>> func = (source,col) => source
-					.SelectMany(colParam => col, (s,c) => c)
+					.SelectMany(cp => col, (s,c) => c)
 					;
 
 				var body   = func.Body.Unwrap();
@@ -1334,9 +1438,9 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region ConvertIQueriable
+		#region ConvertIQueryable
 
-		Expression ConvertIQueriable(Expression expression)
+		Expression ConvertIQueryable(Expression expression)
 		{
 			if (expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
 			{
@@ -1350,9 +1454,7 @@ namespace LinqToDB.Linq.Builder
 				var l    = Expression.Lambda<Func<Expression,IQueryable>>(Expression.Convert(expr, typeof(IQueryable)), new [] { p });
 				var n    = _query.AddQueryableAccessors(expression, l);
 
-				Expression accessor;
-
-				_expressionAccessors.TryGetValue(expression, out accessor);
+				_expressionAccessors.TryGetValue(expression, out var accessor);
 
 				var path =
 					Expression.Call(

@@ -162,8 +162,8 @@ namespace Tests.Playground
 	public class JsonConvertTests : TestBase
 	{
 
-		[Test, Combinatorial]
-		public void SampleSelectTest([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		[Test]
+		public void SampleSelectTest([IncludeDataSources(false, TestProvName.SqlAzure)] string context)
 		{
 			using (var db = new MyDataConnection(context))
 			using (var table = db.CreateLocalTable<SampleClass>())
@@ -179,6 +179,5 @@ namespace Tests.Playground
 				Assert.AreEqual("Pr1", objects[0].Data.Property1);
 			}
 		}
-
 	}
 }

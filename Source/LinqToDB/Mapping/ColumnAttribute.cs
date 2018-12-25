@@ -79,6 +79,7 @@ namespace LinqToDB.Mapping
 			if (ca.HasLength())       Length       = ca.Length;
 			if (ca.HasPrecision())    Precision    = ca.Precision;
 			if (ca.HasScale())        Scale        = ca.Scale;
+			if (ca.HasOrder())        Order        = ca.Order;
 		}
 
 		/// <summary>
@@ -98,7 +99,7 @@ namespace LinqToDB.Mapping
 		/// Gets or sets the name of mapped member.
 		/// When applied to class or interface, should contain name of property of field.
 		///
-		/// If column is mapped to a property or field of composite object, <see cref="MemberName"/> should contain a path to that
+		/// If column mapped to a property or field of composite object, <see cref="MemberName"/> should contain a path to that
 		/// member using dot as separator.
 		/// <example>
 		/// <code>
@@ -109,7 +110,7 @@ namespace LinqToDB.Mapping
 		///     public int    Building { get; set; }
 		/// }
 		///
-		/// [Column("city", "Residence.Street")]
+		/// [Column("city", "Residence.City")]
 		/// [Column("user_name", "Name")]
 		/// public class User
 		/// {
@@ -311,5 +312,25 @@ namespace LinqToDB.Mapping
 		/// - {3} - identity specification.
 		/// </summary>
 		public string CreateFormat { get; set; }
+
+		private int? _order;
+		/// <summary>
+		/// Specifies the order of the field in table creation.
+		/// Positive values first (ascending), then unspecified (arbitrary), then negative values (ascending).
+		/// </summary>
+		/// <remarks>
+		/// Ordering performed in <see cref="SqlTable.SqlTable(MappingSchema, Type, string)"/> constructor.
+		/// </remarks>
+		public int Order
+		{
+			get => _order ?? int.MaxValue;
+			set => _order = value;
+		}
+
+		/// <summary>
+		/// Returns <c>true</c>, if <see cref="Order"/> was configured for current attribute.
+		/// </summary>
+		/// <returns><c>true</c> if <see cref="Order"/> property was set in attribute.</returns>
+		public bool HasOrder() { return _order.HasValue; }
 	}
 }

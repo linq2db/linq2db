@@ -1,12 +1,8 @@
 <#@ include file="LinqToDB.ttinclude" #>
-<#
-	LinqToDB.DataProvider.Informix.InformixTools.ResolveInformix(
-		typeof(IBM.Data.Informix.IfxConnection).Assembly);
-#><#+
+<#+
 LinqToDB.Data.DataConnection GetInformixConnection(string connectionString)
 {
-	var conn = new IBM.Data.Informix.IfxConnection(connectionString);
-	return LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(conn);
+	return new LinqToDB.Data.DataConnection(new LinqToDB.DataProvider.Informix.InformixDataProvider(), connectionString);
 }
 
 LinqToDB.Data.DataConnection GetInformixConnection(string host, string port, string server, string database, string uid, string password)
@@ -16,13 +12,13 @@ LinqToDB.Data.DataConnection GetInformixConnection(string host, string port, str
 
 void LoadInformixMetadata(string connectionString)
 {
-	var dataConnection = GetInformixConnection(connectionString);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetInformixConnection(connectionString))
+		LoadMetadata(dataConnection);
 }
 
 void LoadInformixMetadata(string host, string port, string server, string database, string uid, string password)
 {
-	var dataConnection = GetInformixConnection(host, port, server, database, uid, password);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetInformixConnection(host, port, server, database, uid, password))
+		LoadMetadata(dataConnection);
 }
 #>

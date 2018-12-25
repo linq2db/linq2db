@@ -109,6 +109,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (NeedSkip(selectQuery))
 			{
+				SkipAlias = false;
+
 				var aliases = GetTempAliases(2, "t");
 
 				if (_rowNumberAlias == null)
@@ -151,6 +153,8 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 			else if (NeedTake(selectQuery) && (!selectQuery.OrderBy.IsEmpty || !selectQuery.Having.IsEmpty))
 			{
+				SkipAlias = false;
+
 				var aliases = GetTempAliases(1, "t");
 
 				AppendIndent().AppendFormat("SELECT {0}.*", aliases[0]).AppendLine();
@@ -219,9 +223,10 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Money          : StringBuilder.Append("Number(19,4)");              break;
 				case DataType.SmallMoney     : StringBuilder.Append("Number(10,4)");              break;
 				case DataType.NVarChar       :
-					StringBuilder.Append("VarChar2");
-					if (type.Length > 0)
-						StringBuilder.Append('(').Append(type.Length).Append(')');
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+						StringBuilder.Append("VarChar2(4000)");
+					else
+						StringBuilder.Append($"VarChar2({type.Length})");
 					break;
 				case DataType.Boolean        : StringBuilder.Append("Char(1)");                   break;
 				case DataType.NText          : StringBuilder.Append("NClob");                     break;

@@ -16,9 +16,8 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 using Microsoft.SqlServer.Types;
 using SqlServerTypes;
 #endif
@@ -30,7 +29,7 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlServerTests : DataProviderTestBase
 	{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
+#if !NETSTANDARD1_6 && !MONO
 		[OneTimeSetUp]
 		protected void InitializeFixture()
 		{
@@ -39,10 +38,10 @@ namespace Tests.DataProvider
 		}
 #endif
 
-		[AttributeUsage(AttributeTargets.Method)]
-		class SqlServerDataContextAttribute : IncludeDataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		class AllSqlServerDataContextAttribute : IncludeDataSourcesAttribute
 		{
-			public SqlServerDataContextAttribute(bool includeLinqService = false)
+			public AllSqlServerDataContextAttribute(bool includeLinqService = false)
 				: base(includeLinqService,
 					ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
 					ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)
@@ -50,8 +49,19 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestParameters(string context)
+		[AttributeUsage(AttributeTargets.Parameter)]
+		class SqlServerDataContextAttribute : IncludeDataSourcesAttribute
+		{
+			public SqlServerDataContextAttribute(bool includeLinqService = false)
+				: base(includeLinqService,
+					ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+					TestProvName.SqlAzure)
+			{
+			}
+		}
+
+		[Test]
+		public void TestParameters([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -64,8 +74,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestDataTypes(string context)
+		[Test]
+		public void TestDataTypes([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -113,8 +123,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void TestDataTypes2(string context)
+		[Test]
+		public void TestDataTypes2([SqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -123,7 +133,7 @@ namespace Tests.DataProvider
 				Assert.That(TestType<DateTime?>      (conn, "datetime2DataType",      DataType.DateTime2,      "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 				Assert.That(TestType<TimeSpan?>      (conn, "timeDataType",           DataType.Time,           "AllTypes2"), Is.EqualTo(new TimeSpan(0, 12, 12, 12, 12)));
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 				Assert.That(TestType<SqlHierarchyId?>(conn, "hierarchyidDataType",              tableName:"AllTypes2"),            Is.EqualTo(SqlHierarchyId.Parse("/1/3/")));
 				Assert.That(TestType<SqlGeography>   (conn, "geographyDataType", skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (-122.36 47.656, -122.343 47.656)"));
 				Assert.That(TestType<SqlGeometry>    (conn, "geometryDataType",  skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
@@ -178,8 +188,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestNumerics(string context)
+		[Test]
+		public void TestNumerics([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -228,8 +238,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void TestDate(string context)
+		[Test]
+		public void TestDate([SqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -242,8 +252,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestSmallDateTime(string context)
+		[Test]
+		public void TestSmallDateTime([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -257,8 +267,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestDateTime(string context)
+		[Test]
+		public void TestDateTime([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -273,8 +283,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void TestDateTime2(string context)
+		[Test]
+		public void TestDateTime2([SqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -289,8 +299,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void TestDateTimeOffset(string context)
+		[Test]
+		public void TestDateTimeOffset([SqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -336,8 +346,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void TestTimeSpan(string context)
+		[Test]
+		public void TestTimeSpan([SqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -353,8 +363,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestChar(string context)
+		[Test]
+		public void TestChar([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -399,8 +409,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestString(string context)
+		[Test]
+		public void TestString([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -470,8 +480,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestBinary(string context)
+		[Test]
+		public void TestBinary([AllSqlServerDataContext] string context)
 		{
 			var arr1 = new byte[] {       48, 57 };
 			var arr2 = new byte[] { 0, 0, 48, 57 };
@@ -504,8 +514,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestSqlTypes(string context)
+		[Test]
+		public void TestSqlTypes([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -550,8 +560,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestGuid(string context)
+		[Test]
+		public void TestGuid([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -570,8 +580,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestTimestamp(string context)
+		[Test]
+		public void TestTimestamp([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -585,8 +595,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestSqlVariant(string context)
+		[Test]
+		public void TestSqlVariant([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -599,9 +609,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void TestHierarchyID(string context)
+#if !NETSTANDARD1_6
+		[Test]
+		public void TestHierarchyID([SqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -616,8 +626,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void TestGeometry(string context)
+		[Test]
+		public void TestGeometry([SqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -635,8 +645,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void TestGeography(string context)
+		[Test]
+		public void TestGeography([SqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -655,8 +665,8 @@ namespace Tests.DataProvider
 		}
 #endif
 
-		[Test, SqlServerDataContext]
-		public void TestXml(string context)
+		[Test]
+		public void TestXml([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -685,8 +695,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestEnum1(string context)
+		[Test]
+		public void TestEnum1([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -700,8 +710,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void TestEnum2(string context)
+		[Test]
+		public void TestEnum2([AllSqlServerDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -727,8 +737,8 @@ namespace Tests.DataProvider
 			[Column] public short    SmallIntValue;
 		}
 
-		[Test, SqlServerDataContext]
-		public void BulkCopyLinqTypesMultipleRows(string context)
+		[Test]
+		public void BulkCopyLinqTypesMultipleRows([AllSqlServerDataContext] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -754,8 +764,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void BulkCopyLinqTypesProviderSpecific(string context)
+		[Test]
+		public void BulkCopyLinqTypesProviderSpecific([AllSqlServerDataContext] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -937,14 +947,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void BulkCopyAllTypesMultipleRows(string context)
+		[Test]
+		public void BulkCopyAllTypesMultipleRows([AllSqlServerDataContext] string context)
 		{
 			BulkCopyAllTypes(context, BulkCopyType.MultipleRows);
 		}
 
-		[Test, SqlServerDataContext]
-		public void BulkCopyAllTypesProviderSpecific(string context)
+		[Test]
+		public void BulkCopyAllTypesProviderSpecific([AllSqlServerDataContext] string context)
 		{
 			BulkCopyAllTypes(context, BulkCopyType.ProviderSpecific);
 		}
@@ -962,7 +972,7 @@ namespace Tests.DataProvider
 				if (column.MemberName == "timestampDataType")
 					continue;
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 				if (actualValue is SqlGeometry)
 				{
 					Assert.That(actualValue == null  || ((SqlGeometry) actualValue).IsNull ? null : actualValue.ToString(),
@@ -995,7 +1005,7 @@ namespace Tests.DataProvider
 			[Column(DbType="datetimeoffset(7)"), Nullable] public DateTimeOffset? datetimeoffsetDataType { get; set; } // datetimeoffset(7)
 			[Column(DbType="datetime2(7)"),      Nullable] public DateTime?       datetime2DataType      { get; set; } // datetime2(7)
 			[Column(DbType="time(7)"),           Nullable] public TimeSpan?       timeDataType           { get; set; } // time(7)
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 			[Column(DbType="hierarchyid"),       Nullable] public SqlHierarchyId  hierarchyidDataType    { get; set; } // hierarchyid
 			[Column(DbType="geography"),         Nullable] public SqlGeography    geographyDataType      { get; set; } // geography
 			[Column(DbType="geometry"),          Nullable] public SqlGeometry     geometryDataType       { get; set; } // geometry
@@ -1013,7 +1023,7 @@ namespace Tests.DataProvider
 					datetimeoffsetDataType = DateTime.Now.AddMinutes(i),
 					datetime2DataType      = DateTime.Today.AddDays(i),
 					timeDataType           = TimeSpan.FromSeconds(i),
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 					hierarchyidDataType    = SqlHierarchyId.Parse("/1/3/"),
 					geographyDataType      = SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)"),
 					geometryDataType       = SqlGeometry.Parse("LINESTRING (100 100, 20 180, 180 180)"),
@@ -1050,21 +1060,21 @@ namespace Tests.DataProvider
 		}
 
 #if !NETSTANDARD1_6
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void BulkCopyAllTypes2MultipleRows(string context)
+		[Test]
+		public void BulkCopyAllTypes2MultipleRows([SqlServerDataContext] string context)
 		{
 			BulkCopyAllTypes2(context, BulkCopyType.MultipleRows);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void BulkCopyAllTypes2ProviderSpecific(string context)
+		[Test]
+		public void BulkCopyAllTypes2ProviderSpecific([SqlServerDataContext] string context)
 		{
 			BulkCopyAllTypes2(context, BulkCopyType.ProviderSpecific);
 		}
 #endif
 
-		[Test, SqlServerDataContext]
-		public void CreateAllTypes(string context)
+		[Test]
+		public void CreateAllTypes([AllSqlServerDataContext] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -1093,8 +1103,8 @@ namespace Tests.DataProvider
 		}
 
 #if !NETSTANDARD1_6
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void CreateAlltypes2(string context)
+		[Test]
+		public void CreateAllTypes2([SqlServerDataContext] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -1128,8 +1138,8 @@ namespace Tests.DataProvider
 			[PrimaryKey] public int ID;
 		}
 
-		[Test, SqlServerDataContext]
-		public void CreateTempTable(string context)
+		[Test]
+		public void CreateTempTable([AllSqlServerDataContext] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -1139,8 +1149,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void CreateTempTable2(string context)
+		[Test]
+		public void CreateTempTable2([AllSqlServerDataContext] string context)
 		{
 			using (var db1 = new DataConnection(context))
 			using (var db2 = new DataConnection(context))
@@ -1158,8 +1168,8 @@ namespace Tests.DataProvider
 			[Column] public decimal Decimal3;
 		}
 
-		[Test, SqlServerDataContext]
-		public void OverflowTest(string context)
+		[Test]
+		public void OverflowTest([AllSqlServerDataContext] string context)
 		{
 			var func = SqlServerTools.DataReaderGetDecimal;
 			try
@@ -1211,8 +1221,8 @@ namespace Tests.DataProvider
 			[Column] public SqlDecimal Decimal3;
 		}
 
-		[Test, SqlServerDataContext]
-		public void OverflowTest2(string context)
+		[Test]
+		public void OverflowTest2([AllSqlServerDataContext] string context)
 		{
 			var func = SqlServerTools.DataReaderGetDecimal;
 
@@ -1231,8 +1241,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void SelectTableWithHintTest(string context)
+		[Test]
+		public void SelectTableWithHintTest([AllSqlServerDataContext] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1240,8 +1250,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext]
-		public void UpdateTableWithHintTest(string context)
+		[Test]
+		public void UpdateTableWithHintTest([AllSqlServerDataContext] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1250,8 +1260,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext(false)]
-		public void InOutProcedureTest(string context)
+		[Test]
+		public void InOutProcedureTest([AllSqlServerDataContext] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1262,8 +1272,8 @@ namespace Tests.DataProvider
 				int?   inputOutputID  = 9012;
 				string outputStr      = "OuputStr";
 				string inputOutputStr = "InputOutputStr";
-				
-				var parameters = new [] 
+
+				var parameters = new []
 				{
 					new DataParameter("@ID",             inputID,        DataType.Int32),
 					new DataParameter("@outputID",       outputID,       DataType.Int32)   { Direction = ParameterDirection.InputOutput },
@@ -1287,8 +1297,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, SqlServerDataContext(false)]
-		public async Task InOutProcedureTestAsync(string context)
+		[Test]
+		public async Task InOutProcedureTestAsync([AllSqlServerDataContext] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1299,8 +1309,8 @@ namespace Tests.DataProvider
 				int?   inputOutputID  = 9012;
 				string outputStr      = "OuputStr";
 				string inputOutputStr = "InputOutputStr";
-				
-				var parameters = new [] 
+
+				var parameters = new []
 				{
 					new DataParameter("@ID",             inputID,        DataType.Int32),
 					new DataParameter("@outputID",       outputID,       DataType.Int32)   { Direction = ParameterDirection.InputOutput },
@@ -1324,5 +1334,19 @@ namespace Tests.DataProvider
 			}
 		}
 
+#if !NETSTANDARD1_6
+		[Test]
+		public void TestIssue1144([AllSqlServerDataContext] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+
+				var table = schema.Tables.Where(_ => _.TableName == "Issue1144").Single();
+
+				Assert.AreEqual(1, table.Columns.Count);
+			}
+		}
+#endif
 	}
 }

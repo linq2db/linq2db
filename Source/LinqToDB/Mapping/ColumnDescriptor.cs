@@ -50,6 +50,7 @@ namespace LinqToDB.Mapping
 			if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
 			if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
 			if (columnAttribute.HasScale    ()) Scale     = columnAttribute.Scale;
+			if (columnAttribute.HasOrder    ()) Order     = columnAttribute.Order;
 
 			if (Storage == null)
 			{
@@ -290,6 +291,12 @@ namespace LinqToDB.Mapping
 		public string         CreateFormat    { get; private set; }
 
 		/// <summary>
+		/// Sort order for column list.
+		/// Positive values first, then unspecified (null), then negative values.
+		/// </summary>
+		public int?           Order           { get; private set; }
+
+		/// <summary>
 		/// Gets sequence name for specified column.
 		/// </summary>
 		public SequenceNameAttribute SequenceName { get; private set; }
@@ -310,7 +317,9 @@ namespace LinqToDB.Mapping
 				var objParam   = Expression.Parameter(typeof(object), "obj");
 				var getterExpr = MemberAccessor.GetterExpression.GetBody(Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type));
 
-				var expr = mappingSchema.GetConvertExpression(MemberType, typeof(DataParameter), createDefault : false);
+				var expr = mappingSchema.GetConvertExpression(
+					new DbDataType(MemberType, DataType, DbType), 
+					new DbDataType(typeof(DataParameter), DataType, DbType), createDefault : false);
 
 				if (expr != null)
 				{
