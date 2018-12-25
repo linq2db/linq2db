@@ -1479,9 +1479,9 @@ namespace LinqToDB.Mapping
 		/// <returns>
 		/// Mapping types.
 		/// </returns>
-		public Type[] GetEntites()
+		public Type[] GetEntities()
 		{
-			return Schemas[0].GetEntites();
+			return Schemas[0].GetEntities();
 		}
 
 		internal void ResetEntityDescriptor(Type type)
