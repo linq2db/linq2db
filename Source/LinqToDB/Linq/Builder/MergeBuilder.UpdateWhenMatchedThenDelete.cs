@@ -45,7 +45,8 @@ namespace LinqToDB.Linq.Builder
 					builder.BuildSearchCondition(
 						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, predicateCondition),
 						predicateConditionExpr,
-						operation.Where.Conditions);
+						operation.Where.Conditions,
+						false);
 				}
 
 				var deleteCondition = (LambdaExpression)predicate.Unwrap();
@@ -54,7 +55,8 @@ namespace LinqToDB.Linq.Builder
 				builder.BuildSearchCondition(
 					new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, deleteCondition),
 					deleteConditionExpr,
-					operation.WhereDelete.Conditions);
+					operation.WhereDelete.Conditions,
+					false);
 
 				return mergeContext;
 			}

@@ -32,7 +32,8 @@ namespace LinqToDB.Linq.Builder
 					builder.BuildSearchCondition(
 						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, condition),
 						conditionExpr,
-						operation.Where.Conditions);
+						operation.Where.Conditions,
+						false);
 				}
 
 				return mergeContext;

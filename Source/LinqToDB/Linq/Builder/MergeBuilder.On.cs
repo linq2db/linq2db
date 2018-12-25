@@ -34,7 +34,8 @@ namespace LinqToDB.Linq.Builder
 					builder.BuildSearchCondition(
 						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, condition),
 						conditionExpr,
-						statement.On.Conditions);
+						statement.On.Conditions,
+						false);
 				}
 				else if (methodCall.Arguments.Count == 3)
 				{

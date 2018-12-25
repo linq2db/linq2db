@@ -20,6 +20,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SchemaProvider;
 	using SqlProvider;
 	using Microsoft.SqlServer.Server;
+	using LinqToDB.Linq;
 
 	public class SqlServerDataProvider : DataProviderBase
 	{
