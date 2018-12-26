@@ -19,7 +19,7 @@
 		protected virtual void BuildMergeStatement(SqlMergeStatement mergeStatement)
 		{
 			BuildMergeInto(mergeStatement);
-			BuildMergeSource(mergeStatement);
+			BuildMergeSource(mergeStatement.Source);
 			BuildMergeOn(mergeStatement);
 
 			foreach (var operation in mergeStatement.Operations)
@@ -69,7 +69,16 @@
 
 		protected virtual void BuildMergeOperationDelete(SqlMergeOperationClause operation)
 		{
-			throw new NotImplementedException("BuildMergeOperationDelete");
+			StringBuilder
+				.Append("WHEN MATCHED");
+
+			if (operation.Where != null)
+			{
+				StringBuilder.Append(" AND ");
+				BuildSearchCondition(Precedence.Unknown, operation.Where);
+			}
+
+			StringBuilder.AppendLine(" THEN DELETE");
 		}
 
 		protected virtual void BuildMergeOperationInsert(SqlMergeOperationClause operation)
@@ -112,7 +121,7 @@
 			StringBuilder.AppendLine(")");
 		}
 
-		private void BuildMergeSourceQuery(SqlMergeStatement mergeStatement)
+		private void BuildMergeSourceQuery(SqlMergeSourceTable mergeSource)
 		{
 			//var inlineParameters = _connection.InlineParameters;
 			try
@@ -154,7 +163,7 @@
 
 				//SaveParameters(statement.Parameters);
 
-				BuildPhysicalTable(mergeStatement.SourceQuery, null);
+				BuildPhysicalTable(mergeSource.SourceQuery, null);
 
 				//var cs = new[] { ' ', '\t', '\r', '\n' };
 
@@ -166,10 +175,10 @@
 				//_connection.InlineParameters = inlineParameters;
 			}
 
-			BuildMergeAsSourceClause(mergeStatement);
+			BuildMergeAsSourceClause(mergeSource);
 		}
 
-		private void BuildMergeAsSourceClause(SqlMergeStatement mergeStatement)
+		private void BuildMergeAsSourceClause(SqlMergeSourceTable mergeSource)
 		{
 			//StringBuilder
 			//	.AppendLine()
@@ -177,7 +186,7 @@
 
 			StringBuilder.Append(" ");
 
-			ConvertTableName(StringBuilder, null, null, mergeStatement.SourceName);
+			ConvertTableName(StringBuilder, null, null, mergeSource.Name);
 
 			if (MergeSupportsColumnAliasesInSource)
 			{
@@ -187,7 +196,7 @@
 				StringBuilder.Append(" (");
 
 				var first = true;
-				foreach (var field in mergeStatement.SourceFields.Values)
+				foreach (var field in mergeSource.SourceFields)
 				{
 					if (!first)
 						StringBuilder.AppendLine(", ");
@@ -201,23 +210,23 @@
 			}
 		}
 
-		private void BuildMergeSourceEnumerable(SqlMergeStatement mergeStatement)
+		private void BuildMergeSourceEnumerable(SqlMergeSourceTable mergeSource)
 		{
 			throw new NotImplementedException("BuildMergeSourceEnumerable");
 		}
 
-		private void BuildMergeSource(SqlMergeStatement mergeStatement)
+		private void BuildMergeSource(SqlMergeSourceTable mergeSource)
 		{
 			StringBuilder
 				.Append("USING ");
 
-			if (mergeStatement.SourceQuery != null)
+			if (mergeSource.SourceQuery != null)
 			{
-				BuildMergeSourceQuery(mergeStatement);
+				BuildMergeSourceQuery(mergeSource);
 			}
 			else
 			{
-				BuildMergeSourceEnumerable(mergeStatement);
+				BuildMergeSourceEnumerable(mergeSource);
 			}
 
 			StringBuilder

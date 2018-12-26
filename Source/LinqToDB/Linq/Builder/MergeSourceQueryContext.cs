@@ -1,77 +1,73 @@
-﻿namespace LinqToDB.Linq.Builder
-{
-	using System.Collections.Generic;
-	using System.Linq.Expressions;
-	using SqlQuery;
+﻿using JetBrains.Annotations;
+using LinqToDB.SqlQuery;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 
+namespace LinqToDB.Linq.Builder
+{
 	class MergeSourceQueryContext : SubQueryContext
 	{
-		private readonly IDictionary<string, SqlField> _sourceFields;
+		private readonly SqlMergeStatement _merge;
 
-		public MergeSourceQueryContext(IBuildContext source, IDictionary<string, SqlField> sourceFields)
-			: base(source, new SelectQuery { ParentSelect = source.SelectQuery }, true)
+		public MergeSourceQueryContext(
+			ExpressionBuilder builder,
+			BuildInfo buildInfo,
+			SqlMergeStatement merge,
+			IBuildContext sourceContext,
+			Type sourceType)
+			:base(sourceContext, new SelectQuery { ParentSelect = sourceContext.SelectQuery }, true)
 		{
-			_sourceFields = sourceFields;
-		}
-
-		public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
-		{
-			return base.BuildExpression(expression, level, enforceServerSide);
-		}
-
-		public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-		{
-			base.BuildQuery(query, queryParameter);
-		}
-
-		public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
-		{
-			return base.ConvertToIndex(expression, level, flags);
-		}
-
-		public override int ConvertToParentIndex(int index, IBuildContext context)
-		{
-			return base.ConvertToParentIndex(index, context);
+			_merge = merge;
+			_merge.Source = new SqlMergeSourceTable(builder.MappingSchema, _merge, sourceType)
+			{
+				SourceQuery = sourceContext.SelectQuery
+			};
 		}
 
 		public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
 		{
-			return base.ConvertToSql(expression, level, flags);
+			return SubQuery
+				.ConvertToIndex(expression, level, flags)
+				.Select(info =>
+				{
+					var expr = (info.Sql is SqlColumn column) ? column.Expression : info.Sql;
+					//var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info))?.Sql;
+					var field = RegisterSourceField(expr, expr, info.Index, info.MemberChain.LastOrDefault());
+					return new SqlInfo(info.MemberChain)
+					{
+						Sql = field
+					};
+				})
+				.ToArray();
 		}
 
-		public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+		SqlField RegisterSourceField(ISqlExpression baseExpression, [NotNull] ISqlExpression expression, int index, MemberInfo member)
 		{
-			return base.GetContext(expression, level, buildInfo);
-		}
+			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-		protected override int GetIndex(SqlColumn column)
-		{
-			return base.GetIndex(column);
-		}
+			var sourceField = _merge.Source.RegisterSourceField(baseExpression, expression, index, () =>
+			{
+				var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
 
-		public override ISqlExpression GetSubQuery(IBuildContext context)
-		{
-			return base.GetSubQuery(context);
-		}
+				var newField = f == null
+					? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull, Name = member?.Name }
+					: new SqlField(f) { Name = member?.Name ?? f.Name};
 
-		public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor testFlag)
-		{
-			return base.IsExpression(expression, level, testFlag);
-		}
+				newField.PhysicalName = newField.Name;
+				newField.Table = _merge.Source;
+				return newField;
+			});
 
-		public override void SetAlias(string alias)
-		{
-			base.SetAlias(alias);
-		}
+			//if (!SqlTable.Fields.TryGetValue(sourceField.Name, out var field))
+			//{
+			//	field = new SqlField(sourceField);
+			//	SqlTable.Add(field);
+			//}
 
-		public override string ToString()
-		{
-			return base.ToString();
-		}
-
-		public override SqlStatement GetResultStatement()
-		{
-			return base.GetResultStatement();
+			return sourceField;
 		}
 	}
 }

@@ -1285,7 +1285,8 @@ namespace LinqToDB.SqlProvider
 					AppendIndent().Append(")");
 					break;
 
-				case QueryElementType.SqlCteTable  :
+				case QueryElementType.SqlCteTable    :
+				case QueryElementType.MergeSourceTable:
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
@@ -2932,10 +2933,9 @@ namespace LinqToDB.SqlProvider
 					var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
 					return alias != "$" ? alias : null;
 
-				case QueryElementType.SqlTable:
-					return ((SqlTable)table).Alias;
-
-				case QueryElementType.SqlCteTable:
+				case QueryElementType.SqlTable        :
+				case QueryElementType.SqlCteTable     :
+				case QueryElementType.MergeSourceTable:
 					return ((SqlTable)table).Alias;
 
 				default:
@@ -3032,8 +3032,9 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.TableSource:
 					return GetPhysicalTableName(((SqlTableSource)table).Source, alias);
 
-				case QueryElementType.SqlCteTable:
-					return GetTablePhysicalName((SqlCteTable)table);
+				case QueryElementType.SqlCteTable     :
+				case QueryElementType.MergeSourceTable:
+					return GetTablePhysicalName((SqlTable)table);
 
 				default:
 					throw new InvalidOperationException();

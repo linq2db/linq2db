@@ -56,5 +56,7 @@ namespace LinqToDB.SqlQuery
 		CreateTableStatement,
 		DropTableStatement,
 		TruncateTableStatement,
+
+		MergeSourceTable,
 	}
 }

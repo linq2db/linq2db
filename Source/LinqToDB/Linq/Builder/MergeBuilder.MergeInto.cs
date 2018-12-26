@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				// MergeInto<TTarget, TSource>(IQueryable<TSource> source, ITable<TTarget> target, string hint)
-				var source = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
+				var sourceContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
 				var target = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1]));
 
 				var targetTable = ((TableBuilder.TableContext)target).SqlTable;
@@ -32,8 +32,13 @@ namespace LinqToDB.Linq.Builder
 
 				target.Statement = merge;
 
-				source = new MergeSourceQueryContext(source, merge.SourceFields);
-				source.SetAlias("Source");
+				var source = new MergeSourceQueryContext(
+					builder,
+					new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()),
+					merge,
+					sourceContext,
+					methodCall.Method.GetGenericArguments()[1]);
+				//source.SetAlias("Source");
 				return new MergeContext(merge, target, source);
 			}
 

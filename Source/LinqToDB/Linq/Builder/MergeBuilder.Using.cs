@@ -22,16 +22,21 @@ namespace LinqToDB.Linq.Builder
 
 				if (LinqExtensions.UsingMethodInfo1.GetGenericMethodDefinition() == methodCall.Method.GetGenericMethodDefinition())
 				{
-					var source = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
-					source = new MergeSourceQueryContext(source, mergeContext.Merge.SourceFields);
-					source.SetAlias("Source");
-					mergeContext.Merge.SourceQuery = source.SelectQuery;
+					var sourceContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+					var source = new MergeSourceQueryContext(
+						builder,
+						new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()),
+						mergeContext.Merge,
+						sourceContext,
+						methodCall.Method.GetGenericArguments()[1]);
+					//source.SetAlias("Source");
+					//mergeContext.Merge.SetSourceQuery(source.SelectQuery);
 					mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, source };
 				}
 				else
 				{
 					var source = (IEnumerable)methodCall.Arguments[1].EvaluateExpression();
-					mergeContext.Merge.SourceEnumerable = source;
+					mergeContext.Merge.Source.SourceEnumerable = source;
 					mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, new EnumerableContext(source) };
 				}
 

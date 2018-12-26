@@ -606,26 +606,6 @@ namespace LinqToDB.DataProvider
 		}
 		#endregion
 
-		#region Operations: DELETE
-		protected virtual void BuildDelete(Expression<Func<TTarget, TSource, bool>> predicate)
-		{
-			Command
-				.AppendLine()
-				.Append("WHEN MATCHED ");
-
-			if (predicate != null)
-			{
-				Command.Append("AND ");
-				BuildPredicateByTargetAndSource(predicate);
-			}
-
-			Command
-				.AppendLine("THEN")
-				.AppendLine("DELETE")
-				;
-		}
-		#endregion
-
 		#region Operations: INSERT
 		protected void BuildCustomInsert(Expression<Func<TSource, TTarget>> create)
 		{

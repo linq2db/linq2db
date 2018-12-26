@@ -1,7 +1,10 @@
-﻿using System;
+﻿using LinqToDB.Common;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
@@ -17,11 +20,14 @@ namespace LinqToDB.SqlQuery
 			Target = new SqlTableSource(target, TargetAlias);
 		}
 
-		public SqlMergeStatement(SqlTable target, SelectQuery source)
-			: this(target)
-		{
-			SourceQuery = source;
-		}
+		//public SqlMergeStatement(MappingSchema mappingSchema, SqlTable target, Type sourceType, SelectQuery source)
+		//	: this(target)
+		//{
+		//	Source = new SqlMergeSourceTable(mappingSchema, this, sourceType)
+		//	{
+		//		SourceQuery = source
+		//	};
+		//}
 
 		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
@@ -38,10 +44,7 @@ namespace LinqToDB.SqlQuery
 				.AppendLine()
 				.Append("USING (");
 
-			if (SourceQuery != null)
-				((IQueryElement)SourceQuery).ToString(sb, dic);
-			else
-				sb.Append("<TODO:List>");
+			Source.ToString(sb, dic);
 
 			sb
 				.AppendLine(")")
@@ -63,7 +66,7 @@ namespace LinqToDB.SqlQuery
 		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
 		{
 			Target.Walk(skipColumns, func);
-			SourceQuery?.Walk(skipColumns, func);
+			Source.Walk(skipColumns, func);
 
 			((ISqlExpressionWalkable)On).Walk(skipColumns, func);
 
@@ -75,22 +78,22 @@ namespace LinqToDB.SqlQuery
 
 		public string Hint { get; internal set; }
 
-		public string SourceName { get; set; } = "Source";
 
-		public IDictionary<string, SqlField> SourceFields { get; } = new Dictionary<string, SqlField>();
-
-		public void RegisterSourceFieldMapping(SqlField field)
-		{
-			if (!SourceFields.ContainsKey(field.PhysicalName))
-			{
-				SourceFields.Add(field.PhysicalName, new SqlField(field));
-			}
-		}
+		//public void RegisterSourceFieldMapping(SqlField field)
+		//{
+		//	if (!SourceFields.ContainsKey(field.PhysicalName))
+		//	{
+		//		SourceFields.Add(field.PhysicalName, new SqlField(field));
+		//	}
+		//}
 
 		public SqlTableSource Target { get; }
-		public SelectQuery SourceQuery { get; internal set; }
 
-		public IEnumerable SourceEnumerable { get; internal set; }
+		public SqlMergeSourceTable Source { get; internal set; }
+
+		public void SetSourceQuery(SelectQuery source)
+		{
+		}
 
 		public SqlSearchCondition On { get; private set; } = new SqlSearchCondition();
 
@@ -98,8 +101,8 @@ namespace LinqToDB.SqlQuery
 
 		public override bool IsParameterDependent
 		{
-			get => SourceQuery?.IsParameterDependent ?? false;
-			set => SourceQuery.IsParameterDependent = value;
+			get => Source.IsParameterDependent;
+			set => Source.IsParameterDependent = value;
 		}
 
 		public override SelectQuery SelectQuery
@@ -113,7 +116,12 @@ namespace LinqToDB.SqlQuery
 			if (Target.Source == table)
 				return Target;
 
-			return SourceQuery?.GetTableSource(table);
+			if (Source == table)
+			{
+				return Source;
+			}
+
+			return null;
 		}
 
 		public override IEnumerable<IQueryElement> EnumClauses()
@@ -123,8 +131,7 @@ namespace LinqToDB.SqlQuery
 
 		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
 		{
-			if (SourceQuery != null)
-				SourceQuery = func(SourceQuery);
+			Source.WalkQueries(func);
 		}
 	}
 }
