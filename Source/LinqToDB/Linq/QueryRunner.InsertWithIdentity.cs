@@ -7,16 +7,17 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using SqlQuery;
+	using Common.Internal.Cache;
 
 	static partial class QueryRunner
 	{
 		public static class InsertWithIdentity<T>
 		{
-			static readonly ConcurrentDictionary<object,Query<object>> _queryCache = new ConcurrentDictionary<object,Query<object>>();
+			static readonly MemoryCache _queryCache = new MemoryCache(new MemoryCacheOptions());
 
 			static InsertWithIdentity()
 			{
-				Linq.Query.CacheCleaners.Add(() => _queryCache.Clear());
+				Linq.Query.CacheCleaners.Add(() => _queryCache.Compact(1));
 			}
 
 			static Query<object> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
@@ -72,8 +73,12 @@ namespace LinqToDB.Linq
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
 					? CreateQuery(dataContext, tableName, databaseName, schemaName, type)
-					: _queryCache.GetOrAdd(key,
-						o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
+					: _queryCache.GetOrCreate(key,
+						o =>
+						{
+							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+							return CreateQuery(dataContext, tableName, databaseName, schemaName, type);
+						});
 
 				return ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -88,8 +93,12 @@ namespace LinqToDB.Linq
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
 					? CreateQuery(dataContext, tableName, databaseName, schemaName, type)
-					: _queryCache.GetOrAdd(key,
-						o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
+					: _queryCache.GetOrCreate(key,
+						o =>
+						{
+							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+							return CreateQuery(dataContext, tableName, databaseName, schemaName, type);
+						});
 
 				return await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 			}

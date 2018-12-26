@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -9,16 +8,17 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using SqlQuery;
+	using Common.Internal.Cache;
 
 	static partial class QueryRunner
 	{
 		public static class InsertOrReplace<T>
 		{
-			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
+			static readonly MemoryCache _queryCache = new MemoryCache(new MemoryCacheOptions());
 
 			static InsertOrReplace()
 			{
-				Linq.Query.CacheCleaners.Add(() => _queryCache.Clear());
+				Linq.Query.CacheCleaners.Add(() => _queryCache.Compact(1));
 			}
 
 			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
@@ -130,7 +130,11 @@ namespace LinqToDB.Linq
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
 					? CreateQuery(dataContext, tableName, databaseName, schema, type)
-					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schema, type));
+					: _queryCache.GetOrCreate(key, o =>
+					{
+						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return CreateQuery(dataContext, tableName, databaseName, schema, type);
+					});
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -144,7 +148,11 @@ namespace LinqToDB.Linq
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
 					? CreateQuery(dataContext, tableName, schema, databaseName, type)
-					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName, type));
+					: _queryCache.GetOrCreate(key, o =>
+					{
+						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return CreateQuery(dataContext, tableName, schema, databaseName, type);
+					});
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 
