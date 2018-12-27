@@ -24,5 +24,47 @@
 			StringBuilder.Append("INTO ");
 			BuildTableName(merge.Target, true, true);
 		}
+
+		protected override void BuildMergeOperationInsert(SqlMergeOperationClause operation)
+		{
+			StringBuilder
+				.AppendLine()
+				.AppendLine("WHEN NOT MATCHED THEN")
+				.Append("INSERT")
+				;
+
+			var insertClause = new SqlInsertClause();
+			insertClause.Items.AddRange(operation.Items);
+
+			BuildInsertClause(new SqlInsertOrUpdateStatement(null), insertClause, null, false, false);
+
+			if (operation.Where.Conditions.Count != 0)
+			{
+				StringBuilder.Append(" WHERE ");
+				BuildSearchCondition(Precedence.Unknown, operation.Where);
+			}
+		}
+
+		protected override void BuildMergeOperationUpdate(SqlMergeOperationClause operation)
+		{
+			StringBuilder
+				.AppendLine()
+				.AppendLine("WHEN MATCHED THEN")
+				.AppendLine("UPDATE")
+				;
+
+			var update = new SqlUpdateClause();
+			update.Items.AddRange(operation.Items);
+			BuildUpdateSet(null, update);
+
+			if (operation.Where.Conditions.Count != 0)
+			{
+				StringBuilder
+					.AppendLine("WHERE")
+					.Append("\t")
+					;
+				BuildSearchCondition(Precedence.Unknown, operation.Where);
+			}
+		}
 	}
 }

@@ -607,126 +607,126 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		#region Operations: INSERT
-		protected void BuildCustomInsert(Expression<Func<TSource, TTarget>> create)
-		{
-			Expression insertExpression = Expression.Call(
-				null,
-				LinqExtensions.InsertMethodInfo3.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
-				new[]
-				{
-					_connection.GetTable<TSource>().Expression,
-					_connection.GetTable<TTarget>().Expression,
-					Expression.Quote(create)
-				});
+		//protected void BuildCustomInsert(Expression<Func<TSource, TTarget>> create)
+		//{
+		//	Expression insertExpression = Expression.Call(
+		//		null,
+		//		LinqExtensions.InsertMethodInfo3.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+		//		new[]
+		//		{
+		//			_connection.GetTable<TSource>().Expression,
+		//			_connection.GetTable<TTarget>().Expression,
+		//			Expression.Quote(create)
+		//		});
 
-			var qry = Query<int>.GetQuery(DataContext, ref insertExpression);
-			lock (qry)
-			{
-			var statement = qry.Queries[0].Statement;
+		//	var qry = Query<int>.GetQuery(DataContext, ref insertExpression);
+		//	lock (qry)
+		//	{
+		//		var statement = qry.Queries[0].Statement;
 
-			// we need InsertOrUpdate for sql builder to generate values clause
-			var newInsert = new SqlInsertOrUpdateStatement(statement.SelectQuery) { Insert = statement.GetInsertClause(), Update = statement.GetUpdateClause() };
-			newInsert.Parameters.AddRange(statement.Parameters);
-			newInsert.Insert.Into.Alias = TargetAlias;
+		//		// we need InsertOrUpdate for sql builder to generate values clause
+		//		var newInsert = new SqlInsertOrUpdateStatement(statement.SelectQuery) { Insert = statement.GetInsertClause(), Update = statement.GetUpdateClause() };
+		//		newInsert.Parameters.AddRange(statement.Parameters);
+		//		newInsert.Insert.Into.Alias = TargetAlias;
 
-			var tables = MoveJoinsToSubqueries(newInsert, SourceAlias, null, QueryElement.InsertSetter);
-			SetSourceColumnAliases(newInsert.Insert, tables.Item1.Source);
+		//		var tables = MoveJoinsToSubqueries(newInsert, SourceAlias, null, QueryElement.InsertSetter);
+		//		SetSourceColumnAliases(newInsert.Insert, tables.Item1.Source);
 
-			qry.Queries[0].Statement = newInsert;
-			QueryRunner.SetParameters(qry, DataContext, insertExpression, null, 0);
+		//		qry.Queries[0].Statement = newInsert;
+		//		QueryRunner.SetParameters(qry, DataContext, insertExpression, null, 0);
 
-			SaveParameters(newInsert.Parameters);
+		//		SaveParameters(newInsert.Parameters);
 
-			if (IsIdentityInsertSupported
-				&& newInsert.Insert.Items.Any(_ => _.Column is SqlField field && field.IsIdentity))
-				OnInsertWithIdentity();
+		//		if (IsIdentityInsertSupported
+		//			&& newInsert.Insert.Items.Any(_ => _.Column is SqlField field && field.IsIdentity))
+		//			OnInsertWithIdentity();
 
-			SqlBuilder.BuildInsertClauseHelper(newInsert, Command);
-		}
-		}
+		//		SqlBuilder.BuildInsertClauseHelper(newInsert, Command);
+		//	}
+		//}
 
-		protected void BuildDefaultInsert()
-		{
-			// insert identity field values only if it is supported by database and field is not excluded from
-			// implicit insert operation by SkipOnInsert attribute
-			// see https://github.com/linq2db/linq2db/issues/914 for more details
-			var insertColumns = TargetDescriptor.Columns
-				.Where(c => (IsIdentityInsertSupported && c.IsIdentity && !c.SkipOnInsert) || !c.SkipOnInsert)
-				.ToList();
+		//protected void BuildDefaultInsert()
+		//{
+		//	// insert identity field values only if it is supported by database and field is not excluded from
+		//	// implicit insert operation by SkipOnInsert attribute
+		//	// see https://github.com/linq2db/linq2db/issues/914 for more details
+		//	var insertColumns = TargetDescriptor.Columns
+		//		.Where(c => (IsIdentityInsertSupported && c.IsIdentity && !c.SkipOnInsert) || !c.SkipOnInsert)
+		//		.ToList();
 
-			if (IsIdentityInsertSupported && insertColumns.Any(c => c.IsIdentity))
-				OnInsertWithIdentity();
+		//	if (IsIdentityInsertSupported && insertColumns.Any(c => c.IsIdentity))
+		//		OnInsertWithIdentity();
 
-			Command.AppendLine("(");
+		//	Command.AppendLine("(");
 
-			var first = true;
-			foreach (var column in insertColumns)
-			{
-				if (!first)
-					Command
-						.Append(",")
-						.AppendLine();
+		//	var first = true;
+		//	foreach (var column in insertColumns)
+		//	{
+		//		if (!first)
+		//			Command
+		//				.Append(",")
+		//				.AppendLine();
 
-				first = false;
-				Command.AppendFormat("\t{0}", SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField));
-			}
+		//		first = false;
+		//		Command.AppendFormat("\t{0}", SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField));
+		//	}
 
-			Command
-				.AppendLine()
-				.AppendLine(")")
-				.AppendLine("VALUES")
-				.AppendLine("(");
+		//	Command
+		//		.AppendLine()
+		//		.AppendLine(")")
+		//		.AppendLine("VALUES")
+		//		.AppendLine("(");
 
-			var sourceAlias = SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias);
+		//	var sourceAlias = SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias);
 
-			first = true;
+		//	first = true;
 
-			foreach (var column in insertColumns)
-			{
-				if (!first)
-					Command
-						.Append(",")
-						.AppendLine();
+		//	foreach (var column in insertColumns)
+		//	{
+		//		if (!first)
+		//			Command
+		//				.Append(",")
+		//				.AppendLine();
 
-				first = false;
-				Command.AppendFormat(
-					"\t{1}.{0}",
-					GetEscapedSourceColumnAlias(column.ColumnName),
-					sourceAlias);
-			}
+		//		first = false;
+		//		Command.AppendFormat(
+		//			"\t{1}.{0}",
+		//			GetEscapedSourceColumnAlias(column.ColumnName),
+		//			sourceAlias);
+		//	}
 
-			Command
-				.AppendLine()
-				.AppendLine(")");
-		}
+		//	Command
+		//		.AppendLine()
+		//		.AppendLine(")");
+		//}
 
-		protected virtual void BuildInsert(
-			Expression<Func<TSource,bool>>    predicate,
-			Expression<Func<TSource,TTarget>> create)
-		{
-			Command
-				.AppendLine()
-				.Append("WHEN NOT MATCHED ");
+		//protected virtual void BuildInsert(
+		//	Expression<Func<TSource,bool>>    predicate,
+		//	Expression<Func<TSource,TTarget>> create)
+		//{
+		//	Command
+		//		.AppendLine()
+		//		.Append("WHEN NOT MATCHED ");
 
-			if (predicate != null)
-			{
-				Command.Append("AND ");
-				BuildSingleTablePredicate(predicate, SourceAlias, true);
-			}
+		//	if (predicate != null)
+		//	{
+		//		Command.Append("AND ");
+		//		BuildSingleTablePredicate(predicate, SourceAlias, true);
+		//	}
 
-			Command
-				.AppendLine("THEN")
-				.Append("INSERT")
-				;
+		//	Command
+		//		.AppendLine("THEN")
+		//		.Append("INSERT")
+		//		;
 
-			if (create != null)
-				BuildCustomInsert(create);
-			else
-			{
-				Command.AppendLine();
-				BuildDefaultInsert();
-			}
-		}
+		//	if (create != null)
+		//		BuildCustomInsert(create);
+		//	else
+		//	{
+		//		Command.AppendLine();
+		//		BuildDefaultInsert();
+		//	}
+		//}
 
 		protected virtual void OnInsertWithIdentity()
 		{
@@ -744,33 +744,33 @@ namespace LinqToDB.DataProvider
 		protected void BuildCustomUpdate(Expression<Func<TTarget, TSource, TTarget>> update)
 		{
 			// build update query
-			var target      = _connection.GetTable<TTarget>();
+			var target = _connection.GetTable<TTarget>();
 			var updateQuery = target.SelectMany(_ => _connection.GetTable<TSource>(), (t, s) => new { t, s });
-			var predicate   = RewriteUpdatePredicateParameters(updateQuery, update);
+			var predicate = RewriteUpdatePredicateParameters(updateQuery, update);
 
 			Expression updateExpression = Expression.Call(
 				null,
 				LinqExtensions.UpdateMethodInfo.MakeGenericMethod(new[] { updateQuery.GetType().GetGenericArgumentsEx()[0], typeof(TTarget) }),
 				new[] { updateQuery.Expression, target.Expression, Expression.Quote(predicate) });
 
-			var qry   = Query<int>.GetQuery(DataContext, ref updateExpression);
+			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
 			lock (qry)
 			{
-			var statement = qry.Queries[0].Statement;
+				var statement = qry.Queries[0].Statement;
 
-			if (ProviderUsesAlternativeUpdate)
-				BuildAlternativeUpdateQuery(statement);
-			else
-			{
-				var tables = MoveJoinsToSubqueries(statement, TargetAlias, SourceAlias, QueryElement.UpdateSetter);
-				SetSourceColumnAliases(statement.RequireUpdateClause(), tables.Item2.Source);
+				if (ProviderUsesAlternativeUpdate)
+					BuildAlternativeUpdateQuery(statement);
+				else
+				{
+					var tables = MoveJoinsToSubqueries(statement, TargetAlias, SourceAlias, QueryElement.UpdateSetter);
+					SetSourceColumnAliases(statement.RequireUpdateClause(), tables.Item2.Source);
+				}
+
+				QueryRunner.SetParameters(qry, DataContext, updateExpression, null, 0);
+				SaveParameters(statement.Parameters);
+
+				SqlBuilder.BuildUpdateSetHelper((SqlUpdateStatement)statement, Command);
 			}
-
-			QueryRunner.SetParameters(qry, DataContext, updateExpression, null, 0);
-			SaveParameters(statement.Parameters);
-
-			SqlBuilder.BuildUpdateSetHelper((SqlUpdateStatement)statement, Command);
-		}
 		}
 
 		private void BuildAlternativeUpdateQuery(SqlStatement statement)
@@ -829,7 +829,7 @@ namespace LinqToDB.DataProvider
 				Command.AppendLine("SET");
 
 				var sourceAlias = (string)SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias);
-				var maxLen      = updateColumns.Max(c => ((string)SqlBuilder.Convert(c.ColumnName, ConvertType.NameToQueryField)).Length);
+				var maxLen = updateColumns.Max(c => ((string)SqlBuilder.Convert(c.ColumnName, ConvertType.NameToQueryField)).Length);
 
 				var first = true;
 				foreach (var column in updateColumns)
@@ -852,31 +852,31 @@ namespace LinqToDB.DataProvider
 				throw new LinqToDBException("Merge.Update call requires updatable columns");
 		}
 
-		protected virtual void BuildUpdate(
-					Expression<Func<TTarget, TSource, bool>>    predicate,
-					Expression<Func<TTarget, TSource, TTarget>> update)
-		{
-			Command
-				.AppendLine()
-				.Append("WHEN MATCHED ");
+		//protected virtual void BuildUpdate(
+		//			Expression<Func<TTarget, TSource, bool>>    predicate,
+		//			Expression<Func<TTarget, TSource, TTarget>> update)
+		//{
+		//	Command
+		//		.AppendLine()
+		//		.Append("WHEN MATCHED ");
 
-			if (predicate != null)
-			{
-				Command.Append("AND ");
-				BuildPredicateByTargetAndSource(predicate);
-			}
+		//	if (predicate != null)
+		//	{
+		//		Command.Append("AND ");
+		//		BuildPredicateByTargetAndSource(predicate);
+		//	}
 
-			while (Command[Command.Length - 1] ==  ' ')
-				Command.Length--;
+		//	while (Command[Command.Length - 1] ==  ' ')
+		//		Command.Length--;
 
-			Command.AppendLine(" THEN");
-			Command.AppendLine("UPDATE");
+		//	Command.AppendLine(" THEN");
+		//	Command.AppendLine("UPDATE");
 
-			if (update != null)
-				BuildCustomUpdate(update);
-			else
-				BuildDefaultUpdate();
-		}
+		//	if (update != null)
+		//		BuildCustomUpdate(update);
+		//	else
+		//		BuildDefaultUpdate();
+		//}
 
 		private static ISqlExpression ConvertToSubquery(
 							SelectQuery sql,
@@ -1016,41 +1016,41 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		#region Operations: UPDATE BY SOURCE
-		private void BuildUpdateBySource(
-							Expression<Func<TTarget, bool>>    predicate,
-							Expression<Func<TTarget, TTarget>> update)
-		{
-			Command
-				.AppendLine()
-				.Append("WHEN NOT MATCHED By Source ");
+		//private void BuildUpdateBySource(
+		//					Expression<Func<TTarget, bool>>    predicate,
+		//					Expression<Func<TTarget, TTarget>> update)
+		//{
+		//	Command
+		//		.AppendLine()
+		//		.Append("WHEN NOT MATCHED By Source ");
 
-			if (predicate != null)
-			{
-				Command.Append("AND ");
-				BuildSingleTablePredicate(predicate, TargetAlias, false);
-			}
+		//	if (predicate != null)
+		//	{
+		//		Command.Append("AND ");
+		//		BuildSingleTablePredicate(predicate, TargetAlias, false);
+		//	}
 
-			Command.AppendLine("THEN UPDATE");
+		//	Command.AppendLine("THEN UPDATE");
 
-			Expression updateExpression = Expression.Call(
-				null,
-				LinqExtensions.UpdateMethodInfo2.MakeGenericMethod(typeof(TTarget)),
-				new[] { _connection.GetTable<TTarget>().Expression, Expression.Quote(update) });
+		//	Expression updateExpression = Expression.Call(
+		//		null,
+		//		LinqExtensions.UpdateMethodInfo2.MakeGenericMethod(typeof(TTarget)),
+		//		new[] { _connection.GetTable<TTarget>().Expression, Expression.Quote(update) });
 
-			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
-			lock (qry)
-			{
-			var statement = (SqlUpdateStatement)qry.Queries[0].Statement;
+		//	var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
+		//	lock (qry)
+		//	{
+		//	var statement = (SqlUpdateStatement)qry.Queries[0].Statement;
 
-			MoveJoinsToSubqueries(statement, TargetAlias, null, QueryElement.UpdateSetter);
+		//	MoveJoinsToSubqueries(statement, TargetAlias, null, QueryElement.UpdateSetter);
 
-			QueryRunner.SetParameters(qry, DataContext, updateExpression, null, 0);
+		//	QueryRunner.SetParameters(qry, DataContext, updateExpression, null, 0);
 
-			SaveParameters(statement.Parameters);
+		//	SaveParameters(statement.Parameters);
 
-			SqlBuilder.BuildUpdateSetHelper(statement, Command);
-		}
-		}
+		//	SqlBuilder.BuildUpdateSetHelper(statement, Command);
+		//}
+		//}
 		#endregion
 
 		#region Parameters

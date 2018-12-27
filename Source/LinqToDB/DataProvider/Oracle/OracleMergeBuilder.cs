@@ -67,55 +67,55 @@ namespace LinqToDB.DataProvider.Oracle
 			BuildPredicateByTargetAndSource(deletePredicate);
 		}
 
-		protected override void BuildInsert(
-			Expression<Func<TSource, bool>> predicate,
-			Expression<Func<TSource, TTarget>> create)
-		{
-			Command
-				.AppendLine()
-				.AppendLine("WHEN NOT MATCHED THEN")
-				.Append("INSERT")
-				;
+		//protected override void BuildInsert(
+		//	Expression<Func<TSource, bool>> predicate,
+		//	Expression<Func<TSource, TTarget>> create)
+		//{
+		//	Command
+		//		.AppendLine()
+		//		.AppendLine("WHEN NOT MATCHED THEN")
+		//		.Append("INSERT")
+		//		;
 
-			if (create != null)
-				BuildCustomInsert(create);
-			else
-				BuildDefaultInsert();
+		//	if (create != null)
+		//		BuildCustomInsert(create);
+		//	else
+		//		BuildDefaultInsert();
 
-			if (predicate != null)
-			{
-				Command
-					.AppendLine("WHERE")
-					.Append("\t")
-					;
-				BuildSingleTablePredicate(predicate, SourceAlias, true);
-			}
-		}
+		//	if (predicate != null)
+		//	{
+		//		Command
+		//			.AppendLine("WHERE")
+		//			.Append("\t")
+		//			;
+		//		BuildSingleTablePredicate(predicate, SourceAlias, true);
+		//	}
+		//}
 
-		protected override void BuildUpdate(
-			Expression<Func<TTarget, TSource, bool>> predicate,
-			Expression<Func<TTarget, TSource, TTarget>> update)
-		{
-			Command
-				.AppendLine()
-				.AppendLine("WHEN MATCHED THEN")
-				.AppendLine("UPDATE")
-				;
+		//protected override void BuildUpdate(
+		//	Expression<Func<TTarget, TSource, bool>> predicate,
+		//	Expression<Func<TTarget, TSource, TTarget>> update)
+		//{
+		//	Command
+		//		.AppendLine()
+		//		.AppendLine("WHEN MATCHED THEN")
+		//		.AppendLine("UPDATE")
+		//		;
 
-			if (update != null)
-				BuildCustomUpdate(update);
-			else
-				BuildDefaultUpdate();
+		//	if (update != null)
+		//		BuildCustomUpdate(update);
+		//	else
+		//		BuildDefaultUpdate();
 
-			if (predicate != null)
-			{
-				Command
-					.AppendLine("WHERE")
-					.Append("\t")
-					;
-				BuildPredicateByTargetAndSource(predicate);
-			}
-		}
+		//	if (predicate != null)
+		//	{
+		//		Command
+		//			.AppendLine("WHERE")
+		//			.Append("\t")
+		//			;
+		//		BuildPredicateByTargetAndSource(predicate);
+		//	}
+		//}
 
 		protected override bool MergeHintsSupported => true;
 	}

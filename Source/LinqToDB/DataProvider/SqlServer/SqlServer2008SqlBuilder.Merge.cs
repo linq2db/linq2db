@@ -30,7 +30,7 @@
 			StringBuilder
 				.Append("WHEN NOT MATCHED BY SOURCE");
 
-			if (operation.Where != null)
+			if (operation.Where.Conditions.Count != 0)
 			{
 				StringBuilder.Append(" AND ");
 				BuildSearchCondition(Precedence.Unknown, operation.Where);
@@ -47,6 +47,25 @@
 			// disable explicit identity insert
 			//if (_hasIdentityInsert)
 			//	StringBuilder.AppendFormat("SET IDENTITY_INSERT {0} OFF", TargetTableName).AppendLine();
+		}
+
+		protected override void BuildMergeOperationUpdateBySource(SqlMergeOperationClause operation)
+		{
+			StringBuilder
+				.AppendLine()
+				.Append("WHEN NOT MATCHED By Source");
+
+			if (operation.Where.Conditions.Count != 0)
+			{
+				StringBuilder.Append(" AND ");
+				BuildSearchCondition(Precedence.Unknown, operation.Where);
+			}
+
+			StringBuilder.AppendLine(" THEN UPDATE");
+
+			var update = new SqlUpdateClause();
+			update.Items.AddRange(operation.Items);
+			BuildUpdateSet(null, update);
 		}
 	}
 }

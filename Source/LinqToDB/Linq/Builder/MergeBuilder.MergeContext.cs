@@ -1,5 +1,7 @@
-﻿using LinqToDB.SqlQuery;
+﻿using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -8,6 +10,19 @@ namespace LinqToDB.Linq.Builder
 	{
 		private class MergeContext : SequenceContextBase
 		{
+			private readonly ISet<Expression> _sourceParameters = new HashSet<Expression>();
+			private readonly ISet<Expression> _targetParameters = new HashSet<Expression>();
+
+			public void AddSourceParameter(Expression param)
+			{
+				_sourceParameters.Add(param);
+			}
+
+			public void AddTargetParameter(Expression param)
+			{
+				_targetParameters.Add(param);
+			}
+
 			public MergeContext(SqlMergeStatement merge, IBuildContext target)
 				: base(null, target, null)
 			{
@@ -42,7 +57,30 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
 			{
-				throw new NotImplementedException();
+				switch (flags)
+				{
+					case ConvertFlags.Field:
+					//case ConvertFlags.Key:
+					//case ConvertFlags.All:
+						{
+							var root = expression.GetRootObject(Builder.MappingSchema);
+
+							if (root.NodeType == ExpressionType.Parameter)
+							{
+								if (_sourceParameters.Contains(root))
+									return SourceContext.ConvertToSql(expression, level, flags);
+
+								if (_targetParameters.Contains(root))
+									return TargetContext.ConvertToSql(expression, level, flags);
+
+								return TargetContext.ConvertToSql(expression, level, flags);
+							}
+
+							break;
+						}
+				}
+
+				throw new LinqException("'{0}' cannot be converted to SQL.", expression);
 			}
 
 			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)

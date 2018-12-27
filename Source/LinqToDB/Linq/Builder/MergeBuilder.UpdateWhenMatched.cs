@@ -28,13 +28,16 @@ namespace LinqToDB.Linq.Builder
 				var setter    = methodCall.Arguments[2];
 
 				if (!(setter is ConstantExpression constSetter) || constSetter.Value != null)
-					UpdateBuilder.BuildSetter(
+				{
+					var setterExpression = (LambdaExpression)setter.Unwrap();
+					UpdateBuilder.BuildSetterWithContext(
 						builder,
 						buildInfo,
-						(LambdaExpression)setter.Unwrap(),
-						mergeContext,
+						setterExpression,
+						mergeContext.TargetContext,
 						operation.Items,
-						mergeContext);
+						new ExpressionContext(buildInfo.Parent, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, setterExpression));
+				}
 
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{

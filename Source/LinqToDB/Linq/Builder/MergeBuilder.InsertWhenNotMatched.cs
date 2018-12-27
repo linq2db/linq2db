@@ -27,21 +27,28 @@ namespace LinqToDB.Linq.Builder
 				var setter    = methodCall.Arguments[2];
 
 				if (!(setter is ConstantExpression constSetter) || constSetter.Value != null)
+				{
+					var setterExpression = (LambdaExpression)setter.Unwrap();
+					mergeContext.AddSourceParameter(setterExpression.Parameters[0]);
+
 					UpdateBuilder.BuildSetter(
 						builder,
 						buildInfo,
-						(LambdaExpression)setter.Unwrap(),
-						mergeContext,
+						setterExpression,
+						mergeContext.TargetContext,
 						operation.Items,
 						mergeContext);
+				}
 
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{
 					var condition = (LambdaExpression)predicate.Unwrap();
 					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
 
+					//mergeContext.AddSourceParameter(condition.Parameters[0]);
+
 					builder.BuildSearchCondition(
-						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, condition),
+						new ExpressionContext(null, new[] { mergeContext.SourceContext }, condition),
 						conditionExpr,
 						operation.Where.Conditions,
 						false);

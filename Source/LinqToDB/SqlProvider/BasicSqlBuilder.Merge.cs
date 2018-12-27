@@ -64,7 +64,25 @@
 
 		protected virtual void BuildMergeOperationUpdate(SqlMergeOperationClause operation)
 		{
-			throw new NotImplementedException("BuildMergeOperationUpdate");
+			StringBuilder
+				.AppendLine()
+				.Append("WHEN MATCHED");
+
+			if (operation.Where.Conditions.Count != 0)
+			{
+				StringBuilder.Append(" AND ");
+				BuildSearchCondition(Precedence.Unknown, operation.Where);
+			}
+
+			//while (StringBuilder[Command.Length - 1] == ' ')
+			//	StringBuilder.Length--;
+
+			StringBuilder.AppendLine(" THEN");
+			StringBuilder.AppendLine("UPDATE");
+
+			var update = new SqlUpdateClause();
+			update.Items.AddRange(operation.Items);
+			BuildUpdateSet(null, update);
 		}
 
 		protected virtual void BuildMergeOperationDelete(SqlMergeOperationClause operation)
@@ -72,7 +90,7 @@
 			StringBuilder
 				.Append("WHEN MATCHED");
 
-			if (operation.Where != null)
+			if (operation.Where.Conditions.Count != 0)
 			{
 				StringBuilder.Append(" AND ");
 				BuildSearchCondition(Precedence.Unknown, operation.Where);
@@ -83,7 +101,34 @@
 
 		protected virtual void BuildMergeOperationInsert(SqlMergeOperationClause operation)
 		{
-			throw new NotImplementedException("BuildMergeOperationInsert");
+			StringBuilder
+				.AppendLine()
+				.Append("WHEN NOT MATCHED");
+
+			if (operation.Where.Conditions.Count != 0)
+			{
+				StringBuilder.Append(" AND ");
+				BuildSearchCondition(Precedence.Unknown, operation.Where);
+			}
+
+			StringBuilder
+				.AppendLine(" THEN")
+				.Append("INSERT")
+				;
+
+
+			var insertClause = new SqlInsertClause();
+			insertClause.Items.AddRange(operation.Items);
+
+			// TODO: refactor BuildInsertClause?
+			BuildInsertClause(new SqlInsertOrUpdateStatement(null), insertClause, null, false, false);
+			//if (create != null)
+			//	BuildCustomInsert(create);
+			//else
+			//{
+			//	StringBuilder.AppendLine();
+			//	BuildDefaultInsert();
+			//}
 		}
 
 		protected virtual void BuildMergeOperationUpdateWithDelete(SqlMergeOperationClause operation)

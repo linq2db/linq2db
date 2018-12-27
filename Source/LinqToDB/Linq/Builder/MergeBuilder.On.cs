@@ -31,6 +31,9 @@ namespace LinqToDB.Linq.Builder
 					var condition = (LambdaExpression)predicate.Unwrap();
 					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
 
+					mergeContext.AddTargetParameter(condition.Parameters[0]);
+					mergeContext.AddSourceParameter(condition.Parameters[1]);
+
 					builder.BuildSearchCondition(
 						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, condition),
 						conditionExpr,
