@@ -65,9 +65,38 @@ namespace LinqToDB.Linq.Builder
 						JoinBuilder.BuildJoin(builder, statement.On, targetKeyContext, arg1, sourceKeyContext, arg2);
 					}
 				}
+				else
 				{
 					// OnTargetKey<TTarget>(IMergeableOn<TTarget, TTarget> merge)
-					// TODO: ???
+					var targetType = methodCall.Method.GetGenericArguments()[0];
+					var pTarget = Expression.Parameter(targetType, "t");
+					var pSource = Expression.Parameter(targetType, "s");
+					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType);
+
+					Expression ex = null;
+
+					for (var i = 0; i< targetDescriptor.Columns.Count; i++)
+					{
+						var column = targetDescriptor.Columns[i];
+						if (!column.IsPrimaryKey)
+							continue;
+
+						var expr = Expression.Equal(
+							Expression.MakeMemberAccess(pTarget, column.MemberInfo),
+							Expression.MakeMemberAccess(pSource, column.MemberInfo));
+						ex = ex != null ? Expression.AndAlso(ex, expr) : expr;
+					}
+
+					if (ex == null)
+						throw new LinqToDBException("Method OnTargetKey() needs at least one primary key column");
+
+					var condition = Expression.Lambda(ex, pTarget, pSource);
+
+					builder.BuildSearchCondition(
+						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, condition),
+						ex,
+						statement.On.Conditions,
+						false);
 				}
 
 				return mergeContext;

@@ -1,6 +1,7 @@
 ﻿using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -37,6 +38,23 @@ namespace LinqToDB.Linq.Builder
 						mergeContext.TargetContext,
 						operation.Items,
 						new ExpressionContext(buildInfo.Parent, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, setterExpression));
+				}
+				else
+				{
+					// build setters like QueryRunner.Update
+					var targetType = methodCall.Method.GetGenericArguments()[0];
+					var sqlTable = new SqlTable(builder.MappingSchema, targetType);
+
+					var param = Expression.Parameter(targetType, "s");
+
+					var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
+					foreach (var field in sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys))
+					{
+						var expression = Expression.PropertyOrField(param, field.Name);
+						var expr = mergeContext.SourceContext.ConvertToSql(expression, 1, ConvertFlags.Field)[0].Sql;
+
+						operation.Items.Add(new SqlSetExpression(field, expr));
+					}
 				}
 
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)

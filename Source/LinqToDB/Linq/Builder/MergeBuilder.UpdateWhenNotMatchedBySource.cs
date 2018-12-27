@@ -25,18 +25,17 @@ namespace LinqToDB.Linq.Builder
 				statement.Operations.Add(operation);
 
 				Expression predicate = methodCall.Arguments[1];
-				Expression setter    = methodCall.Arguments[2];
+				Expression setter = methodCall.Arguments[2];
+
+				UpdateBuilder.BuildSetter(
+					builder,
+					buildInfo,
+					(LambdaExpression)setter.Unwrap(),
+					mergeContext,
+					operation.Items,
+					mergeContext);
 
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
-					UpdateBuilder.BuildSetter(
-						builder,
-						buildInfo,
-						(LambdaExpression)setter.Unwrap(),
-						mergeContext,
-						operation.Items,
-						mergeContext);
-
-				if (!(setter is ConstantExpression constSetter) || constSetter.Value != null)
 				{
 					var condition = (LambdaExpression)predicate.Unwrap();
 					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LinqToDB.SqlQuery;
+using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -17,10 +18,16 @@ namespace LinqToDB.Linq.Builder
 			{
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-				// TODO
+				var source = new MergeSourceQueryContext(
+					builder,
+					new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()),
+					mergeContext.Merge,
+					// is it ok to reuse context like that?
+					mergeContext.TargetContext,
+					methodCall.Method.GetGenericArguments()[0]);
+				mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, source };
 
-				throw new NotImplementedException();
-				//return mergeContext;
+				return mergeContext;
 			}
 
 			protected override SequenceConvertInfo Convert(

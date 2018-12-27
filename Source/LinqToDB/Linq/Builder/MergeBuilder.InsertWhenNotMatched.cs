@@ -39,6 +39,31 @@ namespace LinqToDB.Linq.Builder
 						operation.Items,
 						mergeContext);
 				}
+				else
+				{
+					// build setters like QueryRunner.Insert
+					var targetType = methodCall.Method.GetGenericArguments()[0];
+					var sqlTable = new SqlTable(builder.MappingSchema, targetType);
+
+					var param = Expression.Parameter(targetType, "s");
+					foreach (var field in sqlTable.Fields.Values)
+					{
+						if (field.IsInsertable)
+						{
+							var expression = Expression.PropertyOrField(param, field.Name);
+							var expr = mergeContext.SourceContext.ConvertToSql(expression, 1, ConvertFlags.Field)[0].Sql;
+
+							operation.Items.Add(new SqlSetExpression(field, expr));
+						}
+						else if (field.IsIdentity)
+						{
+							var expr = builder.DataContext.CreateSqlProvider().GetIdentityExpression(sqlTable);
+
+							if (expr != null)
+								operation.Items.Add(new SqlSetExpression(field, expr));
+						}
+					}
+				}
 
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{

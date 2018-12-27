@@ -126,7 +126,14 @@ namespace LinqToDB.SqlQuery
 
 		public override IEnumerable<IQueryElement> EnumClauses()
 		{
-			throw new NotImplementedException();
+			yield return Target;
+			yield return Source;
+			yield return On;
+
+			foreach (var operation in Operations)
+			{
+				yield return operation;
+			}
 		}
 
 		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)

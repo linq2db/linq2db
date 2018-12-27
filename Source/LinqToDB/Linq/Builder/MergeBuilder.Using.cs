@@ -1,5 +1,6 @@
 ﻿using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
+using System;
 using System.Collections;
 using System.Linq.Expressions;
 
@@ -29,15 +30,14 @@ namespace LinqToDB.Linq.Builder
 						mergeContext.Merge,
 						sourceContext,
 						methodCall.Method.GetGenericArguments()[1]);
-					//source.SetAlias("Source");
-					//mergeContext.Merge.SetSourceQuery(source.SelectQuery);
 					mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, source };
 				}
 				else
 				{
-					var source = (IEnumerable)methodCall.Arguments[1].EvaluateExpression();
-					mergeContext.Merge.Source.SourceEnumerable = source;
-					mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, new EnumerableContext(source) };
+					throw new NotImplementedException("TODO: Enumerable Source");
+					//var source = (IEnumerable)methodCall.Arguments[1].EvaluateExpression();
+					//mergeContext.Merge.Source.SourceEnumerable = source;
+					//mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, new EnumerableContext(source) };
 				}
 
 				return mergeContext;
