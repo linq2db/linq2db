@@ -47,7 +47,8 @@ namespace LinqToDB.Linq.Builder
 
 					var param = Expression.Parameter(targetType, "s");
 
-					foreach (var field in sqlTable.Fields.Values.Where(f => f.IsUpdatable))
+					var keys = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
+					foreach (var field in sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys))
 					{
 						var expression = Expression.PropertyOrField(param, field.Name);
 						var expr = mergeContext.SourceContext.ConvertToSql(expression, 1, ConvertFlags.Field)[0].Sql;

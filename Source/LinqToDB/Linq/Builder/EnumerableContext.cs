@@ -106,7 +106,7 @@ namespace LinqToDB.Linq.Builder
 												throw new InvalidOperationException();
 											}
 
-											Table.Rows[i].Add(new SqlValue(value));
+											Table.Rows[i].Add(Builder.MappingSchema.GetSqlValue(column.MemberType, value));
 										}
 									}
 									return new[]
