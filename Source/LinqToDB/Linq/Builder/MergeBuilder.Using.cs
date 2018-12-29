@@ -1,7 +1,10 @@
 ﻿using LinqToDB.Expressions;
+using LinqToDB.Extensions;
 using LinqToDB.SqlQuery;
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -34,13 +37,138 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					throw new NotImplementedException("TODO: Enumerable Source");
-					//var source = (IEnumerable)methodCall.Arguments[1].EvaluateExpression();
-					//mergeContext.Merge.Source.SourceEnumerable = source;
-					//mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, new EnumerableContext(source) };
+					var enumerableBuildInfo = new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery());
+
+					var sourceContext = Find(builder, enumerableBuildInfo, (index, type) =>
+					{
+						var query = enumerableBuildInfo.SelectQuery;
+						var innerQuery = new SelectQuery { ParentSelect = query };
+
+						//var valuesTable = new SqlValuesTable();
+						//query.Select.From.Table(valuesTable);
+
+						IList<SqlValue> elements;
+
+						switch (index)
+						{
+							//case 1:
+							//case 2:
+							case 4:
+								elements = BuildElements(type, (IEnumerable)((ConstantExpression)enumerableBuildInfo.Expression).Value);
+								break;
+							//case 3:
+							//	//						enumerableBuildInfo.JoinType = JoinType.CrossApply;
+							//	elements = BuildElements(builder, enumerableBuildInfo, ((NewArrayExpression)enumerableBuildInfo.Expression).Expressions);
+							//	break;
+							default:
+								throw new InvalidOperationException();
+						}
+
+						return new EnumerableContext(builder, enumerableBuildInfo, query, type, elements);
+					});
+
+					var source = new MergeSourceQueryContext(
+						builder,
+						enumerableBuildInfo,
+						mergeContext.Merge,
+						sourceContext,
+						methodCall.Method.GetGenericArguments()[1],
+						true);
+					mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, source };
 				}
 
 				return mergeContext;
+			}
+
+			static T Find<T>(ExpressionBuilder builder, BuildInfo buildInfo, Func<int, Type, T> action)
+			{
+				var expression = buildInfo.Expression;
+
+				switch (expression.NodeType)
+				{
+					case ExpressionType.Constant:
+						{
+							var c = (ConstantExpression)expression;
+
+							var type = c.Value.GetType();
+
+							if (typeof(EnumerableQuery<>).IsSameOrParentOf(type))
+							{
+								// Avoiding collision with TableBuilder
+								var elementType = type.GetGenericArguments(typeof(EnumerableQuery<>))[0];
+								if (!builder.MappingSchema.IsScalarType(elementType))
+									break;
+
+								return action(1, elementType);
+							}
+
+							if (typeof(IEnumerable<>).IsSameOrParentOf(type))
+							{
+								var elementType = type.GetGenericArguments(typeof(IEnumerable<>))[0];
+
+								return action(4, elementType);
+							}
+
+							if (typeof(Array).IsSameOrParentOf(type))
+								return action(2, type.GetElementType());
+
+							break;
+						}
+
+					case ExpressionType.NewArrayInit:
+						{
+							var newArray = (NewArrayExpression)expression;
+							if (newArray.Expressions.Count > 0)
+								return action(3, newArray.Expressions[0].Type);
+							break;
+						}
+
+					case ExpressionType.Parameter:
+						{
+							break;
+						}
+
+					//case ExpressionType.Call:
+					//	{
+					//		var call = (MethodCallExpression)expression;
+
+					//		if (call.Type.IsGenericTypeEx())
+					//		{
+					//			if (call.Type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+					//			{
+					//				var type = call.Type.GetGenericArgumentsEx()[0];
+					//				return action(4, type);
+					//			}
+					//		}
+
+					//		break;
+					//	}
+				}
+
+				throw new InvalidOperationException();
+				//return action(0, null);
+			}
+
+			//static IEnumerable<SqlValue[]> BuildElements(ExpressionBuilder builder, BuildInfo buildInfo, IEnumerable<Expression> elements)
+			//{
+			//	return elements.Select(e =>
+			//	{
+			//		var res = builder.ConvertToSql(buildInfo.Parent, e);
+			//		if (res != null)
+			//		throw new InvalidOperationException();
+			//		return new SqlValue[0];
+			//		//new[] { builder.ConvertToSql(buildInfo.Parent, e) }
+			//	});
+			//}
+
+			//static IEnumerable<SqlValue[]> BuildElements(Type type, IEnumerable elements)
+			//{
+			//	return elements.OfType<object>().Select(o => new[] { new SqlValue(type, o) });
+			//}
+
+			static IList<SqlValue> BuildElements(Type type, IEnumerable elements)
+			{
+				return elements.OfType<object>().Select(o => new SqlValue(type, o)).ToList();
 			}
 
 			protected override SequenceConvertInfo Convert(

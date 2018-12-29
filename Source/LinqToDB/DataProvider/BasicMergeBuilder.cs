@@ -224,36 +224,36 @@ namespace LinqToDB.DataProvider
 
 		private void BuildAsSourceClause(IEnumerable<string> columnNames)
 		{
-			Command
-				.AppendLine()
-				.AppendFormat(") {0}", SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias));
+			//Command
+			//	.AppendLine()
+			//	.AppendFormat(") {0}", SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias));
 
-			if (columnNames != null && SupportsColumnAliasesInTableAlias)
-			{
-				var nameList = columnNames.ToList();
+			//if (columnNames != null && SupportsColumnAliasesInTableAlias)
+			//{
+			//	var nameList = columnNames.ToList();
 
-				if (!nameList.Any())
-					throw new LinqToDBException("Merge source doesn't have any columns.");
+			//	if (!nameList.Any())
+			//		throw new LinqToDBException("Merge source doesn't have any columns.");
 
-				Command.Append(" (");
+			//	Command.Append(" (");
 
-				var first = true;
-				foreach (var columnName in nameList)
-				{
-					if (!first)
-						Command.Append(", ");
-					else
-						first = false;
+			//	var first = true;
+			//	foreach (var columnName in nameList)
+			//	{
+			//		if (!first)
+			//			Command.Append(", ");
+			//		else
+			//			first = false;
 
-					Command
-						.AppendFormat("{0}", CreateSourceColumnAlias(columnName, true));
-				}
+			//		Command
+			//			.AppendFormat("{0}", CreateSourceColumnAlias(columnName, true));
+			//	}
 
-				Command
-					.AppendLine(")");
-			}
-			else
-				Command.AppendLine();
+			//	Command
+			//		.AppendLine(")");
+			//}
+			//else
+			//	Command.AppendLine();
 		}
 
 		private void BuildEmptySource()
@@ -308,7 +308,9 @@ namespace LinqToDB.DataProvider
 			{
 				var source = Merge.EnumerableSource ?? Merge.QueryableSource;
 				if (SupportsSourceDirectValues)
-					BuildSourceDirectValues(source);
+				{
+					//BuildSourceDirectValues(source);
+				}
 				else
 					BuildSourceSubQueryValues(source);
 			}
@@ -330,31 +332,31 @@ namespace LinqToDB.DataProvider
 			return alias;
 		}
 
-		private void BuildSourceDirectValues(IEnumerable<TSource> source)
-		{
-			var hasData        = false;
-			var columnTypes    = GetSourceColumnTypes();
-			var valueConverter = DataContext.MappingSchema.ValueToSqlConverter;
+		//private void BuildSourceDirectValues(IEnumerable<TSource> source)
+		//{
+		//	var hasData        = false;
+		//	var columnTypes    = GetSourceColumnTypes();
+		//	var valueConverter = DataContext.MappingSchema.ValueToSqlConverter;
 
-			TSource next = null;
-			foreach (var item in source)
-			{
-				if (next != null)
-					BuildValues(ref hasData, columnTypes, valueConverter, next, false);
+		//	TSource next = null;
+		//	foreach (var item in source)
+		//	{
+		//		if (next != null)
+		//			BuildValues(ref hasData, columnTypes, valueConverter, next, false);
 
-				next = item;
-			}
+		//		next = item;
+		//	}
 
-			if (next != null)
-				BuildValues(ref hasData, columnTypes, valueConverter, next, true);
+		//	if (next != null)
+		//		BuildValues(ref hasData, columnTypes, valueConverter, next, true);
 
-			if (hasData)
-				BuildAsSourceClause(_sourceDescriptor.Columns.Select(_ => _.ColumnName));
-			else if (EmptySourceSupported)
-				BuildEmptySource();
-			else
-				NoopCommand = true;
-		}
+		//	if (hasData)
+		//		BuildAsSourceClause(_sourceDescriptor.Columns.Select(_ => _.ColumnName));
+		//	else if (EmptySourceSupported)
+		//		BuildEmptySource();
+		//	else
+		//		NoopCommand = true;
+		//}
 
 		private void BuildValues(ref bool hasData, SqlDataType[] columnTypes, ValueToSqlConverter valueConverter, TSource item, bool lastRecord)
 		{

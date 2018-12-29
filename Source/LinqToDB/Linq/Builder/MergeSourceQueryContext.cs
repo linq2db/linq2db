@@ -25,6 +25,32 @@ namespace LinqToDB.Linq.Builder
 			{
 				SourceQuery = sourceContext.SelectQuery
 			};
+
+			if (SubQuery is SelectContext select)
+			{
+				select.AllowAddDefault = false;
+			}
+		}
+
+		public MergeSourceQueryContext(
+			ExpressionBuilder builder,
+			BuildInfo buildInfo,
+			SqlMergeStatement merge,
+			EnumerableContext sourceContext,
+			Type sourceType,
+			bool _)
+			: base(sourceContext, new SelectQuery { ParentSelect = sourceContext.SelectQuery }, true)
+		{
+			_merge = merge;
+			_merge.Source = new SqlMergeSourceTable(builder.MappingSchema, _merge, sourceType)
+			{
+				SourceEnumerable = sourceContext.Table
+			};
+
+			if (SubQuery is SelectContext select)
+			{
+				select.AllowAddDefault = false;
+			}
 		}
 
 		public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)

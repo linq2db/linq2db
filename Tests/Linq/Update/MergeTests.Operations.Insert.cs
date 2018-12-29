@@ -588,7 +588,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(896, Details = "Regression from 1.x: Member 'TestMapping1.Fake' is not a table column.")]
+		// fixed?
+		//[ActiveIssue(896, Details = "Regression from 1.x: Member 'TestMapping1.Fake' is not a table column.")]
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery3([MergeDataContextSource] string context)
 		{
@@ -620,8 +621,6 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
-
-				Assert.Fail("Almost done, uncomment and fix asserts below");
 
 				AssertRowCount(0, rows, context);
 			}
@@ -710,7 +709,8 @@ namespace Tests.xUpdate
 						.Merge());
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
+				//Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
 			}
 		}
 
@@ -737,7 +737,8 @@ namespace Tests.xUpdate
 						.Merge());
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("Column Field3 doesn't exist in source", exception.Message);
+				Assert.AreEqual("'s.Field3' cannot be converted to SQL.", exception.Message);
+				//Assert.AreEqual("Column Field3 doesn't exist in source", exception.Message);
 			}
 		}
 		#endregion
@@ -1086,7 +1087,8 @@ namespace Tests.xUpdate
 					.Merge());
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+				Assert.AreEqual("'_.Field2' cannot be converted to SQL.", exception.Message);
+				//Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
 			}
 		}
 		#endregion

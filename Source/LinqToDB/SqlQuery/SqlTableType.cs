@@ -9,6 +9,7 @@ namespace LinqToDB.SqlQuery
 		Expression,
 		Cte,
 		RawSql,
-		MergeSource
+		MergeSource,
+		Values
 	}
 }

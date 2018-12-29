@@ -27,8 +27,10 @@ namespace LinqToDB.SqlQuery
 		private IDictionary<string, Tuple<SqlField, int>>         SourceFieldsByName { get; } = new Dictionary<string, Tuple<SqlField, int>>();
 		private IDictionary<ISqlExpression, Tuple<SqlField, int>> SourceFieldsByExpression { get; } = new Dictionary<ISqlExpression, Tuple<SqlField, int>>();
 
-		public IEnumerable SourceEnumerable { get; internal set; }
+		public SqlValuesTable SourceEnumerable { get; internal set; }
 		public SelectQuery SourceQuery { get; internal set; }
+
+		public ISqlTableSource Source => (ISqlTableSource)SourceQuery ?? SourceEnumerable;
 
 		public List<SqlField> SourceFields { get; } = new List<SqlField>();
 

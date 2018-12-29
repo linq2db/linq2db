@@ -128,7 +128,8 @@ namespace Tests.xUpdate
 					.Merge());
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
+				//Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
 			}
 		}
 
@@ -217,7 +218,8 @@ namespace Tests.xUpdate
 					.Merge());
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
+				//Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
 			}
 		}
 
@@ -435,7 +437,8 @@ namespace Tests.xUpdate
 						.Merge());
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("Column Id doesn't exist in source", exception.Message);
+				Assert.AreEqual("'s.Id' cannot be converted to SQL.", exception.Message);
+				//Assert.AreEqual("Column Id doesn't exist in source", exception.Message);
 			}
 		}
 	}

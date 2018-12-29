@@ -1,6 +1,7 @@
 ﻿namespace LinqToDB.SqlProvider
 {
 	using System;
+	using System.Collections.Generic;
 	using SqlQuery;
 
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
@@ -15,6 +16,11 @@
 		/// E.g. as table_alias (column_alias1, column_alias2).
 		/// </summary>
 		protected virtual bool MergeSupportsColumnAliasesInSource => true;
+
+		/// <summary>
+		/// If true, provider supports list of VALUES as a source element of merge command.
+		/// </summary>
+		protected virtual bool MergeSupportsSourceDirectValues => true;
 
 		protected virtual void BuildMergeStatement(SqlMergeStatement mergeStatement)
 		{
@@ -208,7 +214,7 @@
 
 				//SaveParameters(statement.Parameters);
 
-				BuildPhysicalTable(mergeSource.SourceQuery, null);
+				BuildPhysicalTable(mergeSource.Source, null);
 
 				//var cs = new[] { ' ', '\t', '\r', '\n' };
 
@@ -257,7 +263,71 @@
 
 		private void BuildMergeSourceEnumerable(SqlMergeSourceTable mergeSource)
 		{
+			if (MergeSupportsSourceDirectValues)
+			{
+				StringBuilder.Append("(");
+				BuildValues(mergeSource.SourceFields, mergeSource.SourceEnumerable, true);
+				StringBuilder.Append(")");
+				//if (hasData)
+				BuildMergeAsSourceClause(mergeSource);
+				//else if (EmptySourceSupported)
+				//	BuildEmptySource();
+				//else
+				//	NoopCommand = true;
+				return;
+			}
+
 			throw new NotImplementedException("BuildMergeSourceEnumerable");
+		}
+
+		private void BuildValues(IList<SqlField> fields, SqlValuesTable sourceEnumerable, bool typed)
+		{
+			//var hasData = false;
+			//var columnTypes = GetSourceColumnTypes();
+			//var valueConverter = DataContext.MappingSchema.ValueToSqlConverter;
+
+			for (var i = 0; i < sourceEnumerable.Rows.Count; i++)
+			{
+				var last = sourceEnumerable.Rows.Count == i - 1;
+
+				BuildValuesRow(fields, sourceEnumerable.Rows[i]//, typed && last
+					, i == 0);
+			}
+		}
+
+		private void BuildValuesRow(IList<SqlField> fields, IList<SqlValue> sqlValues, bool first)
+		{
+			if (!first)
+				StringBuilder.AppendLine(",");
+			else
+				StringBuilder
+					.AppendLine("\tVALUES");
+
+			StringBuilder.Append("\t\t(");
+			for (var i = 0; i < sqlValues.Count; i++)
+			{
+				var field = fields[i];
+				var value = sqlValues[i];
+				if (i > 0)
+					StringBuilder.Append(",");
+
+				BuildValue(
+					new SqlDataType(
+						field.DataType,
+						field.SystemType,
+						field.Length,
+						field.Precision,
+						field.Scale),
+					value.Value);
+				//if (!ValueToSqlConverter.TryConvert(StringBuilder, columnType, sqlValues[i].Value))
+				//{
+				//	AddSourceValueAsParameter(column.DataType, column.DbType, value);
+				//}
+
+				//AddSourceValue(valueConverter, column, columnTypes[i], value, !hasData, lastRecord);
+			}
+
+			StringBuilder.Append(")");
 		}
 
 		private void BuildMergeSource(SqlMergeSourceTable mergeSource)

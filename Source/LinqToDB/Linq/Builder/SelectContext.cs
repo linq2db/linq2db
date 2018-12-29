@@ -36,6 +36,8 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext     Parent      { [DebuggerStepThrough] get; set; }
 		public bool              IsScalar    { [DebuggerStepThrough] get; }
 
+		public bool              AllowAddDefault { [DebuggerStepThrough] get; set; } = true;
+
 		Expression IBuildContext.Expression => Lambda;
 
 		public readonly Dictionary<MemberInfo,Expression> Members = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
@@ -1160,7 +1162,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					if (add)
+					if (add && AllowAddDefault)
 					{
 						memberExpression = Expression.Constant(type.GetDefaultValue(), type);
 						Members.Add(member, memberExpression);
