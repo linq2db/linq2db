@@ -1,6 +1,7 @@
 ﻿using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -49,20 +50,45 @@ namespace LinqToDB.Linq.Builder
 					var sourceKeySelector = sourceKeyLambda.Body.Unwrap();
 
 					var targetKeyContext = new ExpressionContext(buildInfo.Parent, mergeContext.TargetContext, targetKeyLambda);
-					var sourceKeyContext = new JoinBuilder.InnerKeyContext(buildInfo.Parent, mergeContext.SourceContext, sourceKeyLambda);
+					var sourceKeyContext = new ExpressionContext(buildInfo.Parent, mergeContext.SourceContext, sourceKeyLambda);
 
-					var mi1 = (MemberInitExpression)targetKeySelector;
-					var mi2 = (MemberInitExpression)sourceKeySelector;
-
-					for (var i = 0; i < mi1.Bindings.Count; i++)
+					if (targetKeySelector.NodeType == ExpressionType.New)
 					{
-						if (mi1.Bindings[i].Member != mi2.Bindings[i].Member)
+						var new1 = (NewExpression)targetKeySelector;
+						var new2 = (NewExpression)sourceKeySelector;
+
+						for (var i = 0; i < new1.Arguments.Count; i++)
+						{
+							var arg1 = new1.Arguments[i];
+							var arg2 = new2.Arguments[i];
+
+							JoinBuilder.BuildJoin(builder, statement.On, targetKeyContext, arg1, sourceKeyContext, arg2);
+						}
+					}
+					else if (targetKeySelector.NodeType == ExpressionType.MemberInit)
+					{
+						// TODO: migrate unordered members support to original code
+						var mi1 = (MemberInitExpression)targetKeySelector;
+						var mi2 = (MemberInitExpression)sourceKeySelector;
+
+						if (mi1.Bindings.Count != mi2.Bindings.Count)
 							throw new LinqException($"List of member inits does not match for entity type '{targetKeySelector.Type}'.");
 
-						var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
-						var arg2 = ((MemberAssignment)mi2.Bindings[i]).Expression;
+						for (var i = 0; i < mi1.Bindings.Count; i++)
+						{
+							var binding2 = (MemberAssignment)mi2.Bindings.Where(b => b.Member == mi1.Bindings[i].Member).FirstOrDefault();
+							if (binding2 == null)
+								throw new LinqException($"List of member inits does not match for entity type '{targetKeySelector.Type}'.");
 
-						JoinBuilder.BuildJoin(builder, statement.On, targetKeyContext, arg1, sourceKeyContext, arg2);
+							var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
+							var arg2 = binding2.Expression;
+
+							JoinBuilder.BuildJoin(builder, statement.On, targetKeyContext, arg1, sourceKeyContext, arg2);
+						}
+					}
+					else
+					{
+						JoinBuilder.BuildJoin(builder, statement.On, targetKeyContext, targetKeySelector, sourceKeyContext, sourceKeySelector);
 					}
 				}
 				else
