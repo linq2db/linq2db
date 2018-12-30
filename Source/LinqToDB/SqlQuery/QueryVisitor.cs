@@ -308,6 +308,15 @@ namespace LinqToDB.SqlQuery
 						Visit1X((SelectQuery)element);
 						break;
 					}
+
+				case QueryElementType.SqlField:
+				case QueryElementType.SqlParameter:
+				case QueryElementType.SqlValue:
+				case QueryElementType.SqlDataType:
+					break;
+
+				default:
+					throw new InvalidOperationException($"Visit1 visitor not implemented for element {element.ElementType}");
 			}
 		}
 
@@ -753,6 +762,15 @@ namespace LinqToDB.SqlQuery
 
 						break;
 					}
+
+				case QueryElementType.SqlField:
+				case QueryElementType.SqlParameter:
+				case QueryElementType.SqlValue:
+				case QueryElementType.SqlDataType:
+					break;
+
+				default:
+					throw new InvalidOperationException($"Visit2 visitor not implemented for element {element.ElementType}");
 			}
 
 			_action2(element);
@@ -1127,6 +1145,17 @@ namespace LinqToDB.SqlQuery
 							Find(((SelectQuery)element).OrderBy, find) ??
 							(((SelectQuery)element).HasUnion ? Find(((SelectQuery)element).Unions, find) : null);
 					}
+
+				case QueryElementType.SqlField:
+				case QueryElementType.SqlParameter:
+				case QueryElementType.SqlValue:
+				case QueryElementType.SqlDataType:
+
+				case QueryElementType.CteClause: // ???
+					break;
+
+				default:
+					throw new InvalidOperationException($"Find visitor not implemented for element {element.ElementType}");
 			}
 
 			return null;
@@ -1842,6 +1871,14 @@ namespace LinqToDB.SqlQuery
 
 						return nq;
 					}
+
+				case QueryElementType.SqlParameter:
+				case QueryElementType.SqlField:
+				case QueryElementType.SqlValue:
+					break;
+
+				default:
+					throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
 			}
 
 			newElement = newElement == null ? action(element) : (action(newElement) ?? newElement);

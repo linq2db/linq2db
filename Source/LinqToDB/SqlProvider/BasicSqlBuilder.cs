@@ -1311,8 +1311,8 @@ namespace LinqToDB.SqlProvider
 					
 					break;
 
-				default                          :
-					throw new InvalidOperationException();
+				default:
+					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
 		}
 
@@ -1795,7 +1795,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				default:
-					throw new InvalidOperationException();
+					throw new InvalidOperationException($"Unexpected predicate type {predicate.ElementType}");
 			}
 		}
 
@@ -2305,7 +2305,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				default:
-					throw new InvalidOperationException();
+					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
 			}
 
 			return StringBuilder;
@@ -2939,7 +2939,7 @@ namespace LinqToDB.SqlProvider
 					return ((SqlTable)table).Alias;
 
 				default:
-					throw new InvalidOperationException();
+					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
 		}
 
@@ -3037,7 +3037,7 @@ namespace LinqToDB.SqlProvider
 					return GetTablePhysicalName((SqlTable)table);
 
 				default:
-					throw new InvalidOperationException();
+					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
 		}
 

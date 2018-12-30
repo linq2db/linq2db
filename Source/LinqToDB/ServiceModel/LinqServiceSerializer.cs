@@ -1234,6 +1234,9 @@ namespace LinqToDB.ServiceModel
 
 							break;
 						}
+
+					default:
+						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
 				}
 
 				Builder.AppendLine();
@@ -1946,6 +1949,9 @@ namespace LinqToDB.ServiceModel
 
 							break;
 						}
+
+					default:
+						throw new InvalidOperationException($"Parse not implemented for element {type}");
 				}
 
 				ObjectIndices.Add(idx, obj);

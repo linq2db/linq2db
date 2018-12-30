@@ -253,7 +253,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
- 		static SqlField GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
+		static SqlField GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
 		{
 			switch (expression)
 			{
