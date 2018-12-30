@@ -24,7 +24,7 @@ namespace LinqToDB.SqlQuery
 
 		Type ISqlExpression.SystemType => throw new NotImplementedException();
 
-		QueryElementType IQueryElement.ElementType => throw new NotImplementedException();
+		QueryElementType IQueryElement.ElementType => QueryElementType.SqlValuesTable;
 
 		public List<List<SqlValue>> Rows { get; } = new List<List<SqlValue>>();
 

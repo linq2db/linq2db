@@ -45,6 +45,7 @@ namespace LinqToDB.SqlQuery
 		CteClause,
 		SqlCteTable,
 		SqlRawSqlTable,
+		SqlValuesTable,
 
 		SelectStatement,
 		InsertStatement,

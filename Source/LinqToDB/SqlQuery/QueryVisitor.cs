@@ -309,6 +309,23 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.MergeStatement:
+					Visit1X((SqlMergeStatement)element);
+					break;
+
+				case QueryElementType.MergeSourceTable:
+					Visit1X((SqlMergeSourceTable)element);
+					break;
+
+					// TODO: no tests hit this case for some reason
+				//case QueryElementType.SqlValuesTable:
+				//	Visit1X((SqlValuesTable)element);
+				//	break;
+
+				case QueryElementType.MergeOperationClause:
+					Visit1X((SqlMergeOperationClause)element);
+					break;
+
 				case QueryElementType.SqlField:
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:
@@ -455,6 +472,40 @@ namespace LinqToDB.SqlQuery
 		void Visit1X(SqlFunction element)
 		{
 			foreach (var p in element.Parameters) Visit1(p);
+		}
+
+		void Visit1X(SqlMergeStatement element)
+		{
+			Visit1(element.Target);
+			Visit1(element.Source);
+			Visit1(element.On);
+
+			foreach (var operation in element.Operations)
+				Visit1(operation);
+		}
+
+		void Visit1X(SqlMergeSourceTable element)
+		{
+			Visit1(element.Source);
+
+			foreach (var field in element.Fields.Values)
+				Visit1(field);
+		}
+
+		//void Visit1X(SqlValuesTable element)
+		//{
+		//	foreach (var row in element.Rows)
+		//		foreach (var value in row)
+		//			Visit1(value);
+		//}
+
+		void Visit1X(SqlMergeOperationClause element)
+		{
+			Visit1(element.Where);
+			Visit1(element.WhereDelete);
+
+			foreach (var item in element.Items)
+				Visit1(item);
 		}
 
 		public void Visit(IQueryElement element, Action<IQueryElement> action)
@@ -763,6 +814,22 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.MergeStatement:
+					Visit2X((SqlMergeStatement)element);
+					break;
+
+				case QueryElementType.MergeSourceTable:
+					Visit2X((SqlMergeSourceTable)element);
+					break;
+
+				case QueryElementType.SqlValuesTable:
+					Visit2X((SqlValuesTable)element);
+					break;
+
+				case QueryElementType.MergeOperationClause:
+					Visit2X((SqlMergeOperationClause)element);
+					break;
+
 				case QueryElementType.SqlField:
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:
@@ -941,6 +1008,40 @@ namespace LinqToDB.SqlQuery
 		void Visit2X(SqlFunction element)
 		{
 			foreach (var p in element.Parameters) Visit2(p);
+		}
+
+		void Visit2X(SqlMergeStatement element)
+		{
+			Visit2(element.Target);
+			Visit2(element.Source);
+			Visit2(element.On);
+
+			foreach (var operation in element.Operations)
+				Visit2(operation);
+		}
+
+		void Visit2X(SqlMergeSourceTable element)
+		{
+			Visit2(element.Source);
+
+			foreach (var field in element.Fields.Values)
+				Visit2(field);
+		}
+
+		void Visit2X(SqlValuesTable element)
+		{
+			foreach (var row in element.Rows)
+				foreach (var value in row)
+					Visit2(value);
+		}
+
+		void Visit2X(SqlMergeOperationClause element)
+		{
+			Visit2(element.Where);
+			Visit2(element.WhereDelete);
+
+			foreach (var item in element.Items)
+				Visit2(item);
 		}
 
 		#endregion
@@ -1150,9 +1251,10 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlDataType:
-
-				case QueryElementType.CteClause: // ???
 					break;
+
+				case QueryElementType.CteClause:
+					throw new NotImplementedException("TODO: implement");
 
 				default:
 					throw new InvalidOperationException($"Find visitor not implemented for element {element.ElementType}");

@@ -31,13 +31,13 @@ namespace LinqToDB.Linq.Builder
 					var setterExpression = (LambdaExpression)setter.Unwrap();
 					mergeContext.AddSourceParameter(setterExpression.Parameters[0]);
 
-					UpdateBuilder.BuildSetter(
+					UpdateBuilder.BuildSetterWithContext(
 						builder,
 						buildInfo,
 						setterExpression,
 						mergeContext.TargetContext,
 						operation.Items,
-						mergeContext);
+						new ExpressionContext(buildInfo.Parent, new[] { mergeContext.SourceContext }, setterExpression));
 				}
 				else
 				{

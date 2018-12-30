@@ -24,7 +24,7 @@ namespace LinqToDB.SqlQuery
 
 		//public string SourceName { get; set; } = "Source";
 
-		private IDictionary<string, Tuple<SqlField, int>>         SourceFieldsByName { get; } = new Dictionary<string, Tuple<SqlField, int>>();
+		private IDictionary<SqlField, Tuple<SqlField, int>>         SourceFieldsByBase { get; } = new Dictionary<SqlField, Tuple<SqlField, int>>();
 		private IDictionary<ISqlExpression, Tuple<SqlField, int>> SourceFieldsByExpression { get; } = new Dictionary<ISqlExpression, Tuple<SqlField, int>>();
 
 		public SqlValuesTable SourceEnumerable { get; internal set; }
@@ -74,7 +74,7 @@ namespace LinqToDB.SqlQuery
 		internal SqlField RegisterSourceField(ISqlExpression baseExpression, ISqlExpression expression, int index, Func<SqlField> fieldFactory)
 		{
 			var baseField = baseExpression as SqlField;
-			if (baseField != null && SourceFieldsByName.TryGetValue(baseField.Name, out var value))
+			if (baseField != null && SourceFieldsByBase.TryGetValue(baseField, out var value))
 				return value.Item1;
 
 			if (baseField == null && expression != null && SourceFieldsByExpression.TryGetValue(expression, out value))
@@ -93,7 +93,7 @@ namespace LinqToDB.SqlQuery
 			if (expression != null && !SourceFieldsByExpression.ContainsKey(expression))
 				SourceFieldsByExpression.Add(expression, Tuple.Create(newField, index));
 			if (baseField != null)
-				SourceFieldsByName.Add(baseField.Name, Tuple.Create(newField, index));
+				SourceFieldsByBase.Add(baseField, Tuple.Create(newField, index));
 			return newField;
 
 		}
