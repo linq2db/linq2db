@@ -9,6 +9,10 @@
 		// Oracle doesn't support TABLE_ALIAS(COLUMN_ALIAS, ...) syntax
 		protected override bool MergeSupportsColumnAliasesInSource => false;
 
+		// It doesn't make sense to fix empty source generation as it will take too much effort for nothing
+		protected override bool MergeEmptySourceSupported => false;
+
+
 		protected override void BuildMergeInto(SqlMergeStatement merge)
 		{
 			StringBuilder.Append("MERGE ");

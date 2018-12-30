@@ -40,8 +40,6 @@ namespace LinqToDB.DataProvider.Oracle
 		// oracle doesn't support INSERT FROM
 		protected override bool ProviderUsesAlternativeUpdate => true;
 
-		// It doesn't make sense to fix empty source generation as it will take too much effort for nothing
-		protected override bool EmptySourceSupported => false;
 
 		protected override void BuildUpdateWithDelete(
 			Expression<Func<TTarget, TSource, bool>> updatePredicate,

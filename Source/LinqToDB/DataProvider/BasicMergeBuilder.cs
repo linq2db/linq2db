@@ -256,45 +256,45 @@ namespace LinqToDB.DataProvider
 			//	Command.AppendLine();
 		}
 
-		private void BuildEmptySource()
-		{
-			Command
-				.AppendLine("(")
-				.Append("\tSELECT ")
-				;
+		//private void BuildEmptySource()
+		//{
+		//	Command
+		//		.AppendLine("(")
+		//		.Append("\tSELECT ")
+		//		;
 
-			var columnTypes = GetSourceColumnTypes();
+		//	var columnTypes = GetSourceColumnTypes();
 
-			for (var i = 0; i < _sourceDescriptor.Columns.Count; i++)
-			{
-				if (i > 0)
-					Command.Append(", ");
+		//	for (var i = 0; i < _sourceDescriptor.Columns.Count; i++)
+		//	{
+		//		if (i > 0)
+		//			Command.Append(", ");
 
-				AddSourceValue(
-					DataContext.MappingSchema.ValueToSqlConverter,
-					_sourceDescriptor.Columns[i],
-					columnTypes[i],
-					null, true, true);
+		//		AddSourceValue(
+		//			DataContext.MappingSchema.ValueToSqlConverter,
+		//			_sourceDescriptor.Columns[i],
+		//			columnTypes[i],
+		//			null, true, true);
 
-				Command
-					.Append(" ")
-					.Append(CreateSourceColumnAlias(_sourceDescriptor.Columns[i].ColumnName, true));
-			}
+		//		Command
+		//			.Append(" ")
+		//			.Append(CreateSourceColumnAlias(_sourceDescriptor.Columns[i].ColumnName, true));
+		//	}
 
-			Command
-				.AppendLine()
-				.Append("\tFROM ");
+		//	Command
+		//		.AppendLine()
+		//		.Append("\tFROM ");
 
-			if (FakeSourceTable != null)
-				AddFakeSourceTableName();
-			else // we don't select anything, so it is ok to use target table
-				Command.AppendLine(TargetTableName);
+		//	if (FakeSourceTable != null)
+		//		AddFakeSourceTableName();
+		//	else // we don't select anything, so it is ok to use target table
+		//		Command.AppendLine(TargetTableName);
 
-			Command
-				.AppendLine("\tWHERE 1 = 0")
-				.Append(") ")
-				.AppendLine((string)SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias));
-		}
+		//	Command
+		//		.AppendLine("\tWHERE 1 = 0")
+		//		.Append(") ")
+		//		.AppendLine((string)SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias));
+		//}
 
 		private void BuildSource()
 		{
@@ -467,8 +467,8 @@ namespace LinqToDB.DataProvider
 
 			if (hasData)
 				BuildAsSourceClause(_sourceDescriptor.Columns.Select(_ => _.ColumnName));
-			else if (EmptySourceSupported)
-				BuildEmptySource();
+			//else if (EmptySourceSupported)
+			//	BuildEmptySource();
 			else
 				NoopCommand = true;
 		}
@@ -1123,11 +1123,11 @@ namespace LinqToDB.DataProvider
 		/// </summary>
 		protected virtual bool IsIdentityInsertSupported => false;
 
-		/// <summary>
-		/// If true, builder will generate command for empty enumerable source;
-		/// otherwise command generation will be interrupted and 0 result returned without request to database.
-		/// </summary>
-		protected virtual bool EmptySourceSupported => true;
+		///// <summary>
+		///// If true, builder will generate command for empty enumerable source;
+		///// otherwise command generation will be interrupted and 0 result returned without request to database.
+		///// </summary>
+		//protected virtual bool EmptySourceSupported => true;
 
 		protected BasicSqlBuilder SqlBuilder { get; private set;  }
 

@@ -22,6 +22,30 @@
 		/// </summary>
 		protected virtual bool MergeSupportsSourceDirectValues => true;
 
+		/// <summary>
+		/// If true, builder will generate command for empty enumerable source;
+		/// Otherwise exception will be generated.
+		/// </summary>
+		protected virtual bool MergeEmptySourceSupported => true;
+
+		/// <summary>
+		/// If <see cref="SupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
+		/// FROM clause, this property should contain name of table with single record.
+		/// </summary>
+		protected virtual string FakeTable => null;
+
+		/// <summary>
+		/// If <see cref="SupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
+		/// FROM clause, this property could contain name of database for table with single record.
+		/// </summary>
+		protected virtual string FakeTableDatabase => null;
+
+		/// <summary>
+		/// If <see cref="SupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
+		/// FROM clause, this property could contain name of schema for table with single record.
+		/// </summary>
+		protected virtual string FakeTableSchema => null;
+
 		protected virtual void BuildMergeStatement(SqlMergeStatement mergeStatement)
 		{
 			BuildMergeInto(mergeStatement);
@@ -172,7 +196,7 @@
 			StringBuilder.AppendLine(")");
 		}
 
-		private void BuildMergeSourceQuery(SqlMergeSourceTable mergeSource)
+		protected virtual void BuildMergeSourceQuery(SqlMergeSourceTable mergeSource)
 		{
 			//var inlineParameters = _connection.InlineParameters;
 			try
@@ -265,9 +289,20 @@
 		{
 			if (MergeSupportsSourceDirectValues)
 			{
-				StringBuilder.Append("(");
-				BuildValues(mergeSource.SourceFields, mergeSource.SourceEnumerable, true);
-				StringBuilder.Append(")");
+				if (mergeSource.SourceEnumerable.Rows.Count > 0)
+				{
+					StringBuilder.Append("(");
+					BuildValues(mergeSource.SourceFields, mergeSource.SourceEnumerable, true);
+					StringBuilder.Append(")");
+				}
+				else if (MergeEmptySourceSupported)
+				{
+					BuildMergeEmptySource(mergeSource);
+				}
+				else
+				{
+					throw new LinqToDBException($"{this.Name} doesn't support merge with empty source");
+				}
 				//if (hasData)
 				BuildMergeAsSourceClause(mergeSource);
 				//else if (EmptySourceSupported)
@@ -278,6 +313,67 @@
 			}
 
 			throw new NotImplementedException("BuildMergeSourceEnumerable");
+		}
+
+		private void BuildMergeEmptySource(SqlMergeSourceTable mergeSource)
+		{
+			StringBuilder
+				.AppendLine("(")
+				.Append("\tSELECT ")
+				;
+
+			//var columnTypes = GetSourceColumnTypes();
+
+			for (var i = 0; i < mergeSource.SourceFields.Count; i++)
+			{
+				var field = mergeSource.SourceFields[i];
+
+				if (i > 0)
+					StringBuilder.Append(", ");
+
+				BuildValue(
+					new SqlDataType(
+						field.DataType,
+						field.SystemType,
+						field.Length,
+						field.Precision,
+						field.Scale),
+					null);
+
+				//AddSourceValue(
+				//	DataContext.MappingSchema.ValueToSqlConverter,
+				//	_sourceDescriptor.Columns[i],
+				//	columnTypes[i],
+				//	null, true, true);
+
+				//StringBuilder
+				//	.Append(" ")
+				//	.Append(CreateSourceColumnAlias(_sourceDescriptor.Columns[i].ColumnName, true));
+			}
+
+			StringBuilder
+				.AppendLine()
+				.Append("\tFROM ");
+
+			if (!BuildFakeTableName())
+				// we don't select anything, so it is ok to use target table
+				BuildTableName(mergeSource.Merge.Target, true, false);
+
+			StringBuilder
+				.AppendLine("\tWHERE 1 = 0")
+				.AppendLine(")");
+				//.AppendLine((string)SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias));
+		}
+
+		protected virtual bool BuildFakeTableName()
+		{
+			if (FakeTable != null)
+			{
+				BuildTableName(StringBuilder, FakeTableDatabase, FakeTableSchema, FakeTable);
+				return true;
+			}
+
+			return false;
 		}
 
 		private void BuildValues(IList<SqlField> fields, SqlValuesTable sourceEnumerable, bool typed)
