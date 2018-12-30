@@ -66,7 +66,7 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
+				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK)"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
