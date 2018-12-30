@@ -19,7 +19,7 @@ namespace LinqToDB.SqlQuery
 
 		public MergeOperationType OperationType { get; }
 
-		QueryElementType IQueryElement.ElementType => throw new NotImplementedException();
+		QueryElementType IQueryElement.ElementType => QueryElementType.MergeOperationClause;
 
 		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{

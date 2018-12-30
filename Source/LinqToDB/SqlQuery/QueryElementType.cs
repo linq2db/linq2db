@@ -58,5 +58,6 @@ namespace LinqToDB.SqlQuery
 		TruncateTableStatement,
 
 		MergeSourceTable,
+		MergeOperationClause,
 	}
 }
