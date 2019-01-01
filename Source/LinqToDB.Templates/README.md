@@ -256,7 +256,7 @@ GetColumn("Person", "PersonID")    .MemberName   = "ID";
 // Same logic can be used for other column options
 GetColumn("Person", "PasswordHash").SkipOnUpdate = true;
 // Change column property type
-GetColumn("Person", "Gender")      .Type         = "global::Model.Gender";
+GetColumn("Person", "Gender")      .TypeBuilder        = () => "global::Model.Gender";
 
 // Replaces association property name
 GetFK("Orders", "FK_Orders_Customers").MemberName      = "Customers";
