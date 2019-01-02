@@ -31,7 +31,9 @@ namespace Tests.UserTests
 			[Association(QueryExpressionMethod = nameof(Query))]
 			public virtual ICollection<Message> MessagesA3 { get; set; }
 
-			public virtual ICollection<Message> MessagesF { get; set; }
+			public virtual ICollection<Message> MessagesF1 { get; set; }
+			public virtual ICollection<Message> MessagesF2 { get; set; }
+			public virtual ICollection<Message> MessagesF3 { get; set; }
 
 			static Expression<Func<Topic, Message, bool>> Predicate => (t, m) => t.Id == m.TopicId;
 
@@ -121,7 +123,7 @@ namespace Tests.UserTests
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<Topic>()
-						.Association(e => e.MessagesF, (t, m) => t.Id == m.TopicId)
+						.Association(e => e.MessagesF1, (t, m) => t.Id == m.TopicId)
 						.Property(e => e.Id)
 						.Property(e => e.Title)
 						.Property(e => e.Text)
@@ -141,7 +143,7 @@ namespace Tests.UserTests
 						new
 						{
 							Topic = x,
-							MessagesIds = x.MessagesF.Select(t => t.Id).ToList()
+							MessagesIds = x.MessagesF1.Select(t => t.Id).ToList()
 						}).FirstOrDefault();
 				}
 			}
@@ -155,8 +157,7 @@ namespace Tests.UserTests
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<Topic>()
-						// TODO: add missing override and uncomment
-						//.Association(e => e.MessagesF, t => t.Id, m => m.TopicId)
+						.Association(e => e.MessagesF2, t => t.Id, m => m.TopicId)
 						.Property(e => e.Id)
 						.Property(e => e.Title)
 						.Property(e => e.Text)
@@ -176,7 +177,7 @@ namespace Tests.UserTests
 						new
 						{
 							Topic = x,
-							MessagesIds = x.MessagesF.Select(t => t.Id).ToList()
+							MessagesIds = x.MessagesF2.Select(t => t.Id).ToList()
 						}).FirstOrDefault();
 				}
 			}
@@ -190,7 +191,7 @@ namespace Tests.UserTests
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<Topic>()
-						.Association(e => e.MessagesF, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
+						.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
 						.Property(e => e.Id)
 						.Property(e => e.Title)
 						.Property(e => e.Text)
@@ -210,7 +211,7 @@ namespace Tests.UserTests
 						new
 						{
 							Topic = x,
-							MessagesIds = x.MessagesF.Select(t => t.Id).ToList()
+							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
 						}).FirstOrDefault();
 				}
 			}
