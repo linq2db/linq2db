@@ -18,9 +18,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		#region Init
 
-#if !NETSTANDARD1_6
-		private static readonly SqlCommandBuilder _commandBuilder = new SqlCommandBuilder();
-#endif
+		private static readonly Func<string, string> _quoteIdentifier;
 
 		static readonly SqlServerDataProvider _sqlServerDataProvider2000 = new SqlServerDataProvider(ProviderName.SqlServer2000, SqlServerVersion.v2000);
 		static readonly SqlServerDataProvider _sqlServerDataProvider2005 = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005);
@@ -41,15 +39,33 @@ namespace LinqToDB.DataProvider.SqlServer
 			DataConnection.AddDataProvider(_sqlServerDataProvider2000);
 
 			DataConnection.AddProviderDetector(ProviderDetector);
+
+#if !NETSTANDARD1_6
+			try
+			{
+				_quoteIdentifier = TryToUseCommandBuilder();
+			}
+			catch
+			{
+				// see https://github.com/linq2db/linq2db/issues/1487
+			}
+#endif
+			if (_quoteIdentifier == null)
+				_quoteIdentifier = identifier => '[' + identifier.Replace("]", "]]") + ']';
+
 		}
+
+#if !NETSTANDARD1_6
+		private static Func<string, string> TryToUseCommandBuilder()
+		{
+			var commandBuilder = new SqlCommandBuilder();
+			return commandBuilder.QuoteIdentifier;
+		}
+#endif
 
 		internal static string QuoteIdentifier(string identifier)
 		{
-#if !NETSTANDARD1_6
-			return _commandBuilder.QuoteIdentifier(identifier);
-#else
-			return '[' + identifier.Replace("]", "]]") + ']';
-#endif
+			return _quoteIdentifier(identifier);
 		}
 
 		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
