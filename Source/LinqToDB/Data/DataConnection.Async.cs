@@ -15,7 +15,10 @@ namespace LinqToDB.Data
 		{
 			if (_connection == null)
 			{
-				_connection = DataProvider.CreateConnection(ConnectionString);
+				if (_connectionFactory != null)
+					_connection = _connectionFactory();
+				else
+					_connection = DataProvider.CreateConnection(ConnectionString);
 
 				if (RetryPolicy != null)
 					_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);
