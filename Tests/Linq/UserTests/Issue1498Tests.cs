@@ -123,8 +123,8 @@ namespace Tests.UserTests
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<Topic>()
-						.Association(e => e.MessagesF1, (t, m) => t.Id == m.TopicId)
 						.Property(e => e.Id)
+						.Association(e => e.MessagesF1, (t, m) => t.Id == m.TopicId)
 						.Property(e => e.Title)
 						.Property(e => e.Text)
 					.Entity<Message>()
@@ -157,8 +157,8 @@ namespace Tests.UserTests
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<Topic>()
-						.Association(e => e.MessagesF2, t => t.Id, m => m.TopicId)
 						.Property(e => e.Id)
+						.Association(e => e.MessagesF2, t => t.Id, m => m.TopicId)
 						.Property(e => e.Title)
 						.Property(e => e.Text)
 					.Entity<Message>()
@@ -191,8 +191,8 @@ namespace Tests.UserTests
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<Topic>()
-						.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
 						.Property(e => e.Id)
+						.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
 						.Property(e => e.Title)
 						.Property(e => e.Text)
 					.Entity<Message>()
