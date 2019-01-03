@@ -56,7 +56,6 @@ namespace Tests.UserTests
 		public void TestConnectionStringCopy(
 			[DataSources(
 				false,
-			ProviderName.MySqlConnector,
 			ProviderName.OracleManaged,
 			ProviderName.OracleNative,
 			ProviderName.SapHana)]
