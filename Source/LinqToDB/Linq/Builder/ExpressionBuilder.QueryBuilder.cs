@@ -580,6 +580,9 @@ namespace LinqToDB.Linq.Builder
 		static readonly MethodInfo _whereMethodInfo =
 			MemberHelper.MethodOf(() => LinqExtensions.Where<int,int,object>(null,null)).GetGenericMethodDefinition();
 
+		static readonly MethodInfo _queryableMethodInfo =
+			MemberHelper.MethodOf<IQueryable<bool>>(n => n.Where(a => a)).GetGenericMethodDefinition();
+
 		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappingSchema, Expression expression, HashSet<ParameterExpression> parameters)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
@@ -614,42 +617,108 @@ namespace LinqToDB.Linq.Builder
 
 									if (table.IsList)
 									{
-										var ttype  = typeof(Table<>).MakeGenericType(table.ObjectType);
-										var tbl    = Activator.CreateInstance(ttype, context.Builder.DataContext);
-										var method = e == expression ?
-											MemberHelper.MethodOf<IEnumerable<bool>>(n => n.Where(a => a)).GetGenericMethodDefinition().MakeGenericMethod(table.ObjectType) :
-											_whereMethodInfo.MakeGenericMethod(e.Type, table.ObjectType, ttype);
-
 										var me = (MemberExpression)e;
-										var op = Expression.Parameter(table.ObjectType, "t");
+										Expression expr;
 
-										parameters.Add(op);
+										var parentType = me.Expression.Type;
+										var childType  = table.ObjectType;
 
-										Expression ex = null;
-
-										for (var i = 0; i < table.Association.ThisKey.Length; i++)
+										var queryMethod = table.Association.GetQueryMethod(parentType, childType);
+										if (queryMethod != null)
 										{
-											var field1 = table.ParentAssociation.SqlTable.Fields[table.Association.ThisKey [i]];
-											var field2 = table.                  SqlTable.Fields[table.Association.OtherKey[i]];
+											var parentParam = Expression.Parameter(parentType, "o");
+											var ptype       = typeof(Table<>).MakeGenericType(parentType);
+											var ptbl        = Activator.CreateInstance(ptype, context.Builder.DataContext);
 
-											var ma1 = Expression.MakeMemberAccess(op,            field2.ColumnDescriptor.MemberInfo);
-											var ma2 = Expression.MakeMemberAccess(me.Expression, field1.ColumnDescriptor.MemberInfo);
+											var principalExpression = Expression.Constant(ptbl);
+											var selectMany = (MethodCallExpression)table.GetAssociationQueryExpression(Expression.Constant(context.Builder.DataContext), null,
+												parentType, principalExpression, queryMethod);
 
-											var ee = Equal(mappingSchema, ma1, ma2);
+											var parentDescriptor = mappingSchema.GetEntityDescriptor(parentType);
 
-											ex = ex == null ? ee : Expression.AndAlso(ex, ee);
+											var keyColumns = parentDescriptor.Columns.Where(c => c.IsPrimaryKey).ToList();
+											if (keyColumns.Count == 0)
+												keyColumns = parentDescriptor.Columns;
+				
+											var arguments = selectMany.Arguments.ToList();
+							
+											Expression predicate = null;
+											foreach (var column in keyColumns)
+											{
+												var ee = Expression.Equal(
+													Expression.MakeMemberAccess(
+														parentParam, column.MemberInfo),
+													Expression.MakeMemberAccess(
+														root, column.MemberInfo));
+												predicate = predicate == null ? ee : Expression.AndAlso(predicate, ee);
+											}
+
+											if (predicate == null)
+												throw new LinqToDBException($"Invalid mapping for Principal Entity during association building. Association {table.Association.MemberInfo.DeclaringType}.{table.Association.MemberInfo.Name}");
+
+											var filteredQuery = Expression.Call(null,
+												_queryableMethodInfo.MakeGenericMethod(parentType), arguments[0], Expression.Lambda(predicate, parentParam));
+
+											arguments[0] = filteredQuery;
+											selectMany   = selectMany.Update(selectMany.Object, arguments);
+
+											var asQueryable = MemberHelper
+												.MethodOf((IQueryable<object> q) => LinqExtensions.AsQueryable<object, object>(0))
+												.GetGenericMethodDefinition()
+												.MakeGenericMethod(e.Type, selectMany.Type);
+
+											expr = Expression.Call(null,
+												asQueryable, selectMany);
 										}
+										else
+										{
+											var ttype  = typeof(Table<>).MakeGenericType(childType);
+											var tbl    = Activator.CreateInstance(ttype, context.Builder.DataContext);
+											var method = e == expression ?
+												MemberHelper.MethodOf<IEnumerable<bool>>(n => n.Where(a => a)).GetGenericMethodDefinition().MakeGenericMethod(childType) :
+												_whereMethodInfo.MakeGenericMethod(e.Type, childType, ttype);
 
-										var expr = Expression.Call(null, method, Expression.Constant(tbl), Expression.Lambda(ex, op));
+											var op = Expression.Parameter(childType, "t");
+
+											parameters.Add(op);
+
+											Expression ex = null;
+
+											for (var i = 0; i < table.Association.ThisKey.Length; i++)
+											{
+												var field1 = table.ParentAssociation.SqlTable.Fields[table.Association.ThisKey [i]];
+												var field2 = table.                  SqlTable.Fields[table.Association.OtherKey[i]];
+
+												var ma1 = Expression.MakeMemberAccess(op,            field2.ColumnDescriptor.MemberInfo);
+												var ma2 = Expression.MakeMemberAccess(me.Expression, field1.ColumnDescriptor.MemberInfo);
+
+												var ee = Equal(mappingSchema, ma1, ma2);
+
+												ex = ex == null ? ee : Expression.AndAlso(ex, ee);
+											}
+
+											var predicate = table.Association.GetPredicate(parentType, childType);
+											if (predicate != null)
+											{
+												var body = predicate.GetBody(me.Expression, op);
+												ex = ex == null ? body : Expression.AndAlso(ex, body);
+											}
+
+											if (ex == null)
+												throw new LinqToDBException($"Invalid association configuration for {table.Association.MemberInfo.DeclaringType}.{table.Association.MemberInfo.Name}");
+
+											expr = Expression.Call(null, method, Expression.Constant(tbl), Expression.Lambda(ex, op));
+										}
 
 										if (e == expression)
 										{
 											expr = Expression.Call(
-												MemberHelper.MethodOf<IEnumerable<int>>(n => n.ToList()).GetGenericMethodDefinition().MakeGenericMethod(table.ObjectType),
+												MemberHelper.MethodOf<IEnumerable<int>>(n => n.ToList()).GetGenericMethodDefinition().MakeGenericMethod(childType),
 												expr);
 										}
 
 										return expr;
+
 									}
 								}
 							}
@@ -677,6 +746,14 @@ namespace LinqToDB.Linq.Builder
 			//
 			expression = expression.Transform(e =>
 			{
+				if (e.NodeType == ExpressionType.Lambda)
+				{
+					foreach (var param in ((LambdaExpression)e).Parameters)
+					{
+						parameters.Add(param);
+					}
+				}
+
 				var root = e.GetRootObject(MappingSchema);
 
 				if (root != null &&

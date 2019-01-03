@@ -204,8 +204,10 @@ namespace Tests.UserTests
 				using (db.CreateLocalTable<Message>())
 				{
 					db.Insert(new Topic() { Id = 6, Title = "title", Text = "text" });
+					db.Insert(new Message() { Id = 60, Text = "message", TopicId = 6});
+					db.Insert(new Message() { Id = 61, Text = "message", TopicId = 7});
 
-					db.GetTable<Topic>()
+					var result = db.GetTable<Topic>()
 						.Where(x => x.Id == 6)
 						.Select(x =>
 						new
@@ -213,8 +215,51 @@ namespace Tests.UserTests
 							Topic = x,
 							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
 						}).FirstOrDefault();
+
+					Assert.IsNotNull(result);
+					Assert.AreEqual(60, result.MessagesIds.Single());
 				}
 			}
 		}
+
+		[Test]
+		public void TestFluentAssociationByQueryWithKeys([DataSources] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<Topic>()
+						.Property(e => e.Id).IsPrimaryKey()
+						.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
+						.Property(e => e.Title)
+						.Property(e => e.Text)
+					.Entity<Message>()
+						.Property(e => e.Id).IsPrimaryKey()
+						.Property(e => e.TopicId)
+						.Property(e => e.Text);
+
+				using (db.CreateLocalTable<Topic>())
+				using (db.CreateLocalTable<Message>())
+				{
+					db.Insert(new Topic() { Id = 6, Title = "title", Text = "text" });
+					db.Insert(new Message() { Id = 60, Text = "message", TopicId = 6});
+					db.Insert(new Message() { Id = 61, Text = "message", TopicId = 7});
+
+					var result = db.GetTable<Topic>()
+						.Where(x => x.Id == 6)
+						.Select(x =>
+						new
+						{
+							Topic = x,
+							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
+						}).FirstOrDefault();
+
+					Assert.IsNotNull(result);
+					Assert.AreEqual(60, result.MessagesIds.Single());
+				}
+			}
+		}
+
 	}
 }

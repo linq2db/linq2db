@@ -73,21 +73,9 @@ namespace LinqToDB.Linq.Builder
 				var queryMethod = Association.GetQueryMethod(parent.ObjectType, ObjectType);
 				if (queryMethod != null)
 				{
-					var dcParam     = queryMethod.Parameters[1];
-					var resultParam = Expression.Parameter(ObjectType);
+					var selectManyMethod = GetAssociationQueryExpression(Expression.Constant(builder.DataContext), queryMethod.Parameters[0], parent.ObjectType, parent.Expression, queryMethod);
 
-					Expression dcConst = Expression.Constant(builder.DataContext);
-					if (dcParam.Type != typeof(IDataContext))
-						dcConst = Expression.Convert(dcConst, dcParam.Type);
-
-					var body    = queryMethod.Body.Transform(e => e == dcParam ? dcConst : e);
-					body        = Expression.Convert(body, typeof(IEnumerable<>).MakeGenericType(ObjectType));
-					queryMethod = Expression.Lambda(body, queryMethod.Parameters[0]);
-
-					var selectManyMethodInfo = _selectManyMethodInfo.MakeGenericMethod(parent.ObjectType, ObjectType, ObjectType);
-					var resultLamba          = Expression.Lambda(resultParam, Expression.Parameter(parent.ObjectType), resultParam);
-					var selectManyMethod     = Expression.Call(null, selectManyMethodInfo, parent.Expression, queryMethod, resultLamba);
-					var ownerTableSource     = SelectQuery.From.Tables[0];
+					var ownerTableSource = SelectQuery.From.Tables[0];
 
 					_innerContext = builder.BuildSequence(new BuildInfo(this, selectManyMethod, new SelectQuery())
 						{ IsAssociationBuilt = true });
@@ -202,6 +190,22 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				Init(false);
+			}
+
+			public Expression GetAssociationQueryExpression(Expression dataContextExpr, Expression parentObjExpression, Type parentType, Expression parentExpression,
+				LambdaExpression queryMethod)
+			{
+				var resultParam = Expression.Parameter(ObjectType);
+
+				var body    = queryMethod.GetBody(parentObjExpression ?? queryMethod.Parameters[0], dataContextExpr);
+				body        = Expression.Convert(body, typeof(IEnumerable<>).MakeGenericType(ObjectType));
+				queryMethod = Expression.Lambda(body, queryMethod.Parameters[0]);
+
+				var selectManyMethodInfo = _selectManyMethodInfo.MakeGenericMethod(parentType, ObjectType, ObjectType);
+				var resultLamba          = Expression.Lambda(resultParam, Expression.Parameter(parentType), resultParam);
+				var selectManyMethod     = Expression.Call(null, selectManyMethodInfo, parentExpression, queryMethod, resultLamba);
+
+				return selectManyMethod;
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
