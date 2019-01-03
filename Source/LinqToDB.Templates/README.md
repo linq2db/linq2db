@@ -191,6 +191,10 @@ ReplaceSimilarTables          = true;
 // additional hints for schema loader
 // Also check GetSchemaOptions.LoadProcedure option above
 GenerateProcedureErrors       = true;
+// If enabled, methods for procedures that return table will be generated with List<T> return type and
+// IMPORTANT: this will lead to load of all procedure results into list and could lead
+// to performance issues on big results
+GenerateProcedureResultAsList = false;
 
 /* Other generated functionality */
 // Enables generation of Find(pk fields) extension methods for record selection by primary key value
