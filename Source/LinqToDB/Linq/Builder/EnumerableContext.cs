@@ -81,12 +81,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									if (!Table.Fields.TryGetValue(column.MemberInfo.Name, out var newField))
 									{
-										newField = new SqlField()
-										{
-											Name = column.MemberInfo.Name,
-											PhysicalName = column.MemberInfo.Name,
-											ColumnDescriptor = column
-										};
+										newField = new SqlField(column);
 
 										Table.Add(newField);
 
