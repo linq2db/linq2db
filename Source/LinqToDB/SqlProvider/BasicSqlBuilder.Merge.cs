@@ -238,6 +238,7 @@
 
 				//SaveParameters(statement.Parameters);
 
+				// TODO: add extra parameter to skip aliases?
 				BuildPhysicalTable(mergeSource.Source, null);
 
 				//var cs = new[] { ' ', '\t', '\r', '\n' };

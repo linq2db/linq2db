@@ -359,6 +359,26 @@ namespace LinqToDB.SqlQuery
 			{
 				switch (expr.ElementType)
 				{
+					case QueryElementType.MergeSourceTable:
+						{
+							var source = (SqlMergeSourceTable)expr;
+
+							Utils.MakeUniqueNames(
+								source.SourceFields,
+								n => !ReservedWords.IsReserved(n),
+								f => f.PhysicalName,
+								(f, n) => { f.PhysicalName = n; },
+								f =>
+								{
+									var a = f.PhysicalName;
+									return a.IsNullOrEmpty()
+										? "c1"
+										: a + (a.EndsWith("_") ? string.Empty : "_") + "1";
+								},
+								StringComparer.OrdinalIgnoreCase);
+
+							break;
+						}
 					case QueryElementType.SqlQuery:
 						{
 							var query = (SelectQuery)expr;

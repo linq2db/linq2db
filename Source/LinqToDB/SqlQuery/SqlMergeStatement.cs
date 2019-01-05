@@ -20,15 +20,6 @@ namespace LinqToDB.SqlQuery
 			Target = new SqlTableSource(target, TargetAlias);
 		}
 
-		//public SqlMergeStatement(MappingSchema mappingSchema, SqlTable target, Type sourceType, SelectQuery source)
-		//	: this(target)
-		//{
-		//	Source = new SqlMergeSourceTable(mappingSchema, this, sourceType)
-		//	{
-		//		SourceQuery = source
-		//	};
-		//}
-
 		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			throw new NotImplementedException();
@@ -78,14 +69,6 @@ namespace LinqToDB.SqlQuery
 
 		public string Hint { get; internal set; }
 
-
-		//public void RegisterSourceFieldMapping(SqlField field)
-		//{
-		//	if (!SourceFields.ContainsKey(field.PhysicalName))
-		//	{
-		//		SourceFields.Add(field.PhysicalName, new SqlField(field));
-		//	}
-		//}
 
 		public SqlTableSource Target { get; }
 
