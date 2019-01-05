@@ -1068,14 +1068,16 @@ namespace Tests
 
 	public class AllowMultipleQuery : IDisposable
 	{
-		public AllowMultipleQuery()
+		private readonly bool _oldValue = Configuration.Linq.AllowMultipleQuery;
+
+		public AllowMultipleQuery(bool value = true)
 		{
-			Configuration.Linq.AllowMultipleQuery = true;
+			Configuration.Linq.AllowMultipleQuery = value;
 		}
 
 		public void Dispose()
 		{
-			Configuration.Linq.AllowMultipleQuery = false;
+			Configuration.Linq.AllowMultipleQuery = _oldValue;
 		}
 	}
 
