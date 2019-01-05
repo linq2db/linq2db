@@ -951,10 +951,13 @@ namespace LinqToDB.Linq.Builder
 					if (association.ExpressionPredicate != null)
 					{
 						var l  = association.ExpressionPredicate;
-						var ex = l.Body.Transform(e => e == l.Parameters[0] ? parent : e == l.Parameters[1] ? param : e);
+						var ex = l.GetBody(parent, param);
 
 						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
 					}
+
+					if (expr == null)
+						throw new LinqToDBException("Invalid association for LoadWith");
 
 					var predicate = Expression.Lambda<Func<T,bool>>(expr, param);
 

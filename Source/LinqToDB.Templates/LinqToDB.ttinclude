@@ -15,18 +15,19 @@ Func<Table,MemberBase> GenerateProviderSpecificTable = t => null;
 Func<Parameter, bool>  GenerateProcedureDbType       = p => false;
 
 bool   GenerateObsoleteAttributeForAliases = false;
-bool   GenerateFindExtensions    = true;
-bool   IsCompactColumns          = true;
-bool   IsCompactColumnAliases    = true;
-bool   GenerateDataTypes         = false;
-bool?  GenerateLengthProperty    = null;
-bool?  GeneratePrecisionProperty = null;
-bool?  GenerateScaleProperty     = null;
-bool   GenerateDbTypes           = false;
-bool   GenerateSchemaAsType      = false;
-bool   GenerateViews             = true;
-string SchemaNameSuffix          = "Schema";
-string SchemaDataContextTypeName = "DataContext";
+bool   GenerateFindExtensions              = true;
+bool   IsCompactColumns                    = true;
+bool   IsCompactColumnAliases              = true;
+bool   GenerateDataTypes                   = false;
+bool?  GenerateLengthProperty              = null;
+bool?  GeneratePrecisionProperty           = null;
+bool?  GenerateScaleProperty               = null;
+bool   GenerateDbTypes                     = false;
+bool   GenerateSchemaAsType                = false;
+bool   GenerateViews                       = true;
+bool   GenerateProcedureResultAsList       = false;
+string SchemaNameSuffix                    = "Schema";
+string SchemaDataContextTypeName           = "DataContext";
 
 Dictionary<string,string> SchemaNameMapping = new Dictionary<string,string>();
 
@@ -754,7 +755,11 @@ void GenerateTypesFromMetadata()
 			else
 			{
 				p.IsStatic    = true;
-				p.TypeBuilder = () => p.ResultTable == null ? "int" : "IEnumerable<" + p.ResultTable.TypeName + ">";
+				p.TypeBuilder = () => p.ResultTable == null
+					? "int"
+					: GenerateProcedureResultAsList
+						? "List<" + p.ResultTable.TypeName + ">"
+						: "IEnumerable<" + p.ResultTable.TypeName + ">";
 
 				if (p.IsDefaultSchema || !GenerateSchemaAsType)
 					p.ParameterBuilders.Add(() => "this DataConnection dataConnection");
@@ -801,7 +806,9 @@ void GenerateTypesFromMetadata()
 				var outputParameters     = p.ProcParameters.Where(pp => pp.IsOut).           ToList();
 				var inOrOutputParameters = p.ProcParameters.Where(pp => pp.IsIn || pp.IsOut).ToList();
 
-				spName += inOrOutputParameters.Count == 0 ? ");" : ",";
+				spName += inOrOutputParameters.Count == 0
+					? (p.ResultTable == null || !GenerateProcedureResultAsList ? ");" : ").ToList();")
+					: ",";
 
 				var retName = "ret";
 				var retNo   = 0;
@@ -880,7 +887,9 @@ void GenerateTypesFromMetadata()
 
 						// we need to call ToList(), because otherwise output parameters will not be updated
 						// with values. See https://msdn.microsoft.com/en-us/library/ms971497#gazoutas_topic6
-						str += i + 1 == inOrOutputParameters.Count ? (outputParameters.Count > 0 && p.ResultTable != null ? ").ToList();" : ");") : ",";
+						str += i + 1 == inOrOutputParameters.Count
+							? ((GenerateProcedureResultAsList || outputParameters.Count > 0) && p.ResultTable != null ? ").ToList();" : ");")
+							: ",";
 
 						return new [] { str };
 					});
@@ -934,10 +943,10 @@ void GenerateTypesFromMetadata()
 		if (tabfs.Members.Count > 0)
 			DataContextObject.Members.Add(tabfs);
 
-		MakeTypeMembersNamesUnique(DataContextObject);
+		MakeTypeMembersNamesUnique(DataContextObject, "InitDataContext", "InitMappingSchema");
 		MakeMembersNamesUnique(Model.Types, "Table");
 		foreach (var type in Model.Types.OfType<Class>())
-			MakeTypeMembersNamesUnique(type);
+			MakeTypeMembersNamesUnique(type, exceptMethods: new [] { "Find" });
 
 		foreach (var schema in schemas.Values)
 		{
@@ -950,7 +959,7 @@ void GenerateTypesFromMetadata()
 			if (schema.TableFunctions.Members.Count > 0)
 				schema.DataContext.Members.Add(schema.TableFunctions);
 
-			MakeTypeMembersNamesUnique(schema.DataContext);
+			MakeTypeMembersNamesUnique(schema.DataContext, "InitDataContext", "InitMappingSchema");
 			foreach (var type in schema.Type.Members.OfType<Class>())
 				MakeTypeMembersNamesUnique(type);
 		}
@@ -961,7 +970,7 @@ void GenerateTypesFromMetadata()
 		Model.Usings.Add("System.Linq");
 		var tableExtensions = new Class("TableExtensions", defTableExtensions) { IsStatic = true };
 		Model.Types.Add(tableExtensions);
-		MakeTypeMembersNamesUnique(tableExtensions);
+		MakeTypeMembersNamesUnique(tableExtensions, exceptMethods: new [] { "Find" });
 	}
 
 	foreach (var schema in schemas.Values)
@@ -983,9 +992,13 @@ void GenerateTypesFromMetadata()
 	AfterGenerateLinqToDBModel();
 }
 
-void MakeTypeMembersNamesUnique(Class type, string defaultName = "Member")
+void MakeTypeMembersNamesUnique(Class type, string defaultName = "Member", params string[] exceptMethods)
 {
-	MakeMembersNamesUnique(GetAllClassMembers(type.Members), defaultName, type.Name, "InitDataContext", "InitMappingSchema");
+	var reservedNames = new [] { type.Name };
+	if (exceptMethods != null && exceptMethods.Length > 0)
+		reservedNames = reservedNames.Concat(exceptMethods).ToArray();
+
+	MakeMembersNamesUnique(GetAllClassMembers(type.Members, exceptMethods), defaultName, reservedNames);
 }
 
 void MakeMembersNamesUnique(IEnumerable<IClassMember> members, string defaultName, params string[] reservedNames)
@@ -1004,15 +1017,15 @@ void MakeMembersNamesUnique(IEnumerable<IClassMember> members, string defaultNam
 		defaultName);
 }
 
-IEnumerable<IClassMember> GetAllClassMembers(IEnumerable<IClassMember> members)
+IEnumerable<IClassMember> GetAllClassMembers(IEnumerable<IClassMember> members, params string[] exceptMethods)
 {
 	foreach (var member in members)
 	{
 		if (member is MemberGroup mg)
-			foreach (var m in GetAllClassMembers(mg.Members))
+			foreach (var m in GetAllClassMembers(mg.Members, exceptMethods))
 				yield return m;
 		// constructors don't have own type/flag
-		else if (member is Method method && (method.BuildType() == null || method.Name == "InitDataContext" || method.Name == "InitMappingSchema"))
+		else if (member is Method method && (method.BuildType() == null || (exceptMethods != null && exceptMethods.Contains(method.Name))))
 			continue;
 		else
 			yield return member;

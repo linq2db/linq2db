@@ -2755,6 +2755,11 @@ namespace LinqToDB
 			throw new InvalidOperationException();
 		}
 
+		internal static TOutput AsQueryable<TOutput,TInput>(TInput source)
+		{
+			throw new InvalidOperationException();
+		}
+
 		#endregion
 
 		#region SqlJoin
