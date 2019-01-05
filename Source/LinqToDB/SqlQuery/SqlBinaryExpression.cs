@@ -64,6 +64,17 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
+		public override int GetHashCode()
+		{
+			var hashCode = Operation.GetHashCode();
+
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr1.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr2.GetHashCode());
+
+			return hashCode;
+		}
+
 		#region ISqlExpression Members
 
 		public bool CanBeNull => Expr1.CanBeNull || Expr2.CanBeNull;

@@ -166,6 +166,16 @@ namespace LinqToDB.SqlQuery
 			return (object)p != null && Name != null && p.Name != null && Name == p.Name && SystemType == p.SystemType;
 		}
 
+		public override int GetHashCode()
+		{
+			var hashCode = SystemType.GetHashCode();
+
+			if (Name != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
+
+			return hashCode;
+		}
+
 		#endregion
 
 		#region ISqlExpression Members

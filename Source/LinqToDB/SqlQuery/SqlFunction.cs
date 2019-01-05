@@ -111,6 +111,17 @@ namespace LinqToDB.SqlQuery
 			return clone;
 		}
 
+		public override int GetHashCode()
+		{
+			var hashCode = SystemType.GetHashCode();
+
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
+			for (var i = 0; i < Parameters.Length; i++)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
+
+			return hashCode;
+		}
+
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)

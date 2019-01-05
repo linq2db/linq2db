@@ -1247,14 +1247,19 @@ namespace LinqToDB.SqlQuery
 							(((SelectQuery)element).HasUnion ? Find(((SelectQuery)element).Unions, find) : null);
 					}
 
+				case QueryElementType.CteClause:
+					{
+						throw new NotImplementedException("TODO: StackOverflowException");
+						//return
+						//	Find(((CteClause)element).Fields, find) ??
+						//	Find(((CteClause)element).Body,   find);
+					}
+
 				case QueryElementType.SqlField:
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlDataType:
 					break;
-
-				case QueryElementType.CteClause:
-					throw new NotImplementedException("TODO: implement");
 
 				default:
 					throw new InvalidOperationException($"Find visitor not implemented for element {element.ElementType}");

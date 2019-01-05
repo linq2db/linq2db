@@ -362,8 +362,12 @@ namespace LinqToDB.SqlQuery
 
 				for (var i = 0; i < sql.Select.Columns.Count; i++)
 				{
-					var scol = sql.  Select.Columns[i];
 					var ucol = union.Select.Columns[i];
+
+					if (exprs.ContainsKey(ucol))
+						continue;
+
+					var scol = sql.Select.Columns[i];
 
 					scol.Expression = ucol.Expression;
 					scol.RawAlias   = ucol.RawAlias;

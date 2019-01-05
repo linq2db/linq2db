@@ -502,6 +502,20 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
+		public override int GetHashCode()
+		{
+			var hashCode = Type.GetHashCode();
+
+			if (Length != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Length.GetHashCode());
+			if (Precision != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Precision.GetHashCode());
+			if (Scale != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Scale.GetHashCode());
+
+			return hashCode;
+		}
+
 		#region ISqlExpression Members
 
 		public bool CanBeNull => false;
