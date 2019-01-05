@@ -88,7 +88,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatchedAnd(s => s.Patient.Diagnosis.Contains("sick"), s => new Model.Person()
+					.InsertWhenNotMatchedAnd(s => s.Patient.Diagnosis.Contains("sick"), s => new Person()
 					{
 						FirstName = s.Patient.Diagnosis,
 						LastName = "Inserted 2",
@@ -136,7 +136,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatched(s => new Model.Person()
+					.InsertWhenNotMatched(s => new Person()
 					{
 						FirstName = s.Patient.Diagnosis,
 						LastName = "Inserted 2",
@@ -181,7 +181,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatchedAnd(s => s.Patient.Diagnosis.Contains("sick"), s => new Model.Person()
+					.InsertWhenNotMatchedAnd(s => s.Patient.Diagnosis.Contains("sick"), s => new Person()
 					{
 						FirstName = "Inserted 1",
 						LastName = "Inserted 2",
@@ -271,7 +271,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.UpdateWhenMatched((t, s) => new Model.Person()
+					.UpdateWhenMatched((t, s) => new Person()
 					{
 						MiddleName = "first " + s.Patient.Diagnosis,
 						LastName = "last " + t.Patient.Diagnosis
@@ -312,7 +312,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID + 10)
 					.UpdateWhenNotMatchedBySourceAnd(t => t.FirstName == "first 3",
-						t => new Model.Person()
+						t => new Person()
 						{
 							FirstName = "Updated",
 							LastName = t.Patient.Diagnosis
@@ -354,7 +354,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID + 10)
 					.UpdateWhenNotMatchedBySourceAnd(t => t.Patient.Diagnosis.Contains("very"),
-						t => new Model.Person()
+						t => new Person()
 						{
 							FirstName = "Updated"
 						})
@@ -399,7 +399,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedAnd(
 						(t, s) => s.Patient.Diagnosis == t.Patient.Diagnosis && t.Patient.Diagnosis.Contains("very"),
-						(t, s) => new Model.Person()
+						(t, s) => new Person()
 						{
 							LastName = "Updated"
 						})
@@ -506,7 +506,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatchedAnd(
 						s => s.Patient.Diagnosis.Contains("sick"),
-						s => new Model.Person()
+						s => new Person()
 						{
 							FirstName = s.Patient.Diagnosis,
 							LastName = "Inserted 2",
@@ -554,7 +554,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatched(s => new Model.Person()
+					.InsertWhenNotMatched(s => new Person()
 					{
 						FirstName = s.Patient.Diagnosis,
 						LastName = "Inserted 2",
@@ -601,7 +601,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatchedAnd(
 						s => s.Patient.Diagnosis.Contains("sick"),
-						s => new Model.Person()
+						s => new Person()
 						{
 							FirstName = "Inserted 1",
 							LastName = "Inserted 2",
@@ -691,7 +691,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.UpdateWhenMatched((t, s) => new Model.Person()
+					.UpdateWhenMatched((t, s) => new Person()
 					{
 						MiddleName = "first " + s.Patient.Diagnosis,
 						LastName = "last " + t.Patient.Diagnosis
@@ -733,7 +733,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID + 10)
 					.UpdateWhenNotMatchedBySourceAnd(
 						t => t.FirstName == "first 3",
-						t => new Model.Person()
+						t => new Person()
 						{
 							FirstName = "Updated",
 							LastName = t.Patient.Diagnosis
@@ -776,7 +776,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID + 10)
 					.UpdateWhenNotMatchedBySourceAnd(
 						t => t.Patient.Diagnosis.Contains("very"),
-						t => new Model.Person()
+						t => new Person()
 						{
 							FirstName = "Updated"
 						})
@@ -821,7 +821,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedAnd(
 						(t, s) => s.Patient.Diagnosis.Contains("very") && t.Patient.Diagnosis.Contains("very"),
-						(t, s) => new Model.Person()
+						(t, s) => new Person()
 						{
 							MiddleName = "Updated"
 						})
@@ -897,7 +897,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedThenDelete(
-						(t, s) => new Model.Person()
+						(t, s) => new Person()
 						{
 							LastName = s.LastName
 						},
@@ -932,7 +932,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedThenDelete(
-						(t, s) => new Model.Person()
+						(t, s) => new Person()
 						{
 							LastName = s.FirstName
 						},

@@ -53,6 +53,17 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		public void MatchBuilt()
+		{
+			// for table source, we should build all associations, used in operations as left joins to not affect
+			// number of records, returned by source, if association had inner join configured
+			// associations, used in match, should use their original join type
+			if (SubQuery is TableBuilder.TableContext table)
+			{
+				table.ForceLeftJoinAssociations = true;
+			}
+		}
+
 		public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
 		{
 			return SubQuery

@@ -125,6 +125,7 @@ namespace LinqToDB.Linq.Builder
 						false);
 				}
 
+				mergeContext.SourceContext.MatchBuilt();
 				return mergeContext;
 			}
 

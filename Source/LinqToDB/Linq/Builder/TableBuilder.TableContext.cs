@@ -39,6 +39,8 @@ namespace LinqToDB.Linq.Builder
 			public EntityDescriptor EntityDescriptor;
 			public SqlTable         SqlTable;
 
+			internal bool           ForceLeftJoinAssociations { get; set; }
+
 			#endregion
 
 			#region Init
@@ -1341,7 +1343,8 @@ namespace LinqToDB.Linq.Builder
 								aa.QueryExpression,
 								aa.Storage,
 								aa.CanBeNull,
-								aa.AliasName))
+								aa.AliasName),
+							ForceLeftJoinAssociations)
 							{ Parent = Parent };
 
 					isNew = true;
@@ -1357,7 +1360,7 @@ namespace LinqToDB.Linq.Builder
 						var q =
 							from a in objectMapper.Associations.Concat(inheritance.SelectMany(om => om.Associations))
 							where a.MemberInfo.EqualsTo(memberExpression.Member)
-							select new AssociatedTableContext(Builder, this, a) { Parent = Parent };
+							select new AssociatedTableContext(Builder, this, a, ForceLeftJoinAssociations) { Parent = Parent };
 
 						tableAssociation = q.FirstOrDefault();
 

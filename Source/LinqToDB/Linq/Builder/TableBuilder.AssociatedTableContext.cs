@@ -41,7 +41,8 @@ namespace LinqToDB.Linq.Builder
 			public AssociatedTableContext(
 				[JetBrains.Annotations.NotNull] ExpressionBuilder     builder,
 				[JetBrains.Annotations.NotNull] TableContext          parent,
-				[JetBrains.Annotations.NotNull] AssociationDescriptor association
+				[JetBrains.Annotations.NotNull] AssociationDescriptor association,
+				                                bool                  forceLeft
 			)
 				: base(builder, parent.SelectQuery)
 			{
@@ -50,7 +51,7 @@ namespace LinqToDB.Linq.Builder
 				if (association == null) throw new ArgumentNullException(nameof(association));
 
 				var type = association.MemberInfo.GetMemberType();
-				var left = association.CanBeNull;
+				var left = forceLeft || association.CanBeNull;
 
 				if (typeof(IEnumerable).IsSameOrParentOf(type))
 				{

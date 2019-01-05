@@ -37,8 +37,8 @@ namespace LinqToDB.Linq.Builder
 
 			public SqlMergeStatement Merge => (SqlMergeStatement)Statement;
 
-			public IBuildContext TargetContext => Sequence;
-			public IBuildContext SourceContext => Sequences[1];
+			public IBuildContext           TargetContext => Sequence;
+			public MergeSourceQueryContext SourceContext => (MergeSourceQueryContext)Sequences[1];
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{

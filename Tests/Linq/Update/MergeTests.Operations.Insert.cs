@@ -1495,20 +1495,20 @@ namespace Tests.xUpdate
 						field = _.OtherId,
 						Field = _.OtherField1,
 						and = _.OtherField2,
-						or = _.OtherField3,
-						between = _.OtherField4,
+						Target = _.OtherField3,
+						Source = _.OtherField4,
 						@case = _.OtherField5
 					}))
 					.On((t, s) => t.Id == s.field)
 					.InsertWhenNotMatchedAnd(
-						s => s.between == 216,
+						s => s.Source == 216,
 						s => new TestMapping1()
 						{
 							Id = s.field,
 							Field1 = s.Field,
 							Field2 = s.and,
-							Field3 = s.or,
-							Field4 = s.between,
+							Field3 = s.Target,
+							Field4 = s.Source,
 							Field5 = s.@case
 						})
 					.Merge();
