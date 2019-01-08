@@ -34,16 +34,15 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property.
 		/// </summary>
-		public DataConnection() : this((string)null)
+		public DataConnection() : this(new LinqToDbConnectionOptions())
 		{}
 
 		/// <summary>
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property and provided mapping schema.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
-		public DataConnection([JetBrains.Annotations.NotNull] MappingSchema mappingSchema) : this((string)null)
+		public DataConnection([JetBrains.Annotations.NotNull] MappingSchema mappingSchema) : this(new LinqToDbConnectionOptions().UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -53,9 +52,8 @@ namespace LinqToDB.Data
 		/// In case of null, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(string configurationString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
-			: this(configurationString)
+			: this(new LinqToDbConnectionOptions().UseConfigurationString(configurationString).UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -64,20 +62,8 @@ namespace LinqToDB.Data
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
 		/// In case of <c>null</c>, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		public DataConnection(string configurationString)
+			: this(new LinqToDbConnectionOptions().UseConfigurationString(configurationString))
 		{
-			InitConfig();
-
-			ConfigurationString = configurationString ?? DefaultConfiguration;
-
-			if (ConfigurationString == null)
-				throw new LinqToDBException("Configuration string is not provided.");
-
-			var ci = GetConfigurationInfo(ConfigurationString);
-
-			DataProvider     = ci.DataProvider;
-			ConnectionString = ci.ConnectionString;
-			MappingSchema    = DataProvider.MappingSchema;
-			RetryPolicy      = Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null;
 		}
 
 		/// <summary>
@@ -90,9 +76,8 @@ namespace LinqToDB.Data
 				[JetBrains.Annotations.NotNull] string        providerName,
 				[JetBrains.Annotations.NotNull] string        connectionString,
 				[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
-			: this(providerName, connectionString)
+			: this(new LinqToDbConnectionOptions().UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -103,18 +88,8 @@ namespace LinqToDB.Data
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] string providerName,
 			[JetBrains.Annotations.NotNull] string connectionString)
+			: this(new LinqToDbConnectionOptions().UseConnectionString(providerName, connectionString))
 		{
-			if (providerName     == null) throw new ArgumentNullException(nameof(providerName));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
-
-			if (!_dataProviders.TryGetValue(providerName, out var dataProvider))
-				throw new LinqToDBException($"DataProvider '{providerName}' not found.");
-
-			InitConfig();
-
-			DataProvider     = dataProvider;
-			ConnectionString = connectionString;
-			MappingSchema    = DataProvider.MappingSchema;
 		}
 
 		/// <summary>
@@ -127,9 +102,8 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] string        connectionString,
 			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
-			: this(dataProvider, connectionString)
+			: this(new LinqToDbConnectionOptions().UseConnectionString(dataProvider, connectionString).UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -140,12 +114,8 @@ namespace LinqToDB.Data
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] string connectionString)
+			: this(new LinqToDbConnectionOptions().UseConnectionString(dataProvider, connectionString))
 		{
-			InitConfig();
-
-			DataProvider     = dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider));
-			ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-			MappingSchema    = DataProvider.MappingSchema;
 		}
 
 		/// <summary>
@@ -158,9 +128,8 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDataProvider       dataProvider,
 			[JetBrains.Annotations.NotNull] Func<IDbConnection> connectionFactory,
 			[JetBrains.Annotations.NotNull] MappingSchema       mappingSchema)
-			: this(dataProvider, connectionFactory)
+			: this(new LinqToDbConnectionOptions().UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -171,25 +140,8 @@ namespace LinqToDB.Data
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider       dataProvider,
 			[JetBrains.Annotations.NotNull] Func<IDbConnection> connectionFactory)
+			: this(new LinqToDbConnectionOptions().UseConnectionFactory(dataProvider, connectionFactory))
 		{
-			if (dataProvider      == null) throw new ArgumentNullException(nameof(dataProvider));
-			if (connectionFactory == null) throw new ArgumentNullException(nameof(connectionFactory));
-
-			InitConfig();
-
-			DataProvider       = dataProvider;
-			MappingSchema      = DataProvider.MappingSchema;
-
-			_connectionFactory = () =>
-			{
-				var connection = connectionFactory();
-
-				if (!Configuration.AvoidSpecificDataProviderAPI && !DataProvider.IsCompatibleConnection(connection))
-					throw new LinqToDBException(
-						$"DataProvider '{DataProvider}' and connection '{connection}' are not compatible.");
-
-				return connection;
-			};
 		}
 
 		/// <summary>
@@ -202,9 +154,8 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] IDbConnection connection,
 			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
-			: this(dataProvider, connection)
+			: this(new LinqToDbConnectionOptions().UseConnection(dataProvider, connection).UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -233,20 +184,8 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] IDbConnection connection,
 			                                bool          disposeConnection)
+			: this(new LinqToDbConnectionOptions().UseConnection(dataProvider, connection, disposeConnection))
 		{
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
-			if (connection   == null) throw new ArgumentNullException(nameof(connection));
-
-			InitConfig();
-
-			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(connection))
-				throw new LinqToDBException(
-					$"DataProvider '{dataProvider}' and connection '{connection}' are not compatible.");
-
-			DataProvider       = dataProvider;
-			MappingSchema      = DataProvider.MappingSchema;
-			_connection        = connection;
-			_disposeConnection = disposeConnection;
 		}
 
 		/// <summary>
@@ -259,9 +198,8 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDataProvider  dataProvider,
 			[JetBrains.Annotations.NotNull] IDbTransaction transaction,
 			[JetBrains.Annotations.NotNull] MappingSchema  mappingSchema)
-			: this(dataProvider, transaction)
+			: this(new LinqToDbConnectionOptions().UseTransaction(dataProvider, transaction).UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -272,23 +210,99 @@ namespace LinqToDB.Data
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider  dataProvider,
 			[JetBrains.Annotations.NotNull] IDbTransaction transaction)
+			: this(new LinqToDbConnectionOptions().UseTransaction(dataProvider, transaction))
 		{
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
-			if (transaction  == null) throw new ArgumentNullException(nameof(transaction));
+		}
 
+		public DataConnection(LinqToDbConnectionOptions options)
+		{
 			InitConfig();
+			
+			switch (options.SetupType)
+			{
+				case LinqToDbConnectionOptions.ConnectionSetupType.ConfigurationString:
+				case LinqToDbConnectionOptions.ConnectionSetupType.DefaultConfiguration:
+					ConnectionString = options._configurationString ?? DefaultConfiguration;
+					if (ConfigurationString == null)
+						throw new LinqToDBException("Configuration string is not provided.");
+					var ci = GetConfigurationInfo(ConfigurationString);
 
-			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(transaction.Connection))
-				throw new LinqToDBException(
-					$"DataProvider '{dataProvider}' and connection '{transaction.Connection}' are not compatible.");
+					DataProvider = ci.DataProvider;
+					ConnectionString = ci.ConnectionString;
+					MappingSchema = DataProvider.MappingSchema;
+					RetryPolicy = Configuration.RetryPolicy.Factory != null
+						? Configuration.RetryPolicy.Factory(this)
+						: null;
+					break;
 
-			DataProvider       = dataProvider;
-			MappingSchema      = DataProvider.MappingSchema;
-			_connection        = transaction.Connection;
-			Transaction        = transaction;
-			_closeTransaction  = false;
-			_closeConnection   = false;
-			_disposeConnection = false;
+				case LinqToDbConnectionOptions.ConnectionSetupType.ConnectionString:
+					if (options._providerName == null && options._dataProvider == null) 
+						throw new LinqToDBException("DataProvider was not specified ");
+
+					if (options._providerName != null
+					    && !_dataProviders.TryGetValue(options._providerName, out var dataProvider))
+						throw new LinqToDBException($"DataProvider '{options._providerName}' not found.");
+					else dataProvider = options._dataProvider;
+					
+					DataProvider = dataProvider;
+					ConnectionString = options._connectionString;
+					MappingSchema = DataProvider.MappingSchema;
+					break;
+				
+				case LinqToDbConnectionOptions.ConnectionSetupType.ConnectionFactory:
+					//copy to tmp variable so that if the factory in options gets changed later we will still use the old one
+					//is this expected?
+					var originalConnectionFactory = options._connectionFactory;
+					_connectionFactory = () =>
+					{
+						var connection = originalConnectionFactory();
+
+						if (!Configuration.AvoidSpecificDataProviderAPI
+						    && !DataProvider.IsCompatibleConnection(connection))
+							throw new LinqToDBException(
+								$"DataProvider '{DataProvider}' and connection '{connection}' are not compatible.");
+
+						return connection;
+					};
+					break;
+				
+				case LinqToDbConnectionOptions.ConnectionSetupType.Connection:
+
+					if (!Configuration.AvoidSpecificDataProviderAPI
+					    && !options._dataProvider.IsCompatibleConnection(options._dbConnection))
+						throw new LinqToDBException(
+							$"DataProvider '{options._dataProvider}' and connection '{options._dbConnection}' are not compatible.");
+
+					_connection = options._dbConnection;
+					_disposeConnection = options._disposeConnection;
+					break;
+
+				case LinqToDbConnectionOptions.ConnectionSetupType.Transaction:
+					if (!Configuration.AvoidSpecificDataProviderAPI
+					    && !options._dataProvider.IsCompatibleConnection(options._dbTransaction.Connection))
+						throw new LinqToDBException(
+							$"DataProvider '{options._dataProvider}' and connection '{options._dbTransaction.Connection}' are not compatible.");
+
+					_connection        = options._dbTransaction.Connection;
+					Transaction        = options._dbTransaction;
+					_closeTransaction  = false;
+					_closeConnection   = false;
+					_disposeConnection = false;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+
+			if (options._dataProvider != null)
+			{
+				DataProvider = options._dataProvider;
+				MappingSchema      = DataProvider.MappingSchema;
+			}
+
+			if (options._mappingSchema != null)
+			{
+				AddMappingSchema(options._mappingSchema);
+			}
 		}
 
 		#endregion

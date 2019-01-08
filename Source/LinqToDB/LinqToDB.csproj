@@ -113,6 +113,7 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
 		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.1.0" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
 
@@ -135,6 +136,7 @@
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.1.0" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
 
