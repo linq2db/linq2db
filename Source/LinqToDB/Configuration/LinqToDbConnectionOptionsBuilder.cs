@@ -42,24 +42,28 @@ namespace LinqToDB.Configuration
 		{
 			return new LinqToDbConnectionOptions<TContext>(this);
 		}
+		public LinqToDbConnectionOptions Build()
+		{
+			return new LinqToDbConnectionOptions(this);
+		}
 
-		public LinqToDbConnectionOptionsBuilder UseSqlServer([JetBrains.Annotations.NotNull] string connectionString)
+		public LinqToDbConnectionOptionsBuilder UseSqlServer(string connectionString)
 		{
 			return UseConnectionString(LinqToDB.ProviderName.SqlServer, connectionString);
 		}
-		public LinqToDbConnectionOptionsBuilder UseOracle([JetBrains.Annotations.NotNull] string connectionString)
+		public LinqToDbConnectionOptionsBuilder UseOracle(string connectionString)
 		{
 			return UseConnectionString(LinqToDB.ProviderName.Oracle, connectionString);
 		}
-		public LinqToDbConnectionOptionsBuilder UsePostgreSQL([JetBrains.Annotations.NotNull] string connectionString)
+		public LinqToDbConnectionOptionsBuilder UsePostgreSQL(string connectionString)
 		{
 			return UseConnectionString(LinqToDB.ProviderName.PostgreSQL, connectionString);
 		}
-		public LinqToDbConnectionOptionsBuilder UseMySql([JetBrains.Annotations.NotNull] string connectionString)
+		public LinqToDbConnectionOptionsBuilder UseMySql(string connectionString)
 		{
 			return UseConnectionString(LinqToDB.ProviderName.MySql, connectionString);
 		}
-		public LinqToDbConnectionOptionsBuilder UseSQLite([JetBrains.Annotations.NotNull] string connectionString)
+		public LinqToDbConnectionOptionsBuilder UseSQLite(string connectionString)
 		{
 			return UseConnectionString(LinqToDB.ProviderName.SQLite, connectionString);
 		}
@@ -71,8 +75,8 @@ namespace LinqToDB.Configuration
 		/// <param name="connectionString">Database specific connections string</param>
 		/// <returns></returns>
 		public LinqToDbConnectionOptionsBuilder UseConnectionString(
-			[JetBrains.Annotations.NotNull] string providerName,
-			[JetBrains.Annotations.NotNull] string connectionString)
+			string providerName,
+			string connectionString)
 		{
 			CheckAssignSetupType(ConnectionSetupType.ConnectionString);
 
@@ -83,8 +87,8 @@ namespace LinqToDB.Configuration
 		}
 
 		public LinqToDbConnectionOptionsBuilder UseConnectionString(
-			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
-			[JetBrains.Annotations.NotNull] string connectionString)
+			IDataProvider dataProvider,
+			string connectionString)
 		{
 			CheckAssignSetupType(ConnectionSetupType.ConnectionString);
 
@@ -95,7 +99,7 @@ namespace LinqToDB.Configuration
 		}
 
 		public LinqToDbConnectionOptionsBuilder UseConfigurationString(
-			[JetBrains.Annotations.NotNull] string configurationString)
+			string configurationString)
 		{
 			CheckAssignSetupType(ConnectionSetupType.ConfigurationString);
 			ConfigurationString = configurationString ?? throw new ArgumentNullException(nameof(configurationString));
@@ -103,8 +107,8 @@ namespace LinqToDB.Configuration
 		}
 
 		public LinqToDbConnectionOptionsBuilder UseConnectionFactory(
-			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
-			[JetBrains.Annotations.NotNull] Func<IDbConnection> connectionFactory)
+			IDataProvider dataProvider,
+			Func<IDbConnection> connectionFactory)
 		{
 			CheckAssignSetupType(ConnectionSetupType.ConnectionFactory);
 
@@ -114,8 +118,8 @@ namespace LinqToDB.Configuration
 			return this;
 		}
 
-		public LinqToDbConnectionOptionsBuilder UseConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider,
-			[JetBrains.Annotations.NotNull] IDbConnection connection,
+		public LinqToDbConnectionOptionsBuilder UseConnection(IDataProvider dataProvider,
+			IDbConnection connection,
 			bool disposeConnection = false)
 		{
 			CheckAssignSetupType(ConnectionSetupType.Connection);
@@ -123,18 +127,13 @@ namespace LinqToDB.Configuration
 			DataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
 			DbConnection = connection   ?? throw new ArgumentNullException(nameof(connection));
 
-			if (!Common.Configuration.AvoidSpecificDataProviderAPI
-			    && !DataProvider.IsCompatibleConnection(DbConnection))
-				throw new LinqToDBException(
-					$"DataProvider '{DataProvider}' and connection '{DbConnection}' are not compatible.");
-
 			DisposeConnection = disposeConnection;
 
 			return this;
 		}
 
-		public LinqToDbConnectionOptionsBuilder UseTransaction([JetBrains.Annotations.NotNull] IDataProvider dataProvider,
-			[JetBrains.Annotations.NotNull] IDbTransaction transaction)
+		public LinqToDbConnectionOptionsBuilder UseTransaction(IDataProvider dataProvider,
+			IDbTransaction transaction)
 		{
 			CheckAssignSetupType(ConnectionSetupType.Transaction);
 
@@ -144,13 +143,13 @@ namespace LinqToDB.Configuration
 			return this;
 		}
 
-		public LinqToDbConnectionOptionsBuilder UseMappingSchema([JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+		public LinqToDbConnectionOptionsBuilder UseMappingSchema(MappingSchema mappingSchema)
 		{
 			MappingSchema = mappingSchema ?? throw new ArgumentNullException(nameof(mappingSchema));
 			return this;
 		}
 
-		public LinqToDbConnectionOptionsBuilder UseDataProvider([JetBrains.Annotations.NotNull] IDataProvider dataProvider)
+		public LinqToDbConnectionOptionsBuilder UseDataProvider(IDataProvider dataProvider)
 		{
 			DataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
 			return this;

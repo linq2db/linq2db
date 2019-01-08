@@ -13,14 +13,14 @@ namespace LinqToDB.Configuration
 			return connection is T;
 		}
 
-		public LinqToDbConnectionOptions([JetBrains.Annotations.NotNull] LinqToDbConnectionOptionsBuilder builder) : base(builder)
+		public LinqToDbConnectionOptions(LinqToDbConnectionOptionsBuilder builder) : base(builder)
 		{
 		}
 	}
 
 	public class LinqToDbConnectionOptions
 	{
-		public LinqToDbConnectionOptions([JetBrains.Annotations.NotNull] LinqToDbConnectionOptionsBuilder builder)
+		public LinqToDbConnectionOptions(LinqToDbConnectionOptionsBuilder builder)
 		{
 			SetupType = builder.SetupType;
 			switch (SetupType)

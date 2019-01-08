@@ -49,8 +49,8 @@ namespace LinqToDB.AspNet
 		private static void CheckContextConstructor<TContext>()
 		{
 			var constructorInfo = 
-				typeof(TContext).GetConstructorEx(new[] {typeof(LinqToDbConnectionOptions<TContext>)}) ??
-				typeof(TContext).GetConstructorEx(new[] {typeof(LinqToDbConnectionOptions)});
+				typeof(TContext).GetConstructor(new[] {typeof(LinqToDbConnectionOptions<TContext>)}) ??
+				typeof(TContext).GetConstructor(new[] {typeof(LinqToDbConnectionOptions)});
 			if (constructorInfo == null)
 			{
 				throw new ArgumentException("Missing constructor accepting 'LinqToDbContextOptions' on type "
