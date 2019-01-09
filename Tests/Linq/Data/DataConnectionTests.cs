@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 
 using LinqToDB;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
@@ -14,6 +15,9 @@ namespace Tests.Data
 {
 #if !NETSTANDARD1_6
 	using System.Configuration;
+#endif
+#if NETCOREAPP2_0
+	using Microsoft.Extensions.DependencyInjection;
 #endif
 
 	using Model;
@@ -246,6 +250,54 @@ namespace Tests.Data
 			{
 				await conn.SelectAsync(() => 1);
 			}
+		}
+		
+#if NETCOREAPP2_0
+		[Test]
+		public void TestServiceCollection([NorthwindDataContext] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddLinqToDb((serviceProvider, options) => options.UseConfigurationString(context));
+			var provider = collection.BuildServiceProvider();
+			var con = provider.GetService<DataConnection>();
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+#endif
+
+		public class DbConnection1 : DataConnection
+		{
+			public DbConnection1(LinqToDbConnectionOptions options) : base(options)
+			{
+			}
+		}
+
+		public class DbConnection2 : DataConnection
+		{
+			public DbConnection2(LinqToDbConnectionOptions<DbConnection2> options) : base(options)
+			{
+			}
+		}
+		
+#if NETCOREAPP2_0
+		[Test]
+		public void TestSettingsPerDb([NorthwindDataContext] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddLinqToDbContext<DbConnection1>((provider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDbContext<DbConnection2>((provider, options) => {});
+			
+			var serviceProvider = collection.BuildServiceProvider();
+			var c1 = serviceProvider.GetService<DbConnection1>();
+			var c2 = serviceProvider.GetService<DbConnection2>();
+			Assert.That(c1.ConfigurationString, Is.EqualTo(context));
+			Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+		}
+#endif
+		
+		[Test]
+		public void TestConstructorThrowsWhenGivenInvalidSettings()
+		{
+			Assert.Throws<LinqToDBException>(() => new DbConnection1(new LinqToDbConnectionOptions<DbConnection2>()));
 		}
 	}
 }
