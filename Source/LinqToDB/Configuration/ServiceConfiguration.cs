@@ -16,6 +16,13 @@ namespace LinqToDB.Configuration
 #if NETSTANDARD2_0
 	public static class ServiceConfiguration
 	{
+		public static IServiceCollection AddLinqToDb(
+			this IServiceCollection serviceCollection,
+			Action<IServiceProvider, LinqToDbConnectionOptions> configure,
+			ServiceLifetime lifetime = ServiceLifetime.Scoped)
+		{
+			return AddLinqToDbContext<DataConnection>(serviceCollection, configure, lifetime);
+		}
 		public static IServiceCollection AddLinqToDbContext<TContext>(
 			this IServiceCollection serviceCollection,
 			Action<IServiceProvider, LinqToDbConnectionOptions> configure,
