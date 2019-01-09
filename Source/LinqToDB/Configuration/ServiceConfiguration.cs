@@ -47,13 +47,15 @@ namespace LinqToDB.Configuration
 				},
 				lifetime));
 			serviceCollection.TryAdd(new ServiceDescriptor(typeof(LinqToDbConnectionOptions),
-				typeof(LinqToDbConnectionOptions<TContextImplementation>)));
+				provider => provider.GetService(typeof(LinqToDbConnectionOptions<TContextImplementation>)), lifetime));
 			return serviceCollection;
 		}
 
 		private static void CheckContextConstructor<TContext>()
 		{
-			var constructorInfo = typeof(TContext).GetConstructorEx(new[] {typeof(LinqToDbConnectionOptions)});
+			var constructorInfo = 
+				typeof(TContext).GetConstructorEx(new[] {typeof(LinqToDbConnectionOptions<TContext>)}) ??
+				typeof(TContext).GetConstructorEx(new[] {typeof(LinqToDbConnectionOptions)});
 			if (constructorInfo == null)
 			{
 				throw new ArgumentException("Missing constructor accepting 'LinqToDbContextOptions' on type "
@@ -210,10 +212,19 @@ namespace LinqToDB.Configuration
 			SetupType = ConnectionSetupType.DefaultConfiguration;
 			return this;
 		}
+
+		public virtual bool IsValidConfigForConnectionType(DataConnection connection)
+		{
+			return true;
+		}
 	}
 
 	//this type is used to discriminate between options for 2 different Contexts
 	public class LinqToDbConnectionOptions<T> : LinqToDbConnectionOptions
 	{
+		public override bool IsValidConfigForConnectionType(DataConnection connection)
+		{
+			return connection is T;
+		}
 	}
 }

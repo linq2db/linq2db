@@ -214,8 +214,19 @@ namespace LinqToDB.Data
 		{
 		}
 
-		public DataConnection(LinqToDbConnectionOptions options)
+		/// <summary>
+		/// Creates database connection object that uses a LinqToDbConnectionOptions to configure the connection.
+		/// </summary>
+		/// <param name="options">Options, setup ahead of time</param>
+		public DataConnection([JetBrains.Annotations.NotNull]LinqToDbConnectionOptions options)
 		{
+			if (options == null)
+				throw new ArgumentNullException(nameof(options));
+			
+			if (!options.IsValidConfigForConnectionType(this))
+				throw new LinqToDBException(
+					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(LinqToDbConnectionOptions)}<{GetType().Name}>");
+			
 			InitConfig();
 			
 			switch (options.SetupType)
