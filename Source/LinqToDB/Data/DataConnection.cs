@@ -222,7 +222,7 @@ namespace LinqToDB.Data
 			{
 				case LinqToDbConnectionOptions.ConnectionSetupType.ConfigurationString:
 				case LinqToDbConnectionOptions.ConnectionSetupType.DefaultConfiguration:
-					ConnectionString = options._configurationString ?? DefaultConfiguration;
+					ConfigurationString = options._configurationString ?? DefaultConfiguration;
 					if (ConfigurationString == null)
 						throw new LinqToDBException("Configuration string is not provided.");
 					var ci = GetConfigurationInfo(ConfigurationString);
@@ -237,7 +237,7 @@ namespace LinqToDB.Data
 
 				case LinqToDbConnectionOptions.ConnectionSetupType.ConnectionString:
 					if (options._providerName == null && options._dataProvider == null) 
-						throw new LinqToDBException("DataProvider was not specified ");
+						throw new LinqToDBException("DataProvider was not specified");
 
 					if (options._providerName != null
 					    && !_dataProviders.TryGetValue(options._providerName, out var dataProvider))
