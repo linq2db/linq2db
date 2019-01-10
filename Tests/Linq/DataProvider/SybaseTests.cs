@@ -376,7 +376,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var value = testCase.Item1;
+				var value   = testCase.Item1;
 				var literal = testCase.Item2;
 
 				// test raw literals queries

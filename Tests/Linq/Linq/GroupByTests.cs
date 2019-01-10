@@ -1445,7 +1445,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByExtraFieldBugTest([IncludeDataSources(ProviderName.MySql)] string context)
+		public void GroupByExtraFieldBugTest([IncludeDataSources(ProviderName.MySql, TestProvName.MySql57)] string context)
 		{
 			// https://github.com/igor-tkachev/LinqToDB/issues/42
 			// extra field is generated in the GROUP BY clause, for example:

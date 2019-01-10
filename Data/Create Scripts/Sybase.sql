@@ -5,7 +5,7 @@ DROP DATABASE {DBNAME}
 GO
 
 CREATE DATABASE {DBNAME}
-	ON master = '102400K'
+	ON master = '50M'
 GO
 
 USE {DBNAME}
@@ -13,6 +13,7 @@ GO
 
 sp_configure 'enable unicode normalization', 0
 GO
+
 CREATE TABLE InheritanceParent
 (
 	InheritanceParentId int          NOT NULL,
@@ -182,7 +183,7 @@ SELECT
 	 2233332,      33333, 3333333,
 	Cast('2012-12-12 12:12:12' as datetime),
 	           Cast('2012-12-12 12:12:12' as smalldatetime),
-						  Cast('2012-12-12' as date),
+	                   Cast('2012-12-12' as date),
 	                               Cast('12:12:12.010' as time),
 	      '1',     '234',   '567', '23233',  '3323',  '111',
 	        1,         2, Cast(3 as varbinary)

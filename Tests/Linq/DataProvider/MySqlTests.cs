@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
 using System.Data.Linq;
 using System.Linq;
 using System.Xml;
@@ -8,6 +11,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
@@ -16,11 +20,7 @@ using MySql.Data.Types;
 
 namespace Tests.DataProvider
 {
-	using LinqToDB.SchemaProvider;
 	using Model;
-	using System.Collections.Generic;
-	using System.Data;
-	using System.Diagnostics;
 
 	[TestFixture]
 	public class MySqlTests : DataProviderTestBase

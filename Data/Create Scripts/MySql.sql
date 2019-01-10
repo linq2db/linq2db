@@ -426,11 +426,17 @@ BEGIN
 	SELECT * FROM Person;
 END
 GO
+
+-- SKIP MySql BEGIN
+SET GLOBAL log_bin_trust_function_creators = 1;
+-- SKIP MySql END
+
 CREATE FUNCTION TestFunction(param INT)
 RETURNS VARCHAR(10)
 BEGIN
 	RETURN 'done';
 END
+
 GO
 DROP PROCEDURE IF EXISTS AddIssue792Record
 GO

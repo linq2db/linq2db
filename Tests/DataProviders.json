@@ -307,4 +307,27 @@
 			"SqlServer.2014" : { "Provider" : "System.Data.SqlClient", "ConnectionString" : "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;" }
 		}
 	}
+
+	/* DBHost2 Connections
+
+			"SqlServer"        : { "Provider" : "SqlServer",                       "ConnectionString" : "Server=DBHost2\\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;" },
+			"SqlServer.2014"   : { "Provider" : "System.Data.SqlClient",           "ConnectionString" : "Server=DBHost2\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;" },
+			"SqlServer.2012"   : { "Provider" : "System.Data.SqlClient",           "ConnectionString" : "Server=DBHost2\\SQLSERVER2012;Database=TestData;User Id=sa;Password=TestPassword;MultipleActiveResultSets=True;" },
+			"SqlServer.2012.1" : { "Provider" : "System.Data.SqlClient",           "ConnectionString" : "Server=DBHost2\\SQLSERVER2012;Database=TestData;User Id=sa;Password=TestPassword;" },
+			"SqlServer.2008"   : { "Provider" : "System.Data.SqlClient",           "ConnectionString" : "Server=DBHost2\\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;" },
+			"SqlServer.2008.1" : { "Provider" : "System.Data.SqlClient",           "ConnectionString" : "Server=DBHost2\\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;" },
+			"SqlServer.2005"   : { "Provider" : "System.Data.SqlClient",           "ConnectionString" : "Server=DBHost2\\SQLSERVER2005;Database=TestData;User Id=sa;Password=TestPassword;" },
+			"SqlServer.2005.1" : { "Provider" : "System.Data.SqlClient",           "ConnectionString" : "Server=DBHost2\\SQLSERVER2005;Database=TestData;User Id=sa;Password=TestPassword;" },
+			"DB2"              : { "Provider" : "IBM.Data.DB2",                    "ConnectionString" : "Server=dbhost2:50000;Database=TESTDATA;UID=Administrator;PWD=TestPassword;" },
+			"Firebird"         : {                                                 "ConnectionString" : "DataSource=dbhost2;Database=C:\\Data\\TestData.fdb;User Id=SYSDBA;Password=TestPassword" },
+			"Informix"         : { "Provider" : "IBM.Data.Informix",               "ConnectionString" : "Host=dbhost2;Service=9088;Server=ol_informix1210;Protocol=onsoctcp;Database=TestData;UID=informix;PWD=TestPassword;" },
+			"MySql57"          : { "Provider" : "MySql.Data.MySqlClient",          "ConnectionString" : "Server=dbhost2;Port=3306;Database=testdata;Uid=TestUser;Pwd=TestPassword;charset=utf8;Allow User Variables=True;" },
+			"MariaDB"          : { "Provider" : "MySql.Data.MySqlClient",          "ConnectionString" : "Server=dbhost2;Port=3307;Database=testdata;Uid=root;Pwd=TestPassword;charset=utf8;Allow User Variables=True;" },
+			"Oracle.Native"    : { "Provider" : "Oracle.DataAccess.Client",        "ConnectionString" : "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost2)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=TestData)));User Id=TestUser;Password=TestPassword;" },
+			"Oracle.Managed"   : { "Provider" : "Oracle.ManagedDataAccess.Client", "ConnectionString" : "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost2)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=TestData)));User Id=TestUser;Password=TestPassword;" },
+			"PostgreSQL"       : { "Provider" : "Npgsql",                          "ConnectionString" : "Server=dbhost2;Port=5432;Database=TestData;User Id=postgres;Password=TestPassword;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
+			"Sybase"           : { "Provider" : "Sybase.Data.AseClient",           "ConnectionString" : "Data Source=dbhost2;Port=5000;Database=TestData;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;Charset='iso_1';" },
+			"Sybase.Managed"   : { "Provider" : "AdoNetCore.AseClient",            "ConnectionString" : "Data Source=dbhost2;Port=5000;Database=TestDataCore;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;Charset='iso_1';" },
+			"Northwind"        : { "Provider" : "System.Data.SqlClient",           "ConnectionString" : "Server=DBHost2\\SQLSERVER2012;Database=Northwind;User Id=sa;Password=TestPassword" },
+	 */
 }

@@ -1072,7 +1072,6 @@ namespace LinqToDB.Data
 				});
 			}
 
-
 			try
 			{
 				int ret;
