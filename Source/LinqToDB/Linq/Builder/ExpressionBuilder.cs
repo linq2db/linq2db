@@ -434,7 +434,39 @@ namespace LinqToDB.Linq.Builder
 							}
 							
 							return mc;
-						}						
+						}		
+						
+					case ExpressionType.Invoke:
+						{
+							var invocation = (InvocationExpression)expr;
+							if (invocation.Expression.NodeType == ExpressionType.Call)
+							{
+								var mc = (MethodCallExpression)invocation.Expression;
+								if (mc.Method.Name == "Compile" &&
+								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
+								{
+									if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
+									{
+										var map = new Dictionary<Expression, Expression>();
+										for (int i = 0; i < invocation.Arguments.Count; i++)
+										{
+											map.Add(lambda.Parameters[i], invocation.Arguments[i]);
+										}
+
+										var newBody = lambda.Body.Transform(se =>
+										{
+											if (se.NodeType == ExpressionType.Parameter &&
+											    map.TryGetValue(se, out var newExpr))
+												return newExpr;
+											return se;
+										});
+
+										return ExpandExpression(newBody);
+									}
+								}
+							}
+							break;
+						}
 				}
 
 				return expr;
