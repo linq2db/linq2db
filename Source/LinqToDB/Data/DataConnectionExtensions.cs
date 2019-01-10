@@ -1422,7 +1422,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Performs bulk intert operation into table specified in <paramref name="options"/> parameter or into table, identified by <paramref name="table"/>.
+		/// Performs bulk insert operation into table specified in <paramref name="options"/> parameter or into table, identified by <paramref name="table"/>.
 		/// </summary>
 		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
 		/// <param name="table">Target table.</param>
@@ -1444,7 +1444,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Performs bulk intert operation into table, identified by <paramref name="table"/>.
+		/// Performs bulk insert operation into table, identified by <paramref name="table"/>.
 		/// </summary>
 		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
 		/// <param name="table">Target table.</param>
@@ -1471,7 +1471,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Performs bulk intert operation into table, identified by <paramref name="table"/>.
+		/// Performs bulk insert operation into table, identified by <paramref name="table"/>.
 		/// </summary>
 		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
 		/// <param name="table">Target table.</param>
