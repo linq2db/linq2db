@@ -78,7 +78,7 @@
         <Link>Database/Create Scripts/%(FileName)%(Extension)</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Compile Include="..\Linq\Infrastructure\ActiveIssueConfigurationTests.cs" Link="ActiveIssueConfigurationTests.cs" />
+    <Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 
     <!--
     <PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />

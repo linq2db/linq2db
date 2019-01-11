@@ -421,24 +421,22 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext                   select,
 			List<SqlSetExpression> items)
 		{
-			var ext = extract.Body;
-
 			if (!update.Type.IsConstantable() && !builder.AsParameters.Contains(update))
 				builder.AsParameters.Add(update);
 
-			while (ext.NodeType == ExpressionType.Convert || ext.NodeType == ExpressionType.ConvertChecked)
-				ext = ((UnaryExpression)ext).Operand;
+			var ext    = extract.Body;
+			var member = MemberHelper.GetMemberInfo(ext);
 
-			if (ext.NodeType != ExpressionType.MemberAccess || ext.GetRootObject(builder.MappingSchema) != extract.Parameters[0])
+			var rootObject = ext.GetRootObject(builder.MappingSchema);
+
+			if (!member.IsPropertyEx() && !member.IsFieldEx() || rootObject != extract.Parameters[0])
 				throw new LinqException("Member expression expected for the 'Set' statement.");
-
-			var body   = (MemberExpression)ext;
-			var member = body.Member;
 
 			if (member is MethodInfo)
 				member = ((MethodInfo)member).GetPropertyInfo();
 
-			var column = select.ConvertToSql(body, 1, ConvertFlags.Field);
+			var columnExpr = Expression.MakeMemberAccess(rootObject, member);
+			var column     = select.ConvertToSql(columnExpr, 1, ConvertFlags.Field);
 
 			if (column.Length == 0)
 				throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType?.Name, member.Name);
