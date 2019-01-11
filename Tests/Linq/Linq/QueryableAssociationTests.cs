@@ -268,7 +268,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationObjectTest2([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationObjectTest2([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -383,7 +383,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyLazy([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationOneToManyLazy([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -406,7 +406,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyLazyProjection([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationOneToManyLazyProjection([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
