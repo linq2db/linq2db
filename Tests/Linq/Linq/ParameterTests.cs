@@ -48,6 +48,16 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TestOptimizingParameters([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id || _.ID <= id || _.ID == id).Count());
+			}
+		}
+
+		[Test]
 		public void CharAsSqlParameter1(
 			[DataSources(
 				ProviderName.SqlCe,
