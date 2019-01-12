@@ -21,7 +21,7 @@ void CheckNameCasing()
 
 		if (!name.StartsWith("\""))
 			if (name.StartsWith("_") || name.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
-				t.TableName = "\\\"" + name + "\\\"";
+				t.TableName = "\"" + name + "\"";
 
 		foreach (var col in t.Columns.Values)
 		{
@@ -29,7 +29,7 @@ void CheckNameCasing()
 
 			if (!name.StartsWith("\""))
 				if (name.StartsWith("_") || name.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
-					col.ColumnName = "\\\"" + name + "\\\"";
+					col.ColumnName = "\"" + name + "\"";
 		}
 	}
 }
