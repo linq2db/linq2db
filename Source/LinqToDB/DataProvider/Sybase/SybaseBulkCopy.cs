@@ -8,9 +8,9 @@ namespace LinqToDB.DataProvider.Sybase
 	class SybaseBulkCopy : BasicBulkCopy
 	{
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return MultipleRowsCopy2(dataConnection, options, source, "");
+			return MultipleRowsCopy2(table, options, source, "");
 		}
 	}
 }

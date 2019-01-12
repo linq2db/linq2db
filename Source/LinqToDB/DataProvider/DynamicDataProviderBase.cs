@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
@@ -204,16 +205,34 @@ namespace LinqToDB.DataProvider
 		// {
 		//     ReaderExpressions[new ReaderInfo { FieldType = typeof(T), DataTypeName = dataTypeName }] = expr;
 		// }
-		protected void SetField(Type fieldType, string dataTypeName, string methodName)
+		protected bool SetField(Type fieldType, string dataTypeName, string methodName, bool throwException = true)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter      = Expression.Parameter(typeof(int),    "i");
 
+			MethodCallExpression call;
+
+			if (throwException)
+			{
+				call = Expression.Call(dataReaderParameter, methodName, null, indexParameter);
+			}
+			else
+			{
+				var methodInfo = DataReaderType.GetMethodsEx().FirstOrDefault(m => m.Name == methodName);
+
+				if (methodInfo == null)
+					return false;
+
+				call = Expression.Call(dataReaderParameter, methodInfo, indexParameter);
+			}
+
 			ReaderExpressions[new ReaderInfo { FieldType = fieldType, DataTypeName = dataTypeName }] =
 				Expression.Lambda(
-					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
+					call,
 					dataReaderParameter,
 					indexParameter);
+
+			return true;
 		}
 
 		// SetProviderField<MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
@@ -258,17 +277,34 @@ namespace LinqToDB.DataProvider
 		// {
 		//     ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
 		// }
-		protected void SetProviderField(Type toType, Type fieldType, string methodName)
+		protected bool SetProviderField(Type toType, Type fieldType, string methodName, bool throwException = true)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter      = Expression.Parameter(typeof(int),    "i");
-			var methodCall          = Expression.Call(dataReaderParameter, methodName, null, indexParameter) as Expression;
+
+			Expression methodCall;
+
+			if (throwException)
+			{
+				methodCall = Expression.Call(dataReaderParameter, methodName, null, indexParameter);
+			}
+			else
+			{
+				var methodInfo = DataReaderType.GetMethodsEx().FirstOrDefault(m => m.Name == methodName);
+
+				if (methodInfo == null)
+					return false;
+
+				methodCall = Expression.Call(dataReaderParameter, methodInfo, indexParameter);
+			}
 
 			if (methodCall.Type != toType)
 				methodCall = Expression.Convert(methodCall, toType);
 
 			ReaderExpressions[new ReaderInfo { ToType = toType, ProviderFieldType = fieldType }] =
 				Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+
+			return true;
 		}
 
 		#endregion
