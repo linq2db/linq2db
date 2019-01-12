@@ -4,7 +4,7 @@ using LinqToDB;
 using LinqToDB.Data;
 
 using IBM.Data.Informix;
-
+using LinqToDB.DataProvider.Informix;
 using NUnit.Framework;
 
 namespace Tests.DataProvider
@@ -61,6 +61,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyLinqTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
+			InformixTools.ResolveInformix(typeof(IBM.Data.Informix.IfxConnection).Assembly);
+
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
 				using (var db = new DataConnection(context))
@@ -82,6 +84,16 @@ namespace Tests.DataProvider
 					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
 				}
 			}
+		}
+
+		[Test]
+		public void Driver()
+		{
+			InformixTools.ResolveInformix(typeof(IBM.Data.Informix.IfxConnection).Assembly);
+
+			var dr = null as IfxDataReader;
+
+			var _ = dr.GetBigInt(0);
 		}
 	}
 }
