@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -27,15 +28,17 @@ namespace LinqToDB.DataProvider.Oracle
 		Action<object,Action<object>>       _bulkCopySubscriber;
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection,
+			[JetBrains.Annotations.NotNull] ITable<T> table,
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
+			var dataConnection = table?.DataContext as DataConnection;
+
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
 			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName  = GetTableName(sqlBuilder, options, descriptor);
+			var tableName  = GetTableName(sqlBuilder, options, table);
 
 			if (dataConnection.Transaction == null)
 			{
@@ -115,28 +118,22 @@ namespace LinqToDB.DataProvider.Oracle
 
 			options.BulkCopyType = BulkCopyType.MultipleRows;
 
-			return MultipleRowsCopy(dataConnection, options, source);
+			return MultipleRowsCopy(table, options, source);
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			switch (OracleTools.UseAlternativeBulkCopy)
 			{
-				case AlternativeBulkCopy.InsertInto:
-					return MultipleRowsCopy2(dataConnection, options, source);
-				case AlternativeBulkCopy.InsertDual:
-					return MultipleRowsCopy3(dataConnection, options, source);
-				default:
-					return MultipleRowsCopy1(dataConnection, options, source);
+				case AlternativeBulkCopy.InsertInto: return MultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source);
+				case AlternativeBulkCopy.InsertDual: return MultipleRowsCopy3(new MultipleRowsHelper<T>(table, options), source);
+				default                            : return MultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source);
 			}
 		}
 
-		new BulkCopyRowsCopied MultipleRowsCopy1<T>(
-			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		new static BulkCopyRowsCopied MultipleRowsCopy1(MultipleRowsHelper helper, IEnumerable source)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options);
-
 			helper.StringBuilder.AppendLine("INSERT ALL");
 			helper.SetHeader();
 
@@ -175,11 +172,8 @@ namespace LinqToDB.DataProvider.Oracle
 			return helper.RowsCopied;
 		}
 
-		BulkCopyRowsCopied MultipleRowsCopy2<T>(
-			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		static BulkCopyRowsCopied MultipleRowsCopy2(MultipleRowsHelper helper, IEnumerable source)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options);
-
 			helper.StringBuilder.AppendFormat("INSERT INTO {0} (", helper.TableName);
 
 			foreach (var column in helper.Columns)
@@ -199,7 +193,7 @@ namespace LinqToDB.DataProvider.Oracle
 			helper.StringBuilder.AppendLine(")");
 			helper.SetHeader();
 
-			var list = new List<T>(31);
+			var list = new List<object>(31);
 
 			foreach (var item in source)
 			{
@@ -210,7 +204,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (helper.CurrentCount >= helper.BatchSize)
 				{
-					if (!Execute(dataConnection, helper, list))
+					if (!Execute(helper, list))
 						return helper.RowsCopied;
 
 					list.Clear();
@@ -219,16 +213,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (helper.CurrentCount > 0)
 			{
-				Execute(dataConnection, helper, list);
+				Execute(helper, list);
 			}
 
 			return helper.RowsCopied;
 		}
 
-		BulkCopyRowsCopied MultipleRowsCopy3<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		static BulkCopyRowsCopied MultipleRowsCopy3(MultipleRowsHelper helper, IEnumerable source)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options);
-
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
 				.Append("(");
@@ -283,17 +275,17 @@ namespace LinqToDB.DataProvider.Oracle
 			return helper.RowsCopied;
 		}
 
-		bool Execute<T>(DataConnection dataConnection, MultipleRowsHelper<T> helper, List<T> list)
+		static bool Execute(MultipleRowsHelper helper, List<object> list)
 		{
 			for (var i = 0; i < helper.Columns.Length; i++)
 			{
 				var column   = helper.Columns[i];
 				var dataType = column.DataType == DataType.Undefined
-					? dataConnection.MappingSchema.GetDataType(column.MemberType).DataType
+					? helper.DataConnection.MappingSchema.GetDataType(column.MemberType).DataType
 					: column.DataType;
 				//var type     = dataConnection.DataProvider.ConvertParameterType(column.MemberType, dataType);
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(dataConnection.MappingSchema, o)).ToArray(), dataType, column.DbType)
+				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(helper.DataConnection.MappingSchema, o)).ToArray(), dataType, column.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,

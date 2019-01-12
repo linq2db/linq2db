@@ -447,7 +447,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Dictionary : if (_setHstore    != null) _setHstore(parameter);    else base.SetParameterType(parameter, dataType); break;
 				case DataType.Json       : if (_setJson      != null) _setJson(parameter);      else base.SetParameterType(parameter, dataType); break;
 				case DataType.BinaryJson : if (_setJsonb     != null) _setJsonb(parameter);     else base.SetParameterType(parameter, dataType); break;
-				default :     
+				default :
 				{
 					if (_setNativeParameterType != null && !string.IsNullOrEmpty(dataType.DbType))
 					{
@@ -472,11 +472,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new PostgreSQLBulkCopy(this, GetConnectionType()).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? PostgreSQLTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}
