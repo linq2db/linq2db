@@ -92,11 +92,11 @@ namespace LinqToDB.DataProvider.Informix
 
 			if (!Configuration.AvoidSpecificDataProviderAPI)
 			{
-				SetField(typeof(Int64), "BIGINT", "GetBigInt");
+				SetField(typeof(Int64), "BIGINT", "GetBigInt", false);
 
 				SetProviderField(_ifxDecimal,  typeof(decimal),  "GetIfxDecimal");
 				SetProviderField(_ifxDateTime, typeof(DateTime), "GetIfxDateTime");
-				SetProviderField(_ifxTimeSpan, typeof(TimeSpan), "GetIfxTimeSpan");
+				SetProviderField(_ifxTimeSpan, typeof(TimeSpan), "GetIfxTimeSpan", false);
 			}
 
 			var p = Expression.Parameter(typeof(TimeSpan));

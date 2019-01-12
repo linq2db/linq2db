@@ -14,6 +14,7 @@ using System.ServiceModel.Description;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Informix;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -49,6 +50,10 @@ namespace Tests
 				Environment.Version
 #endif
 				);
+
+#if NET46
+//			InformixTools.ResolveInformix(typeof(IBM.Data.Informix.IfxConnection).Assembly);
+#endif
 
 			var traceCount = 0;
 
@@ -97,8 +102,15 @@ namespace Tests
 			var configName = "CORE1";
 #elif NETSTANDARD2_0
 			var configName = "CORE2";
-#else
+#elif NET46
 			var configName = "NET45";
+#elif NETCOREAPP2_0
+			var configName = "CORE1";
+#elif NETCOREAPP1_0
+			var configName = "CORE2";
+#else
+			var configName = "";
+#error Unknown framework
 #endif
 
 #if APPVEYOR

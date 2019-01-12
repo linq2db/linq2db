@@ -5,7 +5,7 @@ open LinqToDB.Mapping
 
 
 
-let Initialize () = 
+let Initialize () =
     // Add a AddScalarType for all option types you plan on using.
     let ms = new MappingSchema();
     ms.AddScalarType(typeof<string option>,          None, LinqToDB.DataType.NVarChar)

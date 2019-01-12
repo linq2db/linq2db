@@ -1,8 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\..\Build\linq2db.Default.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
+		<TargetFrameworks>net46;netcoreapp1.0;netcoreapp2.0</TargetFrameworks>
 		<Configurations>Debug;Release</Configurations>
 	</PropertyGroup>
 
