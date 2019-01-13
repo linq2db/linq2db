@@ -26,6 +26,7 @@ bool   GenerateDbTypes                     = false;
 bool   GenerateSchemaAsType                = false;
 bool   GenerateViews                       = true;
 bool   GenerateProcedureResultAsList       = false;
+bool   PrefixTableMappingWithSchema        = true;
 string SchemaNameSuffix                    = "Schema";
 string SchemaDataContextTypeName           = "DataContext";
 
@@ -1006,7 +1007,7 @@ void MakeMembersNamesUnique(IEnumerable<IClassMember> members, string defaultNam
 	LinqToDB.Common.Utils.MakeUniqueNames(
 		members,
 		reservedNames,
-		m => m is Table tbl ? (tbl.Schema != null ? tbl.Schema + "_" : null) + tbl.Name : (m is TypeBase t ? t.Name : ((MemberBase)m).Name),
+		m => m is Table tbl ? (tbl.Schema != null && !tbl.IsDefaultSchema && PrefixTableMappingWithSchema ? tbl.Schema + "_" : null) + tbl.Name : (m is TypeBase t ? t.Name : ((MemberBase)m).Name),
 		(m, newName) =>
 		{
 			if (m is TypeBase t)
