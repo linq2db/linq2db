@@ -73,7 +73,7 @@ void FixFunctionNames()
 	foreach (var proc in Procedures.Values)
 	{
 		if (proc.ProcedureName.Any(char.IsUpper))
-			proc.ProcedureName = "\\\"" + proc.ProcedureName + "\\\"";
+			proc.ProcedureName = "\"" + proc.ProcedureName + "\"";
 	}
 }
 
@@ -108,12 +108,12 @@ void SetCaseSensitiveNames()
 		foreach (var t in Tables.Values)
 		{
 			if (t.TableName.Any(char.IsUpper))
-				t.TableName = "\\\"" + t.TableName + "\\\"";
+				t.TableName = "\"" + t.TableName + "\"";
 
 			foreach (var c in t.Columns.Values)
 			{
 				if (c.ColumnName.Any(char.IsUpper))
-					c.ColumnName = "\\\"" + c.ColumnName + "\\\"";
+					c.ColumnName = "\"" + c.ColumnName + "\"";
 			}
 		}
 	}
