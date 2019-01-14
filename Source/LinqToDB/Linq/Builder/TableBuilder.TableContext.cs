@@ -220,13 +220,13 @@ namespace LinqToDB.Linq.Builder
 				if (buildBlock && _variable != null)
 					return _variable;
 
-				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
-
 				// choosing type that can be instantiated
 				if ((objectType.IsInterfaceEx() || objectType.IsAbstractEx()) && !(ObjectType.IsInterfaceEx() || ObjectType.IsAbstractEx()))
 				{
 					objectType = ObjectType;
 				}
+
+				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
 				var expr =
 					IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(objectType)) ?
@@ -540,7 +540,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					info = ConvertToSql(null, 0, ConvertFlags.All);
 
-					var table = new SqlTable(Builder.MappingSchema, tableType);
+					var table = new SqlTable(Builder.MappingSchema, ObjectType);
 					var q     =
 						from fld1 in table.Fields.Values.Select((f,i) => new { f, i })
 						join fld2 in info on fld1.f.Name equals ((SqlField)fld2.Sql).Name
