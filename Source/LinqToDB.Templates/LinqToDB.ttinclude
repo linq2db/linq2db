@@ -41,10 +41,10 @@ Func<Column, string, string, bool, string> BuildColumnComparison = (c, padding1,
 static IEnumerable<Method> GetConstructorsImpl(string defaultConfiguration, string name)
 {
 	if (defaultConfiguration == null)
-		yield return new Method(null, name);
+		yield return new Method((Func<string>)null, name);
 	else
-		yield return new Method(null, name) { AfterSignature = { ": base(\"" + defaultConfiguration + "\")" } };
-	yield return new Method(null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature = { ": base(configuration)" } };
+		yield return new Method((Func<string>)null, name) { AfterSignature = { ": base(\"" + defaultConfiguration + "\")" } };
+	yield return new Method((Func<string>)null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature = { ": base(configuration)" } };
 }
 
 void GenerateTypesFromMetadata()
@@ -534,7 +534,7 @@ void GenerateTypesFromMetadata()
 					if (key.AssociationType != AssociationType.OneToMany)
 					{
 						var single = new Method(() => t.TypePrefix + t.TypeName, GetAssociationExtensionSinglularName(key));
-						
+
 						single.ParameterBuilders.Add(() => string.Format("this {0}{1} obj", key.OtherTable.TypePrefix, key.OtherTable.TypeName));
 
 						single.ParameterBuilders.Add(() => "IDataContext db");
