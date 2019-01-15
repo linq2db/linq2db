@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-
+using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -137,5 +137,30 @@ namespace Tests.Playground
 				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
 			}
 		}
+
+		[Test]
+		public void InvocationTestByInvoke([SQLiteDataSources] string context, [Values(1, 2)] int param)
+		{
+			var sampleData = GenerateData();
+
+			Expression<Func<int, int, int>> func = (p1, p2) => p1 * 10 + p2 * 2;
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(sampleData))
+			{
+				var query = table.AsQueryable();
+
+				query.Set(q => q.Value, q => func.Compile()(param, q.Value)).Update();
+
+				var compiled = func.Compile();
+				foreach (var sd in sampleData)
+				{
+					sd.Value = compiled(param, sd.Value);
+				}
+
+				AreEqual(sampleData, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+			}
+		}
+
 	}
 }

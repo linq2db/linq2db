@@ -26,6 +26,7 @@ bool   GenerateDbTypes                     = false;
 bool   GenerateSchemaAsType                = false;
 bool   GenerateViews                       = true;
 bool   GenerateProcedureResultAsList       = false;
+bool   PrefixTableMappingWithSchema        = true;
 string SchemaNameSuffix                    = "Schema";
 string SchemaDataContextTypeName           = "DataContext";
 
@@ -43,8 +44,8 @@ static IEnumerable<Method> GetConstructorsImpl(string defaultConfiguration, stri
 	if (defaultConfiguration == null)
 		yield return new Method((Func<string>)null, name);
 	else
-		yield return new Method((Func<string>)null, name) { AfterSignature = { ": base(\"" + defaultConfiguration + "\")" } };
-	yield return new Method((Func<string>)null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature = { ": base(configuration)" } };
+		yield return new Method(null, name) { AfterSignature = { ": base(" + ToStringLiteral(defaultConfiguration) + ")" } };
+	yield return new Method(null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature = { ": base(configuration)" } };
 }
 
 void GenerateTypesFromMetadata()
@@ -230,17 +231,17 @@ void GenerateTypesFromMetadata()
 				null);
 
 			if (GenerateObsoleteAttributeForAliases)
-				aProp.Attributes.Add(new Attribute("Obsolete", "\"Use " + t.DataContextPropertyName + " instead.\""));
+				aProp.Attributes.Add(new Attribute("Obsolete", ToStringLiteral("Use " + t.DataContextPropertyName + " instead.")));
 
 			aliases.Members.Add(aProp);
 		}
 
 		var tableAttrs = new List<string>();
 
-		if (DatabaseName != null) tableAttrs.Add("Database=" + '"' + DatabaseName + '"');
-		if (t.Schema     != null) tableAttrs.Add("Schema="   + '"' + t.Schema     + '"');
+		if (DatabaseName != null) tableAttrs.Add("Database="  + ToStringLiteral(DatabaseName));
+		if (t.Schema     != null) tableAttrs.Add("Schema="    + ToStringLiteral(t.Schema));
 
-		tableAttrs.Add((tableAttrs.Count == 0 ? "" : "Name=") + '"' + t.TableName + '"');
+		tableAttrs.Add((tableAttrs.Count == 0 ? "" : "Name=") + ToStringLiteral(t.TableName));
 
 		if (t.IsView)
 			tableAttrs.Add("IsView=true");
@@ -272,7 +273,7 @@ void GenerateTypesFromMetadata()
 		var allNullable    = t.Columns.Values.All  (c => c.IsNullable || c.IsIdentity);
 		var nameMaxLen     = t.Columns.Values.Max  (c => (int?)(c.MemberName == c.ColumnName
 			? 0
-			: NormalizeStringName(c.ColumnName).Length)) ?? 0;
+			: ToStringLiteral(c.ColumnName).Length)) ?? 0;
 		var dbTypeMaxLen   = t.Columns.Values.Max  (c => (int?)(c.ColumnType.Length)) ?? 0;
 		var dataTypeMaxLen = t.Columns.Values.Where(c => c.DataType != null).Max  (c => (int?)(c.DataType.Length)) ?? 0;
 		var dataTypePrefix = t.Columns.Values.Any  (c => c.MemberName == "DataType") ? "LinqToDB." : "";
@@ -286,7 +287,7 @@ void GenerateTypesFromMetadata()
 
 			if (c.MemberName != c.ColumnName)
 			{
-				var columnNameInAttr = NormalizeStringName(c.ColumnName);
+				var columnNameInAttr = ToStringLiteral(c.ColumnName);
 
 				var space = new string(' ', nameMaxLen - columnNameInAttr.Length);
 
@@ -303,7 +304,7 @@ void GenerateTypesFromMetadata()
 			{
 				var space = new string(' ', dbTypeMaxLen - c.ColumnType.Length);
 
-				ca.Parameters.Add("DbType=\"" + c.ColumnType + '"' + space);
+				ca.Parameters.Add("DbType=" + ToStringLiteral(c.ColumnType) + space);
 				canBeReplaced = false;
 			}
 
@@ -425,9 +426,9 @@ void GenerateTypesFromMetadata()
 				caProp.Comment.AddRange(columnComments);
 
 				if (GenerateObsoleteAttributeForAliases)
-					caProp.Attributes.Add(new Attribute("Obsolete", "\"Use " + c.MemberName + " instead.\""));
+					caProp.Attributes.Add(new Attribute("Obsolete", ToStringLiteral("Use " + c.MemberName + " instead.")));
 
-				caProp.Attributes.Add(new Attribute("ColumnAlias", "\"" + c.MemberName + "\""));
+				caProp.Attributes.Add(new Attribute("ColumnAlias" , ToStringLiteral(c.MemberName)));
 
 				columnAliases.Members.Add(caProp);
 			}
@@ -463,8 +464,8 @@ void GenerateTypesFromMetadata()
 
 					var aa = new Attribute("Association");
 
-					aa.Parameters.Add("ThisKey=\""   + string.Join(", ", (from c in key.ThisColumns  select c.MemberName).ToArray()) + "\"");
-					aa.Parameters.Add("OtherKey=\""  + string.Join(", ", (from c in key.OtherColumns select c.MemberName).ToArray()) + "\"");
+					aa.Parameters.Add("ThisKey="   + ToStringLiteral(string.Join(", ", (from c in key.ThisColumns  select c.MemberName).ToArray())));
+					aa.Parameters.Add("OtherKey="  + ToStringLiteral(string.Join(", ", (from c in key.OtherColumns select c.MemberName).ToArray())));
 					aa.Parameters.Add("CanBeNull=" + (key.CanBeNull ? "true" : "false"));
 
 					switch (key.AssociationType)
@@ -477,9 +478,9 @@ void GenerateTypesFromMetadata()
 					if (key.BackReference != null)
 					{
 						if (!string.IsNullOrEmpty(key.KeyName))
-							aa.Parameters.Add("KeyName=\"" + key.KeyName + "\"");
+							aa.Parameters.Add("KeyName=" + ToStringLiteral(key.KeyName));
 						if (GenerateBackReferences && !string.IsNullOrEmpty(key.BackReference.MemberName))
-							aa.Parameters.Add("BackReferenceName=\"" + key.BackReference.MemberName + "\"");
+							aa.Parameters.Add("BackReferenceName=" + ToStringLiteral(key.BackReference.MemberName));
 					}
 					else
 					{
@@ -646,7 +647,7 @@ void GenerateTypesFromMetadata()
 				aClass.Comment.AddRange(comments);
 
 			if (GenerateObsoleteAttributeForAliases)
-				aClass.Attributes.Add(new Attribute("Obsolete", "\"Use " + t.TypeName + " instead.\""));
+				aClass.Attributes.Add(new Attribute("Obsolete", ToStringLiteral("Use " + t.TypeName + " instead.")));
 
 			Model.Types.Add(aClass);
 		}
@@ -720,10 +721,10 @@ void GenerateTypesFromMetadata()
 			{
 				var tableAttrs = new List<string>();
 
-				if (DatabaseName != null) tableAttrs.Add("Database=" + '"' + DatabaseName + '"');
-				if (p.Schema     != null) tableAttrs.Add("Schema="   + '"' + p.Schema     + '"');
+				if (DatabaseName != null) tableAttrs.Add("Database=" + ToStringLiteral(DatabaseName));
+				if (p.Schema     != null) tableAttrs.Add("Schema="   + ToStringLiteral(p.Schema));
 
-				tableAttrs.Add("Name=" + '"' + p.ProcedureName + '"');
+				tableAttrs.Add("Name=" + ToStringLiteral(p.ProcedureName));
 
 				p.Attributes.Add(new Attribute("Sql.TableFunction", tableAttrs.ToArray()));
 
@@ -734,7 +735,7 @@ void GenerateTypesFromMetadata()
 				p.IsStatic = true;
 				p.TypeBuilder = () => p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
 				var paramCount = p.ProcParameters.Count(pr => !pr.IsResult);
-				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + (p.Schema != null ? p.Schema + "." : null) + p.ProcedureName + "\"", "ServerSideOnly=true, IsAggregate = true" + (paramCount > 0 ? (", ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }") : null)));
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + ToStringLiteral((p.Schema != null ? p.Schema + "." : null) + p.ProcedureName), "ServerSideOnly=true, IsAggregate = true" + (paramCount > 0 ? (", ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }") : null)));
 
 				if (p.IsDefaultSchema || !GenerateSchemaAsType)
 					p.ParameterBuilders.Add(() => "this IEnumerable<TSource> src");
@@ -750,7 +751,7 @@ void GenerateTypesFromMetadata()
 			{
 				p.IsStatic    = true;
 				p.TypeBuilder = () => p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
-				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + (p.Schema != null ? p.Schema + "." : null)  + p.ProcedureName + "\"", "ServerSideOnly=true"));
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + ToStringLiteral((p.Schema != null ? p.Schema + "." : null)  + p.ProcedureName), "ServerSideOnly=true"));
 			}
 			else
 			{
@@ -800,7 +801,7 @@ void GenerateTypesFromMetadata()
 						(string)SqlBuilder.Convert(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
 					).ToString();
 
-				spName = "\"" + spName.Replace("\"", "\\\"") + "\"";
+				spName = ToStringLiteral(spName);
 
 				var inputParameters      = p.ProcParameters.Where(pp => pp.IsIn).            ToList();
 				var outputParameters     = p.ProcParameters.Where(pp => pp.IsOut).           ToList();
@@ -865,14 +866,14 @@ void GenerateTypesFromMetadata()
 					{
 						var str = string.Format(
 							!pr.IsIn && pr.IsOut
-								? "\tnew DataParameter(\"{0}\", null, {3}{4})"
-								: "\tnew DataParameter(\"{0}\", {1}{2}, {3}{4})" + (GenerateProcedureDbType(pr) ? "{{ DbType = \"{5}\" }}" : null),
-							pr.SchemaName,
+								? "\tnew DataParameter({0}, null, {3}{4})"
+								: "\tnew DataParameter({0}, {1}{2}, {3}{4})" + (GenerateProcedureDbType(pr) ? "{{ DbType = {5} }}" : null),
+							ToStringLiteral(pr.SchemaName),
 							LenDiff(maxLenSchema, pr.SchemaName),
 							pr.ParameterName,
 							LenDiff(maxLenParam, pr.ParameterName),
 							"DataType." + pr.DataType,
-							pr.SchemaType);
+							ToStringLiteral(pr.SchemaType));
 
 						if (pr.IsOut)
 						{
@@ -905,12 +906,12 @@ void GenerateTypesFromMetadata()
 
 					foreach (var pr in p.ProcParameters.Where(_ => _.IsOut))
 					{
-						p.BodyBuilders.Add(() => new [] { string.Format("{0} {1}= Converter.ChangeTypeTo<{2}>{3}(((IDbDataParameter)dataConnection.Command.Parameters[\"{4}\"]).{5}Value);",
+						p.BodyBuilders.Add(() => new [] { string.Format("{0} {1}= Converter.ChangeTypeTo<{2}>{3}(((IDbDataParameter)dataConnection.Command.Parameters[{4}]).{5}Value);",
 							pr.ParameterName,
 							LenDiff(maxLenParam,  pr.ParameterName),
 							pr.ParameterType,
 							LenDiff(maxLenType,   pr.ParameterType),
-							pr.SchemaName,
+							ToStringLiteral(pr.SchemaName),
 							LenDiff(maxLenSchema, pr.SchemaName)) });
 					}
 
@@ -925,7 +926,7 @@ void GenerateTypesFromMetadata()
 				foreach (var c in p.ResultTable.Columns.Values)
 				{
 					if (c.MemberName != c.ColumnName)
-						c.Attributes.Add(new Attribute("Column") { Parameters = { NormalizeStringName(c.ColumnName) } });
+						c.Attributes.Add(new Attribute("Column") { Parameters = { ToStringLiteral(c.ColumnName) } });
 					columns.Members.Add(c);
 				}
 
@@ -1006,7 +1007,7 @@ void MakeMembersNamesUnique(IEnumerable<IClassMember> members, string defaultNam
 	LinqToDB.Common.Utils.MakeUniqueNames(
 		members,
 		reservedNames,
-		m => m is Table tbl ? (tbl.Schema != null ? tbl.Schema + "_" : null) + tbl.Name : (m is TypeBase t ? t.Name : ((MemberBase)m).Name),
+		m => m is Table tbl ? (tbl.Schema != null && !tbl.IsDefaultSchema && PrefixTableMappingWithSchema ? tbl.Schema + "_" : null) + tbl.Name : (m is TypeBase t ? t.Name : ((MemberBase)m).Name),
 		(m, newName) =>
 		{
 			if (m is TypeBase t)
@@ -1032,11 +1033,10 @@ IEnumerable<IClassMember> GetAllClassMembers(IEnumerable<IClassMember> members, 
 	}
 }
 
+// left for backward compatibility
 string NormalizeStringName(string name)
 {
-	if (name.Contains("\"") || name.Contains("\\"))
-		return @"@""" + name.Replace(@"""", @"""""") + @"""";
-	return "\"" + name + "\"";
+	return ToStringLiteral(name);
 }
 
 #>

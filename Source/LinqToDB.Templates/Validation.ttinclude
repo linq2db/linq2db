@@ -54,7 +54,7 @@ void ValidationImpl()
 				cl.Attributes.Add(
 					new Attribute("CustomValidation",
 						"typeof(" + cl.Name + ".CustomValidator)",
-						"\"" + mname + "\"")
+						ToStringLiteral(mname))
 						{
 							IsSeparated = true
 						});

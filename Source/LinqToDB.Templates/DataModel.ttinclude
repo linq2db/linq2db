@@ -123,6 +123,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 			table = new Table
 			{
 				TableSchema             = t,
+				IsDefaultSchema         = t.IsDefaultSchema,
 				Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.SchemaName)? null : t.SchemaName,
 				BaseClass               = BaseEntityClass,
 				TableName               = t.TableName,
@@ -702,6 +703,7 @@ public partial class Table : Class
 	public MemberBase  DataContextProperty     { get; set; }
 	public bool        IsView                  { get; set; }
 	public bool        IsProviderSpecific      { get; set; }
+	public bool        IsDefaultSchema         { get; set; }
 	public string      Description             { get; set; }
 	public string      AliasPropertyName       { get; set; }
 	public string      AliasTypeName           { get; set; }

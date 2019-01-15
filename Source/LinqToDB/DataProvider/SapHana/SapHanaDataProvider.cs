@@ -20,15 +20,17 @@ namespace LinqToDB.DataProvider.SapHana
 		protected SapHanaDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.IsParameterOrderDependent = true;
+
 			//supported flags
-			SqlProviderFlags.IsCountSubQuerySupported = true;
+			SqlProviderFlags.IsCountSubQuerySupported  = true;
 
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
 			//when expression returns more than 1 row
 			//mark this as supported, it's better to throw exception
 			//instead of replace with left join, in which case returns incorrect data
-			SqlProviderFlags.IsSubQueryColumnSupported = true;
+			SqlProviderFlags.IsSubQueryColumnSupported  = true;
 
 			SqlProviderFlags.IsTakeSupported            = true;
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
