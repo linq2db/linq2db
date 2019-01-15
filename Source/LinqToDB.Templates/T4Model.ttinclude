@@ -374,7 +374,7 @@ public abstract partial class MemberBase : IClassMember
 	public string          ID;
 	public AccessModifier  AccessModifier = AccessModifier.Public;
 	public string          Name;
-	public Func<string> TypeBuilder;
+	public Func<string>    TypeBuilder;
 	public List<string>    Comment = new List<string>();
 	public string          EndLineComment;
 	public List<Attribute> Attributes = new List<Attribute>();
@@ -387,6 +387,12 @@ public abstract partial class MemberBase : IClassMember
 	public int NameLen;
 	public int ParamLen;
 	public int BodyLen;
+
+	public string Type
+	{
+		get { return TypeBuilder?.Invoke(); }
+		set { TypeBuilder = () => value;    }
+	}
 
 	public string BuildType() { return TypeBuilder?.Invoke(); }
 
@@ -1320,6 +1326,15 @@ public partial class Method : MemberBase
 
 		if (parameterBuilders  != null) ParameterBuilders.AddRange(parameterBuilders);
 		if (bodyBuilders       != null) BodyBuilders.AddRange(bodyBuilders);
+	}
+
+	public static Method Create(string type, string name, IEnumerable<string> parameters = null, IEnumerable<string> body = null)
+	{
+		return new Method(
+			() => type,
+			name,
+			parameters?.Select<string,Func<string>>((string p) => () => p),
+			body?.Select<string,Func<IEnumerable<string>>>(p => () => new[] { p }).ToArray());
 	}
 
 	public IEnumerable<string> BuildBody()

@@ -118,5 +118,68 @@ static class Pluralization
 
 		return str;
 	}
+
+	static string GetLastWordVersion1(string str)
+	{
+		if (string.IsNullOrWhiteSpace(str))
+			return string.Empty;
+
+		var i       = str.Length - 1;
+		var isLower = char.IsLower(str[i]);
+
+		while (i > 0 && char.IsLower(str[i-1]) == isLower)
+			i--;
+
+		return str.Substring(isLower && i > 0 ? i - 1 : i);
+	}
+
+	public static string ToPluralVersion1(string str)
+	{
+		if (_service == null)
+			_service = PluralizationService.CreateService(System.Globalization.CultureInfo.GetCultureInfo(CultureInfo));
+
+		var word = GetLastWordVersion1(str);
+
+		string newWord;
+
+		if (!Dictionary.TryGetValue(word.ToLower(), out newWord))
+			newWord = _service.IsPlural(word) ? word : _service.Pluralize(word);
+
+		if (string.Compare(word, newWord, true) != 0)
+		{
+			if (char.IsUpper(word[0]))
+				newWord = char.ToUpper(newWord[0]) + newWord.Substring(1, newWord.Length - 1);
+
+			return word == str ? newWord : str.Substring(0, str.Length - word.Length) + newWord;
+		}
+
+		return str;
+	}
+
+	public static string ToSingularVersion1(string str)
+	{
+		if (_service == null)
+			_service = PluralizationService.CreateService(System.Globalization.CultureInfo.GetCultureInfo(CultureInfo));
+
+		var word = GetLastWordVersion1(str);
+
+		var newWord =
+			Dictionary
+				.Where(dic => string.Compare(dic.Value, word, true) == 0)
+				.Select(dic => dic.Key)
+				.FirstOrDefault()
+			??
+			(_service.IsSingular(word) ? word : _service.Singularize(word));
+
+		if (string.Compare(word, newWord, true) != 0)
+		{
+			if (char.IsUpper(word[0]))
+				newWord = char.ToUpper(newWord[0]) + newWord.Substring(1, newWord.Length - 1);
+
+			return word == str ? newWord : str.Substring(0, str.Length - word.Length) + newWord;
+		}
+
+		return str;
+	}
 }
 #>
