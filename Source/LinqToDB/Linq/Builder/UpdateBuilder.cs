@@ -362,10 +362,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var member = MemberHelper.GetMemberInfo(extract.Body);
 
-			var ext = extract.Body;
-
-			while (ext.NodeType == ExpressionType.Convert || ext.NodeType == ExpressionType.ConvertChecked)
-				ext = ((UnaryExpression)ext).Operand;
+			var ext = extract.Body.Unwrap();
 
 			var rootObject = ext.GetRootObject(builder.MappingSchema);
 
@@ -424,7 +421,7 @@ namespace LinqToDB.Linq.Builder
 			if (!update.Type.IsConstantable() && !builder.AsParameters.Contains(update))
 				builder.AsParameters.Add(update);
 
-			var ext        = extract.Body;
+			var ext        = extract.Body.Unwrap();
 			var rootObject = ext.GetRootObject(builder.MappingSchema);
 
 			ISqlExpression columnSql;
