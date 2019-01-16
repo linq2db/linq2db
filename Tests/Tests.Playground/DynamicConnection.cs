@@ -8,6 +8,7 @@ using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
+using LinqToDB.Extensions;
 
 namespace Tests.Playground
 {
@@ -21,81 +22,49 @@ namespace Tests.Playground
 		{
 		}
 
-
-		public Expression UpCastQuery(Expression expression)
+		private static void CalcTypesMap(Type genericType, Type realType, Dictionary<string, Type> typesMap)
 		{
-			var result = expression.Transform(e =>
+			if (genericType.IsGenericType)
 			{
-				switch (e.NodeType)
-				{
-					case ExpressionType.Call:
-						{
-							var mc = (MethodCallExpression)e;
+				var ge = genericType.GetGenericArguments();
+				var re = realType.GetGenericArguments();
+//				if (re.Length == 0)
+//				{
+//					realType = typeof(IEnumerable<>).MakeGenericType(realType);
+//					re = realType.GetGenericArguments();
+//				}
 
-							if (mc.IsQueryable())
-							{
-								var a = UpCastQuery(ReplaceDynamicProps(mc.Arguments[0]));
-
-								var methodGenericArgument = mc.Method.GetGenericArguments()[0];
-								var constantGenericArgument = a.Type.GetGenericArguments()[0];
-								if (methodGenericArgument != constantGenericArgument)
-								{
-									var toReplace = mc.Method.GetGenericMethodDefinition()
-										.MakeGenericMethod(constantGenericArgument);
-									var arguments = new[] {a}.Concat(mc.Arguments.Skip(1).Select(UpCastQuery)).ToList();
-									for (int i = 1; i < arguments.Count; i++)
-									{
-										var arg = arguments[i].Unwrap();
-										if (arg.NodeType == ExpressionType.Lambda)
-										{
-											var dictionary = new Dictionary<Expression, Expression>();
-											var lambda = (LambdaExpression)arg;
-											foreach (var parameter in lambda.Parameters)
-											{
-												var newParameter = parameter;
-												if (parameter.Type == methodGenericArgument)
-												{
-													newParameter = Expression.Parameter(constantGenericArgument,
-														parameter.Name);
-												}
-
-												dictionary.Add(parameter, newParameter);
-											}
-
-											var body = lambda.Body.Transform(le =>
-												dictionary.TryGetValue(le, out var ne) ? ne : le);
-											arg = Expression.Lambda(body,
-												lambda.Parameters.Select(
-													p => (ParameterExpression)dictionary[p]));
-											arguments[i] = arg;
-										}
-									}
-
-									mc = Expression.Call(null, toReplace, arguments);
-								}
-							}
-
-							e = mc;
-							break;
-						}
-				}
-
-				return e;
-			});
-
-			return result;
+				CalcTypesMap(ge, re, typesMap);
+			}
+			else
+			{
+				if (!typesMap.ContainsKey(genericType.Name))
+					typesMap.Add(genericType.Name, realType);
+			}
 		}
 
-		public Expression ReplaceDynamicProps(Expression expression)
+		private static void CalcTypesMap(Type[] genericTypes, Type[] realTypes, Dictionary<string, Type> typesMap)
 		{
-			Type propType = null;
+			for (int i = 0; i < genericTypes.Length; i++)
+			{
+				var gt = genericTypes[i];
+				var rt = realTypes[i];
+				CalcTypesMap(gt, rt, typesMap);
+			}
+		}
 
-			expression = UpCastQuery(expression);
+		//TODO: move to parameter of ReplaceDynamicPropsl
+		private Dictionary<MemberInfo, Expression> knownReplacements;
 
+		public Expression ReplaceDynamicProps(Type propType, Expression expression, bool throwIfNotExists)
+		{
 			var result = expression.Transform(e =>
 			{
 				switch (e.NodeType)
 				{
+					case ExpressionType.Quote:
+						e = ReplaceDynamicProps(null, e.Unwrap(), throwIfNotExists);
+						break;
 					case ExpressionType.LessThan:
 					case ExpressionType.LessThanOrEqual:
 					case ExpressionType.GreaterThan:
@@ -117,22 +86,28 @@ namespace Tests.Playground
 								propType = be.Method.GetParameters()[1].ParameterType;
 							}
 
+							var left  = ReplaceDynamicProps(propType, be.Left, throwIfNotExists);
+							var right = ReplaceDynamicProps(propType, be.Right, throwIfNotExists);
+
+							if (ReferenceEquals(left, be.Left) && ReferenceEquals(right, be.Right))
+								break;
+
 							switch (e.NodeType)
 							{
 								case ExpressionType.LessThan:
-									e = Expression.LessThan(TransformProp(propType, be.Left), TransformProp(propType, be.Right));
+									e = Expression.LessThan(left, right);
 									break;
 								case ExpressionType.LessThanOrEqual:
-									e = Expression.LessThanOrEqual(TransformProp(propType, be.Left), TransformProp(propType, be.Right));
+									e = Expression.LessThanOrEqual(left, right);
 									break;
 								case ExpressionType.GreaterThan:
-									e = Expression.GreaterThan(TransformProp(propType, be.Left), TransformProp(propType, be.Right));
+									e = Expression.GreaterThan(left, right);
 									break;
 								case ExpressionType.GreaterThanOrEqual:
-									e = Expression.GreaterThanOrEqual(TransformProp(propType, be.Left), TransformProp(propType, be.Right));
+									e = Expression.GreaterThanOrEqual(left, right);
 									break;
 								case ExpressionType.Equal:
-									e = ExpressionBuilder.Equal(MappingSchema, TransformProp(propType, be.Left), TransformProp(propType, be.Right));
+									e = ExpressionBuilder.Equal(MappingSchema, left, right);
 									break;
 								default:
 									throw new ArgumentException();
@@ -140,23 +115,61 @@ namespace Tests.Playground
 
 							break;
 						}
-
-					case ExpressionType.ConvertChecked:
-					case ExpressionType.Convert:
+					case ExpressionType.Lambda:
 						{
-							var unary = (UnaryExpression)e;
-							if (unary.Method?.DeclaringType == typeof(PropertyValue))
+							var lambda = (LambdaExpression)e;
+							var body = ReplaceDynamicProps(propType, lambda.Body, throwIfNotExists);
+							if (body != lambda.Body)
 							{
-								if (e.NodeType == ExpressionType.Convert)
-									e = Expression.Convert(TransformProp(unary.Type, unary.Operand), unary.Type);
-								else
-									e = Expression.ConvertChecked(TransformProp(unary.Type, unary.Operand), unary.Type);
+								var newLambda = Expression.Lambda(body, lambda.Parameters);
+								e = newLambda;
 							}
 							break;
 						}
+
+					case ExpressionType.New:
+						{
+							var newExpr = (NewExpression)e;
+							for (var i = 0; i < newExpr.Members.Count; i++)
+							{
+								var member = newExpr.Members[i];
+								if (member.GetMemberType() != newExpr.Arguments[i].Type)
+								{
+									knownReplacements.Remove(member);
+									knownReplacements.Add(member, newExpr.Arguments[i]);
+								}
+							}
+
+							break;
+						}
+
 					case ExpressionType.Call:
 						{
-							e = TransformProp(propType, e);
+							e = TransformProp(propType, e, false);
+
+							if (e.NodeType != ExpressionType.Call)
+								return e;
+							
+							var mc = (MethodCallExpression)e;
+
+							var arguments = mc.Arguments.Select(arg => ReplaceDynamicProps(propType, arg, false)).ToList();
+							if (!arguments.SequenceEqual(mc.Arguments))
+								mc = mc.Update(mc.Object, arguments);
+
+							var newMc = UpcastMethodExpression(mc);
+							if (!ReferenceEquals(mc, newMc))
+								newMc = (MethodCallExpression)ReplaceDynamicProps(propType, newMc, true);
+
+							e = newMc;
+
+							break;
+						}
+					case ExpressionType.Convert:
+						{
+							var unary = (UnaryExpression)e;
+							var operand = ReplaceDynamicProps(unary.Type, unary.Operand, throwIfNotExists);
+							if (!ReferenceEquals(operand, unary.Operand))
+								e = Expression.Convert(operand, expression.Type);
 							break;
 						}
 				}
@@ -167,6 +180,110 @@ namespace Tests.Playground
 			return result;
 		}
 
+		private static Type CalcNewType(Type generic, Dictionary<string, Type> typesMap)
+		{
+			if (generic.IsGenericType)
+			{
+				var newArguments = generic.GetGenericArguments()
+					.Select(ga => CalcNewType(ga, typesMap))
+					.ToArray();
+				return generic.GetGenericTypeDefinition().MakeGenericType(newArguments);
+			}
+
+			if (!typesMap.TryGetValue(generic.Name, out var result))
+				throw new Exception("Invalid type mapping");
+			return result;
+		}
+
+		private static LambdaExpression UpcastLambda(LambdaExpression lambda, Type genericType,
+			Dictionary<string, Type> typesMap)
+		{
+			var genericBodyType = typeof(Expression).IsSameOrParentOf(genericType) ? genericType.GetGenericArguments()[0] : genericType;
+			var genericBodyTypeArguments = genericBodyType.GetGenericArguments();
+
+			var dictionary = new Dictionary<Expression, Expression>();
+			for (var i = 0; i < lambda.Parameters.Count; i++)
+			{
+				var parameter = lambda.Parameters[i];
+				var newParameter = parameter;
+
+				var genericParamType = genericBodyTypeArguments[i];
+				var newParamType = CalcNewType(genericParamType, typesMap);
+
+				if (newParamType != parameter.Type)
+				{
+					newParameter = Expression.Parameter(newParamType, parameter.Name);
+				}
+
+				dictionary.Add(parameter, newParameter);
+			}
+
+			var body = lambda.Body.Transform(le =>
+				dictionary.TryGetValue(le, out var ne) ? ne : le);
+
+			var genericReturnType = genericBodyTypeArguments[genericBodyTypeArguments.Length - 1];
+			var resultType = CalcNewType(genericReturnType, typesMap);
+			if (body.Type != resultType)
+			{
+				body = Expression.Convert(body, resultType);
+			}
+
+			var newLabda = Expression.Lambda(body, lambda.Parameters.Select(
+				p => (ParameterExpression)dictionary[p]));
+
+			return newLabda;
+		}
+
+		private static MethodCallExpression UpcastMethodExpression(MethodCallExpression mc)
+		{
+			if (!mc.Method.IsGenericMethod || mc.Method.GetGenericMethodDefinition() == _sqlProperty)
+				return mc;
+
+			var genericDef = mc.Method.GetGenericMethodDefinition();
+			var genericArgs = genericDef.GetGenericArguments();
+
+			var genericParameters = genericDef.GetParameters();
+			var currentParameters = mc.Method.GetParameters();
+
+			var genericTypesMap = new Dictionary<string, Type>();
+			for (int i = 0; i < genericParameters.Length; i++)
+			{
+				var gp = genericParameters[i].ParameterType;
+				var cp = currentParameters[i].ParameterType;
+				var at = mc.Arguments[i].Type;
+
+				if (cp.IsGenericType && at.IsGenericType)
+					cp = at;
+				CalcTypesMap(gp, cp, genericTypesMap);
+			}
+
+
+			var newGenericArguments = genericArgs.Select(p => genericTypesMap[p.Name]).ToArray();
+			var methodGenericArguments = mc.Method.GetGenericArguments();
+
+			if (!newGenericArguments.SequenceEqual(methodGenericArguments))
+			{
+				var toReplace = genericDef
+					.MakeGenericMethod(newGenericArguments);
+
+				var arguments = mc.Arguments.ToList();
+				for (int i = 0; i < mc.Arguments.Count; i++)
+				{
+					var gp = genericParameters[i].ParameterType;
+					var arg = arguments[i].Unwrap();
+
+					if (arg.NodeType == ExpressionType.Lambda)
+					{
+						arguments[i] = UpcastLambda((LambdaExpression)arg, gp, genericTypesMap);
+					}
+				}
+
+				mc = Expression.Call(null, toReplace, arguments);
+			}
+
+			return mc;
+		}
+
 		private Expression FixArgument(Expression expr)
 		{
 			return expr;
@@ -174,17 +291,17 @@ namespace Tests.Playground
 
 		public Expression ProcessExpression(Expression expression)
 		{
-			var result = ReplaceDynamicProps(expression);
+			knownReplacements = new Dictionary<MemberInfo, Expression>();
+			var result = ReplaceDynamicProps(null, expression, true);
 			return result;
 		}
 
-
-		private Expression TransformProp(Type type, Expression expr)
+		private Expression TransformProp(Type propType, Expression expr, bool throwIfNotExists)
 		{
 			if (expr.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)expr;
-				if (type != null && mc.Method == _getItemInfo)
+				if (mc.Method == _getItemInfo)
 				{
 					if (mc.Method == _getItemInfo)
 					{
@@ -197,12 +314,27 @@ namespace Tests.Playground
 
 							var prop = objectExpr.Type.GetProperty(name);
 							if (prop == null)
-								throw new Exception($"Property {objectExpr.Type}.{name} not found.");
-
-							objectExpr = Expression.MakeMemberAccess(objectExpr, prop);
+							{
+							
+								if (propType != null && objectExpr is MemberExpression memberExpression)
+								{
+									var sqlProp = _sqlProperty.MakeGenericMethod(propType);
+									objectExpr = Expression.Call(null, sqlProp, objectExpr, Expression.Constant(name));
+								}
+								else
+								{
+									if (throwIfNotExists)
+										throw new Exception($"Property {objectExpr.Type}.{name} not found.");
+									return expr;
+								}
+							}
+							else
+							{
+								objectExpr = Expression.MakeMemberAccess(objectExpr, prop);
+							}
 						}
 
-						expr = ReplaceDynamicProps(objectExpr);
+						expr = ReplaceDynamicProps(propType, objectExpr, throwIfNotExists);
 					}
 				}
 				else if (mc.Method == _getItemInfoPropValue)
@@ -235,26 +367,28 @@ namespace Tests.Playground
 
 						var prop = objectExpr.Type.GetProperty(name);
 						if (prop == null)
-							throw new Exception($"Property {objectExpr.Type}.{name} not found.");
+						{
+							if (throwIfNotExists)
+								throw new Exception($"Property {objectExpr.Type}.{name} not found.");
+							return expr;
+						}
 
 						objectExpr = Expression.MakeMemberAccess(objectExpr, prop);
 					}
 
-					expr = ReplaceDynamicProps(objectExpr);
+					expr = ReplaceDynamicProps(propType, objectExpr, throwIfNotExists);
 						
 				}
 			}
-			else
-				expr = ReplaceDynamicProps(expr);
 
 			return expr;
 		}
 
-		private Expression TransformPropOld(Type type, Expression expr)
+		private Expression TransformPropOld(Type propType, Expression expr)
 		{
 			if (expr.NodeType == ExpressionType.Call)
 			{
-				if (type != null)
+				if (propType != null)
 				{
 					var mc = (MethodCallExpression)expr;
 					if (mc.Method == _getItemInfo)
@@ -270,16 +404,15 @@ namespace Tests.Playground
 							objectExpr = Expression.Call(null, sqlProp, objectExpr, Expression.Constant(name));
 						}
 
-						var sqlPropMethod = _sqlProperty.MakeGenericMethod(type);
+						var sqlPropMethod = _sqlProperty.MakeGenericMethod(propType);
 						objectExpr = Expression.Call(null, sqlPropMethod, objectExpr, Expression.Constant(path[path.Length - 1]));
 
-						expr = ReplaceDynamicProps(objectExpr);
-
+						expr = ReplaceDynamicProps(propType, objectExpr, false);
 					}
 				}
 			}
 			else
-				expr = ReplaceDynamicProps(expr);
+				expr = ReplaceDynamicProps(propType, expr, false);
 
 			return expr;
 		}

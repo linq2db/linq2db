@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Forms;
 using LinqToDB;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
@@ -26,6 +27,8 @@ namespace Tests.Playground
 
 		public class SomePerson : BaseEntity
 		{
+			[PrimaryKey]
+			public int Id { get; set; }
 			public string FirstName { get; set; }
 			public string LastName { get; set; }
 
@@ -76,7 +79,7 @@ namespace Tests.Playground
 			using (var db = new DynamicConnection(context))
 			using (db.CreateLocalTable(new[]{new Car{ Brand = "Mercedes", Color = "Black", TopSpeed = 250} }))
 			using (db.CreateLocalTable(new[]{new SomeAddress{Id = 1, City = "NY", Street = "4t Avenue"}}))
-			using (db.CreateLocalTable(new[]{new SomePerson{AddressId = 1, Age = 40, FirstName = "John", LastName = "Smith"} }))
+			using (db.CreateLocalTable(new[]{new SomePerson{Id = 33, AddressId = 1, Age = 40, FirstName = "John", LastName = "Smith"} }))
 			{
 //				ITable<BaseEntity> table = GetDynamicTable<BaseEntity>(db, "Car");
 //				var query = table.Where(e =>
@@ -94,24 +97,62 @@ namespace Tests.Playground
 
 				ITable<BaseEntity> persons = GetDynamicTable<BaseEntity>(db, "Person");
 
-//				var person = persons.Where(p => p["Address.City"] == "NY").First();
-
-//				var person = persons.Where(p => Sql.Property<string>(Sql.Property<BaseEntity>(p, "Address"), "City") == "NY").First();
-//				var person = persons.Where(p => p["FirstName"] == "John")
+//				var person1 = persons.Where(p => p["Address.City"] == "NY").First();
+//
+//				var person2 = persons.Where(p => Sql.Property<string>(Sql.Property<BaseEntity>(p, "Address"), "City") == "NY").First();
+//
+//				var person3 = persons.Where(p => p["FirstName"] == "John")
 //					.FirstOrDefault(p => p["LastName"] == "Smith");
 //
-//				var person2 = persons
+//				var person4 = persons
 //					.Where(p => p["Address.City"] == "NY")
 //					.FirstOrDefault(p => p["LastName"] == "Smith");
-
-//				var person3 = persons
+//
+//				var person5 = persons
 //					.Where(p => p["Address"]["City"] == "NY")
 //					.FirstOrDefault();
-
-				var person4 = persons
-					.Where(p => p["Addresses"].Any())
+//
+//				var person6 = persons
+//					.Where(p => p["Addresses"].Any())
+//					.FirstOrDefault();
+//
+				var person7 = persons
+					.Where(p => p["Addresses"].Any(a => a["City"] == "NY"))
 					.FirstOrDefault();
 
+				var addressQuery = 
+					from p in persons.Where(p => p["Addresses"].Count() == 1)
+					from a in p["Addresses"]
+					where a["City"] == "NY"
+					select new
+					{
+						PP = p,
+						AA = a
+					};
+
+				var addreses = addressQuery.ToArray();
+
+				var addressQuery2 = from p in persons.Where(p => p["Addresses"].Count() == 1) select p;
+//				var addressQuery2 = persons.Where(p => p["Addresses"].Count() == 1).Select(p => p);
+
+				var addressQueryUp = persons.Where(p => p["FirstName"] == "John")
+					.Set(a => a["FirstName"], "Me")
+					.Update();
+
+				db.Into(persons)
+					.Value(p => p["FirstName"], "Sarah")
+					.Value(p => p["LastName"], "Connor")
+					.Value(p => p["Age"], 10)
+					.Value(p => p["Id"], 44)
+					.Insert();
+
+				var personU = persons.FirstOrDefault();
+
+				personU["FirstName"].SetValue("Superman");
+
+				db.Update(personU);
+
+				var addreses2 = addressQuery2.ToArray();
 			}
 		}
 	}

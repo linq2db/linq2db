@@ -2,31 +2,71 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using JetBrains.Annotations;
+using LinqToDB.Extensions;
 
 namespace Tests.Playground
 {
   public sealed class PropertyValue : IEquatable<PropertyValue>, IEnumerable<BaseEntity>
     {
-        public PropertyValue(Type type, object value)
-        {
-            Type = type ?? throw new ArgumentNullException(nameof(type));
+	    public PropertyInfo Member { get; }
+	    private readonly object _ownerObject;
+	    private Type _type;
+	    private object _value;
 
-            Value = value; // Value can be null
+	    public PropertyValue([NotNull] object ownerObject, [NotNull] PropertyInfo member)
+        {
+	        Member = member ?? throw new ArgumentNullException(nameof(member));
+	        _ownerObject = ownerObject ?? throw new ArgumentNullException(nameof(ownerObject));
         }
 
-        public Type Type { get; }
+	    public PropertyValue(object value, [NotNull] Type type)
+	    {
+		    Value = value;
+		    _type = type ?? throw new ArgumentNullException(nameof(type));
+	    }
 
-        public object Value { get; set; }
+	    public static PropertyValue Create<T>(T value)
+	    {
+			return new PropertyValue(value, typeof(string));
+	    }
 
-        public static PropertyValue Create<T>(T value)
-        {
-            return new PropertyValue(typeof(T), value);
-        }
+	    public Type Type => _type ?? Member.PropertyType;
+
+	    public object Value
+	    {
+		    get
+		    {
+			    if (_ownerObject == null)
+				    return _value;
+			    return Member.GetValue(_ownerObject);
+		    }
+		    set
+		    {
+			    if (_ownerObject == null)
+				    _value = value;
+			    else
+			    {
+				    if (_ownerObject == null)
+					    _value = value;
+					else if (_value == null)
+						Member.SetValue(_ownerObject, null);
+					else
+					    Member.SetValue(_ownerObject, Convert.ChangeType(value, Member.PropertyType));
+			    }
+		    }
+	    }
 
 	    public PropertyValue this[string name]
 	    {
 		    get => throw new NotImplementedException();
 		    set => throw new NotImplementedException();
+	    }
+
+	    public T As<T>()
+	    {
+		    throw new NotImplementedException();
 	    }
 
         #region int
@@ -77,6 +117,22 @@ namespace Tests.Playground
             return propertyValue.Value as string;
         }
 
+//	    public static implicit operator PropertyValue(string value)
+//	    {
+//		    return Create(value);
+//	    }
+//
+	    public void SetValue<T>(T value)
+	    {
+		    object objectValue = value;
+		    var memberType = Member.GetMemberType();
+		    if (memberType != typeof(T))
+		    {
+			    objectValue = Convert.ChangeType(objectValue, memberType);
+		    }
+			Member.SetValue(_ownerObject, objectValue);
+	    }
+
         public static bool operator ==(PropertyValue propertyValue, string value)
         {
             propertyValue.Type.ThrowIfTypeMismatch<string>();
@@ -98,8 +154,9 @@ namespace Tests.Playground
             propertyValue.Type.ThrowIfTypeMismatch<int>(); // supports just int. has to support any other type that supports ++ operator.
 
             var newValue = Convert.ToInt32(propertyValue.Value) + 1;
+	        propertyValue.SetValue(newValue);
 
-            return new PropertyValue(propertyValue.Type, newValue);
+            return propertyValue;
         }
 
         public static bool operator ==(PropertyValue value1, PropertyValue value2)

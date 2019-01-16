@@ -52,7 +52,7 @@ namespace LinqToDB.Expressions
 					? ((UnaryExpression)methodCall.Arguments[0]).Operand
 					: methodCall.Arguments[0];
 
-				if (arg1.NodeType != ExpressionType.Constant && arg1.NodeType != ExpressionType.Parameter)
+				if (arg1.NodeType != ExpressionType.Constant && arg1.NodeType != ExpressionType.Parameter && arg1.NodeType != ExpressionType.MemberAccess)
 					throw new ArgumentException("Only simple, non-navigational, member names are supported in this context (e.g.: x => Sql.Property(x, \"SomeProperty\")).");
 
 				var memberName = (string)methodCall.Arguments[1].EvaluateExpression();
