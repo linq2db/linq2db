@@ -53,6 +53,9 @@ namespace LinqToDB.Metadata
 		{
 			List<Attribute> attrs;
 
+			if (memberInfo.DeclaringType != type)
+				memberInfo = type.GetMemberEx(memberInfo) ?? memberInfo;
+
 			var got = _members.TryGetValue(memberInfo, out attrs);
 
 			if (got)
