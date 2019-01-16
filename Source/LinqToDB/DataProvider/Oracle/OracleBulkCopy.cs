@@ -116,7 +116,7 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 			}
 
-			options.BulkCopyType = BulkCopyType.MultipleRows;
+			//options.BulkCopyType = BulkCopyType.MultipleRows;
 
 			return MultipleRowsCopy(table, options, source);
 		}
@@ -126,13 +126,13 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (OracleTools.UseAlternativeBulkCopy)
 			{
-				case AlternativeBulkCopy.InsertInto: return MultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source);
-				case AlternativeBulkCopy.InsertDual: return MultipleRowsCopy3(new MultipleRowsHelper<T>(table, options), source);
-				default                            : return MultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source);
+				case AlternativeBulkCopy.InsertInto: return OracleMultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source);
+				case AlternativeBulkCopy.InsertDual: return OracleMultipleRowsCopy3(new MultipleRowsHelper<T>(table, options), source);
+				default                            : return OracleMultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source);
 			}
 		}
 
-		new static BulkCopyRowsCopied MultipleRowsCopy1(MultipleRowsHelper helper, IEnumerable source)
+		static BulkCopyRowsCopied OracleMultipleRowsCopy1(MultipleRowsHelper helper, IEnumerable source)
 		{
 			helper.StringBuilder.AppendLine("INSERT ALL");
 			helper.SetHeader();
@@ -172,7 +172,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return helper.RowsCopied;
 		}
 
-		static BulkCopyRowsCopied MultipleRowsCopy2(MultipleRowsHelper helper, IEnumerable source)
+		static BulkCopyRowsCopied OracleMultipleRowsCopy2(MultipleRowsHelper helper, IEnumerable source)
 		{
 			helper.StringBuilder.AppendFormat("INSERT INTO {0} (", helper.TableName);
 
@@ -219,7 +219,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return helper.RowsCopied;
 		}
 
-		static BulkCopyRowsCopied MultipleRowsCopy3(MultipleRowsHelper helper, IEnumerable source)
+		static BulkCopyRowsCopied OracleMultipleRowsCopy3(MultipleRowsHelper helper, IEnumerable source)
 		{
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()

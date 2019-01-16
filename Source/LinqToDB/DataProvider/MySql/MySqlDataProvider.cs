@@ -44,15 +44,15 @@ namespace LinqToDB.DataProvider.MySql
 			_mySqlDecimalType  = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDecimal",  true);
 			_mySqlDateTimeType = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDateTime", true);
 
-			_mySqlDecimalValueGetter  = TypeAccessor.GetAccessor(_mySqlDecimalType) ["Value"].Getter;
-			_mySqlDateTimeValueGetter = TypeAccessor.GetAccessor(_mySqlDateTimeType)["Value"].Getter;
+				_mySqlDecimalValueGetter  = TypeAccessor.GetAccessor(_mySqlDecimalType) ["Value"].Getter;
+				_mySqlDateTimeValueGetter = TypeAccessor.GetAccessor(_mySqlDateTimeType)["Value"].Getter;
 
-			SetProviderField(_mySqlDecimalType,  "GetMySqlDecimal");
+				SetProviderField(_mySqlDecimalType, "GetMySqlDecimal");
 			SetProviderField(_mySqlDateTimeType, "GetMySqlDateTime");
-			SetToTypeField  (_mySqlDecimalType,  "GetMySqlDecimal");
+				SetToTypeField(_mySqlDecimalType,   "GetMySqlDecimal");
 			SetToTypeField  (_mySqlDateTimeType, "GetMySqlDateTime");
 
-			MappingSchema.SetDataType(_mySqlDecimalType,  DataType.Decimal);
+				MappingSchema.SetDataType(_mySqlDecimalType, DataType.Decimal);
 			MappingSchema.SetDataType(_mySqlDateTimeType, DataType.DateTime2);
 		}
 
@@ -127,7 +127,7 @@ namespace LinqToDB.DataProvider.MySql
 				var list = source.RetrieveIdentity((DataConnection)table.DataContext);
 
 				if (!ReferenceEquals(list, source))
-					options.KeepIdentity = true;
+					options = new BulkCopyOptions(options) { KeepIdentity = true };
 
 				source = list;
 			}

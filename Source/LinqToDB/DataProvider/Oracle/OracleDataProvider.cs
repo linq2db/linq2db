@@ -600,7 +600,7 @@ namespace LinqToDB.DataProvider.Oracle
 				var list = source.RetrieveIdentity((DataConnection)table.DataContext);
 
 				if (!ReferenceEquals(list, source))
-					options.KeepIdentity = true;
+					options = new BulkCopyOptions(options) { KeepIdentity = true };
 
 				source = list;
 			}
