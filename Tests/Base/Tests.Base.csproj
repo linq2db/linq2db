@@ -30,11 +30,6 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
-		<Reference Include="IBM.Data.Informix">
-			<HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
 	</ItemGroup>
 </Project>

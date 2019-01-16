@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.MySql
 			: this(name, null)
 		{
 		}
-		
+
 		protected MySqlDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.MySql
 		protected override string ConnectionTypeName  => Name == ProviderName.MySqlConnector
 			? $"{ConnectionNamespace}.MySqlConnection, MySqlConnector"
 			: $"{ConnectionNamespace}.MySqlConnection, MySql.Data";
-			
+
 		protected override string DataReaderTypeName  => Name == ProviderName.MySqlConnector
 			? $"{ConnectionNamespace}.MySqlDataReader, MySqlConnector"
 			: $"{ConnectionNamespace}.MySqlDataReader, MySql.Data";
@@ -65,10 +65,10 @@ namespace LinqToDB.DataProvider.MySql
 
 				MappingSchema.SetDataType(_mySqlDecimalType, DataType.Decimal);
 			}
-			
+
 			SetProviderField(_mySqlDateTimeType, "GetMySqlDateTime");
 			SetToTypeField(_mySqlDateTimeType,   "GetMySqlDateTime");
-			
+
 			MappingSchema.SetDataType(_mySqlDateTimeType, DataType.DateTime2);
 		}
 
@@ -157,7 +157,7 @@ namespace LinqToDB.DataProvider.MySql
 				var list = source.RetrieveIdentity((DataConnection)table.DataContext);
 
 				if (!ReferenceEquals(list, source))
-					options.KeepIdentity = true;
+					options = new BulkCopyOptions(options) { KeepIdentity = true };
 
 				source = list;
 			}
