@@ -535,7 +535,7 @@ void GenerateTypesFromMetadata()
 					if (key.AssociationType != AssociationType.OneToMany)
 					{
 						var single = new Method(() => t.TypePrefix + t.TypeName, GetAssociationExtensionSinglularName(key));
-						
+
 						single.ParameterBuilders.Add(() => string.Format("this {0}{1} obj", key.OtherTable.TypePrefix, key.OtherTable.TypeName));
 
 						single.ParameterBuilders.Add(() => "IDataContext db");

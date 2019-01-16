@@ -2,7 +2,10 @@
 <#
 	string GetConnectionString(string config)
 	{
-		var settings = Tests.Tools.SettingsReader.Deserialize("NET45", System.IO.File.ReadAllText(@".\Tests\DataProviders.json"), System.IO.File.ReadAllText(@".\Tests\UserDataProviders.json"));
+		var settings = Tests.Tools.SettingsReader.Deserialize(
+			"NET45",
+			System.IO.File.ReadAllText(Host.ResolvePath(@"..\DataProviders.json")),
+			System.IO.File.ReadAllText(Host.ResolvePath(@"..\UserDataProviders.json")));
 		return settings.Connections[config].ConnectionString;
 	}
 #>
