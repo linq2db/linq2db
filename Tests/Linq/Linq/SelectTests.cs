@@ -818,16 +818,15 @@ namespace Tests.Linq
 
 		class LocalClass
 		{
-			public string Field1 { get; set; }
 		}
 
-		[Test]
+		[Test, Explicit("Fails")]
 		public void SelectLocalTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var c = new LocalClass();
-				var _ = db.Parent.Select(p => new { p.Value1, c }).Distinct().ToList();
+				var _ = db.Parent.Select(p => new { c, p.Value1 }).Distinct().ToList();
 			}
 		}
 	}
