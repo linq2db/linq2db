@@ -42,7 +42,7 @@ Func<Column, string, string, bool, string> BuildColumnComparison = (c, padding1,
 static IEnumerable<Method> GetConstructorsImpl(string defaultConfiguration, string name)
 {
 	if (defaultConfiguration == null)
-		yield return new Method(null, name);
+		yield return new Method((Func<string>)null, name);
 	else
 		yield return new Method(null, name) { AfterSignature = { ": base(" + ToStringLiteral(defaultConfiguration) + ")" } };
 	yield return new Method(null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature = { ": base(configuration)" } };

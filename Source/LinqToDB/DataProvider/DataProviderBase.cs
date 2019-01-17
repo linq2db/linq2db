@@ -447,9 +447,9 @@ namespace LinqToDB.DataProvider
 
 		#region BulkCopy
 
-		public virtual BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public virtual BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, dataConnection, options, source);
+			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, table, options, source);
 		}
 
 		#endregion

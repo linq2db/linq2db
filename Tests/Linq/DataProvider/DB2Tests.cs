@@ -12,6 +12,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.Mapping;
 
+using IBM.Data.DB2;
 using IBM.Data.DB2Types;
 
 using NUnit.Framework;

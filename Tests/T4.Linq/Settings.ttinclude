@@ -6,6 +6,7 @@
 			"NET45",
 			System.IO.File.ReadAllText(Host.ResolvePath(@"..\DataProviders.json")),
 			System.IO.File.ReadAllText(Host.ResolvePath(@"..\UserDataProviders.json")));
+
 		return settings.Connections[config].ConnectionString;
 	}
 #>

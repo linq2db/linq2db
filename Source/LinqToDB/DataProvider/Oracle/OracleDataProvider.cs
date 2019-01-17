@@ -402,9 +402,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public string AssemblyName => Name == ProviderName.OracleNative ? "Oracle.DataAccess" : "Oracle.ManagedDataAccess";
 
-		public    override string ConnectionNamespace               => $"{AssemblyName}.Client";
-		protected override string ConnectionTypeName                => $"{AssemblyName}.Client.OracleConnection, {AssemblyName}";
-		protected override string DataReaderTypeName                => $"{AssemblyName}.Client.OracleDataReader, {AssemblyName}";
+		public    override string ConnectionNamespace => $"{AssemblyName}.Client";
+		protected override string ConnectionTypeName  => $"{AssemblyName}.Client.OracleConnection, {AssemblyName}";
+		protected override string DataReaderTypeName  => $"{AssemblyName}.Client.OracleDataReader, {AssemblyName}";
 
 		public             bool   IsXmlTypeSupported  => _oracleXmlType != null;
 
@@ -589,7 +589,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		OracleBulkCopy _bulkCopy;
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new OracleBulkCopy(this, GetConnectionType());
@@ -597,10 +597,10 @@ namespace LinqToDB.DataProvider.Oracle
 #pragma warning disable 618
 			if (options.RetrieveSequence)
 			{
-				var list = source.RetrieveIdentity(dataConnection);
+				var list = source.RetrieveIdentity((DataConnection)table.DataContext);
 
 				if (!ReferenceEquals(list, source))
-					options.KeepIdentity = true;
+					options = new BulkCopyOptions(options) { KeepIdentity = true };
 
 				source = list;
 			}
@@ -608,7 +608,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}
