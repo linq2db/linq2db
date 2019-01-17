@@ -48,9 +48,11 @@ namespace LinqToDB.DataProvider
 				lock (SyncRoot)
 					if (_connectionType == null)
 					{
-						_connectionType = Type.GetType(ConnectionTypeName, true);
+						var connectionType = Type.GetType(ConnectionTypeName, true);
 
-						OnConnectionTypeCreated(_connectionType);
+						OnConnectionTypeCreated(connectionType);
+
+						_connectionType = connectionType;
 					}
 
 			return _connectionType;
@@ -89,18 +91,22 @@ namespace LinqToDB.DataProvider
 				lock (SyncRoot)
 					if (_connectionType == null)
 					{
+						Type connectionType;
+
 						if (DbFactoryProviderName == null)
-							_connectionType = Type.GetType(ConnectionTypeName, true);
+							connectionType = Type.GetType(ConnectionTypeName, true);
 						else
 						{
-							_connectionType = Type.GetType(ConnectionTypeName, false);
+							connectionType = Type.GetType(ConnectionTypeName, false);
 
-							if (_connectionType == null)
+							if (connectionType == null)
 								using (var db = DbProviderFactories.GetFactory(DbFactoryProviderName).CreateConnection())
-									_connectionType = db.GetType();
+									connectionType = db.GetType();
 						}
 
-						OnConnectionTypeCreated(_connectionType);
+						OnConnectionTypeCreated(connectionType);
+
+						_connectionType = connectionType;
 					}
 
 			return _connectionType;
