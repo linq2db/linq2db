@@ -85,15 +85,15 @@ namespace Tests.DataProvider
 				}
 			}
 		}
-
-		[Test]
-		public void Driver()
-		{
-			InformixTools.ResolveInformix(typeof(IBM.Data.Informix.IfxConnection).Assembly);
-
-			var dr = null as IfxDataReader;
-
-			var _ = dr.GetBigInt(0);
-		}
+//
+//		[Test]
+//		public void Driver()
+//		{
+//			InformixTools.ResolveInformix(typeof(IBM.Data.Informix.IfxConnection).Assembly);
+//
+//			var dr = null as IfxDataReader;
+//
+//			var _ = dr.GetBigInt(0);
+//		}
 	}
 }
