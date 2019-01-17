@@ -14,13 +14,6 @@ namespace LinqToDB.Linq
 	{
 		public static class InsertOrReplace<T>
 		{
-			static readonly MemoryCache _queryCache = new MemoryCache(new MemoryCacheOptions());
-
-			static InsertOrReplace()
-			{
-				Linq.Query.CacheCleaners.Add(() => _queryCache.Compact(1));
-			}
-
 			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
@@ -127,10 +120,10 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
-				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type };
+				var key  = new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
 					? CreateQuery(dataContext, tableName, databaseName, schema, type)
-					: _queryCache.GetOrCreate(key, o =>
+					: Cache<T>.QueryCache.GetOrCreate(key, o =>
 					{
 						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 						return CreateQuery(dataContext, tableName, databaseName, schema, type);
@@ -145,10 +138,10 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
-				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type };
+				var key  = new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
 					? CreateQuery(dataContext, tableName, schema, databaseName, type)
-					: _queryCache.GetOrCreate(key, o =>
+					: Cache<T>.QueryCache.GetOrCreate(key, o =>
 					{
 						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 						return CreateQuery(dataContext, tableName, schema, databaseName, type);
