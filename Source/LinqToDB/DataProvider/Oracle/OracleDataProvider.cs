@@ -402,9 +402,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public string AssemblyName => Name == ProviderName.OracleNative ? "Oracle.DataAccess" : "Oracle.ManagedDataAccess";
 
-		public    override string ConnectionNamespace               => $"{AssemblyName}.Client";
-		protected override string ConnectionTypeName                => $"{AssemblyName}.Client.OracleConnection, {AssemblyName}";
-		protected override string DataReaderTypeName                => $"{AssemblyName}.Client.OracleDataReader, {AssemblyName}";
+		public    override string ConnectionNamespace => $"{AssemblyName}.Client";
+		protected override string ConnectionTypeName  => $"{AssemblyName}.Client.OracleConnection, {AssemblyName}";
+		protected override string DataReaderTypeName  => $"{AssemblyName}.Client.OracleDataReader, {AssemblyName}";
 
 		public             bool   IsXmlTypeSupported  => _oracleXmlType != null;
 

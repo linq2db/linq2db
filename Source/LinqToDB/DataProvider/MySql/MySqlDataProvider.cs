@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using LinqToDB.Tools;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -11,6 +10,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using Reflection;
 	using SqlProvider;
+	using Tools;
 
 	public class MySqlDataProvider : DynamicDataProviderBase
 	{
