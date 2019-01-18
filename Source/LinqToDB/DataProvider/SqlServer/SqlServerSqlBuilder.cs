@@ -275,14 +275,19 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 			else
 			{
-				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(table, null);
-				StringBuilder.AppendLine("', N'U') IS NOT NULL)");
+				if (dropTable.IfExists)
+				{
+					StringBuilder.Append("IF (OBJECT_ID(N'");
+					BuildPhysicalTable(table, null);
+					StringBuilder.AppendLine("', N'U') IS NOT NULL)");
+					Indent++;
+				}
 
-				Indent++;
 				AppendIndent().Append("DROP TABLE ");
 				BuildPhysicalTable(table, null);
-				Indent--;
+
+				if (dropTable.IfExists)
+					Indent--;
 			}
 		}
 
