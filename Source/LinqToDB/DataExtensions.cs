@@ -578,11 +578,11 @@ namespace LinqToDB
 
 			if (throwExceptionIfNotExists)
 			{
-				QueryRunner.DropTable<T>.Query(dataContext, tableName, databaseName, schemaName);
+				QueryRunner.DropTable<T>.Query(dataContext, tableName, databaseName, schemaName, !throwExceptionIfNotExists);
 			}
 			else try
 			{
-				QueryRunner.DropTable<T>.Query(dataContext, tableName, databaseName, schemaName);
+				QueryRunner.DropTable<T>.Query(dataContext, tableName, databaseName, schemaName, !throwExceptionIfNotExists);
 			}
 			catch
 			{
@@ -616,7 +616,8 @@ namespace LinqToDB
 					table.DataContext,
 					tableName    ?? table.TableName,
 					databaseName ?? table.DatabaseName,
-					schemaName   ?? table.SchemaName);
+					schemaName   ?? table.SchemaName,
+					!throwExceptionIfNotExists);
 			}
 			else try
 			{
@@ -624,7 +625,8 @@ namespace LinqToDB
 					table.DataContext,
 					tableName    ?? table.TableName,
 					databaseName ?? table.DatabaseName,
-					schemaName   ?? table.SchemaName);
+					schemaName   ?? table.SchemaName,
+					!throwExceptionIfNotExists);
 			}
 			catch
 			{
@@ -657,11 +659,11 @@ namespace LinqToDB
 
 			if (throwExceptionIfNotExists)
 			{
-				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, token);
+				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, !throwExceptionIfNotExists, token);
 			}
 			else try
 			{
-				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, token);
+				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, !throwExceptionIfNotExists, token);
 			}
 			catch
 			{
@@ -698,7 +700,9 @@ namespace LinqToDB
 					table.DataContext,
 					tableName    ?? table.TableName,
 					databaseName ?? table.DatabaseName,
-					schemaName   ?? table.SchemaName, token);
+					schemaName   ?? table.SchemaName,
+					!throwExceptionIfNotExists,
+					token);
 			}
 			else try
 			{
@@ -707,6 +711,7 @@ namespace LinqToDB
 					tableName    ?? table.TableName,
 					databaseName ?? table.DatabaseName,
 					schemaName   ?? table.SchemaName,
+					!throwExceptionIfNotExists,
 					token);
 			}
 			catch

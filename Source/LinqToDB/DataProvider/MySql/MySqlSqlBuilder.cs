@@ -326,15 +326,9 @@ namespace LinqToDB.DataProvider.MySql
 				StringBuilder.Append("DELETE FROM ");
 		}
 
-//		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
-//		{
-//			var table = dropTable.Table;
-//
-//			AppendIndent().Append("DROP TABLE ");
-//			BuildPhysicalTable(table, null);
-//			StringBuilder.AppendLine(" IF EXISTS");
-//
-//			base.BuildDropTableStatement(dropTable);
-//		}
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
+		{
+			BuildDropTableStatementIfExists(dropTable);
+		}
 	}
 }
