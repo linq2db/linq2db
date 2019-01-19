@@ -9,7 +9,6 @@ namespace LinqToDB.DataProvider.SapHana
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
-	using System.Data.Common;
 
 	public class SapHanaDataProvider : DynamicDataProviderBase
 	{
@@ -113,8 +112,8 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				case DataType.Boolean:
 					dataType = dataType.WithDataType(DataType.Byte);
-					if (value is bool)
-						value = (bool)value ? (byte)1 : (byte)0;
+					if (value is bool b)
+						value = b ? (byte)1 : (byte)0;
 					break;
 				case DataType.Guid:
 					if (value != null)
@@ -143,11 +142,11 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new SapHanaBulkCopy(this, GetConnectionType()).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}

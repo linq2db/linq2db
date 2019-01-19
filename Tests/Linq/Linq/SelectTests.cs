@@ -796,7 +796,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void SelectNullProjectionTests([DataSources] string context)
+		public void SelectNullProjectionTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -813,6 +813,20 @@ namespace Tests.Linq
 					};
 
 				AreEqual(expected, actual);
+			}
+		}
+
+		class LocalClass
+		{
+		}
+
+		[Test, Explicit("Fails")]
+		public void SelectLocalTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var c = new LocalClass();
+				var _ = db.Parent.Select(p => new { c, p.Value1 }).Distinct().ToList();
 			}
 		}
 	}

@@ -152,6 +152,7 @@ namespace LinqToDB.DataProvider.SQLite
 			IEnumerable<T>             source,
 			int                        maxBatchSize       = 1000,
 			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			where T : class
 		{
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions

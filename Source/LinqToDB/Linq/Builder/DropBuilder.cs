@@ -19,7 +19,17 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = (TableBuilder.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			sequence.Statement = new SqlDropTableStatement {Table = sequence.SqlTable};
+			var ifExists = false;
+
+			if (methodCall.Arguments.Count == 2)
+			{
+				if (methodCall.Arguments[1] is ConstantExpression c)
+				{
+					ifExists = !(bool)c.Value;
+				}
+			}
+
+			sequence.Statement = new SqlDropTableStatement(ifExists) {Table = sequence.SqlTable};
 
 			return new DropContext(buildInfo.Parent, sequence);
 		}

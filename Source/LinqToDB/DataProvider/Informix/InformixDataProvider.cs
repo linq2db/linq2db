@@ -92,11 +92,11 @@ namespace LinqToDB.DataProvider.Informix
 
 			if (!Configuration.AvoidSpecificDataProviderAPI)
 			{
-				SetField(typeof(Int64), "BIGINT", "GetBigInt");
+				SetField(typeof(Int64), "BIGINT", "GetBigInt", false);
 
 				SetProviderField(_ifxDecimal,  typeof(decimal),  "GetIfxDecimal");
 				SetProviderField(_ifxDateTime, typeof(DateTime), "GetIfxDateTime");
-				SetProviderField(_ifxTimeSpan, typeof(TimeSpan), "GetIfxTimeSpan");
+				SetProviderField(_ifxTimeSpan, typeof(TimeSpan), "GetIfxTimeSpan", false);
 			}
 
 			var p = Expression.Parameter(typeof(TimeSpan));
@@ -161,19 +161,19 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			if (value is TimeSpan)
+			if (value is TimeSpan ts)
 			{
 				if (dataType.DataType != DataType.Int64)
-					value = _newIfxTimeSpan((TimeSpan)value);
+					value = _newIfxTimeSpan(ts);
 			}
 			else if (value is Guid || value == null && dataType.DataType == DataType.Guid)
 			{
 				value    = value?.ToString();
 				dataType = dataType.WithDataType(DataType.Char);
 			}
-			else if (value is bool)
+			else if (value is bool b)
 			{
-				value = (bool)value ? 't' : 'f';
+				value = b ? 't' : 'f';
 				dataType = dataType.WithDataType(DataType.Char);
 			}
 
@@ -201,11 +201,11 @@ namespace LinqToDB.DataProvider.Informix
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new InformixBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}
