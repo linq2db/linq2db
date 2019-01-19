@@ -341,6 +341,38 @@ namespace LinqToDB
 			return dct;
 		}
 
+		/// <summary>
+		/// Starts new transaction asynchronously for current context with specified isolation level.
+		/// If connection already has transaction, it will be rolled back.
+		/// </summary>
+		/// <param name="level">Transaction isolation level.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Database transaction object.</returns>
+		public virtual async Task<DataContextTransaction> BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
+		{
+			var dct = new DataContextTransaction(this);
+
+			await dct.BeginTransactionAsync(level);
+
+			return dct;
+		}
+
+		/// <summary>
+		/// Starts new transaction asynchronously for current context with default isolation level.
+		/// If connection already has transaction, it will be rolled back.
+		/// </summary>
+		/// <param name="autoCommitOnDispose">Not supported, see <a href="https://github.com/linq2db/linq2db/issues/104">issue</a>.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Database transaction object.</returns>
+		public virtual async Task<DataContextTransaction> BeginTransactionAsync(bool autoCommitOnDispose = true, CancellationToken cancellationToken = default)
+		{
+			var dct = new DataContextTransaction(this);
+
+			await dct.BeginTransactionAsync();
+
+			return dct;
+		}
+
 		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
 		{
 			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters));
