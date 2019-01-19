@@ -513,7 +513,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var me = (MemberExpression)expr;
-							var l  = ConvertMethodExpression(me.Member.ReflectedTypeEx(), me.Member);
+							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedTypeEx(), me.Member);
 
 							if (l != null)
 							{
@@ -709,7 +709,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var l = ConvertMethodExpression(call.Method.ReflectedTypeEx(), call.Method);
+							var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedTypeEx(), call.Method);
 
 							if (l != null)
 								return new TransformInfo(OptimizeExpression(ConvertMethod(call, l)));
