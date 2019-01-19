@@ -815,5 +815,43 @@ namespace Tests.Linq
 				AreEqual(expected, actual);
 			}
 		}
+
+		class LocalClass
+		{
+		}
+
+		[Test, Explicit("Fails")]
+		public void SelectLocalTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var c = new LocalClass();
+				var _ = db.Parent.Select(p => new { c, p.Value1 }).Distinct().ToList();
+			}
+		}
+
+		// excluded providers where db object names doesn't match with query
+		[Test]
+		public void ComplexQuery(
+			[DataSources(
+					false,
+					ProviderName.DB2,
+					ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+					ProviderName.SapHana)]
+				string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var person = db.Query<ComplexPerson>("select PersonID, FirstName, MiddleName, LastName, Gender from Person where PersonID = 3").FirstOrDefault();
+
+				Assert.NotNull(person);
+				Assert.AreEqual(3, person.ID);
+				Assert.AreEqual(Gender.Female, person.Gender);
+				Assert.NotNull(person.Name);
+				Assert.AreEqual("Jane", person.Name.FirstName);
+				Assert.IsNull(person.Name.MiddleName);
+				Assert.AreEqual("Doe", person.Name.LastName);
+			}
+		}
 	}
 }

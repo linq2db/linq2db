@@ -153,6 +153,26 @@ namespace LinqToDB.Data
 					.Where (m => !m.Column.MemberAccessor.IsComplex)
 					.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
 
+			// added from TableContext.BuildDefaultConstructor without LoadWith functionality
+			var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
+
+			if (hasComplex)
+			{
+				var obj   = Expression.Variable(expr.Type);
+				var exprs = new List<Expression> { Expression.Assign(obj, expr) };
+
+				if (hasComplex)
+				{
+					exprs.AddRange(
+						members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
+							m.Column.MemberAccessor.SetterExpression.GetBody(obj, m.Expr)));
+				}
+
+				exprs.Add(obj);
+
+				expr = Expression.Block(new[] { obj }, exprs);
+			}
+
 			return expr;
 		}
 
