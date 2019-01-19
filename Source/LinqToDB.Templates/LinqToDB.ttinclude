@@ -50,8 +50,6 @@ static IEnumerable<Method> GetConstructorsImpl(string defaultConfiguration, stri
 
 void GenerateTypesFromMetadata()
 {
-	DataContextObject.Members.Add(new Method(() => "void", "InitMappingSchema"));
-
 	BeforeGenerateLinqToDBModel();
 
 	Model.Usings.Add("LinqToDB");
@@ -161,7 +159,11 @@ void GenerateTypesFromMetadata()
 	DataContextObject.Members.Add(new MemberGroup
 	{
 		IsCompact = true,
-		Members   = { new Method(() => "void", "InitDataContext") { AccessModifier = AccessModifier.Partial } }
+		Members   =
+		{
+			new Method(() => "void", "InitDataContext"  ) { AccessModifier = AccessModifier.Partial },
+			new Method(() => "void", "InitMappingSchema") { AccessModifier = AccessModifier.Partial }
+		}
 	});
 
 	if (Tables.Count > 0)
@@ -947,7 +949,7 @@ void GenerateTypesFromMetadata()
 		MakeTypeMembersNamesUnique(DataContextObject, "InitDataContext", "InitMappingSchema");
 		MakeMembersNamesUnique(Model.Types, "Table");
 		foreach (var type in Model.Types.OfType<Class>())
-			MakeTypeMembersNamesUnique(type, exceptMethods: new [] { "Find" });
+			MakeTypeMembersNamesUnique(type, exceptMethods: new [] { "Find", "InitDataContext", "InitMappingSchema" });
 
 		foreach (var schema in schemas.Values)
 		{
