@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+using Tests.Tools;
 
 namespace Tests.Playground
 {
@@ -36,6 +38,24 @@ namespace Tests.Playground
 					.Take(1);
 			}
 
+			[Association(QueryExpressionMethod = nameof(OthersFromSqlImpl), CanBeNull = true)]
+			public List<SomeOtherEntity> OthersFromSql { get; set; } = new List<SomeOtherEntity>();
+
+			private static Expression<Func<SomeEntity, IDataContext, IQueryable<SomeOtherEntity>>> OthersFromSqlImpl()
+			{
+				return (e, db) => db.FromSql<SomeOtherEntity>($"dbo.fn_SomeFunction({e.Id})");
+			}
+
+			[Association(QueryExpressionMethod = nameof(OtherFromSqlImpl), CanBeNull = true)]
+			public SomeOtherEntity OtherFromSql { get; set; }
+
+			private static Expression<Func<SomeEntity, IDataContext, IQueryable<SomeOtherEntity>>> OtherFromSqlImpl()
+			{
+				return (e, db) => db.FromSql<SomeOtherEntity>($"dbo.fn_SomeFunction({e.Id})").Take(1);
+			}
+
+			#region Equality Members
+
 			protected bool Equals(SomeEntity other)
 			{
 				return Id == other.Id && string.Equals(OwnerStr, other.OwnerStr) && Equals(Other, other.Other);
@@ -59,9 +79,10 @@ namespace Tests.Playground
 					return hashCode;
 				}
 			}
+
+			#endregion
 		}
 
-		[Table]
 		public class SomeOtherEntity
 		{
 			[Column]
@@ -134,6 +155,10 @@ namespace Tests.Playground
 
 				pair.e.Others.Add(child);
 				pair.e.OthersMapped.Add(child);
+
+				pair.e.OtherFromSql = pair.o;
+				pair.e.OthersFromSql.Add(pair.o);
+				pair.e.OthersFromSql.Add(pair.o);
 			}
 
 			return (entities, others);
@@ -219,6 +244,43 @@ namespace Tests.Playground
 				var expected = expectedQuery.ToArray();
 
 				AreEqual(expected, result);
+			}
+		}
+
+		static void CreateFunction(DataConnection dc, string tableName)
+		{
+			DropFunction(dc);
+			dc.Execute("DROP FUNCTION IF EXISTS dbo.fn_SomeFunction;");
+
+			dc.Execute($@"CREATE FUNCTION fn_SomeFunction (@id AS INT)
+RETURNS TABLE
+AS RETURN
+  SELECT * FROM [{tableName}] WHERE Id = @id
+  UNION ALL
+  SELECT * FROM [{tableName}] WHERE Id = @id
+"
+			);
+		}
+
+		static void DropFunction(DataConnection dc)
+		{
+			dc.Execute("DROP FUNCTION IF EXISTS dbo.fn_SomeFunction;");
+		}
+
+		[Test]
+		public void AssociationObjectTest2([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		{
+			var (entities, others) = GenerateEntities();
+
+			using (new AllowMultipleQuery())
+			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
+			using (db.CreateLocalTable("SomeTable", entities))
+			using (db.CreateLocalTable(others))
+			{
+				CreateFunction(db, "SomeOtherEntity");
+				var q1 = db.GetTable<SomeEntity>().TableName("SomeTable").With("NOLOCK").Where(x => x.Id == 123 && x.OthersFromSql.Any()).ToArray();
+				var q2 = db.GetTable<SomeEntity>().TableName("SomeTable").With("NOLOCK").LoadWith(t => t.OthersFromSql).ToArray();
+				DropFunction(db);
 			}
 		}
 
@@ -321,16 +383,17 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void AssociationOneToManyLazy([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationOneToManyLazy([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
 			using (new AllowMultipleQuery())
-			using (var db = GetDataContext(context, GetMapping()))
+			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable(entities))
 			using (db.CreateLocalTable(others))
 			{
-				var query = db.GetTable<SomeEntity>().LoadWith(e => e.Other).LoadWith(e => e.Others).Take(2);
+				CreateFunction(db, "SomeOtherEntity");
+				var query = db.GetTable<SomeEntity>().With("NOLOCK").LoadWith(e => e.Other).LoadWith(e => e.Others).LoadWith(e => e.OthersFromSql).Take(2);
 
 				var expectedQuery = entities.Take(2);
 
@@ -338,6 +401,43 @@ namespace Tests.Playground
 				var expected = expectedQuery.ToArray();
 
 				AreEqual(expected, result);
+				DropFunction(db);
+			}
+		}
+
+		[Test]
+		public void AssociationOneToManyLazyProjection([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		{
+			var (entities, others) = GenerateEntities();
+
+			using (new AllowMultipleQuery())
+			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
+			using (db.CreateLocalTable(entities))
+			using (db.CreateLocalTable(others))
+			{
+				CreateFunction(db, "SomeOtherEntity");
+				var query = db.GetTable<SomeEntity>().With("NOLOCK").Take(2).Select(e => new
+				{
+					e.Id,
+					Others        = e.Others.ToArray(),
+					Other         = e.Other,
+					OthersFromSql = e.OthersFromSql.ToArray(),
+					OtherFromSql  = e.OtherFromSql
+				});
+
+				var result = query.ToArray();
+
+				var expected = entities.Take(2).Select(e => new
+				{
+					e.Id,
+					Others        = e.Others.ToArray(),
+					Other         = e.Other,
+					OthersFromSql = e.OthersFromSql.ToArray(),
+					OtherFromSql  = e.OtherFromSql
+				});
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+				DropFunction(db);
 			}
 		}
 
