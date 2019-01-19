@@ -56,18 +56,14 @@ namespace LinqToDB.DataProvider.MySql
 
 		#region BulkCopy
 
-		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
-		public  static BulkCopyType  DefaultBulkCopyType
-		{
-			get { return _defaultBulkCopyType;  }
-			set { _defaultBulkCopyType = value; }
-		}
+		public static BulkCopyType DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection             dataConnection,
 			IEnumerable<T>             source,
 			int                        maxBatchSize       = 1000,
 			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			where T : class
 		{
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions
