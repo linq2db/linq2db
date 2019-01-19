@@ -227,11 +227,11 @@ namespace LinqToDB.DataProvider.SQLite
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new SQLiteBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}

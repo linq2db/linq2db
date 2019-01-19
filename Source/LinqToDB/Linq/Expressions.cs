@@ -170,6 +170,10 @@ namespace LinqToDB.Linq
 #if DEBUG1
 #if NET45
 			var targetFramework = "net45";
+#elif NET45
+			var targetFramework = "net45";
+#elif NETCOREAPP1_0
+			var targetFramework = "netcoreapp1.0";
 #elif NETCOREAPP2_0
 			var targetFramework = "netcoreapp2.0";
 #elif NETSTANDARD1_6

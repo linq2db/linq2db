@@ -1,8 +1,10 @@
-﻿namespace LinqToDB.Data
+﻿using System;
+
+namespace LinqToDB.Data
 {
 	/// <summary>
 	/// Bulk copy implementation type.
-	/// For more details on support level by provider see 
+	/// For more details on support level by provider see
 	/// <a href="https://github.com/linq2db/linq2db/wiki/Bulk-Copy">this article</a>.
 	/// </summary>
 	public enum BulkCopyType

@@ -626,49 +626,10 @@ namespace LinqToDB.Linq.Builder
 										var queryMethod = table.Association.GetQueryMethod(parentType, childType);
 										if (queryMethod != null)
 										{
-											var parentParam = Expression.Parameter(parentType, "o");
-											var ptype       = typeof(Table<>).MakeGenericType(parentType);
-											var ptbl        = Activator.CreateInstance(ptype, context.Builder.DataContext);
+											//TODO: MARS
+											var dcConst = Expression.Constant(context.Builder.DataContext.Clone(true));
 
-											var principalExpression = Expression.Constant(ptbl);
-											var selectMany = (MethodCallExpression)table.GetAssociationQueryExpression(Expression.Constant(context.Builder.DataContext), null,
-												parentType, principalExpression, queryMethod);
-
-											var parentDescriptor = mappingSchema.GetEntityDescriptor(parentType);
-
-											var keyColumns = parentDescriptor.Columns.Where(c => c.IsPrimaryKey).ToList();
-											if (keyColumns.Count == 0)
-												keyColumns = parentDescriptor.Columns;
-				
-											var arguments = selectMany.Arguments.ToList();
-							
-											Expression predicate = null;
-											foreach (var column in keyColumns)
-											{
-												var ee = Expression.Equal(
-													Expression.MakeMemberAccess(
-														parentParam, column.MemberInfo),
-													Expression.MakeMemberAccess(
-														root, column.MemberInfo));
-												predicate = predicate == null ? ee : Expression.AndAlso(predicate, ee);
-											}
-
-											if (predicate == null)
-												throw new LinqToDBException($"Invalid mapping for Principal Entity during association building. Association {table.Association.MemberInfo.DeclaringType}.{table.Association.MemberInfo.Name}");
-
-											var filteredQuery = Expression.Call(null,
-												_queryableMethodInfo.MakeGenericMethod(parentType), arguments[0], Expression.Lambda(predicate, parentParam));
-
-											arguments[0] = filteredQuery;
-											selectMany   = selectMany.Update(selectMany.Object, arguments);
-
-											var asQueryable = MemberHelper
-												.MethodOf((IQueryable<object> q) => LinqExtensions.AsQueryable<object, object>(0))
-												.GetGenericMethodDefinition()
-												.MakeGenericMethod(e.Type, selectMany.Type);
-
-											expr = Expression.Call(null,
-												asQueryable, selectMany);
+											expr = queryMethod.GetBody(me.Expression, dcConst);
 										}
 										else
 										{

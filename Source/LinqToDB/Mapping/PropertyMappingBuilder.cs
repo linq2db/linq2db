@@ -27,11 +27,8 @@ namespace LinqToDB.Mapping
 			[JetBrains.Annotations.NotNull] EntityMappingBuilder<T>    entity,
 			[JetBrains.Annotations.NotNull] Expression<Func<T,object>> memberGetter)
 		{
-			if (entity       == null) throw new ArgumentNullException("entity");
-			if (memberGetter == null) throw new ArgumentNullException("memberGetter");
-
-			_entity       = entity;
-			_memberGetter = memberGetter;
+			_entity       = entity       ?? throw new ArgumentNullException(nameof(entity));
+			_memberGetter = memberGetter ?? throw new ArgumentNullException(nameof(memberGetter));
 			_memberInfo   = MemberHelper.MemberOf(memberGetter);
 
 			if (_memberInfo.ReflectedTypeEx() != typeof(T))
