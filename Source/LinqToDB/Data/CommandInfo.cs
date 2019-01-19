@@ -1154,7 +1154,7 @@ namespace LinqToDB.Data
 			{
 				var td = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 
-				if (td.InheritanceMapping.Count > 0)
+				if (td.InheritanceMapping.Count > 0 || td.Columns.Any(c => c.MemberAccessor.IsComplex))
 				{
 					var    readerBuilder = new RecordReaderBuilder(dataConnection, typeof(T), dataReader);
 					return readerBuilder.BuildReaderFunction<T>();
