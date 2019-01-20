@@ -483,6 +483,8 @@ Also, you can use .NET built-in TransactionScope class:
 ```c#
 // don't forget that isolation level is serializable by default
 using (var transaction = new TransactionScope())
+// or for async code
+// using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
 {
   using (var db = new DbNorthwind())
   {
