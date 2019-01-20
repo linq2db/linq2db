@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-
+using JetBrains.Annotations;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
@@ -212,6 +212,14 @@ namespace Tests.Tools
 				return expression;
 
 			return ((UnaryExpression)expression).Operand;
+		}
+	}
+
+	public static class ComparerBuilder
+	{
+		public static IEqualityComparer<T> GetEqualityComparer<T>([NoEnumeration] IEnumerable<T> enumerable)
+		{
+			return ComparerBuilder<T>.GetEqualityComparer();
 		}
 	}
 }

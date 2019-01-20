@@ -3,7 +3,7 @@
 	<Import Project="..\..\Build\linq2db.Default.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net45;net46;netcoreapp2.0;netstandard1.6;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net45;net46;netcoreapp1.0;netcoreapp2.0;netstandard1.6;netstandard2.0</TargetFrameworks>
 		<AssemblyName>linq2db</AssemblyName>
 		<RootNamespace>LinqToDB</RootNamespace>
 
@@ -83,9 +83,18 @@
 		<Compile Include="Compatibility\System\Threading\AsyncLocal.cs" />
 	</ItemGroup>
 
-	<!-- .NET Standard -->
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+	<!-- .NET Core -->
+
+	<PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp1.0'">
+		<DefineConstants>$(DefineConstants);NETSTANDARD1_6</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp2.0'">
+		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' OR '$(TargetFramework)' == 'netcoreapp1.0' ">
 		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
 		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.4" />
@@ -108,7 +117,7 @@
 		<Compile Include="Compatibility\System\SerializableAttribute.cs" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
@@ -118,29 +127,6 @@
 		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
 		<Compile Remove="ServiceModel\**\*.cs;" />
 		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
-		<Compile Remove="**\*SchemaProvider11111*.cs" />
-		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
-		<Compile Include="Compatibility\System\Data\DataTableExtensions.cs" />
-		<Compile Include="Compatibility\System\Data\DataRowExtensions.cs" />
-	</ItemGroup>
-
-
-	<!-- .NET Core -->
-
-	<PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp2.0'">
-		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
-	</PropertyGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
-
-		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
-		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
-		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
-		<Compile Remove="ServiceModel\**\*.cs;" />
-		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
-		<Compile Remove="**\*SchemaProvider11111*.cs" />
 		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
 		<Compile Include="Compatibility\System\Data\DataTableExtensions.cs" />
 		<Compile Include="Compatibility\System\Data\DataRowExtensions.cs" />

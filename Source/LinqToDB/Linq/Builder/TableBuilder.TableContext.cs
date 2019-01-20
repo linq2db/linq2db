@@ -342,13 +342,16 @@ namespace LinqToDB.Linq.Builder
 					}
 				).ToList();
 
-				Expression expr = Expression.MemberInit(
+				var initExpr = Expression.MemberInit(
 					Expression.New(objectType),
 						members
+							// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
 							.Where (m => !m.Column.MemberAccessor.IsComplex)
 							.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
 
-				var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
+				Expression expr = initExpr;
+
+				var hasComplex = members.Count > initExpr.Bindings.Count;
 				var loadWith   = GetLoadWith();
 
 				if (hasComplex || loadWith != null)
@@ -907,6 +910,14 @@ namespace LinqToDB.Linq.Builder
 					Expression expr  = null;
 					var        param = Expression.Parameter(typeof(T), "c");
 
+					var queryMethod = association.Association.GetQueryMethod(parent.Type, typeof(T));
+
+					if (queryMethod != null)
+					{
+						expr = queryMethod.GetBody(parent, Expression.Constant(association.Builder.DataContext));
+						return expr;
+					}
+
 					foreach (var cond in association.ParentAssociationJoin.Condition.Conditions.Take(association.RegularConditionCount))
 					{
 						SqlPredicate.ExprExpr p;
@@ -995,9 +1006,6 @@ namespace LinqToDB.Linq.Builder
 
 							if (association.IsList)
 							{
-								if (association.InnerContext != null)
-									return new SubQueryContext(association);
-
 								var ma     = expression.NodeType == ExpressionType.MemberAccess
 												? ((MemberExpression)buildInfo.Expression).Expression
 												: expression.NodeType == ExpressionType.Call

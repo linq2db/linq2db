@@ -1,51 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\..\Build\linq2db.Default.props" />
+	<Import Project="..\..\Build\linq2db.Tests.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net46;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
-		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
 		<AssemblyName>linq2db.Tests</AssemblyName>
-		<Configurations>AppVeyor;NET.46;CORE.1;CORE.2</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'AppVeyor' ">
-		<DefineConstants>RELEASE;APPVEYOR</DefineConstants>
-		<DebugSymbols>false</DebugSymbols>
-		<Optimize>true</Optimize>
 		<AssemblyName Condition="'$(TargetFramework)' == 'netcoreapp1.0'">linq2db.Tests.Core1</AssemblyName>
 		<AssemblyName Condition="'$(TargetFramework)' == 'netcoreapp2.0'">linq2db.Tests.Core2</AssemblyName>
 	</PropertyGroup>
-
-	<PropertyGroup Condition=" '$(Configuration)' == 'Travis' ">
-		<DefineConstants>RELEASE;TRAVIS</DefineConstants>
-		<DebugSymbols>false</DebugSymbols>
-		<Optimize>true</Optimize>
-	</PropertyGroup>
-
-	<PropertyGroup Condition=" '$(Configuration)' == 'NET.46' ">
-		<TargetFrameworks>net46</TargetFrameworks>
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>full</DebugType>
-		<Optimize>false</Optimize>
-	</PropertyGroup>
-
-	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.1' ">
-		<TargetFrameworks>netcoreapp1.0</TargetFrameworks>
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>full</DebugType>
-		<Optimize>false</Optimize>
-		</PropertyGroup>
-
-	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.2' ">
-		<TargetFrameworks>netcoreapp2.0</TargetFrameworks>
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>full</DebugType>
-		<Optimize>false</Optimize>
-	</PropertyGroup>
-
 
 	<ItemGroup>
 		<Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
@@ -59,26 +23,32 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
-		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
-		<PackageReference Include="AdoNetCore.AseClient" Version="0.13.1" />
 
-		<PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
+		<PackageReference Include="AdoNetCore.AseClient" Version="0.13.1" />
 		<PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" Condition=" '$(TargetFramework)' != 'net40' " />
-		<PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-		<PackageReference Include="NUnit" Version="3.11.0" />
-		<PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.12.1" />
 		<PackageReference Include="Npgsql" Version="3.2.7" />
 		<PackageReference Include="Mono.Cecil" Version="0.10.0" />
-		<PackageReference Include="MySql.Data" Version="6.10.6" />
+		<PackageReference Include="MySql.Data" Version="8.0.13" />
 		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" />
-		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
+
+	<Target Name="AddPackageAliases" BeforeTargets="ResolveReferences" Outputs="%(PackageReference.Identity)">
+		<PropertyGroup>
+			<AliasPackageReference>@(PackageReference->'%(Identity)')</AliasPackageReference>
+			<AliasName>@(PackageReference->'%(Alias)')</AliasName>
+		</PropertyGroup>
+
+		<ItemGroup>
+			<ReferencePath Condition="'%(FileName)'=='$(AliasPackageReference)'">
+				<Aliases>$(AliasName)</Aliases>
+			</ReferencePath>
+		</ItemGroup>
+	</Target>
 
 
 	<!-- .NET Framework -->
@@ -89,22 +59,6 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net46' ">
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
-
-		<Reference Include="Microsoft.CSharp" />
-		<Reference Include="System" />
-		<Reference Include="System.Configuration" />
-		<Reference Include="System.Core" />
-		<Reference Include="System.Data.DataSetExtensions" />
-		<Reference Include="System.Data.Linq" />
-		<Reference Include="System.Data.Services" />
-		<Reference Include="System.Threading.Tasks" />
-		<Reference Include="System.ServiceModel" />
-		<Reference Include="System.Web.Services" />
-		<Reference Include="System.Xml.Linq" />
-		<Reference Include="System.Data" />
-		<Reference Include="System.Xml" />
-		<Reference Include="System.Runtime.Serialization" />
-		<Reference Include="System.Windows.Forms" />
 
 		<None Update="SqlServerTypes\x64\msvcr120.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -150,15 +104,7 @@
 	</ItemGroup>
 
 
-	<!-- .NET Standard -->
-
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
-		<DefineConstants>$(DefineConstants);NETSTANDARD1_6</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
-	</PropertyGroup>
+	<!-- .NET Core -->
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
 		<Compile Remove="SchemaProvider\SchemaProviderTests.cs" />
@@ -190,24 +136,6 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
-		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.4" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
-		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
-		<PackageReference Include="System.Data.Common" Version="4.3.0" />
-		<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
-		<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
-		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-		<PackageReference Include="System.Runtime.InteropServices.WindowsRuntime" Version="4.3.0" />
-		<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
-		<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
-		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
-		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
-
-		<PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />
-
 		<Compile Remove="DataProvider\AccessTests.cs" />
 		<Compile Remove="DataProvider\DB2Tests.cs" />
 		<Compile Remove="DataProvider\SybaseTests.cs" />
@@ -224,22 +152,22 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
-	  <PackageReference Include="Oracle.ManagedDataAccess.Core">
-	    <Version>2.18.3</Version>
-	  </PackageReference>
+		<PackageReference Include="Oracle.ManagedDataAccess.Core">
+			<Version>2.18.3</Version>
+		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="npgsql4\net451\" />
-	  <Folder Include="npgsql4\netstandard2.0\" />
+		<Folder Include="npgsql4\net451\" />
+		<Folder Include="npgsql4\netstandard2.0\" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="..\..\Redist\npgsql4\net451\Npgsql.dll" Link="npgsql4\net451\Npgsql.dll">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Include="..\..\Redist\npgsql4\netstandard2.0\Npgsql.dll" Link="npgsql4\netstandard2.0\Npgsql.dll">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
+		<None Include="..\..\Redist\npgsql4\net451\Npgsql.dll" Link="npgsql4\net451\Npgsql.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\Redist\npgsql4\netstandard2.0\Npgsql.dll" Link="npgsql4\netstandard2.0\Npgsql.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 </Project>

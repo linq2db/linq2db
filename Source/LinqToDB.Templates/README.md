@@ -141,6 +141,10 @@ DatabaseName                  = null;
 IncludeDefaultSchema          = true;
 // Enables generation of mappings for views
 GenerateViews                 = true;
+// Enables prefixing mapping classes for tables in non-default schema with schema name
+// E.g. MySchema.MyTable -> MySchema_MyTable
+// Applicable only if GenerateSchemaAsType = false
+PrefixTableMappingWithSchema  = true;
 
 /* Columns comfiguration */
 // Enables compact generation of column properties

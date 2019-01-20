@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using LinqToDB.Tools;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -11,6 +10,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using Reflection;
 	using SqlProvider;
+	using Tools;
 
 	public class MySqlDataProvider : DynamicDataProviderBase
 	{
@@ -44,15 +44,15 @@ namespace LinqToDB.DataProvider.MySql
 			_mySqlDecimalType  = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDecimal",  true);
 			_mySqlDateTimeType = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDateTime", true);
 
-			_mySqlDecimalValueGetter  = TypeAccessor.GetAccessor(_mySqlDecimalType) ["Value"].Getter;
-			_mySqlDateTimeValueGetter = TypeAccessor.GetAccessor(_mySqlDateTimeType)["Value"].Getter;
+				_mySqlDecimalValueGetter  = TypeAccessor.GetAccessor(_mySqlDecimalType) ["Value"].Getter;
+				_mySqlDateTimeValueGetter = TypeAccessor.GetAccessor(_mySqlDateTimeType)["Value"].Getter;
 
-			SetProviderField(_mySqlDecimalType,  "GetMySqlDecimal");
+				SetProviderField(_mySqlDecimalType, "GetMySqlDecimal");
 			SetProviderField(_mySqlDateTimeType, "GetMySqlDateTime");
-			SetToTypeField  (_mySqlDecimalType,  "GetMySqlDecimal");
+				SetToTypeField(_mySqlDecimalType,   "GetMySqlDecimal");
 			SetToTypeField  (_mySqlDateTimeType, "GetMySqlDateTime");
 
-			MappingSchema.SetDataType(_mySqlDecimalType,  DataType.Decimal);
+				MappingSchema.SetDataType(_mySqlDecimalType, DataType.Decimal);
 			MappingSchema.SetDataType(_mySqlDateTimeType, DataType.DateTime2);
 		}
 
@@ -116,18 +116,18 @@ namespace LinqToDB.DataProvider.MySql
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (source == null)
-				throw new ArgumentException("Source is null!", "source");
+				throw new ArgumentException("Source is null!", nameof(source));
 
 #pragma warning disable 618
 			if (options.RetrieveSequence)
 			{
-				var list = source.RetrieveIdentity(dataConnection);
+				var list = source.RetrieveIdentity((DataConnection)table.DataContext);
 
 				if (!ReferenceEquals(list, source))
-					options.KeepIdentity = true;
+					options = new BulkCopyOptions(options) { KeepIdentity = true };
 
 				source = list;
 			}
@@ -135,7 +135,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			return new MySqlBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}
