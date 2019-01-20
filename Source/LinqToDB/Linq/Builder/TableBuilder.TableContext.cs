@@ -342,13 +342,15 @@ namespace LinqToDB.Linq.Builder
 					}
 				).ToList();
 
-				Expression expr = Expression.MemberInit(
+				var initExpr = Expression.MemberInit(
 					Expression.New(objectType),
 						members
 							.Where (m => !m.Column.MemberAccessor.IsComplex)
 							.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
 
-				var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
+				Expression expr = initExpr;
+
+				var hasComplex = members.Count > initExpr.Bindings.Count;
 				var loadWith   = GetLoadWith();
 
 				if (hasComplex || loadWith != null)

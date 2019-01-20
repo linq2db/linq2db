@@ -147,26 +147,25 @@ namespace LinqToDB.Data
 				}
 			).ToList();
 
-			Expression expr = Expression.MemberInit(
+			var initExpr = Expression.MemberInit(
 				Expression.New(objectType),
 				members
 					.Where (m => !m.Column.MemberAccessor.IsComplex)
 					.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
 
+			Expression expr = initExpr;
+
 			// added from TableContext.BuildDefaultConstructor without LoadWith functionality
-			var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
+			var hasComplex = members.Count > initExpr.Bindings.Count;
 
 			if (hasComplex)
 			{
 				var obj   = Expression.Variable(expr.Type);
 				var exprs = new List<Expression> { Expression.Assign(obj, expr) };
 
-				if (hasComplex)
-				{
-					exprs.AddRange(
-						members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
-							m.Column.MemberAccessor.SetterExpression.GetBody(obj, m.Expr)));
-				}
+				exprs.AddRange(
+					members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
+						m.Column.MemberAccessor.SetterExpression.GetBody(obj, m.Expr)));
 
 				exprs.Add(obj);
 
