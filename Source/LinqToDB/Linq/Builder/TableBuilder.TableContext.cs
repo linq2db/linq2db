@@ -345,6 +345,7 @@ namespace LinqToDB.Linq.Builder
 				var initExpr = Expression.MemberInit(
 					Expression.New(objectType),
 						members
+							// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
 							.Where (m => !m.Column.MemberAccessor.IsComplex)
 							.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
 
