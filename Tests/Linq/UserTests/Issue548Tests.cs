@@ -26,7 +26,7 @@ namespace Tests.UserTests
 
 		[Test, Category("WindowsOnly")]
 		public void Test1()
-		{ 
+		{
 			var ms      = new MappingSchema();
 			var builder = ms.GetFluentMappingBuilder();
 
@@ -109,7 +109,7 @@ namespace Tests.UserTests
 		}
 
 		/// <summary>
-		/// This will iterate through <see cref="MappingSchema.MetadataReaders"/>, 
+		/// This will iterate through <see cref="MappingSchema.MetadataReaders"/>,
 		/// and had a chance to fail on <see cref="MappingSchema._metadataReaders"/> == null
 		/// </summary>
 		/// <param name="ms"></param>

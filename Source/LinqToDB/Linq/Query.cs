@@ -216,11 +216,10 @@ namespace LinqToDB.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr)
 		{
+			expr = ExpressionBuilder.ExpandExpression(expr);
+
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
-
-			if (Configuration.Linq.UseBinaryAggregateExpression)
-				expr = ExpressionBuilder.AggregateExpression(expr);
 
 			if (Configuration.Linq.DisableQueryCache)
 				return CreateQuery(dataContext, expr);

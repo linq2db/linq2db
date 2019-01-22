@@ -43,7 +43,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestParameters([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestParameters([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -262,8 +262,8 @@ namespace Tests.DataProvider
 			TestNumeric(conn, (T?)null, dataType);
 		}
 
-		//[Test, IncludeDataContextSource(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.Npgsql4)]
-		public void TestNumerics(string context)
+		//[Test]
+		public void TestNumerics([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -312,7 +312,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDate([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestDate([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -330,7 +330,7 @@ namespace Tests.DataProvider
 		/// same value back out equivalent in value
 		/// </summary>
 		[Test]
-		public void TestJson([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestJson([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -345,7 +345,7 @@ namespace Tests.DataProvider
 		/// with values coming back as being equivalent in value
 		/// </summary>
 		[Test]
-		public void TestJsonb([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestJsonb([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			var json = new { name = "bob", age = 10 };
 			using (var conn = new DataConnection(context))
@@ -361,7 +361,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDateTime([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestDateTime([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -377,7 +377,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestChar([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestChar([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -413,7 +413,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestString([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestString([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -440,7 +440,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestBinary([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestBinary([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			var arr1 = new byte[] { 48, 57 };
 
@@ -461,7 +461,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestGuid([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestGuid([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -481,7 +481,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestXml([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestXml([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -507,7 +507,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestEnum1([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestEnum1([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -519,7 +519,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestEnum2([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestEnum2([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -533,7 +533,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void SequenceInsert1([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void SequenceInsert1([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -549,7 +549,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void SequenceInsert2([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void SequenceInsert2([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -565,7 +565,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void SequenceInsert3([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void SequenceInsert3([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -581,7 +581,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void SequenceInsertWithIdentity1([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void SequenceInsertWithIdentity1([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -599,7 +599,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void SequenceInsertWithIdentity2([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void SequenceInsertWithIdentity2([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -617,7 +617,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void SequenceInsertWithIdentity3([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void SequenceInsertWithIdentity3([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -635,7 +635,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void SequenceInsertWithIdentity4([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void SequenceInsertWithIdentity4([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -651,7 +651,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void SequenceInsertWithIdentity5([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void SequenceInsertWithIdentity5([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -667,7 +667,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void BulkCopyLinqTypes([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void BulkCopyLinqTypes([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
@@ -698,7 +698,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue140([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void Issue140([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -716,7 +716,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void CreateTableTest([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void CreateTableTest([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<CreateTableTestClass>())
@@ -739,7 +739,7 @@ namespace Tests.DataProvider
 
 #if !NPGSQL226
 		[Test]
-		public void NpgsqlDateTimeTest([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void NpgsqlDateTimeTest([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			PostgreSQLTools.GetDataProvider().CreateConnection(DataConnection.GetConnectionString(context));
 
@@ -825,7 +825,7 @@ namespace Tests.DataProvider
 
 		// test that native bulk copy method inserts data properly
 		[Test]
-		public void BulkCopyTest([Values]BulkTestMode mode, [IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void BulkCopyTest([Values]BulkTestMode mode, [IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			var macaddr8Supported = context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11) || context.Contains(TestProvName.PostgreSQLLatest);
 			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
@@ -938,9 +938,9 @@ namespace Tests.DataProvider
 
 					AreEqual(
 						r => {
-							r.ID             = 0;
+							r.ID = 0;
 							r.binaryDataType = null;
-							r.bitDataType    = null;
+							r.bitDataType = null;
 							r.varBitDataType = null;
 							if (!lineSupported)     r.lineDataType     = null;
 							if (!jsonbSupported)    r.jsonbDataType    = null;
@@ -1070,25 +1070,25 @@ namespace Tests.DataProvider
 							},
 							new ColumnSchema()
 							{
-								ColumnName           = "timestampDataType",
-								ColumnType           = "timestamp (0) without time zone",
-								MemberName           = "timestampDataType",
-								MemberType           = "DateTime?",
-								SystemType           = typeof(DateTime),
+								ColumnName = "timestampDataType",
+								ColumnType = "timestamp (0) without time zone",
+								MemberName = "timestampDataType",
+								MemberType = "DateTime?",
+								SystemType = typeof(DateTime),
 								ProviderSpecificType = "NpgsqlDate",
-								IsNullable           = true,
-								DataType             = DataType.DateTime2
+								IsNullable = true,
+								DataType   = DataType.DateTime2
 							},
 							new ColumnSchema()
 							{
-								ColumnName           = "timestampTZDataType",
-								ColumnType           = "timestamp (0) with time zone",
-								MemberName           = "timestampTZDataType",
-								MemberType           = "DateTimeOffset?",
-								SystemType           = typeof(DateTimeOffset),
+								ColumnName = "timestampTZDataType",
+								ColumnType = "timestamp (0) with time zone",
+								MemberName = "timestampTZDataType",
+								MemberType = "DateTimeOffset?",
+								SystemType = typeof(DateTimeOffset),
 								ProviderSpecificType = "NpgsqlDate",
-								IsNullable           = true,
-								DataType             = DataType.DateTimeOffset
+								IsNullable = true,
+								DataType   = DataType.DateTimeOffset
 							},
 							new ColumnSchema()
 							{
@@ -1692,7 +1692,7 @@ namespace Tests.DataProvider
 
 #if !NETSTANDARD1_6
 		public void SchemaProceduresLoadedTest(
-			[IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+			[IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1707,7 +1707,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void ProceduresSchemaProviderTest(
-			[IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context,
+			[IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context,
 			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
 		{
 			var macaddr8Supported =  context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11) || context.Contains(TestProvName.PostgreSQLLatest);
@@ -1826,24 +1826,24 @@ namespace Tests.DataProvider
 						else if (expectedColumn.ColumnType == "bool")
 							Assert.Contains(actualColumn.ColumnType, new[] { "bool", "boolean" });
 						else
-							Assert.AreEqual(expectedColumn.ColumnType, actualColumn.ColumnType);
+						Assert.AreEqual(expectedColumn.ColumnType, actualColumn.ColumnType);
 
-						Assert.AreEqual(expectedColumn.IsNullable          , actualColumn.IsNullable);
-						Assert.AreEqual(expectedColumn.IsIdentity          , actualColumn.IsIdentity);
-						Assert.AreEqual(expectedColumn.IsPrimaryKey        , actualColumn.IsPrimaryKey);
-						Assert.AreEqual(expectedColumn.PrimaryKeyOrder     , actualColumn.PrimaryKeyOrder);
-						Assert.AreEqual(expectedColumn.Description         , actualColumn.Description);
-						Assert.AreEqual(expectedColumn.MemberName          , actualColumn.MemberName);
-						Assert.AreEqual(expectedColumn.MemberType          , actualColumn.MemberType);
+						Assert.AreEqual(expectedColumn.IsNullable, actualColumn.IsNullable);
+						Assert.AreEqual(expectedColumn.IsIdentity, actualColumn.IsIdentity);
+						Assert.AreEqual(expectedColumn.IsPrimaryKey, actualColumn.IsPrimaryKey);
+						Assert.AreEqual(expectedColumn.PrimaryKeyOrder, actualColumn.PrimaryKeyOrder);
+						Assert.AreEqual(expectedColumn.Description, actualColumn.Description);
+						Assert.AreEqual(expectedColumn.MemberName, actualColumn.MemberName);
+						Assert.AreEqual(expectedColumn.MemberType, actualColumn.MemberType);
 						Assert.AreEqual(expectedColumn.ProviderSpecificType, actualColumn.ProviderSpecificType);
-						Assert.AreEqual(expectedColumn.SystemType          , actualColumn.SystemType);
-						Assert.AreEqual(expectedColumn.DataType            , actualColumn.DataType);
-						Assert.AreEqual(expectedColumn.SkipOnInsert        , actualColumn.SkipOnInsert);
-						Assert.AreEqual(expectedColumn.SkipOnUpdate        , actualColumn.SkipOnUpdate);
-						Assert.AreEqual(expectedColumn.Length              , actualColumn.Length);
-						Assert.AreEqual(expectedColumn.Precision           , actualColumn.Precision);
-						Assert.AreEqual(expectedColumn.Scale               , actualColumn.Scale);
-						Assert.AreEqual(actualTable                        , actualColumn.Table);
+						Assert.AreEqual(expectedColumn.SystemType, actualColumn.SystemType);
+						Assert.AreEqual(expectedColumn.DataType, actualColumn.DataType);
+						Assert.AreEqual(expectedColumn.SkipOnInsert, actualColumn.SkipOnInsert);
+						Assert.AreEqual(expectedColumn.SkipOnUpdate, actualColumn.SkipOnUpdate);
+						Assert.AreEqual(expectedColumn.Length, actualColumn.Length);
+						Assert.AreEqual(expectedColumn.Precision, actualColumn.Precision);
+						Assert.AreEqual(expectedColumn.Scale, actualColumn.Scale);
+						Assert.AreEqual(actualTable, actualColumn.Table);
 					}
 
 					Assert.IsNotNull(procedure.SimilarTables);
@@ -1861,7 +1861,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestVoidFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestVoidFunction([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1874,7 +1874,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestCustomAggregate([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestCustomAggregate([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1896,7 +1896,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestCustomAggregateNotNullable([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestCustomAggregateNotNullable([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1918,21 +1918,21 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestTableFunction([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context, new MappingSchema(context)))
 			{
 				var result = new TestPgFunctions(db).GetAllTypes().ToList();
 
 				var res1 = db.GetTable<AllTypes>().OrderBy(_ => _.ID).ToArray()[1];
-				var res2 = result                 .OrderBy(_ => _.ID).ToArray()[1];
+				var res2 = result.OrderBy(_ => _.ID).ToArray()[1];
 
 				var c1 = res1.binaryDataType.GetHashCode() == res2.binaryDataType.GetHashCode();
-				var c2 = res1.bitDataType   .GetHashCode() == res2.bitDataType   .GetHashCode();
+				var c2 = res1.bitDataType.GetHashCode() == res2.bitDataType.GetHashCode();
 				var c3 = res1.varBitDataType.GetHashCode() == res2.varBitDataType.GetHashCode();
 
 				var e1 = res1.binaryDataType.Equals(res2.binaryDataType);
-				var e2 = res1.bitDataType   .Equals(res2.bitDataType);
+				var e2 = res1.bitDataType.Equals(res2.bitDataType);
 				var e3 = res1.varBitDataType.Equals(res2.varBitDataType);
 
 				AreEqual(db.GetTable<AllTypes>().OrderBy(_ => _.ID), result.OrderBy(_ => _.ID), AllTypes.Comparer);
@@ -1940,7 +1940,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestParametersFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestParametersFunction([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1956,7 +1956,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestScalarTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestScalarTableFunction([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1971,7 +1971,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestRecordTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestRecordTableFunction([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1987,7 +1987,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestScalarFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestScalarFunction([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1998,7 +1998,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestSingleOutParameterFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestSingleOutParameterFunction([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2010,7 +2010,7 @@ namespace Tests.DataProvider
 
 		[ActiveIssue("Functionality not implemented yet")]
 		[Test]
-		public void TestDynamicRecordFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestDynamicRecordFunction([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2029,7 +2029,7 @@ namespace Tests.DataProvider
 
 		[ActiveIssue("Functionality not implemented yet")]
 		[Test]
-		public void TestDynamicTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void TestDynamicTableFunction([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

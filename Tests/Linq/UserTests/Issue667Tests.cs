@@ -32,8 +32,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue667Tests: TestBase
 	{
-		[Test, DataContextSource]
-		public void TestAnd(string context)
+		[Test]
+		public void TestAnd([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -42,14 +42,14 @@ namespace Tests.UserTests
 				predicate = predicate.And(p => p.ParentID <= 4);
 				
 				var q = db.Parent.Where(predicate); 
-				var e = Parent   .Where(predicate.Compile());
+				var e = Parent.Where(predicate.Compile()); 
 
 				AreEqual(r => new Parent() { ParentID = r.ParentID, Value1 = r.Value1 }, e, q, ComparerBuilder<Parent>.GetEqualityComparer(), src => src.OrderBy(p => p.ParentID));
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestAndFalse(string context)
+		[Test]
+		public void TestAndFalse([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -64,8 +64,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestOrTrue(string context)
+		[Test]
+		public void TestOrTrue([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -74,14 +74,14 @@ namespace Tests.UserTests
 				predicate = predicate.Or(p => p.ParentID <= 4);
 				
 				var q = db.Parent.Where(predicate); 
-				var e = Parent   .Where(predicate.Compile());
+				var e = Parent.Where(predicate.Compile()); 
 
 				AreEqual(r => new Parent() { ParentID = r.ParentID, Value1 = r.Value1 }, e, q, ComparerBuilder<Parent>.GetEqualityComparer(), src => src.OrderBy(p => p.ParentID));
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestOrFalse(string context)
+		[Test]
+		public void TestOrFalse([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -90,7 +90,7 @@ namespace Tests.UserTests
 				predicate = predicate.Or(p => p.ParentID <= 4);
 				
 				var q = db.Parent.Where(predicate); 
-				var e = Parent   .Where(predicate.Compile());
+				var e = Parent.Where(predicate.Compile()); 
 
 				AreEqual(r => new Parent() { ParentID = r.ParentID, Value1 = r.Value1 }, e, q, ComparerBuilder<Parent>.GetEqualityComparer(), src => src.OrderBy(p => p.ParentID));
 			}

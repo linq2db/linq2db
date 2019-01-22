@@ -1,9 +1,11 @@
-﻿using System;
+﻿extern alias MySqlData;
+
+using System;
 using System.Linq;
 
 using LinqToDB;
 
-using MySql.Data.MySqlClient;
+using MySqlData::MySql.Data.MySqlClient;
 
 using NUnit.Framework;
 
@@ -14,8 +16,8 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class DataExceptionTests : TestBase
 	{
-		[Test, IncludeDataContextSource(ProviderName.MySql)]
-		public void ParameterPrefixTest(string context)
+		[Test]
+		public void ParameterPrefixTest([IncludeDataSources(ProviderName.MySql)] string context)
 		{
 			try
 			{

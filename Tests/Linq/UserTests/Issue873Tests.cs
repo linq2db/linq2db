@@ -1,10 +1,11 @@
-﻿using NUnit.Framework;
+﻿using System;
 using System.Linq;
+
 using LinqToDB;
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-
 	[TestFixture]
 	public class Issue873Tests : TestBase
 	{

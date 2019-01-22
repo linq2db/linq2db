@@ -53,12 +53,12 @@ namespace Tests.UserTests
 			public int UserId { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var userId = 32;
+				var userId  = 32;
 				var childId = 32;
 
 				//Configuration.Linq.OptimizeJoins = false;

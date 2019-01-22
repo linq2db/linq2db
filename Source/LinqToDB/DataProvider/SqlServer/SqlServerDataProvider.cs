@@ -10,6 +10,8 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.SqlServer.Server;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Configuration;
@@ -19,7 +21,6 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using Microsoft.SqlServer.Server;
 
 	public class SqlServerDataProvider : DataProviderBase
 	{
@@ -92,10 +93,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region Public Properties
 
-		public override string ConnectionNamespace { get { return typeof(SqlConnection).Namespace; } }
-		public override Type   DataReaderType      { get { return typeof(SqlDataReader);           } }
+		public override string ConnectionNamespace => typeof(SqlConnection).Namespace;
+		public override Type   DataReaderType      => typeof(SqlDataReader);
 
-		public SqlServerVersion Version { get; private set; }
+		public SqlServerVersion Version { get; }
 
 		#endregion
 
@@ -182,9 +183,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "IsMarsEnabled" :
 					if (dataConnection.ConnectionString != null)
 					{
-						bool flag;
-
-						if (!_marsFlags.TryGetValue(dataConnection.Connection.ConnectionString, out flag))
+						if (!_marsFlags.TryGetValue(dataConnection.Connection.ConnectionString, out var flag))
 						{
 							flag = dataConnection.Connection.ConnectionString.Split(';')
 								.Select(s => s.Split('='))
@@ -210,31 +209,27 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				case DataType.Udt        :
 					{
-						string s;
-						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
+						if (value != null && _udtTypes.TryGetValue(value.GetType(), out var s))
 							if (parameter is SqlParameter)
 #if NETSTANDARD1_6
 								((SqlParameter)parameter).TypeName = s;
 #else
 								((SqlParameter)parameter).UdtTypeName = s;
 #endif
-
 					}
 
 					break;
 				case DataType.NText:
-					if (value is DateTimeOffset) value = ((DateTimeOffset)value).ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
-					else if (value is DateTime)
+					     if (value is DateTimeOffset dto) value = dto.ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
+					else if (value is DateTime dt)
 					{
-						var dt = (DateTime)value;
 						value = dt.ToString(
 							dt.Millisecond == 0
 								? "yyyy-MM-ddTHH:mm:ss"
 								: "yyyy-MM-ddTHH:mm:ss.fff");
 					}
-					else if (value is TimeSpan)
+					else if (value is TimeSpan ts)
 					{
-						var ts = (TimeSpan)value;
 						value = ts.ToString(
 							ts.Days > 0
 								? ts.Milliseconds > 0
@@ -374,14 +369,14 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		SqlServerBulkCopy _bulkCopy;
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new SqlServerBulkCopy(this);
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}
@@ -403,7 +398,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection, 
+			DataConnection connection,
 			IMergeable<TTarget, TSource> merge)
 		{
 			return new SqlServerMergeBuilder<TTarget, TSource>(connection, merge);

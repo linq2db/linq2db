@@ -43,7 +43,7 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			var clone = new SqlDropTableStatement();
+			var clone = new SqlTruncateTableStatement();
 
 			if (Table != null)
 				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);

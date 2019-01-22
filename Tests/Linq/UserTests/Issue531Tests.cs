@@ -50,8 +50,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void Test(string context)
+		[Test]
+		public void Test([NorthwindDataContext] string context)
 		{
 			MappingSchema.Default.SetConverter<List<string>, string>((obj) =>
 			{

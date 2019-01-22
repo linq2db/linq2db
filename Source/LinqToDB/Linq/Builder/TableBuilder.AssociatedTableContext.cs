@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
@@ -35,8 +35,6 @@ namespace LinqToDB.Linq.Builder
 
 			Dictionary<ISqlExpression, SqlField> _replaceMap;
 			IBuildContext                        _innerContext;
-
-			public IBuildContext InnerContext => _innerContext;
 
 			public AssociatedTableContext(
 				[JetBrains.Annotations.NotNull] ExpressionBuilder     builder,
@@ -73,21 +71,10 @@ namespace LinqToDB.Linq.Builder
 				var queryMethod = Association.GetQueryMethod(parent.ObjectType, ObjectType);
 				if (queryMethod != null)
 				{
-					var dcParam     = queryMethod.Parameters[1];
-					var resultParam = Expression.Parameter(ObjectType);
+					var selectManyMethod = GetAssociationQueryExpression(Expression.Constant(builder.DataContext),
+						queryMethod.Parameters[0], parent.ObjectType, parent.Expression, queryMethod);
 
-					Expression dcConst = Expression.Constant(builder.DataContext);
-					if (dcParam.Type != typeof(IDataContext))
-						dcConst = Expression.Convert(dcConst, dcParam.Type);
-
-					var body    = queryMethod.Body.Transform(e => e == dcParam ? dcConst : e);
-					body        = Expression.Convert(body, typeof(IEnumerable<>).MakeGenericType(ObjectType));
-					queryMethod = Expression.Lambda(body, queryMethod.Parameters[0]);
-
-					var selectManyMethodInfo = _selectManyMethodInfo.MakeGenericMethod(parent.ObjectType, ObjectType, ObjectType);
-					var resultLamba          = Expression.Lambda(resultParam, Expression.Parameter(parent.ObjectType), resultParam);
-					var selectManyMethod     = Expression.Call(null, selectManyMethodInfo, parent.Expression, queryMethod, resultLamba);
-					var ownerTableSource     = SelectQuery.From.Tables[0];
+					var ownerTableSource = SelectQuery.From.Tables[0];
 
 					_innerContext = builder.BuildSequence(new BuildInfo(this, selectManyMethod, new SelectQuery())
 						{ IsAssociationBuilt = true });
@@ -99,6 +86,12 @@ namespace LinqToDB.Linq.Builder
 
 					var foundIndex = associationQuery.Select.From.Tables.FindIndex(t =>
 						t.Source is SqlTable sqlTable && QueryHelper.IsEqualTables(sqlTable, parent.SqlTable));
+
+					// try to search table by object type
+					// TODO: review maybe there are another ways to do that
+					if (foundIndex < 0)
+						foundIndex = associationQuery.Select.From.Tables.FindIndex(t =>
+							t.Source is SqlTable sqlTable && sqlTable.ObjectType == parent.SqlTable.ObjectType);
 
 					if (foundIndex < 0)
 						throw new LinqToDBException("Invalid association query. It is not possible to inline query. Can not find owner table.");
@@ -202,6 +195,22 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				Init(false);
+			}
+
+			public Expression GetAssociationQueryExpression(Expression dataContextExpr, Expression parentObjExpression, Type parentType, Expression parentTableExpression,
+				LambdaExpression queryMethod)
+			{
+				var resultParam = Expression.Parameter(ObjectType);
+
+				var body    = queryMethod.GetBody(parentObjExpression ?? queryMethod.Parameters[0], dataContextExpr);
+				body        = Expression.Convert(body, typeof(IEnumerable<>).MakeGenericType(ObjectType));
+				queryMethod = Expression.Lambda(body, queryMethod.Parameters[0]);
+
+				var selectManyMethodInfo = _selectManyMethodInfo.MakeGenericMethod(parentType, ObjectType, ObjectType);
+				var resultLamba          = Expression.Lambda(resultParam, Expression.Parameter(parentType), resultParam);
+				var selectManyMethod     = Expression.Call(null, selectManyMethodInfo, parentTableExpression, queryMethod, resultLamba);
+
+				return selectManyMethod;
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)

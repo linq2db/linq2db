@@ -137,9 +137,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildPredicate(ISqlPredicate predicate)
 		{
-			var exprExpr = predicate as SqlPredicate.ExprExpr;
-
-			if (exprExpr != null)
+			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{
 				var leftType  = exprExpr.Expr1.SystemType;
 				var rightType = exprExpr.Expr2.SystemType;
@@ -177,12 +175,17 @@ namespace LinqToDB.DataProvider.SQLite
 			return sb.Append(table);
 		}
 
-		private static bool IsDateTime(Type type)
+		static bool IsDateTime(Type type)
 		{
 			return    type == typeof(DateTime)
 				   || type == typeof(DateTimeOffset)
 				   || type == typeof(DateTime?)
 				   || type == typeof(DateTimeOffset?);
+		}
+
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
+		{
+			BuildDropTableStatementIfExists(dropTable);
 		}
 	}
 }

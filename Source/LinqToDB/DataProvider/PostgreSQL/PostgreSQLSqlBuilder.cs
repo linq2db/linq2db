@@ -338,5 +338,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			StringBuilder.AppendLine();
 		}
+
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
+		{
+			BuildDropTableStatementIfExists(dropTable);
+		}
 	}
 }

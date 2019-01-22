@@ -465,7 +465,9 @@ namespace LinqToDB.Data
 
 				public void Dispose()
 				{
-					_dataReader.Dispose();
+					// call interface method, because at least MySQL provider incorrectly override
+					// methods for .net core 1x
+					DataReader.Dispose();
 				}
 			}
 

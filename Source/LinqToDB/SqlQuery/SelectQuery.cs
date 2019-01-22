@@ -33,15 +33,15 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal void Init(
-			SqlSelectClause         select,
-			SqlFromClause           from,
-			SqlWhereClause          where,
-			SqlGroupByClause        groupBy,
-			SqlWhereClause          having,
-			SqlOrderByClause        orderBy,
-			List<SqlUnion>          unions,
-			SelectQuery          parentSelect,
-			bool                 parameterDependent)
+			SqlSelectClause  select,
+			SqlFromClause    from,
+			SqlWhereClause   where,
+			SqlGroupByClause groupBy,
+			SqlWhereClause   having,
+			SqlOrderByClause orderBy,
+			List<SqlUnion>   unions,
+			SelectQuery      parentSelect,
+			bool             parameterDependent)
 		{
 			Select               = select;
 			From                 = from;
@@ -74,11 +74,9 @@ namespace LinqToDB.SqlQuery
 		private List<object> _properties;
 		public  List<object>  Properties => _properties ?? (_properties = new List<object>());
 
-		public SelectQuery ParentSelect         { get; set; }
-
-		public bool IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
-
-		public bool               IsParameterDependent { get; set; }
+		public SelectQuery    ParentSelect         { get; set; }
+		public bool           IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
+		public bool           IsParameterDependent { get; set; }
 
 		#endregion
 

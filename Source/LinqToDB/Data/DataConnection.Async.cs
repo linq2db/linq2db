@@ -11,11 +11,44 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
+		/// <summary>
+		/// Starts new transaction asynchronously for current connection with default isolation level. If connection already has transaction, it will be rolled back.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Database transaction object.</returns>
+		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+		{
+			await EnsureConnectionAsync(cancellationToken);
+
+			return BeginTransaction();
+		}
+
+		/// <summary>
+		/// Starts new transaction asynchronously for current connection with specified isolation level. If connection already have transaction, it will be rolled back.
+		/// </summary>
+		/// <param name="isolationLevel">Transaction isolation level.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Database transaction object.</returns>
+		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
+		{
+			await EnsureConnectionAsync(cancellationToken);
+
+			return BeginTransaction(isolationLevel);
+		}
+
+		/// <summary>
+		/// Ensure that database connection opened. If opened connection missing, it will be opened asynchronously.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Async operation task.</returns>
 		public async Task EnsureConnectionAsync(CancellationToken cancellationToken = default)
 		{
 			if (_connection == null)
 			{
-				_connection = DataProvider.CreateConnection(ConnectionString);
+				if (_connectionFactory != null)
+					_connection = _connectionFactory();
+				else
+					_connection = DataProvider.CreateConnection(ConnectionString);
 
 				if (RetryPolicy != null)
 					_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);

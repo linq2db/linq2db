@@ -268,10 +268,6 @@ namespace LinqToDB.DataProvider.Firebird
 					if (_identityField != null)
 						return 3;
 					break;
-
-				case SqlDropTableStatement dropTable:
-					_identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
-					break;
 			}
 
 			return base.CommandCount(statement);
@@ -279,13 +275,21 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
+			var identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+
+			if (identityField == null && dropTable.IfExists == false)
+			{
+				base.BuildDropTableStatement(dropTable);
+				return;
+			}
+
 			// implementation use following approach: http://www.firebirdfaq.org/faq69/
 			StringBuilder
 				.AppendLine("EXECUTE BLOCK AS BEGIN");
 
 			Indent++;
 
-			if (_identityField != null)
+			if (identityField != null)
 			{
 				BuildDropWithSchemaCheck("TRIGGER"  , "rdb$triggers"  , "rdb$trigger_name"  , "TIDENTITY_" + dropTable.Table.PhysicalName);
 				BuildDropWithSchemaCheck("GENERATOR", "rdb$generators", "rdb$generator_name", "GIDENTITY_" + dropTable.Table.PhysicalName);
@@ -297,41 +301,45 @@ namespace LinqToDB.DataProvider.Firebird
 
 			StringBuilder
 				.AppendLine("END");
-		}
 
-		private void BuildDropWithSchemaCheck(string objectName, string schemaTable, string nameColumn, string identifier)
-		{
-			AppendIndent().AppendFormat("IF (EXISTS(SELECT 1 FROM {0} WHERE {1} = ", schemaTable, nameColumn);
+			void BuildDropWithSchemaCheck(string objectName, string schemaTable, string nameColumn, string identifier)
+			{
+				if (dropTable.IfExists)
+				{
+					AppendIndent().AppendFormat("IF (EXISTS(SELECT 1 FROM {0} WHERE {1} = ", schemaTable, nameColumn);
 
-			var identifierValue = identifier;
+					var identifierValue = identifier;
 
-			// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-			if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-				IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
-				identifierValue = identifierValue.ToUpper();
+					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
+					if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+					    IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+						identifierValue = identifierValue.ToUpper();
 
-			BuildValue(null, identifierValue);
+					BuildValue(null, identifierValue);
 
-			StringBuilder
-				.AppendLine(")) THEN");
+					StringBuilder
+						.AppendLine(")) THEN");
 
-			Indent++;
+					Indent++;
+				}
 
-			AppendIndent().Append("EXECUTE STATEMENT ");
+				AppendIndent().Append("EXECUTE STATEMENT ");
 
-			var dropCommand = new StringBuilder();
+				var dropCommand = new StringBuilder();
 
-			dropCommand
-				.Append("DROP ")
-				.Append(objectName)
-				.Append(" ")
-				.Append(Convert(identifier, ConvertType.NameToQueryTable));
+				dropCommand
+					.Append("DROP ")
+					.Append(objectName)
+					.Append(" ")
+					.Append(Convert(identifier, ConvertType.NameToQueryTable));
 
-			BuildValue(null, dropCommand.ToString());
+				BuildValue(null, dropCommand.ToString());
 
-			StringBuilder.AppendLine(";");
+				StringBuilder.AppendLine(";");
 
-			Indent--;
+				if (dropTable.IfExists)
+					Indent--;
+			}
 		}
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)

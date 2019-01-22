@@ -322,7 +322,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit1X(SelectQuery q)
 		{
-					Visit1(q.Select);
+			Visit1(q.Select);
 			Visit1(q.From);
 			Visit1(q.Where);
 			Visit1(q.GroupBy);
@@ -769,7 +769,6 @@ namespace LinqToDB.SqlQuery
 			foreach (var element in elements)
 				_action2(element);
 		}
-
 
 		void Visit2X(SelectQuery q)
 		{
@@ -1664,7 +1663,7 @@ namespace LinqToDB.SqlQuery
 						if (t  != null && !ReferenceEquals(s.Table, t) ||
 							ps != null && !ReferenceEquals(s.Parameters,  ps))
 						{
-							newElement = new SqlDropTableStatement { Table = t ?? s.Table };
+							newElement = new SqlDropTableStatement(s.IfExists) { Table = t ?? s.Table };
 							if (ps != null)
 								((SqlDropTableStatement)newElement).Parameters.AddRange(ps);
 							else
@@ -2514,7 +2513,7 @@ namespace LinqToDB.SqlQuery
 						if (t  != null && !ReferenceEquals(s.Table, t) ||
 							ps != null && !ReferenceEquals(s.Parameters,  ps))
 						{
-							newElement = new SqlDropTableStatement { Table = t ?? s.Table };
+							newElement = new SqlDropTableStatement(s.IfExists) { Table = t ?? s.Table };
 							if (ps != null)
 								((SqlDropTableStatement)newElement).Parameters.AddRange(ps);
 							else

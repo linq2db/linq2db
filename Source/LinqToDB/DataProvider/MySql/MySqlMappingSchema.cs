@@ -55,5 +55,23 @@ namespace LinqToDB.DataProvider.MySql
 			foreach (var b in value)
 				stringBuilder.Append(b.ToString("X2"));
 		}
+
+		internal static readonly MySqlMappingSchema Instance = new MySqlMappingSchema();
+
+		public class MySqlOfficialMappingSchema : MappingSchema
+		{
+			public MySqlOfficialMappingSchema()
+				: base(ProviderName.MySqlOfficial, Instance)
+			{
+			}
+		}
+
+		public class MySqlConnectorMappingSchema : MappingSchema
+		{
+			public MySqlConnectorMappingSchema()
+				: base(ProviderName.MySqlConnector, Instance)
+			{
+			}
+		}
 	}
 }

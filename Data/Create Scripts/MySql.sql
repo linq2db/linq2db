@@ -1,5 +1,4 @@
-﻿
-DROP TABLE IF EXISTS Doctor
+﻿DROP TABLE IF EXISTS Doctor
 GO
 DROP TABLE IF EXISTS Patient
 GO
@@ -192,8 +191,10 @@ CREATE TABLE AllTypes
 	timeDataType        time                         NULL,
 	yearDataType        year                         NULL,
 -- SKIP MySql57 BEGIN
+-- SKIP MySqlConnector BEGIN
 	year2DataType       year(2)                      NULL,
 -- SKIP MySql57 END
+-- SKIP MySqlConnector END
 -- SKIP MySql BEGIN
 -- SKIP MariaDB BEGIN
 	year2DataType       year(4)                      NULL,
@@ -425,6 +426,8 @@ BEGIN
 	SELECT param3 + param2 INTO param1;
 	SELECT * FROM Person;
 END
+GO
+SET GLOBAL log_bin_trust_function_creators = 1;
 GO
 CREATE FUNCTION TestFunction(param INT)
 RETURNS VARCHAR(10)

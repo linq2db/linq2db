@@ -25,8 +25,8 @@ namespace Tests.UserTests
 			public short SmallIntValue;
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void Test1(string context)
+		[Test]
+		public void Test1([IncludeDataSources(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -36,15 +36,15 @@ namespace Tests.UserTests
 					where t2.DateTimeValue == date
 					select t2);
 
-				q.FirstOrDefault();
+				var _ = q.FirstOrDefault();
 
 				Assert.AreEqual(1, ((DataConnection)db).Command.Parameters.Count);
 				Assert.AreEqual(DbType.Date, ((IDbDataParameter) ((DataConnection)db).Command.Parameters[0]).DbType);
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void Test2(string context)
+		[Test]
+		public void Test2([IncludeDataSources(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -53,7 +53,7 @@ namespace Tests.UserTests
 					where t1.DateTimeValue == date
 					select t1);
 
-				q.FirstOrDefault();
+				var _ = q.FirstOrDefault();
 
 				Assert.AreEqual(1, ((DataConnection)db).Command.Parameters.Count);
 				Assert.AreEqual(DbType.Date, ((IDbDataParameter) ((DataConnection)db).Command.Parameters[0]).DbType);
