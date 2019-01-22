@@ -1,17 +1,16 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.Mapping;
-using Npgsql;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
+
 namespace Tests.UserTests
 {
-	[TestFixture]
+	[TestFixture, Parallelizable(ParallelScope.None)]
 	public class Issue1498Tests : TestBase
 	{
 		public class Topic
@@ -53,6 +52,9 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(
+			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
+			Configurations = new [] { ProviderName.Firebird })]
 		public void TestAttributesByKey([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -74,6 +76,9 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(
+			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
+			Configurations = new [] { ProviderName.Firebird })]
 		public void TestAttributesByExpression([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -95,6 +100,9 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(
+			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
+			Configurations = new [] { ProviderName.Firebird })]
 		public void TestAttributesByQuery([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -116,6 +124,9 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(
+			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
+			Configurations = new [] { ProviderName.Firebird })]
 		public void TestFluentAssociationByExpression([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -150,6 +161,9 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(
+			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
+			Configurations = new [] { ProviderName.Firebird })]
 		public void TestFluentAssociationByKeys([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -184,6 +198,9 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(
+			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
+			Configurations = new [] { ProviderName.Firebird })]
 		public void TestFluentAssociationByQuery([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -223,6 +240,9 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(
+			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
+			Configurations = new [] { ProviderName.Firebird })]
 		public void TestFluentAssociationByQueryWithKeys([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())

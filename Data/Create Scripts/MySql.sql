@@ -1,5 +1,4 @@
-﻿
-DROP TABLE IF EXISTS Doctor
+﻿DROP TABLE IF EXISTS Doctor
 GO
 DROP TABLE IF EXISTS Patient
 GO
@@ -427,6 +426,8 @@ BEGIN
 	SELECT param3 + param2 INTO param1;
 	SELECT * FROM Person;
 END
+GO
+SET GLOBAL log_bin_trust_function_creators = 1;
 GO
 CREATE FUNCTION TestFunction(param INT)
 RETURNS VARCHAR(10)

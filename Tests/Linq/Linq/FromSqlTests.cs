@@ -1,23 +1,26 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Linq
 {
-	[TestFixture]
+	using Model;
+
+	[TestFixture, Parallelizable(ParallelScope.None)]
 	public class FromSqlTests : TestBase
 	{
 		[Table(Name = "sample_class")]
 		class SampleClass
 		{
-			[Column("id")] 
+			[Column("id")]
 			public int Id    { get; set; }
 
-			[Column("value", Length = 50)] 
+			[Column("value", Length = 50)]
 			public string Value { get; set; }
 		}
 
@@ -109,8 +112,8 @@ namespace Tests.Linq
 			{
 				int startId = 5;
 
-				var query = 
-					from t in table 
+				var query =
+					from t in table
 					from s in db.FromSql<SampleClass>($"SELECT * FROM sample_class where id >= {startId} and id < {endId}").InnerJoin(s => s.Id == t.Id)
 					select s;
 
@@ -127,8 +130,8 @@ namespace Tests.Linq
 
 				Assert.AreEqual(expected, projection);
 			}
-		}	
-		
+		}
+
 		[Test]
 		public void TestFormattableInExpr2([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
 		{
@@ -137,8 +140,8 @@ namespace Tests.Linq
 			{
 				int startId = 5;
 
-				var query = 
-					from t in table 
+				var query =
+					from t in table
 					from s in db.FromSql<SampleClass>($"SELECT * FROM sample_class where id >= {new DataParameter("startId", startId, DataType.Int64)} and id < {endId}").InnerJoin(s => s.Id == t.Id)
 					select s;
 
@@ -223,7 +226,7 @@ namespace Tests.Linq
 				var parameters = new object[] { new DataParameter("startId", startId, DataType.Int64), endId };
 
 				var query =
-					from t in table 
+					from t in table
 					from s in db.FromSql<SampleClass>("SELECT * FROM sample_class where id >= {0} and id < {1}", parameters).InnerJoin(s => s.Id == t.Id)
 					select s;
 
@@ -244,7 +247,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestTableValueFunction(
-			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context, 
+			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context,
 			[Values(0, 1)] int offset)
 		{
 			using (var db = GetDataContext(context))

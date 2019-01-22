@@ -250,7 +250,6 @@ namespace Tests.Playground
 		static void CreateFunction(DataConnection dc, string tableName)
 		{
 			DropFunction(dc);
-			dc.Execute("DROP FUNCTION IF EXISTS dbo.fn_SomeFunction;");
 
 			dc.Execute($@"CREATE FUNCTION fn_SomeFunction (@id AS INT)
 RETURNS TABLE
@@ -264,7 +263,9 @@ AS RETURN
 
 		static void DropFunction(DataConnection dc)
 		{
-			dc.Execute("DROP FUNCTION IF EXISTS dbo.fn_SomeFunction;");
+			dc.Execute(@"
+				IF EXISTS (SELECT * FROM sysobjects WHERE id = object_id(N'fn_SomeFunction') AND xtype IN (N'FN', N'IF', N'TF'))
+					DROP FUNCTION fn_SomeFunction");
 		}
 
 		[Test]

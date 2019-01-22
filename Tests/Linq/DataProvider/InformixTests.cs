@@ -85,15 +85,18 @@ namespace Tests.DataProvider
 				}
 			}
 		}
-//
+
 //		[Test]
-//		public void Driver()
-//		{
+		public void Driver([IncludeDataSources(CurrentProvider)] string context)
+		{
 //			InformixTools.ResolveInformix(typeof(IBM.Data.Informix.IfxConnection).Assembly);
 //
 //			var dr = null as IfxDataReader;
 //
 //			var _ = dr.GetBigInt(0);
-//		}
+
+			var tm = new IfxTimeSpan(0);
+			var _ = IfxTimeSpan.Null;
+		}
 	}
 }
