@@ -208,5 +208,19 @@ namespace Tests.xUpdate
 			perform();
 			return true;
 		}
+
+		[Test]
+		public void ReuseOptionTest([DataSources(false)]string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.BeginTransaction();
+
+				var options = new BulkCopyOptions();
+
+				db.Parent.BulkCopy(options, new [] { new Parent { ParentID = 111001 } });
+				db.Child. BulkCopy(options, new [] { new Child  { ParentID = 111001 } });
+			}
+		}
 	}
 }

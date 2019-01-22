@@ -166,7 +166,7 @@ namespace Tests.xUpdate
 
 				SqlProviderFlags IDataProvider.SqlProviderFlags => throw new NotImplementedException();
 
-				BulkCopyRowsCopied IDataProvider.BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source) => throw new NotImplementedException();
+				BulkCopyRowsCopied IDataProvider.BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source) => throw new NotImplementedException();
 
 				Type IDataProvider.ConvertParameterType(Type type, DbDataType dataType) => throw new NotImplementedException();
 

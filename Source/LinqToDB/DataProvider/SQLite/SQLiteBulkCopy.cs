@@ -8,9 +8,9 @@ namespace LinqToDB.DataProvider.SQLite
 	class SQLiteBulkCopy : BasicBulkCopy
 	{
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return MultipleRowsCopy1(dataConnection, options, source);
+			return MultipleRowsCopy1(table, options, source);
 		}
 	}
 }

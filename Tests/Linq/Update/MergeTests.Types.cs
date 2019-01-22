@@ -548,7 +548,7 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if ((context == TestProvName.MySql57 || context == ProviderName.MySqlConnector) 
+				if ((context == TestProvName.MySql57 || context == ProviderName.MySqlConnector)
 				    && expected.Value.Millisecond > 500) expected = expected.Value.AddSeconds(1);
 
 				if (context == ProviderName.Sybase || context == ProviderName.SybaseManaged)

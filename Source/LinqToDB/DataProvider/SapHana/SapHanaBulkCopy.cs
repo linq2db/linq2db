@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Data;
+
 using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.SapHana
@@ -28,19 +29,20 @@ namespace LinqToDB.DataProvider.SapHana
 		Action<object,Action<object>>                      _bulkCopySubscriber;
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection,
+			[JetBrains.Annotations.NotNull] ITable<T> table,
 			BulkCopyOptions options,
 			IEnumerable<T> source)
 		{
-			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+			if (!(table?.DataContext is DataConnection dataConnection))
+				throw new ArgumentNullException(nameof(dataConnection));
 
 			var connection = dataConnection.Connection;
 
 			if (connection == null )
-				return MultipleRowsCopy(dataConnection, options, source);
+				return MultipleRowsCopy(table, options, source);
 
 			if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOfEx(_connectionType)))
-				return MultipleRowsCopy(dataConnection, options, source);
+				return MultipleRowsCopy(table, options, source);
 
 			var transaction = dataConnection.Transaction;
 			var ed          = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
@@ -62,10 +64,10 @@ namespace LinqToDB.DataProvider.SapHana
 				}
 			}
 
-			if (_bulkCopyCreator == null) 
-				return MultipleRowsCopy(dataConnection, options, source);
+			if (_bulkCopyCreator == null)
+				return MultipleRowsCopy(table, options, source);
 
-			int hanaOptions = 0; //default;
+			var hanaOptions = default(int);
 
 			if (options.KeepIdentity == true)
 			{
@@ -104,8 +106,7 @@ namespace LinqToDB.DataProvider.SapHana
 				if (options.BulkCopyTimeout.HasValue) dbc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
 				var sqlBuilder = _dataProvider.CreateSqlBuilder();
-				var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof (T));
-				var tableName  = GetTableName(sqlBuilder, options, descriptor);
+				var tableName  = GetTableName(sqlBuilder, options, table);
 
 				dbc.DestinationTableName = tableName;
 
@@ -131,7 +132,7 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		private static Func<IDbConnection, int, IDbTransaction, IDisposable> SapHanaCreateBulkCopyCreator(
+		static Func<IDbConnection, int, IDbTransaction, IDisposable> SapHanaCreateBulkCopyCreator(
 			Type connectionType, Type bulkCopyType, Type bulkCopyOptionType, Type externalTransactionConnection)
 		{
 			var p1   = Expression.Parameter(typeof(IDbConnection),  "pc");
@@ -139,8 +140,8 @@ namespace LinqToDB.DataProvider.SapHana
 			var p3   = Expression.Parameter(typeof(IDbTransaction), "pt");
 			var ctor = bulkCopyType.GetConstructorEx(new[]
 			{
-				connectionType, 
-				bulkCopyOptionType, 
+				connectionType,
+				bulkCopyOptionType,
 				externalTransactionConnection
 			});
 

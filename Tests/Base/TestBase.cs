@@ -97,8 +97,15 @@ namespace Tests
 			var configName = "CORE1";
 #elif NETSTANDARD2_0
 			var configName = "CORE2";
-#else
+#elif NET46
 			var configName = "NET45";
+#elif NETCOREAPP2_0
+			var configName = "CORE1";
+#elif NETCOREAPP1_0
+			var configName = "CORE2";
+#else
+			var configName = "";
+#error Unknown framework
 #endif
 
 #if APPVEYOR
@@ -1068,14 +1075,16 @@ namespace Tests
 
 	public class AllowMultipleQuery : IDisposable
 	{
-		public AllowMultipleQuery()
+		private readonly bool _oldValue = Configuration.Linq.AllowMultipleQuery;
+
+		public AllowMultipleQuery(bool value = true)
 		{
-			Configuration.Linq.AllowMultipleQuery = true;
+			Configuration.Linq.AllowMultipleQuery = value;
 		}
 
 		public void Dispose()
 		{
-			Configuration.Linq.AllowMultipleQuery = false;
+			Configuration.Linq.AllowMultipleQuery = _oldValue;
 		}
 	}
 

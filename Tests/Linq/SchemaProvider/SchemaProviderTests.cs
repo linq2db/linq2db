@@ -17,9 +17,9 @@ namespace Tests.SchemaProvider
 	{
 		[Test]
 		public void Test([DataSources(false, ProviderName.SQLiteMS,
-				ProviderName.MySqlConnector
+				ProviderName.MySqlConnector, TestProvName.MySql57
 #if NETSTANDARD2_0
-				, ProviderName.MySql, TestProvName.MySql57
+				, ProviderName.MySql
 #endif
 			)]
 			string context)
@@ -323,9 +323,9 @@ namespace Tests.SchemaProvider
 
 		[Test]
 		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS,
-				ProviderName.MySqlConnector
+				ProviderName.MySqlConnector, TestProvName.MySql57
 #if NETSTANDARD2_0
-				, ProviderName.MySql, TestProvName.MySql57
+				, ProviderName.MySql
 #endif
 			)]
 			string context)

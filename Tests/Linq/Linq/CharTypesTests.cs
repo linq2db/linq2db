@@ -288,7 +288,7 @@ namespace Tests.Linq
 
 						if (context == ProviderName.MySql
 							  || context == ProviderName.MySql + ".LinqService"
-							  || context == ProviderName.MySqlConnector 
+							  || context == ProviderName.MySqlConnector
 							  || context == ProviderName.MySqlConnector + ".LinqService"
 							  || context == TestProvName.MySql57
 							  || context == TestProvName.MySql57 + ".LinqService"

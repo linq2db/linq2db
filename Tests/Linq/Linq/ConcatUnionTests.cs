@@ -889,5 +889,51 @@ namespace Tests.Linq
 
 		}
 
+		[Test]
+		public void TestConcatWithParameterProjection([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var someValue = 3;
+				var items1 = from c in db.Child
+					where c.ChildID <= someValue
+					select new
+					{
+						Value = someValue,
+						c.ChildID
+					};
+
+				var items2 = from c in db.Child
+					where c.ChildID > someValue
+					select new
+					{
+						Value = someValue,
+						c.ChildID
+					};
+
+				var actual = items1.Concat(items2);
+
+				var items1_ = from c in Child
+					where c.ChildID <= someValue
+					select new
+					{
+						Value = someValue,
+						c.ChildID
+					};
+
+				var items2_ = from c in Child
+					where c.ChildID > someValue
+					select new
+					{
+						Value = someValue,
+						c.ChildID
+					};
+
+				var expected = items1_.Concat(items2_);
+
+				AreEqual(expected, actual);
+			}
+		}
+
 	}
 }

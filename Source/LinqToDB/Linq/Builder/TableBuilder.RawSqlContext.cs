@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
+	using LinqToDB.Expressions;
+	using SqlQuery;
+
 	partial class TableBuilder
 	{
 #if !NET45
@@ -37,7 +37,7 @@ namespace LinqToDB.Linq.Builder
 				format    = (string)mc.Arguments[0].EvaluateExpression();
 				arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
 
-			} 
+			}
 			else
 			{
 				var evaluatedSql = sqlExpr.EvaluateExpression();
@@ -64,9 +64,9 @@ namespace LinqToDB.Linq.Builder
 			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], format, sqlArguments);
 		}
 
-		class RawSqlContext : TableContext	
+		class RawSqlContext : TableContext
 		{
-			public RawSqlContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, string sql, params ISqlExpression[] parameters) 
+			public RawSqlContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, string sql, params ISqlExpression[] parameters)
 				: base(builder, buildInfo, new SqlRawSqlTable(builder.MappingSchema, originalType, sql, parameters))
 			{
 			}
