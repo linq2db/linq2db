@@ -909,6 +909,5 @@ namespace Tests.Linq
 				AreEqual(query2_, query2);
 			}
 		}
-
 	}
 }

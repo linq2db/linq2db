@@ -2133,7 +2133,7 @@ namespace LinqToDB.Linq.Builder
 			if (expr != null)
 			{
 				if (accessorExpression == null || dataTypeAccessorExpression == null || dbTypeAccessorExpression == null)
-				{ 
+				{
 					var body = expr.GetBody(accessorExpression);
 
 					accessorExpression         = Expression.PropertyOrField(body, "Value");
