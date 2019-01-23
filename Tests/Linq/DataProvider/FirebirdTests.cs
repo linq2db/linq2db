@@ -540,7 +540,7 @@ namespace Tests.DataProvider
 			public int Field;
 		}
 
-		[Test]
+		[Test, Parallelizable(ParallelScope.None)]
 		public void DropTableTest(
 			[IncludeDataSources(true, ProviderName.Firebird, TestProvName.Firebird3)] string context,
 			[Values] FirebirdIdentifierQuoteMode quoteMode,
@@ -559,8 +559,17 @@ namespace Tests.DataProvider
 				{
 					// first drop deletes table if it remains from previous test run
 					// second drop deletes non-existing table
-					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
-					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
+					db.DropTable<TTable>(throwExceptionIfNotExists: false);
+
+					try
+					{
+						db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
+					}
+					catch when(throwIfNotExists)
+					{
+					}
+
+
 					db.CreateTable<TTable>();
 					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
 				}

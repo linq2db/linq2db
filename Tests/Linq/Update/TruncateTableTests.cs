@@ -21,7 +21,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TruncateTableTest([DataSources(ProviderName.OracleNative)] string context)
+		public void TruncateTableTest([DataSources(ProviderName.OracleNative, ProviderName.Firebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

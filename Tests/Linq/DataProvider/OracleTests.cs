@@ -2029,7 +2029,7 @@ namespace Tests.DataProvider
 				db.Execute("GRANT DROP ANY SEQUENCE TO " + currentUser);
 
 				try {db.Execute("DROP USER Issue723Schema CASCADE");} catch { }
-				
+
 				db.Execute("CREATE USER Issue723Schema IDENTIFIED BY password");
 
 				try

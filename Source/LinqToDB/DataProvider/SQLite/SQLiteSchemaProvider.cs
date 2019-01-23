@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			var fks = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeys");
 
-			var result = 
+			var result =
 			(
 				from fk in fks.AsEnumerable()
 				where fk.Field<string>("CONSTRAINT_TYPE") == "FOREIGN KEY"
