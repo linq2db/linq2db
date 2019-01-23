@@ -1,16 +1,21 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using JetBrains.Annotations;
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using Newtonsoft.Json;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Tests.Tools;
 
+using Newtonsoft.Json;
+
+using NUnit.Framework;
+
+// ReSharper disable once CheckNamespace
 namespace Tests.xUpdate
 {
+	using Tools;
+
 	using ColumnBuilder        = Action<EntityMappingBuilder<CreateTableTypesTests.CreateTableTypes>>;
 	using ValueBuilder         = Action<CreateTableTypesTests.CreateTableTypes>;
 	using DefaultValueBuilder  = Action<string, CreateTableTypesTests.CreateTableTypes>;
@@ -73,6 +78,7 @@ namespace Tests.xUpdate
 		// TODO: add length validation to fields with length (text/binary)
 		static IEnumerable<(ColumnBuilder, ValueBuilder, DefaultValueBuilder, Func<string, bool>, Func<string, bool>)> TestCases
 		{
+			[UsedImplicitly]
 			get
 			{
 				yield return (e => e.HasColumn(_ => _.Int32),                                  v => v.Int32              = 1                                   , null,                                                                                                                        null,                            null);
