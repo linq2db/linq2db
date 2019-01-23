@@ -450,7 +450,7 @@ namespace Tests.Linq
 		public void TestNoColumns([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
+			//using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
 			{
 				var expected = db.GetTable<Child>().Count();
 
@@ -475,7 +475,7 @@ namespace Tests.Linq
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
+			using (var testTable = db.CreateLocalTable<CteDMLTests>(context, nameof(TestInsert), "CteChild"))
 			{
 				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte("CTE1_");
 				var toInsert = from p in cte1
@@ -684,16 +684,14 @@ namespace Tests.Linq
 			var hierarchyData = GeHirarchyData();
 
 			using (var db = GetDataContext(context))
+			using (var tree = db.CreateLocalTable(context, "19", hierarchyData))
 			{
-				using (var tree = db.CreateLocalTable(hierarchyData))
-				{
-					var hierarchy = GetHierarchyDown(tree, db);
+				var hierarchy = GetHierarchyDown(tree, db);
 
-					var result = hierarchy.OrderBy(h => h.Id);
-					var expected = EnumerateDown(hierarchyData, 0, null).OrderBy(h => h.Id);
+				var result = hierarchy.OrderBy(h => h.Id);
+				var expected = EnumerateDown(hierarchyData, 0, null).OrderBy(h => h.Id);
 
-					AreEqual(expected, result, ComparerBuilder<HierarchyData>.GetEqualityComparer());
-				}
+				AreEqual(expected, result, ComparerBuilder<HierarchyData>.GetEqualityComparer());
 			}
 		}
 
@@ -703,24 +701,22 @@ namespace Tests.Linq
 			var hierarchyData = GeHirarchyData();
 
 			using (var db = GetDataContext(context))
+			using (var tree = db.CreateLocalTable(context, "20", hierarchyData))
 			{
-				using (var tree = db.CreateLocalTable(hierarchyData))
-				{
-					var hierarchy1 = GetHierarchyDown(tree, db);
-					var hierarchy2 = GetHierarchyDown(tree, db);
+				var hierarchy1 = GetHierarchyDown(tree, db);
+				var hierarchy2 = GetHierarchyDown(tree, db);
 
-					var query = from h1 in hierarchy1
-						from h2 in hierarchy2.InnerJoin(h2 => h2.Id == h1.Id)
-						select new
-						{
-							h1.Id,
-							LevelSum = h2.Level + h1.Level
-						};
+				var query = from h1 in hierarchy1
+					from h2 in hierarchy2.InnerJoin(h2 => h2.Id == h1.Id)
+					select new
+					{
+						h1.Id,
+						LevelSum = h2.Level + h1.Level
+					};
 
-					var count = query.Count();
+				var count = query.Count();
 
-					Assert.Greater(count, 0);
-				}
+				Assert.Greater(count, 0);
 			}
 		}
 
@@ -730,14 +726,12 @@ namespace Tests.Linq
 			var hierarchyData = GeHirarchyData();
 
 			using (var db = GetDataContext(context))
+			using (var tree = db.CreateLocalTable(context, "21", hierarchyData))
 			{
-				using (var tree = db.CreateLocalTable(hierarchyData))
-				{
-					var hierarchy = GetHierarchyDown(tree, db);
-					var expected = EnumerateDown(hierarchyData, 0, null);
+				var hierarchy = GetHierarchyDown(tree, db);
+				var expected = EnumerateDown(hierarchyData, 0, null);
 
-					Assert.AreEqual(expected.Count(), hierarchy.Count());
-				}
+				Assert.AreEqual(expected.Count(), hierarchy.Count());
 			}
 		}
 
@@ -746,19 +740,17 @@ namespace Tests.Linq
 		{
 			var hierarchyData = GeHirarchyData();
 
-			using (var db = GetDataContext(context))
+			using (var db          = GetDataContext(context))
+			using (var tree        = db.CreateLocalTable               (context, "17", hierarchyData))
+			using (var resultTable = db.CreateLocalTable<HierarchyData>(context, "18"))
 			{
-				using (var tree = db.CreateLocalTable(hierarchyData))
-				using (var resultTable = db.CreateLocalTable<HierarchyData>())
-				{
-					var hierarchy = GetHierarchyDown(tree, db);
-					hierarchy.Insert(resultTable, r => r);
+				var hierarchy = GetHierarchyDown(tree, db);
+				hierarchy.Insert(resultTable, r => r);
 
-					var result = resultTable.OrderBy(h => h.Id);
-					var expected = EnumerateDown(hierarchyData, 0, null).OrderBy(h => h.Id);
+				var result = resultTable.OrderBy(h => h.Id);
+				var expected = EnumerateDown(hierarchyData, 0, null).OrderBy(h => h.Id);
 
-					AreEqual(expected, result, ComparerBuilder<HierarchyData>.GetEqualityComparer());
-				}
+				AreEqual(expected, result, ComparerBuilder<HierarchyData>.GetEqualityComparer());
 			}
 		}
 
@@ -766,24 +758,22 @@ namespace Tests.Linq
 		public void RecursiveDeepNesting([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (var tree = db.CreateLocalTable<HierarchyTree>(context, "22"))
 			{
-				using (var tree = db.CreateLocalTable<HierarchyTree>())
-				{
-					var hierarchy = GetHierarchyDown(tree, db);
+				var hierarchy = GetHierarchyDown(tree, db);
 
-					var query = from q in hierarchy
-						from data1 in tree.InnerJoin(data1 => data1.Id == q.Id)
-						from data2 in tree.InnerJoin(data2 => data2.Id == q.Id)
-						from data3 in tree.InnerJoin(data3 => data3.Id == q.Id)
-						from data4 in tree.InnerJoin(data4 => data4.Id == q.Id)
-						select new
-						{
-							q.Id,
-							q.Level
-						};
+				var query = from q in hierarchy
+					from data1 in tree.InnerJoin(data1 => data1.Id == q.Id)
+					from data2 in tree.InnerJoin(data2 => data2.Id == q.Id)
+					from data3 in tree.InnerJoin(data3 => data3.Id == q.Id)
+					from data4 in tree.InnerJoin(data4 => data4.Id == q.Id)
+					select new
+					{
+						q.Id,
+						q.Level
+					};
 
-					Assert.DoesNotThrow(() => Console.WriteLine(query.ToString()));
-				}
+				Assert.DoesNotThrow(() => Console.WriteLine(query.ToString()));
 			}
 		}
 

@@ -223,6 +223,30 @@ namespace Tests
 			}
 		}
 
+		public static TempTable<T> CreateLocalTable<T>(
+			this IDataContext db, string context, string methodName, string tableName = null)
+		{
+			if (context.StartsWith(ProviderName.Firebird))
+			{
+				var ctx = context
+					.Replace(ProviderName.Firebird, "f")
+					.Replace("LinqService",         "ls")
+					.Replace(".",                   "");
+
+				tableName = $"{tableName ?? typeof(T).Name}_{ctx}_{methodName}";
+			}
+
+			try
+			{
+				return new TempTable<T>(db, tableName);
+			}
+			catch
+			{
+				db.DropTable<T>(tableName);
+				return new TempTable<T>(db, tableName);
+			}
+		}
+
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string tableName, IEnumerable<T> items)
 		{
 			var table = CreateLocalTable<T>(db, tableName);
@@ -244,6 +268,24 @@ namespace Tests
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items)
 		{
 			return CreateLocalTable(db, null, items);
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(
+			this IDataContext db, string context, string methodName, IEnumerable<T> items)
+		{
+			string tableName = null;
+
+			if (context.StartsWith(ProviderName.Firebird))
+			{
+				var ctx = context
+					.Replace(ProviderName.Firebird, "f")
+					.Replace("LinqService",         "ls")
+					.Replace(".",                   "");
+
+				tableName = $"{typeof(T).Name}_{ctx}_{methodName}";
+			}
+
+			return CreateLocalTable(db, tableName, items);
 		}
 	}
 }
