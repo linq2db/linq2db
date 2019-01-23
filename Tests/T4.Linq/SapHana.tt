@@ -1,9 +1,7 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                          #>
-<#@ output extension=".generated.cs"                                                 #>
-<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SapHana.ttinclude"        #>
-<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude"    #>
-<#@ include file="Settings.ttinclude"                                                #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\NET.46\net46\linq2db.dll"            #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                   #>
+<#@ output extension=".generated.cs"                                          #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SapHana.ttinclude" #>
+<#@ include file="Shared.ttinclude"                                           #>
 <#
 	NamespaceName = "SapHanaDataContext";
 
