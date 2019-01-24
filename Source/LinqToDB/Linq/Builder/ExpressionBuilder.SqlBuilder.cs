@@ -1855,9 +1855,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var ctx = GetContext(context, left);
 
-					if (ctx != null &&
-						(ctx.IsExpression(left, 0, RequestFor.Object).Result ||
-						 left.NodeType == ExpressionType.Parameter && ctx.IsExpression(left, 0, RequestFor.Field).Result))
+					if (ctx != null && ctx.IsExpression(left, 0, RequestFor.Object).Result)
 					{
 						return new SqlPredicate.Expr(new SqlValue(!isEqual));
 					}
