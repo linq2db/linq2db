@@ -121,11 +121,9 @@ namespace LinqToDB.SqlQuery
 								new DbDataType(field.SystemType, field.DataType, field.DbType),
 								new DbDataType(typeof(DataParameter)), true);
 
-							if (converter != null && converter.ConvertValueToParameter != null)
-							{
-								var parameter = converter.ConvertValueToParameter(DefaultValue.GetValue(field.SystemType, mappingSchema));
+							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.SystemType, mappingSchema));
+							if (parameter != null)
 								field.DataType = parameter.DataType;
-							}
 						}
 						catch
 						{
