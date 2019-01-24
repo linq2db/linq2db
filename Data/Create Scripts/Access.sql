@@ -95,7 +95,7 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Tester", "Testerson", 
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Jane",   "Doe",       "F")
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Jürgen", "König",     "M")
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ("Jürgen", "König", "Ko", "M")
 GO
 
 INSERT INTO Doctor (PersonID, Taxonomy)   VALUES (1, "Psychiatry")

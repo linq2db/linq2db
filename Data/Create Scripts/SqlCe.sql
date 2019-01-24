@@ -50,7 +50,7 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M')
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M')
 GO
 -- Doctor Table Extension
 
@@ -167,7 +167,7 @@ GO
 INSERT INTO AllTypes
 (
 	bigintDataType, numericDataType, bitDataType, smallintDataType, decimalDataType,
-	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType, 
+	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType,
 
 	datetimeDataType,
 
@@ -195,14 +195,14 @@ GO
 
 CREATE TABLE Issue695Parent
 (
-	ID          int NOT NULL 
+	ID          int NOT NULL
 			CONSTRAINT PK_Issue695 PRIMARY KEY
 )
 GO
 
 CREATE TABLE Issue695
 (
-	ID          int NOT NULL 
+	ID          int NOT NULL
 			CONSTRAINT PK_Issue695 PRIMARY KEY
 			CONSTRAINT FK_Issue695_Parent --FOREIGN KEY
 			REFERENCES Issue695Parent ([ID])
