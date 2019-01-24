@@ -1222,7 +1222,7 @@ namespace Tests.xUpdate
 		public void UpdateByTableName([DataSources] string context)
 		{
 			const string schemaName = null;
-			const string tableName  = "xxPerson";
+			var tableName  = InsertTests.GetTableName(context, "32");
 
 			using (var db = GetDataContext(context))
 			{
@@ -1265,7 +1265,7 @@ namespace Tests.xUpdate
 		public async Task UpdateByTableNameAsync([DataSources] string context)
 		{
 			const string schemaName = null;
-			const string tableName  = "xxPerson";
+			var tableName  = InsertTests.GetTableName(context, "33");
 
 			using (var db = GetDataContext(context))
 			{
