@@ -24,20 +24,23 @@ namespace LinqToDB
 			{
 			}
 
-			public PropertyAttribute(string configuraion, string name)
-				: base(configuraion, name)
+			public PropertyAttribute(string configuration, string name)
+				: base(configuration, name)
 			{
 			}
 
 			public string Name
 			{
-				get { return Expression;  }
-				set { Expression = value; }
+				get => Expression;
+				set => Expression = value;
 			}
 
 			public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
 			{
-				return new SqlExpression(member.GetMemberType(), Name ?? member.Name, SqlQuery.Precedence.Primary) { CanBeNull = CanBeNull };
+				return new SqlExpression(member.GetMemberType(), Name ?? member.Name, SqlQuery.Precedence.Primary)
+				{
+					CanBeNull = GetCanBeNull(new ISqlExpression[0])
+				};
 			}
 		}
 	}

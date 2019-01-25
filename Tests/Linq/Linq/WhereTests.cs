@@ -1371,7 +1371,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IsNullOrEmptyTest([DataSources] string context)
+		public void IsNullOrEmptyTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1388,5 +1388,58 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void IsNullOrEmptyTest2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in db.Person.AsEnumerable()
+					select p.FirstName into nm
+					where !(string.IsNullOrEmpty(nm))
+					select new { nm }
+					,
+					from p in db.Person
+					select p.FirstName into nm
+					where !(string.IsNullOrEmpty(nm))
+					select new { nm });
+			}
+		}
+
+		[Test]
+		public void LengthTest1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in db.Person.AsEnumerable()
+					select p.MiddleName into nm
+					where !(nm?.Length == 0)
+					select new { nm }
+					,
+					from p in db.Person
+					select p.MiddleName into nm
+					where !(nm.Length == 0)
+					select new { nm });
+			}
+		}
+
+		[Test]
+		public void LengthTest2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in db.Person.AsEnumerable()
+					select p.FirstName into nm
+					where !(nm.Length == 0)
+					select new { nm }
+					,
+					from p in db.Person
+					select p.FirstName into nm
+					where !(nm.Length == 0)
+					select new { nm });
+			}
+		}
 	}
 }

@@ -403,7 +403,7 @@ namespace Tests.xUpdate
 		public void DeleteByTableName([DataSources] string context)
 		{
 			const string schemaName = null;
-			var tableName  = InsertTests.GetTableName(context);
+			var tableName  = InsertTests.GetTableName(context, "1a");
 
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateTempTable<Person>(tableName, schemaName: schemaName))

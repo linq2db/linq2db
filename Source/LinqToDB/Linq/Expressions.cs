@@ -1598,9 +1598,10 @@ namespace LinqToDB.Linq
 		// MSSQL
 		//
 		[Sql.Function]
-		public static Decimal? Round(Decimal? value, int precision, int mode) { return 0; }
+		public static Decimal? Round(Decimal? value, int precision, int mode) => 0;
+
 		[Sql.Function]
-		public static Double?  Round(Double?  value, int precision, int mode) { return 0; }
+		public static Double?  Round(Double?  value, int precision, int mode) => 0;
 
 		// Access
 		//
@@ -1629,9 +1630,9 @@ namespace LinqToDB.Linq
 
 		// Firebird
 		//
-		[Sql.Function("PI", ServerSideOnly = true)]
+		[Sql.Function("PI", ServerSideOnly = true, CanBeNull = false)]
 		public static decimal DecimalPI() { return (decimal)Math.PI; }
-		[Sql.Function("PI", ServerSideOnly = true)]
+		[Sql.Function("PI", ServerSideOnly = true, CanBeNull = false)]
 		public static double  DoublePI () { return          Math.PI; }
 
 		// Informix
