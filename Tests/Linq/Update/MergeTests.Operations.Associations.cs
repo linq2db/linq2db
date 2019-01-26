@@ -4,6 +4,7 @@ using System.Linq;
 using Tests.Model;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -11,6 +12,91 @@ namespace Tests.xUpdate
 {
 	public partial class MergeTests
 	{
+		[Table("Person")]
+		public class TestJoinPerson
+		{
+			[Column("PersonID"), Identity, PrimaryKey] public int ID;
+
+			[Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull = false)]
+			public TestJoinPatient Patient;
+		}
+
+		[Table("Patient")]
+		public class TestJoinPatient
+		{
+			[PrimaryKey] public int    PersonID;
+			[Column]     public string Diagnosis;
+		}
+
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SourceAssociationAsInnerJoin1([MergeBySourceDataContextSource] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareAssociationsData(db);
+
+				var parsons = db.Person.ToArray();
+				var patients = db.Patient.ToArray();
+
+				var cnt = db.GetTable<TestJoinPerson>()
+					.Merge()
+					// inner join performed in source
+					.Using(db.GetTable<TestJoinPerson>().Select(p => new { p.ID, p.Patient.Diagnosis }))
+					.On((t, s) => t.ID == s.ID)
+					.DeleteWhenMatchedAnd((t, s) => s.Diagnosis != "sick")
+					.Merge();
+
+				Assert.AreEqual(1, cnt);
+			}
+		}
+
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SourceAssociationAsInnerJoin2([MergeBySourceDataContextSource] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareAssociationsData(db);
+
+				var parsons = db.Person.ToArray();
+				var patients = db.Patient.ToArray();
+
+				var cnt = db.GetTable<TestJoinPerson>()
+					.Merge()
+					.Using(db.GetTable<TestJoinPerson>())
+					// inner join still performed in source
+					.On((t, s) => t.ID == s.ID && s.Patient.Diagnosis != null)
+					.DeleteWhenMatchedAnd((t, s) => s.Patient.Diagnosis != "sick")
+					.Merge();
+
+				Assert.AreEqual(1, cnt);
+			}
+		}
+
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SourceAssociationAsOuterJoin([MergeBySourceDataContextSource] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareAssociationsData(db);
+
+				var parsons = db.Person.ToArray();
+				var patients = db.Patient.ToArray();
+
+				var cnt = db.GetTable<TestJoinPerson>()
+					.Merge()
+					.Using(db.GetTable<TestJoinPerson>())
+					.On((t, s) => t.ID == s.ID)
+					// // inner join promoted to outer join
+					.DeleteWhenMatchedAnd((t, s) => s.Patient.Diagnosis != "sick")
+					.Merge();
+
+				Assert.AreEqual(5, cnt);
+			}
+		}
+
 		[Test, Parallelizable(ParallelScope.None)]
 		public void OtherSourceAssociationInDeleteBySourcePredicate([MergeBySourceDataContextSource] string context)
 		{
