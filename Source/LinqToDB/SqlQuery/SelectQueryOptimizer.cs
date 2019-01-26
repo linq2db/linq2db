@@ -385,8 +385,11 @@ namespace LinqToDB.SqlQuery
 			});
 
 			if (exprs.Count > 0)
+			{
 				_selectQuery.Walk(
-					false, expr => exprs.TryGetValue(expr, out var e) ? e : expr);
+					new WalkOptions { ProcessParent = true },
+					expr => exprs.TryGetValue(expr, out var e) ? e : expr);
+			}
 		}
 
 		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns, List<ISqlTableSource> tables)
@@ -735,10 +738,10 @@ namespace LinqToDB.SqlQuery
 					return toReplace.TryGetValue(e, out var newValue) ? newValue : e;
 				}
 
-				((ISqlExpressionWalkable)query.RootQuery()).Walk(false, TransformFunc);
+				((ISqlExpressionWalkable)query.RootQuery()).Walk(new WalkOptions(), TransformFunc);
 				foreach (var j in joins)
 				{
-					((ISqlExpressionWalkable) j).Walk(false, TransformFunc);
+					((ISqlExpressionWalkable) j).Walk(new WalkOptions(), TransformFunc);
 				}
 
 				query.Select.From.Tables.Add(baseTable);
@@ -819,7 +822,7 @@ namespace LinqToDB.SqlQuery
 			var top = _statement ?? (IQueryElement)_selectQuery.RootQuery();
 
 			((ISqlExpressionWalkable)top).Walk(
-				false, expr => map.TryGetValue(expr, out var fld) ? fld : expr);
+				new WalkOptions(), expr => map.TryGetValue(expr, out var fld) ? fld : expr);
 
 			new QueryVisitor().Visit(top, expr =>
 			{
@@ -840,7 +843,7 @@ namespace LinqToDB.SqlQuery
 			if (!query.Where. IsEmpty) ConcatSearchCondition(_selectQuery.Where,  query.Where);
 			if (!query.Having.IsEmpty) ConcatSearchCondition(_selectQuery.Having, query.Having);
 
-			((ISqlExpressionWalkable)top).Walk(false, expr =>
+			((ISqlExpressionWalkable)top).Walk(new WalkOptions(), expr =>
 			{
 				if (expr is SelectQuery sql)
 					if (sql.ParentSelect == query)
@@ -892,7 +895,7 @@ namespace LinqToDB.SqlQuery
 
 				var tableSources = new HashSet<ISqlTableSource>();
 
-				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(false, e =>
+				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(new WalkOptions(), e =>
 				{
 					if (e is ISqlTableSource ts && !tableSources.Contains(ts))
 						tableSources.Add(ts);
@@ -1033,7 +1036,7 @@ namespace LinqToDB.SqlQuery
 					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)
 						OptimizeApply(tableSources, table, join, isApplySupported, optimizeColumns);
 
-					join.Walk(false, e =>
+					join.Walk(new WalkOptions(), e =>
 					{
 						if (e is ISqlTableSource ts && !tableSources.Contains(ts))
 							tableSources.Add(ts);
@@ -1045,7 +1048,7 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeColumns()
 		{
-			((ISqlExpressionWalkable)_selectQuery.Select).Walk(false, expr =>
+			((ISqlExpressionWalkable)_selectQuery.Select).Walk(new WalkOptions(), expr =>
 			{
 				if (expr is SelectQuery query    &&
 					query.From.Tables.Count == 0 &&

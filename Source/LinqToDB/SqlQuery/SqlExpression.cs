@@ -62,10 +62,10 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(skipColumns, func);
+				Parameters[i] = Parameters[i].Walk(options, func);
 
 			return func(this);
 		}

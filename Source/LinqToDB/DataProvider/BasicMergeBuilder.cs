@@ -916,7 +916,7 @@ namespace LinqToDB.DataProvider
 					}
 				});
 
-				((ISqlExpressionWalkable)statement.RequireUpdateClause()).Walk(true,
+				((ISqlExpressionWalkable)statement.RequireUpdateClause()).Walk(new WalkOptions(true),
 					element => ConvertToSubquery(subQuery, element, tableSet, tables, (SqlTable)target.Source,
 						(SqlTable)source.Source));
 			}
@@ -1091,7 +1091,7 @@ namespace LinqToDB.DataProvider
 						throw new InvalidOperationException();
 				}
 
-				queryPart.Walk(true, element => ConvertToSubquery(statement.SelectQuery, element, tableSet, tables, firstTable, secondTable));
+				queryPart.Walk(new WalkOptions(true), element => ConvertToSubquery(statement.SelectQuery, element, tableSet, tables, firstTable, secondTable));
 			}
 
 			var table1   = statement.SelectQuery.From.Tables[0];
