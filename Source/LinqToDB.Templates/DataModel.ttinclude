@@ -123,6 +123,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 			table = new Table
 			{
 				TableSchema             = t,
+				IsDefaultSchema         = t.IsDefaultSchema,
 				Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.SchemaName)? null : t.SchemaName,
 				BaseClass               = BaseEntityClass,
 				TableName               = t.TableName,
@@ -146,7 +147,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 						IsPrimaryKey    = c.IsPrimaryKey,
 						PrimaryKeyOrder = c.PrimaryKeyOrder,
 						MemberName      = CheckType(c.SystemType, c.MemberName),
-						Type            = ConvertTableColumnMemberType(t, c),
+						TypeBuilder     = () => ConvertTableColumnMemberType(t, c),
 						SkipOnInsert    = c.SkipOnInsert,
 						SkipOnUpdate    = c.SkipOnUpdate,
 						Description     = c.Description,
@@ -283,7 +284,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 								IsPrimaryKey    = c.IsPrimaryKey,
 								PrimaryKeyOrder = c.PrimaryKeyOrder,
 								MemberName      = CheckColumnName(CheckType(c.SystemType, c.MemberName)),
-								Type            = ConvertProcedureColumnMemberType(p, c),
+								TypeBuilder     = () => ConvertProcedureColumnMemberType(p, c),
 								SkipOnInsert    = c.SkipOnInsert,
 								SkipOnUpdate    = c.SkipOnUpdate,
 								Description     = c.Description,
@@ -483,6 +484,8 @@ void LoadMetadata(DataConnection dataConnection)
 
 	foreach (var proc in Procedures.Values)
 	{
+	    proc.Name = ConvertToCompilable(proc.Name, false);
+
 		if (KeyWords.Contains(proc.Name))
 			proc.Name = "@" + proc.Name;
 
@@ -665,7 +668,7 @@ public class TableContext
 		var c = Transformation.GetColumn(TableName, columnName);
 
 		if (MemberName  != null) c.MemberName  = MemberName;
-		if (Type        != null) c.Type        = Type;
+		if (Type        != null) c.TypeBuilder = () => Type;
 		if (IsNullable  != null) c.IsNullable  = IsNullable.Value;
 		if (Conditional != null) c.Conditional = Conditional;
 
@@ -700,6 +703,7 @@ public partial class Table : Class
 	public MemberBase  DataContextProperty     { get; set; }
 	public bool        IsView                  { get; set; }
 	public bool        IsProviderSpecific      { get; set; }
+	public bool        IsDefaultSchema         { get; set; }
 	public string      Description             { get; set; }
 	public string      AliasPropertyName       { get; set; }
 	public string      AliasTypeName           { get; set; }

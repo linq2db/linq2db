@@ -7,6 +7,8 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
+	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using Mapping;
 
 	public class SqlTable : ISqlTableSource
@@ -70,9 +72,7 @@ namespace LinqToDB.SqlQuery
 			ObjectType   = objectType;
 			PhysicalName = physicalName ?? Name;
 
-			// Order columns by the Order field.  Positive first then negative.
-			var columns = ed.Columns.OrderBy(_ => _.Order >= 0 ? 0 : (_.Order == null ? 1 : 2)).ThenBy(_ => _.Order);
-			foreach (var column in columns)
+			foreach (var column in ed.Columns)
 			{
 				var field = new SqlField
 				{
@@ -91,6 +91,7 @@ namespace LinqToDB.SqlQuery
 					Precision        = column.Precision,
 					Scale            = column.Scale,
 					CreateFormat     = column.CreateFormat,
+					CreateOrder      = column.Order,
 					ColumnDescriptor = column,
 				};
 
@@ -110,6 +111,25 @@ namespace LinqToDB.SqlQuery
 					}
 
 					field.DataType = dataType.DataType;
+
+					// try to get type from converter
+					if (field.DataType == DataType.Undefined)
+					{
+						try
+						{
+							var converter = mappingSchema.GetConverter(
+								new DbDataType(field.SystemType, field.DataType, field.DbType),
+								new DbDataType(typeof(DataParameter)), true);
+
+							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.SystemType, mappingSchema));
+							if (parameter != null)
+								field.DataType = parameter.DataType;
+						}
+						catch
+						{
+							// converter cannot handle default value?
+						}
+					}
 
 					if (field.Length == null)
 						field.Length = dataType.Length;

@@ -37,8 +37,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, IncludeDataContextSource(TestProvName.Northwind)]
-		public void Test1(string context)
+		[Test]
+		public void Test1([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			try
 			{

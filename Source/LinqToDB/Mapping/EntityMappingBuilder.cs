@@ -208,6 +208,16 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Adds member mapping to current entity.
+		/// </summary>
+		/// <param name="func">Column mapping property or field getter expression.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Member(Expression<Func<T,object>> func)
+		{
+			return new PropertyMappingBuilder<T>(this, func);
+		}
+
+		/// <summary>
 		/// Adds association mapping to current entity.
 		/// </summary>
 		/// <typeparam name="S">Association member type.</typeparam>
@@ -237,11 +247,40 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Adds association mapping to current entity.
+		/// </summary>
+		/// <typeparam name="S">Association member type.</typeparam>
+		/// <typeparam name="ID1">This association side key type.</typeparam>
+		/// <typeparam name="ID2">Other association side key type.</typeparam>
+		/// <param name="prop">Association member getter expression.</param>
+		/// <param name="thisKey">This association key getter expression.</param>
+		/// <param name="otherKey">Other association key getter expression.</param>
+		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
+			[JetBrains.Annotations.NotNull] Expression<Func<T, IEnumerable<S>>> prop,
+			[JetBrains.Annotations.NotNull] Expression<Func<T, ID1>>            thisKey,
+			[JetBrains.Annotations.NotNull] Expression<Func<S, ID2>>            otherKey,
+			                                bool                                canBeNull = true)
+		{
+			if (prop     == null) throw new ArgumentNullException(nameof(prop));
+			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
+			if (otherKey == null) throw new ArgumentNullException(nameof(otherKey));
+
+			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
+			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
+
+			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
+
+			return Property( objProp ).HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull } );
+		}
+
+		/// <summary>
 		/// Adds one-to-many association mapping to current entity.
 		/// </summary>
 		/// <typeparam name="TOther">Other association side type</typeparam>
 		/// <param name="prop">Association member getter expression.</param>
-		/// <param name="predicate">Predicate expresssion.</param>
+		/// <param name="predicate">Predicate expression.</param>
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<TOther>(
@@ -262,7 +301,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <typeparam name="TOther">Other association side type</typeparam>
 		/// <param name="prop">Association member getter expression.</param>
-		/// <param name="predicate">Predicate expresssion</param>
+		/// <param name="predicate">Predicate expression</param>
 		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<TOther>(
@@ -276,6 +315,48 @@ namespace LinqToDB.Mapping
 			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
 
 			return Property( objProp ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull } );
+		}
+
+		/// <summary>
+		/// Adds one-to-many association mapping to current entity.
+		/// </summary>
+		/// <typeparam name="TOther">Other association side type</typeparam>
+		/// <param name="prop">Association member getter expression.</param>
+		/// <param name="queryExpression">Query expression.</param>
+		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Association<TOther>(
+			[JetBrains.Annotations.NotNull] Expression<Func<T, IEnumerable<TOther>>>              prop,
+			[JetBrains.Annotations.NotNull] Expression<Func<T, IDataContext, IQueryable<TOther>>> queryExpression,
+			                                bool                                     canBeNull = true)
+		{
+			if (prop            == null) throw new ArgumentNullException(nameof(prop));
+			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
+
+			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
+
+			return Property( objProp ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull, Relationship = Relationship.OneToMany } );
+		}
+
+		/// <summary>
+		/// Adds one-to-one association mapping to current entity.
+		/// </summary>
+		/// <typeparam name="TOther">Other association side type</typeparam>
+		/// <param name="prop">Association member getter expression.</param>
+		/// <param name="queryExpression">Query expression.</param>
+		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Association<TOther>(
+			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther>>       prop,
+			[JetBrains.Annotations.NotNull] Expression<Func<T, IDataContext, IQueryable<TOther>>> queryExpression,
+			                                bool                              canBeNull = true)
+		{
+			if (prop            == null) throw new ArgumentNullException(nameof(prop));
+			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
+
+			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
+
+			return Property( objProp ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull } );
 		}
 
 		/// <summary>

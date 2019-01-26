@@ -207,9 +207,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 						if (name.Length > 0 && name[0] == '[')
 							return value;
-					}
 
-					return "[" + value + "]";
+						return SqlServerTools.QuoteIdentifier(name);
+					}
 
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.SqlServer
 //						if (name.IndexOf('.') > 0)
 //							value = string.Join("].[", name.Split('.'));
 
-						return "[" + value + "]";
+						return SqlServerTools.QuoteIdentifier(name);
 					}
 
 					break;
@@ -275,14 +275,19 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 			else
 			{
-				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(table, null);
-				StringBuilder.AppendLine("', N'U') IS NOT NULL)");
+				if (dropTable.IfExists)
+				{
+					StringBuilder.Append("IF (OBJECT_ID(N'");
+					BuildPhysicalTable(table, null);
+					StringBuilder.AppendLine("', N'U') IS NOT NULL)");
+					Indent++;
+				}
 
-				Indent++;
 				AppendIndent().Append("DROP TABLE ");
 				BuildPhysicalTable(table, null);
-				Indent--;
+
+				if (dropTable.IfExists)
+					Indent--;
 			}
 		}
 
@@ -293,10 +298,19 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
 				case DataType.Variant   : StringBuilder.Append("Sql_Variant");      return;
 				case DataType.NVarChar  :
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					{
+						StringBuilder
+							.Append(type.DataType)
+							.Append("(Max)");
+						return;
+					}
+
+					break;
+
 				case DataType.VarChar   :
 				case DataType.VarBinary :
-
-					if (type.Length == int.MaxValue || type.Length < 0)
+					if (type.Length == null || type.Length > 8000 || type.Length < 1)
 					{
 						StringBuilder
 							.Append(type.DataType)

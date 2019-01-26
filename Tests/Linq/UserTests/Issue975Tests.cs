@@ -15,7 +15,7 @@ namespace Tests.UserTests
 	{
 		public static class SqlServer
 		{
-			[Sql.Function(ServerSideOnly = true)]
+			[Sql.Function(ServerSideOnly = true, CanBeNull = false)]
 			public static DateTime GetDate() { throw new InvalidOperationException("Use only LINQ expression"); }
 		}
 
@@ -69,7 +69,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public void Test(
-			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context
+			[IncludeDataSources(true, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context
 		)
 		{
 			using (var db = GetDataContext(context))

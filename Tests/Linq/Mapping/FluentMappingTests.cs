@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 
 using LinqToDB;
@@ -6,6 +7,7 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 using Tests.Model;
+using Tests.Tools;
 
 namespace Tests.Mapping
 {
@@ -318,8 +320,8 @@ namespace Tests.Mapping
 			public string LastName  { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void FluentInheritance(string context)
+		[Test]
+		public void FluentInheritance([DataSources] string context)
 		{
 			var ms = MappingSchema.Default; // new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -343,8 +345,8 @@ namespace Tests.Mapping
 			}
 		}
 
-		[Test, DataContextSource]
-		public void FluentInheritance2(string context)
+		[Test]
+		public void FluentInheritance2([DataSources] string context)
 		{
 			var ms = MappingSchema.Default; // new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -365,6 +367,49 @@ namespace Tests.Mapping
 				var jane = db.GetTable<TestInheritanceFemale>().Where(_ => _.PersonID == 3).FirstOrDefault();
 				Assert.IsNotNull(jane);
 
+			}
+		}
+
+		class BaseEntity
+		{
+			public int Id { get; set; }
+
+			[NotColumn]
+			public int Value { get; set; }
+
+			public int ValueMethod()
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		class DescendantEntity : BaseEntity
+		{
+		}
+
+		[Test]
+		public void FluentInheritanceExpression([DataSources] string context)
+		{
+			var ms = MappingSchema.Default; // new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<DescendantEntity>()
+				.Property(e => e.Value).IsExpression(e => e.Id + 100)
+				.Member(e => e.ValueMethod()).IsExpression(e => e.Id + 1000);
+
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(
+				context,
+				"25",
+				new[] { new DescendantEntity{Id = 1, Value = 0}, new DescendantEntity{Id = 2, Value = 0} })
+			)
+			{
+				var items1 = table.Where(e => e.Value == 101).ToArray();
+				var items2 = table.Where(e => e.ValueMethod() == 1001).ToArray();
+
+				Assert.AreEqual(1, items1.Length);
+
+				AreEqual(items1, items2, ComparerBuilder<DescendantEntity>.GetEqualityComparer());
 			}
 		}
 
@@ -441,7 +486,7 @@ namespace Tests.Mapping
 
 		}
 
-		[Test] 
+		[Test]
 		public void InterfaceInheritance()
 		{
 			var ms = new MappingSchema();

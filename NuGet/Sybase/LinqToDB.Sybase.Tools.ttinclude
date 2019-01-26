@@ -1,3 +1,2 @@
-<#@ assembly name="$(LinqToDBT4SybaseToolsDirectory)Sybase.AdoNet45.AseClient.dll" #>
 <#@ include file="LinqToDB.Tools.ttinclude" #>
 <#@ include file="LinqToDB.Sybase.ttinclude" #>

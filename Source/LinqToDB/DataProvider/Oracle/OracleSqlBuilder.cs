@@ -109,6 +109,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (NeedSkip(selectQuery))
 			{
+				SkipAlias = false;
+
 				var aliases = GetTempAliases(2, "t");
 
 				if (_rowNumberAlias == null)
@@ -151,6 +153,8 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 			else if (NeedTake(selectQuery) && (!selectQuery.OrderBy.IsEmpty || !selectQuery.Having.IsEmpty))
 			{
+				SkipAlias = false;
+
 				var aliases = GetTempAliases(1, "t");
 
 				AppendIndent().AppendFormat("SELECT {0}.*", aliases[0]).AppendLine();
@@ -219,9 +223,10 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Money          : StringBuilder.Append("Number(19,4)");              break;
 				case DataType.SmallMoney     : StringBuilder.Append("Number(10,4)");              break;
 				case DataType.NVarChar       :
-					StringBuilder.Append("VarChar2");
-					if (type.Length > 0)
-						StringBuilder.Append('(').Append(type.Length).Append(')');
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+						StringBuilder.Append("VarChar2(4000)");
+					else
+						StringBuilder.Append($"VarChar2({type.Length})");
 					break;
 				case DataType.Boolean        : StringBuilder.Append("Char(1)");                   break;
 				case DataType.NText          : StringBuilder.Append("NClob");                     break;
@@ -387,13 +392,6 @@ namespace LinqToDB.DataProvider.Oracle
 					if (_identityField != null)
 						return 3;
 					break;
-
-				case SqlDropTableStatement dropTable:
-					_identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
-					if (_identityField != null)
-						return 3;
-
-					break;
 			}
 
 			return base.CommandCount(statement);
@@ -401,7 +399,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			if (_identityField == null)
+			var identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+
+			if (identityField == null && dropTable.IfExists == false)
 			{
 				base.BuildDropTableStatement(dropTable);
 			}
@@ -412,11 +412,93 @@ namespace LinqToDB.DataProvider.Oracle
 					: dropTable.Table.Schema + ".";
 
 				StringBuilder
-					.Append("DROP TRIGGER ")
-					.Append(schemaPrefix)
-					.Append("TIDENTITY_")
-					.Append(dropTable.Table.PhysicalName)
-					.AppendLine();
+					.AppendLine(@"BEGIN");
+
+				if (identityField == null)
+				{
+					StringBuilder
+						.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
+					BuildPhysicalTable(dropTable.Table, null);
+					StringBuilder
+						.AppendLine("';")
+						;
+
+					if (dropTable.IfExists)
+					{
+						StringBuilder
+							.AppendLine("EXCEPTION")
+							.AppendLine("\tWHEN OTHERS THEN")
+							.AppendLine("\t\tIF SQLCODE != -942 THEN")
+							.AppendLine("\t\t\tRAISE;")
+							.AppendLine("\t\tEND IF;")
+							;
+					}
+				}
+				else if (!dropTable.IfExists)
+				{
+					StringBuilder
+						.Append("\tEXECUTE IMMEDIATE 'DROP TRIGGER ")
+						.Append(schemaPrefix)
+						.Append("TIDENTITY_")
+						.Append(dropTable.Table.PhysicalName)
+						.AppendLine("';")
+						.Append("\tEXECUTE IMMEDIATE 'DROP SEQUENCE ")
+						.Append(schemaPrefix)
+						.Append("SIDENTITY_")
+						.Append(dropTable.Table.PhysicalName)
+						.AppendLine("';")
+						.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
+					BuildPhysicalTable(dropTable.Table, null);
+					StringBuilder
+						.AppendLine("';")
+						;
+				}
+				else
+				{
+					StringBuilder
+						.AppendLine("\tBEGIN")
+						.Append("\t\tEXECUTE IMMEDIATE 'DROP TRIGGER ")
+						.Append(schemaPrefix)
+						.Append("TIDENTITY_")
+						.Append(dropTable.Table.PhysicalName)
+						.AppendLine("';")
+						.AppendLine("\tEXCEPTION")
+						.AppendLine("\t\tWHEN OTHERS THEN")
+						.AppendLine("\t\t\tIF SQLCODE != -4080 THEN")
+						.AppendLine("\t\t\t\tRAISE;")
+						.AppendLine("\t\t\tEND IF;")
+						.AppendLine("\tEND;")
+
+						.AppendLine("\tBEGIN")
+						.Append("\t\tEXECUTE IMMEDIATE 'DROP SEQUENCE ")
+						.Append(schemaPrefix)
+						.Append("SIDENTITY_")
+						.Append(dropTable.Table.PhysicalName)
+						.AppendLine("';")
+						.AppendLine("\tEXCEPTION")
+						.AppendLine("\t\tWHEN OTHERS THEN")
+						.AppendLine("\t\t\tIF SQLCODE != -2289 THEN")
+						.AppendLine("\t\t\t\tRAISE;")
+						.AppendLine("\t\t\tEND IF;")
+						.AppendLine("\tEND;")
+
+						.AppendLine("\tBEGIN")
+						.Append("\t\tEXECUTE IMMEDIATE 'DROP TABLE ");
+					BuildPhysicalTable(dropTable.Table, null);
+					StringBuilder
+						.AppendLine("';")
+						.AppendLine("\tEXCEPTION")
+						.AppendLine("\t\tWHEN OTHERS THEN")
+						.AppendLine("\t\t\tIF SQLCODE != -942 THEN")
+						.AppendLine("\t\t\t\tRAISE;")
+						.AppendLine("\t\t\tEND IF;")
+						.AppendLine("\tEND;")
+						;
+				}
+
+				StringBuilder
+					.AppendLine("END;")
+					;
 			}
 		}
 
@@ -453,24 +535,6 @@ END;",
 						;
 
 					break;
-
-				case SqlDropTableStatement dropTable:
-					if (commandNumber == 1)
-					{
-						StringBuilder
-							.Append("DROP SEQUENCE ")
-							.Append(GetSchemaPrefix(dropTable.Table))
-							.Append("SIDENTITY_")
-							.Append(dropTable.Table.PhysicalName)
-							.AppendLine();
-					}
-					else
-					{
-						base.BuildDropTableStatement(dropTable);
-					}
-
-					break;
-
 				case SqlCreateTableStatement createTable:
 				{
 					var schemaPrefix = GetSchemaPrefix(createTable.Table);

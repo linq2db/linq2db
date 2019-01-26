@@ -1,11 +1,22 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
 	{
+		GenerateProcedureDbType = p => p.DataType == "Structured" && p.SchemaType != null;
+
 		var afterGenerateLinqToDBModel = AfterGenerateLinqToDBModel;
 		AfterGenerateLinqToDBModel = () =>
 		{
 			afterGenerateLinqToDBModel();
 			DoGenerateSqlServerFreeText();
+		};
+
+		var buildColumnComparison = BuildColumnComparison;
+		BuildColumnComparison = (c, padding1, padding2, last) =>
+		{
+			if (c.BuildType() == "SqlHierarchyId")
+				return string.Format("\t(bool)(t.{0}{1} == {0}{3}){2}", c.MemberName, padding1, last ? ");" : " &&", last ? "" : padding2);
+			else
+				return buildColumnComparison(c, padding1, padding2, last);
 		};
 	}
 #>
@@ -36,8 +47,8 @@ void DoGenerateSqlServerFreeText()
 						IsCompact = true,
 						Members   =
 						{
-							new Field("T",   "Key"),
-							new Field("int", "Rank")
+							new Field(() => "T",   "Key"),
+							new Field(() => "int", "Rank")
 						}
 					})
 				{
@@ -45,16 +56,16 @@ void DoGenerateSqlServerFreeText()
 					IsPartial        = false
 				},
 
-				new Field("MethodInfo", "_freeTextTableMethod1")
+				new Field(() => "MethodInfo", "_freeTextTableMethod1")
 				{
 					AccessModifier = AccessModifier.Private,
 					IsStatic       = true,
 					InitValue      = "typeof(" + DataContextObject.Name + ").GetMethod(\"FreeTextTable\", new Type[] { typeof(string), typeof(string) })"
 				},
 
-				new Method("ITable<FreeTextKey<TKey>>", "FreeTextTable",
-					new[] { "string field", "string text" },
-					new[]
+				new Method(() => "ITable<FreeTextKey<TKey>>", "FreeTextTable",
+					new Func<string>[] { () => "string field", () => "string text" },
+					() => new[]
 					{
 						"return this.GetTable<FreeTextKey<TKey>>(",
 						"	this,",
@@ -67,7 +78,7 @@ void DoGenerateSqlServerFreeText()
 					Attributes = { new Attribute("FreeTextTableExpression") }
 				},
 
-				new Field("MethodInfo", "_freeTextTableMethod2")
+				new Field(() => "MethodInfo", "_freeTextTableMethod2")
 				{
 					AccessModifier = AccessModifier.Private,
 					IsStatic       = true,
@@ -79,9 +90,9 @@ void DoGenerateSqlServerFreeText()
 					"		.Single()"
 				},
 
-				new Method("ITable<FreeTextKey<TKey>>", "FreeTextTable",
-					new[] { "Expression<Func<TTable,string>> fieldSelector", "string text" },
-					new[]
+				new Method(() => "ITable<FreeTextKey<TKey>>", "FreeTextTable",
+					new Func<string>[] { () => "Expression<Func<TTable,string>> fieldSelector", () => "string text" },
+					() => new[]
 					{
 						"return this.GetTable<FreeTextKey<TKey>>(",
 						"	this,",
@@ -115,19 +126,19 @@ LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string databa
 
 void LoadSqlServerMetadata(string connectionString)
 {
-	var dataConnection = GetSqlServerConnection(connectionString);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetSqlServerConnection(connectionString))
+		LoadMetadata(dataConnection);
 }
 
 void LoadSqlServerMetadata(string server, string database)
 {
-	var dataConnection = GetSqlServerConnection(server, database);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetSqlServerConnection(server, database))
+		LoadMetadata(dataConnection);
 }
 
 void LoadSqlServerMetadata(string server, string database, string user, string password)
 {
-	var dataConnection = GetSqlServerConnection(server, database, user, password);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetSqlServerConnection(server, database, user, password))
+		LoadMetadata(dataConnection);
 }
 #>

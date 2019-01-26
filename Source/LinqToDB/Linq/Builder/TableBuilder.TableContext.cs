@@ -342,13 +342,16 @@ namespace LinqToDB.Linq.Builder
 					}
 				).ToList();
 
-				Expression expr = Expression.MemberInit(
+				var initExpr = Expression.MemberInit(
 					Expression.New(objectType),
 						members
+							// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
 							.Where (m => !m.Column.MemberAccessor.IsComplex)
 							.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
 
-				var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
+				Expression expr = initExpr;
+
+				var hasComplex = members.Count > initExpr.Bindings.Count;
 				var loadWith   = GetLoadWith();
 
 				if (hasComplex || loadWith != null)
@@ -735,7 +738,7 @@ namespace LinqToDB.Linq.Builder
 							if (table.Field != null)
 								return new[]
 								{
-									new SqlInfo(table.Field.ColumnDescriptor.MemberInfo) { Sql = table.Field }
+									new SqlInfo(QueryHelper.GetUnderlyingField(table.Field)?.ColumnDescriptor.MemberInfo) { Sql = table.Field }
 								};
 
 							if (expression == null)
@@ -778,7 +781,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			public SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public virtual SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
 			{
 				switch (flags)
 				{
@@ -907,6 +910,14 @@ namespace LinqToDB.Linq.Builder
 					Expression expr  = null;
 					var        param = Expression.Parameter(typeof(T), "c");
 
+					var queryMethod = association.Association.GetQueryMethod(parent.Type, typeof(T));
+
+					if (queryMethod != null)
+					{
+						expr = queryMethod.GetBody(parent, Expression.Constant(association.Builder.DataContext));
+						return expr;
+					}
+
 					foreach (var cond in association.ParentAssociationJoin.Condition.Conditions.Take(association.RegularConditionCount))
 					{
 						SqlPredicate.ExprExpr p;
@@ -951,10 +962,13 @@ namespace LinqToDB.Linq.Builder
 					if (association.ExpressionPredicate != null)
 					{
 						var l  = association.ExpressionPredicate;
-						var ex = l.Body.Transform(e => e == l.Parameters[0] ? parent : e == l.Parameters[1] ? param : e);
+						var ex = l.GetBody(parent, param);
 
 						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
 					}
+
+					if (expr == null)
+						throw new LinqToDBException("Invalid association for LoadWith");
 
 					var predicate = Expression.Lambda<Func<T,bool>>(expr, param);
 
@@ -1050,7 +1064,7 @@ namespace LinqToDB.Linq.Builder
 				if (alias == null)
 					return;
 
-				if (alias.Contains('<'))
+				if (!alias.Contains('<'))
 					if (SqlTable.Alias == null)
 						SqlTable.Alias = alias;
 			}
@@ -1099,7 +1113,7 @@ namespace LinqToDB.Linq.Builder
 				return LoadWith;
 			}
 
-			SqlField GetField(Expression expression, int level, bool throwException)
+			protected virtual ISqlExpression GetField(Expression expression, int level, bool throwException)
 			{
 				if (expression.NodeType == ExpressionType.MemberAccess)
 				{
@@ -1107,9 +1121,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (EntityDescriptor.Aliases != null)
 					{
-						if (EntityDescriptor.Aliases.ContainsKey(memberExpression.Member.Name))
+						if (EntityDescriptor.Aliases.TryGetValue(memberExpression.Member.Name, out var aliasName))
 						{
-							var alias = EntityDescriptor[memberExpression.Member.Name];
+							var alias = EntityDescriptor[aliasName];
 
 							if (alias == null)
 							{
@@ -1262,10 +1276,10 @@ namespace LinqToDB.Linq.Builder
 
 			class TableLevel
 			{
-				public TableContext Table;
-				public SqlField     Field;
-				public int          Level;
-				public bool         IsNew;
+				public TableContext   Table;
+				public ISqlExpression Field;
+				public int            Level;
+				public bool           IsNew;
 			}
 
 			TableLevel FindTable(Expression expression, int level, bool throwException, bool throwExceptionForNull)
@@ -1331,8 +1345,11 @@ namespace LinqToDB.Linq.Builder
 								aa.GetOtherKeys(),
 								aa.ExpressionPredicate,
 								aa.Predicate,
+								aa.QueryExpressionMethod,
+								aa.QueryExpression,
 								aa.Storage,
-								aa.CanBeNull))
+								aa.CanBeNull,
+								aa.AliasName))
 							{ Parent = Parent };
 
 					isNew = true;

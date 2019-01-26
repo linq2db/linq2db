@@ -10,21 +10,29 @@ namespace LinqToDB.DataProvider
 	using SqlProvider;
 	using SqlQuery;
 
-	public class MultipleRowsHelper<T>
+	public class MultipleRowsHelper<T> : MultipleRowsHelper
 	{
-		public MultipleRowsHelper(DataConnection dataConnection, BulkCopyOptions options)
+		public MultipleRowsHelper(ITable<T> table, BulkCopyOptions options)
+			: base((DataConnection)table.DataContext, options, typeof(T))
+		{
+			TableName = BasicBulkCopy.GetTableName(SqlBuilder, options, table);
+		}
+	}
+
+	public abstract class MultipleRowsHelper
+	{
+		protected MultipleRowsHelper(DataConnection dataConnection, BulkCopyOptions options, Type entityType)
 		{
 			DataConnection = dataConnection;
 			Options        = options;
 			SqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder();
 			ValueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
-			Descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			Descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(entityType);
 			Columns        = Descriptor.Columns
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.KeepIdentity == true)
 				.ToArray();
 			ColumnTypes    = Columns.Select(c => new SqlDataType(c.DataType, c.MemberType, c.Length, c.Precision, c.Scale)).ToArray();
 			ParameterName  = SqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
-			TableName      = BasicBulkCopy.GetTableName(SqlBuilder, options, Descriptor);
 			BatchSize      = Math.Max(10, Options.MaxBatchSize ?? 1000);
 		}
 
@@ -35,7 +43,7 @@ namespace LinqToDB.DataProvider
 		public readonly EntityDescriptor    Descriptor;
 		public readonly ColumnDescriptor[]  Columns;
 		public readonly SqlDataType[]       ColumnTypes;
-		public readonly string              TableName;
+		public          string              TableName;
 		public readonly string              ParameterName;
 
 		public readonly List<DataParameter> Parameters    = new List<DataParameter>();
@@ -67,13 +75,11 @@ namespace LinqToDB.DataProvider
 
 					StringBuilder.Append(name);
 
-					if (value is DataParameter)
-					{
-						value = ((DataParameter)value).Value;
-					}
+					if (value is DataParameter dataParameter)
+						value = dataParameter.Value;
 
 					Parameters.Add(new DataParameter(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, value,
-						column.DataType));
+						column.DataType, column.DbType));
 				}
 
 				StringBuilder.Append(",");

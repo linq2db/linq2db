@@ -15,8 +15,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class CompileTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void CompiledTest1(string context)
+		[Test]
+		public void CompiledTest1([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, string n1, int n2) =>
 				n1 + n2);
@@ -28,8 +28,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompiledTest2(string context)
+		[Test]
+		public void CompiledTest2([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).Take(n));
@@ -41,8 +41,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompiledTest3(string context)
+		[Test]
+		public void CompiledTest3([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.GetTable<Child>().Where(c => c.ParentID == n).Take(n));
@@ -54,8 +54,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompiledTest4(string context)
+		[Test]
+		public void CompiledTest4([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int[] n) =>
 				db.GetTable<Child>().Where(c => n.Contains(c.ParentID)));
@@ -64,8 +64,8 @@ namespace Tests.Linq
 				Assert.AreEqual(3, query(db, new[] { 1, 2 }).ToList().Count());
 		}
 
-		[Test, DataContextSource]
-		public void CompiledTest5(string context)
+		[Test]
+		public void CompiledTest5([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, object[] ps) =>
 				db.Parent.Where(p => p.ParentID == (int)ps[0] && p.Value1 == (int?)ps[1]));
@@ -77,18 +77,20 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompiledTable1(string context)
+		[Test]
+		public void CompiledTable1([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db) =>
 				db.Child);
 
 			using (var db = GetDataContext(context))
-				query(db).ToList().Count();
+			{
+				var _ = query(db).ToList().Count();
+			}
 		}
 
-		[Test, DataContextSource]
-		public void CompiledTable2(string context)
+		[Test]
+		public void CompiledTable2([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db) =>
 				db.GetTable<Child>());
@@ -97,8 +99,10 @@ namespace Tests.Linq
 				query(db).ToList().Count();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void ConcurentTest1(string context)
+		[Test, Order(100)]
+		public void ConcurrentTest1([IncludeDataSources(
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+			string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.GetTable<Parent>().Where(p => p.ParentID == n).First().ParentID);
@@ -133,8 +137,10 @@ namespace Tests.Linq
 				Assert.AreEqual(results[i,0], results[i,1]);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void ConcurentTest2(string context)
+		[Test]
+		public void ConcurrentTest2([IncludeDataSources(
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+			string context)
 		{
 			var threads = new Thread[100];
 			var results = new int   [100,2];
@@ -164,8 +170,8 @@ namespace Tests.Linq
 				Assert.AreEqual(results[i,0], results[i,1]);
 		}
 
-		[Test, DataContextSource]
-		public void ParamTest1(string context)
+		[Test]
+		public void ParamTest1([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Child>>((db, id) =>
 				from c in db.Child
@@ -180,8 +186,8 @@ namespace Tests.Linq
 				Assert.AreEqual(2, query(db, 2).ToList().Count());
 		}
 
-		[Test, DataContextSource]
-		public void ElementTest1(string context)
+		[Test]
+		public void ElementTest1([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).First());
@@ -193,8 +199,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompiledQueryWithExpressionMethodTest(string context)
+		[Test]
+		public void CompiledQueryWithExpressionMethodTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -204,7 +210,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ExpressionMethod("FilterExpression")]
+		[ExpressionMethod(nameof(FilterExpression))]
 		public static IQueryable<Parent> Filter(ITestDataContext db, int date)
 		{
 			throw new NotImplementedException();

@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
-	using Common;
 	using Data;
 	using Linq;
 	using Mapping;
@@ -33,7 +32,7 @@ namespace LinqToDB.DataProvider
 		protected List<DataParameter> Parameters    = new List<DataParameter>();
 		protected List<ColumnInfo>    Columns;
 
-		protected virtual bool IsIdentitySupported { get { return false; } }
+		protected virtual bool IsIdentitySupported => false;
 
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -328,7 +327,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine("\tVALUES")
 				;
 
-			var pidx  = 0;
+			var pidx = 0;
 
 			var hasData     = false;
 			var columnTypes = table.Columns
@@ -352,7 +351,7 @@ namespace LinqToDB.DataProvider
 
 						StringBuilder.Append(name);
 						Parameters.Add(new DataParameter(pname == "?" ? pname : "p" + pidx, value,
-							column.DataType));
+							column.DataType, column.DbType));
 					}
 
 					StringBuilder.Append(",");
@@ -410,7 +409,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine("(")
 				;
 
-			var pidx  = 0;
+			var pidx = 0;
 
 			var hasData     = false;
 			var columnTypes = table.Columns
@@ -438,7 +437,7 @@ namespace LinqToDB.DataProvider
 
 						StringBuilder.Append(name);
 						Parameters.Add(new DataParameter(pname == "?" ? pname : "p" + pidx, value,
-							column.Column.DataType));
+							column.Column.DataType, column.Column.DbType));
 					}
 
 					if (!hasData)

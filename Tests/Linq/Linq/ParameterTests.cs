@@ -17,8 +17,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ParameterTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void InlineParameter(string context)
+		[Test]
+		public void InlineParameter([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -34,8 +34,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestQueryCacheWithNullParameters(string context)
+		[Test]
+		public void TestQueryCacheWithNullParameters([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -47,8 +47,26 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.DB2, ProviderName.SapHana)]
-		public void CharAsSqlParameter1(string context)
+		[Test]
+		public void TestOptimizingParameters([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id || _.ID <= id || _.ID == id).Count());
+			}
+		}
+
+		[Test]
+		public void CharAsSqlParameter1(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest, TestProvName.PostgreSQLLatest,
+				ProviderName.Informix,
+				ProviderName.DB2,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var  db = GetDataContext(context))
 			{
@@ -59,8 +77,16 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2, ProviderName.SapHana)]
-		public void CharAsSqlParameter2(string context)
+		[Test]
+		public void CharAsSqlParameter2(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.Informix,
+				ProviderName.DB2,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var  db = GetDataContext(context))
 			{
@@ -71,8 +97,16 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2, ProviderName.SQLiteMS, ProviderName.SapHana)]
-		public void CharAsSqlParameter3(string context)
+		[Test]
+		public void CharAsSqlParameter3(
+			[DataSources(
+				ProviderName.SqlCe,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.Informix,
+				ProviderName.DB2,
+				ProviderName.SQLiteMS,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var  db = GetDataContext(context))
 			{
@@ -83,8 +117,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CharAsSqlParameter4(string context)
+		[Test]
+		public void CharAsSqlParameter4([DataSources] string context)
 		{
 			using (var  db = GetDataContext(context))
 			{
@@ -95,8 +129,13 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2)]
-		public void CharAsSqlParameter5(string context)
+		[Test]
+		public void CharAsSqlParameter5(
+			[DataSources(
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.Informix,
+				ProviderName.DB2)]
+			string context)
 		{
 			using (var  db = GetDataContext(context))
 			{
@@ -107,8 +146,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void SqlStringParameter(string context)
+		[Test]
+		public void SqlStringParameter([DataSources(false)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -124,8 +163,10 @@ namespace Tests.Linq
 		}
 
 		// Excluded providers inline such parameter
-		[Test, DataContextSource(false, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.Informix)]
-		public void ExposeSqlStringParameter(string context)
+		[Test]
+		public void ExposeSqlStringParameter([DataSources(
+			false, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -145,8 +186,10 @@ namespace Tests.Linq
 		}
 
 		// Excluded providers inline such parameter
-		[Test, DataContextSource(false, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.Informix)]
-		public void ExposeSqlDecimalParameter(string context)
+		[Test]
+		public void ExposeSqlDecimalParameter([DataSources(
+			false, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -160,8 +203,8 @@ namespace Tests.Linq
 		}
 
 		// DB2: see DB2SqlOptimizer.SetQueryParameter - binary parameters inlined for DB2
-		[Test, DataContextSource(false, ProviderName.DB2)]
-		public void ExposeSqlBinaryParameter(string context)
+		[Test]
+		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.DB2)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -174,8 +217,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -184,21 +227,21 @@ namespace Tests.Linq
 				if (context.Contains("Informix"))
 					dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
 
-				var list = db.Types.Where(t => t.DateTimeValue == Sql.ToSql(dt)).ToList();
+				var _ = db.Types.Where(t => t.DateTimeValue == Sql.ToSql(dt)).ToList();
 			}
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
-		[Test, DataContextSource]
-		public void Test2(string context)
+		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
+		[Test]
+		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				int id1 = 1, id2 = 10000;
 
-				var parent1 = db.Parent.FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
+				var parent1 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
 				id1++;
-				var parent2 = db.Parent.FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
+				var parent2 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
 
 				Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
 			}

@@ -6,53 +6,63 @@
 //---------------------------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 namespace DB2DataContext
 {
 	/// <summary>
 	/// Database       : TESTDATA
-	/// Data Source    : DBHost:50000
-	/// Server Version : 10.01.0000
+	/// Data Source    : dbhost2:50000
+	/// Server Version : 11.01.0003
 	/// </summary>
 	public partial class TESTDATADB : LinqToDB.Data.DataConnection
 	{
-		public ITable<ALLTYPE>           ALLTYPES            { get { return this.GetTable<ALLTYPE>(); } }
-		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
-		public ITable<Doctor>            Doctors             { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>        GrandChildren       { get { return this.GetTable<GrandChild>(); } }
-		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
-		public ITable<InheritanceParent> InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<LinqDataType>      LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<MASTERTABLE>       MASTERTABLEs        { get { return this.GetTable<MASTERTABLE>(); } }
-		public ITable<Parent>            Parents             { get { return this.GetTable<Parent>(); } }
-		public ITable<Patient>           Patients            { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>            People              { get { return this.GetTable<Person>(); } }
-		public ITable<PERSONVIEW>        PERSONVIEWs         { get { return this.GetTable<PERSONVIEW>(); } }
-		public ITable<SLAVETABLE>        SLAVETABLEs         { get { return this.GetTable<SLAVETABLE>(); } }
-		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<TestTable2>        TestTable2          { get { return this.GetTable<TestTable2>(); } }
-		public ITable<TestTable3>        TestTable3          { get { return this.GetTable<TestTable3>(); } }
+		public ITable<ADMINISTRATOR_ALLTYPE>           ALLTYPES            { get { return this.GetTable<ADMINISTRATOR_ALLTYPE>(); } }
+		public ITable<ADMINISTRATOR_Child>             Children            { get { return this.GetTable<ADMINISTRATOR_Child>(); } }
+		public ITable<ADMINISTRATOR_Doctor>            Doctors             { get { return this.GetTable<ADMINISTRATOR_Doctor>(); } }
+		public ITable<ADMINISTRATOR_GrandChild>        GrandChildren       { get { return this.GetTable<ADMINISTRATOR_GrandChild>(); } }
+		public ITable<ADMINISTRATOR_InheritanceChild>  InheritanceChildren { get { return this.GetTable<ADMINISTRATOR_InheritanceChild>(); } }
+		public ITable<ADMINISTRATOR_InheritanceParent> InheritanceParents  { get { return this.GetTable<ADMINISTRATOR_InheritanceParent>(); } }
+		public ITable<ADMINISTRATOR_KeepIdentityTest>  KeepIdentityTests   { get { return this.GetTable<ADMINISTRATOR_KeepIdentityTest>(); } }
+		public ITable<ADMINISTRATOR_LinqDataType>      LinqDataTypes       { get { return this.GetTable<ADMINISTRATOR_LinqDataType>(); } }
+		public ITable<ADMINISTRATOR_MASTERTABLE>       Mastertables        { get { return this.GetTable<ADMINISTRATOR_MASTERTABLE>(); } }
+		public ITable<ADMINISTRATOR_Parent>            Parents             { get { return this.GetTable<ADMINISTRATOR_Parent>(); } }
+		public ITable<ADMINISTRATOR_Patient>           Patients            { get { return this.GetTable<ADMINISTRATOR_Patient>(); } }
+		public ITable<ADMINISTRATOR_Person>            People              { get { return this.GetTable<ADMINISTRATOR_Person>(); } }
+		public ITable<ADMINISTRATOR_PERSONVIEW>        Personviews         { get { return this.GetTable<ADMINISTRATOR_PERSONVIEW>(); } }
+		public ITable<ADMINISTRATOR_SLAVETABLE>        Slavetables         { get { return this.GetTable<ADMINISTRATOR_SLAVETABLE>(); } }
+		public ITable<ADMINISTRATOR_TestIdentity>      TestIdentities      { get { return this.GetTable<ADMINISTRATOR_TestIdentity>(); } }
+		public ITable<ADMINISTRATOR_TestMerge1>        TestMerge1          { get { return this.GetTable<ADMINISTRATOR_TestMerge1>(); } }
+		public ITable<ADMINISTRATOR_TestMerge2>        TestMerge2          { get { return this.GetTable<ADMINISTRATOR_TestMerge2>(); } }
+
+		public void InitMappingSchema()
+		{
+		}
 
 		public TESTDATADB()
 		{
 			InitDataContext();
+			InitMappingSchema();
 		}
 
 		public TESTDATADB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
+			InitMappingSchema();
 		}
 
 		partial void InitDataContext();
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="ALLTYPES")]
-	public partial class ALLTYPE
+	public partial class ADMINISTRATOR_ALLTYPE
 	{
 		[Column(DbType="INTEGER",                  DataType=DataType.Int32),                     PrimaryKey, Identity] public int       ID                { get; set; } // INTEGER
 		[Column(DbType="BIGINT",                   DataType=DataType.Int64),                     Nullable            ] public long?     BIGINTDATATYPE    { get; set; } // BIGINT
@@ -78,14 +88,14 @@ namespace DB2DataContext
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="Child")]
-	public partial class Child
+	public partial class ADMINISTRATOR_Child
 	{
 		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable] public int? ChildID  { get; set; } // INTEGER
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="Doctor")]
-	public partial class Doctor
+	public partial class ADMINISTRATOR_Doctor
 	{
 		[Column(DbType="INTEGER",     DataType=DataType.Int32),              PrimaryKey, NotNull] public int    PersonID { get; set; } // INTEGER
 		[Column(DbType="VARCHAR(50)", DataType=DataType.VarChar, Length=50),             NotNull] public string Taxonomy { get; set; } // VARCHAR(50)
@@ -96,13 +106,13 @@ namespace DB2DataContext
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
-		public Person Person { get; set; }
+		public ADMINISTRATOR_Person Person { get; set; }
 
 		#endregion
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="GrandChild")]
-	public partial class GrandChild
+	public partial class ADMINISTRATOR_GrandChild
 	{
 		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable] public int? ParentID     { get; set; } // INTEGER
 		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable] public int? ChildID      { get; set; } // INTEGER
@@ -110,7 +120,7 @@ namespace DB2DataContext
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="InheritanceChild")]
-	public partial class InheritanceChild
+	public partial class ADMINISTRATOR_InheritanceChild
 	{
 		[Column(DbType="INTEGER",     DataType=DataType.Int32),              PrimaryKey,  NotNull] public int    InheritanceChildId  { get; set; } // INTEGER
 		[Column(DbType="INTEGER",     DataType=DataType.Int32),                           NotNull] public int    InheritanceParentId { get; set; } // INTEGER
@@ -119,15 +129,22 @@ namespace DB2DataContext
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="InheritanceParent")]
-	public partial class InheritanceParent
+	public partial class ADMINISTRATOR_InheritanceParent
 	{
 		[Column(DbType="INTEGER",     DataType=DataType.Int32),              PrimaryKey,  NotNull] public int    InheritanceParentId { get; set; } // INTEGER
 		[Column(DbType="INTEGER",     DataType=DataType.Int32),                 Nullable         ] public int?   TypeDiscriminator   { get; set; } // INTEGER
 		[Column(DbType="VARCHAR(50)", DataType=DataType.VarChar, Length=50),    Nullable         ] public string Name                { get; set; } // VARCHAR(50)
 	}
 
+	[Table(Schema="ADMINISTRATOR", Name="KeepIdentityTest")]
+	public partial class ADMINISTRATOR_KeepIdentityTest
+	{
+		[Column(DbType="INTEGER", DataType=DataType.Int32), PrimaryKey, Identity] public int  ID    { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable            ] public int? Value { get; set; } // INTEGER
+	}
+
 	[Table(Schema="ADMINISTRATOR", Name="LinqDataTypes")]
-	public partial class LinqDataType
+	public partial class ADMINISTRATOR_LinqDataType
 	{
 		[Column(DbType="INTEGER",                DataType=DataType.Int32),                            Nullable] public int?      ID             { get; set; } // INTEGER
 		[Column(DbType="DECIMAL(10,4)",          DataType=DataType.Decimal,   Precision=10, Scale=4), Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL(10,4)
@@ -143,7 +160,7 @@ namespace DB2DataContext
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="MASTERTABLE")]
-	public partial class MASTERTABLE
+	public partial class ADMINISTRATOR_MASTERTABLE
 	{
 		[Column(DbType="INTEGER", DataType=DataType.Int32), PrimaryKey(0), NotNull] public int ID1 { get; set; } // INTEGER
 		[Column(DbType="INTEGER", DataType=DataType.Int32), PrimaryKey(1), NotNull] public int ID2 { get; set; } // INTEGER
@@ -154,20 +171,20 @@ namespace DB2DataContext
 		/// FK_SLAVETABLE_MASTERTABLE_BackReference
 		/// </summary>
 		[Association(ThisKey="ID1, ID2", OtherKey="ID222222222222222222222222, ID1", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<SLAVETABLE> SLAVETABLEs { get; set; }
+		public IEnumerable<ADMINISTRATOR_SLAVETABLE> Slavetables { get; set; }
 
 		#endregion
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="Parent")]
-	public partial class Parent
+	public partial class ADMINISTRATOR_Parent
 	{
 		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable] public int? Value1   { get; set; } // INTEGER
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="Patient")]
-	public partial class Patient
+	public partial class ADMINISTRATOR_Patient
 	{
 		[Column(DbType="INTEGER",      DataType=DataType.Int32),               PrimaryKey, NotNull] public int    PersonID  { get; set; } // INTEGER
 		[Column(DbType="VARCHAR(256)", DataType=DataType.VarChar, Length=256),             NotNull] public string Diagnosis { get; set; } // VARCHAR(256)
@@ -178,13 +195,13 @@ namespace DB2DataContext
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
-		public Person Person { get; set; }
+		public ADMINISTRATOR_Person Person { get; set; }
 
 		#endregion
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="Person")]
-	public partial class Person
+	public partial class ADMINISTRATOR_Person
 	{
 		[Column(DbType="INTEGER",      DataType=DataType.Int32),              PrimaryKey,  Identity] public int    PersonID   { get; set; } // INTEGER
 		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull              ] public string FirstName  { get; set; } // VARCHAR(50)
@@ -198,19 +215,19 @@ namespace DB2DataContext
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Doctor Doctor { get; set; }
+		public ADMINISTRATOR_Doctor Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Patient Patient { get; set; }
+		public ADMINISTRATOR_Patient Patient { get; set; }
 
 		#endregion
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="PERSONVIEW", IsView=true)]
-	public partial class PERSONVIEW
+	public partial class ADMINISTRATOR_PERSONVIEW
 	{
 		[Column(DbType="INTEGER",      DataType=DataType.Int32),              NotNull    ] public int    PersonID   { get; set; } // INTEGER
 		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull    ] public string FirstName  { get; set; } // VARCHAR(50)
@@ -220,106 +237,172 @@ namespace DB2DataContext
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="SLAVETABLE")]
-	public partial class SLAVETABLE
+	public partial class ADMINISTRATOR_SLAVETABLE
 	{
-		[Column(                                  DbType="INTEGER", DataType=DataType.Int32), NotNull] public int ID1                        { get; set; } // INTEGER
-		[Column(@"ID 2222222222222222222222  22", DbType="INTEGER", DataType=DataType.Int32), NotNull] public int ID222222222222222222222222 { get; set; } // INTEGER
-		[Column(@"ID 2222222222222222",           DbType="INTEGER", DataType=DataType.Int32), NotNull] public int ID2222222222222222         { get; set; } // INTEGER
+		[Column(                                 DbType="INTEGER", DataType=DataType.Int32), NotNull] public int ID1                        { get; set; } // INTEGER
+		[Column("ID 2222222222222222222222  22", DbType="INTEGER", DataType=DataType.Int32), NotNull] public int ID222222222222222222222222 { get; set; } // INTEGER
+		[Column("ID 2222222222222222",           DbType="INTEGER", DataType=DataType.Int32), NotNull] public int ID2222222222222222         { get; set; } // INTEGER
 
 		#region Associations
 
 		/// <summary>
 		/// FK_SLAVETABLE_MASTERTABLE
 		/// </summary>
-		[Association(ThisKey="ID222222222222222222222222, ID1", OtherKey="ID1, ID2", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_SLAVETABLE_MASTERTABLE", BackReferenceName="SLAVETABLEs")]
-		public MASTERTABLE MASTERTABLE { get; set; }
+		[Association(ThisKey="ID222222222222222222222222, ID1", OtherKey="ID1, ID2", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_SLAVETABLE_MASTERTABLE", BackReferenceName="Slavetables")]
+		public ADMINISTRATOR_MASTERTABLE MASTERTABLE { get; set; }
 
 		#endregion
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="TestIdentity")]
-	public partial class TestIdentity
+	public partial class ADMINISTRATOR_TestIdentity
 	{
 		[Column(DbType="INTEGER", DataType=DataType.Int32), PrimaryKey, Identity] public int ID { get; set; } // INTEGER
 	}
 
-	[Table(Schema="ADMINISTRATOR", Name="TestTable2")]
-	public partial class TestTable2
+	[Table(Schema="ADMINISTRATOR", Name="TestMerge1")]
+	public partial class ADMINISTRATOR_TestMerge1
 	{
-		[Column(DbType="INTEGER",         DataType=DataType.Int32),                 PrimaryKey,  Identity] public int       ID          { get; set; } // INTEGER
-		[Column(DbType="VARGRAPHIC(50)",  DataType=DataType.Text,      Length=50),  NotNull              ] public string    Name        { get; set; } // VARGRAPHIC(50)
-		[Column(DbType="VARGRAPHIC(250)", DataType=DataType.Text,      Length=250),    Nullable          ] public string    Description { get; set; } // VARGRAPHIC(250)
-		[Column(DbType="TIMESTAMP",       DataType=DataType.Timestamp),                Nullable          ] public DateTime? CreatedOn   { get; set; } // TIMESTAMP
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                             PrimaryKey,  NotNull] public int       Id              { get; set; } // INTEGER
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      Field1          { get; set; } // INTEGER
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      Field2          { get; set; } // INTEGER
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      Field3          { get; set; } // INTEGER
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      Field4          { get; set; } // INTEGER
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      Field5          { get; set; } // INTEGER
+		[Column(DbType="BIGINT",                    DataType=DataType.Int64),                                Nullable         ] public long?     FieldInt64      { get; set; } // BIGINT
+		[Column(DbType="SMALLINT",                  DataType=DataType.Int16),                                Nullable         ] public short?    FieldBoolean    { get; set; } // SMALLINT
+		[Column(DbType="VARCHAR(20)",               DataType=DataType.VarChar,   Length=20),                 Nullable         ] public string    FieldString     { get; set; } // VARCHAR(20)
+		[Column(DbType="VARCHAR(80)",               DataType=DataType.VarChar,   Length=80),                 Nullable         ] public string    FieldNString    { get; set; } // VARCHAR(80)
+		[Column(DbType="CHARACTER(1)",              DataType=DataType.Char,      Length=1),                  Nullable         ] public char?     FieldChar       { get; set; } // CHARACTER(1)
+		[Column(DbType="CHARACTER(4)",              DataType=DataType.Char,      Length=4),                  Nullable         ] public string    FieldNChar      { get; set; } // CHARACTER(4)
+		[Column(DbType="REAL",                      DataType=DataType.Single),                               Nullable         ] public float?    FieldFloat      { get; set; } // REAL
+		[Column(DbType="DOUBLE",                    DataType=DataType.Double),                               Nullable         ] public double?   FieldDouble     { get; set; } // DOUBLE
+		[Column(DbType="TIMESTAMP",                 DataType=DataType.Timestamp),                            Nullable         ] public DateTime? FieldDateTime   { get; set; } // TIMESTAMP
+		[Column(DbType="VARCHAR (20) FOR BIT DATA", DataType=DataType.VarBinary, Length=20),                 Nullable         ] public byte[]    FieldBinary     { get; set; } // VARCHAR (20) FOR BIT DATA
+		[Column(DbType="CHAR (16) FOR BIT DATA",    DataType=DataType.Binary,    Length=16),                 Nullable         ] public byte[]    FieldGuid       { get; set; } // CHAR (16) FOR BIT DATA
+		[Column(DbType="DECIMAL(24,10)",            DataType=DataType.Decimal,   Precision=24, Scale=10),    Nullable         ] public decimal?  FieldDecimal    { get; set; } // DECIMAL(24,10)
+		[Column(DbType="DATE",                      DataType=DataType.Date),                                 Nullable         ] public DateTime? FieldDate       { get; set; } // DATE
+		[Column(DbType="TIME",                      DataType=DataType.Time),                                 Nullable         ] public TimeSpan? FieldTime       { get; set; } // TIME
+		[Column(DbType="VARCHAR(20)",               DataType=DataType.VarChar,   Length=20),                 Nullable         ] public string    FieldEnumString { get; set; } // VARCHAR(20)
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      FieldEnumNumber { get; set; } // INTEGER
 	}
 
-	[Table(Schema="ADMINISTRATOR", Name="TestTable3")]
-	public partial class TestTable3
+	[Table(Schema="ADMINISTRATOR", Name="TestMerge2")]
+	public partial class ADMINISTRATOR_TestMerge2
 	{
-		[Column(DbType="INTEGER",        DataType=DataType.Int32),            PrimaryKey, NotNull] public int    ID   { get; set; } // INTEGER
-		[Column(DbType="VARGRAPHIC(50)", DataType=DataType.Text,  Length=50),             NotNull] public string Name { get; set; } // VARGRAPHIC(50)
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                             PrimaryKey,  NotNull] public int       Id              { get; set; } // INTEGER
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      Field1          { get; set; } // INTEGER
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      Field2          { get; set; } // INTEGER
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      Field3          { get; set; } // INTEGER
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      Field4          { get; set; } // INTEGER
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      Field5          { get; set; } // INTEGER
+		[Column(DbType="BIGINT",                    DataType=DataType.Int64),                                Nullable         ] public long?     FieldInt64      { get; set; } // BIGINT
+		[Column(DbType="SMALLINT",                  DataType=DataType.Int16),                                Nullable         ] public short?    FieldBoolean    { get; set; } // SMALLINT
+		[Column(DbType="VARCHAR(20)",               DataType=DataType.VarChar,   Length=20),                 Nullable         ] public string    FieldString     { get; set; } // VARCHAR(20)
+		[Column(DbType="VARCHAR(80)",               DataType=DataType.VarChar,   Length=80),                 Nullable         ] public string    FieldNString    { get; set; } // VARCHAR(80)
+		[Column(DbType="CHARACTER(1)",              DataType=DataType.Char,      Length=1),                  Nullable         ] public char?     FieldChar       { get; set; } // CHARACTER(1)
+		[Column(DbType="CHARACTER(4)",              DataType=DataType.Char,      Length=4),                  Nullable         ] public string    FieldNChar      { get; set; } // CHARACTER(4)
+		[Column(DbType="REAL",                      DataType=DataType.Single),                               Nullable         ] public float?    FieldFloat      { get; set; } // REAL
+		[Column(DbType="DOUBLE",                    DataType=DataType.Double),                               Nullable         ] public double?   FieldDouble     { get; set; } // DOUBLE
+		[Column(DbType="TIMESTAMP",                 DataType=DataType.Timestamp),                            Nullable         ] public DateTime? FieldDateTime   { get; set; } // TIMESTAMP
+		[Column(DbType="VARCHAR (20) FOR BIT DATA", DataType=DataType.VarBinary, Length=20),                 Nullable         ] public byte[]    FieldBinary     { get; set; } // VARCHAR (20) FOR BIT DATA
+		[Column(DbType="CHAR (16) FOR BIT DATA",    DataType=DataType.Binary,    Length=16),                 Nullable         ] public byte[]    FieldGuid       { get; set; } // CHAR (16) FOR BIT DATA
+		[Column(DbType="DECIMAL(24,10)",            DataType=DataType.Decimal,   Precision=24, Scale=10),    Nullable         ] public decimal?  FieldDecimal    { get; set; } // DECIMAL(24,10)
+		[Column(DbType="DATE",                      DataType=DataType.Date),                                 Nullable         ] public DateTime? FieldDate       { get; set; } // DATE
+		[Column(DbType="TIME",                      DataType=DataType.Time),                                 Nullable         ] public TimeSpan? FieldTime       { get; set; } // TIME
+		[Column(DbType="VARCHAR(20)",               DataType=DataType.VarChar,   Length=20),                 Nullable         ] public string    FieldEnumString { get; set; } // VARCHAR(20)
+		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      FieldEnumNumber { get; set; } // INTEGER
+	}
+
+	public static partial class TESTDATADBStoredProcedures
+	{
+		#region PersonSelectbykey
+
+		public static int PersonSelectbykey(this DataConnection dataConnection, int? ID)
+		{
+			return dataConnection.ExecuteProc("ADMINISTRATOR.PERSON_SELECTBYKEY",
+				new DataParameter("ID", ID, DataType.Int32));
+		}
+
+		#endregion
+
+		#region ADDISSUE792RECORD
+
+		public static int ADDISSUE792RECORD(this DataConnection dataConnection)
+		{
+			return dataConnection.ExecuteProc("ADMINISTRATOR.ADDISSUE792RECORD");
+		}
+
+		#endregion
 	}
 
 	public static partial class TableExtensions
 	{
-		public static ALLTYPE Find(this ITable<ALLTYPE> table, int ID)
+		public static ADMINISTRATOR_ALLTYPE Find(this ITable<ADMINISTRATOR_ALLTYPE> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Doctor Find(this ITable<Doctor> table, int PersonID)
+		public static ADMINISTRATOR_Doctor Find(this ITable<ADMINISTRATOR_Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static InheritanceChild Find(this ITable<InheritanceChild> table, int InheritanceChildId)
+		public static ADMINISTRATOR_InheritanceChild Find(this ITable<ADMINISTRATOR_InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static InheritanceParent Find(this ITable<InheritanceParent> table, int InheritanceParentId)
+		public static ADMINISTRATOR_InheritanceParent Find(this ITable<ADMINISTRATOR_InheritanceParent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static MASTERTABLE Find(this ITable<MASTERTABLE> table, int ID1, int ID2)
+		public static ADMINISTRATOR_KeepIdentityTest Find(this ITable<ADMINISTRATOR_KeepIdentityTest> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static ADMINISTRATOR_MASTERTABLE Find(this ITable<ADMINISTRATOR_MASTERTABLE> table, int ID1, int ID2)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID1 == ID1 &&
 				t.ID2 == ID2);
 		}
 
-		public static Patient Find(this ITable<Patient> table, int PersonID)
+		public static ADMINISTRATOR_Patient Find(this ITable<ADMINISTRATOR_Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Person Find(this ITable<Person> table, int PersonID)
+		public static ADMINISTRATOR_Person Find(this ITable<ADMINISTRATOR_Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
+		public static ADMINISTRATOR_TestIdentity Find(this ITable<ADMINISTRATOR_TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TestTable2 Find(this ITable<TestTable2> table, int ID)
+		public static ADMINISTRATOR_TestMerge1 Find(this ITable<ADMINISTRATOR_TestMerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
-				t.ID == ID);
+				t.Id == Id);
 		}
 
-		public static TestTable3 Find(this ITable<TestTable3> table, int ID)
+		public static ADMINISTRATOR_TestMerge2 Find(this ITable<ADMINISTRATOR_TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
-				t.ID == ID);
+				t.Id == Id);
 		}
 	}
 }

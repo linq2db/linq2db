@@ -648,8 +648,8 @@ namespace LinqToDB.Extensions
 		/// aren't a parent and it's child.</remarks>
 		public static bool IsSameOrParentOf([NotNull] this Type parent, [NotNull] Type child)
 		{
-			if (parent == null) throw new ArgumentNullException("parent");
-			if (child  == null) throw new ArgumentNullException("child");
+			if (parent == null) throw new ArgumentNullException(nameof(parent));
+			if (child  == null) throw new ArgumentNullException(nameof(child));
 
 			if (parent == child ||
 				child.IsEnumEx() && Enum.GetUnderlyingType(child) == parent ||

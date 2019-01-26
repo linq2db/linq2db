@@ -6,10 +6,10 @@ using System.Data.OleDb;
 using System.IO;
 using System.Runtime.InteropServices;
 
-
 namespace LinqToDB.DataProvider.Access
 {
 	using Configuration;
+	using Common;
 	using Data;
 	using Extensions;
 	using Mapping;
@@ -58,9 +58,9 @@ namespace LinqToDB.DataProvider.Access
 			return value;
 		}
 
-		public override string ConnectionNamespace { get { return typeof(OleDbConnection).Namespace; } }
-		public override Type   DataReaderType      { get { return typeof(OleDbDataReader);           } }
-		
+		public override string ConnectionNamespace => typeof(OleDbConnection).Namespace;
+		public override Type   DataReaderType      => typeof(OleDbDataReader);
+
 		protected override IDbConnection CreateConnectionInternal(string connectionString)
 		{
 			return new OleDbConnection(connectionString);
@@ -88,17 +88,17 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessSchemaProvider();
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			// Do some magic to workaround 'Data type mismatch in criteria expression' error
 			// in JET for some european locales.
 			//
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				// OleDbType.Decimal is locale aware, OleDbType.Currency is locale neutral.
 				//
 				case DataType.Decimal    :
-				case DataType.VarNumeric : 
+				case DataType.VarNumeric :
 					((OleDbParameter)parameter).OleDbType = _decimalType; return;
 
 				// OleDbType.DBTimeStamp is locale aware, OleDbType.Date is locale neutral.
@@ -120,7 +120,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool   deleteIfExists = false)
 		{
-			if (databaseName == null) throw new ArgumentNullException("databaseName");
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			databaseName = databaseName.Trim();
 
@@ -153,7 +153,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public void DropDatabase([JetBrains.Annotations.NotNull] string databaseName)
 		{
-			if (databaseName == null) throw new ArgumentNullException("databaseName");
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			DropFileDatabase(databaseName, ".mdb");
 		}
@@ -161,12 +161,12 @@ namespace LinqToDB.DataProvider.Access
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 
 			return new AccessBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? AccessTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}

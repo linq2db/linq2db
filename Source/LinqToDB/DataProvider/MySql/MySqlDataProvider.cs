@@ -1,20 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using LinqToDB.Tools;
 
 namespace LinqToDB.DataProvider.MySql
 {
 	using Data;
+	using Common;
 	using Extensions;
 	using Mapping;
 	using Reflection;
 	using SqlProvider;
+	using Tools;
 
 	public class MySqlDataProvider : DynamicDataProviderBase
 	{
 		public MySqlDataProvider()
 			: this(ProviderName.MySql, new MySqlMappingSchema())
+		{
+		}
+
+		public MySqlDataProvider(string name)
+			: this(name, null)
 		{
 		}
 
@@ -29,8 +35,13 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		public    override string ConnectionNamespace => "MySql.Data.MySqlClient";
-		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.MySqlConnection, MySql.Data";
-		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.MySqlDataReader, MySql.Data";
+		protected override string ConnectionTypeName  => Name == ProviderName.MySqlConnector
+			? $"{ConnectionNamespace}.MySqlConnection, MySqlConnector"
+			: $"{ConnectionNamespace}.MySqlConnection, MySql.Data";
+
+		protected override string DataReaderTypeName  => Name == ProviderName.MySqlConnector
+			? $"{ConnectionNamespace}.MySqlDataReader, MySqlConnector"
+			: $"{ConnectionNamespace}.MySqlDataReader, MySql.Data";
 
 		Type _mySqlDecimalType;
 		Type _mySqlDateTimeType;
@@ -40,18 +51,24 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			_mySqlDecimalType  = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDecimal",  true);
 			_mySqlDateTimeType = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDateTime", true);
 
-			_mySqlDecimalValueGetter  = TypeAccessor.GetAccessor(_mySqlDecimalType) ["Value"].Getter;
-			_mySqlDateTimeValueGetter = TypeAccessor.GetAccessor(_mySqlDateTimeType)["Value"].Getter;
+			if (Name != ProviderName.MySqlConnector)
+			{
+				_mySqlDecimalType         = connectionType.AssemblyEx().GetType("MySql.Data.Types.MySqlDecimal", true);
 
-			SetProviderField(_mySqlDecimalType,  "GetMySqlDecimal");
+				_mySqlDecimalValueGetter  = TypeAccessor.GetAccessor(_mySqlDecimalType) ["Value"].Getter;
+				_mySqlDateTimeValueGetter = TypeAccessor.GetAccessor(_mySqlDateTimeType)["Value"].Getter;
+
+				SetProviderField(_mySqlDecimalType, "GetMySqlDecimal");
+				SetToTypeField(_mySqlDecimalType,   "GetMySqlDecimal");
+
+				MappingSchema.SetDataType(_mySqlDecimalType, DataType.Decimal);
+			}
+
 			SetProviderField(_mySqlDateTimeType, "GetMySqlDateTime");
-			SetToTypeField  (_mySqlDecimalType,  "GetMySqlDecimal");
-			SetToTypeField  (_mySqlDateTimeType, "GetMySqlDateTime");
+			SetToTypeField(_mySqlDateTimeType,   "GetMySqlDateTime");
 
-			MappingSchema.SetDataType(_mySqlDecimalType,  DataType.Decimal);
 			MappingSchema.SetDataType(_mySqlDateTimeType, DataType.DateTime2);
 		}
 
@@ -67,6 +84,16 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
+		static class MappingSchemaInstance
+		{
+			public static readonly MySqlMappingSchema.MySqlOfficialMappingSchema MySqlOfficialMappingSchema   = new MySqlMappingSchema.MySqlOfficialMappingSchema();
+			public static readonly MySqlMappingSchema.MySqlConnectorMappingSchema MySqlConnectorMappingSchema = new MySqlMappingSchema.MySqlConnectorMappingSchema();
+		}
+
+		public override MappingSchema MappingSchema => Name == ProviderName.MySqlConnector
+			? MappingSchemaInstance.MySqlConnectorMappingSchema
+			: MappingSchemaInstance.MySqlOfficialMappingSchema as MappingSchema;
+
 		readonly ISqlOptimizer _sqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
@@ -81,9 +108,9 @@ namespace LinqToDB.DataProvider.MySql
 		}
 #endif
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Decimal    :
 				case DataType.VarNumeric :
@@ -93,10 +120,12 @@ namespace LinqToDB.DataProvider.MySql
 				case DataType.Date       :
 				case DataType.DateTime   :
 				case DataType.DateTime2  :
-					if (value != null && value.GetType() == _mySqlDateTimeType)
+					if (value != null && _mySqlDateTimeValueGetter != null && value.GetType() == _mySqlDateTimeType)
 						value = _mySqlDateTimeValueGetter(value);
 					break;
 				case DataType.Char       :
+				case DataType.VarChar    :
+				case DataType.NVarChar   :
 				case DataType.NChar      :
 					if (value is char)
 						value = value.ToString();
@@ -106,25 +135,29 @@ namespace LinqToDB.DataProvider.MySql
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
+			if (Name == ProviderName.MySqlConnector)
+			{
+				base.SetParameterType(parameter, dataType);
+			}
 		}
 
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (source == null)
-				throw new ArgumentException("Source is null!", "source");
+				throw new ArgumentException("Source is null!", nameof(source));
 
 #pragma warning disable 618
 			if (options.RetrieveSequence)
 			{
-				var list = source.RetrieveIdentity(dataConnection);
+				var list = source.RetrieveIdentity((DataConnection)table.DataContext);
 
 				if (!ReferenceEquals(list, source))
-					options.KeepIdentity = true;
+					options = new BulkCopyOptions(options) { KeepIdentity = true };
 
 				source = list;
 			}
@@ -132,7 +165,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			return new MySqlBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}

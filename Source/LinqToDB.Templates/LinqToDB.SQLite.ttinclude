@@ -32,13 +32,13 @@ LinqToDB.Data.DataConnection GetSQLiteConnection(string path, string database)
 
 void LoadSQLiteMetadata(string connectionString)
 {
-	var dataConnection = GetSQLiteConnection(connectionString);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetSQLiteConnection(connectionString))
+		LoadMetadata(dataConnection);
 }
 
 void LoadSQLiteMetadata(string path, string database)
 {
-	var dataConnection = GetSQLiteConnection(path, database);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetSQLiteConnection(path, database))
+		LoadMetadata(dataConnection);
 }
 #>

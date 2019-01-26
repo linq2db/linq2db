@@ -10,6 +10,7 @@ using LinqToDB.Extensions;
 namespace LinqToDB.DataProvider.SqlCe
 {
 	using Data;
+	using Common;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -42,6 +43,10 @@ namespace LinqToDB.DataProvider.SqlCe
 		public    override string ConnectionNamespace => "System.Data.SqlServerCe";
 		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.SqlCeConnection, {ConnectionNamespace}";
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.SqlCeDataReader, {ConnectionNamespace}";
+
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+		public override string DbFactoryProviderName => "System.Data.SqlServerCe.4.0";
+#endif
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
@@ -105,12 +110,12 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 #endif
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Xml :
-					dataType = DataType.NVarChar;
+					dataType = dataType.WithDataType(DataType.NVarChar);
 
 					if (value is SqlXml)
 					{
@@ -126,9 +131,9 @@ namespace LinqToDB.DataProvider.SqlCe
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.SByte      : parameter.DbType    = DbType.Int16;   break;
 				case DataType.UInt16     : parameter.DbType    = DbType.Int32;   break;
@@ -192,11 +197,11 @@ namespace LinqToDB.DataProvider.SqlCe
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new SqlCeBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SqlCeTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}

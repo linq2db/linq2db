@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using LinqToDB;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -9,8 +9,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue708Tests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

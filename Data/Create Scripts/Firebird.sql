@@ -108,7 +108,7 @@ COMMIT;
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F');
 COMMIT;
 -- INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M');
-INSERT INTO Person (FirstName, LastName, Gender) VALUES (_utf8 x'4AC3BC7267656E', _utf8 x'4BC3B66E6967',     'M');
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES (_utf8 x'4AC3BC7267656E', _utf8 x'4BC3B66E6967', 'Ko', 'M');
 COMMIT;
 
 -- Doctor Table Extension

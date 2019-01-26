@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Configuration;
+	using Common;
 	using Data;
 	using Expressions;
 	using Extensions;
@@ -68,55 +69,7 @@ namespace LinqToDB.DataProvider.Oracle
 		Type _oracleXmlStream;
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
-		private Type _dataReaderType;
-		private volatile Type _connectionType;
-
-		public override Type DataReaderType
-		{
-			get
-			{
-				if (Name == ProviderName.OracleNative)
-				{
-					if (_dataReaderType != null)
-						return _dataReaderType;
-
-					_dataReaderType = Type.GetType(DataReaderTypeName, false);
-
-					if (_dataReaderType == null)
-					{
-						var assembly = DbProviderFactories.GetFactory(AssemblyName + ".Client").GetType().Assembly;
-						_dataReaderType = assembly.GetType(DataReaderTypeNameWithoutAssembly, true);
-					}
-
-					return _dataReaderType;
-				}
-
-				return base.DataReaderType;
-			}
-		}
-
-		protected override Type GetConnectionType()
-		{
-			if (Name == ProviderName.OracleNative)
-			{
-				if (_connectionType == null)
-					lock (SyncRoot)
-						if (_connectionType == null)
-						{
-							_connectionType = Type.GetType(ConnectionTypeName, false);
-
-							if (_connectionType == null)
-								using (var db = DbProviderFactories.GetFactory(AssemblyName + ".Client").CreateConnection())
-									_connectionType = db.GetType();
-
-							OnConnectionTypeCreated(_connectionType);
-						}
-
-				return _connectionType;
-			}
-
-			return base.GetConnectionType();
-		}
+		public override string DbFactoryProviderName => Name == ProviderName.OracleNative ? "Oracle.DataAccess.Client" : null;
 #endif
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
@@ -449,10 +402,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public string AssemblyName => Name == ProviderName.OracleNative ? "Oracle.DataAccess" : "Oracle.ManagedDataAccess";
 
-		public    override string ConnectionNamespace               => $"{AssemblyName}.Client";
-		protected override string ConnectionTypeName                => $"{AssemblyName}.Client.OracleConnection, {AssemblyName}";
-		protected override string DataReaderTypeName                => $"{DataReaderTypeNameWithoutAssembly}, {AssemblyName}";
-		private            string DataReaderTypeNameWithoutAssembly => $"{AssemblyName}.Client.OracleDataReader";
+		public    override string ConnectionNamespace => $"{AssemblyName}.Client";
+		protected override string ConnectionTypeName  => $"{AssemblyName}.Client.OracleConnection, {AssemblyName}";
+		protected override string DataReaderTypeName  => $"{AssemblyName}.Client.OracleDataReader, {AssemblyName}";
 
 		public             bool   IsXmlTypeSupported  => _oracleXmlType != null;
 
@@ -494,7 +446,14 @@ namespace LinqToDB.DataProvider.Oracle
 			if (_setBindByName == null)
 				EnsureConnection();
 
-			_setBindByName(dataConnection);
+			//if (Name == ProviderName.OracleNative)
+				_setBindByName(dataConnection);
+
+//			if (Name == ProviderName.OracleNative)
+//			{
+//				dynamic cmd = Proxy.GetUnderlyingObject((DbCommand)dataConnection.Command);
+//				cmd.BindByName = true;
+//			}
 
 			base.InitCommand(dataConnection, commandType, commandText, parameters);
 
@@ -533,9 +492,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		Func<DateTimeOffset,string,object> _createOracleTimeStampTZ;
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.DateTimeOffset:
 					if (value is DateTimeOffset)
@@ -546,7 +505,7 @@ namespace LinqToDB.DataProvider.Oracle
 					}
 					break;
 				case DataType.Boolean:
-					dataType = DataType.Byte;
+					dataType = dataType.WithDataType(DataType.Byte);
 					if (value is bool)
 						value = (bool)value ? (byte)1 : (byte)0;
 					break;
@@ -558,24 +517,24 @@ namespace LinqToDB.DataProvider.Oracle
 					// Inference of DbType and OracleDbType from Value: TimeSpan - Object - IntervalDS
 					//
 					if (value is TimeSpan)
-						dataType = DataType.Undefined;
+						dataType = dataType.WithDataType(DataType.Undefined);
 					break;
 			}
 
-			if (dataType == DataType.Undefined && value is string && ((string)value).Length >= 4000)
+			if (dataType.DataType == DataType.Undefined && value is string && ((string)value).Length >= 4000)
 			{
-				dataType = DataType.NText;
+				dataType = dataType.WithDataType(DataType.NText);
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		public override Type ConvertParameterType(Type type, DataType dataType)
+		public override Type ConvertParameterType(Type type, DbDataType dataType)
 		{
 			if (type.IsNullable())
 				type = type.ToUnderlying();
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.DateTimeOffset : if (type == typeof(DateTimeOffset)) return _oracleTimeStampTZ; break;
 				case DataType.Boolean        : if (type == typeof(bool))           return typeof(byte);       break;
@@ -601,12 +560,12 @@ namespace LinqToDB.DataProvider.Oracle
 		Action<IDbDataParameter> _setNVarchar2;
 		Action<IDbDataParameter> _setVarchar2;
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Byte           : parameter.DbType = DbType.Int16;            break;
 				case DataType.SByte          : parameter.DbType = DbType.Int16;            break;
@@ -637,7 +596,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		OracleBulkCopy _bulkCopy;
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new OracleBulkCopy(this, GetConnectionType());
@@ -645,10 +604,10 @@ namespace LinqToDB.DataProvider.Oracle
 #pragma warning disable 618
 			if (options.RetrieveSequence)
 			{
-				var list = source.RetrieveIdentity(dataConnection);
+				var list = source.RetrieveIdentity((DataConnection)table.DataContext);
 
 				if (!ReferenceEquals(list, source))
-					options.KeepIdentity = true;
+					options = new BulkCopyOptions(options) { KeepIdentity = true };
 
 				source = list;
 			}
@@ -656,7 +615,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}

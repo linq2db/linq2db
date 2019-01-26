@@ -50,35 +50,53 @@ namespace LinqToDB.Common
 			}
 		}
 
-		readonly ConcurrentDictionary<Type,ConcurrentDictionary<Type,LambdaInfo>> _expressions =
-			new ConcurrentDictionary<Type,ConcurrentDictionary<Type,LambdaInfo>>();
+		readonly ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> _expressions =
+			new ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>>();
 
 		public void Set(Type from, Type to, LambdaInfo expr)
+		{
+			Set(_expressions, new DbDataType(from), new DbDataType(to), expr);
+		}
+
+		public void Set(DbDataType from, DbDataType to, LambdaInfo expr)
 		{
 			Set(_expressions, from, to, expr);
 		}
 
-		static void Set(ConcurrentDictionary<Type,ConcurrentDictionary<Type,LambdaInfo>> expressions, Type from, Type to, LambdaInfo expr)
+		static void Set(ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> expressions, DbDataType from, DbDataType to, LambdaInfo expr)
 		{
-			ConcurrentDictionary<Type,LambdaInfo> dic;
+			ConcurrentDictionary<DbDataType,LambdaInfo> dic;
 
 			if (!expressions.TryGetValue(from, out dic))
-				expressions[from] = dic = new ConcurrentDictionary<Type, LambdaInfo>();
+				expressions[from] = dic = new ConcurrentDictionary<DbDataType, LambdaInfo>();
 
 			dic[to] = expr;
 		}
 
-		public LambdaInfo Get(Type from, Type to)
+		public LambdaInfo Get(DbDataType from, DbDataType to)
 		{
-			ConcurrentDictionary<Type,LambdaInfo> dic;
+			ConcurrentDictionary<DbDataType,LambdaInfo> dic;
 			LambdaInfo li;
 
-			return _expressions.TryGetValue(@from, out dic) && dic.TryGetValue(to, out li) ? li : null;
+			return _expressions.TryGetValue(from, out dic) && dic.TryGetValue(to, out li) ? li : null;
+		}
+
+		public LambdaInfo Get(Type from, Type to)
+		{
+			ConcurrentDictionary<DbDataType,LambdaInfo> dic;
+			LambdaInfo li;
+
+			return _expressions.TryGetValue(new DbDataType(from), out dic) && dic.TryGetValue(new DbDataType(to), out li) ? li : null;
 		}
 
 		public LambdaInfo Create(MappingSchema mappingSchema, Type from, Type to)
 		{
-			var ex  = ConvertBuilder.GetConverter(mappingSchema, from, to);
+			return Create(mappingSchema, new DbDataType(from), new DbDataType(to));
+		}
+
+		public LambdaInfo Create(MappingSchema mappingSchema, DbDataType from, DbDataType to)
+		{
+			var ex  = ConvertBuilder.GetConverter(mappingSchema, from.SystemType, to.SystemType);
 			var lm  = ex.Item1.Compile();
 			var ret = new LambdaInfo(ex.Item1, ex.Item2, lm, ex.Item3);
 

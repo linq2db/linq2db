@@ -34,7 +34,7 @@ GO
 
 
 CREATE TABLE "Person"
-( 
+(
 	--PersonID   INTEGER PRIMARY KEY DEFAULT NEXTVAL('Seq'),
 	"PersonID"   SERIAL PRIMARY KEY,
 	"FirstName"  VARCHAR(50) NOT NULL,
@@ -50,7 +50,7 @@ INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Tester', 'Test
 GO
 INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Jane',   'Doe',       'F')
 GO
-INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Jürgen', 'König',     'M')
+INSERT INTO "Person" ("FirstName", "LastName", "MiddleName", "Gender") VALUES ('Jürgen', 'König', 'Ko', 'M')
 GO
 -- Doctor Table Extension
 
@@ -270,11 +270,22 @@ CREATE TABLE "AllTypes"
 	"inetDataType"        inet                     NULL,
 	"cidrDataType"        cidr                     NULL,
 	"macaddrDataType"     macaddr                  NULL,
-	--PGSQL 10+
-	--"macaddr8DataType"  macaddr8                 NULL,
+-- SKIP PostgreSQL.9.2 BEGIN
+-- SKIP PostgreSQL.9.3 BEGIN
+-- SKIP PostgreSQL.9.5 BEGIN
+-- SKIP PostgreSQL BEGIN
+	"macaddr8DataType"  macaddr8                   NULL,
+-- SKIP PostgreSQL.9.2 END
+-- SKIP PostgreSQL.9.3 END
+-- SKIP PostgreSQL.9.5 END
+-- SKIP PostgreSQL END
 
 	"jsonDataType"        json                     NULL,
-	"jsonbDataType"       jsonb                    NULL,
+-- SKIP PostgreSQL.9.2 BEGIN
+-- SKIP PostgreSQL.9.3 BEGIN
+"jsonbDataType"       jsonb                    NULL,
+-- SKIP PostgreSQL.9.2 END
+-- SKIP PostgreSQL.9.3 END
 
 	"xmlDataType"         xml                      NULL,
 	"varBitDataType"      varbit                   NULL

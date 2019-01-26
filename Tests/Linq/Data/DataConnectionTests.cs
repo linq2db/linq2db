@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using NUnit.Framework;
@@ -21,8 +25,8 @@ namespace Tests.Data
 	[TestFixture]
 	public class DataConnectionTests : TestBase
 	{
-		[Test, NorthwindDataContext]
-		public void Test1(string context)
+		[Test]
+		public void Test1([NorthwindDataContext] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider = DataConnection.GetDataProvider(context);
@@ -44,14 +48,15 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, IncludeDataContextSource(
+		[Test]
+		public void Test3([IncludeDataSources(
 			ProviderName.SqlServer,
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2008 + ".1",
 			ProviderName.SqlServer2005,
 			ProviderName.SqlServer2005 + ".1",
 			ProviderName.Access)]
-		public void Test3(string context)
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -83,8 +88,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void CloneTest(string context)
+		[Test]
+		public void CloneTest([DataSources(false)] string context)
 		{
 			using (var con = new DataConnection(context))
 			{
@@ -96,9 +101,11 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, IncludeDataContextSource(false,
-			 ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void GetDataProviderTest(string context)
+		[Test]
+		public void GetDataProviderTest([IncludeDataSources(false,
+			ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 
@@ -243,6 +250,34 @@ namespace Tests.Data
 			{
 				await conn.SelectAsync(() => 1);
 			}
+		}
+
+		[Test]
+		public void MultipleConnectionsTest([DataSources] string context)
+		{
+			var exceptions = new ConcurrentBag<Exception>();
+
+			var threads = Enumerable
+				.Range(1, 10)
+				.Select(n => new Thread(() =>
+				{
+					try
+					{
+						using (var db = GetDataContext(context))
+							db.Parent.ToList();
+					}
+					catch (Exception e)
+					{
+						exceptions.Add(e);
+					}
+				}))
+				.ToArray();
+
+			foreach (var thread in threads) thread.Start();
+			foreach (var thread in threads) thread.Join();
+
+			if (exceptions.Count > 0)
+				throw new AggregateException(exceptions);
 		}
 	}
 }

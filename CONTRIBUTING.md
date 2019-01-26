@@ -282,9 +282,9 @@ If you want to skip building commit by CI (for example you have changed *.md fil
 1. Merge PR
 1. [Tag release](https://github.com/linq2db/linq2db/releases)
 1. Update versions in `master` branch (this will lead to publish all next `master` builds as new version RC):
-   * in [.\appveyor.yml](https://github.com/linq2db/linq2db/blob/master/appveyor.yml) set `assemblyVersion` parameter
-   * in *.nuspec files update linq2db dependency version
-   * in issue template update default linq2db version
+   * in [.\appveyor.yml](https://github.com/linq2db/linq2db/blob/master/appveyor.yml) set `assemblyVersion` and `packageVersion` parameters to next version
+   * in NuGet\PackLocal.cmd file update linq2db version to next version
+   * in issue template update default linq2db version to released version
 
 ## Process
 

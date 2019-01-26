@@ -10,6 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3
 		Build\CodeJam.AppVeyor.FixVersionProps.ps1 = Build\CodeJam.AppVeyor.FixVersionProps.ps1
 		Build\linq2db.Default.props = Build\linq2db.Default.props
 		Build\linq2db.snk = Build\linq2db.snk
+		Build\linq2db.Tests.props = Build\linq2db.Tests.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{AF93451E-198C-4A94-8EB4-C330D886E102}"
@@ -80,6 +81,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.Firebird.nuspec = NuGet\linq2db.Firebird.nuspec
 		NuGet\linq2db.Informix.nuspec = NuGet\linq2db.Informix.nuspec
 		NuGet\linq2db.MySql.nuspec = NuGet\linq2db.MySql.nuspec
+		NuGet\linq2db.MySqlConnector.nuspec = NuGet\linq2db.MySqlConnector.nuspec
 		NuGet\linq2db.nuspec = NuGet\linq2db.nuspec
 		NuGet\linq2db.Oracle.Managed.nuspec = NuGet\linq2db.Oracle.Managed.nuspec
 		NuGet\linq2db.Oracle.Unmanaged.nuspec = NuGet\linq2db.Oracle.Unmanaged.nuspec
@@ -95,6 +97,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
 		NuGet\Pack.bat = NuGet\Pack.bat
 		NuGet\PackAV.bat = NuGet\PackAV.bat
+		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
 		NuGet\Push.bat = NuGet\Push.bat
 		NuGet\Readme.txt = NuGet\Readme.txt
 	EndProjectSection
@@ -103,7 +106,6 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.FSharp", "Tests\FShar
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "t4models", "t4models", "{3294F9A3-2530-4ACE-BE44-0C1182DB34C9}"
 	ProjectSection(SolutionItems) = preProject
-		NuGet\t4models\CopyMe.tt.txt = NuGet\t4models\CopyMe.tt.txt
 		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
 		NuGet\t4models\linq2db.t4models.props = NuGet\t4models\linq2db.t4models.props
 		NuGet\t4models\LinqToDB.Tools.ttinclude = NuGet\t4models\LinqToDB.Tools.ttinclude
@@ -233,6 +235,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sybase.DataAction", "Sybase
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.Playground", "Tests\Tests.Playground\Tests.Playground.csproj", "{4E3D4705-F037-4536-A45D-7AF52BB017DC}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySqlConnector", "MySqlConnector", "{B4080869-A89C-4996-938C-D7F42E9AA3CB}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\MySqlConnector\CopyMe.MySqlConnector.tt.txt = NuGet\MySqlConnector\CopyMe.MySqlConnector.tt.txt
+		NuGet\MySqlConnector\linq2db.MySqlConnector.props = NuGet\MySqlConnector\linq2db.MySqlConnector.props
+		NuGet\MySqlConnector\LinqToDB.MySqlConnector.Tools.ttinclude = NuGet\MySqlConnector\LinqToDB.MySqlConnector.Tools.ttinclude
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		AppVeyor|Any CPU = AppVeyor|Any CPU
@@ -274,14 +283,14 @@ Global
 		{EF534F71-A4E6-4019-8835-43BEE792C70A}.Travis|Any CPU.Build.0 = Travis|Any CPU
 		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.AppVeyor|Any CPU.ActiveCfg = AppVeyor|Any CPU
 		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.AppVeyor|Any CPU.Build.0 = AppVeyor|Any CPU
-		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.CORE.1|Any CPU.ActiveCfg = CORE.1|Any CPU
-		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.CORE.1|Any CPU.Build.0 = CORE.1|Any CPU
-		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.CORE.2|Any CPU.ActiveCfg = CORE.2|Any CPU
-		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.CORE.2|Any CPU.Build.0 = CORE.2|Any CPU
+		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.CORE.1|Any CPU.ActiveCfg = Release|Any CPU
+		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.CORE.1|Any CPU.Build.0 = Release|Any CPU
+		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.CORE.2|Any CPU.ActiveCfg = Release|Any CPU
+		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.CORE.2|Any CPU.Build.0 = Release|Any CPU
 		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.NET.45|Any CPU.ActiveCfg = NET.45|Any CPU
-		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.NET.45|Any CPU.Build.0 = NET.45|Any CPU
+		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.NET.45|Any CPU.ActiveCfg = Travis|Any CPU
+		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.NET.45|Any CPU.Build.0 = Travis|Any CPU
 		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.Travis|Any CPU.ActiveCfg = AppVeyor|Any CPU
@@ -429,6 +438,7 @@ Global
 		{7FEE7809-27BB-432A-8920-D0DC56F13A62} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{1FC89283-09FB-444B-BF70-F76B3E3A83BB} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{4E3D4705-F037-4536-A45D-7AF52BB017DC} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
+		{B4080869-A89C-4996-938C-D7F42E9AA3CB} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

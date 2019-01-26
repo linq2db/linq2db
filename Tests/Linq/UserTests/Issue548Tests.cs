@@ -1,12 +1,11 @@
-﻿using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
@@ -26,7 +25,7 @@ namespace Tests.UserTests
 
 		[Test, Category("WindowsOnly")]
 		public void Test1()
-		{ 
+		{
 			var ms      = new MappingSchema();
 			var builder = ms.GetFluentMappingBuilder();
 
@@ -109,7 +108,7 @@ namespace Tests.UserTests
 		}
 
 		/// <summary>
-		/// This will iterate through <see cref="MappingSchema.MetadataReaders"/>, 
+		/// This will iterate through <see cref="MappingSchema.MetadataReaders"/>,
 		/// and had a chance to fail on <see cref="MappingSchema._metadataReaders"/> == null
 		/// </summary>
 		/// <param name="ms"></param>
