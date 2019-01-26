@@ -80,10 +80,10 @@
     </None>
 		<Compile Include="..\Linq\Infrastructure\ActiveIssueConfigurationTests.cs" Link="ActiveIssueConfigurationTests.cs" />
 
-    <!--
-    <PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />
-    -->
-    <PackageReference Include="Oracle.ManagedDataAccess" Version="12.2.1100" />
+	  <Reference Include="Oracle.DataAccess">
+		  <HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
+	  </Reference>
+	  <PackageReference Include="Oracle.ManagedDataAccess" Version="12.2.1100" />
     <PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
     <PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
     <PackageReference Include="MiniProfiler" Version="3.2.0.157" />

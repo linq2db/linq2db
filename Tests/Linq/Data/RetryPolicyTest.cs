@@ -7,6 +7,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.SqlServer;
+
 using NUnit.Framework;
 
 namespace Tests.Data

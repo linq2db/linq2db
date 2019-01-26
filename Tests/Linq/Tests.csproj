@@ -96,7 +96,10 @@
 			<Private>false</Private>
 		</Reference>
 
-		<PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />
+		<Reference Include="Oracle.DataAccess">
+			<HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
+		</Reference>
+
 		<PackageReference Include="Oracle.ManagedDataAccess" Version="12.2.1100" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />

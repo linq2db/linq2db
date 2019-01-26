@@ -441,6 +441,8 @@ namespace Tests.xUpdate
 
 			using (var db = GetDataContext(context))
 			{
+				await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists:false);
+
 				try
 				{
 					var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);

@@ -218,7 +218,7 @@ namespace Tests
 			}
 			catch
 			{
-				db.DropTable<T>(tableName);
+				db.DropTable<T>(tableName, throwExceptionIfNotExists:false);
 				return new TempTable<T>(db, tableName);
 			}
 		}
@@ -232,6 +232,17 @@ namespace Tests
 					.Replace(ProviderName.Firebird, "f")
 					.Replace("LinqService",         "ls")
 					.Replace(".",                   "");
+
+				tableName = $"{tableName ?? typeof(T).Name}_{ctx}_{methodName}";
+			}
+
+			if (context.StartsWith(ProviderName.Oracle))
+			{
+				var ctx = context
+					.Replace(ProviderName.OracleNative,  "on")
+					.Replace(ProviderName.OracleManaged, "om")
+					.Replace("LinqService",              "ls")
+					.Replace(".",                        "");
 
 				tableName = $"{tableName ?? typeof(T).Name}_{ctx}_{methodName}";
 			}

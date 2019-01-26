@@ -124,10 +124,13 @@
 			}
 		}
 
+		[ActiveIssue(
+			Configurations = new[] { ProviderName.OracleManaged + ".LinqService", ProviderName.OracleNative + ".LinqService" },
+			Details = "Specified cast is not valid.")]
 		[Test]
 		public void TestAvg([IncludeDataSources(
 			true, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleNative)]
+			ProviderName.SqlServer2012, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

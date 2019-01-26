@@ -1591,6 +1591,14 @@ namespace Tests.xUpdate
 				tableName += "_" + methodName;
 			}
 
+			if (context.StartsWith("Oracle"))
+			{
+				tableName += "_o";
+
+				if (context.EndsWith("LinqService"))
+					tableName += "l";
+			}
+
 			return tableName;
 		}
 
@@ -1605,6 +1613,8 @@ namespace Tests.xUpdate
 			{
 				try
 				{
+					db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+
 					var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
 
 					Assert.AreEqual(tableName, table.TableName);
