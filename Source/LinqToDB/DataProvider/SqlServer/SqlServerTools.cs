@@ -6,12 +6,11 @@ using System.Linq;
 using System.Reflection;
 
 using JetBrains.Annotations;
-using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Common;
 	using Configuration;
-
 	using Data;
 
 	public static class SqlServerTools
@@ -166,7 +165,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 #endregion
 
-#region Public Members
+		#region Public Members
 
 		public static IDataProvider GetDataProvider(SqlServerVersion version = SqlServerVersion.v2008)
 		{
@@ -198,7 +197,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static void ResolveSqlTypes([NotNull] string path)
 		{
-			if (path == null) throw new ArgumentNullException("path");
+			if (path == null) throw new ArgumentNullException(nameof(path));
 			new AssemblyResolver(path, "Microsoft.SqlServer.Types");
 		}
 
@@ -222,9 +221,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlGeometryType    = sqlGeometryType;
 		}
 
-#endregion
+		#endregion
 
-#region CreateDataConnection
+		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, SqlServerVersion version = SqlServerVersion.v2008)
 		{
@@ -262,26 +261,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new DataConnection(_sqlServerDataProvider2008, transaction);
 		}
 
-#endregion
+		#endregion
 
-#region BulkCopy
+		#region BulkCopy
 
-		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.ProviderSpecific;
-		public  static BulkCopyType  DefaultBulkCopyType
-		{
-			get { return _defaultBulkCopyType;  }
-			set { _defaultBulkCopyType = value; }
-		}
-
-//		public static int MultipleRowsCopy<T>(DataConnection dataConnection, IEnumerable<T> source, int maxBatchSize = 1000)
-//		{
-//			return dataConnection.BulkCopy(
-//				new BulkCopyOptions
-//				{
-//					BulkCopyType = BulkCopyType.MultipleRows,
-//					MaxBatchSize = maxBatchSize,
-//				}, source);
-//		}
+		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
 
 		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
 			DataConnection             dataConnection,
@@ -292,6 +276,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			bool                       checkConstraints   = false,
 			int                        notifyAfter        = 0,
 			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			where T : class
 		{
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions
@@ -306,16 +291,16 @@ namespace LinqToDB.DataProvider.SqlServer
 				}, source);
 		}
 
-#endregion
+		#endregion
 
-#region Extensions
+		#region Extensions
 
 		public static void SetIdentityInsert<T>(this DataConnection dataConnection, ITable<T> table, bool isOn)
 		{
 			dataConnection.Execute("SET IDENTITY_INSERT ");
 		}
 
-#endregion
+		#endregion
 
 		public static class Sql
 		{

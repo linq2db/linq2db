@@ -5,18 +5,18 @@ using System.IO;
 using System.Reflection;
 
 using JetBrains.Annotations;
-using LinqToDB.Common;
-using LinqToDB.Configuration;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Common;
+	using Configuration;
 	using Data;
+	using Extensions;
 
 	public static class MySqlTools
 	{
 		public static string AssemblyName;
-		
+
 		static readonly MySqlDataProvider _mySqlDataProvider  	            = new MySqlDataProvider(ProviderName.MySqlOfficial);
 		static readonly MySqlDataProvider _mySqlConnectorDataProvider       = new MySqlDataProvider(ProviderName.MySqlConnector);
 
@@ -27,10 +27,10 @@ namespace LinqToDB.DataProvider.MySql
 			DataConnection.AddDataProvider(ProviderName.MySql, DetectedProvider);
 			DataConnection.AddDataProvider(_mySqlDataProvider);
 			DataConnection.AddDataProvider(_mySqlConnectorDataProvider);
-			
+
 			DataConnection.AddProviderDetector(ProviderDetector);
 		}
-		
+
 		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			if (css.IsGlobal)
@@ -40,7 +40,6 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				case ""                                          :
 				case null                                        :
-
 					if (css.Name.Contains("MySql"))
 						goto case "MySql";
 					break;
@@ -65,9 +64,9 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			return DetectedProvider;
 		}
-		
+
 		static string _detectedProviderName;
-		
+
 		public static string  DetectedProviderName =>
 			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
 
@@ -87,19 +86,19 @@ namespace LinqToDB.DataProvider.MySql
 			catch (Exception)
 			{
 			}
-			
+
 			return ProviderName.MySqlOfficial;
 		}
 
 		public static void ResolveMySql([NotNull] string path)
 		{
-			if (path == null) throw new ArgumentNullException("path");
+			if (path == null) throw new ArgumentNullException(nameof(path));
 			new AssemblyResolver(path, AssemblyName);
 		}
 
 		public static void ResolveMySql([NotNull] Assembly assembly)
 		{
-			if (assembly == null) throw new ArgumentNullException("assembly");
+			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
 			new AssemblyResolver(assembly, AssemblyName);
 		}
 
@@ -128,18 +127,14 @@ namespace LinqToDB.DataProvider.MySql
 
 		#region BulkCopy
 
-		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
-		public  static BulkCopyType  DefaultBulkCopyType
-		{
-			get { return _defaultBulkCopyType;  }
-			set { _defaultBulkCopyType = value; }
-		}
+		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection             dataConnection,
 			IEnumerable<T>             source,
 			int                        maxBatchSize       = 1000,
 			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			where T : class
 		{
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions

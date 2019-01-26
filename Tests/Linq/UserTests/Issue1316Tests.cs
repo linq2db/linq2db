@@ -46,9 +46,9 @@ namespace Tests.UserTests
 		public void Test_ComplexNavigation([DataSources] string context)
 		{
 			using (var db  = GetDataContext(context))
-			using (var __ = db.CreateLocalTable<Table>())
+			using (var __ = db.CreateLocalTable<Table>(context, "7"))
 			{
-				db.Insert(new Table() { ID = 5 });
+				db.Insert(new Table { ID = 5 }, __.TableName);
 
 				var obj = new Test()
 				{
@@ -64,8 +64,8 @@ namespace Tests.UserTests
 					}
 				};
 
-				db.GetTable<Table>().Where(_ => _.ID == obj.Child.GetChild().Child.GetId()).Single();
-				db.GetTable<Table>().Where(_ => _.ID == obj.Child.GetChild().Child.Id).Single();
+				db.GetTable<Table>().TableName(__.TableName).Where(_ => _.ID == obj.Child.GetChild().Child.GetId()).Single();
+				db.GetTable<Table>().TableName(__.TableName).Where(_ => _.ID == obj.Child.GetChild().Child.Id).Single();
 			}
 		}
 
@@ -73,19 +73,22 @@ namespace Tests.UserTests
 		public void Test_ObjectNavigation([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var __ = db.CreateLocalTable<Table>())
+			using (var __ = db.CreateLocalTable<Table>(context, "2"))
 			{
-				db.Insert(new Table() { ID = 5 });
+				db.Insert(new Table { ID = 5 }, __.TableName);
 
-				var obj = new Test()
+				var obj = new Test
 				{
-					Child = new Test()
+					Child = new Test
 					{
 						Id = 5
 					}
 				};
 
-				var ___ = db.GetTable<Table>().Where(_ => _.ID == obj.Child.Id).Single();
+				var ___ = db.GetTable<Table>()
+					.TableName(__.TableName)
+					.Where(_ => _.ID == obj.Child.Id)
+					.Single();
 			}
 		}
 
@@ -93,11 +96,14 @@ namespace Tests.UserTests
 		public void Test_MethodWithProperty([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var __ = db.CreateLocalTable<Table>())
+			using (var __ = db.CreateLocalTable<Table>(context, "3"))
 			{
-				db.Insert(new Table() { ID = 5 });
+				db.Insert(new Table { ID = 5 }, __.TableName);
 
-				var ___ = db.GetTable<Table>().Where(_ => _.ID == GetTuple().Item1).Single();
+				var ___ = db.GetTable<Table>()
+					.TableName(__.TableName)
+					.Where(_ => _.ID == GetTuple().Item1)
+					.Single();
 			}
 		}
 
@@ -105,11 +111,14 @@ namespace Tests.UserTests
 		public void Test_Method([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var __ = db.CreateLocalTable<Table>())
+			using (var __ = db.CreateLocalTable<Table>(context, "4"))
 			{
-				db.Insert(new Table() { ID = 5 });
+				db.Insert(new Table { ID = 5 }, __.TableName);
 
-				var ___ = db.GetTable<Table>().Where(_ => _.ID == GetValue()).Single();
+				var ___ = db.GetTable<Table>()
+					.TableName(__.TableName)
+					.Where(_ => _.ID == GetValue())
+					.Single();
 			}
 		}
 
@@ -117,13 +126,16 @@ namespace Tests.UserTests
 		public void Test_Linq([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var __ = db.CreateLocalTable<Table>())
+			using (var __ = db.CreateLocalTable<Table>(context, "5"))
 			{
-				db.Insert(new Table() { ID = 5 });
+				db.Insert(new Table { ID = 5 }, __.TableName);
 
 				var ids = new[] { 1, 2, 3, 4, 5, 6 };
 
-				var ___ = db.GetTable<Table>().Where(_ => ids.Where(id => id > 3).Contains(_.ID)).Single();
+				var ___ = db.GetTable<Table>()
+					.TableName(__.TableName)
+					.Where(_ => ids.Where(id => id > 3).Contains(_.ID))
+					.Single();
 			}
 		}
 	}

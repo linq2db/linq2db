@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using NUnit.Framework;
@@ -246,6 +250,34 @@ namespace Tests.Data
 			{
 				await conn.SelectAsync(() => 1);
 			}
+		}
+
+		[Test]
+		public void MultipleConnectionsTest([DataSources] string context)
+		{
+			var exceptions = new ConcurrentBag<Exception>();
+
+			var threads = Enumerable
+				.Range(1, 10)
+				.Select(n => new Thread(() =>
+				{
+					try
+					{
+						using (var db = GetDataContext(context))
+							db.Parent.ToList();
+					}
+					catch (Exception e)
+					{
+						exceptions.Add(e);
+					}
+				}))
+				.ToArray();
+
+			foreach (var thread in threads) thread.Start();
+			foreach (var thread in threads) thread.Join();
+
+			if (exceptions.Count > 0)
+				throw new AggregateException(exceptions);
 		}
 	}
 }

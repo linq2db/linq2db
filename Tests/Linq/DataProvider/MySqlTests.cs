@@ -11,19 +11,19 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
 
-using MySqlDataDateTime  = MySqlData::MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal   = MySqlData::MySql.Data.Types.MySqlDecimal;
-using MySqlDataGeometry  = MySqlData::MySql.Data.Types.MySqlGeometry;
+using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal  = MySqlData::MySql.Data.Types.MySqlDecimal;
+using MySqlDataGeometry = MySqlData::MySql.Data.Types.MySqlGeometry;
 
 using MySqlConnectorDateTime = MySqlConnector::MySql.Data.Types.MySqlDateTime;
 
 namespace Tests.DataProvider
 {
-	using LinqToDB.SchemaProvider;
 	using Model;
 	using System.Collections.Generic;
 	using System.Data;
@@ -104,8 +104,15 @@ namespace Tests.DataProvider
 
 				if (context != ProviderName.MySqlConnector)
 				{
-								TestType<MySqlDataDecimal?>(conn, "decimalDataType", DataType.Decimal);
-					Assert.That(TestType<MySqlDataDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlDataDateTime(2012, 12, 12, 12, 12, 12, 0)));
+					TestType<MySqlDataDecimal?>(conn, "decimalDataType", DataType.Decimal);
+
+					var dt1 = TestType<MySqlDataDateTime?>(conn, "datetimeDataType", DataType.DateTime);
+					var dt2 = new MySqlDataDateTime(2012, 12, 12, 12, 12, 12, 0)
+					{
+						TimezoneOffset = dt1.Value.TimezoneOffset
+					};
+
+					Assert.That(dt1, Is.EqualTo(dt2));
 				}
 				else
 				{
@@ -676,13 +683,13 @@ namespace Tests.DataProvider
 
 				var procedure = procedures[0];
 
-				Assert.AreEqual(expectedProc.CatalogName,         procedure.CatalogName);
-				Assert.AreEqual(expectedProc.SchemaName,          procedure.SchemaName);
-				Assert.AreEqual(expectedProc.MemberName,          procedure.MemberName);
-				Assert.AreEqual(expectedProc.IsTableFunction,     procedure.IsTableFunction);
-				Assert.AreEqual(expectedProc.IsAggregateFunction, procedure.IsAggregateFunction);
-				Assert.AreEqual(expectedProc.IsDefaultSchema,     procedure.IsDefaultSchema);
-				Assert.AreEqual(expectedProc.IsLoaded,            procedure.IsLoaded);
+				Assert.AreEqual(expectedProc.CatalogName.ToLower(), procedure.CatalogName.ToLower());
+				Assert.AreEqual(expectedProc.SchemaName,            procedure.SchemaName);
+				Assert.AreEqual(expectedProc.MemberName,            procedure.MemberName);
+				Assert.AreEqual(expectedProc.IsTableFunction,       procedure.IsTableFunction);
+				Assert.AreEqual(expectedProc.IsAggregateFunction,   procedure.IsAggregateFunction);
+				Assert.AreEqual(expectedProc.IsDefaultSchema,       procedure.IsDefaultSchema);
+				Assert.AreEqual(expectedProc.IsLoaded,              procedure.IsLoaded);
 
 				Assert.IsNull(procedure.ResultException);
 
@@ -770,7 +777,7 @@ namespace Tests.DataProvider
 					foreach (var table in procedure.SimilarTables)
 					{
 						var tbl = expectedProc.SimilarTables
-							.Where(_ => _.TableName == table.TableName)
+							.Where(_ => _.TableName.ToLower() == table.TableName.ToLower())
 							.SingleOrDefault();
 
 						Assert.IsNotNull(tbl);
@@ -829,7 +836,7 @@ namespace Tests.DataProvider
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				var res = db.TestOutputParametersWithoutTableProcedure("test", out var outParam);
-				
+
 				Assert.AreEqual(123, outParam);
 				Assert.AreEqual(1, res);
 			}
@@ -843,7 +850,7 @@ namespace Tests.DataProvider
 			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
 				new DataParameter("aInParam", aInParam, DataType.VarChar),
 				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
-			
+
 			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
 
 			return ret;

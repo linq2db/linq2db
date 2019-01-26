@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.SapHana
 	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
-	using System.Data.Common;
 
 	public class SapHanaDataProvider : DynamicDataProviderBase
 	{
@@ -22,15 +21,17 @@ namespace LinqToDB.DataProvider.SapHana
 		protected SapHanaDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.IsParameterOrderDependent = true;
+
 			//supported flags
-			SqlProviderFlags.IsCountSubQuerySupported = true;
+			SqlProviderFlags.IsCountSubQuerySupported  = true;
 
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
 			//when expression returns more than 1 row
 			//mark this as supported, it's better to throw exception
 			//instead of replace with left join, in which case returns incorrect data
-			SqlProviderFlags.IsSubQueryColumnSupported = true;
+			SqlProviderFlags.IsSubQueryColumnSupported  = true;
 
 			SqlProviderFlags.IsTakeSupported            = true;
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
@@ -112,8 +113,8 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				case DataType.Boolean:
 					dataType = dataType.WithDataType(DataType.Byte);
-					if (value is bool)
-						value = (bool)value ? (byte)1 : (byte)0;
+					if (value is bool b)
+						value = b ? (byte)1 : (byte)0;
 					break;
 				case DataType.Guid:
 					if (value != null)
@@ -142,11 +143,11 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new SapHanaBulkCopy(this, GetConnectionType()).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}

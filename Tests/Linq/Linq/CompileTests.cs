@@ -99,7 +99,7 @@ namespace Tests.Linq
 				query(db).ToList().Count();
 		}
 
-		[Test]
+		[Test, Order(100)]
 		public void ConcurrentTest1([IncludeDataSources(
 			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 			string context)

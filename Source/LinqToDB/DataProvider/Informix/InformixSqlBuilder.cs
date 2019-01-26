@@ -6,7 +6,6 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
 	using SqlQuery;
 	using SqlProvider;
 	using System.Globalization;

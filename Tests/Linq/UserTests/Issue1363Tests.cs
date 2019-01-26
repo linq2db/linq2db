@@ -39,10 +39,11 @@ namespace Tests.UserTests
 			TestProvName.Firebird3,
 			ProviderName.Informix
 		})]
-		[Test]
+		[Test, Parallelizable(ParallelScope.None)]
 		public void TestInsert([DataSources(
 			ProviderName.Access, ProviderName.SqlCe, ProviderName.MySql,
-			TestProvName.MariaDB, TestProvName.MySql57)]
+			TestProvName.MariaDB, TestProvName.MySql57,
+			ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

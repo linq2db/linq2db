@@ -12,7 +12,6 @@ namespace LinqToDB.DataProvider.Sybase
 	using Common;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Collections.Concurrent;
 
 	public class SybaseDataProvider : DynamicDataProviderBase
 	{
@@ -201,11 +200,11 @@ namespace LinqToDB.DataProvider.Sybase
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new SybaseBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}

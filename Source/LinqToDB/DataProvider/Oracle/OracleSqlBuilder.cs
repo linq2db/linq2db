@@ -392,13 +392,6 @@ namespace LinqToDB.DataProvider.Oracle
 					if (_identityField != null)
 						return 3;
 					break;
-
-				case SqlDropTableStatement dropTable:
-					_identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
-					if (_identityField != null)
-						return 3;
-
-					break;
 			}
 
 			return base.CommandCount(statement);
@@ -406,7 +399,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			if (_identityField == null)
+			var identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+
+			if (identityField == null && dropTable.IfExists == false)
 			{
 				base.BuildDropTableStatement(dropTable);
 			}
@@ -417,11 +412,93 @@ namespace LinqToDB.DataProvider.Oracle
 					: dropTable.Table.Schema + ".";
 
 				StringBuilder
-					.Append("DROP TRIGGER ")
-					.Append(schemaPrefix)
-					.Append("TIDENTITY_")
-					.Append(dropTable.Table.PhysicalName)
-					.AppendLine();
+					.AppendLine(@"BEGIN");
+
+				if (identityField == null)
+				{
+					StringBuilder
+						.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
+					BuildPhysicalTable(dropTable.Table, null);
+					StringBuilder
+						.AppendLine("';")
+						;
+
+					if (dropTable.IfExists)
+					{
+						StringBuilder
+							.AppendLine("EXCEPTION")
+							.AppendLine("\tWHEN OTHERS THEN")
+							.AppendLine("\t\tIF SQLCODE != -942 THEN")
+							.AppendLine("\t\t\tRAISE;")
+							.AppendLine("\t\tEND IF;")
+							;
+					}
+				}
+				else if (!dropTable.IfExists)
+				{
+					StringBuilder
+						.Append("\tEXECUTE IMMEDIATE 'DROP TRIGGER ")
+						.Append(schemaPrefix)
+						.Append("TIDENTITY_")
+						.Append(dropTable.Table.PhysicalName)
+						.AppendLine("';")
+						.Append("\tEXECUTE IMMEDIATE 'DROP SEQUENCE ")
+						.Append(schemaPrefix)
+						.Append("SIDENTITY_")
+						.Append(dropTable.Table.PhysicalName)
+						.AppendLine("';")
+						.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
+					BuildPhysicalTable(dropTable.Table, null);
+					StringBuilder
+						.AppendLine("';")
+						;
+				}
+				else
+				{
+					StringBuilder
+						.AppendLine("\tBEGIN")
+						.Append("\t\tEXECUTE IMMEDIATE 'DROP TRIGGER ")
+						.Append(schemaPrefix)
+						.Append("TIDENTITY_")
+						.Append(dropTable.Table.PhysicalName)
+						.AppendLine("';")
+						.AppendLine("\tEXCEPTION")
+						.AppendLine("\t\tWHEN OTHERS THEN")
+						.AppendLine("\t\t\tIF SQLCODE != -4080 THEN")
+						.AppendLine("\t\t\t\tRAISE;")
+						.AppendLine("\t\t\tEND IF;")
+						.AppendLine("\tEND;")
+
+						.AppendLine("\tBEGIN")
+						.Append("\t\tEXECUTE IMMEDIATE 'DROP SEQUENCE ")
+						.Append(schemaPrefix)
+						.Append("SIDENTITY_")
+						.Append(dropTable.Table.PhysicalName)
+						.AppendLine("';")
+						.AppendLine("\tEXCEPTION")
+						.AppendLine("\t\tWHEN OTHERS THEN")
+						.AppendLine("\t\t\tIF SQLCODE != -2289 THEN")
+						.AppendLine("\t\t\t\tRAISE;")
+						.AppendLine("\t\t\tEND IF;")
+						.AppendLine("\tEND;")
+
+						.AppendLine("\tBEGIN")
+						.Append("\t\tEXECUTE IMMEDIATE 'DROP TABLE ");
+					BuildPhysicalTable(dropTable.Table, null);
+					StringBuilder
+						.AppendLine("';")
+						.AppendLine("\tEXCEPTION")
+						.AppendLine("\t\tWHEN OTHERS THEN")
+						.AppendLine("\t\t\tIF SQLCODE != -942 THEN")
+						.AppendLine("\t\t\t\tRAISE;")
+						.AppendLine("\t\t\tEND IF;")
+						.AppendLine("\tEND;")
+						;
+				}
+
+				StringBuilder
+					.AppendLine("END;")
+					;
 			}
 		}
 
@@ -458,24 +535,6 @@ END;",
 						;
 
 					break;
-
-				case SqlDropTableStatement dropTable:
-					if (commandNumber == 1)
-					{
-						StringBuilder
-							.Append("DROP SEQUENCE ")
-							.Append(GetSchemaPrefix(dropTable.Table))
-							.Append("SIDENTITY_")
-							.Append(dropTable.Table.PhysicalName)
-							.AppendLine();
-					}
-					else
-					{
-						base.BuildDropTableStatement(dropTable);
-					}
-
-					break;
-
 				case SqlCreateTableStatement createTable:
 				{
 					var schemaPrefix = GetSchemaPrefix(createTable.Table);

@@ -2,7 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 using Tests.Model;
@@ -28,19 +28,55 @@ namespace Tests.xUpdate
 
 				var table = db.CreateTable<DropTableTest>();
 
-				table.Insert(() => new DropTableTest() { ID = 123 });
+				table.Insert(() => new DropTableTest { ID = 123 });
 
 				var data = table.ToList();
+
+				table.Drop();
 
 				Assert.NotNull(data);
 				Assert.AreEqual(1, data.Count);
 				Assert.AreEqual(123, data[0].ID);
 
+				// check that table dropped
+				var exception = Assert.Catch(() => table.ToList());
+				Assert.IsNotNull(exception);
+			}
+		}
+
+		class DropTableTestID
+		{
+			[Identity, PrimaryKey]
+			public int ID  { get; set; }
+			public int ID1 { get; set; }
+		}
+
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[Test]
+		public void DropCurrentDatabaseTableWIthIdentityTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// cleanup
+				db.DropTable<DropTableTestID>(throwExceptionIfNotExists: false);
+				db.Close();
+
+				var table = db.CreateTable<DropTableTestID>();
+
+				table.Insert(() => new DropTableTestID { ID1 = 2 });
+
+				var data = table.Select(t => new { t.ID, t.ID1 }).ToList();
+
 				table.Drop();
+
+				Assert.That(data, Is.EquivalentTo(new[]
+				{
+					new { ID = 1, ID1 = 2 }
+				}));
 
 				// check that table dropped
 				var exception = Assert.Catch(() => table.ToList());
-				Assert.True(exception is Exception);
+				Assert.IsNotNull(exception);
 			}
 		}
 

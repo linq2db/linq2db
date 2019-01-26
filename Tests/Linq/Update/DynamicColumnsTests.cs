@@ -73,6 +73,33 @@ namespace Tests.Update
 		}
 
 		[Test]
+		public void UpdateViaSqlPropertyValue([DataSources(ProviderName.Informix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 1001;
+
+					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
+					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
+
+					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
+					Assert.AreEqual(1,
+						db.Child
+							.Where(c => Sql.Property<int>(c, ChildIDColumn) == id && Sql.Property<int?>(Sql.Property<Parent>(c, "Parent"), "Value1") == 1)
+							.Set(c => Sql.Property<int>(c, ChildIDColumn), 5000)
+							.Update());
+					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == 5000));
+				}
+				finally
+				{
+					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
+				}
+			}
+		}
+
+		[Test]
 		public void InsertDynamicColumns([DataSources] string context)
 		{
 			var firstNameColumn = "FirstName";

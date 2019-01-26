@@ -1,10 +1,8 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"                                       #>
 <#@ output extension=".generated.cs"                                                              #>
+<#@ include file="Shared.ttinclude"                                                               #>
 <#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.Firebird.ttinclude"                    #>
-<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude"                 #>
-<#@ include file="Settings.ttinclude"                                                             #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\NET.46\net46\FirebirdSql.Data.FirebirdClient.dll" #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\NET.46\net46\linq2db.dll"                         #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\FirebirdSql.Data.FirebirdClient.dll" #>
 <#
 	NamespaceName = "FirebirdDataContext";
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
-
+using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -53,6 +54,41 @@ namespace LinqToDB
 			var db = DataContext.GetDataConnection();
 
 			db.BeginTransaction(level);
+
+			if (_transactionCounter == 0)
+				DataContext.LockDbManagerCounter++;
+
+			_transactionCounter++;
+		}
+
+		/// <summary>
+		/// Start new transaction asynchronously with default isolation level.
+		/// If underlying connection already has transaction, it will be rolled back.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+		{
+			var db = DataContext.GetDataConnection();
+
+			await db.BeginTransactionAsync();
+
+			if (_transactionCounter == 0)
+				DataContext.LockDbManagerCounter++;
+
+			_transactionCounter++;
+		}
+
+		/// <summary>
+		/// Start new transaction asynchronously with specified isolation level.
+		/// If underlying connection already has transaction, it will be rolled back.
+		/// </summary>
+		/// <param name="level">Transaction isolation level.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		public async Task BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
+		{
+			var db = DataContext.GetDataConnection();
+
+			await db.BeginTransactionAsync(level);
 
 			if (_transactionCounter == 0)
 				DataContext.LockDbManagerCounter++;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -1576,17 +1577,44 @@ namespace Tests.xUpdate
 			}
 		}
 
+		internal static string GetTableName(string context, [CallerMemberName] string methodName = null)
+		{
+			var tableName  = "xxPerson";
+
+			if (context.StartsWith("Firebird"))
+			{
+				tableName += "_f";
+
+				if (context.EndsWith("LinqService"))
+					tableName += "l";
+
+				tableName += "_" + methodName;
+			}
+
+			if (context.StartsWith("Oracle"))
+			{
+				tableName += "_o";
+
+				if (context.EndsWith("LinqService"))
+					tableName += "l";
+			}
+
+			return tableName;
+		}
+
 		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
 		public void InsertByTableName([DataSources] string context)
 		{
 			const string schemaName = null;
-			const string tableName  = "xxPerson";
+			var tableName  = GetTableName(context, "35");
 
 			using (var db = GetDataContext(context))
 			{
 				try
 				{
+					db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+
 					var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
 
 					Assert.AreEqual(tableName, table.TableName);
@@ -1626,7 +1654,7 @@ namespace Tests.xUpdate
 		public async Task InsertByTableNameAsync([DataSources] string context)
 		{
 			const string schemaName = null;
-			const string tableName  = "xxPerson";
+			var tableName  = GetTableName(context, "31");
 
 			using (var db = GetDataContext(context))
 			{
