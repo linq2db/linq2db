@@ -250,21 +250,24 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			if (NpgsqlInetType != null)
 			{
-				var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-				var indexParameter      = Expression.Parameter(typeof(int), "i");
-
 				// npgsql4 obsoletes NpgsqlInetType and returns ValueTuple<IPAddress, int>
 				// still while it is here, we should be able to map it properly
-				var from = typeof((IPAddress, int));
-				var p = Expression.Parameter(from, "p");
-				MappingSchema.SetConvertExpression(from, NpgsqlInetType,
-					Expression.Lambda(
-						Expression.New(
-							NpgsqlInetType.GetConstructorEx(new[] { typeof(IPAddress), typeof(int) }),
-							Expression.Field(p, "Item1"),
-							Expression.Field(p, "Item2")),
-						p));
 
+				var valueTypeType = Type.GetType("System.ValueTuple`2");
+
+				if (valueTypeType != null)
+				{
+					var from = valueTypeType.MakeGenericType(typeof(IPAddress), typeof(int));
+					var p    = Expression.Parameter(from, "p");
+
+					MappingSchema.SetConvertExpression(from, NpgsqlInetType,
+						Expression.Lambda(
+							Expression.New(
+								NpgsqlInetType.GetConstructorEx(new[] { typeof(IPAddress), typeof(int) }),
+								Expression.Field(p, "Item1"),
+								Expression.Field(p, "Item2")),
+							p));
+				}
 			}
 
 			_setMoney     = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Money");
@@ -447,7 +450,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Dictionary : if (_setHstore    != null) _setHstore(parameter);    else base.SetParameterType(parameter, dataType); break;
 				case DataType.Json       : if (_setJson      != null) _setJson(parameter);      else base.SetParameterType(parameter, dataType); break;
 				case DataType.BinaryJson : if (_setJsonb     != null) _setJsonb(parameter);     else base.SetParameterType(parameter, dataType); break;
-				default :     
+				default :
 				{
 					if (_setNativeParameterType != null && !string.IsNullOrEmpty(dataType.DbType))
 					{
@@ -472,11 +475,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new PostgreSQLBulkCopy(this, GetConnectionType()).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? PostgreSQLTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}

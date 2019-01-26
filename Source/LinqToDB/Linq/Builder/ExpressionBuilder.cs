@@ -434,7 +434,39 @@ namespace LinqToDB.Linq.Builder
 							}
 							
 							return mc;
-						}						
+						}		
+						
+					case ExpressionType.Invoke:
+						{
+							var invocation = (InvocationExpression)expr;
+							if (invocation.Expression.NodeType == ExpressionType.Call)
+							{
+								var mc = (MethodCallExpression)invocation.Expression;
+								if (mc.Method.Name == "Compile" &&
+								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
+								{
+									if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
+									{
+										var map = new Dictionary<Expression, Expression>();
+										for (int i = 0; i < invocation.Arguments.Count; i++)
+										{
+											map.Add(lambda.Parameters[i], invocation.Arguments[i]);
+										}
+
+										var newBody = lambda.Body.Transform(se =>
+										{
+											if (se.NodeType == ExpressionType.Parameter &&
+											    map.TryGetValue(se, out var newExpr))
+												return newExpr;
+											return se;
+										});
+
+										return ExpandExpression(newBody);
+									}
+								}
+							}
+							break;
+						}
 				}
 
 				return expr;
@@ -481,7 +513,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var me = (MemberExpression)expr;
-							var l  = ConvertMethodExpression(me.Member.ReflectedTypeEx(), me.Member);
+							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedTypeEx(), me.Member);
 
 							if (l != null)
 							{
@@ -677,7 +709,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var l = ConvertMethodExpression(call.Method.ReflectedTypeEx(), call.Method);
+							var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedTypeEx(), call.Method);
 
 							if (l != null)
 								return new TransformInfo(OptimizeExpression(ConvertMethod(call, l)));

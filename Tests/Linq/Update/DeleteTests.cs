@@ -403,7 +403,7 @@ namespace Tests.xUpdate
 		public void DeleteByTableName([DataSources] string context)
 		{
 			const string schemaName = null;
-			var tableName  = "xxPerson" + TestUtils.GetNext().ToString();
+			var tableName  = InsertTests.GetTableName(context, "1a");
 
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateTempTable<Person>(tableName, schemaName: schemaName))
@@ -437,10 +437,12 @@ namespace Tests.xUpdate
 		public async Task DeleteByTableNameAsync([DataSources] string context)
 		{
 			const string schemaName = null;
-			const string tableName  = "xxPerson";
+			var tableName  = InsertTests.GetTableName(context, "30");
 
 			using (var db = GetDataContext(context))
 			{
+				await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists:false);
+
 				try
 				{
 					var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);

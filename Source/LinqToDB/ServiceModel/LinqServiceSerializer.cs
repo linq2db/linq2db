@@ -532,7 +532,7 @@ namespace LinqToDB.ServiceModel
 								break;
 						}
 					}
-					catch 
+					catch
 					{
 						// ignore errors
 					}
@@ -1195,6 +1195,7 @@ namespace LinqToDB.ServiceModel
 
 						Append(elem.Table);
 						Append(elem.Parameters);
+						Append(elem.IfExists);
 
 						break;
 					}
@@ -1895,8 +1896,9 @@ namespace LinqToDB.ServiceModel
 					{
 						var table      = Read<SqlTable>();
 						var parameters = ReadArray<SqlParameter>();
+						var ifExists   = ReadBool();
 
-						obj = _statement = new SqlDropTableStatement
+						obj = _statement = new SqlDropTableStatement(ifExists)
 						{
 							Table = table,
 						};

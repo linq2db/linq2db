@@ -265,5 +265,28 @@ namespace LinqToDB.DataProvider.DB2
 			dynamic p = parameter;
 			return p.DB2Type.ToString();
 		}
+
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
+		{
+			var table = dropTable.Table;
+
+			if (dropTable.IfExists)
+			{
+				AppendIndent().Append(@"BEGIN
+	DECLARE CONTINUE HANDLER FOR SQLSTATE '42704'
+		BEGIN END;
+	EXECUTE IMMEDIATE 'DROP TABLE ");
+				BuildPhysicalTable(table, null);
+				StringBuilder.AppendLine(
+				@"';
+END");
+			}
+			else
+			{
+				AppendIndent().Append("DROP TABLE ");
+				BuildPhysicalTable(table, null);
+				StringBuilder.AppendLine();
+			}
+		}
 	}
 }

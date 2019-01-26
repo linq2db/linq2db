@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using LinqToDB.Tools;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -11,6 +10,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using Reflection;
 	using SqlProvider;
+	using Tools;
 
 	public class MySqlDataProvider : DynamicDataProviderBase
 	{
@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.MySql
 			: this(name, null)
 		{
 		}
-		
+
 		protected MySqlDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.MySql
 		protected override string ConnectionTypeName  => Name == ProviderName.MySqlConnector
 			? $"{ConnectionNamespace}.MySqlConnection, MySqlConnector"
 			: $"{ConnectionNamespace}.MySqlConnection, MySql.Data";
-			
+
 		protected override string DataReaderTypeName  => Name == ProviderName.MySqlConnector
 			? $"{ConnectionNamespace}.MySqlDataReader, MySqlConnector"
 			: $"{ConnectionNamespace}.MySqlDataReader, MySql.Data";
@@ -65,10 +65,10 @@ namespace LinqToDB.DataProvider.MySql
 
 				MappingSchema.SetDataType(_mySqlDecimalType, DataType.Decimal);
 			}
-			
+
 			SetProviderField(_mySqlDateTimeType, "GetMySqlDateTime");
 			SetToTypeField(_mySqlDateTimeType,   "GetMySqlDateTime");
-			
+
 			MappingSchema.SetDataType(_mySqlDateTimeType, DataType.DateTime2);
 		}
 
@@ -146,18 +146,18 @@ namespace LinqToDB.DataProvider.MySql
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (source == null)
-				throw new ArgumentException("Source is null!", "source");
+				throw new ArgumentException("Source is null!", nameof(source));
 
 #pragma warning disable 618
 			if (options.RetrieveSequence)
 			{
-				var list = source.RetrieveIdentity(dataConnection);
+				var list = source.RetrieveIdentity((DataConnection)table.DataContext);
 
 				if (!ReferenceEquals(list, source))
-					options.KeepIdentity = true;
+					options = new BulkCopyOptions(options) { KeepIdentity = true };
 
 				source = list;
 			}
@@ -165,7 +165,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			return new MySqlBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}
