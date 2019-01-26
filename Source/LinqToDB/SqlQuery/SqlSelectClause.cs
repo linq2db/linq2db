@@ -302,12 +302,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			for (var i = 0; i < Columns.Count; i++)
 			{
 				var col  = Columns[i];
-				var expr = col.Walk(skipColumns, func);
+				var expr = col.Walk(options, func);
 
 				if (expr is SqlColumn column)
 					Columns[i] = column;
@@ -315,8 +315,8 @@ namespace LinqToDB.SqlQuery
 					Columns[i] = new SqlColumn(col.Parent, expr, col.Alias);
 			}
 
-			TakeValue = TakeValue?.Walk(skipColumns, func);
-			SkipValue = SkipValue?.Walk(skipColumns, func);
+			TakeValue = TakeValue?.Walk(options, func);
+			SkipValue = SkipValue?.Walk(options, func);
 
 			return null;
 		}

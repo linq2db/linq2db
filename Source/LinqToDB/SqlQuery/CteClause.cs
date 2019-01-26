@@ -66,9 +66,9 @@ namespace LinqToDB.SqlQuery
 			return newClause;
 		}
 
-		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			Body = Body?.Walk(skipColumns, func) as SelectQuery;
+			Body = Body?.Walk(options, func) as SelectQuery;
 
 			return null;
 		}

@@ -35,9 +35,9 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression Expr1 { get; set; }
 
-			protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
-				Expr1 = Expr1.Walk(skipColumns, func);
+				Expr1 = Expr1.Walk(options, func);
 
 				if (Expr1 == null)
 					throw new InvalidOperationException();
@@ -109,10 +109,10 @@ namespace LinqToDB.SqlQuery
 			public new Operator   Operator { get; }
 			public ISqlExpression Expr2    { get; internal set; }
 
-			protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
-				base.Walk(skipColumns, func);
-				Expr2 = Expr2.Walk(skipColumns, func);
+				base.Walk(options, func);
+				Expr2 = Expr2.Walk(options, func);
 			}
 
 			public override bool CanBeNull => base.CanBeNull || Expr2.CanBeNull;
@@ -170,12 +170,12 @@ namespace LinqToDB.SqlQuery
 			public ISqlExpression Expr2  { get; internal set; }
 			public ISqlExpression Escape { get; internal set; }
 
-			protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
-				base.Walk(skipColumns, func);
-				Expr2 = Expr2.Walk(skipColumns, func);
+				base.Walk(options, func);
+				Expr2 = Expr2.Walk(options, func);
 
-				Escape = Escape?.Walk(skipColumns, func);
+				Escape = Escape?.Walk(options, func);
 			}
 
 			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -223,11 +223,11 @@ namespace LinqToDB.SqlQuery
 			public ISqlExpression Expr2 { get; internal set; }
 			public ISqlExpression Expr3 { get; internal set; }
 
-			protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
-				base.Walk(skipColumns, func);
-				Expr2 = Expr2.Walk(skipColumns, func);
-				Expr3 = Expr3.Walk(skipColumns, func);
+				base.Walk(options, func);
+				Expr2 = Expr2.Walk(options, func);
+				Expr3 = Expr3.Walk(options, func);
 			}
 
 			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -304,10 +304,10 @@ namespace LinqToDB.SqlQuery
 
 			public SelectQuery SubQuery { get; private set; }
 
-			protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
-				base.Walk(skipColumns, func);
-				SubQuery = (SelectQuery)((ISqlExpression)SubQuery).Walk(skipColumns, func);
+				base.Walk(options, func);
+				SubQuery = (SelectQuery)((ISqlExpression)SubQuery).Walk(options, func);
 			}
 
 			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -356,11 +356,11 @@ namespace LinqToDB.SqlQuery
 
 			public   List<ISqlExpression>  Values { get; } = new List<ISqlExpression>();
 
-			protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> action)
+			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> action)
 			{
-				base.Walk(skipColumns, action);
+				base.Walk(options, action);
 				for (var i = 0; i < Values.Count; i++)
-					Values[i] = Values[i].Walk(skipColumns, action);
+					Values[i] = Values[i].Walk(options, action);
 			}
 
 			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -416,9 +416,9 @@ namespace LinqToDB.SqlQuery
 
 			public SqlFunction Function { get; private set; }
 
-			protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
-				Function = (SqlFunction)((ISqlExpression)Function).Walk(skipColumns, func);
+				Function = (SqlFunction)((ISqlExpression)Function).Walk(options, func);
 			}
 
 			public override bool CanBeNull => Function.CanBeNull;
@@ -466,11 +466,11 @@ namespace LinqToDB.SqlQuery
 
 		public    abstract bool              CanBeNull  { get; }
 		protected abstract ICloneableElement Clone    (Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone);
-		protected abstract void              Walk     (bool skipColumns, Func<ISqlExpression,ISqlExpression> action);
+		protected abstract void              Walk     (WalkOptions options, Func<ISqlExpression,ISqlExpression> action);
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			Walk(skipColumns, func);
+			Walk(options, func);
 			return null;
 		}
 
