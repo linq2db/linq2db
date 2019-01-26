@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		private void CorrectSkip(SelectQuery selectQuery)
 		{
-			((ISqlExpressionWalkable)selectQuery).Walk(false, e =>
+			((ISqlExpressionWalkable)selectQuery).Walk(new WalkOptions(), e =>
 			{
 				if (e is SelectQuery q && q.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(q) && q.OrderBy.IsEmpty)
 				{

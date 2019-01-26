@@ -36,11 +36,11 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
 			for (var index = 0; index < Clauses.Count; index++)
 			{
-				Clauses[index].Walk(skipColumns, func);
+				Clauses[index].Walk(options, func);
 			}
 
 			return null;
