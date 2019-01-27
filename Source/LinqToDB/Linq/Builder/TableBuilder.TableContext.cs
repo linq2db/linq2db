@@ -924,7 +924,8 @@ namespace LinqToDB.Linq.Builder
 						return expr;
 					}
 
-					foreach (var cond in association.ParentAssociationJoin.Condition.Conditions.Take(association.RegularConditionCount))
+					var conditions = association.ParentAssociationJoin?.Condition ?? association.SelectQuery.Where.SearchCondition;
+					foreach (var cond in conditions.Conditions.Take(association.RegularConditionCount))
 					{
 						SqlPredicate.ExprExpr p;
 
@@ -1024,7 +1025,7 @@ namespace LinqToDB.Linq.Builder
 
 								buildInfo.IsAssociationBuilt = true;
 
-								if (tableLevel.IsNew || buildInfo.CopyTable)
+								if (association.ParentAssociationJoin != null && (tableLevel.IsNew || buildInfo.CopyTable))
 									association.ParentAssociationJoin.IsWeak = true;
 
 								return Builder.BuildSequence(new BuildInfo(buildInfo, expr));
@@ -1401,7 +1402,8 @@ namespace LinqToDB.Linq.Builder
 					if (_associationsToSubQueries)
 					{
 						tableAssociation.SelectQuery.Select.Columns.Clear();
-						tableAssociation.SelectQuery.Select.Field((SqlField)field);
+						if (field != null)
+							tableAssociation.SelectQuery.Select.Field((SqlField)field);
 						field = tableAssociation.SelectQuery;
 					}
 
