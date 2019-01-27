@@ -11,7 +11,8 @@ namespace Tests.UserTests
 	public class Issue1556Tests : TestBase
 	{
 		[Test]
-		public void Issue1556Test([DataSources(ProviderName.Sybase, ProviderName.OracleNative)] string context)
+		public void Issue1556Test(
+			[DataSources(ProviderName.Sybase, ProviderName.OracleNative, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
