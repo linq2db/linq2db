@@ -127,9 +127,15 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
 		{
+			var root = expression.GetRootObject(Builder.MappingSchema);
+
 			for (var i = 0; i < Lambda.Parameters.Count; i++)
-				if (ReferenceEquals(expression, Lambda.Parameters[i]))
-					return Sequences[i].GetContext(null, 0, buildInfo);
+				if (ReferenceEquals(root, Lambda.Parameters[i]))
+				{
+					if (expression == root)
+						return Sequences[i].GetContext(null, 0, buildInfo);
+					return Sequences[i].GetContext(expression, level + 1, buildInfo);
+				}
 
 			switch (expression.NodeType)
 			{
