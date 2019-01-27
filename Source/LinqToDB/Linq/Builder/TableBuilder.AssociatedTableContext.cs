@@ -21,6 +21,7 @@ namespace LinqToDB.Linq.Builder
 			public readonly SqlJoinedTable           ParentAssociationJoin;
 			public readonly AssociationDescriptor    Association;
 			public readonly bool                     IsList;
+			public readonly bool                     IsSubQuery;
 			public          int                      RegularConditionCount;
 			public          LambdaExpression         ExpressionPredicate;
 
@@ -45,12 +46,12 @@ namespace LinqToDB.Linq.Builder
 			)
 				: base(builder, asSubquery ? new SelectQuery() { ParentSelect = parent.SelectQuery } : parent.SelectQuery)
 			{
-				if (builder == null) throw new ArgumentNullException(nameof(builder));
-				if (parent == null) throw new ArgumentNullException(nameof(parent));
+				if (builder     == null) throw new ArgumentNullException(nameof(builder));
+				if (parent      == null) throw new ArgumentNullException(nameof(parent));
 				if (association == null) throw new ArgumentNullException(nameof(association));
 
 				var type = association.MemberInfo.GetMemberType();
-				var left = forceLeft || association.CanBeNull || asSubquery;
+				var left = forceLeft || association.CanBeNull;
 
 				if (typeof(IEnumerable).IsSameOrParentOf(type))
 				{
@@ -67,6 +68,7 @@ namespace LinqToDB.Linq.Builder
 
 				Association = association;
 				ParentAssociation = parent;
+				IsSubQuery = asSubquery;
 
 				if (asSubquery)
 				{

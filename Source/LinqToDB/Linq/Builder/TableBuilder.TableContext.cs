@@ -727,7 +727,12 @@ namespace LinqToDB.Linq.Builder
 									from f in table.Table.SqlTable.Fields.Values
 									where f.IsPrimaryKey
 									orderby f.PrimaryKeyOrder
-									select new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f };
+									select new SqlInfo(f.ColumnDescriptor.MemberInfo)
+									{
+										Sql = _associationsToSubQueries
+											? table.Table.SelectQuery.Select.Field(f).SelectQuery
+											: (ISqlExpression)f
+									};
 
 								var key = q.ToArray();
 
