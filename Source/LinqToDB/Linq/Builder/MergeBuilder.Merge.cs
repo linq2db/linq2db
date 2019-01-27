@@ -17,8 +17,7 @@ namespace LinqToDB.Linq.Builder
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				// Merge(ITable<TTarget> target, string hint)
-				var target = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
-
+				var target = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()) { AssociationsAsSubQueries = true });
 
 				var targetTable = ((TableBuilder.TableContext)target).SqlTable;
 

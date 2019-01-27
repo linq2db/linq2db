@@ -100,9 +100,7 @@ namespace LinqToDB.SqlQuery
 				return Target;
 
 			if (Source == table)
-			{
 				return Source;
-			}
 
 			return null;
 		}

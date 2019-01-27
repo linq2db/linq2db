@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				// MergeInto<TTarget, TSource>(IQueryable<TSource> source, ITable<TTarget> target, string hint)
 				var sourceContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
-				var target = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1]));
+				var target = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1]) { AssociationsAsSubQueries = true });
 
 				var targetTable = ((TableBuilder.TableContext)target).SqlTable;
 

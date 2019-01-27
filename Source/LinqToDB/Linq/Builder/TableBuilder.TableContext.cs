@@ -41,16 +41,18 @@ namespace LinqToDB.Linq.Builder
 
 			internal bool           ForceLeftJoinAssociations { get; set; }
 
+			private bool            _associationsToSubQueries;
 			#endregion
 
 			#region Init
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
+				Builder                   = builder;
+				Parent                    = buildInfo.Parent;
+				Expression                = buildInfo.Expression;
+				SelectQuery               = buildInfo.SelectQuery;
+				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
@@ -64,10 +66,11 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
+				Builder                   = builder;
+				Parent                    = buildInfo.Parent;
+				Expression                = buildInfo.Expression;
+				SelectQuery               = buildInfo.SelectQuery;
+				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
@@ -87,10 +90,11 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo)
 			{
-				Builder     = builder;
-				Parent      = buildInfo.Parent;
-				Expression  = buildInfo.Expression;
-				SelectQuery = buildInfo.SelectQuery;
+				Builder                   = builder;
+				Parent                    = buildInfo.Parent;
+				Expression                = buildInfo.Expression;
+				SelectQuery               = buildInfo.SelectQuery;
+				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				var mc   = (MethodCallExpression)Expression;
 				var attr = builder.GetTableFunctionAttribute(mc.Method);
@@ -1352,7 +1356,8 @@ namespace LinqToDB.Linq.Builder
 								aa.Storage,
 								aa.CanBeNull,
 								aa.AliasName),
-							ForceLeftJoinAssociations)
+							ForceLeftJoinAssociations,
+							_associationsToSubQueries)
 							{ Parent = Parent };
 
 					isNew = true;
@@ -1363,18 +1368,21 @@ namespace LinqToDB.Linq.Builder
 
 					var memberExpression = (MemberExpression)levelExpression;
 
-					if (!_associations.TryGetValue(memberExpression.Member, out tableAssociation))
+					// subquery association shouldn't be cached, because different assciation navigation pathes
+					// should produce different subqueries
+					if (_associationsToSubQueries || !_associations.TryGetValue(memberExpression.Member, out tableAssociation))
 					{
 						var q =
 							from a in objectMapper.Associations.Concat(inheritance.SelectMany(om => om.Associations))
 							where a.MemberInfo.EqualsTo(memberExpression.Member)
-							select new AssociatedTableContext(Builder, this, a, ForceLeftJoinAssociations) { Parent = Parent };
+							select new AssociatedTableContext(Builder, this, a, ForceLeftJoinAssociations, _associationsToSubQueries) { Parent = Parent };
 
 						tableAssociation = q.FirstOrDefault();
 
 						isNew = true;
 
-						_associations.Add(memberExpression.Member, tableAssociation);
+						if (!_associationsToSubQueries)
+							_associations.Add(memberExpression.Member, tableAssociation);
 					}
 				}
 
@@ -1389,6 +1397,13 @@ namespace LinqToDB.Linq.Builder
 						return al;
 
 					var field = tableAssociation.GetField(expression, level + 1, false);
+
+					if (_associationsToSubQueries)
+					{
+						tableAssociation.SelectQuery.Select.Columns.Clear();
+						tableAssociation.SelectQuery.Select.Field((SqlField)field);
+						field = tableAssociation.SelectQuery;
+					}
 
 					return new TableLevel { Table = tableAssociation, Field = field, Level = field == null ? level : level + 1, IsNew = isNew };
 				}
