@@ -53,7 +53,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([DataSources] string configuration)
+		public void Test([DataSources(ProviderName.Firebird)] string configuration)
 		{
 			using (var db = GetDataContext(configuration))
 			{
@@ -81,7 +81,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([DataSources] string configuration)
+		public void Test2([DataSources(ProviderName.Firebird)] string configuration)
 		{
 			using (var db = GetDataContext(configuration))
 			{

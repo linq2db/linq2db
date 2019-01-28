@@ -40,7 +40,7 @@ CREATE TABLE Person
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    'M');
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M');
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F');
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M');
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M');
 
 --
 -- Doctor Table Extension
@@ -142,7 +142,7 @@ GO
 INSERT INTO AllTypes
 (
 	bigintDataType, numericDataType, bitDataType, smallintDataType, decimalDataType,
-	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType, 
+	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType,
 	datetimeDataType,
 	charDataType, varcharDataType, textDataType, ncharDataType, nvarcharDataType, ntextDataType,
 	objectDataType
@@ -185,7 +185,7 @@ CREATE TABLE ForeignKeyTable
 (
 	PrimaryKeyTableID integer      NOT NULL,
 	Name              nvarchar(50) NOT NULL,
-	-- Test: the foreign key targets the parent table without a column 
+	-- Test: the foreign key targets the parent table without a column
 	-- reference.  This should automatically match against the primary key
 	-- of the target table.
 	CONSTRAINT FK_ForeignKeyTable_PrimaryKeyTable FOREIGN KEY(PrimaryKeyTableID) REFERENCES PrimaryKeyTable ON DELETE CASCADE
@@ -203,7 +203,7 @@ CREATE TABLE FKTestPosition
 	PositionID   integer      NOT NULL,
 	Name         nvarchar(50) NOT NULL,
 	PRIMARY KEY(Company, Department, PositionID),
-	-- Test: one level deeper, this should link to both fields in the 
+	-- Test: one level deeper, this should link to both fields in the
 	-- primary key of the FKTestDepartment table
 	CONSTRAINT FK_Position_Department FOREIGN KEY(Company, Department) REFERENCES FKTestDepartment ON DELETE CASCADE
 	-- A simpler foreign key for the above would be:

@@ -249,18 +249,18 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Select) .Walk(skipColumns, func);
-			((ISqlExpressionWalkable)From)   .Walk(skipColumns, func);
-			((ISqlExpressionWalkable)Where)  .Walk(skipColumns, func);
-			((ISqlExpressionWalkable)GroupBy).Walk(skipColumns, func);
-			((ISqlExpressionWalkable)Having) .Walk(skipColumns, func);
-			((ISqlExpressionWalkable)OrderBy).Walk(skipColumns, func);
+			((ISqlExpressionWalkable)Select) .Walk(options, func);
+			((ISqlExpressionWalkable)From)   .Walk(options, func);
+			((ISqlExpressionWalkable)Where)  .Walk(options, func);
+			((ISqlExpressionWalkable)GroupBy).Walk(options, func);
+			((ISqlExpressionWalkable)Having) .Walk(options, func);
+			((ISqlExpressionWalkable)OrderBy).Walk(options, func);
 
 			if (HasUnion)
 				foreach (var union in Unions)
-					((ISqlExpressionWalkable)union.SelectQuery).Walk(skipColumns, func);
+					((ISqlExpressionWalkable)union.SelectQuery).Walk(options, func);
 
 			return func(this);
 		}

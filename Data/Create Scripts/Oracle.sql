@@ -150,7 +150,7 @@ INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson',
 /
 INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 /
-INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M')
+INSERT INTO Person  (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M')
 /
 INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (1, 'Psychiatry')
 /

@@ -576,7 +576,7 @@ namespace LinqToDB.SqlProvider
 			if (_replaceMap != null && _replaceMap.Count > 0 || _removedSources != null)
 			{
 				((ISqlExpressionWalkable)_statement)
-					.Walk(false, element =>
+					.Walk(new WalkOptions(), element =>
 					{
 						if (element is SqlField field)
 							return GetNewField(new VirtualField(field)).Element;

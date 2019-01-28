@@ -1210,12 +1210,14 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[ActiveIssue(
+			Configurations = new [] { ProviderName.OracleNative },
+			Details = "ORA-00955: name is already used by an existing object")]
 		[Test]
 		public void UpdateByTableName([DataSources] string context)
 		{
 			const string schemaName = null;
-			const string tableName  = "xxPerson";
+			var tableName  = InsertTests.GetTableName(context, "32");
 
 			using (var db = GetDataContext(context))
 			{
@@ -1254,11 +1256,14 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(
+			Configurations = new [] { ProviderName.OracleNative },
+			Details = "ORA-00955: name is already used by an existing object")]
 		[Test]
 		public async Task UpdateByTableNameAsync([DataSources] string context)
 		{
 			const string schemaName = null;
-			const string tableName  = "xxPerson";
+			var tableName  = InsertTests.GetTableName(context, "33");
 
 			using (var db = GetDataContext(context))
 			{
@@ -1296,6 +1301,5 @@ namespace Tests.xUpdate
 				await table.DropAsync();
 			}
 		}
-
 	}
 }

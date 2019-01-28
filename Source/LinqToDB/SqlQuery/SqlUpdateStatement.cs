@@ -35,12 +35,12 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
-			With?.Walk(skipColumns, func);
-			((ISqlExpressionWalkable)_update)?.Walk(skipColumns, func);
+			With?.Walk(options, func);
+			((ISqlExpressionWalkable)_update)?.Walk(options, func);
 
-			SelectQuery = (SelectQuery)SelectQuery.Walk(skipColumns, func);
+			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
 
 			return null;
 		}
@@ -51,7 +51,7 @@ namespace LinqToDB.SqlQuery
 
 			if (_update != null)
 				clone._update = (SqlUpdateClause)_update.Clone(objectTree, doClone);
-			
+
 			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 
 			objectTree.Add(this, clone);

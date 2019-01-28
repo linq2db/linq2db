@@ -39,10 +39,6 @@ namespace SQLiteDataContext
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
 		public ITable<TestT4Casing>      TestT4Casings       { get { return this.GetTable<TestT4Casing>(); } }
 
-		public void InitMappingSchema()
-		{
-		}
-
 		public TestDataDB()
 		{
 			InitDataContext();
@@ -56,7 +52,8 @@ namespace SQLiteDataContext
 			InitMappingSchema();
 		}
 
-		partial void InitDataContext();
+		partial void InitDataContext  ();
+		partial void InitMappingSchema();
 	}
 
 	[Table("AllTypes")]

@@ -7,8 +7,8 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Common;
-	using LinqToDB.Data;
+	using Common;
+	using Data;
 	using Mapping;
 
 	public class SqlTable : ISqlTableSource
@@ -121,11 +121,9 @@ namespace LinqToDB.SqlQuery
 								new DbDataType(field.SystemType, field.DataType, field.DbType),
 								new DbDataType(typeof(DataParameter)), true);
 
-							if (converter != null && converter.ConvertValueToParameter != null)
-							{
-								var parameter = converter.ConvertValueToParameter(DefaultValue.GetValue(field.SystemType, mappingSchema));
+							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.SystemType, mappingSchema));
+							if (parameter != null)
 								field.DataType = parameter.DataType;
-							}
 						}
 						catch
 						{
@@ -373,11 +371,11 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public virtual ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public virtual ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			if (TableArguments != null)
 				for (var i = 0; i < TableArguments.Length; i++)
-					TableArguments[i] = TableArguments[i].Walk(skipColumns, func);
+					TableArguments[i] = TableArguments[i].Walk(options, func);
 
 			return func(this);
 		}

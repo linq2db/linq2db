@@ -1326,7 +1326,7 @@ namespace LinqToDB.SqlProvider
 							statement.SelectQuery.From.Tables.RemoveAt(0);
 							if (tableToUpdate != null && tableToUpdate != table)
 							{
-								statement.Walk(false, e =>
+								statement.Walk(new WalkOptions(), e =>
 								{
 									if (e is SqlField field && field.Table == tableToUpdate)
 									{
@@ -1635,7 +1635,7 @@ namespace LinqToDB.SqlProvider
 
 							statement.Update.Table = jt;
 
-							statement.Walk(false, exp =>
+							statement.Walk(new WalkOptions(), exp =>
 							{
 								if (exp is SqlField field && field.Table == updateTable)
 								{
@@ -1775,7 +1775,7 @@ namespace LinqToDB.SqlProvider
 
 		public void OptimizeJoins(SqlStatement statement)
 		{
-			((ISqlExpressionWalkable) statement).Walk(false, element =>
+			((ISqlExpressionWalkable) statement).Walk(new WalkOptions(), element =>
 			{
 				if (element is SelectQuery query)
 					new JoinOptimizer().OptimizeJoins(statement, query);

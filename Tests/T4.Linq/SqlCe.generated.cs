@@ -15,7 +15,7 @@ namespace SqlCeDataContext
 {
 	/// <summary>
 	/// Database       : TestData
-	/// Data Source    : I:\linq2db\\Data\TestData.sdf
+	/// Data Source    : C:\GitHub\linq2db\\Data\TestData.sdf
 	/// Server Version : 4.0.8876.1
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
@@ -37,10 +37,6 @@ namespace SqlCeDataContext
 		public ITable<TestMerge1>        TestMerge1s         { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2s         { get { return this.GetTable<TestMerge2>(); } }
 
-		public void InitMappingSchema()
-		{
-		}
-
 		public TestDataDB()
 		{
 			InitDataContext();
@@ -54,7 +50,8 @@ namespace SqlCeDataContext
 			InitMappingSchema();
 		}
 
-		partial void InitDataContext();
+		partial void InitDataContext  ();
+		partial void InitMappingSchema();
 	}
 
 	[Table("AllTypes")]

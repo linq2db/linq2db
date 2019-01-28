@@ -447,7 +447,14 @@ namespace LinqToDB.DataProvider.Oracle
 			if (_setBindByName == null)
 				EnsureConnection();
 
-			_setBindByName(dataConnection);
+			//if (Name == ProviderName.OracleNative)
+				_setBindByName(dataConnection);
+
+//			if (Name == ProviderName.OracleNative)
+//			{
+//				dynamic cmd = Proxy.GetUnderlyingObject((DbCommand)dataConnection.Command);
+//				cmd.BindByName = true;
+//			}
 
 			base.InitCommand(dataConnection, commandType, commandText, parameters);
 

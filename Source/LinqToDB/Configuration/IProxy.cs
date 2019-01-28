@@ -27,8 +27,8 @@ namespace LinqToDB.Configuration
 		/// <returns>Unproxified object.</returns>
 		internal static T GetUnderlyingObject<T>(T obj)
 		{
-			while (obj is IProxy<T>)
-				obj = ((IProxy<T>)obj).UnderlyingObject;
+			while (obj is IProxy<T> proxy)
+				obj = proxy.UnderlyingObject;
 
 			return obj;
 		}

@@ -250,21 +250,24 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			if (NpgsqlInetType != null)
 			{
-				var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-				var indexParameter      = Expression.Parameter(typeof(int), "i");
-
 				// npgsql4 obsoletes NpgsqlInetType and returns ValueTuple<IPAddress, int>
 				// still while it is here, we should be able to map it properly
-				var from = typeof((IPAddress, int));
-				var p = Expression.Parameter(from, "p");
-				MappingSchema.SetConvertExpression(from, NpgsqlInetType,
-					Expression.Lambda(
-						Expression.New(
-							NpgsqlInetType.GetConstructorEx(new[] { typeof(IPAddress), typeof(int) }),
-							Expression.Field(p, "Item1"),
-							Expression.Field(p, "Item2")),
-						p));
 
+				var valueTypeType = Type.GetType("System.ValueTuple`2");
+
+				if (valueTypeType != null)
+				{
+					var from = valueTypeType.MakeGenericType(typeof(IPAddress), typeof(int));
+					var p    = Expression.Parameter(from, "p");
+
+					MappingSchema.SetConvertExpression(from, NpgsqlInetType,
+						Expression.Lambda(
+							Expression.New(
+								NpgsqlInetType.GetConstructorEx(new[] { typeof(IPAddress), typeof(int) }),
+								Expression.Field(p, "Item1"),
+								Expression.Field(p, "Item2")),
+							p));
+				}
 			}
 
 			_setMoney     = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Money");

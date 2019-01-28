@@ -670,6 +670,13 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression, bool unwrap = false)
 		{
+			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
+			{
+				var sql = ConvertToSqlConvertible(context, expression);
+				if (sql != null)
+					return sql;
+			}
+
 			if (!PreferServerSide(expression, false))
 			{
 				if (CanBeConstant(expression))
@@ -1028,6 +1035,15 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+		}
+
+		ISqlExpression ConvertToSqlConvertible(IBuildContext context, Expression expression)
+		{
+			var l = Expression.Lambda<Func<IToSqlConverter>>(expression);
+			var f = l.Compile();
+			var c = f();
+
+			return c.ToSql(expression);
 		}
 
 		readonly HashSet<Expression> _convertedPredicates = new HashSet<Expression>();
@@ -1855,9 +1871,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var ctx = GetContext(context, left);
 
-					if (ctx != null &&
-						(ctx.IsExpression(left, 0, RequestFor.Object).Result ||
-						 left.NodeType == ExpressionType.Parameter && ctx.IsExpression(left, 0, RequestFor.Field).Result))
+					if (ctx != null && ctx.IsExpression(left, 0, RequestFor.Object).Result)
 					{
 						return new SqlPredicate.Expr(new SqlValue(!isEqual));
 					}
@@ -2133,7 +2147,7 @@ namespace LinqToDB.Linq.Builder
 			if (expr != null)
 			{
 				if (accessorExpression == null || dataTypeAccessorExpression == null || dbTypeAccessorExpression == null)
-				{ 
+				{
 					var body = expr.GetBody(accessorExpression);
 
 					accessorExpression         = Expression.PropertyOrField(body, "Value");

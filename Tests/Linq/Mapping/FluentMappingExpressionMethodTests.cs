@@ -1,11 +1,14 @@
 ﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Tools;
 
 namespace Tests.Playground
 {
+	using Tools;
+
 	[TestFixture]
 	public class FluentMappingExpressionMethodTests : TestBase
 	{
@@ -45,7 +48,7 @@ namespace Tests.Playground
 			using (var db = GetDataContext(context, CreateMappingSchema()))
 			{
 				var testData = GenerateData();
-				using (var table = db.CreateLocalTable(testData))
+				using (var table = db.CreateLocalTable(context, "6", testData))
 				{
 					Assert.AreEqual(testData.Length,
 						table.Where(t => Sql.AsNotNull(t.EntityValue) == t.Id.ToString() + t.Value).Count());
@@ -64,7 +67,7 @@ namespace Tests.Playground
 					var meterialized = table.ToArray();
 					var expected = meterialized.Select(e => new InstanceClass
 						{ Id = e.Id, Value = e.Value, EntityMaterialized = "M" + e.Id.ToString() });
-					
+
 					AreEqual(expected, meterialized, ComparerBuilder<InstanceClass>.GetEqualityComparer());
 				}
 			}

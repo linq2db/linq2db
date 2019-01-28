@@ -300,7 +300,28 @@ namespace LinqToDB.DataProvider.Oracle
 				StringBuilder
 					.AppendLine(@"BEGIN");
 
-				if (identityField != null)
+				if (identityField == null)
+				{
+					StringBuilder
+						.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
+					BuildPhysicalTable(dropTable.Table, null);
+					StringBuilder
+						.AppendLine("';")
+						;
+
+					if (dropTable.IfExists)
+					{
+						StringBuilder
+							.AppendLine("EXCEPTION")
+							.AppendLine("\tWHEN OTHERS THEN")
+							.AppendLine("\t\tIF SQLCODE != -942 THEN")
+							.AppendLine("\t\t\tRAISE;")
+							.AppendLine("\t\tEND IF;")
+							;
+					}
+				}
+				else if (!dropTable.IfExists)
+				{
 					StringBuilder
 						.Append("\tEXECUTE IMMEDIATE 'DROP TRIGGER ")
 						.Append(schemaPrefix)
@@ -312,32 +333,52 @@ namespace LinqToDB.DataProvider.Oracle
 						.Append("SIDENTITY_")
 						.Append(dropTable.Table.PhysicalName)
 						.AppendLine("';")
+						.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
+					BuildPhysicalTable(dropTable.Table, null);
+					StringBuilder
+						.AppendLine("';")
 						;
-
-				StringBuilder
-					.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
-				BuildPhysicalTable(dropTable.Table, null);
-				StringBuilder
-					.AppendLine("';")
-					;
-
-				if (dropTable.IfExists)
+				}
+				else
 				{
 					StringBuilder
-						.AppendLine("EXCEPTION")
-						.AppendLine("\tWHEN OTHERS THEN")
-						.Append("\t\tIF SQLCODE != -942 ")
-						;
+						.AppendLine("\tBEGIN")
+						.Append("\t\tEXECUTE IMMEDIATE 'DROP TRIGGER ")
+						.Append(schemaPrefix)
+						.Append("TIDENTITY_")
+						.Append(dropTable.Table.PhysicalName)
+						.AppendLine("';")
+						.AppendLine("\tEXCEPTION")
+						.AppendLine("\t\tWHEN OTHERS THEN")
+						.AppendLine("\t\t\tIF SQLCODE != -4080 THEN")
+						.AppendLine("\t\t\t\tRAISE;")
+						.AppendLine("\t\t\tEND IF;")
+						.AppendLine("\tEND;")
 
-					if (identityField != null)
-						StringBuilder
-							.Append("AND SQLCODE != -4080 AND SQLCODE != -2289 ")
-							;
+						.AppendLine("\tBEGIN")
+						.Append("\t\tEXECUTE IMMEDIATE 'DROP SEQUENCE ")
+						.Append(schemaPrefix)
+						.Append("SIDENTITY_")
+						.Append(dropTable.Table.PhysicalName)
+						.AppendLine("';")
+						.AppendLine("\tEXCEPTION")
+						.AppendLine("\t\tWHEN OTHERS THEN")
+						.AppendLine("\t\t\tIF SQLCODE != -2289 THEN")
+						.AppendLine("\t\t\t\tRAISE;")
+						.AppendLine("\t\t\tEND IF;")
+						.AppendLine("\tEND;")
 
+						.AppendLine("\tBEGIN")
+						.Append("\t\tEXECUTE IMMEDIATE 'DROP TABLE ");
+					BuildPhysicalTable(dropTable.Table, null);
 					StringBuilder
-						.AppendLine("THEN")
-						.AppendLine("\t\t\tRAISE;")
-						.AppendLine("\t\tEND IF;")
+						.AppendLine("';")
+						.AppendLine("\tEXCEPTION")
+						.AppendLine("\t\tWHEN OTHERS THEN")
+						.AppendLine("\t\t\tIF SQLCODE != -942 THEN")
+						.AppendLine("\t\t\t\tRAISE;")
+						.AppendLine("\t\t\tEND IF;")
+						.AppendLine("\tEND;")
 						;
 				}
 
