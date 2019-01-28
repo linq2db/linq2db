@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
-
+using System.Threading.Tasks;
 using LinqToDB;
-
+using LinqToDB.Async;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -51,6 +51,19 @@ namespace Tests.Linq
 			{
 				Assert.AreEqual(1, query(db, 1).ToList().Count());
 				Assert.AreEqual(2, query(db, 2).ToList().Count());
+			}
+		}
+
+		[Test]
+		public async Task CompiledTest3Async([DataSources] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
+				db.GetTable<Child>().Where(c => c.ParentID == n).Take(n).ToListAsync(default));
+
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(1, (await query(db, 1)).Count());
+				Assert.AreEqual(2, (await query(db, 2)).Count());
 			}
 		}
 
@@ -196,6 +209,19 @@ namespace Tests.Linq
 			{
 				Assert.AreEqual(1, query(db, 1).ParentID);
 				Assert.AreEqual(2, query(db, 2).ParentID);
+			}
+		}
+
+		[Test]
+		public async Task ElementTest1Async([DataSources] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
+				db.Child.Where(c => c.ParentID == n).FirstAsync(default));
+
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(1, (await query(db, 1)).ParentID);
+				Assert.AreEqual(2, (await query(db, 2)).ParentID);
 			}
 		}
 
