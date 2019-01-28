@@ -38,18 +38,18 @@ namespace LinqToDB
 
 		private interface ITableHelper
 		{
-			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, bool isQueriable);
+			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, bool isQueryable);
 		}
 
 		internal class TableHelper<T> : ITableHelper
 		{
-			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, bool isQueriable)
+			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, bool isQueryable)
 			{
 				var table = new CompiledTable<T>(query, expr);
 
 				return Expression.Call(
 					Expression.Constant(table),
-					isQueriable ?
+					isQueryable ?
 						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create (null)) :
 						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute(null)),
 					ps);
