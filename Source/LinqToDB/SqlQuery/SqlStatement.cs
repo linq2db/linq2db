@@ -30,6 +30,11 @@ namespace LinqToDB.SqlQuery
 
 		public abstract bool IsParameterDependent { get; set; }
 
+		/// <summary>
+		/// Used internally for SQL Builder
+		/// </summary>
+		public SqlStatement ParentStatement { get; set; }
+
 		public SqlStatement ProcessParameters(MappingSchema mappingSchema)
 		{
 			if (IsParameterDependent)

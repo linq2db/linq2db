@@ -95,7 +95,9 @@ namespace LinqToDB.SqlProvider
 						if (union.IsAll) sb.Append(" ALL");
 						sb.AppendLine();
 
-						((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(commandNumber, new SqlSelectStatement(union.SelectQuery), sb, indent, skipAlias);
+						((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(commandNumber,
+							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, indent,
+							skipAlias);
 					}
 				}
 			}
@@ -122,7 +124,8 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsTakeSupported && selectQuery.Select.TakeValue != null)
 				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
 
-			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, indent, skipAlias);
+			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0,
+				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, indent, skipAlias);
 		}
 
 		protected abstract ISqlBuilder CreateSqlBuilder();
@@ -196,7 +199,8 @@ namespace LinqToDB.SqlProvider
 
 			++Indent;
 
-			var selectStatement = new SqlSelectStatement(deleteStatement.SelectQuery) { With = deleteStatement.GetWithClause() };
+			var selectStatement = new SqlSelectStatement(deleteStatement.SelectQuery)
+				{ ParentStatement = deleteStatement, With = deleteStatement.GetWithClause() };
 
 			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, selectStatement, StringBuilder, Indent);
 
@@ -2157,7 +2161,16 @@ namespace LinqToDB.SqlProvider
 							//TODO: looks like SqlBuilder is trying to fix issue with bad table mapping from Builder. Merge Tests fails.
 							var ts = Statement.SelectQuery?.GetTableSource(field.Table);
 							if (ts == null)
-								ts = Statement.GetTableSource(field.Table);
+							{
+								var current = Statement;
+								do
+								{
+									ts = current.GetTableSource(field.Table);
+									if (ts != null)
+										break;
+									current = current.ParentStatement;
+								} while (current != null);
+							}
 
 							if (ts == null)
 							{

@@ -81,6 +81,7 @@
         <Link>Database/Create Scripts/%(FileName)%(Extension)</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 		<Compile Include="..\Linq\Infrastructure\ActiveIssueConfigurationTests.cs" Link="ActiveIssueConfigurationTests.cs" />
 
     <!--
