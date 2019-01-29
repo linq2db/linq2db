@@ -441,5 +441,68 @@ AS RETURN
 			}
 		}
 
+
+		public class SomeTableType
+		{
+			public int Value { get; set; }
+		}
+
+		[Table("FewNumberEntity")]
+		public class FewNumberEntity
+		{
+			[Column]
+			public int Id { get; set; }
+			[Column]
+			public int UserId { get; set; }
+		}
+
+		[Table("LargeNumberEntity")]
+		public class LargeNumberEntity
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(GetSomeValue), CanBeNull = false)]
+			public SomeTableType SomeValue { get; set; }
+
+			private static Expression<Func<LargeNumberEntity, IDataContext, IQueryable<SomeTableType>>> GetSomeValue()
+			{
+				return (t, db) => db.FromSql<SomeTableType>($@"SELECT 
+	COUNT(*) as [Value] 
+FROM 
+	[dbo].[SomeTable] [st] WITH(NOLOCK) 
+WHERE 
+	[st].[LargeNumberEntityId]={t.Id}");
+			}
+		}
+
+		[Test]
+		public void AssociationFromSqlTest([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
+			using (db.CreateLocalTable<FewNumberEntity>())
+			using (db.CreateLocalTable<LargeNumberEntity>())
+			{
+				var tasksQuery = db.GetTable<LargeNumberEntity>();
+
+				var filtered = db.GetTable<FewNumberEntity>().Where(x => x.UserId == 123);
+
+				var final = filtered.InnerJoin(tasksQuery, (x, y) => x.Id == y.Id, (x, y) => y);
+
+				var q = final.Select(x => new
+				{
+					x.Id,
+					x.SomeValue.Value
+				});
+
+				var select = q.GetSelectQuery();
+
+				// Ensure that cross apply inlined in query
+				Assert.AreEqual(2, select.Select.From.Tables[0].Joins.Count);
+
+				Console.WriteLine(q.ToString());
+			}
+		}
+
 	}
 }
