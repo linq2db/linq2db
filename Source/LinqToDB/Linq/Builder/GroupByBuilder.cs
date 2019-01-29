@@ -492,10 +492,11 @@ namespace LinqToDB.Linq.Builder
 							Builder.ReplaceParent(ctx, p);
 							return res;
 						}
-						else
-						{
-							return Builder.ConvertToSql(_element, ex, true);
-						}
+
+						if (call.Arguments[0] == e && typeof(IGrouping<,>).IsSameOrParentOf(ex.Type))
+							return _element.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
+
+						return Builder.ConvertToSql(_element, ex, true);
 					});
 
 					if (expr != null)
@@ -532,7 +533,7 @@ namespace LinqToDB.Linq.Builder
 				if (attribute != null)
 					return attribute.GetExpression(call.Method, args);
 
-				return new SqlFunction(call.Type, call.Method.Name, args);
+				return new SqlFunction(call.Type, call.Method.Name, true, args);
 			}
 
 			PropertyInfo _keyProperty;

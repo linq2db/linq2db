@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -69,6 +70,10 @@ namespace LinqToDB.Linq.Builder
 						builder.ReplaceParent(ctx, p);
 						return res;
 					}
+
+					if (methodCall.Arguments[0] == e && typeof(IEnumerable<>).IsSameOrParentOf(ex.Type))
+						return sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
+
 					return builder.ConvertToSql(context, ex, true);
 				});
 			}
