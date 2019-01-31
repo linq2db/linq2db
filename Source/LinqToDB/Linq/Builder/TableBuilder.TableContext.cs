@@ -1408,7 +1408,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						tableAssociation.SelectQuery.Select.Columns.Clear();
 						if (field != null)
-							tableAssociation.SelectQuery.Select.Field((SqlField)field);
+							tableAssociation.SelectQuery.Select.Add(field);
 						field = tableAssociation.SelectQuery;
 					}
 
