@@ -23,7 +23,7 @@ void GenerateModel()
 	WriteComment(this, "    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.");
 	WriteComment(this, " </auto-generated>");
 	WriteComment(this, "---------------------------------------------------------------------------------------------------");
-	
+
 	WriteLine("");
 	WriteLine("#pragma warning disable 1591");
 	WriteLine("");
