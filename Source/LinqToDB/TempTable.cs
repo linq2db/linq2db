@@ -254,7 +254,7 @@ namespace LinqToDB
 		{
 			return _table.ExecuteAsync<TResult>(expression);
 		}
-		
+
 		#endregion
 
 		#region IExpressionQuery<T>

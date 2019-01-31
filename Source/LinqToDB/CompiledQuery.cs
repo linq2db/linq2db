@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-
+using System.Reflection;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -36,22 +37,31 @@ namespace LinqToDB
 			return (TResult)_compiledQuery(args);
 		}
 
-		private interface ITableHelper
+		enum MethodType
 		{
-			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, bool isQueryable);
+			Queryable,
+			Element,
+			ElementAsync
 		}
 
-		internal class TableHelper<T> : ITableHelper
+		interface ITableHelper
 		{
-			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, bool isQueryable)
+			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, MethodType type);
+		}
+
+		class TableHelper<T> : ITableHelper
+		{
+			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, MethodType type)
 			{
 				var table = new CompiledTable<T>(query, expr);
 
 				return Expression.Call(
 					Expression.Constant(table),
-					isQueryable ?
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create (null)) :
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute(null)),
+					type == MethodType.Queryable ?
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create      (null)) :
+					type == MethodType.Element ?
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute     (null)) :
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.ExecuteAsync(null)),
 					ps);
 			}
 		}
@@ -78,7 +88,16 @@ namespace LinqToDB
 						{
 							var expr = (MethodCallExpression)pi;
 
-							if (expr.IsQueryable())
+							if (expr.Method.DeclaringType == typeof(AsyncExtensions) &&
+								expr.Method.GetCustomAttributesEx(typeof(AsyncExtensions.ElementAsyncAttribute), true).Length != 0)
+							{
+								var type = expr.Type.GetGenericArgumentsEx()[0];
+
+								var helper = (ITableHelper)Activator.CreateInstance(typeof(TableHelper<>).MakeGenericType(type));
+
+								return helper.CallTable(query, expr, ps, MethodType.ElementAsync);
+							}
+							else if (expr.IsQueryable())
 							{
 								var type   = typeof(IQueryable).IsSameOrParentOf(expr.Type) ?
 										typeof(IQueryable<>) :
@@ -88,7 +107,7 @@ namespace LinqToDB
 								var helper = (ITableHelper)Activator.CreateInstance(
 									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArgumentsEx()[0]));
 
-								return helper.CallTable(query, expr, ps, qtype != null);
+								return helper.CallTable(query, expr, ps, qtype != null ? MethodType.Queryable : MethodType.Element);
 							}
 
 							if (expr.Method.Name == "GetTable" && expr.Method.DeclaringType == typeof(DataExtensions))
@@ -103,7 +122,7 @@ namespace LinqToDB
 							var helper = (ITableHelper)Activator
 								.CreateInstance(typeof(TableHelper<>)
 								.MakeGenericType(pi.Type.GetGenericArgumentsEx()[0]));
-							return helper.CallTable(query, pi, ps, true);
+							return helper.CallTable(query, pi, ps, MethodType.Queryable);
 						}
 
 						break;

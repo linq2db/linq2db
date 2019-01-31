@@ -4,8 +4,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB;
-using LinqToDB.Async;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -226,6 +227,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public async Task ElementTest1Async2([DataSources] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
+				db.Child.FirstAsync(c => c.ParentID == n, default));
+
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(1, (await query(db, 1)).ParentID);
+				Assert.AreEqual(2, (await query(db, 2)).ParentID);
+			}
+		}
+
+		[Test]
 		public void CompiledQueryWithExpressionMethodTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -236,13 +250,24 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public async Task CompiledQueryWithExpressionMethodTestAsync([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = CompiledQuery.Compile((ITestDataContext xdb, int id) => Filter(xdb, id).FirstOrDefaultAsync(default));
+
+				await query(db, 1);
+			}
+		}
+
 		[ExpressionMethod(nameof(FilterExpression))]
 		public static IQueryable<Parent> Filter(ITestDataContext db, int date)
 		{
 			throw new NotImplementedException();
 		}
 
-		static Expression<Func<ITestDataContext, int, IQueryable<Parent>>> FilterExpression()
+		static Expression<Func<ITestDataContext,int,IQueryable<Parent>>> FilterExpression()
 		{
 			return (db, id) =>
 				from x in db.GetTable<Parent>()
