@@ -19,6 +19,23 @@ namespace Tests.Linq
 
 			[Column("value", Length = 50)] 
 			public string Value { get; set; }
+
+
+			public SomeOtherClass AssociatedOne { get; set; }
+
+		}
+
+		[Table(Name = "sample_other_class")]
+		class SomeOtherClass
+		{
+			[Column("id")]
+			public int Id       { get; set; }
+
+			[Column("parent_id")]
+			public int ParentId { get; set; }
+
+			[Column("value", Length = 50)]
+			public string Value { get; set; }
 		}
 
 		static SampleClass[] GenerateTestData()
@@ -239,6 +256,39 @@ namespace Tests.Linq
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
+			}
+		}
+
+		private const string someGeneratedSqlString = "SELECT * FROM sample_other_class where parent_id = {0} and id >= {1}";
+
+		[Test]
+		public void TestAsosciation(
+			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context, 
+			[Values(14, 15)] int startId
+		)
+		{
+			var ms = new MappingSchema();
+
+			var idFilter = 1;
+
+			ms.GetFluentMappingBuilder()
+				.Entity<SampleClass>()
+				.Association(x => x.AssociatedOne,
+					(x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter));
+
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
+			using (var other = db.CreateLocalTable<SomeOtherClass>())
+			{
+
+				var query = from t in table
+					select new
+					{
+						t.Id,
+						t.AssociatedOne
+					};
+
+				var result = query.ToArray();
 			}
 		}
 
