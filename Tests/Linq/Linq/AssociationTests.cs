@@ -887,6 +887,70 @@ namespace Tests.Linq
 				var _ = db.Parent.Select(p => p.ChildPredicate()).ToList();
 			}
 		}
+
+		[Test]
+		public void ComplexQueryWithManyToMany([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				int? id = 3;
+				int? id1 = 3;
+
+				// yes, this query doesn't make sense - it just tests
+				// that SelectContext.ConvertToIndexInternal handles ConvertFlags.Key in IsScalar branch
+				var result = db
+				.GetTable<ComplexChild>()
+				.Where(с => AssociationExtension.ContainsNullable(
+					db
+						.GetTable<ComplexParent>()
+						.Where(_ => _.ParentID == id.Value)
+						.SelectMany(_ => _.Children())
+						.Select(_ => _.Parent)
+						// this fails without ConvertFlags.Key support
+						.Where(_ => _ != null)
+						.Select(_ => _.ParentID),
+					id1))
+				.OrderBy(с => с.ChildID)
+				.Select(с => (int?)с.ChildID)
+				.FirstOrDefault();
+
+				Assert.AreEqual(11, result);
+			}
+		}
+
+		[Table("Parent")]
+		public class ComplexParent
+		{
+			[Column]
+			public int ParentID { get; set; }
+
+			[Association(ThisKey = nameof(ParentID), OtherKey = nameof(ComplexManyToMany.ParentID), CanBeNull = false)]
+			public IQueryable<ComplexManyToMany> ManyToMany { get; }
+		}
+
+		[Table("Child")]
+		public class ComplexManyToMany
+		{
+			[Column]
+			public int ParentID { get; set; }
+			[Column]
+			public int ChildID  { get; set; }
+
+			[Association(ThisKey = nameof(ChildID), OtherKey = nameof(ComplexChild.ChildID), CanBeNull = false)]
+			public ComplexChild  Child { get; }
+		}
+
+		[Table("GrandChild")]
+		public class ComplexChild
+		{
+			[Column]
+			public int ChildID  { get; set; }
+			[Column]
+			public int ParentID { get; set; }
+
+			[Association(ThisKey = nameof(ParentID), OtherKey = nameof(ComplexParent.ParentID), CanBeNull = true)]
+			public ComplexParent Parent { get; }
+		}
 	}
 
 	public static class AssociationExtension
@@ -935,6 +999,31 @@ namespace Tests.Linq
 		public static IQueryable<Parent> QueryableParent(this Child child, IDataContext db)
 		{
 			return db.GetTable<Parent>().Where(_ => _.ParentID == child.ParentID);
+		}
+
+		[ExpressionMethod(nameof(ContainsNullableExpression))]
+		public static bool ContainsNullable<TItem>(IEnumerable<TItem> list, TItem? value)
+			where TItem : struct
+		{
+			return value != null && list.Contains(value.Value);
+		}
+
+		private static Expression<Func<IEnumerable<TItem>, TItem?, bool>> ContainsNullableExpression<TItem>()
+			where TItem : struct
+		{
+			// Contains does not work with Linq2DB - use Any
+			return (list, value) => value != null && list.Any(li => li.Equals(value));
+		}
+
+		[ExpressionMethod(nameof(ChildrenExpression))]
+		public static IQueryable<AssociationTests.ComplexChild> Children(this AssociationTests.ComplexParent p)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<AssociationTests.ComplexParent, IQueryable<AssociationTests.ComplexChild>>> ChildrenExpression()
+		{
+			return p => p.ManyToMany.Select(m2m => m2m.Child);
 		}
 	}
 }
