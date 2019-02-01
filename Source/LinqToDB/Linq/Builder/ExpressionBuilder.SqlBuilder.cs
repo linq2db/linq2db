@@ -839,15 +839,23 @@ namespace LinqToDB.Linq.Builder
 
 						if (attr != null)
 						{
-							if (attr.ExpectExpression)
+							var converted = attr.GetExpression(MappingSchema, context.SelectQuery, ma,
+								e => ConvertToSql(context, e));
+
+							if (converted == null)
 							{
-								var exp = ConvertToSql(context, ma.Expression);
-								return Convert(context, attr.GetExpression(ma.Member, exp));
+								if (attr.ExpectExpression)
+								{
+									var exp = ConvertToSql(context, ma.Expression);
+									converted = Convert(context, attr.GetExpression(ma.Member, exp));
+								}
+								else
+								{
+									converted = Convert(context, attr.GetExpression(ma.Member));
+								}
 							}
-							else
-							{
-								return Convert(context, attr.GetExpression(ma.Member));
-							}
+
+							return converted;
 						}
 
 						var ctx = GetContext(context, expression);
