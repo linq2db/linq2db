@@ -14,8 +14,6 @@ void GenerateModel()
 {
 	Model.SetTree();
 
-	BeforeGenerateModel();
-
 	if (GenerationEnvironment.Length > 0 && GenerationEnvironment.ToString().Trim().Length == 0)
 		GenerationEnvironment.Length = 0;
 
@@ -25,6 +23,8 @@ void GenerateModel()
 	WriteComment(this, "    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.");
 	WriteComment(this, " </auto-generated>");
 	WriteComment(this, "---------------------------------------------------------------------------------------------------");
+
+	BeforeGenerateModel();
 
 	Model.Render(this);
 }
