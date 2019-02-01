@@ -539,17 +539,16 @@ namespace Tests.DataProvider
 			using (db.BeginTransaction())
 			{
 				Random rnd = new Random();
-				var Image = new byte[9000];
-				rnd.NextBytes(Image);
+				var image = new byte[9000];
+				rnd.NextBytes(image);
 
-				var TestItem = new ImageDataType { imageDataType = Image };
+				var testItem = new ImageDataType { imageDataType = image };
 
-				var Id = db.InsertWithInt32Identity(TestItem);
+				var id = db.InsertWithInt32Identity(testItem);
 
-				var Item = db.GetTable<ImageDataType>().FirstOrDefault(_ => _.ID == Id);
+				var item = db.GetTable<ImageDataType>().FirstOrDefault(_ => _.ID == id);
 
-				Assert.That(TestItem.imageDataType, Is.EqualTo(Item.imageDataType));
-
+				Assert.That(testItem.imageDataType, Is.EqualTo(item.imageDataType));
 			}
 		}
 
