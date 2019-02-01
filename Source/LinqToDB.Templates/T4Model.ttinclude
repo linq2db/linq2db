@@ -14,8 +14,6 @@ void GenerateModel()
 {
 	Model.SetTree();
 
-	BeforeGenerateModel();
-
 	if (GenerationEnvironment.Length > 0 && GenerationEnvironment.ToString().Trim().Length == 0)
 		GenerationEnvironment.Length = 0;
 
@@ -30,6 +28,8 @@ void GenerateModel()
 	WriteLine("#pragma warning disable 1591");
 	WriteLine("");
 	
+	BeforeGenerateModel();
+
 	Model.Render(this);
 
 	WriteLine("");
