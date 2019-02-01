@@ -141,6 +141,7 @@ namespace LinqToDB.SchemaProvider
 						Length               = column.c.Length,
 						Precision            = column.c.Precision,
 						Scale                = column.c.Scale,
+						SequenceName         = column.c.SequenceName,
 					});
 				}
 

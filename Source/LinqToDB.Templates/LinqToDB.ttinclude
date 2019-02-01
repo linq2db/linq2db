@@ -386,6 +386,13 @@ void GenerateTypesFromMetadata()
 				canBeReplaced = false;
 			}
 
+			if(c.SequenceName != null)
+			{				
+				var sequenceNameAttr = new Attribute("SequenceName");
+				sequenceNameAttr.Parameters.Add(ToStringLiteral(c.SequenceName));
+				c.Attributes.Add(sequenceNameAttr);
+			}
+
 			// Nullable.
 			//
 			if (c.IsNullable)

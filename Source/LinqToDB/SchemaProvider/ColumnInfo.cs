@@ -19,5 +19,6 @@ namespace LinqToDB.SchemaProvider
 		public bool   IsIdentity;
 		public bool   SkipOnInsert;
 		public bool   SkipOnUpdate;
+		public string SequenceName;
 	}
 }

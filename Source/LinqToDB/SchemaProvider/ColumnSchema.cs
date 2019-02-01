@@ -22,6 +22,10 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets flag indicating that it is identity column.
 		/// </summary>
+		public string      SequenceName         { get; set; }
+		/// <summary>
+		/// Gets flag indicating that it is identity column.
+		/// </summary>
 		public bool        IsIdentity           { get; set; }
 		/// <summary>
 		/// Gets flag indicating that column is a part of primary key.

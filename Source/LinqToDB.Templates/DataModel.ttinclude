@@ -151,6 +151,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 						SkipOnInsert    = c.SkipOnInsert,
 						SkipOnUpdate    = c.SkipOnUpdate,
 						Description     = c.Description,
+						SequenceName    = c.SequencyName,
 					})
 			}
 		})
@@ -738,6 +739,7 @@ public partial class Column : Property
 	public bool      IsDuplicateOrEmpty;
 	public bool      IsDiscriminator;
 	public string    AliasName;
+	public string    SequenceName;
 
 	public string MemberName
 	{

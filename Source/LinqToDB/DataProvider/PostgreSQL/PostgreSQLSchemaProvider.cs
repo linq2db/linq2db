@@ -155,7 +155,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						numeric_scale                                                       as Scale,
 						is_identity = 'YES' OR COALESCE(column_default ~* 'nextval', false) as IsIdentity,
 						is_generated <> 'NEVER'                                             as SkipOnInsert,
-						is_updatable = 'NO'                                                 as SkipOnUpdate
+						is_updatable = 'NO'                                                 as SkipOnUpdate,
+						substring(column_default from 'nextval\(''(.+)''')					as SequenceName
 					FROM
 						information_schema.columns";
 
