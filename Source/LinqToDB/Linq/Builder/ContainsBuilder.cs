@@ -10,7 +10,9 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("Contains") && methodCall.Arguments.Count == 2;
+			return
+				methodCall.IsQueryable     ("Contains") && methodCall.Arguments.Count == 2 ||
+				methodCall.IsAsyncExtension("Contains") && methodCall.Arguments.Count == 3;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
