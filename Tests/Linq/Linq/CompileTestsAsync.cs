@@ -403,7 +403,7 @@ namespace Tests.Linq
 				Assert.AreEqual(10, result);
 			}
 		}
-		
+
 		[Test]
 		public async Task SumAsyncIntN([SQLiteDataSources(true)] string context)
 		{
@@ -431,7 +431,7 @@ namespace Tests.Linq
 				Assert.AreEqual(10, result);
 			}
 		}
-		
+
 		[Test]
 		public async Task SumAsyncLongN([SQLiteDataSources(true)] string context)
 		{
@@ -445,7 +445,7 @@ namespace Tests.Linq
 				Assert.AreEqual(10, result);
 			}
 		}
-		
+
 		[Test]
 		public async Task SumAsyncFloat([SQLiteDataSources(true)] string context)
 		{
@@ -459,7 +459,7 @@ namespace Tests.Linq
 				Assert.AreEqual(10, result);
 			}
 		}
-		
+
 		[Test]
 		public async Task SumAsyncFloatN([SQLiteDataSources(true)] string context)
 		{
@@ -473,7 +473,7 @@ namespace Tests.Linq
 				Assert.AreEqual(10, result);
 			}
 		}
-		
+
 		[Test]
 		public async Task SumAsyncDouble([SQLiteDataSources(true)] string context)
 		{
@@ -487,7 +487,7 @@ namespace Tests.Linq
 				Assert.AreEqual(10, result);
 			}
 		}
-		
+
 		[Test]
 		public async Task SumAsyncDoubleN([SQLiteDataSources(true)] string context)
 		{
@@ -501,7 +501,7 @@ namespace Tests.Linq
 				Assert.AreEqual(10, result);
 			}
 		}
-		
+
 		[Test]
 		public async Task SumAsyncDecimal([SQLiteDataSources(true)] string context)
 		{
@@ -515,7 +515,7 @@ namespace Tests.Linq
 				Assert.AreEqual(10, result);
 			}
 		}
-		
+
 		[Test]
 		public async Task SumAsyncDecimalN([SQLiteDataSources(true)] string context)
 		{
@@ -546,7 +546,7 @@ namespace Tests.Linq
 				Assert.AreEqual(10, result);
 			}
 		}
-		
+
 		[Test]
 		public async Task SumAsyncSelectorIntN([SQLiteDataSources(true)] string context)
 		{
@@ -559,7 +559,7 @@ namespace Tests.Linq
 				var result = await query(db, 5, CancellationToken.None);
 				Assert.AreEqual(10, result);
 			}
-		}		
+		}
 
 		[Test]
 		public async Task SumAsyncSelectorLong([SQLiteDataSources(true)] string context)
@@ -574,7 +574,7 @@ namespace Tests.Linq
 				Assert.AreEqual(10, result);
 			}
 		}
-		
+
 		[Test]
 		public async Task SumAsyncSelectorLongN([SQLiteDataSources(true)] string context)
 		{
@@ -587,7 +587,7 @@ namespace Tests.Linq
 				var result = await query(db, 5, CancellationToken.None);
 				Assert.AreEqual(10, result);
 			}
-		}		
+		}
 
 		[Test]
 		public async Task SumAsyncSelectorFloat([SQLiteDataSources(true)] string context)
@@ -602,7 +602,7 @@ namespace Tests.Linq
 				Assert.AreEqual(10, result);
 			}
 		}
-		
+
 		[Test]
 		public async Task SumAsyncSelectorFloatN([SQLiteDataSources(true)] string context)
 		{
@@ -615,7 +615,7 @@ namespace Tests.Linq
 				var result = await query(db, 5, CancellationToken.None);
 				Assert.AreEqual(10, result);
 			}
-		}		
+		}
 
 		[Test]
 		public async Task SumAsyncSelectorDouble([SQLiteDataSources(true)] string context)
@@ -630,7 +630,7 @@ namespace Tests.Linq
 				Assert.AreEqual(10, result);
 			}
 		}
-		
+
 		[Test]
 		public async Task SumAsyncSelectorDoubleN([SQLiteDataSources(true)] string context)
 		{
@@ -643,7 +643,7 @@ namespace Tests.Linq
 				var result = await query(db, 5, CancellationToken.None);
 				Assert.AreEqual(10, result);
 			}
-		}		
+		}
 
 		[Test]
 		public async Task SumAsyncSelectorDecimal([SQLiteDataSources(true)] string context)
@@ -658,7 +658,7 @@ namespace Tests.Linq
 				Assert.AreEqual(10, result);
 			}
 		}
-		
+
 		[Test]
 		public async Task SumAsyncSelectorDecimalN([SQLiteDataSources(true)] string context)
 		{
@@ -671,7 +671,7 @@ namespace Tests.Linq
 				var result = await query(db, 5, CancellationToken.None);
 				Assert.AreEqual(10, result);
 			}
-		}		
+		}
 
 		#endregion
 
@@ -687,11 +687,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.AreEqual(2.5d, result);
 			}
 		}
-		
-	
+
+
 
 		#endregion
 
