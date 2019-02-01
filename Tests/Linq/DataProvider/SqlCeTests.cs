@@ -523,33 +523,34 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table(Name = "CreateTableTest393", Schema = "IgnoreSchema", Database = "TestDatabase")]
-		public class CreateTableTest393
+		[Table(Name = "AllTypes")]
+		public class ImageDataType
 		{
+			[Column(DbType = "int"), PrimaryKey, Identity]
+			public int ID { get; set; }
 			[Column(DataType = DataType.Image), Nullable]
-			public byte[] MyImage { get; set; } 
+			public byte[] imageDataType { get; set; } 
 		}
 
 		[Test]
 		public void Issue393Test([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			SqlCeTools.CreateDatabase("TestDatabase", true);
-			Assert.IsTrue(File.Exists ("TestDatabase.sdf"));
-
-			using (var db = new DataConnection(SqlCeTools.GetDataProvider(), "Data Source=TestDatabase.sdf"))
+			using (var db = new DataConnection(context))
+			using (db.BeginTransaction())
 			{
-				var TestItem = new CreateTableTest393
-				{
-					MyImage = new byte[9000]
-				};
-					
-				db.CreateTable<CreateTableTest393>();
-				db.Insert<CreateTableTest393>(TestItem);
-				db.DropTable<CreateTableTest393>();
-			}
+				Random rnd = new Random();
+				var Image = new byte[9000];
+				rnd.NextBytes(Image);
 
-			SqlCeTools.DropDatabase("TestDatabase");
-			Assert.IsFalse(File.Exists("TestDatabase.sdf"));
+				var TestItem = new ImageDataType { imageDataType = Image };
+
+				var Id = db.InsertWithInt32Identity(TestItem);
+
+				var Item = db.GetTable<ImageDataType>().FirstOrDefault(_ => _.ID == Id);
+
+				Assert.That(TestItem.imageDataType, Is.EqualTo(Item.imageDataType));
+
+			}
 		}
 
 	}
