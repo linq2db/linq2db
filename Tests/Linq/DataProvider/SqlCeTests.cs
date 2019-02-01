@@ -522,5 +522,35 @@ namespace Tests.DataProvider
 				SqlCeConfiguration.InlineFunctionParameters = defaultValue;
 			}
 		}
+
+		[Table(Name = "CreateTableTest393", Schema = "IgnoreSchema", Database = "TestDatabase")]
+		public class CreateTableTest393
+		{
+			[Column(DataType = DataType.Image), Nullable]
+			public byte[] MyImage { get; set; } 
+		}
+
+		[Test]
+		public void Issue393Test([IncludeDataSources(ProviderName.SqlCe)] string context)
+		{
+			SqlCeTools.CreateDatabase("TestDatabase", true);
+			Assert.IsTrue(File.Exists ("TestDatabase.sdf"));
+
+			using (var db = new DataConnection(SqlCeTools.GetDataProvider(), "Data Source=TestDatabase.sdf"))
+			{
+				var TestItem = new CreateTableTest393
+				{
+					MyImage = new byte[9000]
+				};
+					
+				db.CreateTable<CreateTableTest393>();
+				db.Insert<CreateTableTest393>(TestItem);
+				db.DropTable<CreateTableTest393>();
+			}
+
+			SqlCeTools.DropDatabase("TestDatabase");
+			Assert.IsFalse(File.Exists("TestDatabase.sdf"));
+		}
+
 	}
 }
