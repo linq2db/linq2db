@@ -432,9 +432,9 @@ namespace LinqToDB.Linq.Builder
 									return ExpandExpression(lambda);
 								}
 							}
-							
+
 							return mc;
-						}		
+						}
 
 					case ExpressionType.Invoke:
 						{
@@ -688,27 +688,33 @@ namespace LinqToDB.Linq.Builder
 						{
 							switch (call.Method.Name)
 							{
-								case "Where"              : return new TransformInfo(ConvertWhere     (call));
-								case "GroupBy"            : return new TransformInfo(ConvertGroupBy   (call));
-								case "SelectMany"         : return new TransformInfo(ConvertSelectMany(call));
-								case "Select"             : return new TransformInfo(ConvertSelect    (call));
-								case "LongCount"          :
-								case "Count"              :
-								case "Single"             :
-								case "SingleOrDefault"    :
-								case "First"                : return new TransformInfo(ConvertPredicate     (call));
-								case "FirstOrDefault"       :
+								case "Where"                : return new TransformInfo(ConvertWhere         (call));
+								case "GroupBy"              : return new TransformInfo(ConvertGroupBy       (call));
+								case "SelectMany"           : return new TransformInfo(ConvertSelectMany    (call));
+								case "Select"               : return new TransformInfo(ConvertSelect        (call));
+								case "LongCount"            :
+								case "Count"                :
+								case "Single"               :
+								case "SingleOrDefault"      :
+								case "First"                :
+								case "FirstOrDefault"       : return new TransformInfo(ConvertPredicate     (call));
+								case "LongCountAsync"       :
+								case "CountAsync"           :
 								case "SingleAsync"          :
 								case "SingleOrDefaultAsync" :
 								case "FirstAsync"           :
 								case "FirstOrDefaultAsync"  : return new TransformInfo(ConvertPredicateAsync(call));
-								case "Min"                :
-								case "Max"                : return new TransformInfo(ConvertSelector  (call, true));
-								case "Sum"                :
-								case "Average"            : return new TransformInfo(ConvertSelector  (call, false));
-								case "ElementAt"          :
-								case "ElementAtOrDefault" : return new TransformInfo(ConvertElementAt (call));
-								case "LoadWith"           : return new TransformInfo(expr, true);
+								case "Min"                  :
+								case "Max"                  : return new TransformInfo(ConvertSelector      (call, true));
+								case "Sum"                  :
+								case "Average"              : return new TransformInfo(ConvertSelector      (call, false));
+								case "MinAsync"             :
+								case "MaxAsync"             : return new TransformInfo(ConvertSelectorAsync (call, true));
+								case "SumAsync"             :
+								case "AverageAsync"         : return new TransformInfo(ConvertSelectorAsync (call, false));
+								case "ElementAt"            :
+								case "ElementAtOrDefault"   : return new TransformInfo(ConvertElementAt     (call));
+								case "LoadWith"             : return new TransformInfo(expr, true);
 							}
 						}
 						else
@@ -1445,6 +1451,48 @@ namespace LinqToDB.Linq.Builder
 				OptimizeExpression(Expression.Call(null, sm,
 					method.Arguments[0],
 					method.Arguments[1])));
+		}
+
+		Expression ConvertSelectorAsync(MethodCallExpression method, bool isGeneric)
+		{
+			if (method.Arguments.Count != 3)
+				return method;
+
+			isGeneric = isGeneric && method.Method.DeclaringType == typeof(AsyncExtensions);
+
+			var types = GetMethodGenericTypes(method);
+			var sm    = GetMethodInfo(method, "Select");
+			var cm    = typeof(AsyncExtensions).GetMethodsEx().First(m =>
+			{
+				if (m.Name == method.Method.Name)
+				{
+					var ps = m.GetParameters();
+
+					if (ps.Length == 2)
+					{
+						if (isGeneric)
+							return true;
+
+						var ts = ps[0].ParameterType.GetGenericArgumentsEx();
+						return ts[0] == types[1];// || isDefault && ts[0].IsGenericParameter;
+					}
+				}
+
+				return false;
+			});
+
+			var argType = types[0];
+
+			sm = sm.MakeGenericMethod(argType, types[1]);
+
+			if (cm.IsGenericMethodDefinition)
+				cm = cm.MakeGenericMethod(types[1]);
+
+			return Expression.Call(null, cm,
+				OptimizeExpression(Expression.Call(null, sm,
+					method.Arguments[0],
+					method.Arguments[1])),
+				OptimizeExpression(method.Arguments[2]));
 		}
 
 		#endregion

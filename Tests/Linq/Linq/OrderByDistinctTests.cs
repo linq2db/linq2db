@@ -366,7 +366,7 @@ namespace Tests.Linq
 			var testData = GetTestData();
 
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
+			using (var table = db.CreateLocalTable(context, "OBO", testData))
 			{
 				var actualQuery = table
 					.Where(x => x.Id.Between(1, 9))
