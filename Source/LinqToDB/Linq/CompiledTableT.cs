@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
@@ -95,6 +96,14 @@ namespace LinqToDB.Linq
 			var query = GetInfo(db);
 
 			return (T)query.GetElement(db, _expression, parameters);
+		}
+
+		public async Task<T> ExecuteAsync(object[] parameters)
+		{
+			var db    = (IDataContext)parameters[0];
+			var query = GetInfo(db);
+
+			return (T)(await query.GetElementAsync(db, _expression, parameters, default));
 		}
 	}
 }
