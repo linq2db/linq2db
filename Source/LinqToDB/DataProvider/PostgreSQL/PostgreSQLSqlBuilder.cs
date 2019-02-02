@@ -85,25 +85,25 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			switch (type.DataType)
 			{
-				case DataType.SByte:
-				case DataType.Byte: StringBuilder.Append("SmallInt"); break;
-				case DataType.Money: StringBuilder.Append("money"); break;
-				case DataType.SmallMoney: StringBuilder.Append("Decimal(10,4)"); break;
-				case DataType.DateTime2:
-				case DataType.SmallDateTime:
-				case DataType.DateTime: StringBuilder.Append("TimeStamp"); break;
-				case DataType.DateTimeOffset: StringBuilder.Append("TimeStampTZ"); break;
-				case DataType.Boolean: StringBuilder.Append("Boolean"); break;
-				case DataType.NVarChar:
+				case DataType.SByte         :
+				case DataType.Byte          : StringBuilder.Append("SmallInt");       break;
+				case DataType.Money         : StringBuilder.Append("money");          break;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");  break;
+				case DataType.DateTime2     :
+				case DataType.SmallDateTime :
+				case DataType.DateTime      : StringBuilder.Append("TimeStamp");      break;
+				case DataType.DateTimeOffset: StringBuilder.Append("TimeStampTZ");    break;
+				case DataType.Boolean       : StringBuilder.Append("Boolean");        break;
+				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
 					if (type.Length > 0)
 						StringBuilder.Append('(').Append(type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
 					break;
-				case DataType.Json: StringBuilder.Append("json"); break;
-				case DataType.BinaryJson: StringBuilder.Append("jsonb"); break;
-				case DataType.Guid: StringBuilder.Append("uuid"); break;
-				case DataType.VarBinary: StringBuilder.Append("bytea"); break;
-				case DataType.BitArray:
+				case DataType.Json           : StringBuilder.Append("json");           break;
+				case DataType.BinaryJson     : StringBuilder.Append("jsonb");          break;
+				case DataType.Guid           : StringBuilder.Append("uuid");           break;
+				case DataType.VarBinary      : StringBuilder.Append("bytea");          break;
+				case DataType.BitArray       :
 					if (type.Length == 1)
 						StringBuilder.Append("bit");
 					if (type.Length > 1)
@@ -111,37 +111,37 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					else
 						StringBuilder.Append("bit varying");
 					break;
-				case DataType.NChar:
+				case DataType.NChar          :
 					StringBuilder.Append("character");
 					if (type.Length > 1) // this is correct condition
 						StringBuilder.Append('(').Append(type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
 					break;
-				case DataType.Udt:
+				case DataType.Udt            :
 					if (type.Type != null)
 					{
 						var udtType = type.Type.ToNullableUnderlying();
 
-						if (udtType == _provider.NpgsqlPointType) StringBuilder.Append("point");
-						else if (udtType == _provider.NpgsqlLineType) StringBuilder.Append("line");
-						else if (udtType == _provider.NpgsqlBoxType) StringBuilder.Append("box");
-						else if (udtType == _provider.NpgsqlLSegType) StringBuilder.Append("lseg");
-						else if (udtType == _provider.NpgsqlCircleType) StringBuilder.Append("circle");
-						else if (udtType == _provider.NpgsqlPolygonType) StringBuilder.Append("polygon");
-						else if (udtType == _provider.NpgsqlPathType) StringBuilder.Append("path");
+						if      (udtType == _provider.NpgsqlPointType)    StringBuilder.Append("point");
+						else if (udtType == _provider.NpgsqlLineType)     StringBuilder.Append("line");
+						else if (udtType == _provider.NpgsqlBoxType)      StringBuilder.Append("box");
+						else if (udtType == _provider.NpgsqlLSegType)     StringBuilder.Append("lseg");
+						else if (udtType == _provider.NpgsqlCircleType)   StringBuilder.Append("circle");
+						else if (udtType == _provider.NpgsqlPolygonType)  StringBuilder.Append("polygon");
+						else if (udtType == _provider.NpgsqlPathType)     StringBuilder.Append("path");
 						else if (udtType == _provider.NpgsqlIntervalType) StringBuilder.Append("interval");
-						else if (udtType == _provider.NpgsqlDateType) StringBuilder.Append("date");
+						else if (udtType == _provider.NpgsqlDateType)     StringBuilder.Append("date");
 						else if (udtType == _provider.NpgsqlDateTimeType) StringBuilder.Append("timestamp");
-						else if (udtType == typeof(IPAddress)) StringBuilder.Append("inet");
+						else if (udtType == typeof(IPAddress))            StringBuilder.Append("inet");
 						else if (udtType == typeof(PhysicalAddress)
-							&& !_provider.HasMacAddr8) StringBuilder.Append("macaddr");
-						else base.BuildDataType(type, createDbType);
+							&& !_provider.HasMacAddr8)                    StringBuilder.Append("macaddr");
+						else                                              base.BuildDataType(type, createDbType);
 					}
 					else
 						base.BuildDataType(type, createDbType);
 
 					break;
 
-				default: base.BuildDataType(type, createDbType); break;
+				default                      : base.BuildDataType(type, createDbType); break;
 			}
 		}
 
@@ -196,7 +196,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					if (value != null)
 					{
 						var str = value.ToString();
-						return (str.Length > 0 && str[0] == ':') ? str.Substring(1) : str;
+						return (str.Length > 0 && str[0] == ':')? str.Substring(1): str;
 					}
 
 					break;
@@ -305,8 +305,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			switch (join.JoinType)
 			{
-				case JoinType.CrossApply: StringBuilder.Append("INNER JOIN LATERAL "); return true;
-				case JoinType.OuterApply: StringBuilder.Append("LEFT JOIN LATERAL "); return true;
+				case JoinType.CrossApply : StringBuilder.Append("INNER JOIN LATERAL "); return true;
+				case JoinType.OuterApply : StringBuilder.Append("LEFT JOIN LATERAL ");  return true;
 			}
 
 			return base.BuildJoinType(join);
@@ -315,7 +315,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
-			if (schema != null && schema.Length == 0) schema = null;
+			if (schema   != null && schema.  Length == 0) schema   = null;
 
 			// "db..table" syntax not supported and postgresql doesn't support database name, if it is not current database
 			// so we can clear database name to avoid error from server
