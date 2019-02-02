@@ -56,8 +56,8 @@
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net46'">
 		<PlatformTarget>x86</PlatformTarget>
-		<PlatformTarget Condition="'$(Configuration)' == 'AppVeyor'">Any"</PlatformTarget>
-		<PlatformTarget Condition="'$(Configuration)' == 'Travis'">Any"</PlatformTarget>
+		<PlatformTarget Condition="'$(Configuration)' == 'AppVeyor'">AnyCpu"</PlatformTarget>
+		<PlatformTarget Condition="'$(Configuration)' == 'Travis'">AnyCpu"</PlatformTarget>
 	</PropertyGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net46' ">
