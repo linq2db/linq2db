@@ -168,6 +168,9 @@ GO
 DROP TABLE IF EXISTS "SequenceTest3"
 GO
 
+DROP TABLE IF EXISTS "SequenceCustomNamingTest"
+GO
+
 DROP SEQUENCE IF EXISTS SequenceTestSeq
 GO
 
@@ -180,11 +183,10 @@ GO
 CREATE SEQUENCE "SequenceTest2_ID_seq" INCREMENT 1 START 1
 GO
 
-
-DROP SEQUENCE IF EXISTS "test_schema"."CustomSequenceTest_seq"
+DROP SEQUENCE IF EXISTS "test_schema"."SequenceCustomNamingTest__seq__"
 GO
 
-CREATE SEQUENCE "test_schema"."CustomSequenceTest_seq" INCREMENT 1 START 1
+CREATE SEQUENCE "test_schema"."SequenceCustomNamingTest__seq__" INCREMENT 1 START 1
 GO
 
 CREATE TABLE "SequenceTest1"
@@ -208,9 +210,9 @@ CREATE TABLE "SequenceTest3"
 )
 GO
 
-CREATE TABLE "CustomeSequenceTest"
+CREATE TABLE "SequenceCustomNamingTest"
 (
-	"ID"    INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema.CustomSequenceTest_seq'),
+	"ID"    INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema.SequenceCustomNamingTest__seq__'),
 	"Value" VARCHAR(50)
 )
 GO

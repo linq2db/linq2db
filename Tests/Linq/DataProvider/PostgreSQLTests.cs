@@ -585,16 +585,16 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.GetTable<PostgreSQLSpecific.CustomSequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
+				db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Where(_ => _.Value == "SeqValue").Delete();
 
-				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.CustomSequenceTest { Value = "SeqValue" }));
-				var id2 = db.GetTable<PostgreSQLSpecific.CustomSequenceTest>().Single(_ => _.Value == "SeqValue").ID;
+				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.SequenceCustomNamingTest { Value = "SeqValue" }));
+				var id2 = db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Single(_ => _.Value == "SeqValue").ID;
 
 				Assert.AreEqual(id1, id2);
 
-				db.GetTable<PostgreSQLSpecific.CustomSequenceTest>().Where(_ => _.ID == id1).Delete();
+				db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Where(_ => _.ID == id1).Delete();
 
-				Assert.AreEqual(0, db.GetTable<PostgreSQLSpecific.CustomSequenceTest>().Count(_ => _.Value == "SeqValue"));
+				Assert.AreEqual(0, db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Count(_ => _.Value == "SeqValue"));
 			}
 		}
 
