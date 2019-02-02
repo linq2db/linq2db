@@ -14,6 +14,10 @@
 	<ItemGroup>
 		<Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
 
+		<Compile Remove="DataProvider\DB2Tests.cs" Condition="'$(Configuration)' == 'AppVeyor' OR '$(Configuration)' == 'Travis'" />
+		<Compile Remove="DataProvider\InformixTests.cs" Condition="'$(Configuration)' == 'AppVeyor' OR '$(Configuration)' == 'Travis'" />
+		<Compile Remove="DataProvider\OracleTests.cs" Condition="'$(Configuration)' == 'AppVeyor' OR '$(Configuration)' == 'Travis'" />
+
 		<None Include="..\..\Data\*">
 			<Link>Database/%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -55,8 +59,8 @@
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net46'">
 		<PlatformTarget>x86</PlatformTarget>
-		<PlatformTarget Condition="'$(Configuration)' == 'AppVeyor'">AnyCpu"</PlatformTarget>
-		<PlatformTarget Condition="'$(Configuration)' == 'Travis'">AnyCpu"</PlatformTarget>
+		<PlatformTarget Condition="'$(Configuration)' == 'AppVeyor'">AnyCpu</PlatformTarget>
+		<PlatformTarget Condition="'$(Configuration)' == 'Travis'">AnyCpu</PlatformTarget>
 	</PropertyGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net46' ">
@@ -88,16 +92,19 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
-		<Reference Include="IBM.Data.DB2">
+		<Reference Include="IBM.Data.DB2" Condition="'$(Configuration)' != 'AppVeyor' AND '$(Configuration)' != 'Travis'">
 			<HintPath>..\..\Redist\IBM\IBM.Data.DB2.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
-		<Reference Include="IBM.Data.Informix">
+		<Reference Include="IBM.Data.Informix" Condition="'$(Configuration)' != 'AppVeyor' AND '$(Configuration)' != 'Travis'">
 			<HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 
-		<PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />
+		<Reference Include="Oracle.DataAccess" Condition="'$(Configuration)' != 'AppVeyor' AND '$(Configuration)' != 'Travis'">
+			<HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
+		</Reference>
+
 		<PackageReference Include="Oracle.ManagedDataAccess" Version="12.2.1100" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
