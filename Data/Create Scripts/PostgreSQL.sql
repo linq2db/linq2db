@@ -458,7 +458,7 @@ CREATE SEQUENCE test_schema."TestSchemaIdentity_ID_seq" INCREMENT 1 START 1
 GO
 
 CREATE TABLE test_schema."TestSchemaIdentity" (
-	"ID" INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema."TestSchemaIdentity_ID_seq"')
+	"ID" INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema.TestSchemaIdentity_ID_seq')
 )
 GO
 
