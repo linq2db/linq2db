@@ -453,14 +453,14 @@ GO
 
 CREATE TABLE "SequenceCustomNamingTest"
 (
-	"ID"    INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema.SequenceCustomNamingTest__seq__'),
+	"ID"    INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema."SequenceCustomNamingTest__seq__"'),
 	"Value" VARCHAR(50)
 )
 GO
 
 
 CREATE TABLE test_schema."TestSchemaIdentity" (
-	"ID" INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema.TestSchemaIdentity_ID_seq')
+	"ID" INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema."TestSchemaIdentity_ID_seq"')
 )
 GO
 
