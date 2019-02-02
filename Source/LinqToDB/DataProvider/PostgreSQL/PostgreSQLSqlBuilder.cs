@@ -61,6 +61,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				BuildTableName(StringBuilder, database, schema, sequenceName.ToString());
 
+
 				StringBuilder.AppendLine("')");
 			}
 		}
@@ -261,8 +262,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					var name = Convert(attr.SequenceName, ConvertType.NameToQueryTable).ToString();
 					var database = GetTableDatabaseName(table);
-					var schema = attr.Schema != null 
-						? Convert(attr.Schema, ConvertType.NameToSchema).ToString() 
+					var schema = attr.Schema != null
+						? Convert(attr.Schema, ConvertType.NameToSchema).ToString()
 						: GetTableSchemaName(table);
 
 					var sb = BuildTableName(new StringBuilder(), database, schema, name);
