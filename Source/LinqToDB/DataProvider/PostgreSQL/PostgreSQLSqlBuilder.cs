@@ -56,14 +56,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var schema = attr?.Schema != null
 						? Convert(attr.Schema, ConvertType.NameToSchema).ToString()
 						: GetTableSchemaName(into);
-
+				
 				AppendIndent()
-					.Append("SELECT currval('");
+					.Append("SELECT currval(");
 
-				BuildTableName(StringBuilder, database, schema, sequenceName.ToString());
+				var sb = BuildTableName(new StringBuilder(), database, schema, sequenceName.ToString());
 
-
-				StringBuilder.AppendLine("')");
+				BuildValue(null, sb.ToString());
+				StringBuilder.AppendLine(")");
 			}
 		}
 
