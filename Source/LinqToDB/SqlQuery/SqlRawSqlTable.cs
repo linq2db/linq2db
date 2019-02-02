@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
-	//TODO: Investigate how to implement only ISqlTableSource interface 
+	//TODO: Investigate how to implement only ISqlTableSource interface
 	public class SqlRawSqlTable : SqlTable, IQueryElement
 	{
 		[JetBrains.Annotations.NotNull]
@@ -79,11 +79,11 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			if (Parameters != null)
 				for (var i = 0; i < Parameters.Length; i++)
-					Parameters[i] = Parameters[i].Walk(skipColumns, func);
+					Parameters[i] = Parameters[i].Walk(options, func);
 
 			return func(this);
 		}

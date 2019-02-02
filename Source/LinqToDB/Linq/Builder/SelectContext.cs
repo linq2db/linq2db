@@ -491,6 +491,7 @@ namespace LinqToDB.Linq.Builder
 				switch (flags)
 				{
 					case ConvertFlags.Field :
+					case ConvertFlags.Key   :
 					case ConvertFlags.All   :
 						return ProcessScalar(
 							expression,

@@ -1351,5 +1351,42 @@ namespace Tests.Linq
 				AreEqualLocal(local, table, t => !(!t.BoolValue && t.NullableBoolValue == false) && t.Id > 0);
 			}
 		}
+
+		[Test]
+		public void IsNullTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in db.Person.AsEnumerable()
+					select p.MiddleName into nm
+					where !(nm == null)
+					select new { nm }
+					,
+					from p in db.Person
+					select p.MiddleName into nm
+					where !(nm == null)
+					select new { nm });
+			}
+		}
+
+		[Test]
+		public void IsNullOrEmptyTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in db.Person.AsEnumerable()
+					select p.MiddleName into nm
+					where !(string.IsNullOrEmpty(nm))
+					select new { nm }
+					,
+					from p in db.Person
+					select p.MiddleName into nm
+					where !(string.IsNullOrEmpty(nm))
+					select new { nm });
+			}
+		}
+
 	}
 }

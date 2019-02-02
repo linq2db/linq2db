@@ -1,10 +1,10 @@
-﻿IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.SameTableName') AND type in (N'U'))
+﻿IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.SameTableName') AND type IN (N'U'))
 BEGIN DROP TABLE dbo.SameTableName END
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.TestSchema_SameTableName') AND type in (N'U'))
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.TestSchema_SameTableName') AND type IN (N'U'))
 BEGIN DROP TABLE dbo.TestSchema_SameTableName END
 GO
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.SameTableName') AND type in (N'U'))
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.SameTableName') AND type IN (N'U'))
 BEGIN DROP TABLE TestSchema.SameTableName END
 GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Doctor') AND type in (N'U'))
@@ -65,7 +65,7 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES (N'Jürgen', N'König',   'M')
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES (N'Jürgen', N'König', 'Ko', 'M')
 GO
 -- Doctor Table Extension
 
@@ -332,19 +332,19 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'VariableResults')
 BEGIN DROP Procedure VariableResults END
 GO
-CREATE PROCEDURE VariableResults 
+CREATE PROCEDURE VariableResults
 	@ReturnFullRow bit = 1
 AS
 BEGIN
-	IF @ReturnFullRow = 1 
+	IF @ReturnFullRow = 1
 	BEGIN
-		SELECT 
+		SELECT
 			1      as Code,
 			'Val1' as Value1,
-			'Val2' as Value2 
+			'Val2' as Value2
 	END
-	ELSE 
-        SELECT 
+	ELSE
+		SELECT
 			'v' as Value1,
 			2   as Code
 END

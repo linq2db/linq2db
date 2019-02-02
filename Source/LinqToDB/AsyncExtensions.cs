@@ -65,6 +65,10 @@ namespace LinqToDB
 
 		#endregion
 
+		internal class ElementAsyncAttribute : Attribute
+		{
+		}
+
 		#region ForEachAsync
 
 		/// <summary>

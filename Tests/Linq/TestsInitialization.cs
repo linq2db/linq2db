@@ -1,7 +1,9 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
 using System.Data.Common;
 using System.Reflection;
+
+using NUnit.Framework;
+
 using Tests;
 
 /// <summary>
@@ -14,7 +16,7 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !APPVEYOR && !TRAVIS
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
 		// but loaded from GAC assembly has other version
