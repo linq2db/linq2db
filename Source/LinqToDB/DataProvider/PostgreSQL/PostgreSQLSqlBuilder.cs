@@ -52,7 +52,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				sequenceName = Convert(sequenceName, ConvertType.NameToQueryTable);
 
 				var database = GetTableDatabaseName(into);
-				var schema = attr.Schema != null
+
+				var schema = attr?.Schema != null
 						? Convert(attr.Schema, ConvertType.NameToSchema).ToString()
 						: GetTableSchemaName(into);
 
