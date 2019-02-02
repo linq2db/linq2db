@@ -47,6 +47,6 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets sequence generator schema name.
 		/// </summary>
-		public string SchemaName { get; set; }
+		public string Schema { get; set; }
 	}
 }

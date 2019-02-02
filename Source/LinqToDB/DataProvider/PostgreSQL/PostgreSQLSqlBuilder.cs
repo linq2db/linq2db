@@ -52,8 +52,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				sequenceName = Convert(sequenceName, ConvertType.NameToQueryTable);
 
 				var database = GetTableDatabaseName(into);
-				var schema = attr.SchemaName != null
-						? Convert(attr.SchemaName, ConvertType.NameToSchema).ToString()
+				var schema = attr.Schema != null
+						? Convert(attr.Schema, ConvertType.NameToSchema).ToString()
 						: GetTableSchemaName(into);
 
 				AppendIndent()
@@ -261,8 +261,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					var name = Convert(attr.SequenceName, ConvertType.NameToQueryTable).ToString();
 					var database = GetTableDatabaseName(table);
-					var schema = attr.SchemaName != null 
-						? Convert(attr.SchemaName, ConvertType.NameToSchema).ToString() 
+					var schema = attr.Schema != null 
+						? Convert(attr.Schema, ConvertType.NameToSchema).ToString() 
 						: GetTableSchemaName(table);
 
 					var sb = BuildTableName(new StringBuilder(), database, schema, name);
