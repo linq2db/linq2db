@@ -10,6 +10,7 @@
 		</tags>
 		<dependencies>
 			<group targetFramework=".NETFramework4.5" />
+			<group targetFramework=".NETFramework4.6" />
 			<group targetFramework=".NETStandard1.6">
 				<dependency id="Microsoft.CSharp"                     version="4.3.0" />
 				<dependency id="System.Diagnostics.TraceSource"       version="4.3.0" />
