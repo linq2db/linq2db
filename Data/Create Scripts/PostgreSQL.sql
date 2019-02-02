@@ -180,6 +180,13 @@ GO
 CREATE SEQUENCE "SequenceTest2_ID_seq" INCREMENT 1 START 1
 GO
 
+
+DROP SEQUENCE IF EXISTS "test_schema"."CustomSequenceTest_seq"
+GO
+
+CREATE SEQUENCE "test_schema"."CustomSequenceTest_seq" INCREMENT 1 START 1
+GO
+
 CREATE TABLE "SequenceTest1"
 (
 	"ID"    INTEGER PRIMARY KEY,
@@ -197,6 +204,13 @@ GO
 CREATE TABLE "SequenceTest3"
 (
 	"ID"    INTEGER PRIMARY KEY DEFAULT NEXTVAL('SequenceTestSeq'),
+	"Value" VARCHAR(50)
+)
+GO
+
+CREATE TABLE "CustomeSequenceTest"
+(
+	"ID"    INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema.CustomSequenceTest_seq'),
 	"Value" VARCHAR(50)
 )
 GO

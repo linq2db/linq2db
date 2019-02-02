@@ -581,6 +581,24 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public void SequenceInsertWithIdentity_CustomNaming([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<PostgreSQLSpecific.CustomSequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
+
+				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.CustomSequenceTest { Value = "SeqValue" }));
+				var id2 = db.GetTable<PostgreSQLSpecific.CustomSequenceTest>().Single(_ => _.Value == "SeqValue").ID;
+
+				Assert.AreEqual(id1, id2);
+
+				db.GetTable<PostgreSQLSpecific.CustomSequenceTest>().Where(_ => _.ID == id1).Delete();
+
+				Assert.AreEqual(0, db.GetTable<PostgreSQLSpecific.CustomSequenceTest>().Count(_ => _.Value == "SeqValue"));
+			}
+		}
+
+		[Test]
 		public void SequenceInsertWithIdentity1([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = GetDataContext(context))
