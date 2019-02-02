@@ -33,9 +33,9 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 
-		<PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+		<PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
 		<PackageReference Include="NUnit" Version="3.11.0" />
 		<PackageReference Include="NUnit3TestAdapter" Version="3.12.0" />
 		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
@@ -60,8 +60,6 @@
 		<Reference Include="System.Xml" />
 		<Reference Include="System.Runtime.Serialization" />
 		<Reference Include="System.Windows.Forms" />
-
-		<PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
 	</ItemGroup>
 
 
@@ -92,6 +90,5 @@
 		<PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
 		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
 		<PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />
-		<PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
 	</ItemGroup>
 </Project>

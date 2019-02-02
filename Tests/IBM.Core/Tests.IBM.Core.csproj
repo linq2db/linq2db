@@ -15,8 +15,8 @@
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
 		<PackageReference Include="NUnit" Version="3.11.0" />
 		<PackageReference Include="NUnit3TestAdapter" Version="3.12.0" />
 		<PackageReference Include="IBM.Data.DB2.Core" Version="1.1.1.101" />
