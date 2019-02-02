@@ -76,10 +76,10 @@
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
 		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.4" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.1.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
 		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
 		<PackageReference Include="System.Data.Common" Version="4.3.0" />
 		<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
@@ -89,7 +89,7 @@
 		<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
 		<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
 		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
 		<PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />
 		<PackageReference Include="System.Collections.Immutable" Version="1.4.0" />

@@ -58,7 +58,7 @@
 
 	<!-- .NET Framework -->
 
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net46' AND '$(Configuration)' != 'AppVeyor' AND '$(Configuration)' != 'Travis'">
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net46'">
 		<PlatformTarget>x86</PlatformTarget>
 	</PropertyGroup>
 
