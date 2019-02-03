@@ -1,5 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<PropertyGroup Condition="'$(Configuration)' != 'CORE.1' AND '$(Configuration)' != 'CORE.2'">
+	<PropertyGroup>
+	<!-- because VS doesn't support multi-targeting for tests (works for r# test runner): https://github.com/Microsoft/vstest/issues/298
+             just put required test target framework to first position - VS always use first one only -->
 		<TargetFrameworks>net46;netcoreapp1.0;netcoreapp2.0</TargetFrameworks>
 		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
 		<Configurations>Debug;Release;AppVeyor;Travis</Configurations>
@@ -15,19 +17,6 @@
 		<DefineConstants>RELEASE;TRAVIS</DefineConstants>
 		<DebugSymbols>false</DebugSymbols>
 		<Optimize>true</Optimize>
-	</PropertyGroup>
-
-	<!--remove both CORE.1 and CORE.2 configurations from solution after VS adds support for multi-targeting
-	for tests (works for r# test runner): https://github.com/Microsoft/vstest/issues/298-->
-	<PropertyGroup Condition="'$(Configuration)' == 'CORE.1'">
-		<TargetFramework>netcoreapp1.0</TargetFramework>
-		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
-		<Configurations>Debug;Release;AppVeyor;Travis;CORE.1;CORE.2</Configurations>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)' == 'CORE.2'">
-		<TargetFramework>netcoreapp2.0</TargetFramework>
-		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
-		<Configurations>Debug;Release;AppVeyor;Travis;CORE.1;CORE.2</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>

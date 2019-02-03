@@ -26,8 +26,9 @@ public class TestsInitialization
 			if (requestedAssembly.Name == "IBM.Data.DB2")
 				return DbProviderFactories.GetFactory("IBM.Data.DB2").GetType().Assembly;
 			if (requestedAssembly.Name == "IBM.Data.Informix")
-//				return DbProviderFactories.GetFactory("IBM.Data.Informix").GetType().Assembly;
-				return typeof(IBM.Data.Informix.IfxTimeSpan).Assembly;
+				// chose your red or blue pill carefully
+				return DbProviderFactories.GetFactory("IBM.Data.Informix").GetType().Assembly;
+				//return typeof(IBM.Data.Informix.IfxTimeSpan).Assembly;
 
 			return null;
 		};
