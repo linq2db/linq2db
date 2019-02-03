@@ -598,7 +598,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		private static string _nextValSearchPattern = "nextval";
+		private static readonly string _nextValSearchPattern = "nextval";
 
 		[Test]
 		public void SequenceInsertWithUserDefinedSequenceName([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
