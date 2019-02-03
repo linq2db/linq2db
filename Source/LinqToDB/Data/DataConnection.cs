@@ -18,6 +18,7 @@ namespace LinqToDB.Data
 	using Configuration;
 	using DataProvider;
 	using Expressions;
+	using LinqToDB.Async;
 	using Mapping;
 	using RetryPolicy;
 
@@ -245,7 +246,7 @@ namespace LinqToDB.Data
 
 			DataProvider       = dataProvider;
 			MappingSchema      = DataProvider.MappingSchema;
-			_connection        = connection;
+			_connection        = connection is IAsyncDbConnection async ? async : new AsyncDbConnection(connection);
 			_disposeConnection = disposeConnection;
 		}
 
@@ -284,8 +285,12 @@ namespace LinqToDB.Data
 
 			DataProvider       = dataProvider;
 			MappingSchema      = DataProvider.MappingSchema;
-			_connection        = transaction.Connection;
-			Transaction        = transaction;
+			_connection        = transaction is IAsyncDbTransaction asyncConection
+				? asyncConection.AsyncConnection
+				: (transaction.Connection is IAsyncDbConnection asyncDbConection
+					? asyncDbConection
+					: new AsyncDbConnection(transaction.Connection));
+			TransactionAsync   = transaction is IAsyncDbTransaction asyncTransaction ? asyncTransaction : new AsyncDbTransaction(transaction);
 			_closeTransaction  = false;
 			_closeConnection   = false;
 			_disposeConnection = false;
@@ -942,36 +947,38 @@ namespace LinqToDB.Data
 		bool                _closeConnection;
 		bool                _disposeConnection = true;
 		bool                _closeTransaction;
-		IDbConnection       _connection;
+		IAsyncDbConnection  _connection;
 		Func<IDbConnection> _connectionFactory;
 
 		/// <summary>
 		/// Gets underlying database connection, used by current connection object.
 		/// </summary>
-		public IDbConnection Connection
+		public IDbConnection Connection => EnsureConnection().Unwrap;
+
+		internal IAsyncDbConnection EnsureConnection()
 		{
-			get
+			if (_connection == null)
 			{
-				if (_connection == null)
-				{
-					if (_connectionFactory != null)
-						_connection = _connectionFactory();
-					else
-						_connection = DataProvider.CreateConnection(ConnectionString);
+				IDbConnection connection;
+				if (_connectionFactory != null)
+					connection = _connectionFactory();
+				else
+					connection = DataProvider.CreateConnection(ConnectionString);
 
-					if (RetryPolicy != null)
-						_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);
-				}
+				_connection = connection is IAsyncDbConnection async ? async : new AsyncDbConnection(connection);
 
-				if (_connection.State == ConnectionState.Closed)
-				{
-					_connection.Open();
-					_closeConnection = true;
-					OnConnectionOpened?.Invoke(this, _connection);
-				}
-
-				return _connection;
+				if (RetryPolicy != null)
+					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 			}
+
+			if (_connection.State == ConnectionState.Closed)
+			{
+				_connection.Open();
+				_closeConnection = true;
+				OnConnectionOpened?.Invoke(this, _connection.Unwrap);
+			}
+
+			return _connection;
 		}
 
 		/// <summary>
@@ -1005,10 +1012,10 @@ namespace LinqToDB.Data
 
 			DisposeCommand();
 
-			if (Transaction != null && _closeTransaction)
+			if (TransactionAsync != null && _closeTransaction)
 			{
-				Transaction.Dispose();
-				Transaction = null;
+				TransactionAsync.Dispose();
+				TransactionAsync = null;
 			}
 
 			if (_connection != null)
@@ -1082,7 +1089,7 @@ namespace LinqToDB.Data
 			if (_commandTimeout.HasValue)
 				command.CommandTimeout = _commandTimeout.Value;
 
-			if (Transaction != null)
+			if (TransactionAsync != null)
 				command.Transaction = Transaction;
 
 			return command;
@@ -1296,7 +1303,12 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets current transaction, associated with connection.
 		/// </summary>
-		public IDbTransaction Transaction { get; private set; }
+		public IDbTransaction Transaction => TransactionAsync.Unwrap;
+
+		/// <summary>
+		/// Async transaction wrapper over <see cref="Transaction"/>.
+		/// </summary>
+		internal IAsyncDbTransaction TransactionAsync { get; private set; }
 
 		/// <summary>
 		/// Starts new transaction for current connection with default isolation level. If connection already has transaction, it will be rolled back.
@@ -1306,11 +1318,12 @@ namespace LinqToDB.Data
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			Transaction?.Dispose();
+			TransactionAsync?.Dispose();
 
 			// Create new transaction object.
 			//
-			Transaction = Connection.BeginTransaction();
+			var tr = EnsureConnection().BeginTransaction();
+			TransactionAsync = tr is IAsyncDbTransaction async ? async : new AsyncDbTransaction(tr);
 
 			_closeTransaction = true;
 
@@ -1331,11 +1344,12 @@ namespace LinqToDB.Data
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			Transaction?.Dispose();
+			TransactionAsync?.Dispose();
 
 			// Create new transaction object.
 			//
-			Transaction = Connection.BeginTransaction(isolationLevel);
+			var tr = EnsureConnection().BeginTransaction(isolationLevel);
+			TransactionAsync = tr is IAsyncDbTransaction async ? async : new AsyncDbTransaction(tr);
 
 			_closeTransaction = true;
 
@@ -1352,14 +1366,14 @@ namespace LinqToDB.Data
 		/// </summary>
 		public virtual void CommitTransaction()
 		{
-			if (Transaction != null)
+			if (TransactionAsync != null)
 			{
-				Transaction.Commit();
+				TransactionAsync.Commit();
 
 				if (_closeTransaction)
 				{
-					Transaction.Dispose();
-					Transaction = null;
+					TransactionAsync.Dispose();
+					TransactionAsync = null;
 
 					if (_command != null)
 						_command.Transaction = null;
@@ -1372,14 +1386,14 @@ namespace LinqToDB.Data
 		/// </summary>
 		public virtual void RollbackTransaction()
 		{
-			if (Transaction != null)
+			if (TransactionAsync != null)
 			{
-				Transaction.Rollback();
+				TransactionAsync.Rollback();
 
 				if (_closeTransaction)
 				{
-					Transaction.Dispose();
-					Transaction = null;
+					TransactionAsync.Dispose();
+					TransactionAsync = null;
 
 					if (_command != null)
 						_command.Transaction = null;
@@ -1436,7 +1450,7 @@ namespace LinqToDB.Data
 			ConfigurationString = configurationString;
 			DataProvider        = dataProvider;
 			ConnectionString    = connectionString;
-			_connection         = connection;
+			_connection         = connection is IAsyncDbConnection async ? async : new AsyncDbConnection(connection);
 			MappingSchema       = mappingSchema;
 		}
 
@@ -1446,10 +1460,7 @@ namespace LinqToDB.Data
 		/// <returns>Cloned connection.</returns>
 		public object Clone()
 		{
-			var connection =
-				(_connection == null                 ? null :
-				_connection is ICloneable cloneable ? (IDbConnection)cloneable.Clone() :
-				                                      null) ?? _connectionFactory?.Invoke();
+			var connection = _connection?.TryClone() ?? _connectionFactory?.Invoke();
 
 			// https://github.com/linq2db/linq2db/issues/1486
 			// when there is no ConnectionString and provider doesn't support connection cloning

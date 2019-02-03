@@ -265,9 +265,9 @@ namespace LinqToDB
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
-				dc._dataConnection = _dataConnection.Transaction != null ?
-					new DataConnection(DataProvider, _dataConnection.Transaction) :
-					new DataConnection(DataProvider, _dataConnection.Connection);
+				dc._dataConnection = _dataConnection.TransactionAsync != null ?
+					new DataConnection(DataProvider, _dataConnection.TransactionAsync) :
+					new DataConnection(DataProvider, _dataConnection.EnsureConnection());
 
 			dc.QueryHints.    AddRange(QueryHints);
 			dc.NextQueryHints.AddRange(NextQueryHints);

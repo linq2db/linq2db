@@ -24,5 +24,20 @@ namespace System.Threading.Tasks
 		{
 			return Task.Delay(delay, cancellationToken);
 		}
+
+#if NET45
+		private static readonly Task _completedTask = Task.FromResult(false);
+#endif
+		public static Task CompletedTask
+		{
+			get
+			{
+#if NET45
+				return _completedTask;
+#else
+				return Task.CompletedTask;
+#endif
+			}
+		}
 	}
 }
