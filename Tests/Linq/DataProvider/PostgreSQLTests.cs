@@ -614,7 +614,7 @@ namespace Tests.DataProvider
 			}
 		}
 		[Test]
-		public void SequenceInsertWithNullSequenceNameAttribute([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		public void SequenceInsertWithoutSequenceNameAttribute([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
