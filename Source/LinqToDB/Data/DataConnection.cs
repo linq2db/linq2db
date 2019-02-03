@@ -1303,7 +1303,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets current transaction, associated with connection.
 		/// </summary>
-		public IDbTransaction Transaction => TransactionAsync.Unwrap;
+		public IDbTransaction Transaction => TransactionAsync?.Unwrap;
 
 		/// <summary>
 		/// Async transaction wrapper over <see cref="Transaction"/>.
