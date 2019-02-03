@@ -1450,7 +1450,7 @@ namespace LinqToDB.Data
 			ConfigurationString = configurationString;
 			DataProvider        = dataProvider;
 			ConnectionString    = connectionString;
-			_connection         = connection is IAsyncDbConnection async ? async : new AsyncDbConnection(connection);
+			_connection         = connection is IAsyncDbConnection async ? async : (connection != null ? new AsyncDbConnection(connection) : null);
 			MappingSchema       = mappingSchema;
 		}
 
