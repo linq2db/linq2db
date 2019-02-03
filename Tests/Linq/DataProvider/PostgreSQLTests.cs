@@ -605,12 +605,17 @@ namespace Tests.DataProvider
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				Assert.True(db.MappingSchema.GetFluentMappingBuilder()
+				var seqNameAttrs = db
+					.MappingSchema
+					.GetFluentMappingBuilder()
 					.Entity<PostgreSQLSpecific.SequenceTest1>()
-					.GetAttributes<SequentialAttribute>()
-					.IsNullOrEmpty());
+					.GetAttributes<SequenceNameAttribute>();
+
+				Assert.That(seqNameAttrs.Length, Is.EqualTo(1));
+
 				db.Insert(new PostgreSQLSpecific.SequenceTest1 { Value = "SeqValue" });
-				Assert.True(db.LastQuery.IndexOf(_nextValSearchPattern, StringComparison.OrdinalIgnoreCase) >= 0);
+
+				Assert.That(db.LastQuery, Does.Contain(_nextValSearchPattern));
 			}
 		}
 		[Test]
@@ -618,12 +623,17 @@ namespace Tests.DataProvider
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				Assert.False(db.MappingSchema.GetFluentMappingBuilder()
+				var seqNameAttrs = db
+					.MappingSchema
+					.GetFluentMappingBuilder()
 					.Entity<PostgreSQLSpecific.SequenceTest2>()
-					.GetAttributes<SequentialAttribute>()
-					.IsNullOrEmpty());
+					.GetAttributes<SequenceNameAttribute>();
+
+				Assert.That(seqNameAttrs.Length, Is.EqualTo(0));
+
 				db.Insert(new PostgreSQLSpecific.SequenceTest2 { Value = "SeqValue" });
-				Assert.True(db.LastQuery.IndexOf(_nextValSearchPattern, StringComparison.OrdinalIgnoreCase) < 0);
+
+				Assert.That(db.LastQuery, Does.Not.Contains(_nextValSearchPattern));
 			}
 		}
 
