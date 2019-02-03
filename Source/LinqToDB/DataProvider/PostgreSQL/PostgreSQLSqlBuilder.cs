@@ -267,9 +267,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						? Convert(attr.Schema, ConvertType.NameToSchema).ToString()
 						: GetTableSchemaName(table);
 
-					var sb = BuildTableName(new StringBuilder(), database, schema, name);
-
-					return new SqlExpression($"nextval('{sb}')", Precedence.Primary);
+					var sb = new StringBuilder();
+					sb.Append("nextval(");
+					ValueToSqlConverter.Convert(sb, BuildTableName(new StringBuilder(), database, schema, name).ToString());
+					sb.Append(")");
+					return new SqlExpression(sb.ToString(), Precedence.Primary);
 				}
 			}
 

@@ -583,7 +583,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void SequenceInsertWithIdentity_CustomNaming([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = new TestDataConnection(context))
 			{
 				db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Where(_ => _.Value == "SeqValue").Delete();
 
@@ -595,6 +595,35 @@ namespace Tests.DataProvider
 				db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Where(_ => _.ID == id1).Delete();
 
 				Assert.AreEqual(0, db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Count(_ => _.Value == "SeqValue"));
+			}
+		}
+
+		private static string _nextValSearchPattern = "nextval";
+
+		[Test]
+		public void SequenceInsertWithUserDefinedSequenceName([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				Assert.True(db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<PostgreSQLSpecific.SequenceTest1>()
+					.GetAttributes<SequentialAttribute>()
+					.IsNullOrEmpty());
+				db.Insert(new PostgreSQLSpecific.SequenceTest1 { Value = "SeqValue" });
+				Assert.True(db.LastQuery.IndexOf(_nextValSearchPattern, StringComparison.OrdinalIgnoreCase) >= 0);
+			}
+		}
+		[Test]
+		public void SequenceInsertWithNullSequenceNameAttribute([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				Assert.False(db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<PostgreSQLSpecific.SequenceTest2>()
+					.GetAttributes<SequentialAttribute>()
+					.IsNullOrEmpty());
+				db.Insert(new PostgreSQLSpecific.SequenceTest2 { Value = "SeqValue" });
+				Assert.True(db.LastQuery.IndexOf(_nextValSearchPattern, StringComparison.OrdinalIgnoreCase) < 0);
 			}
 		}
 
