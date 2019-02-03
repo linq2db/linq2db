@@ -34,6 +34,8 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
 	{
+		private static readonly string _nextValSearchPattern = "nextval";
+
 		public PostgreSQLTests()
 		{
 			PassNullSql  = "SELECT \"ID\" FROM \"AllTypes\" WHERE :p IS NULL AND \"{0}\" IS NULL OR :p IS NOT NULL AND \"{0}\" = :p";
@@ -597,8 +599,6 @@ namespace Tests.DataProvider
 				Assert.AreEqual(0, db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Count(_ => _.Value == "SeqValue"));
 			}
 		}
-
-		private static readonly string _nextValSearchPattern = "nextval";
 
 		[Test]
 		public void SequenceInsertWithUserDefinedSequenceNameAttribute([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
