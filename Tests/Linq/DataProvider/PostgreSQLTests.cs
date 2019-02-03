@@ -605,13 +605,9 @@ namespace Tests.DataProvider
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				var seqNameAttrs = db
-					.MappingSchema
-					.GetFluentMappingBuilder()
-					.Entity<PostgreSQLSpecific.SequenceTest1>()
-					.GetAttributes<SequenceNameAttribute>();
-
-				Assert.That(seqNameAttrs.Length, Is.EqualTo(1));
+				var table = new LinqToDB.SqlQuery.SqlTable(db.MappingSchema, typeof(PostgreSQLSpecific.SequenceTest1));
+				Assert.That(table.SequenceAttributes, Is.Not.Null);
+				Assert.That(table.SequenceAttributes.Length, Is.EqualTo(1));
 
 				db.Insert(new PostgreSQLSpecific.SequenceTest1 { Value = "SeqValue" });
 
@@ -623,13 +619,8 @@ namespace Tests.DataProvider
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				var seqNameAttrs = db
-					.MappingSchema
-					.GetFluentMappingBuilder()
-					.Entity<PostgreSQLSpecific.SequenceTest2>()
-					.GetAttributes<SequenceNameAttribute>();
-
-				Assert.That(seqNameAttrs.Length, Is.EqualTo(0));
+				var table = new LinqToDB.SqlQuery.SqlTable(db.MappingSchema, typeof(PostgreSQLSpecific.SequenceTest2));
+				Assert.That(table.SequenceAttributes.IsNullOrEmpty());
 
 				db.Insert(new PostgreSQLSpecific.SequenceTest2 { Value = "SeqValue" });
 
