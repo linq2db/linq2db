@@ -1,0 +1,63 @@
+﻿using System;
+using System.Threading;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite;
+using NUnit.Framework;
+
+namespace Tests.UserTests
+{
+	using LinqToDB;
+	using LinqToDB.Mapping;
+
+	[TestFixture]
+	public class Issue1585Tests : TestBase
+	{
+		class Test1585
+		{
+			public int Id { get; set; }
+		}
+
+		MappingSchema SetFluentMappings()
+		{
+			var ms            = new MappingSchema();
+			var tableName     = nameof(Test1585);
+			var fluentBuilder = ms.GetFluentMappingBuilder();
+
+			fluentBuilder.Entity<Test1585>()
+				.HasTableName(tableName)
+				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
+
+			return ms;
+		}
+
+		[Test]
+		public void TestEntityDescriptor()
+		{
+			var ms = SetFluentMappings();
+
+			EntityDescriptor ed1;
+			EntityDescriptor ed2;
+
+			using (var db = new DataConnection(SQLiteTools.GetDataProvider(), "Data Source=TestDatabase.sqlite", ms))
+			{
+				try
+				{
+					db.DropTable<Test1585>();
+				}
+				catch (Exception ex)
+				{ }
+
+				db.CreateTable<Test1585>();
+				var data = db.GetTable<Test1585>();
+				ed1 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585));	
+			}
+			using (var db = new DataConnection(SQLiteTools.GetDataProvider(), "Data Source=TestDatabase.sqlite", ms))
+			{
+				var data = db.GetTable<Test1585>();
+				ed2 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585));
+			}
+
+			Assert.AreEqual(ed1, ed2);
+		}
+	}
+}
