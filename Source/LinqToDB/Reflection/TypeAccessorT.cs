@@ -47,21 +47,25 @@ namespace LinqToDB.Reflection
 			// Add explicit interface implementation properties support
 			// Or maybe we should support all private fields/properties?
 			//
-			var interfaceMethods = type.GetInterfacesEx().SelectMany(ti => type.GetInterfaceMapEx(ti).TargetMethods).ToList();
-
-			if (interfaceMethods.Count > 0)
+			if (!type.IsInterfaceEx() && !type.IsArray)
 			{
-				foreach (var pi in type.GetNonPublicPropertiesEx())
-				{
-					if (pi.GetIndexParameters().Length == 0)
-					{
-						var getMethod = pi.GetGetMethodEx(true);
-						var setMethod = pi.GetSetMethodEx(true);
+				var interfaceMethods = type.GetInterfacesEx().SelectMany(ti => type.GetInterfaceMapEx(ti).TargetMethods)
+					.ToList();
 
-						if ((getMethod == null || interfaceMethods.Contains(getMethod)) &&
-							(setMethod == null || interfaceMethods.Contains(setMethod)))
+				if (interfaceMethods.Count > 0)
+				{
+					foreach (var pi in type.GetNonPublicPropertiesEx())
+					{
+						if (pi.GetIndexParameters().Length == 0)
 						{
-							_members.Add(pi);
+							var getMethod = pi.GetGetMethodEx(true);
+							var setMethod = pi.GetSetMethodEx(true);
+
+							if ((getMethod == null || interfaceMethods.Contains(getMethod)) &&
+								(setMethod == null || interfaceMethods.Contains(setMethod)))
+							{
+								_members.Add(pi);
+							}
 						}
 					}
 				}
