@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
+using LinqToDB.Expressions;
+using LinqToDB.Linq.Builder;
 using JNotNull = JetBrains.Annotations.NotNullAttribute;
 
 namespace LinqToDB.Mapping
@@ -288,6 +291,125 @@ namespace LinqToDB.Mapping
 				throw new LinqToDBException("Result type of expression predicate should be 'IQueryable<{objectType.Name}>'");
 
 			return lambda;
+		}
+
+		internal static MethodInfo getTableMethodInfo = 
+			MemberHelper.MethodOf<IDataContext>(ctx => ctx.GetTable<object>()).GetGenericMethodDefinition();
+
+		internal static MethodInfo whereMethodInfo = 
+			MemberHelper.MethodOf<IQueryable<object>>(q => q.Where(e => true)).GetGenericMethodDefinition();
+
+		internal static MethodInfo loadWithMethodInfo = 
+			MemberHelper.MethodOf<ITable<object>>(q => q.LoadWith(e => null)).GetGenericMethodDefinition();
+
+		private static Expression ApplyLoadWith(Expression getTableExpression, List<MemberInfo[]> loadWith)
+		{
+			if (loadWith == null || loadWith.Count == 0)
+				return getTableExpression;
+
+			var associationType = getTableExpression.Type.GetGenericArguments()[0];
+
+			foreach (var members in loadWith)
+			{
+				var pLoadWith  = Expression.Parameter(associationType, "t");
+				var isPrevList = false;
+
+				Expression obj = pLoadWith;
+
+				foreach (var member in members)
+				{
+					if (isPrevList)
+						obj = new GetItemExpression(obj);
+
+					obj = Expression.MakeMemberAccess(obj, member);
+
+					isPrevList = typeof(IEnumerable).IsSameOrParentOf(obj.Type);
+				}
+
+				getTableExpression =
+					Expression.Call(null, loadWithMethodInfo.MakeGenericMethod(associationType), pLoadWith);
+			}
+
+			return getTableExpression;
+		}
+
+		public LambdaExpression GetAssociationExpression(Type parentType, Type objectType, List<MemberInfo[]> loadWith, MappingSchema mappingSchema)
+		{
+			var result = GetQueryMethod(parentType, objectType);
+			if (result != null)
+			{
+				if (loadWith != null)
+				{
+					result = (LambdaExpression)result.Transform(e =>
+					{
+						if (e.NodeType == ExpressionType.Call)
+						{
+							var mc = (MethodCallExpression)e;
+							if (mc.Method.GetGenericMethodDefinition() == getTableMethodInfo &&
+							    mc.Method.GetGenericArguments()[0] == objectType)
+							{
+								e = ApplyLoadWith(mc, loadWith);
+							}
+						}
+						return e;
+					});
+				}
+
+				return result;
+			}
+
+			var lContext = Expression.Parameter(typeof(IDataContext), "ctx");
+			var lParent  = Expression.Parameter(parentType, "parent");
+			var lChild   = Expression.Parameter(objectType, "child");
+
+			Expression expr = null;
+
+			var thisEntityDescriptor = mappingSchema.GetEntityDescriptor(parentType);
+			var otherEntityDescriptor = mappingSchema.GetEntityDescriptor(objectType);
+
+			for (var i = 0; i < ThisKey.Length; i++)
+			{
+				var thisKey = ThisKey[i];
+				var otherKey = OtherKey[i];
+
+				var thisColumn = thisEntityDescriptor.Columns.Find(cd => cd.MemberName == thisKey);
+				var otherColumn = otherEntityDescriptor.Columns.Find(cd => cd.MemberName == otherKey);
+
+//				var thisMemberInfo  = parentType.GetPropertyEx(thisKey) as MemberInfo  ?? parentType.GetFieldEx(thisKey);
+//				var otherMemberInfo = objectType.GetPropertyEx(otherKey) as MemberInfo ?? objectType.GetFieldEx(otherKey);
+
+				var thisProp = Expression.Call(null,
+					ReflectionExtensions.SQLPropertyMethod.MakeGenericMethod(thisColumn.MemberType),
+					lParent, Expression.Constant(thisKey));
+
+				var otherProp = Expression.Call(null,
+					ReflectionExtensions.SQLPropertyMethod.MakeGenericMethod(otherColumn.MemberType),
+					lChild, Expression.Constant(otherKey));
+
+//				var thisProp  = Expression.PropertyOrField(lParent, thisKey);
+//				var otherProp = Expression.PropertyOrField(lChild,  otherKey);
+
+				var ex = ExpressionBuilder.Equal(mappingSchema, otherProp, thisProp);
+
+				expr = expr == null ? ex : Expression.AndAlso(expr, ex);
+			}
+
+			var predicate = GetPredicate(parentType, objectType);
+			if (predicate != null)
+			{
+				var body = predicate.GetBody(lParent, lChild);
+				expr = expr == null ? body : Expression.AndAlso(expr, body);
+			}
+
+			// transform to
+			// (lParent, lContext) => lContext.GetTable<objectType>().Where(expr)
+
+			var getTable = (Expression)Expression.Call(null, getTableMethodInfo.MakeGenericMethod(objectType), lContext);
+			    getTable = ApplyLoadWith(getTable, loadWith);
+			var where    = Expression.Call(null, whereMethodInfo.MakeGenericMethod(objectType), getTable, Expression.Lambda(expr, lChild));
+			    result   = Expression.Lambda(where, lParent, lContext);
+
+			return result;
 		}
 	}
 }

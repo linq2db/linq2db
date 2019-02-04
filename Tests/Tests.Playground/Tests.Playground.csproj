@@ -10,11 +10,11 @@
 		<AssemblyName>linq2db.Tests.Playground</AssemblyName>
 	</PropertyGroup>
 
-<!--
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+		<Compile Include="..\Linq\Linq\AssociationTests.cs" Link="AssociationTests.cs" />
+		<Compile Include="..\Linq\Linq\QueryableAssociationTests.cs" Link="QueryableAssociationTests.cs" />
 	</ItemGroup>
--->
 
 	<ItemGroup>
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />

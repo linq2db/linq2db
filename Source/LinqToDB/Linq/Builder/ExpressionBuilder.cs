@@ -380,6 +380,17 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		internal Expression PrepareExpression(Expression expression)
+		{
+			expression = ExpandExpression(expression);
+			expression = OptimizeExpression(expression);
+
+			if (DataContext is IExpressionPreprocessor preprocessor)
+				expression = preprocessor.ProcessExpression(expression);
+
+			return expression;
+		}
+
 		internal static Expression ExpandExpression(Expression expression)
 		{
 			if (Configuration.Linq.UseBinaryAggregateExpression)
@@ -572,39 +583,6 @@ namespace LinqToDB.Linq.Builder
 
 							break;
 						}
-
-					case ExpressionType.Invoke:
-						{
-							var invocation = (InvocationExpression)expr;
-							if (invocation.Expression.NodeType == ExpressionType.Call)
-							{
-								var mc = (MethodCallExpression)invocation.Expression;
-								if (mc.Method.Name == "Compile" &&
-								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
-								{
-									if (mc.Object.EvaluateExpression() is LambdaExpression lambds)
-									{
-										var map = new Dictionary<Expression, Expression>();
-										for (int i = 0; i < invocation.Arguments.Count; i++)
-										{
-											map.Add(lambds.Parameters[i], invocation.Arguments[i]);
-										}
-
-										var newBody = lambds.Body.Transform(se =>
-										{
-											if (se.NodeType == ExpressionType.Parameter &&
-											    map.TryGetValue(se, out var newExpr))
-												return newExpr;
-											return se;
-										});
-
-										return ExposeExpression(newBody);
-									}
-								}
-							}
-							break;
-						}
-
 				}
 
 				return expr;

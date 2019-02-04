@@ -1402,6 +1402,10 @@ namespace LinqToDB.Expressions
 						var l = Transform(e.Left,       func);
 						var r = Transform(e.Right,      func);
 
+						//TODO: temporary workaround
+						if (expr.NodeType == ExpressionType.Equal && l.Type != r.Type)
+							r = Expression.Convert(r, l.Type);
+
 						return e.Update(l, (LambdaExpression)c, r);
 					}
 

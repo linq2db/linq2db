@@ -907,72 +907,12 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					Expression expr  = null;
-					var        param = Expression.Parameter(typeof(T), "c");
+					var queryMethod = association.Association.GetAssociationExpression(parent.Type, typeof(T), loadWith, association.Builder.MappingSchema);
+					queryMethod     = (LambdaExpression)association.Builder.PrepareExpression(queryMethod);
 
-					var queryMethod = association.Association.GetQueryMethod(parent.Type, typeof(T));
+					var expr = queryMethod.GetBody(parent, Expression.Constant(association.Builder.DataContext));
 
-					if (queryMethod != null)
-					{
-						expr = queryMethod.GetBody(parent, Expression.Constant(association.Builder.DataContext));
-						return expr;
-					}
-
-					foreach (var cond in association.ParentAssociationJoin.Condition.Conditions.Take(association.RegularConditionCount))
-					{
-						SqlPredicate.ExprExpr p;
-
-						if (cond.Predicate is SqlSearchCondition condition)
-						{
-							p = condition.Conditions
-								.Select(c => c.Predicate)
-								.OfType<SqlPredicate.ExprExpr>()
-								.First();
-						}
-						else
-						{
-							p = (SqlPredicate.ExprExpr)cond.Predicate;
-						}
-
-						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo);
-						var e2 = Expression.MakeMemberAccess(param,  ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
-
-//						while (e1.Type != e2.Type)
-//						{
-//							if (e1.Type.IsNullable())
-//							{
-//								e1 = Expression.PropertyOrField(e1, "Value");
-//								continue;
-//							}
-//
-//							if (e2.Type.IsNullable())
-//							{
-//								e2 = Expression.PropertyOrField(e2, "Value");
-//								continue;
-//							}
-//
-//							e2 = Expression.Convert(e2, e1.Type);
-//						}
-
-						var ex = ExpressionBuilder.Equal(association.Builder.MappingSchema, e1, e2);
-
-						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
-					}
-
-					if (association.ExpressionPredicate != null)
-					{
-						var l  = association.ExpressionPredicate;
-						var ex = l.GetBody(parent, param);
-
-						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
-					}
-
-					if (expr == null)
-						throw new LinqToDBException("Invalid association for LoadWith");
-
-					var predicate = Expression.Lambda<Func<T,bool>>(expr, param);
-
-					return expression.Where(predicate).Expression;
+					return expr;
 				}
 			}
 

@@ -61,18 +61,25 @@ namespace LinqToDB.Linq.Builder
 				ObjectType         = GetObjectType();
 				EntityDescriptor   = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 				InheritanceMapping = EntityDescriptor.InheritanceMapping;
+				SqlTable = null;
 				SqlTable           = new SqlTable(builder.MappingSchema, ObjectType);
 
 				Association        = association;
 				ParentAssociation  = parent;
 
 				SqlJoinedTable join;
+				var parentType = parent.ObjectType;
+//				if (parentType.IsSameOrParentOf(Association.MemberInfo.DeclaringType))
+//					parentType = Association.MemberInfo.DeclaringType;
+				var parentExpression = parent.Expression == null ? (Expression)null :
+					Expression.Convert(parent.Expression, typeof(ITable<>).MakeGenericType(parentType));
 
-				var queryMethod = Association.GetQueryMethod(parent.ObjectType, ObjectType);
+				var queryMethod = Association.GetAssociationExpression(parentType, ObjectType, null, builder.MappingSchema);
+				queryMethod     = (LambdaExpression)builder.PrepareExpression(queryMethod);
 				if (queryMethod != null)
 				{
 					var selectManyMethod = GetAssociationQueryExpression(Expression.Constant(builder.DataContext),
-						queryMethod.Parameters[0], parent.ObjectType, parent.Expression, queryMethod);
+						queryMethod.Parameters[0], parentType, parentExpression, queryMethod);
 
 					var ownerTableSource = SelectQuery.From.Tables[0];
 
@@ -91,7 +98,7 @@ namespace LinqToDB.Linq.Builder
 					// TODO: review maybe there are another ways to do that
 					if (foundIndex < 0)
 						foundIndex = associationQuery.Select.From.Tables.FindIndex(t =>
-							t.Source is SqlTable sqlTable && sqlTable.ObjectType == parent.SqlTable.ObjectType);
+							t.Source is SqlTable sqlTable && sqlTable.ObjectType.IsSameOrParentOf(parentType));
 
 					if (foundIndex < 0)
 						throw new LinqToDBException("Invalid association query. It is not possible to inline query. Can not find owner table.");
@@ -108,6 +115,16 @@ namespace LinqToDB.Linq.Builder
 								joinedTable.JoinType = JoinType.OuterApply;
 
 							joinedTable.IsWeak = true;
+						}
+					}
+
+					if (!Common.Configuration.Sql.AssociationAlias.IsNullOrEmpty())
+					{
+						var joinForAlias = sourceToReplace.Joins.FirstOrDefault();
+						if (joinForAlias != null)
+						{
+							joinForAlias.Table.Alias = string.Format(Common.Configuration.Sql.AssociationAlias,
+								association.MemberInfo.Name);
 						}
 					}
 
@@ -197,6 +214,9 @@ namespace LinqToDB.Linq.Builder
 				Init(false);
 			}
 
+			internal static MethodInfo getTableMethodInfo =
+				MemberHelper.MethodOf<IDataContext>(ctx => ctx.GetTable<object>()).GetGenericMethodDefinition();
+
 			public Expression GetAssociationQueryExpression(Expression dataContextExpr, Expression parentObjExpression, Type parentType, Expression parentTableExpression,
 				LambdaExpression queryMethod)
 			{
@@ -205,6 +225,8 @@ namespace LinqToDB.Linq.Builder
 				var body    = queryMethod.GetBody(parentObjExpression ?? queryMethod.Parameters[0], dataContextExpr);
 				body        = Expression.Convert(body, typeof(IEnumerable<>).MakeGenericType(ObjectType));
 				queryMethod = Expression.Lambda(body, queryMethod.Parameters[0]);
+				parentTableExpression = Expression.Call(null, getTableMethodInfo.MakeGenericMethod(parentType),
+					Expression.Constant(Builder.DataContext));
 
 				var selectManyMethodInfo = _selectManyMethodInfo.MakeGenericMethod(parentType, ObjectType, ObjectType);
 				var resultLamba          = Expression.Lambda(resultParam, Expression.Parameter(parentType), resultParam);
@@ -243,8 +265,19 @@ namespace LinqToDB.Linq.Builder
 			{
 				return new QueryVisitor().Convert(expression, e =>
 				{
-					if (e.ElementType == QueryElementType.SqlField && _replaceMap.TryGetValue((SqlField)e, out var newField))
-						return newField;
+					if (e.ElementType == QueryElementType.SqlField)
+					{
+						if (_replaceMap.TryGetValue((SqlField)e, out var newField))
+						{
+							return newField;
+						}
+
+//						var field = (SqlField)e;
+//						if (field.Table == _sourceToReplace.Source)
+//						{
+//							return 
+//						}
+					}
 					return e;
 
 				}); 
