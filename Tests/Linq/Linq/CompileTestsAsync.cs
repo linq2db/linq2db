@@ -169,7 +169,7 @@ namespace Tests.Linq
 				}).SingleAsync(c => c.Id == id, token));
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(GenerateData()))
+			using (db.CreateLocalTable(context, "SPA", GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
 				Assert.AreEqual(2, result.Id);
@@ -211,7 +211,7 @@ namespace Tests.Linq
 				}).SingleOrDefaultAsync(c => c.Id == id, token));
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(GenerateData()))
+			using (db.CreateLocalTable(context, "SODPA", GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
 				Assert.AreEqual(2, result.Id);
@@ -325,7 +325,7 @@ namespace Tests.Linq
 				db.GetTable<AsyncDataTable>().Where(c => c.Id > id).MinAsync(c => c.Id, token));
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(GenerateData()))
+			using (db.CreateLocalTable(context, "MSA1", GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
 				Assert.AreEqual(3, result);

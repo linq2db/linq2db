@@ -279,7 +279,7 @@ namespace LinqToDB.Common
 			/// <para>
 			/// Default value: <c>"a_{0}"</c>.
 			/// </para>
-			/// <example> 
+			/// <example>
 			/// In the following query
 			/// <code>
 			/// var query = from child in db.Child
