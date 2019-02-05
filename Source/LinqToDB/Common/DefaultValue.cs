@@ -133,8 +133,8 @@ namespace LinqToDB.Common
 		/// </summary>
 		public static T Value
 		{
-			get { return _value; }
-			set { DefaultValue.SetValue(_value = value); }
+			get => _value;
+			set => DefaultValue.SetValue(_value = value);
 		}
 	}
 }
