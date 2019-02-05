@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3
 		Build\AppVeyor.NUnit.Tests.ps1 = Build\AppVeyor.NUnit.Tests.ps1
 		Build\CodeJam.AppVeyor.FixVersionProps.ps1 = Build\CodeJam.AppVeyor.FixVersionProps.ps1
 		Build\linq2db.Default.props = Build\linq2db.Default.props
+		Build\linq2db.Providers.props = Build\linq2db.Providers.props
 		Build\linq2db.snk = Build\linq2db.snk
 		Build\linq2db.Tests.props = Build\linq2db.Tests.props
 	EndProjectSection
