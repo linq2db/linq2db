@@ -246,39 +246,32 @@ namespace LinqToDB.Mapping
 
 		#region EntityDescriptor
 
-		readonly ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors
-			= new ConcurrentDictionary<Type,EntityDescriptor>();
-
-		public EntityDescriptor GetEntityDescriptor(MappingSchema mappingSchema, Type type)
-		{
-			if (!_entityDescriptors.TryGetValue(type, out var ed))
-				ed = _entityDescriptors.GetOrAdd(type, key =>
-				{
-					var edNew = new EntityDescriptor(mappingSchema, key);
-					mappingSchema.EntityDescriptorCreatedCallback?.Invoke(mappingSchema, edNew);
-					return edNew;
-				});
-
-			return ed;
-		}
-
 		/// <summary>
-		/// Enumerate types for cached <see cref="EntityDescriptor" /> instances.
+		/// Enumerate types registered by FluentMetadataBuilder.
 		/// </summary>
-		/// <seealso cref="GetEntityDescriptor" />
 		/// <returns>
 		///     <see cref="Array{Type}" />
 		/// </returns>
+		[Obsolete("Use 'GetRegisteredTypes()' method instead.")]
 		public Type[] GetEntites()
 		{
-			return _entityDescriptors.Keys.ToArray();
+			return GetRegisteredTypes();
 		}
 
-		internal void ResetEntityDescriptor(Type type)
+		/// <summary>
+		/// Enumerate types registered by FluentMetadataBuilder.
+		/// </summary>
+		/// <returns>
+		///     <see cref="Array{Type}" />
+		/// </returns>
+		public Type[] GetRegisteredTypes()
 		{
-			_entityDescriptors.TryRemove(type, out _);
+			if (MetadataReader is FluentMetadataReader fluent)
+				return fluent.GetRegisteredTypes();
+			return Array<Type>.Empty;
 		}
 
 		#endregion
+
 	}
 }

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Linq;
 using System.Globalization;
 using System.Linq;
@@ -23,6 +22,7 @@ namespace LinqToDB.Mapping
 	using Metadata;
 	using SqlProvider;
 	using SqlQuery;
+	using Common.Internal.Cache;
 
 	/// <summary>
 	/// Mapping schema.
@@ -1398,9 +1398,7 @@ namespace LinqToDB.Mapping
 			if (_mapValues == null)
 				_mapValues = new ConcurrentDictionary<Type,MapValue[]>();
 
-			MapValue[] mapValues;
-
-			if (_mapValues.TryGetValue(type, out mapValues))
+			if (_mapValues.TryGetValue(type, out var mapValues))
 				return mapValues;
 
 			var underlyingType = type.ToNullableUnderlying();
@@ -1461,6 +1459,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public Action<MappingSchema, IEntityChangeDescriptor> EntityDescriptorCreatedCallback { get; set; }
 
+		internal static MemoryCache EntityDescriptorsCache { get; } = new MemoryCache(new MemoryCacheOptions());
+
 		/// <summary>
 		/// Returns mapped entity descriptor.
 		/// </summary>
@@ -1468,25 +1468,55 @@ namespace LinqToDB.Mapping
 		/// <returns>Mapping descriptor.</returns>
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
-			return Schemas[0].GetEntityDescriptor(this, type);
+			var key = new { Type = type, ConfigurationID };
+			var ed = EntityDescriptorsCache.GetOrCreate(key,
+				o =>
+				{
+					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					var edNew = new EntityDescriptor(this, type);
+					EntityDescriptorCreatedCallback?.Invoke(this, edNew);
+					return edNew;
+				});
+
+			return ed;
 		}
 
 		// TODO: V2 - do we need it??
 		/// <summary>
-		/// Returns types for cached <see cref="EntityDescriptor" />s.
+		/// Enumerate types registered by FluentMetadataBuilder.
 		/// </summary>
-		/// <seealso cref="GetEntityDescriptor(Type)" />
 		/// <returns>
 		/// Mapping types.
 		/// </returns>
+		[Obsolete("Use 'GetDefinedTypes() method instead'")]
 		public Type[] GetEntites()
 		{
-			return Schemas[0].GetEntites();
+			return GetDefinedTypes();
+		}
+
+		/// <summary>
+		/// Enumerate types registered by FluentMetadataBuilder.
+		/// </summary>
+		/// <returns>
+		/// Mapping types.
+		/// </returns>
+		public Type[] GetDefinedTypes()
+		{
+			return Schemas.SelectMany(s => s.GetRegisteredTypes()).ToArray();
+		}
+
+		/// <summary>
+		/// Clears EntityDescriptor Cache.
+		/// </summary>
+		public static void ClearCache()
+		{
+			EntityDescriptorsCache.Compact(1);
 		}
 
 		internal void ResetEntityDescriptor(Type type)
 		{
-			Schemas[0].ResetEntityDescriptor(type);
+			var key = new { Type = type, ConfigurationID };
+			EntityDescriptorsCache.Remove(key);
 		}
 
 		#endregion

@@ -31,7 +31,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestEntityDescriptor([DataSources] string context)
+		public void TestEntityDescriptor([SQLiteDataSources] string context)
 		{
 			var ms = SetFluentMappings();
 
