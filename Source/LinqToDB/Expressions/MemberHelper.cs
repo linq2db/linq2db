@@ -2,12 +2,12 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Mapping;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Expressions
 {
 	using LinqToDB.Extensions;
+	using Mapping;
+	using Reflection;
 
 	public static class MemberHelper
 	{
@@ -102,7 +102,13 @@ namespace LinqToDB.Expressions
 			return mi is PropertyInfo info ? info.GetGetMethodEx() : (MethodInfo)mi;
 		}
 
-		public static MethodInfo MethodOf(Expression<Func<object>> func)
+//		public static MethodInfo MethodOf(Expression<Func<object>> func)
+//		{
+//			var mi = GetMemberInfo(func);
+//			return mi is PropertyInfo info ? info.GetGetMethodEx() : (MethodInfo)mi;
+//		}
+
+		public static MethodInfo MethodOf(Expression<Action> func)
 		{
 			var mi = GetMemberInfo(func);
 			return mi is PropertyInfo info ? info.GetGetMethodEx() : (MethodInfo)mi;
