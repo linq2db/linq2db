@@ -23,11 +23,14 @@ namespace LinqToDB.Linq
 	{
 		public static class Cache<T>
 		{
+			static Cache()
+			{
+				Query.CacheCleaners.Add(ClearCache);
+			}
+
 			public static void ClearCache()
 			{
 				QueryCache.Compact(1);
-
-				Query.CacheCleaners.Add(ClearCache);
 			}
 
 			internal static MemoryCache QueryCache { get; } = new MemoryCache(new MemoryCacheOptions());
