@@ -305,5 +305,36 @@ namespace Tests.Linq
 				q.ToList();
 			}
 		}
+
+		[Test, Category("FreeText")]
+		public void issue386([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from t in db.Product
+					join c in db.FreeTextTable<Northwind.Category, int>(c => c.Description, "sweetest candy bread and dry meat") on t.CategoryID equals c.Key
+					orderby t.ProductName descending 
+					select t;
+				var list = q.ToList();
+				Assert.That(list.Count, Is.GreaterThan(0));
+
+				q = from t in db.Product
+					from c in db.FreeTextTable<Northwind.Category, int>("Description", "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
+	 				orderby t.ProductName descending
+					select t;
+				list = q.ToList();
+				Assert.That(list.Count, Is.GreaterThan(0));
+
+				q =	from t in db.Product
+					from c in db.FreeTextTable<Northwind.Category, int>(c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
+					orderby t.ProductName descending
+					select t;
+				list = q.ToList();
+				Assert.That(list.Count, Is.GreaterThan(0));
+
+			}
+		}
+
 	}
 }
