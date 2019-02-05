@@ -307,7 +307,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category("FreeText")]
-		public void issue386([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void Issue386InnerJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -318,21 +318,36 @@ namespace Tests.Linq
 					select t;
 				var list = q.ToList();
 				Assert.That(list.Count, Is.GreaterThan(0));
+			}
+		}
 
-				q = from t in db.Product
+		[Test, Category("FreeText")]
+		public void Issue386LeftJoinWithText([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q = 
+					from t in db.Product
 					from c in db.FreeTextTable<Northwind.Category, int>("Description", "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
-	 				orderby t.ProductName descending
+					orderby t.ProductName descending
 					select t;
-				list = q.ToList();
+				var list = q.ToList();
 				Assert.That(list.Count, Is.GreaterThan(0));
+			}
+		}
 
-				q =	from t in db.Product
+		[Test, Category("FreeText"), ActiveIssue(386)]
+		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q 
+					= from t in db.Product
 					from c in db.FreeTextTable<Northwind.Category, int>(c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
 					orderby t.ProductName descending
 					select t;
-				list = q.ToList();
+				var list = q.ToList();
 				Assert.That(list.Count, Is.GreaterThan(0));
-
 			}
 		}
 
