@@ -31,14 +31,14 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestEntityDescriptor()
+		public void TestEntityDescriptor([DataSources] string context)
 		{
 			var ms = SetFluentMappings();
 
 			EntityDescriptor ed1;
 			EntityDescriptor ed2;
 
-			using (var db = new DataConnection(SQLiteTools.GetDataProvider(), "Data Source=TestDatabase.sqlite", ms))
+			using (var db = GetDataContext(context, ms))
 			{
 				try
 				{
@@ -51,7 +51,7 @@ namespace Tests.UserTests
 				var data = db.GetTable<Test1585>();
 				ed1 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585));	
 			}
-			using (var db = new DataConnection(SQLiteTools.GetDataProvider(), "Data Source=TestDatabase.sqlite", ms))
+			using (var db = GetDataContext(context, ms))
 			{
 				var data = db.GetTable<Test1585>();
 				ed2 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585));
