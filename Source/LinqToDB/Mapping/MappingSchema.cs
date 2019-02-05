@@ -1481,12 +1481,12 @@ namespace LinqToDB.Mapping
 			return ed;
 		}
 
-		// TODO: V2 - do we need it??
+		// TODO: V3 cleanup
 		/// <summary>
-		/// Enumerate types registered by FluentMetadataBuilder.
+		/// Enumerates types, registered by FluentMetadataBuilder.
 		/// </summary>
 		/// <returns>
-		/// Mapping types.
+		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
 		[Obsolete("Use 'GetDefinedTypes() method instead'")]
 		public Type[] GetEntites()
@@ -1495,10 +1495,10 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Enumerate types registered by FluentMetadataBuilder.
+		/// Enumerates types registered by FluentMetadataBuilder.
 		/// </summary>
 		/// <returns>
-		/// Mapping types.
+		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
 		public Type[] GetDefinedTypes()
 		{
@@ -1506,7 +1506,7 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Clears EntityDescriptor Cache.
+		/// Clears EntityDescriptor cache.
 		/// </summary>
 		public static void ClearCache()
 		{

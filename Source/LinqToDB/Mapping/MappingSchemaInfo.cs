@@ -247,10 +247,10 @@ namespace LinqToDB.Mapping
 		#region EntityDescriptor
 
 		/// <summary>
-		/// Enumerate types registered by FluentMetadataBuilder.
+		/// Enumerates types, registered by FluentMetadataBuilder.
 		/// </summary>
 		/// <returns>
-		///     <see cref="Array{Type}" />
+		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
 		[Obsolete("Use 'GetRegisteredTypes()' method instead.")]
 		public Type[] GetEntites()
@@ -259,10 +259,10 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Enumerate types registered by FluentMetadataBuilder.
+		/// Enumerates types, registered by FluentMetadataBuilder.
 		/// </summary>
 		/// <returns>
-		///     <see cref="Array{Type}" />
+		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
 		public Type[] GetRegisteredTypes()
 		{
