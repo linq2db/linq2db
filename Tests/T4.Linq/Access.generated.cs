@@ -18,7 +18,7 @@ namespace AccessDataContext
 {
 	/// <summary>
 	/// Database       : TestData
-	/// Data Source    : I:\linq2db\\Data\TestData.mdb
+	/// Data Source    : C:\GitHub\linq2db\\Data\TestData.mdb
 	/// Server Version : 04.00.0000
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
@@ -45,10 +45,6 @@ namespace AccessDataContext
 		public ITable<TestMerge1>          TestMerge1           { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>          TestMerge2           { get { return this.GetTable<TestMerge2>(); } }
 
-		public void InitMappingSchema()
-		{
-		}
-
 		public TestDataDB()
 		{
 			InitDataContext();
@@ -62,7 +58,8 @@ namespace AccessDataContext
 			InitMappingSchema();
 		}
 
-		partial void InitDataContext();
+		partial void InitDataContext  ();
+		partial void InitMappingSchema();
 	}
 
 	[Table("AllTypes")]

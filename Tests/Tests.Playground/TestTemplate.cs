@@ -19,7 +19,7 @@ namespace Tests.Playground
 		public void SampleSelectTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<SampleClass>())
+			using (var table = db.CreateLocalTable<SampleClass>(context, "SST"))
 			{
 				var result = table.ToArray();
 			}

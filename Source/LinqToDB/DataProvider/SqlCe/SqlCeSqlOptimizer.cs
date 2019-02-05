@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		private void CorrectSkip(SelectQuery selectQuery)
 		{
-			((ISqlExpressionWalkable)selectQuery).Walk(false, e =>
+			((ISqlExpressionWalkable)selectQuery).Walk(new WalkOptions(), e =>
 			{
 				if (e is SelectQuery q && q.Select.SkipValue != null && q.OrderBy.IsEmpty)
 				{

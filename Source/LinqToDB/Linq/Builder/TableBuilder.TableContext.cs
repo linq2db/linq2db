@@ -999,7 +999,9 @@ namespace LinqToDB.Linq.Builder
 					if (buildInfo != null && buildInfo.IsSubQuery)
 					{
 						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
+
+						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess ||
+						    expression.NodeType == ExpressionType.Call)
 						{
 							var tableLevel  = GetAssociation(expression, level);
 							var association = (AssociatedTableContext)tableLevel.Table;

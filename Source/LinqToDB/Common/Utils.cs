@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
 	public static class Utils
 	{
-
 		public static void MakeUniqueNames<T>([NotNull] IEnumerable<T> items, IEnumerable<string> staticNames, [NotNull] Func<T, string> nameFunc,
 			[NotNull] Action<T, string> nameSetter, string defaultName = "t", StringComparer comparer = null)
 		{
@@ -97,8 +97,7 @@ namespace LinqToDB.Common
 					{
 						newName = name + startDigit;
 						++startDigit;
-					} while (duplicates.Contains(newName) || currentNames.Contains(newName) ||
-					         !validatorFunc(newName));
+					} while (duplicates.Contains(newName) || currentNames.Contains(newName) || !validatorFunc(newName));
 
 					nameSetter(groupItem, newName);
 					currentNames.Add(newName);
@@ -108,6 +107,5 @@ namespace LinqToDB.Common
 				}
 			}
 		}
-
 	}
 }

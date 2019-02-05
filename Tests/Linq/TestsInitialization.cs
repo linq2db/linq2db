@@ -1,7 +1,9 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
 using System.Data.Common;
 using System.Reflection;
+
+using NUnit.Framework;
+
 using Tests;
 
 /// <summary>
@@ -14,7 +16,7 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !APPVEYOR && !TRAVIS
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
 		// but loaded from GAC assembly has other version
@@ -24,8 +26,9 @@ public class TestsInitialization
 			if (requestedAssembly.Name == "IBM.Data.DB2")
 				return DbProviderFactories.GetFactory("IBM.Data.DB2").GetType().Assembly;
 			if (requestedAssembly.Name == "IBM.Data.Informix")
-				//return DbProviderFactories.GetFactory("IBM.Data.Informix").GetType().Assembly;
-				return typeof(IBM.Data.Informix.IfxTimeSpan).Assembly;
+				// chose your red or blue pill carefully
+				return DbProviderFactories.GetFactory("IBM.Data.Informix").GetType().Assembly;
+				//return typeof(IBM.Data.Informix.IfxTimeSpan).Assembly;
 
 			return null;
 		};

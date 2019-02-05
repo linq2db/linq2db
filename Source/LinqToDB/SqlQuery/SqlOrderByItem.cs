@@ -15,9 +15,9 @@ namespace LinqToDB.SqlQuery
 		public ISqlExpression Expression   { get; internal set; }
 		public bool           IsDescending { get; }
 
-		internal void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		internal void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			Expression = Expression.Walk(skipColumns, func);
+			Expression = Expression.Walk(options, func);
 		}
 
 		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
