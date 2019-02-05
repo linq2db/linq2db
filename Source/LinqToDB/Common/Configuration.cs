@@ -178,6 +178,12 @@ namespace LinqToDB.Common
 			public static bool DisableQueryCache;
 
 			/// <summary>
+			/// Specifies timeout when query will be evicted from cache since last execution of query.
+			/// Default value is 1 hour.
+			/// </summary>
+			public static TimeSpan CacheSlidingExpiration = TimeSpan.FromHours(1);
+
+			/// <summary>
 			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
 			/// </summary>
 			public static bool PreferApply = true;
