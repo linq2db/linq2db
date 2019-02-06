@@ -53,8 +53,12 @@ namespace LinqToDB.Mapping
 		/// Creates mapping schema for specified configuration name.
 		/// </summary>
 		/// <param name="configuration">Mapping schema configuration name.
-		/// <see cref="ProviderName"/> for standard names.</param>
-		public MappingSchema(string configuration/* ??? */)
+		/// <see cref="ProviderName"/> for standard names.
+		/// </param>
+		/// <remarks>Schema name should be unique for mapping schemas with different mappings.
+		/// Using same name could lead to incorrect mapping used when mapping schemas with same name define different
+		/// mappings for same type.</remarks>
+		public MappingSchema(string configuration)
 			: this(configuration, null)
 		{
 		}
@@ -65,8 +69,11 @@ namespace LinqToDB.Mapping
 		/// Creates mapping schema with specified configuration name and base mapping schemas.
 		/// </summary>
 		/// <param name="configuration">Mapping schema configuration name.
-		/// <see cref="ProviderName"/> for standard names.</param>
+		/// <see cref="ProviderName"/> for standard names.
 		/// <param name="schemas">Base mapping schemas.</param>
+		/// <remarks>Schema name should be unique for mapping schemas with different mappings.
+		/// Using same name could lead to incorrect mapping used when mapping schemas with same name define different
+		/// mappings for same type.</remarks>
 		public MappingSchema(string configuration, params MappingSchema[] schemas)
 		{
 			if (configuration.IsNullOrEmpty() && (schemas == null || schemas.Length == 0))
