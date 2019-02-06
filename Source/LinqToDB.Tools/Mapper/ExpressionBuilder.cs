@@ -25,7 +25,7 @@ namespace LinqToDB.Tools.Mapper
 
 			public readonly Tuple<MemberInfo[],LambdaExpression>[]           MemberMappers;
 			[NotNull]
-			public readonly Dictionary<Tuple<Type,Type>,ParameterExpression> Mappers     = new Dictionary<Tuple<Type,Type>, ParameterExpression>();
+			public readonly Dictionary<Tuple<Type,Type>,ParameterExpression> Mappers     = new Dictionary<Tuple<Type,Type>,ParameterExpression>();
 			[NotNull]
 			public readonly HashSet<Tuple<Type,Type>>                        MapperTypes = new HashSet<Tuple<Type,Type>>();
 			[NotNull, ItemNotNull]
@@ -60,10 +60,10 @@ namespace LinqToDB.Tools.Mapper
 		[NotNull] readonly BuilderData    _data;
 		          readonly bool           _processCrossReferences;
 
-		#region GetExpressionEx
+		#region GetExpression
 
 		[CanBeNull]
-		public LambdaExpression GetExpressionEx()
+		public LambdaExpression GetExpression()
 		{
 			if (_mapperBuilder.MappingSchema.IsScalarType(_fromType) || _mapperBuilder.MappingSchema.IsScalarType(_toType))
 				return _mapperBuilder.MappingSchema.GetConvertExpression(_fromType, _toType);
@@ -74,7 +74,7 @@ namespace LinqToDB.Tools.Mapper
 
 			if (_mapperBuilder.MappingSchema.IsScalarType(_fromType) || _mapperBuilder.MappingSchema.IsScalarType(_toType))
 			{
-				expr = GetExpressionExImpl(pFrom, _toType);
+				expr = GetExpressionImpl(pFrom, _toType);
 			}
 			else if (_processCrossReferences)
 			{
@@ -86,13 +86,13 @@ namespace LinqToDB.Tools.Mapper
 			}
 			else
 			{
-				expr = GetExpressionExImpl(pFrom, _toType);
+				expr = GetExpressionImpl(pFrom, _toType);
 			}
 
 			if (_data.IsRestart)
 			{
 				_mapperBuilder.ProcessCrossReferences = true;
-				return new ExpressionBuilder(_mapperBuilder, new BuilderData(_data.MemberMappers)).GetExpressionEx();
+				return new ExpressionBuilder(_mapperBuilder, new BuilderData(_data.MemberMappers)).GetExpression();
 			}
 
 			var l = Lambda(
@@ -105,13 +105,13 @@ namespace LinqToDB.Tools.Mapper
 		}
 
 		[CanBeNull]
-		LambdaExpression GetExpressionExInner()
+		LambdaExpression GetExpressionInner()
 		{
 			if (_mapperBuilder.MappingSchema.IsScalarType(_fromType) || _mapperBuilder.MappingSchema.IsScalarType(_toType))
 				return _mapperBuilder.MappingSchema.GetConvertExpression(_fromType, _toType);
 
 			var pFrom = Parameter(_fromType, "from");
-			var expr  = GetExpressionExImpl(pFrom, _toType);
+			var expr  = GetExpressionImpl(pFrom, _toType);
 
 			if (_data.IsRestart)
 				return null;
@@ -122,7 +122,7 @@ namespace LinqToDB.Tools.Mapper
 		}
 
 		[CanBeNull]
-		Expression GetExpressionExImpl([NotNull] Expression fromExpression, [NotNull] Type toType)
+		Expression GetExpressionImpl([NotNull] Expression fromExpression, [NotNull] Type toType)
 		{
 			var fromAccessor = TypeAccessor.GetAccessor(fromExpression.Type);
 			var toAccessor   = TypeAccessor.GetAccessor(toType);
@@ -202,7 +202,7 @@ namespace LinqToDB.Tools.Mapper
 				else
 				{
 					var getValue = getter.GetBody(fromExpression);
-					var exExpr   = GetExpressionExImpl(getValue, toMember.Type);
+					var exExpr   = GetExpressionImpl(getValue, toMember.Type);
 
 					if (_data.IsRestart)
 						return null;
@@ -306,10 +306,10 @@ namespace LinqToDB.Tools.Mapper
 
 		#endregion
 
-		#region GetExpression
+		#region GetExpressionEx
 
 		[NotNull]
-		public LambdaExpression GetExpression()
+		public LambdaExpression GetExpressionEx()
 		{
 			var pFrom = Parameter(_fromType, "from");
 			var pTo   = Parameter(_toType,   "to");
@@ -335,7 +335,7 @@ namespace LinqToDB.Tools.Mapper
 			return l;
 		}
 
-		LambdaExpression GetExpressionInner()
+		LambdaExpression GetExpressionExInner()
 		{
 			var pFrom = Parameter(_fromType, "from");
 			var pTo   = Parameter(_toType,   "to");
@@ -501,7 +501,7 @@ namespace LinqToDB.Tools.Mapper
 							// else
 							toMember.HasGetter ?
 								setter.GetBody(_localObject, BuildClassMapper(getValue, toMember)) :
-								setter.GetBody(_localObject, _builder.GetExpressionExImpl(getValue, toMember.Type)));
+								setter.GetBody(_localObject, _builder.GetExpressionImpl(getValue, toMember.Type)));
 
 						_expressions.Add(expr);
 					}
@@ -744,12 +744,12 @@ namespace LinqToDB.Tools.Mapper
 
 				if (builder._data.LocalDic == null)
 				{
-					selector = selectorBuilder.GetExpressionExInner();
+					selector = selectorBuilder.GetExpressionInner();
 				}
 				else
 				{
 					var p  = Parameter(fromItemType);
-					var ex = selectorBuilder.GetExpressionInner();
+					var ex = selectorBuilder.GetExpressionExInner();
 
 					selector = Lambda(
 						Invoke(ex, p, Constant(builder._mapperBuilder.MappingSchema.GetDefaultValue(toItemType), toItemType)),

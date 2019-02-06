@@ -27,14 +27,14 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <returns>Mapping expression.</returns>
 		[Pure]
-		LambdaExpression GetMapperLambdaExpressionEx();
+		LambdaExpression GetMapperLambdaExpression();
 
 		/// <summary>
 		/// Returns a mapper expression to map an object of <i>TFrom</i> type to an object of <i>TTo</i> type.
 		/// </summary>
 		/// <returns>Mapping expression.</returns>
 		[Pure]
-		LambdaExpression GetMapperLambdaExpression();
+		LambdaExpression GetMapperLambdaExpressionEx();
 
 		/// <summary>
 		/// Filters target members to map.
@@ -54,19 +54,19 @@ namespace LinqToDB.Tools.Mapper
 		/// <summary>
 		/// Member mappers.
 		/// </summary>
-		List<Tuple<LambdaExpression,LambdaExpression>> MemberMappers { get; set; }
+		List<MemberMapperInfo> MemberMappers { get; set; }
 
 		/// <summary>
 		/// If true, processes object cross references.
-		/// if default (null), the <see cref="GetMapperLambdaExpressionEx"/> method does not process cross references,
-		/// however the <see cref="GetMapperLambdaExpression"/> method does.
+		/// if default (null), the <see cref="GetMapperLambdaExpression"/> method does not process cross references,
+		/// however the <see cref="GetMapperLambdaExpressionEx"/> method does.
 		/// </summary>
 		bool? ProcessCrossReferences { get; set; }
 
 		/// <summary>
 		/// If true, performs deep copy.
-		/// if default (null), the <see cref="GetMapperLambdaExpressionEx"/> method does not do deep copy,
-		/// however the <see cref="GetMapperLambdaExpression"/> method does.
+		/// if default (null), the <see cref="GetMapperLambdaExpression"/> method does not do deep copy,
+		/// however the <see cref="GetMapperLambdaExpressionEx"/> method does.
 		/// </summary>
 		bool? DeepCopy { get; set; }
 

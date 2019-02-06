@@ -45,7 +45,7 @@ namespace Tests.Tools.Mapper
 		{
 			var mapper = new MapperBuilder<TestMap,TestMap>()
 				.SetProcessCrossReferences(false)
-				.GetMapperExpression()
+				.GetMapperExpressionEx()
 				.Compile();
 
 			mapper(new TestMap(), new TestMap(), null);
@@ -54,7 +54,9 @@ namespace Tests.Tools.Mapper
 		[Test]
 		public void FuncExpressionTest()
 		{
-			var mapper = new MapperBuilder<TestMap,TestMap>().GetMapperExpressionEx().Compile();
+			var mapper = new MapperBuilder<TestMap,TestMap>()
+				.GetMapperExpression()
+				.Compile();
 
 			var value = mapper(new TestMap());
 
@@ -160,7 +162,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		[Test]
-		public void MapObjects1([Values(true,false)] bool useAction)
+		public void MapObjects1([Values] bool useAction)
 		{
 			var map = new MapHelper<Source,Dest>().Map(useAction, m => m
 				.MapMember(_ => _.Field3,  _ => _.Field2)
@@ -203,8 +205,8 @@ namespace Tests.Tools.Mapper
 			map.Map(src);
 			map.Map(src, null);
 			map.Map(src, null, null);
-			map.GetMapperEx()(src);
-			map.GetMapper()(src, null, null);
+			map.GetMapper()(src);
+			map.GetMapperEx()(src, null, null);
 
 			const int n = 1000000;
 
@@ -235,7 +237,7 @@ namespace Tests.Tools.Mapper
 
 			sw.Reset();
 
-			var map3 = map.GetMapperEx();
+			var map3 = map.GetMapper();
 
 			for (var i = 0; i < n; i++)
 			{
@@ -246,7 +248,7 @@ namespace Tests.Tools.Mapper
 
 			sw.Reset();
 
-			var map4 = map.GetMapper();
+			var map4 = map.GetMapperEx();
 
 			for (var i = 0; i < n; i++)
 			{
@@ -257,12 +259,12 @@ namespace Tests.Tools.Mapper
 		}
 
 		[Test]
-		public void MapObjects2([Values(true,false)] bool useAction)
+		public void MapObjects2([Values] bool useAction)
 		{
 			var map = new MapHelper<Source,Dest>().Map(useAction, m => m
-				.ToMapping      ("Field3", "Field2")
-				.ToMapping<Dest>("Field6", "Field7")
-				.FromMapping(new Dictionary<string,string> { ["Field5"] = "Field4" }));
+				.ToMapping      (nameof(Dest.Field3), nameof(Source.Field2))
+				.ToMapping<Dest>(nameof(Dest.Field6), nameof(Source.Field7))
+				.FromMapping(new Dictionary<string,string> { [nameof(Source.Field5)] = nameof(Dest.Field4) }));
 
 			Assert.That(map.To.Field1,             Is.EqualTo(1));
 			Assert.That(map.To.Field3,             Is.EqualTo(2));
@@ -279,7 +281,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		[Test]
-		public void MapObject([Values(true,false)] bool useAction)
+		public void MapObject([Values] bool useAction)
 		{
 			var map = new MapHelper<Source,Source>().Map(useAction, m => m);
 
@@ -302,7 +304,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		[Test]
-		public void MapFilterObjects([Values(true,false)] bool useAction)
+		public void MapFilterObjects([Values] bool useAction)
 		{
 			var map = new MapHelper<Source,Dest>().Map(useAction, mm => mm
 				.SetMemberFilter(m => m.Name != nameof(Source.Field7)));
@@ -316,7 +318,7 @@ namespace Tests.Tools.Mapper
 		class Class4 { public Class2 Class = new Class2(); }
 
 		[Test]
-		public void MapInnerObject1([Values(true,false)] bool useAction)
+		public void MapInnerObject1([Values] bool useAction)
 		{
 			var map = new MapHelper<Class3,Class4>().Map(useAction, m => m);
 
@@ -327,7 +329,7 @@ namespace Tests.Tools.Mapper
 		class Class6 { public Class2 Class1 = new Class2(); public Class2 Class2 = null; }
 
 		[Test]
-		public void MapInnerObject2([Values(true,false)] bool useAction)
+		public void MapInnerObject2([Values] bool useAction)
 		{
 			var src = new Class5();
 
@@ -341,7 +343,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		[Test]
-		public void MapInnerObject3([Values(true,false)] bool useAction)
+		public void MapInnerObject3([Values] bool useAction)
 		{
 			var src = new Class5();
 
@@ -360,7 +362,7 @@ namespace Tests.Tools.Mapper
 		class Class10 { public Class8  Class = new Class8(); }
 
 		[Test]
-		public void SelfReference1([Values(true,false)] bool useAction)
+		public void SelfReference1([Values] bool useAction)
 		{
 			var src = new Class9();
 
@@ -376,7 +378,7 @@ namespace Tests.Tools.Mapper
 		class Class12 { public Class10 Class = new Class10(); }
 
 		[Test]
-		public void SelfReference2([Values(true,false)] bool useAction)
+		public void SelfReference2([Values] bool useAction)
 		{
 			var src = new Class11();
 
@@ -397,7 +399,7 @@ namespace Tests.Tools.Mapper
 		class Cl41 { public Cl1 Class1; public Cl21 Class2; public Cl31 Class3; }
 
 		[Test]
-		public void SelfReference3([Values(true,false)] bool useAction)
+		public void SelfReference3([Values] bool useAction)
 		{
 			var src = new Cl4();
 
@@ -406,7 +408,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		[Test]
-		public void NullTest([Values(true,false)] bool useAction)
+		public void NullTest([Values] bool useAction)
 		{
 			var src = new Cl4 { Class2 = null, };
 
@@ -420,7 +422,7 @@ namespace Tests.Tools.Mapper
 		class Class14 { public Class1 Class = new Class1();  }
 
 		[Test]
-		public void DeepCopy1([Values(true,false)] bool useAction)
+		public void DeepCopy1([Values] bool useAction)
 		{
 			var src = new Class13();
 
@@ -430,7 +432,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		[Test]
-		public void DeepCopy2([Values(true,false)] bool useAction)
+		public void DeepCopy2([Values] bool useAction)
 		{
 			var src = new Class13();
 
@@ -444,7 +446,7 @@ namespace Tests.Tools.Mapper
 		class Class16 { public List<Class2> List = null; }
 
 		[Test]
-		public void ObjectList([Values(true,false)] bool useAction)
+		public void ObjectList([Values] bool useAction)
 		{
 			var src = new Class15();
 
@@ -512,7 +514,7 @@ namespace Tests.Tools.Mapper
 		class Class18 { public Class9[] Arr = null; }
 
 		[Test]
-		public void ObjectArray1([Values(true,false)] bool useAction)
+		public void ObjectArray1([Values] bool useAction)
 		{
 			var mapper = new MapHelper<Class17,Class18>().Map(useAction, new Class17(), m =>
 				m.SetProcessCrossReferences(true));
@@ -531,7 +533,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		[Test]
-		public void ObjectArray2([Values(true,false)] bool useAction)
+		public void ObjectArray2([Values] bool useAction)
 		{
 			var mapper = new MapHelper<Class19,Class18>().Map(useAction, new Class19(), m =>
 				m.SetProcessCrossReferences(true));
@@ -548,7 +550,7 @@ namespace Tests.Tools.Mapper
 		class Class21 { public Dest   Class1 = null;         public Dest   Class2 = null; }
 
 		[Test]
-		public void NoCrossRef([Values(true,false)] bool useAction)
+		public void NoCrossRef([Values] bool useAction)
 		{
 			var source = new Class20();
 
@@ -571,7 +573,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		[Test]
-		public void CollectionTest([Values(true,false)] bool useAction)
+		public void CollectionTest([Values] bool useAction)
 		{
 			var src = new Object3();
 			src.HashSet.Add(Guid.NewGuid().ToString());
@@ -595,7 +597,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		[Test]
-		public void RecursionTest1([Values(true,false)] bool useAction)
+		public void RecursionTest1([Values] bool useAction)
 		{
 			var mapper = new MapHelper<RTest1,RTest1>().Map(useAction, new RTest1(), m => m);
 
@@ -608,7 +610,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		[Test]
-		public void RecursionTest2([Values(true,false)] bool useAction)
+		public void RecursionTest2([Values] bool useAction)
 		{
 			var mapper = new MapHelper<RTest2,RTest2>().Map(useAction, new RTest2(), m => m);
 
@@ -621,7 +623,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		[Test]
-		public void ByteArrayTest([Values(true,false)] bool useAction)
+		public void ByteArrayTest([Values] bool useAction)
 		{
 			var mapper = new MapHelper<ByteTestClass,ByteTestClass>().Map(useAction, new ByteTestClass(), m => m);
 
@@ -645,7 +647,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		[Test]
-		public void RecursionTest3([Values(true,false)] bool useAction)
+		public void RecursionTest3([Values] bool useAction)
 		{
 			var src = new RClass1
 			{
