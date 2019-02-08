@@ -16,6 +16,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
+using LinqToDB.Tools;
 
 using NpgsqlTypes;
 
@@ -813,7 +814,7 @@ namespace Tests.DataProvider
 			[NotColumn(Configuration = ProviderName.PostgreSQL93)]
 			[Column  (DataType = DataType.BinaryJson)] public string jsonbDataType                      { get; set; }
 
-			public static IEqualityComparer<AllTypes> Comparer = Tools.ComparerBuilder<AllTypes>.GetEqualityComparer(true);
+			public static IEqualityComparer<AllTypes> Comparer = ComparerBuilder.GetEqualityComparer<AllTypes>();
 		}
 
 		public enum BulkTestMode
@@ -937,7 +938,8 @@ namespace Tests.DataProvider
 						}
 
 					AreEqual(
-						r => {
+						r =>
+						{
 							r.ID = 0;
 							r.binaryDataType = null;
 							r.bitDataType = null;

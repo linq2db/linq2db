@@ -21,8 +21,8 @@ namespace LinqToDB.Tools.Mapper
 		/// <typeparam name="TTo">Type to map to.</typeparam>
 		/// <returns>Mapping expression.</returns>
 		[Pure]
-		public static Mapper<TFrom, TTo> GetMapper<TFrom, TTo>()
-			=> new Mapper<TFrom, TTo>(new MapperBuilder<TFrom, TTo>());
+		public static Mapper<TFrom,TTo> GetMapper<TFrom,TTo>()
+			=> new Mapper<TFrom,TTo>(new MapperBuilder<TFrom,TTo>());
 
 		/// <summary>
 		/// Returns a mapper to map an object of <i>TFrom</i> type to an object of <i>TTo</i> type.
@@ -32,17 +32,17 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="setter">MapperBuilder parameter setter.</param>
 		/// <returns>Mapping expression.</returns>
 		[Pure, NotNull]
-		public static Mapper<TFrom, TTo> GetMapper<TFrom, TTo>(
-			[NotNull] Func<MapperBuilder<TFrom,TTo>,MapperBuilder<TFrom, TTo>> setter)
+		public static Mapper<TFrom,TTo> GetMapper<TFrom,TTo>(
+			[NotNull] Func<MapperBuilder<TFrom,TTo>,MapperBuilder<TFrom,TTo>> setter)
 		{
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
-			return new Mapper<TFrom, TTo>(setter(new MapperBuilder<TFrom, TTo>()));
+			return new Mapper<TFrom,TTo>(setter(new MapperBuilder<TFrom,TTo>()));
 		}
 
 		static class MapHolder<T>
 		{
 			[NotNull]
-			public static readonly Mapper<T, T> Mapper =
+			public static readonly Mapper<T,T> Mapper =
 				GetMapper<T, T>(m => m
 					 .SetProcessCrossReferences(true)
 					 .SetDeepCopy(true));

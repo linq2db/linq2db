@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
-namespace Tests.Tools
+namespace LinqToDB.Tools.Comparers
 {
-	internal class ArrayEqualityComparer<T> : EqualityComparer<T[]>
+	class ArrayEqualityComparer<T> : EqualityComparer<T[]>
 	{
-		public static new ArrayEqualityComparer<T> Default { get; } = new ArrayEqualityComparer<T>();
+		public new static ArrayEqualityComparer<T> Default { get; } = new ArrayEqualityComparer<T>();
 
 		public override int GetHashCode(T[] obj)
 		{

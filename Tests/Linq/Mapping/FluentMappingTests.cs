@@ -6,11 +6,12 @@ using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
-using Tests.Tools;
 
 namespace Tests.Mapping
 {
+	using Model;
+	using Tools;
+
 	[TestFixture]
 	public class FluentMappingTests : TestBase
 	{
@@ -409,7 +410,7 @@ namespace Tests.Mapping
 
 				Assert.AreEqual(1, items1.Length);
 
-				AreEqual(items1, items2, ComparerBuilder<DescendantEntity>.GetEqualityComparer());
+				AreEqualWithComparer(items1, items2);
 			}
 		}
 

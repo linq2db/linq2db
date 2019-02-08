@@ -1268,7 +1268,7 @@ namespace Tests.Linq
 			[Column(Configuration = ProviderName.DB2, DbType = "smallint")]
 			public bool? NullableBoolValue { get; set; }
 
-			public static readonly IEqualityComparer<WhereCases> Comparer = Tools.ComparerBuilder<WhereCases>.GetEqualityComparer();
+			public static readonly IEqualityComparer<WhereCases> Comparer = ComparerBuilder.GetEqualityComparer<WhereCases>();
 		}
 
 		[Test]

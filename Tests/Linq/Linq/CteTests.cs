@@ -691,7 +691,7 @@ namespace Tests.Linq
 				var result = hierarchy.OrderBy(h => h.Id);
 				var expected = EnumerateDown(hierarchyData, 0, null).OrderBy(h => h.Id);
 
-				AreEqual(expected, result, ComparerBuilder<HierarchyData>.GetEqualityComparer());
+				AreEqualWithComparer(expected, result);
 			}
 		}
 
@@ -750,7 +750,7 @@ namespace Tests.Linq
 				var result = resultTable.OrderBy(h => h.Id);
 				var expected = EnumerateDown(hierarchyData, 0, null).OrderBy(h => h.Id);
 
-				AreEqual(expected, result, ComparerBuilder<HierarchyData>.GetEqualityComparer());
+				AreEqualWithComparer(expected, result);
 			}
 		}
 

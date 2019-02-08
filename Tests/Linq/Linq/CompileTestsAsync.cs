@@ -159,18 +159,25 @@ namespace Tests.Linq
 		[Test]
 		public async Task SinglePredicateAsync([DataSources] string context)
 		{
-			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>((db, id, token) =>
-				(from c in db.GetTable<AsyncDataTable>()
-				where c.Id == id
-				select new AsyncDataProjection
-				{
-					Id = id,
-					Value = c.Id
-				}).SingleAsync(c => c.Id == id, token));
-
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(context, "SPA", GenerateData()))
+			using (var lt = db.CreateLocalTable(context, "SPA", GenerateData()))
 			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<AsyncDataTable>()
+						.HasTableName(lt.TableName);
+
+				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>(
+				(bd, id, token) =>
+					(
+						from c in bd.GetTable<AsyncDataTable>()
+						where c.Id == id
+						select new AsyncDataProjection
+						{
+							Id = id,
+							Value = c.Id
+						}
+					).SingleAsync(c => c.Id == id, token));
+
 				var result = await query(db, 2, CancellationToken.None);
 				Assert.AreEqual(2, result.Id);
 				Assert.AreEqual(2, result.Value);
@@ -201,18 +208,25 @@ namespace Tests.Linq
 		[Test]
 		public async Task SingleOrDefaultPredicateAsync([DataSources] string context)
 		{
-			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>((db, id, token) =>
-				(from c in db.GetTable<AsyncDataTable>()
-				where c.Id == id
-				select new AsyncDataProjection
-				{
-					Id = id,
-					Value = c.Id
-				}).SingleOrDefaultAsync(c => c.Id == id, token));
-
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(context, "SODPA", GenerateData()))
+			using (var lt = db.CreateLocalTable(context, "SODPA", GenerateData()))
 			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<AsyncDataTable>()
+						.HasTableName(lt.TableName);
+
+				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>(
+					(bd, id, token) =>
+					(
+						from c in bd.GetTable<AsyncDataTable>()
+						where c.Id == id
+						select new AsyncDataProjection
+						{
+							Id = id,
+							Value = c.Id
+						}
+					).SingleOrDefaultAsync(c => c.Id == id, token));
+
 				var result = await query(db, 2, CancellationToken.None);
 				Assert.AreEqual(2, result.Id);
 				Assert.AreEqual(2, result.Value);
@@ -307,12 +321,17 @@ namespace Tests.Linq
 		[Test]
 		public async Task MinAsync([SQLiteDataSources(true)] string context)
 		{
-			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>((db, id, token) =>
-				db.GetTable<AsyncDataTable>().Where(c => c.Id > id).Select(c => c.Id).MinAsync(token));
-
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(GenerateData()))
+			using (var lt = db.CreateLocalTable(context, "MA1", GenerateData()))
 			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<AsyncDataTable>()
+						.HasTableName(lt.TableName);
+
+				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>(
+					(bd, id, token) =>
+						bd.GetTable<AsyncDataTable>().Where(c => c.Id > id).Select(c => c.Id).MinAsync(token));
+
 				var result = await query(db, 2, CancellationToken.None);
 				Assert.AreEqual(3, result);
 			}
@@ -321,12 +340,17 @@ namespace Tests.Linq
 		[Test]
 		public async Task MinSelectorAsync([DataSources] string context)
 		{
-			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>((db, id, token) =>
-				db.GetTable<AsyncDataTable>().Where(c => c.Id > id).MinAsync(c => c.Id, token));
-
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(context, "MSA1", GenerateData()))
+			using (var lt = db.CreateLocalTable(context, "MSA1", GenerateData()))
 			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<AsyncDataTable>()
+						.HasTableName(lt.TableName);
+
+				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>(
+					(bd, id, token) =>
+						bd.GetTable<AsyncDataTable>().Where(c => c.Id > id).MinAsync(c => c.Id, token));
+
 				var result = await query(db, 2, CancellationToken.None);
 				Assert.AreEqual(3, result);
 			}

@@ -8,7 +8,7 @@ namespace Tests.Mapping
 	[TestFixture]
 	public class FluentMappingAliasTests : TestBase
 	{
-		class InstanceClass : IProjected 
+		class InstanceClass : IProjected
 		{
 			public int    Id       { get; set; }
 			public int    Value    { get; set; }
@@ -63,7 +63,7 @@ namespace Tests.Mapping
 					var items = queryable.Where(t => t.EntityId > 1 & t.EntityValue >= 104 && t.EntityValue <= 115 && t.EntityValueStr.StartsWith("S")).ToArray();
 					var expected = table .Where(t => t.EntityId > 1 & t.EntityValue >= 104 && t.EntityValue <= 115 && t.EntityValueStr.StartsWith("S")).OfType<IProjected>().ToArray();
 
-					AreEqual(expected, items, ComparerBuilder<IProjected>.GetEqualityComparer());
+					AreEqualWithComparer(expected, items);
 				}
 			}
 		}

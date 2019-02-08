@@ -23,8 +23,8 @@ namespace LinqToDB.Tools.Mapper
 		[CanBeNull]
 		Expression<Func<TFrom,TTo,IDictionary<object,object>,TTo>> _mapperExpression;
 		Expression<Func<TFrom,TTo>>                                _mapperExpressionEx;
-		Func<TFrom,TTo,IDictionary<object,object>,TTo>             _mapper;
-		Func<TFrom,TTo>                                            _mapperEx;
+		Func<TFrom,TTo,IDictionary<object,object>,TTo>             _mapperEx;
+		Func<TFrom,TTo>                                            _mapper;
 
 		internal Mapper([NotNull] MapperBuilder<TFrom,TTo> mapperBuilder) => _mapperBuilder = mapperBuilder;
 
@@ -51,7 +51,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <returns>Mapping expression.</returns>
 		[Pure, NotNull]
 		public Func<TFrom,TTo> GetMapper()
-			=> _mapperEx ?? (_mapperEx = GetMapperExpression().Compile());
+			=> _mapper ?? (_mapper = GetMapperExpression().Compile());
 
 		/// <summary>
 		/// Returns a mapper to map an object of <i>TFrom</i> type to an object of <i>TTo</i> type.
@@ -59,7 +59,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <returns>Mapping expression.</returns>
 		[Pure, NotNull]
 		public Func<TFrom,TTo,IDictionary<object,object>,TTo> GetMapperEx()
-			=> _mapper ?? (_mapper = GetMapperExpressionEx().Compile());
+			=> _mapperEx ?? (_mapperEx = GetMapperExpressionEx().Compile());
 
 		/// <summary>
 		/// Returns a mapper to map an object of <i>TFrom</i> type to an object of <i>TTo</i> type.
