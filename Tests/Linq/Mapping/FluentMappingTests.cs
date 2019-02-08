@@ -571,8 +571,8 @@ namespace Tests.Mapping
 					DerivedClass1 item1 = new DerivedClass1 { NotACol = "test" };
 					db.Insert(item1);
 
-					DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").FirstOrDefault();
-					var count = db.GetTable<DerivedClass1>().Count();
+					DerivedClass res = db.GetTable<DerivedClass>().FirstOrDefault();
+					var count = db.GetTable<DerivedClass>().Count();
 
 					Assert.AreEqual(res.MyCol1, item.MyCol1);
 					Assert.AreNotEqual(res.NotACol, item.NotACol);
@@ -607,7 +607,7 @@ namespace Tests.Mapping
 					db.Insert(item1);
 
 					DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").FirstOrDefault();
-					var count = db.GetTable<DerivedClass1>().Count();
+					var count = db.GetTable<DerivedClass>().Count();
 
 					Assert.AreEqual(res.MyCol1, item.MyCol1);
 					Assert.AreNotEqual(res.NotACol, item.NotACol);
