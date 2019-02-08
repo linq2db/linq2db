@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,7 +22,7 @@ namespace LinqToDB.Linq
 				Linq.Query.CacheCleaners.Add(() => _queryCache.Clear());
 			}
 
-			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
+			static Query<int> CreateQuery(IDataContext dataContext, T obj, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
@@ -32,7 +33,7 @@ namespace LinqToDB.Linq
 
 				var sqlQuery = new SelectQuery();
 
-				ParameterAccessor param;
+				ParameterAccessor param = null;
 
 				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery);
 				insertOrUpdateStatement.Insert.Into  = sqlTable;
@@ -53,15 +54,31 @@ namespace LinqToDB.Linq
 				{
 					if (field.IsInsertable)
 					{
-						if (!supported || !fieldDic.TryGetValue(field, out param))
+						var notSupportedOrNotFound = !supported || !fieldDic.TryGetValue(field, out param);
+						if (notSupportedOrNotFound)
 						{
 							param = GetParameter(type, dataContext, field);
+						}
+						if (field.SkipValuesOnInsert != null && field.SkipValuesOnInsert.Any() && param?.Expression is MemberExpression mExpr)
+						{
+							if ((mExpr.Member is PropertyInfo info && info.CanRead) || mExpr.Member is FieldInfo)
+							{
+								var propOrFieldExpr = Expression.PropertyOrField(Expression.Constant(obj), mExpr.Member.Name);
+								var func = Expression.Lambda<Func<object>>(Expression.Convert(propOrFieldExpr, typeof(object))).Compile();
+								var value = func.Invoke();
+								if (field.SkipValuesOnInsert.Contains(value))
+								{
+									continue;
+								}
+							}
+						}
+						if (notSupportedOrNotFound)
+						{
 							ei.Queries[0].Parameters.Add(param);
 
 							if (supported)
 								fieldDic.Add(field, param);
 						}
-
 						insertOrUpdateStatement.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 					}
 					else if (field.IsIdentity)
@@ -129,8 +146,8 @@ namespace LinqToDB.Linq
 				var type = GetType<T>(obj, dataContext);
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
-					? CreateQuery(dataContext, tableName, databaseName, schema, type)
-					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schema, type));
+					? CreateQuery(dataContext, obj, tableName, databaseName, schema, type)
+					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, obj, tableName, databaseName, schema, type));
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -143,8 +160,8 @@ namespace LinqToDB.Linq
 				var type = GetType<T>(obj, dataContext);
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
-					? CreateQuery(dataContext, tableName, schema, databaseName, type)
-					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName, type));
+					? CreateQuery(dataContext, obj, tableName, schema, databaseName, type)
+					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, obj, tableName, schema, databaseName, type));
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 
