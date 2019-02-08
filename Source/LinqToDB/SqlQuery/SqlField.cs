@@ -33,26 +33,28 @@ namespace LinqToDB.SqlQuery
 			CreateFormat     = field.CreateFormat;
 			CreateOrder      = field.CreateOrder;
 			ColumnDescriptor = field.ColumnDescriptor;
+			SkipValuesOnInsert = field.SkipValuesOnInsert;
 		}
 
-		public Type             SystemType       { get; set; }
-		public string           Alias            { get; set; }
-		public string           Name             { get; set; }
-		public bool             IsPrimaryKey     { get; set; }
-		public int              PrimaryKeyOrder  { get; set; }
-		public bool             IsIdentity       { get; set; }
-		public bool             IsInsertable     { get; set; }
-		public bool             IsUpdatable      { get; set; }
-		public DataType         DataType         { get; set; }
-		public string           DbType           { get; set; }
-		public int?             Length           { get; set; }
-		public int?             Precision        { get; set; }
-		public int?             Scale            { get; set; }
-		public string           CreateFormat     { get; set; }
-		public int?             CreateOrder      { get; set; }
+		public Type                 SystemType              { get; set; }
+		public string               Alias                   { get; set; }
+		public string               Name                    { get; set; }
+		public bool                 IsPrimaryKey            { get; set; }
+		public int                  PrimaryKeyOrder         { get; set; }
+		public bool                 IsIdentity              { get; set; }
+		public bool                 IsInsertable            { get; set; }
+		public IEnumerable<object>  SkipValuesOnInsert      { get; set; }
+		public bool                 IsUpdatable             { get; set; }
+		public DataType             DataType                { get; set; }
+		public string               DbType                  { get; set; }
+		public int?                 Length                  { get; set; }
+		public int?                 Precision               { get; set; }
+		public int?                 Scale                   { get; set; }
+		public string               CreateFormat            { get; set; }
+		public int?                 CreateOrder             { get; set; }
 
-		public ISqlTableSource  Table            { get; set; }
-		public ColumnDescriptor ColumnDescriptor { get; set; }
+		public ISqlTableSource      Table                   { get; set; }
+		public ColumnDescriptor     ColumnDescriptor        { get; set; }
 
 		private string _physicalName;
 		public  string  PhysicalName
