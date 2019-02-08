@@ -561,11 +561,8 @@ namespace Tests.Mapping
 				  .Property(t => t.MyCol1).HasColumnName("my_col1")
 				  .Property(t => t.NotACol).IsNotColumn()
 
-				  .Entity<DerivedClass>().HasTableName("my_table")
-				  .Property(t => t.SomeOtherField).HasColumnName("my_other_col")
-
-				  .Entity<DerivedClass1>().HasTableName("my_table")
-				  .Property(t => t.SomeOtherField).HasColumnName("my_other_col");
+				  .Entity<DerivedClass>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
+				  .Entity<DerivedClass1>().Property(t => t.SomeOtherField).HasColumnName("my_other_col");
 
 				using (db.CreateLocalTable<DerivedClass>())
 				{
@@ -574,10 +571,10 @@ namespace Tests.Mapping
 					DerivedClass1 item1 = new DerivedClass1 { NotACol = "test" };
 					db.Insert(item1);
 
-					DerivedClass res = db.GetTable<DerivedClass>().FirstOrDefault();
+					DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").FirstOrDefault();
 					var count = db.GetTable<DerivedClass1>().Count();
 
-					Assert.AreEqual(res.MyCol1 , item.MyCol1);
+					Assert.AreEqual(res.MyCol1, item.MyCol1);
 					Assert.AreNotEqual(res.NotACol, item.NotACol);
 					Assert.AreEqual(count, 1);
 				}
@@ -599,10 +596,8 @@ namespace Tests.Mapping
 				   })
 				  .Property(t => t.MyCol1).HasColumnName("my_col1")
 				  .Property(t => t.NotACol).IsNotColumn()
-				  .Entity<DerivedClass>().HasTableName("my_table")
-				  .Property(t => t.SomeOtherField).HasColumnName("my_other_col")
-				  .Entity<DerivedClass1>().HasTableName("my_table")
-				  .Property(t => t.SomeOtherField).HasColumnName("my_other_col");
+				  .Entity<DerivedClass>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
+				  .Entity<DerivedClass1>().Property(t => t.SomeOtherField).HasColumnName("my_other_col");
 
 				using (db.CreateLocalTable<DerivedClass>())
 				{
@@ -611,7 +606,7 @@ namespace Tests.Mapping
 					DerivedClass1 item1 = new DerivedClass1 { NotACol = "test", MyCol1 = "MyCol2" };
 					db.Insert(item1);
 
-					DerivedClass res = db.GetTable<DerivedClass>().FirstOrDefault();
+					DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").FirstOrDefault();
 					var count = db.GetTable<DerivedClass1>().Count();
 
 					Assert.AreEqual(res.MyCol1, item.MyCol1);
