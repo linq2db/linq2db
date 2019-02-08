@@ -510,5 +510,116 @@ namespace Tests.Mapping
 			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.StringValue)] .SkipOnInsert);
 			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.MarkedOnType)].SkipOnInsert);
 		}
+
+		/// issue 291 Tests
+		public enum GenericItemType
+		{
+			DerivedClass = 0,
+			DerivedClass1 = 1,
+		}
+
+		public class BaseClass
+		{
+			public string MyCol1;
+			public string NotACol;
+		}
+
+		public class DerivedClass : BaseClass
+		{
+			[Column(IsDiscriminator = true)]
+			public GenericItemType itemType = GenericItemType.DerivedClass;
+			public string SomeOtherField;
+
+		}
+
+		public class DerivedClass1 : BaseClass
+		{
+			[Column(IsDiscriminator = true)]
+			public GenericItemType itemType = GenericItemType.DerivedClass1;
+			public string SomeOtherField;
+		}
+
+		[Test]
+		public void Issue291Test2Attr([DataSources] string contex)
+		{
+			using (var db = new TestDataConnection(contex))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+
+				   .Entity<BaseClass>().HasTableName("my_table")
+				   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
+				   {
+					   IsDefault = true,
+					   Type = typeof(DerivedClass),
+					   Code = GenericItemType.DerivedClass
+				   })
+				   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
+				   {
+					   Type = typeof(DerivedClass1),
+					   Code = GenericItemType.DerivedClass1
+				   })
+				  .Property(t => t.MyCol1).HasColumnName("my_col1")
+				  .Property(t => t.NotACol).IsNotColumn()
+
+				  .Entity<DerivedClass>().HasTableName("my_table")
+				  .Property(t => t.SomeOtherField).HasColumnName("my_other_col")
+
+				  .Entity<DerivedClass1>().HasTableName("my_table")
+				  .Property(t => t.SomeOtherField).HasColumnName("my_other_col");
+
+				using (db.CreateLocalTable<DerivedClass>())
+				{
+					DerivedClass item = new DerivedClass { NotACol = "test", MyCol1 = "MyCol1" };
+					db.Insert(item);
+					DerivedClass1 item1 = new DerivedClass1 { NotACol = "test" };
+					db.Insert(item1);
+
+					DerivedClass res = db.GetTable<DerivedClass>().FirstOrDefault();
+					var count = db.GetTable<DerivedClass1>().Count();
+
+					Assert.AreEqual(res.MyCol1 , item.MyCol1);
+					Assert.AreNotEqual(res.NotACol, item.NotACol);
+					Assert.AreEqual(count, 1);
+				}
+			}
+		}
+
+		[Test]
+		public void Issue291Test1Attr([DataSources] string contex)
+		{
+			using (var db = new TestDataConnection(contex))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+				   .Entity<BaseClass>().HasTableName("my_table")
+				   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
+				   {
+					   IsDefault = true,
+					   Type = typeof(DerivedClass),
+					   Code = GenericItemType.DerivedClass
+				   })
+				  .Property(t => t.MyCol1).HasColumnName("my_col1")
+				  .Property(t => t.NotACol).IsNotColumn()
+				  .Entity<DerivedClass>().HasTableName("my_table")
+				  .Property(t => t.SomeOtherField).HasColumnName("my_other_col")
+				  .Entity<DerivedClass1>().HasTableName("my_table")
+				  .Property(t => t.SomeOtherField).HasColumnName("my_other_col");
+
+				using (db.CreateLocalTable<DerivedClass>())
+				{
+					DerivedClass item = new DerivedClass { NotACol = "test", MyCol1 = "MyCol1" };
+					db.Insert(item);
+					DerivedClass1 item1 = new DerivedClass1 { NotACol = "test", MyCol1 = "MyCol2" };
+					db.Insert(item1);
+
+					DerivedClass res = db.GetTable<DerivedClass>().FirstOrDefault();
+					var count = db.GetTable<DerivedClass1>().Count();
+
+					Assert.AreEqual(res.MyCol1, item.MyCol1);
+					Assert.AreNotEqual(res.NotACol, item.NotACol);
+					Assert.AreEqual(count, 2);
+				}
+			}
+		}
+
 	}
 }
