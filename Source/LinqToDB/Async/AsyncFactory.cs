@@ -153,7 +153,7 @@ namespace LinqToDB.Async
 			if (mi == null
 				|| !mi.ReturnType.IsGenericTypeEx()
 				|| mi.ReturnType.GetGenericTypeDefinition() != typeof(Task<>)
-				|| mi.ReturnType.GetGenericArguments()[0].IsSubclassOfEx(typeof(TTask)))
+				|| mi.ReturnType.GetGenericArgumentsEx()[0].IsSubclassOfEx(typeof(TTask)))
 				return null;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));
