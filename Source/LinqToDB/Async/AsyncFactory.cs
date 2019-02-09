@@ -87,15 +87,13 @@ namespace LinqToDB.Async
 
 		private static Func<IDbTransaction, IAsyncDbTransaction> TransactionFactory(Type type)
 		{
-			var commitAsync   = CreateDelegate<Func<IDbTransaction, CancellationToken, Task     >, IDbTransaction>(type, "CommitAsync"  , _tokenParams     , typeof(Task));
-			var rollbackAsync = CreateDelegate<Func<IDbTransaction, CancellationToken, Task     >, IDbTransaction>(type, "RollbackAsync", _tokenParams     , typeof(Task));
-			var disposeAsync  = CreateDelegate<Func<IDbTransaction                   , ValueTask>, IDbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, typeof(ValueTask));
+			var commitAsync   = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "CommitAsync"  , _tokenParams     , typeof(Task));
+			var rollbackAsync = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "RollbackAsync", _tokenParams     , typeof(Task));
 
 			if (commitAsync      != null
-				|| rollbackAsync != null
-				|| disposeAsync  != null)
+				|| rollbackAsync != null)
 				// if at least one async method found on current type - use found methods for async calls
-				return tr => new ReflectedAsyncDbTransaction(tr, commitAsync, rollbackAsync, disposeAsync);
+				return tr => new ReflectedAsyncDbTransaction(tr, commitAsync, rollbackAsync);
 
 			// no async methods detected, use default fallback-to-sync implementation
 			return tr => new AsyncDbTransaction(tr);
@@ -106,16 +104,14 @@ namespace LinqToDB.Async
 			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken                , Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction, IAsyncDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , t => Wrap(t));
 			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction, IAsyncDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, t => Wrap(t));
 			var changeDatabaseAsync     = CreateDelegate     <Func<IDbConnection, string, CancellationToken        , Task>                     , IDbConnection>(type, "ChangeDatabaseAsync", _changeDatabaseParams, typeof(Task));
-			var closeAsync              = CreateDelegate     <Func<IDbConnection, CancellationToken                , ValueTask>                , IDbConnection>(type, "CloseAsync"         , _tokenParams         , typeof(ValueTask));
-			var disposeAsync            = CreateDelegate     <Func<IDbConnection                                   , ValueTask>                , IDbConnection>(type, "DisposeAsync"       , Array<Type>.Empty    , typeof(ValueTask));
+			var closeAsync              = CreateDelegate     <Func<IDbConnection, CancellationToken                , Task>                     , IDbConnection>(type, "CloseAsync"         , _tokenParams         , typeof(Task));
 
 			if (beginTransactionAsync      != null
 				|| beginTransactionIlAsync != null
 				|| changeDatabaseAsync     != null
-				|| closeAsync              != null
-				|| disposeAsync            != null)
+				|| closeAsync              != null)
 				// if at least one async method found on current type - use found methods for async calls
-				return cn => new ReflectedAsyncDbConnection(cn, closeAsync, disposeAsync, beginTransactionAsync, beginTransactionIlAsync, changeDatabaseAsync);
+				return cn => new ReflectedAsyncDbConnection(cn, closeAsync, beginTransactionAsync, beginTransactionIlAsync, changeDatabaseAsync);
 
 			// default sync implementation
 			return connection => new AsyncDbConnection(connection);
@@ -127,6 +123,7 @@ namespace LinqToDB.Async
 			Type[] parametersTypes,
 			Type   returnType)
 			where TDelegate : Delegate
+			//where TDelegate : class
 		{
 			var mi = instanceType.GetPublicInstanceMethodEx(methodName, parametersTypes);
 
@@ -149,6 +146,7 @@ namespace LinqToDB.Async
 			Type[]                                       parametersTypes,
 			Expression<Func<Task<TTask>, Task<TResult>>> resultConverter)
 			where TDelegate : Delegate
+			//where TDelegate : class
 		{
 			var mi = instanceType.GetPublicInstanceMethodEx(methodName, parametersTypes);
 

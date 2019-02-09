@@ -129,7 +129,7 @@ namespace LinqToDB.Data.RetryPolicy
 			return _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
 		}
 
-		public ValueTask CloseAsync(CancellationToken cancellationToken = default)
+		public Task CloseAsync(CancellationToken cancellationToken = default)
 		{
 			return _connection.CloseAsync(cancellationToken);
 		}
@@ -137,11 +137,6 @@ namespace LinqToDB.Data.RetryPolicy
 		public Task ChangeDatabaseAsync(string databaseName, CancellationToken cancellationToken = default)
 		{
 			return _connection.ChangeDatabaseAsync(databaseName, cancellationToken);
-		}
-
-		public ValueTask DisposeAsync()
-		{
-			return _connection.DisposeAsync();
 		}
 
 		public IAsyncDbConnection TryClone()

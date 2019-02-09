@@ -28,12 +28,6 @@ namespace LinqToDB.Async
 		Task RollbackAsync(CancellationToken cancellationToken = default);
 
 		/// <summary>
-		/// Disposes transaction asynchonously.
-		/// </summary>
-		/// <returns>Async operation task.</returns>
-		ValueTask DisposeAsync();
-
-		/// <summary>
 		/// Gets underlying transaction instance.
 		/// </summary>
 		IDbTransaction Unwrap { get; }

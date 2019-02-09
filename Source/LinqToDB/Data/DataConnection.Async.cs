@@ -23,9 +23,7 @@ namespace LinqToDB.Data
 
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			var task = TransactionAsync?.DisposeAsync();
-			if (task.HasValue)
-				await task.Value;
+			TransactionAsync?.Dispose();
 
 			// Create new transaction object.
 			//
@@ -53,9 +51,7 @@ namespace LinqToDB.Data
 
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			var task = TransactionAsync?.DisposeAsync();
-			if (task.HasValue)
-				await task.Value;
+			TransactionAsync?.Dispose();
 
 			// Create new transaction object.
 			//
@@ -137,7 +133,7 @@ namespace LinqToDB.Data
 
 				if (_closeTransaction)
 				{
-					await TransactionAsync.DisposeAsync();
+					TransactionAsync.Dispose();
 					TransactionAsync = null;
 
 					if (_command != null)
@@ -160,7 +156,7 @@ namespace LinqToDB.Data
 
 				if (_closeTransaction)
 				{
-					await TransactionAsync.DisposeAsync();
+					TransactionAsync.Dispose();
 					TransactionAsync = null;
 
 					if (_command != null)
@@ -182,7 +178,7 @@ namespace LinqToDB.Data
 
 			if (TransactionAsync != null && _closeTransaction)
 			{
-				await TransactionAsync.DisposeAsync();
+				TransactionAsync.Dispose();
 				TransactionAsync = null;
 			}
 
@@ -190,7 +186,7 @@ namespace LinqToDB.Data
 			{
 				if (_disposeConnection)
 				{
-					await _connection.DisposeAsync();
+					_connection.Dispose();
 					_connection = null;
 				}
 				else if (_closeConnection)
@@ -204,10 +200,10 @@ namespace LinqToDB.Data
 		/// Disposes connection asynchronously.
 		/// </summary>
 		/// <returns>Asynchronous operation completion task.</returns>
-		public async ValueTask DisposeAsync()
+		public async Task DisposeAsync(CancellationToken cancellationToken = default)
 		{
 			Disposed = true;
-			await CloseAsync();
+			await CloseAsync(cancellationToken);
 		}
 
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)

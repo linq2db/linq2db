@@ -45,13 +45,6 @@ namespace LinqToDB.Async
 			Transaction.Dispose();
 		}
 
-		public virtual ValueTask DisposeAsync()
-		{
-			Dispose();
-
-			return default;
-		}
-
 		public virtual void Rollback()
 		{
 			Transaction.Rollback();
