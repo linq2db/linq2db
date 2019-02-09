@@ -24,8 +24,8 @@ namespace LinqToDB.Data
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
 			var task = TransactionAsync?.DisposeAsync();
-			if (task != null)
-				await task;
+			if (task.HasValue)
+				await task.Value;
 
 			// Create new transaction object.
 			//
@@ -54,8 +54,8 @@ namespace LinqToDB.Data
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
 			var task = TransactionAsync?.DisposeAsync();
-			if (task != null)
-				await task;
+			if (task.HasValue)
+				await task.Value;
 
 			// Create new transaction object.
 			//
@@ -86,7 +86,7 @@ namespace LinqToDB.Data
 				else
 					connection = DataProvider.CreateConnection(ConnectionString);
 
-				_connection = connection is IAsyncDbConnection async ? async : new AsyncDbConnection(connection);
+				_connection = AsyncFactory.Create(connection);
 
 				if (RetryPolicy != null)
 					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
@@ -204,7 +204,7 @@ namespace LinqToDB.Data
 		/// Disposes connection asynchronously.
 		/// </summary>
 		/// <returns>Asynchronous operation completion task.</returns>
-		public async Task DisposeAsync()
+		public async ValueTask DisposeAsync()
 		{
 			Disposed = true;
 			await CloseAsync();

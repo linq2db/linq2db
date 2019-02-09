@@ -39,7 +39,7 @@
 		<PackageReference Include="MySql.Data" Version="8.0.13" Alias="MySqlData" />
 		<PackageReference Include="MySqlConnector" Version="0.49.0" Alias="MySqlConnector" />
 		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
-		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
 	</ItemGroup>
 
 	<Target Name="AddPackageAliases" BeforeTargets="ResolveReferences" Outputs="%(PackageReference.Identity)">

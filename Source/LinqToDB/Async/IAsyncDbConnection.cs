@@ -33,7 +33,7 @@ namespace LinqToDB.Async
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Async operation task.</returns>
-		Task CloseAsync(CancellationToken cancellationToken = default);
+		ValueTask CloseAsync(CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// Opens current connection asynchonously.
@@ -54,7 +54,7 @@ namespace LinqToDB.Async
 		/// Disposes connection asynchonously.
 		/// </summary>
 		/// <returns>Async operation task.</returns>
-		Task DisposeAsync();
+		ValueTask DisposeAsync();
 
 		/// <summary>
 		/// Gets underlying connection instance.

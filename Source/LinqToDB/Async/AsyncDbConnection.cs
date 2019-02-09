@@ -18,7 +18,7 @@ namespace LinqToDB.Async
 	{
 		protected IDbConnection Connection { get; private set; }
 
-		public AsyncDbConnection(IDbConnection connection)
+		internal protected AsyncDbConnection(IDbConnection connection)
 		{
 			Connection = connection ?? throw new ArgumentNullException(nameof(connection));
 		}
@@ -39,19 +39,19 @@ namespace LinqToDB.Async
 
 		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
-			return Task.FromResult<IAsyncDbTransaction>(new AsyncDbTransaction(BeginTransaction()));
+			return Task.FromResult(AsyncFactory.Create(BeginTransaction()));
 		}
 
 		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 		{
-			return Task.FromResult<IAsyncDbTransaction>(new AsyncDbTransaction(BeginTransaction(isolationLevel)));
+			return Task.FromResult(AsyncFactory.Create(BeginTransaction(isolationLevel)));
 		}
 
-		public virtual Task CloseAsync(CancellationToken cancellationToken = default)
+		public virtual ValueTask CloseAsync(CancellationToken cancellationToken = default)
 		{
 			Close();
 
-			return TaskEx.CompletedTask;
+			return default;
 		}
 
 		public virtual Task OpenAsync(CancellationToken cancellationToken = default)
@@ -64,12 +64,12 @@ namespace LinqToDB.Async
 
 		public virtual IDbTransaction BeginTransaction()
 		{
-			return new AsyncDbTransaction(Connection.BeginTransaction());
+			return AsyncFactory.Create(Connection.BeginTransaction());
 		}
 
 		public virtual IDbTransaction BeginTransaction(IsolationLevel isolationLevel)
 		{
-			return new AsyncDbTransaction(Connection.BeginTransaction(isolationLevel));
+			return AsyncFactory.Create(Connection.BeginTransaction(isolationLevel));
 		}
 
 		public virtual void Close()
@@ -104,17 +104,17 @@ namespace LinqToDB.Async
 			return TaskEx.CompletedTask;
 		}
 
-		public virtual Task DisposeAsync()
+		public virtual ValueTask DisposeAsync()
 		{
 			Dispose();
 
-			return TaskEx.CompletedTask;
+			return default;
 		}
 
 		public virtual IAsyncDbConnection TryClone()
 		{
 			return Unwrap is ICloneable cloneable
-				? new AsyncDbConnection((IDbConnection)cloneable.Clone())
+				? AsyncFactory.Create((IDbConnection)cloneable.Clone())
 				: null;
 		}
 	}

@@ -129,7 +129,7 @@ namespace LinqToDB.Data.RetryPolicy
 			return _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
 		}
 
-		public Task CloseAsync(CancellationToken cancellationToken = default)
+		public ValueTask CloseAsync(CancellationToken cancellationToken = default)
 		{
 			return _connection.CloseAsync(cancellationToken);
 		}
@@ -139,16 +139,14 @@ namespace LinqToDB.Data.RetryPolicy
 			return _connection.ChangeDatabaseAsync(databaseName, cancellationToken);
 		}
 
-		public Task DisposeAsync()
+		public ValueTask DisposeAsync()
 		{
 			return _connection.DisposeAsync();
 		}
 
 		public IAsyncDbConnection TryClone()
 		{
-			var connection = (IDbConnection)Clone();
-
-			return connection is IAsyncDbConnection async ? async : new AsyncDbConnection(connection);
+			return AsyncFactory.Create((IDbConnection)Clone());
 		}
 	}
 }

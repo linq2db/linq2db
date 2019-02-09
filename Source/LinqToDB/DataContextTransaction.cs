@@ -174,7 +174,7 @@ namespace LinqToDB
 			{
 				var db = DataContext.GetDataConnection();
 
-				db.RollbackTransactionAsync(cancellationToken);
+				await db.RollbackTransactionAsync(cancellationToken);
 
 				_transactionCounter--;
 

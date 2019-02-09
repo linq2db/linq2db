@@ -31,16 +31,11 @@ namespace LinqToDB.Async
 		/// Disposes transaction asynchonously.
 		/// </summary>
 		/// <returns>Async operation task.</returns>
-		Task DisposeAsync();
+		ValueTask DisposeAsync();
 
 		/// <summary>
 		/// Gets underlying transaction instance.
 		/// </summary>
 		IDbTransaction Unwrap { get; }
-
-		/// <summary>
-		/// Gets underlying instance of <see cref="IAsyncDbConnection"/>.
-		/// </summary>
-		IAsyncDbConnection AsyncConnection { get; }
 	}
 }

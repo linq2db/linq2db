@@ -246,7 +246,7 @@ namespace LinqToDB.Data
 
 			DataProvider       = dataProvider;
 			MappingSchema      = DataProvider.MappingSchema;
-			_connection        = connection is IAsyncDbConnection async ? async : new AsyncDbConnection(connection);
+			_connection        = AsyncFactory.Create(connection);
 			_disposeConnection = disposeConnection;
 		}
 
@@ -285,12 +285,10 @@ namespace LinqToDB.Data
 
 			DataProvider       = dataProvider;
 			MappingSchema      = DataProvider.MappingSchema;
-			_connection        = transaction is IAsyncDbTransaction asyncConection
-				? asyncConection.AsyncConnection
-				: (transaction.Connection is IAsyncDbConnection asyncDbConection
-					? asyncDbConection
-					: new AsyncDbConnection(transaction.Connection));
-			TransactionAsync   = transaction is IAsyncDbTransaction asyncTransaction ? asyncTransaction : new AsyncDbTransaction(transaction);
+			_connection        = transaction.Connection is IAsyncDbConnection asyncDbConection
+				? asyncDbConection
+				: AsyncFactory.Create(transaction.Connection);
+			TransactionAsync   = AsyncFactory.Create(transaction);
 			_closeTransaction  = false;
 			_closeConnection   = false;
 			_disposeConnection = false;
@@ -965,7 +963,7 @@ namespace LinqToDB.Data
 				else
 					connection = DataProvider.CreateConnection(ConnectionString);
 
-				_connection = connection is IAsyncDbConnection async ? async : new AsyncDbConnection(connection);
+				_connection = AsyncFactory.Create(connection);
 
 				if (RetryPolicy != null)
 					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
@@ -1322,8 +1320,7 @@ namespace LinqToDB.Data
 
 			// Create new transaction object.
 			//
-			var tr = EnsureConnection().BeginTransaction();
-			TransactionAsync = tr is IAsyncDbTransaction async ? async : new AsyncDbTransaction(tr);
+			TransactionAsync = AsyncFactory.Create(EnsureConnection().BeginTransaction());
 
 			_closeTransaction = true;
 
@@ -1348,8 +1345,7 @@ namespace LinqToDB.Data
 
 			// Create new transaction object.
 			//
-			var tr = EnsureConnection().BeginTransaction(isolationLevel);
-			TransactionAsync = tr is IAsyncDbTransaction async ? async : new AsyncDbTransaction(tr);
+			TransactionAsync = AsyncFactory.Create(EnsureConnection().BeginTransaction(isolationLevel));
 
 			_closeTransaction = true;
 
@@ -1450,7 +1446,7 @@ namespace LinqToDB.Data
 			ConfigurationString = configurationString;
 			DataProvider        = dataProvider;
 			ConnectionString    = connectionString;
-			_connection         = connection is IAsyncDbConnection async ? async : (connection != null ? new AsyncDbConnection(connection) : null);
+			_connection         = connection != null ? AsyncFactory.Create(connection) : null;
 			MappingSchema       = mappingSchema;
 		}
 

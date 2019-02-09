@@ -17,7 +17,7 @@ namespace LinqToDB.Async
 	{
 		protected IDbTransaction Transaction { get; private set; }
 
-		public AsyncDbTransaction(IDbTransaction transaction)
+		internal protected AsyncDbTransaction(IDbTransaction transaction)
 		{
 			Transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
 		}
@@ -27,8 +27,6 @@ namespace LinqToDB.Async
 		public virtual IsolationLevel IsolationLevel => Transaction.IsolationLevel;
 
 		public IDbTransaction Unwrap => Transaction is IAsyncDbTransaction async ? async.Unwrap : Transaction;
-
-		public virtual IAsyncDbConnection AsyncConnection => new AsyncDbConnection(Transaction.Connection);
 
 		public virtual void Commit()
 		{
@@ -47,11 +45,11 @@ namespace LinqToDB.Async
 			Transaction.Dispose();
 		}
 
-		public virtual Task DisposeAsync()
+		public virtual ValueTask DisposeAsync()
 		{
 			Dispose();
 
-			return TaskEx.CompletedTask;
+			return default;
 		}
 
 		public virtual void Rollback()
