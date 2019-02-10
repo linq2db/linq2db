@@ -25,7 +25,7 @@ namespace Tests.Data
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
-				if (tid != Thread.CurrentThread.ManagedThreadId)
+				if (tid == Thread.CurrentThread.ManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}
@@ -40,7 +40,7 @@ namespace Tests.Data
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
-				if (tid != Thread.CurrentThread.ManagedThreadId)
+				if (tid == Thread.CurrentThread.ManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}

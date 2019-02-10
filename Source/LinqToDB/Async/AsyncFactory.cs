@@ -1,11 +1,13 @@
 ﻿using JetBrains.Annotations;
 using LinqToDB.Common;
+using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using System;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,13 +21,14 @@ namespace LinqToDB.Async
 	{
 		private static readonly Type[] _tokenParams            = new[] { typeof(CancellationToken) };
 		private static readonly Type[] _beginTransactionParams = new[] { typeof(IsolationLevel)   , typeof(CancellationToken) };
-		private static readonly Type[] _changeDatabaseParams   = new[] { typeof(string)           , typeof(CancellationToken) };
 
 		private static readonly ConcurrentDictionary<Type, Func<IDbConnection, IAsyncDbConnection>> _connectionFactories
 			= new ConcurrentDictionary<Type, Func<IDbConnection, IAsyncDbConnection>>();
 
 		private static readonly ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>> _transactionFactories
 			= new ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>>();
+
+		private static readonly MethodInfo _transactionWrap = MemberHelper.MethodOf(() => Wrap<IDbTransaction>(default)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Register or replace custom <see cref="IAsyncDbConnection"/> for <typeparamref name="TConnection"/> type.
@@ -83,7 +86,11 @@ namespace LinqToDB.Async
 			return _transactionFactories.GetOrAdd(transaction.GetType(), TransactionFactory)(transaction);
 		}
 
-		private static async Task<IAsyncDbTransaction> Wrap(Task<IDbTransaction> transaction) => Create(await transaction);
+		private static async Task<IAsyncDbTransaction> Wrap<TTransaction>(Task<TTransaction> transaction)
+			where TTransaction: IDbTransaction
+		{
+			return Create(await transaction);
+		}
 
 		private static Func<IDbTransaction, IAsyncDbTransaction> TransactionFactory(Type type)
 		{
@@ -101,17 +108,15 @@ namespace LinqToDB.Async
 
 		private static Func<IDbConnection, IAsyncDbConnection> ConnectionFactory(Type type)
 		{
-			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken                , Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction, IAsyncDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , t => Wrap(t));
-			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction, IAsyncDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, t => Wrap(t));
-			var changeDatabaseAsync     = CreateDelegate     <Func<IDbConnection, string, CancellationToken        , Task>                     , IDbConnection>(type, "ChangeDatabaseAsync", _changeDatabaseParams, typeof(Task));
+			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken                , Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction, IAsyncDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap);
+			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction, IAsyncDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap);
 			var closeAsync              = CreateDelegate     <Func<IDbConnection, CancellationToken                , Task>                     , IDbConnection>(type, "CloseAsync"         , _tokenParams         , typeof(Task));
 
 			if (beginTransactionAsync      != null
 				|| beginTransactionIlAsync != null
-				|| changeDatabaseAsync     != null
 				|| closeAsync              != null)
 				// if at least one async method found on current type - use found methods for async calls
-				return cn => new ReflectedAsyncDbConnection(cn, closeAsync, beginTransactionAsync, beginTransactionIlAsync, changeDatabaseAsync);
+				return cn => new ReflectedAsyncDbConnection(cn, beginTransactionAsync, beginTransactionIlAsync, closeAsync);
 
 			// default sync implementation
 			return connection => new AsyncDbConnection(connection);
@@ -128,7 +133,7 @@ namespace LinqToDB.Async
 			var mi = instanceType.GetPublicInstanceMethodEx(methodName, parametersTypes);
 
 			if (mi == null || mi.ReturnType != returnType)
-				return null;
+				return default;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));
 			var parameters = parametersTypes.Select(t => Expression.Parameter(t)).ToArray();
@@ -141,10 +146,10 @@ namespace LinqToDB.Async
 		}
 
 		private static TDelegate CreateTaskTDelegate<TDelegate, TInstance, TTask, TResult>(
-			Type                                         instanceType,
-			string                                       methodName,
-			Type[]                                       parametersTypes,
-			Expression<Func<Task<TTask>, Task<TResult>>> resultConverter)
+			Type       instanceType,
+			string     methodName,
+			Type[]     parametersTypes,
+			MethodInfo taskConverter)
 			where TDelegate : Delegate
 			//where TDelegate : class
 		{
@@ -154,15 +159,15 @@ namespace LinqToDB.Async
 				|| !mi.ReturnType.IsGenericTypeEx()
 				|| mi.ReturnType.GetGenericTypeDefinition() != typeof(Task<>)
 				|| mi.ReturnType.GetGenericArgumentsEx()[0].IsSubclassOfEx(typeof(TTask)))
-				return null;
+				return default;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));
 			var parameters = parametersTypes.Select(t => Expression.Parameter(t)).ToArray();
 
 			return Expression
 				.Lambda<TDelegate>(
-					Expression.Invoke(
-						resultConverter,
+					Expression.Call(
+						taskConverter.MakeGenericMethod(mi.ReturnType.GetGenericArgumentsEx()[0]),
 						Expression.Call(Expression.Convert(pInstance, instanceType), mi, parameters)),
 					new[] { pInstance }.Concat(parameters))
 				.Compile();

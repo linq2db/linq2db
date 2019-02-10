@@ -14,20 +14,17 @@ namespace LinqToDB.Async
 		private Func<IDbConnection, CancellationToken, Task>                                      _closeAsync;
 		private Func<IDbConnection, CancellationToken, Task<IAsyncDbTransaction>>                 _beginTransactionAsync;
 		private Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>> _beginTransactionIlAsync;
-		private Func<IDbConnection, string, CancellationToken, Task>                              _changeDatabaseAsync;
 
 		public ReflectedAsyncDbConnection(
 			IDbConnection connection,
-			Func<IDbConnection, CancellationToken, Task>                                      closeAsync,
 			Func<IDbConnection, CancellationToken, Task<IAsyncDbTransaction>>                 beginTransactionAsync,
 			Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>> beginTransactionIlAsync,
-			Func<IDbConnection, string, CancellationToken, Task>                              changeDatabaseAsync)
+			Func<IDbConnection, CancellationToken, Task>                                      closeAsync)
 			: base(connection)
 		{
-			_closeAsync              = closeAsync;
 			_beginTransactionAsync   = beginTransactionAsync;
 			_beginTransactionIlAsync = beginTransactionIlAsync;
-			_changeDatabaseAsync     = changeDatabaseAsync;
+			_closeAsync              = closeAsync;
 		}
 
 		public override Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
@@ -43,11 +40,6 @@ namespace LinqToDB.Async
 		public override Task CloseAsync(CancellationToken cancellationToken = default)
 		{
 			return _closeAsync?.Invoke(Connection, cancellationToken) ?? base.CloseAsync(cancellationToken);
-		}
-
-		public override Task ChangeDatabaseAsync(string databaseName, CancellationToken cancellationToken = default)
-		{
-			return _changeDatabaseAsync?.Invoke(Connection, databaseName, cancellationToken) ?? base.ChangeDatabaseAsync(databaseName, cancellationToken);
 		}
 	}
 }

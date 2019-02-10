@@ -134,11 +134,6 @@ namespace LinqToDB.Data.RetryPolicy
 			return _connection.CloseAsync(cancellationToken);
 		}
 
-		public Task ChangeDatabaseAsync(string databaseName, CancellationToken cancellationToken = default)
-		{
-			return _connection.ChangeDatabaseAsync(databaseName, cancellationToken);
-		}
-
 		public IAsyncDbConnection TryClone()
 		{
 			return AsyncFactory.Create((IDbConnection)Clone());

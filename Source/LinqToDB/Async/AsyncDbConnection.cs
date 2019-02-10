@@ -97,13 +97,6 @@ namespace LinqToDB.Async
 			Connection.Dispose();
 		}
 
-		public virtual Task ChangeDatabaseAsync(string databaseName, CancellationToken cancellationToken = default)
-		{
-			ChangeDatabase(databaseName);
-
-			return TaskEx.CompletedTask;
-		}
-
 		public virtual Task DisposeAsync()
 		{
 			Dispose();
