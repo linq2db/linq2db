@@ -279,5 +279,47 @@ namespace Tests.Data
 			if (exceptions.Count > 0)
 				throw new AggregateException(exceptions);
 		}
+
+		[Test]
+		public async Task DataConnectionCloseAsync([DataSources(false)] string context)
+		{
+			var db = new DataConnection(context);
+
+			try
+			{
+				db.GetTable<Parent>().ToList();
+			}
+			finally
+			{
+				var tid = Thread.CurrentThread.ManagedThreadId;
+
+				await db.CloseAsync();
+
+				db.Dispose();
+
+				if (tid == Thread.CurrentThread.ManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
+
+		[Test]
+		public async Task DataConnectionDisposeAsync([DataSources(false)] string context)
+		{
+			var db = new DataConnection(context);
+
+			try
+			{
+				db.GetTable<Parent>().ToList();
+			}
+			finally
+			{
+				var tid = Thread.CurrentThread.ManagedThreadId;
+
+				await db.DisposeAsync();
+
+				if (tid == Thread.CurrentThread.ManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
 	}
 }

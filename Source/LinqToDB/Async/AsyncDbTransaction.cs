@@ -15,18 +15,18 @@ namespace LinqToDB.Async
 	[PublicAPI]
 	public class AsyncDbTransaction : IAsyncDbTransaction
 	{
-		protected IDbTransaction Transaction { get; private set; }
+		private readonly IDbTransaction _transaction;
 
 		internal protected AsyncDbTransaction(IDbTransaction transaction)
 		{
-			Transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
+			_transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
 		}
 
 		public virtual IDbConnection Connection => Transaction.Connection;
 
 		public virtual IsolationLevel IsolationLevel => Transaction.IsolationLevel;
 
-		public IDbTransaction Unwrap => Transaction is IAsyncDbTransaction async ? async.Unwrap : Transaction;
+		public IDbTransaction Transaction => _transaction;
 
 		public virtual void Commit()
 		{

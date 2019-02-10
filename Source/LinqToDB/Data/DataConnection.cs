@@ -951,7 +951,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets underlying database connection, used by current connection object.
 		/// </summary>
-		public IDbConnection Connection => EnsureConnection().Unwrap;
+		public IDbConnection Connection => EnsureConnection().Connection;
 
 		internal IAsyncDbConnection EnsureConnection()
 		{
@@ -973,7 +973,7 @@ namespace LinqToDB.Data
 			{
 				_connection.Open();
 				_closeConnection = true;
-				OnConnectionOpened?.Invoke(this, _connection.Unwrap);
+				OnConnectionOpened?.Invoke(this, _connection.Connection);
 			}
 
 			return _connection;
@@ -1301,7 +1301,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets current transaction, associated with connection.
 		/// </summary>
-		public IDbTransaction Transaction => TransactionAsync?.Unwrap;
+		public IDbTransaction Transaction => TransactionAsync?.Transaction;
 
 		/// <summary>
 		/// Async transaction wrapper over <see cref="Transaction"/>.

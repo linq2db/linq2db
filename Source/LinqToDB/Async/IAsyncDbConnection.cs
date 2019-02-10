@@ -45,7 +45,7 @@ namespace LinqToDB.Async
 		/// <summary>
 		/// Gets underlying connection instance.
 		/// </summary>
-		IDbConnection Unwrap { get; }
+		IDbConnection Connection { get; }
 
 		/// <summary>
 		/// Returns cloned connection instance, if underlying provider support cloning or null otherwise.

@@ -16,11 +16,11 @@ namespace LinqToDB.Async
 	[PublicAPI]
 	public class AsyncDbConnection : IAsyncDbConnection
 	{
-		protected IDbConnection Connection { get; private set; }
+		private readonly IDbConnection _connection;
 
 		internal protected AsyncDbConnection(IDbConnection connection)
 		{
-			Connection = connection ?? throw new ArgumentNullException(nameof(connection));
+			_connection = connection ?? throw new ArgumentNullException(nameof(connection));
 		}
 
 		public virtual string ConnectionString
@@ -35,7 +35,7 @@ namespace LinqToDB.Async
 
 		public virtual ConnectionState State => Connection.State;
 
-		public IDbConnection Unwrap => Connection is IAsyncDbConnection async ? async.Unwrap : Connection;
+		public virtual IDbConnection Connection => _connection;
 
 		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
@@ -56,7 +56,7 @@ namespace LinqToDB.Async
 
 		public virtual Task OpenAsync(CancellationToken cancellationToken = default)
 		{
-			if (Unwrap is DbConnection dbConnection)
+			if (Connection is DbConnection dbConnection)
 				return dbConnection.OpenAsync();
 
 			return TaskEx.CompletedTask;
@@ -106,7 +106,7 @@ namespace LinqToDB.Async
 
 		public virtual IAsyncDbConnection TryClone()
 		{
-			return Unwrap is ICloneable cloneable
+			return Connection is ICloneable cloneable
 				? AsyncFactory.Create((IDbConnection)cloneable.Clone())
 				: null;
 		}

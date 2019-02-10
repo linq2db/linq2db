@@ -108,9 +108,9 @@ namespace LinqToDB.Async
 
 		private static Func<IDbConnection, IAsyncDbConnection> ConnectionFactory(Type type)
 		{
-			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken                , Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction, IAsyncDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap);
-			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction, IAsyncDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap);
-			var closeAsync              = CreateDelegate     <Func<IDbConnection, CancellationToken                , Task>                     , IDbConnection>(type, "CloseAsync"         , _tokenParams         , typeof(Task));
+			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken                , Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap);
+			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap);
+			var closeAsync              = CreateDelegate     <Func<IDbConnection, CancellationToken                , Task>                     , IDbConnection                >(type, "CloseAsync"           , _tokenParams           , typeof(Task));
 
 			if (beginTransactionAsync      != null
 				|| beginTransactionIlAsync != null
@@ -128,7 +128,6 @@ namespace LinqToDB.Async
 			Type[] parametersTypes,
 			Type   returnType)
 			where TDelegate : Delegate
-			//where TDelegate : class
 		{
 			var mi = instanceType.GetPublicInstanceMethodEx(methodName, parametersTypes);
 
@@ -145,13 +144,12 @@ namespace LinqToDB.Async
 				.Compile();
 		}
 
-		private static TDelegate CreateTaskTDelegate<TDelegate, TInstance, TTask, TResult>(
+		private static TDelegate CreateTaskTDelegate<TDelegate, TInstance, TTask>(
 			Type       instanceType,
 			string     methodName,
 			Type[]     parametersTypes,
 			MethodInfo taskConverter)
 			where TDelegate : Delegate
-			//where TDelegate : class
 		{
 			var mi = instanceType.GetPublicInstanceMethodEx(methodName, parametersTypes);
 

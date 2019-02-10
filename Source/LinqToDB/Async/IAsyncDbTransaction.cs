@@ -30,6 +30,6 @@ namespace LinqToDB.Async
 		/// <summary>
 		/// Gets underlying transaction instance.
 		/// </summary>
-		IDbTransaction Unwrap { get; }
+		IDbTransaction Transaction { get; }
 	}
 }

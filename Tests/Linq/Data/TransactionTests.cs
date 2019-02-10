@@ -18,12 +18,75 @@ namespace Tests.Data
 		[Test]
 		public async Task DataContextBeginTransactionAsync([DataSources(false)] string context)
 		{
+			using (var db = new DataContext(context))
+			{
+				// ensure connection opened and test results not affected by OpenAsync
+				db.KeepConnectionAlive = true;
+				db.GetTable<Parent>().ToList();
+
+				var tid = Thread.CurrentThread.ManagedThreadId;
+
+				using (await db.BeginTransactionAsync())
+				{
+					db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+
+					if (tid == Thread.CurrentThread.ManagedThreadId)
+						Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+				}
+			}
+		}
+
+		[Test]
+		public async Task DataContextOpenOrBeginTransactionAsync([DataSources(false)] string context)
+		{
 			var tid = Thread.CurrentThread.ManagedThreadId;
 
 			using (var db = new DataContext(context))
 			using (await db.BeginTransactionAsync())
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+
+				if (tid == Thread.CurrentThread.ManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
+
+		[Test]
+		public async Task DataContextCommitTransactionAsync([DataSources(false)] string context)
+		{
+			using (var db = new DataContext(context))
+			using (var tr = await db.BeginTransactionAsync())
+			{
+				int tid;
+				try
+				{
+					db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+
+					tid = Thread.CurrentThread.ManagedThreadId;
+
+					await tr.CommitTransactionAsync();
+				}
+				finally
+				{
+					db.GetTable<Parent>().Where(_ => _.ParentID == 1010).Delete();
+				}
+
+				if (tid == Thread.CurrentThread.ManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
+
+		[Test]
+		public async Task DataContextRollbackTransactionAsync([DataSources(false)] string context)
+		{
+			using (var db = new DataContext(context))
+			using (var tr = await db.BeginTransactionAsync())
+			{
+				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+
+				var tid = Thread.CurrentThread.ManagedThreadId;
+
+				await tr.RollbackTransactionAsync();
 
 				if (tid == Thread.CurrentThread.ManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
@@ -39,6 +102,48 @@ namespace Tests.Data
 			using (await db.BeginTransactionAsync())
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+
+				if (tid == Thread.CurrentThread.ManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
+
+		[Test]
+		public async Task DataConnectionCommitTransactionAsync([DataSources(false)] string context)
+		{
+			using (var db = new DataConnection(context))
+			using (await db.BeginTransactionAsync())
+			{
+				int tid;
+				try
+				{
+					db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+
+					tid = Thread.CurrentThread.ManagedThreadId;
+
+					await db.CommitTransactionAsync();
+				}
+				finally
+				{
+					db.GetTable<Parent>().Where(_ => _.ParentID == 1010).Delete();
+				}
+
+				if (tid == Thread.CurrentThread.ManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
+
+		[Test]
+		public async Task DataConnectionRollbackTransactionAsync([DataSources(false)] string context)
+		{
+			using (var db = new DataConnection(context))
+			using (await db.BeginTransactionAsync())
+			{
+				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+
+				var tid = Thread.CurrentThread.ManagedThreadId;
+
+				await db.RollbackTransactionAsync();
 
 				if (tid == Thread.CurrentThread.ManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");

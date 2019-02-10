@@ -21,7 +21,7 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 			_dataConnection = dataConnection;
 			_connection     = connection;
-			_dbConnection   = (DbConnection)connection.Unwrap;
+			_dbConnection   = (DbConnection)connection.Connection;
 			_policy         = policy;
 		}
 
@@ -104,7 +104,7 @@ namespace LinqToDB.Data.RetryPolicy
 		public override int ConnectionTimeout => _connection.ConnectionTimeout;
 
 		// return this or it will be breaking change for DataConnection.Connection property
-		public IDbConnection Unwrap => this;
+		public IDbConnection Connection => this;
 
 		public override event StateChangeEventHandler StateChange
 		{
