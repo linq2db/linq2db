@@ -21,6 +21,7 @@ addons:
     - zlib1g
 
 dotnet: 2.1.502
+mono: none
 
 os:  
   - linux
