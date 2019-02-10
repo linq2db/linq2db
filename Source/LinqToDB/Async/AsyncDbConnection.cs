@@ -97,13 +97,6 @@ namespace LinqToDB.Async
 			Connection.Dispose();
 		}
 
-		public virtual Task DisposeAsync()
-		{
-			Dispose();
-
-			return TaskEx.CompletedTask;
-		}
-
 		public virtual IAsyncDbConnection TryClone()
 		{
 			return Connection is ICloneable cloneable
