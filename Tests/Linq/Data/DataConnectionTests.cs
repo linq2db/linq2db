@@ -287,7 +287,7 @@ namespace Tests.Data
 
 			try
 			{
-				db.GetTable<Parent>().ToList();
+				await db.GetTable<Parent>().ToListAsync();
 			}
 			finally
 			{
@@ -309,7 +309,7 @@ namespace Tests.Data
 
 			try
 			{
-				db.GetTable<Parent>().ToList();
+				await db.GetTable<Parent>().ToListAsync();
 			}
 			finally
 			{

@@ -22,12 +22,13 @@ namespace Tests.Data
 			{
 				// ensure connection opened and test results not affected by OpenAsync
 				db.KeepConnectionAlive = true;
-				db.GetTable<Parent>().ToList();
+				await db.GetTable<Parent>().ToListAsync();
 
 				var tid = Thread.CurrentThread.ManagedThreadId;
 
 				using (await db.BeginTransactionAsync())
 				{
+					// perform synchonously to not mess with BeginTransactionAsync testing
 					db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
 					if (tid == Thread.CurrentThread.ManagedThreadId)
@@ -44,6 +45,7 @@ namespace Tests.Data
 			using (var db = new DataContext(context))
 			using (await db.BeginTransactionAsync())
 			{
+				// perform synchonously to not mess with BeginTransactionAsync testing
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
 				if (tid == Thread.CurrentThread.ManagedThreadId)
@@ -60,7 +62,7 @@ namespace Tests.Data
 				int tid;
 				try
 				{
-					db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+					await db.InsertAsync(new Parent { ParentID = 1010, Value1 = 1010 });
 
 					tid = Thread.CurrentThread.ManagedThreadId;
 
@@ -68,6 +70,7 @@ namespace Tests.Data
 				}
 				finally
 				{
+					// perform synchonously to not mess with CommitTransactionAsync testing
 					db.GetTable<Parent>().Where(_ => _.ParentID == 1010).Delete();
 				}
 
@@ -82,7 +85,7 @@ namespace Tests.Data
 			using (var db = new DataContext(context))
 			using (var tr = await db.BeginTransactionAsync())
 			{
-				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+				await db.InsertAsync(new Parent { ParentID = 1010, Value1 = 1010 });
 
 				var tid = Thread.CurrentThread.ManagedThreadId;
 
@@ -101,6 +104,7 @@ namespace Tests.Data
 			using (var db = new DataConnection(context))
 			using (await db.BeginTransactionAsync())
 			{
+				// perform synchonously to not mess with BeginTransactionAsync testing
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
 				if (tid == Thread.CurrentThread.ManagedThreadId)
@@ -117,7 +121,7 @@ namespace Tests.Data
 				int tid;
 				try
 				{
-					db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+					await db.InsertAsync(new Parent { ParentID = 1010, Value1 = 1010 });
 
 					tid = Thread.CurrentThread.ManagedThreadId;
 
@@ -125,6 +129,7 @@ namespace Tests.Data
 				}
 				finally
 				{
+					// perform synchonously to not mess with CommitTransactionAsync testing
 					db.GetTable<Parent>().Where(_ => _.ParentID == 1010).Delete();
 				}
 
@@ -139,6 +144,7 @@ namespace Tests.Data
 			using (var db = new DataConnection(context))
 			using (await db.BeginTransactionAsync())
 			{
+				// perform synchonously to not mess with BeginTransactionAsync testing
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
 				var tid = Thread.CurrentThread.ManagedThreadId;
