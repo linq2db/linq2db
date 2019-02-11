@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
 using LinqToDB;
+using LinqToDB.Common;
 
 namespace Tests.UserTests
 {
@@ -20,6 +18,28 @@ namespace Tests.UserTests
 			[Column("Name"), SkipValuesOnInsert("John", "Max")]
 			public String Name { get; set; }
 			[Column("Age"), SkipValuesOnInsert(2, 5)]
+			public Int32? Age { get; set; }
+		}
+
+		[Table("PR_1598_Null_Table")]
+		public class TestTableNull
+		{
+			[Column("Id"), PrimaryKey]
+			public Int32 Id { get; set; }
+			[Column("Name")]
+			public String Name { get; set; }
+			[Column("Age"), SkipValuesOnInsert(null)]
+			public Int32? Age { get; set; }
+		}
+
+		[Table("PR_1598_Fluent_Table")]
+		public class TestTableFluent
+		{
+			[Column("Id"), PrimaryKey]
+			public Int32 Id { get; set; }
+			[Column("Name")]
+			public String Name { get; set; }
+			[Column("Age")]
 			public Int32? Age { get; set; }
 		}
 
@@ -135,6 +155,49 @@ namespace Tests.UserTests
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 50);
+				}
+			}
+		}
+
+		[Test]
+		public void TestSkipNull([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// Change default value, so that null is not inserted as default.
+				db.MappingSchema.SetDefaultValue(typeof(Int32?), 0);
+				using (db.CreateLocalTable<TestTableNull>())
+				{
+					
+					var count = db.Insert(new TestTableNull() { Id = 1, Name = "Tommy", Age = null });
+
+					Assert.Greater(count, 0);
+					var r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1);
+
+					Assert.IsNotNull(r);
+					Assert.IsNotNull(r.Age);
+				}
+			}
+		}
+
+
+		[Test]
+		public void TestSkipWithFluentBuilder([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var mapping = db.MappingSchema.GetFluentMappingBuilder();
+				mapping.Entity<TestTableFluent>().HasSkipValuesOnInsert(t => t.Age, 2, 5);
+				using (db.CreateLocalTable<TestTableFluent>())
+				{
+					var count = db.Insert(new TestTableFluent() { Id = 1, Name = null, Age = 2 });
+
+					Assert.Greater(count, 0);
+
+					var r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1);
+
+					Assert.IsNotNull(r);
+					Assert.IsNull(r.Age);
 				}
 			}
 		}

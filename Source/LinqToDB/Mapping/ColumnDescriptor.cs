@@ -132,9 +132,9 @@ namespace LinqToDB.Mapping
 						DataType = a.DataType.Value;
 				}
 			}
-			
-			var skipInsertForValuesAttr = mappingSchema.GetAttribute<SkipValuesOnInsertAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
-			if (skipInsertForValuesAttr != null)
+
+			var skipInsertForValuesAttr = mappingSchema.GetAttribute<SkipValuesOnInsertAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			if (skipInsertForValuesAttr?.Values.Count > 0)
 			{
 				SkipValuesOnInsert = skipInsertForValuesAttr.Values;
 			}

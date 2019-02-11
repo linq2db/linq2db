@@ -429,6 +429,36 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Adds option for skipping values on insert for the given property current entity.
+		/// </summary>
+		/// <param name="func">Column member getter expression.</param>
+		/// <param name="values">Values that should be skipped during insert.</param>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<T> HasSkipValuesOnInsert(Expression<Func<T, object>> func, params object[] values)
+		{
+			return SetAttribute(func,
+			                    true,
+			                    _ => new SkipValuesOnInsertAttribute(values) { Configuration = Configuration },
+			                    (_, a) => { },
+			                    a => a.Configuration);
+		}
+
+		/// <summary>
+		/// Adds option for skipping values on insert for the given property current entity.
+		/// </summary>
+		/// <param name="func">Column member getter expression.</param>
+		/// <param name="values">Values that should be skipped during insert.</param>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<T> HasSkipValuesOnInsert(Expression<Func<T, object>> func, HashSet<object> values)
+		{
+			return SetAttribute(func, 
+				true, 
+			   _ => new SkipValuesOnInsertAttribute(values) {Configuration = Configuration}, 
+			   (_, a) => { },
+			   a => a.Configuration);
+		}
+
+		/// <summary>
 		/// Sets database table name for current entity.
 		/// </summary>
 		/// <param name="tableName">Table name.</param>
