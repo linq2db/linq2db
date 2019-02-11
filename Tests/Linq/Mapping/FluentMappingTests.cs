@@ -542,7 +542,7 @@ namespace Tests.Mapping
 		[Test]
 		public void Issue291Test2Attr([DataSources] string contex)
 		{
-			using (var db = new TestDataConnection(contex))
+			using (var db = GetDataContext(contex))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 
@@ -584,7 +584,7 @@ namespace Tests.Mapping
 		[Test]
 		public void Issue291Test1Attr([DataSources] string contex)
 		{
-			using (var db = new TestDataConnection(contex))
+			using (var db = GetDataContext(contex))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 				   .Entity<BaseClass>().HasTableName("my_table")
