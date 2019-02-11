@@ -21,14 +21,7 @@ namespace LinqToDB.Mapping
 			}
 			else if(valuesToSkip.Length > 0)
 			{
-				_valuesToSkip = new HashSet<object>();
-				for (var i = 0; i < valuesToSkip.Length; i++)
-				{
-					if (!_valuesToSkip.Contains(valuesToSkip[i]))
-					{
-						_valuesToSkip.Add(valuesToSkip[i]);
-					}
-				}
+				_valuesToSkip = new HashSet<object>(values);
 			}
 		}
 

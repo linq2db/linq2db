@@ -59,17 +59,12 @@ namespace LinqToDB.Linq
 						{
 							param = GetParameter(type, dataContext, field);
 						}
-						if (field.SkipValuesOnInsert != null && field.SkipValuesOnInsert.Any() && param?.Expression is MemberExpression mExpr)
+						if (field.ColumnDescriptor.SkipValuesOnInsert != null && field.ColumnDescriptor.SkipValuesOnInsert.Any())
 						{
-							if ((mExpr.Member is PropertyInfo info && info.CanRead) || mExpr.Member is FieldInfo)
+							var value = field.ColumnDescriptor.GetValue(dataContext.MappingSchema, obj);
+							if (field.ColumnDescriptor.SkipValuesOnInsert.Contains(value))
 							{
-								var propOrFieldExpr = Expression.PropertyOrField(Expression.Constant(obj), mExpr.Member.Name);
-								var func = Expression.Lambda<Func<object>>(Expression.Convert(propOrFieldExpr, typeof(object))).Compile();
-								var value = func.Invoke();
-								if (field.SkipValuesOnInsert.Contains(value))
-								{
-									continue;
-								}
+								continue;
 							}
 						}
 						if (notSupportedOrNotFound)
@@ -144,8 +139,9 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
+				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(obj.GetType());
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type };
-				var ei   = Common.Configuration.Linq.DisableQueryCache
+				var ei   = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.DoNotCacheObjectInsertQueries
 					? CreateQuery(dataContext, obj, tableName, databaseName, schema, type)
 					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, obj, tableName, databaseName, schema, type));
 
@@ -158,8 +154,9 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
+				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(obj.GetType());
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type };
-				var ei   = Common.Configuration.Linq.DisableQueryCache
+				var ei   = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.DoNotCacheObjectInsertQueries
 					? CreateQuery(dataContext, obj, tableName, schema, databaseName, type)
 					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, obj, tableName, schema, databaseName, type));
 

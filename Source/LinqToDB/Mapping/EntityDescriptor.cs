@@ -81,6 +81,15 @@ namespace LinqToDB.Mapping
 		/// Also see <seealso cref="Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
 		/// </summary>
 		public bool IsColumnAttributeRequired { get; private set; }
+      
+		/// <summary>
+      /// Gets a value indicating whether insert queries should be cached based on
+      /// <see cref="SkipValuesOnInsertAttribute"/>.
+      /// </summary>
+		public bool DoNotCacheObjectInsertQueries
+		{
+			get => Columns != null && Columns.Any(c => c.SkipValuesOnInsert != null && c.SkipValuesOnInsert.Any());
+		}
 
 		/// <summary>
 		/// Gets the dynamic columns store descriptor.
