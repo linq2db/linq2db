@@ -18,6 +18,7 @@ using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+using LinqToDB.Tools.Comparers;
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using LinqToDB.ServiceModel;

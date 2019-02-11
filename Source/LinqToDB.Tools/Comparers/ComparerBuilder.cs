@@ -90,11 +90,9 @@ namespace LinqToDB.Tools.Comparers
 			readonly Func<T,T,bool> _equals;
 			readonly Func<T,int>    _getHashCode;
 
-			public override bool Equals(T x, T y)
-				=> x != null ? y != null && _equals(x, y) : y == null;
+			public override bool Equals     (T x, T y) => x != null ? y != null && _equals(x, y) : y == null;
 
-			public override int GetHashCode(T obj)
-				=> obj == null ? 0 : _getHashCode(obj);
+			public override int  GetHashCode(T obj)    => obj == null ? 0 : _getHashCode(obj);
 
 			internal static Comparer<T> DefaultInstance;
 		}
@@ -135,7 +133,26 @@ namespace LinqToDB.Tools.Comparers
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
 			[NotNull, InstantHandle] Func<TypeAccessor<T>,IEnumerable<MemberAccessor>> membersToCompare)
 		{
+			if (membersToCompare == null) throw new ArgumentNullException(nameof(membersToCompare));
+
 			var members = membersToCompare(TypeAccessor.GetAccessor<T>()).ToList();
+			return new Comparer<T>(GetEqualsFunc<T>(members), GetGetHashCodeFunc<T>(members));
+		}
+
+		/// <summary>
+		/// Returns implementations of the <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> generic interface
+		/// based on provided object public members equality.
+		/// </summary>
+		/// <param name="memberPredicate">A function to filter members to compare.</param>
+		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
+		/// <typeparam name="T">The type of objects to compare.</typeparam>
+		[NotNull, Pure]
+		public static IEqualityComparer<T> GetEqualityComparer<T>(
+			[NotNull, InstantHandle] Func<MemberAccessor,bool> memberPredicate)
+		{
+			if (memberPredicate == null) throw new ArgumentNullException(nameof(memberPredicate));
+
+			var members = TypeAccessor.GetAccessor<T>().Members.Where(memberPredicate).ToList();
 			return new Comparer<T>(GetEqualsFunc<T>(members), GetGetHashCodeFunc<T>(members));
 		}
 
@@ -149,21 +166,12 @@ namespace LinqToDB.Tools.Comparers
 			{
 				var arg0 = RemoveCastToObject(me.GetBody(x));
 				var arg1 = RemoveCastToObject(me.GetBody(y));
-				var eq = GetEqualityComparer(arg1.Type);
-				var pi = eq.GetPropertyEx("Default");
-				var mi = eq.GetMethodsEx().Single(m => m.IsPublic && m.Name == "Equals" && m.GetParameters().Length == 2);
+				var eq   = GetEqualityComparer(arg1.Type);
+				var pi   = eq.GetPropertyEx("Default");
+				var mi   = eq.GetMethodsEx().Single(m => m.IsPublic && m.Name == "Equals" && m.GetParameters().Length == 2);
 
 				Debug.Assert(pi != null, "pi != null");
 				Expression expr = Expression.Call(Expression.Property(null, pi), mi, arg0, arg1);
-
-//				if (assertOnFail)
-//				{
-//					expr = Expression.Call(
-//						MethodHelper.GetMethodInfo(Assert, true, (object)null, (object)null),
-//						expr,
-//						Expression.Convert(arg0, typeof(object)),
-//						Expression.Convert(arg1, typeof(object)));
-//				}
 
 				return expr;
 			});
@@ -172,7 +180,7 @@ namespace LinqToDB.Tools.Comparers
 				.DefaultIfEmpty(Expression.Constant(true))
 				.Aggregate(Expression.AndAlso);
 
-			return Expression.Lambda<Func<T, T, bool>>(expression, x, y).Compile();
+			return Expression.Lambda<Func<T,T,bool>>(expression, x, y).Compile();
 		}
 
 		static Type GetEqualityComparer(Type type)

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Reflection
 {
 	using Extensions;
+	using Mapping;
 
 	public class TypeAccessor<T> : TypeAccessor
 	{

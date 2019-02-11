@@ -146,7 +146,7 @@ namespace LinqToDB.Tools.Mapper
 			if (initExpression != null)
 				return initExpression;
 
-			foreach (var toMember in toAccessor.Members.Where(_mapperBuilder.MemberFilter))
+			foreach (var toMember in toAccessor.Members.Where(_mapperBuilder.ToMemberFilter))
 			{
 				if (_data.IsRestart)
 					return null;
@@ -435,7 +435,7 @@ namespace LinqToDB.Tools.Mapper
 
 			void GetObjectExpression()
 			{
-				foreach (var toMember in _toAccessor.Members.Where(_builder._mapperBuilder.MemberFilter))
+				foreach (var toMember in _toAccessor.Members.Where(_builder._mapperBuilder.ToMemberFilter))
 				{
 					if (!toMember.HasSetter)
 						continue;
@@ -667,7 +667,7 @@ namespace LinqToDB.Tools.Mapper
 				MemberMappers          = builder.MemberMappers,
 				FromMappingDictionary  = builder.FromMappingDictionary,
 				ToMappingDictionary    = builder.ToMappingDictionary,
-				MemberFilter           = builder.MemberFilter,
+				ToMemberFilter         = builder.ToMemberFilter,
 				ProcessCrossReferences = builder.ProcessCrossReferences,
 				DeepCopy               = builder.DeepCopy
 			};

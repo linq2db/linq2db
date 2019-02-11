@@ -39,7 +39,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <summary>
 		/// Filters target members to map.
 		/// </summary>
-		Func<MemberAccessor,bool> MemberFilter { get; set; }
+		Func<MemberAccessor,bool> ToMemberFilter { get; set; }
 
 		/// <summary>
 		/// Defines member name mapping for source types.

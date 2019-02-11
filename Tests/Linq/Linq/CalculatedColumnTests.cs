@@ -5,9 +5,9 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
+using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
-using Tests.Tools;
 
 namespace Tests.Linq
 {

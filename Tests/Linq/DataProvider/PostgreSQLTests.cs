@@ -16,7 +16,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
-using LinqToDB.Tools;
+using LinqToDB.Tools.Comparers;
 
 using NpgsqlTypes;
 

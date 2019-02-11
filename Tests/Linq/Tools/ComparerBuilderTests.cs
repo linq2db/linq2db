@@ -6,7 +6,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Reflection;
-using LinqToDB.Tools;
+using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
@@ -242,7 +242,8 @@ namespace Tests.Tools
 		[Test]
 		public void DistinctByMember3Test()
 		{
-			var eq = ComparerBuilder.GetEqualityComparer<TestClass>(ta => ta.Members.Where(m => m.Name.EndsWith("1")));
+			var eq  = ComparerBuilder.GetEqualityComparer<TestClass>(ta => ta.Members.Where(m => m.Name.EndsWith("1")));
+			var eq1 = ComparerBuilder.GetEqualityComparer<TestClass>(m => m.Name.EndsWith("1"));
 			var arr = new[]
 			{
 				new TestClass { Field1 = 1, Prop2 = "2"  },

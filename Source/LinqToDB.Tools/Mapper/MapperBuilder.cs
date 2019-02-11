@@ -81,7 +81,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <summary>
 		/// Filters target members to map.
 		/// </summary>
-		public Func<MemberAccessor,bool> MemberFilter { get; set; } = _ => true;
+		public Func<MemberAccessor,bool> ToMemberFilter { get; set; } = _ => true;
 
 		/// <summary>
 		/// Adds a predicate to filter target members to map.
@@ -89,9 +89,9 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="predicate">Predicate to filter members to map.</param>
 		/// <returns>Returns this mapper.</returns>
 		[JANotNull]
-		public MapperBuilder<TFrom,TTo> SetMemberFilter([JANotNull] Func<MemberAccessor,bool> predicate)
+		public MapperBuilder<TFrom,TTo> SetToMemberFilter([JANotNull] Func<MemberAccessor,bool> predicate)
 		{
-			MemberFilter = predicate ?? throw new ArgumentNullException(nameof(predicate));
+			ToMemberFilter = predicate ?? throw new ArgumentNullException(nameof(predicate));
 			return this;
 		}
 
@@ -344,7 +344,8 @@ namespace LinqToDB.Tools.Mapper
 		/// This example shows how to explicitly convert one value to another.
 		/// </example>
 		[JANotNull]
-		public MapperBuilder<TFrom,TTo> MapMember<T>([JANotNull] Expression<Func<TTo,T>> toMember,
+		public MapperBuilder<TFrom,TTo> MapMember<T>(
+			[JANotNull] Expression<Func<TTo,T>>   toMember,
 			[JANotNull] Expression<Func<TFrom,T>> setter)
 		{
 			if (toMember == null) throw new ArgumentNullException(nameof(toMember));

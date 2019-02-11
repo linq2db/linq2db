@@ -307,7 +307,7 @@ namespace Tests.Tools.Mapper
 		public void MapFilterObjects([Values] bool useAction)
 		{
 			var map = new MapHelper<Source,Dest>().Map(useAction, mm => mm
-				.SetMemberFilter(m => m.Name != nameof(Source.Field7)));
+				.SetToMemberFilter(m => m.Name != nameof(Source.Field7)));
 
 			Assert.That(map.To.Field7, Is.Not.EqualTo(map.From.Field7));
 		}

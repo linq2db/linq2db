@@ -53,10 +53,7 @@ namespace LinqToDB.Reflection
 		#region Items
 
 		readonly List<MemberAccessor> _members = new List<MemberAccessor>();
-		public   List<MemberAccessor>  Members
-		{
-			get { return _members; }
-		}
+		public   List<MemberAccessor>  Members => _members;
 
 		readonly ConcurrentDictionary<string,MemberAccessor> _membersByName = new ConcurrentDictionary<string,MemberAccessor>();
 
@@ -73,10 +70,7 @@ namespace LinqToDB.Reflection
 			}
 		}
 
-		public MemberAccessor this[int index]
-		{
-			get { return _members[index]; }
-		}
+		public MemberAccessor this[int index] => _members[index];
 
 		#endregion
 
@@ -86,11 +80,9 @@ namespace LinqToDB.Reflection
 
 		public static TypeAccessor GetAccessor([NotNull] Type type)
 		{
-			if (type == null) throw new ArgumentNullException("type");
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
-			TypeAccessor accessor;
-
-			if (_accessors.TryGetValue(type, out accessor))
+			if (_accessors.TryGetValue(type, out var accessor))
 				return accessor;
 
 			var accessorType = typeof(TypeAccessor<>).MakeGenericType(type);
@@ -104,11 +96,8 @@ namespace LinqToDB.Reflection
 
 		public static TypeAccessor<T> GetAccessor<T>()
 		{
-			TypeAccessor accessor;
-
-			if (_accessors.TryGetValue(typeof(T), out accessor))
+			if (_accessors.TryGetValue(typeof(T), out var accessor))
 				return (TypeAccessor<T>)accessor;
-
 			return (TypeAccessor<T>)(_accessors[typeof(T)] = new TypeAccessor<T>());
 		}
 
