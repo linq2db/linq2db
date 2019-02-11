@@ -81,15 +81,12 @@ namespace LinqToDB.Mapping
 		/// Also see <seealso cref="Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
 		/// </summary>
 		public bool IsColumnAttributeRequired { get; private set; }
-      
+
 		/// <summary>
-      /// Gets a value indicating whether insert queries should be cached based on
-      /// <see cref="SkipValuesOnInsertAttribute"/>.
-      /// </summary>
-		public bool DoNotCacheObjectInsertQueries
-		{
-			get => Columns != null && Columns.Any(c => c.SkipValuesOnInsert != null && c.SkipValuesOnInsert.Any());
-		}
+		/// Gets a value indicating whether insert queries should be cached based on
+		/// <see cref="SkipValuesOnInsertAttribute"/>.
+		/// </summary>
+		public bool DoNotCacheObjectInsertQueries { get; private set; }
 
 		/// <summary>
 		/// Gets the dynamic columns store descriptor.
@@ -235,6 +232,9 @@ namespace LinqToDB.Mapping
 			foreach (var attr in typeColumnAttrs.Concat(attrs))
 				if (attr.IsColumn)
 					SetColumn(attr, mappingSchema);
+
+			// Check if values could be skipped during insert => disable cache...
+			DoNotCacheObjectInsertQueries = Columns != null && Columns.Any(c => c.SkipValuesOnInsert != null && c.SkipValuesOnInsert.Any());
 		}
 
 		void SetColumn(ColumnAttribute attr, MappingSchema mappingSchema)
