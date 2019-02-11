@@ -251,7 +251,7 @@ namespace LinqToDB.Mapping
 		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
-		public IEnumerable<object> SkipValuesOnInsert { get; private set; }
+		public HashSet<object> SkipValuesOnInsert { get; private set; }
 
 		/// <summary>
 		/// Gets whether a column is updatable.
