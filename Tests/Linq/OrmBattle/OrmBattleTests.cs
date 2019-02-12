@@ -337,7 +337,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(list).Count());
 		}
 
-		[Test, Category("WindowsOnly"), Ignore("Not working at the Moment -> issue #573")]
+		[Test, Category("WindowsOnly")]
 		public void SelectSubqueryTest([NorthwindDataContext] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -635,7 +635,7 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(result, new GenericEqualityComparer<Order>(o => o.OrderID)));
 		}
 
-		[Test, Category("Ordering"), Ignore("Not working at the Moment -> issue #573")]
+		[Test, Category("Ordering"), ActiveIssue(573)]
 		public void OrderByDistinctTest([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: data in Northwind.sqlite is broken
@@ -655,7 +655,7 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(result));
 		}
 
-		[Test, Ignore("Not working at the Moment -> issue #573")]
+		[Test, ActiveIssue(573)]
 		[Category("Ordering")]
 		public void OrderBySelectManyTest([NorthwindDataContext] string context)
 		{
@@ -806,7 +806,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(71, firstGroupList.Count);
 		}
 
-		[Test, Category("Grouping"), Ignore("Not working at the Moment -> issue #573")]
+		[Test, Category("Grouping"), ActiveIssue(573)]
 		public void ComplexGroupingTest([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: Nested queries support is not implemented. Possible in V2
@@ -968,7 +968,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(expected.Count(), list.Count);
 		}
 
-		[Test, Category("Type casts"), Ignore("Not working at the Moment -> issue #573")]
+		[Test, Category("Type casts"), ActiveIssue(573)]
 		public void TypeCastIsChildConditionalTest([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: strange test for me
@@ -1202,7 +1202,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(10, result.ToList().Count);
 		}
 
-		[Test, Category("All/Any/Contains"), Ignore("Not working at the Moment -> issue #573")]
+		[Test, Category("All/Any/Contains"), ActiveIssue(573)]
 		public void AnyParameterizedTest([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: It may take many efforts to implement. And I don't see any benefits.
@@ -1278,7 +1278,7 @@ namespace Tests.OrmBattle
 
 		#region Join tests
 
-		[Test, Category("Join"), Ignore("Not working at the Moment -> issue #573")]
+		[Test, Category("Join"), ActiveIssue(573)]
 		public void GroupJoinTest([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: o.Customer.CustomerID - it is association that means additional JOIN. We have to decide if it is a bug.
@@ -1323,7 +1323,7 @@ namespace Tests.OrmBattle
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test, Category("Join"), Ignore("Not working at the Moment -> issue #573")]
+		[Test, Category("Join"), ActiveIssue(573)]
 		public void LeftJoinTest([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: Same as in GroupJoinTest, p.Category.CategoryID - is an association.
@@ -1401,7 +1401,7 @@ namespace Tests.OrmBattle
 
 		#region Complex tests
 
-		[Test, Category("WindowsOnly"), Ignore("Unknown error on Travis and AppVeyor")]
+		[Test, Category("WindowsOnly"), ActiveIssue(592)]
 		public void ComplexTest1([NorthwindDataContext] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -1425,7 +1425,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, Category("Complex"), Ignore("Not working at the Moment -> issue #573")]
+		[Test, Category("Complex"), ActiveIssue(573)]
 		public void ComplexTest2([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1452,28 +1452,31 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(result).Count());
 		}
 
-		[Test, Category("Complex"), Ignore("Disabled, multiply queries")]
+		[Test, Category("Complex")]
 		public void ComplexTest3([NorthwindDataContext] string context)
 		{
-			Setup(context);
-			var products = db.Product;
-			var suppliers = db.Supplier;
-			var result = from p in products
-				select new
-				{
-					Product = p,
-					Suppliers = suppliers
-						.Where(s => s.SupplierID == p.Supplier.SupplierID)
-						.Select(s => s.CompanyName)
-				};
-			var list = result.ToList();
-			Assert.Greater(list.Count, 0);
-			foreach (var p in list)
-			foreach (var companyName in p.Suppliers)
-				Assert.IsNotNull(companyName);
+			using (new AllowMultipleQuery())
+			{
+				Setup(context);
+				var products = db.Product;
+				var suppliers = db.Supplier;
+				var result = from p in products
+							 select new
+							 {
+								 Product = p,
+								 Suppliers = suppliers
+									 .Where(s => s.SupplierID == p.Supplier.SupplierID)
+									 .Select(s => s.CompanyName)
+							 };
+				var list = result.ToList();
+				Assert.Greater(list.Count, 0);
+				foreach (var p in list)
+					foreach (var companyName in p.Suppliers)
+						Assert.IsNotNull(companyName);
+			}
 		}
 
-		[Test, Category("Complex"), Ignore("Not working at the Moment -> issue #573")]
+		[Test, Category("Complex"), ActiveIssue(573)]
 		public void ComplexTest4([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: This is a bug
@@ -1493,26 +1496,28 @@ namespace Tests.OrmBattle
 				item.ToList();
 		}
 
-		[Test, Category("Complex"), Ignore("Disabled, multiply queries")]
+		[Test, Category("Complex")]
 		public void ComplexTest5([NorthwindDataContext] string context)
 		{
-			Setup(context);
-			var result = db.Customer
-				.Select(c => new {Customer = c, Order = db.Order})
-				.Select(i => i.Customer.Orders);
+			using (new AllowMultipleQuery())
+			{
+				Setup(context);
+				var result = db.Customer
+					.Select(c => new { Customer = c, Order = db.Order })
+					.Select(i => i.Customer.Orders);
 
-			var list = result.ToList();
-			Assert.Greater(list.Count, 0);
+				var list = result.ToList();
+				Assert.Greater(list.Count, 0);
 
-			foreach (var item in list)
-				item.ToList();
+				foreach (var item in list)
+					item.ToList();
+			}
 		}
 
-		[Test, Category("Complex"), Ignore("Not working at the Moment -> issue #573")]
+		[Test, Category("Complex"), ActiveIssue(592)]
 		public void ComplexTest6([NorthwindDataContext] string context)
 		{
 			Setup(context);
-
 			//TODO: sdanyliv: Another strange query that needs efforts for implementation. Can be replaced by this one:
 			var r =
 				from c in db.Customer
