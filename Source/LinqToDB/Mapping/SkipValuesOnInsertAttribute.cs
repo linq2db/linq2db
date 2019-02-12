@@ -4,21 +4,21 @@ using System.Collections.Generic;
 namespace LinqToDB.Mapping
 {
 	/// <summary>
-	/// Attribute for skipping specific values to be inserted.
+	/// Attribute for skipping specific values on insert.
 	/// </summary>
 	[AttributeUsage(
 		AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Interface,
 		AllowMultiple = false, Inherited = true)]
 	public class SkipValuesOnInsertAttribute : Attribute
 	{
-      /// <summary>  Default constructor. 
-      /// </summary>
 		public SkipValuesOnInsertAttribute() { }
 
-      /// <summary>  Constructor. 
-      /// </summary>
-      /// <param name="values">  The values that should be skipped during insert. 
-      /// </param>
+		/// <summary>  
+		/// Constructor. 
+		/// </summary>
+		/// <param name="values"> 
+		/// Values to skip on insert operations.
+		/// </param>
 		public SkipValuesOnInsertAttribute(params object[] values)
 		{
 			var valuesToSkip = values;
@@ -40,7 +40,7 @@ namespace LinqToDB.Mapping
 		public string Configuration { get; set; }
 
 		/// <summary>
-		/// Returns the values that should be skipped during insert.
+		/// Gets collection with values to skip on insert.
 		/// </summary>
 		public HashSet<object> Values { get; }
 	}

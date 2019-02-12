@@ -246,11 +246,12 @@ namespace LinqToDB.Mapping
 		public bool           SkipOnInsert    { get; private set; }
 
 		/// <summary>
-		/// Gets whether a column is insertable if the value is not representated.
+		/// Gets collection of values for which column should be skipped.
 		/// This values will affect only insert operations with implicit columns specification like
 		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
+		/// <returns>The collection of values for which column should be skipped or <c>null</c> if skip is not configured.</returns>
 		public HashSet<object> SkipValuesOnInsert { get; private set; }
 
 		/// <summary>
