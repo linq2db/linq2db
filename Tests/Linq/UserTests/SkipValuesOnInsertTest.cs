@@ -43,6 +43,29 @@ namespace Tests.UserTests
 			public Int32? Age { get; set; }
 		}
 
+		[Table("PR_1598_Enum_Table")]
+		public class TestTableEnum
+		{
+			public enum GenderType
+			{
+				[MapValue(null)]
+				Undefined,
+				[MapValue("Male")]
+				Male,
+				[MapValue("Female")]
+				Female
+			}
+
+			[Column("Id"), PrimaryKey]
+			public Int32 Id { get; set; }
+			[Column("Name")]
+			public String Name { get; set; }
+			[Column("Age")]
+			public Int32? Age { get; set; }
+			[Column("Gender"), SkipValuesOnInsert(GenderType.Female)]
+			public GenderType Gender { get; set; }
+		}
+
 		[Test]
 		public void TestSkipString([DataSources] string context)
 		{
@@ -198,6 +221,34 @@ namespace Tests.UserTests
 
 					Assert.IsNotNull(r);
 					Assert.IsNull(r.Age);
+				}
+			}
+		}
+
+		[Test]
+		public void TestSkipWithEnum([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (db.CreateLocalTable<TestTableEnum>())
+				{
+					var count = db.Insert(new TestTableEnum() { Id = 1, Name = "Max", Age = 20, Gender = TestTableEnum.GenderType.Male});
+
+					Assert.Greater(count, 0);
+
+					var r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1);
+
+					Assert.IsNotNull(r);
+					Assert.AreEqual(r.Gender, TestTableEnum.GenderType.Male);
+
+					count = db.Insert(new TestTableEnum() { Id = 2, Name = "Jenny", Age = 25, Gender = TestTableEnum.GenderType.Female });
+
+					Assert.Greater(count, 0);
+
+					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 2);
+
+					Assert.IsNotNull(r);
+					Assert.AreEqual(r.Gender, TestTableEnum.GenderType.Undefined);
 				}
 			}
 		}
