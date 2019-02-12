@@ -53,26 +53,23 @@ namespace LinqToDB.Linq
 				{
 					if (field.IsInsertable)
 					{
-						var notSupportedOrNotFound = !supported || !fieldDic.TryGetValue(field, out param);
-						if (notSupportedOrNotFound)
-						{
-							param = GetParameter(type, dataContext, field);
-						}
 						if (field.ColumnDescriptor.SkipValuesOnInsert != null)
 						{
-							var value = field.ColumnDescriptor.GetValue(dataContext.MappingSchema, obj);
+							var value = field.ColumnDescriptor.MemberAccessor.Getter(obj);
 							if (field.ColumnDescriptor.SkipValuesOnInsert.Contains(value))
 							{
 								continue;
 							}
 						}
-						if (notSupportedOrNotFound)
+						if (!supported || !fieldDic.TryGetValue(field, out param))
 						{
+							param = GetParameter(type, dataContext, field);
 							ei.Queries[0].Parameters.Add(param);
 
 							if (supported)
 								fieldDic.Add(field, param);
 						}
+
 						insertOrUpdateStatement.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 					}
 					else if (field.IsIdentity)

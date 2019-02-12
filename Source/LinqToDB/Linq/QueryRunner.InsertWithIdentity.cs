@@ -42,15 +42,15 @@ namespace LinqToDB.Linq
 				{
 					if (field.Value.IsInsertable)
 					{
-						var param = GetParameter(type, dataContext, field.Value);
 						if (field.Value.ColumnDescriptor.SkipValuesOnInsert != null)
 						{
-							var value = field.Value.ColumnDescriptor.GetValue(dataContext.MappingSchema, obj);
+							var value = field.Value.ColumnDescriptor.MemberAccessor.Getter(obj);
 							if (field.Value.ColumnDescriptor.SkipValuesOnInsert.Contains(value))
 							{
 								continue;
 							}
 						}
+						var param = GetParameter(type, dataContext, field.Value);
 						ei.Queries[0].Parameters.Add(param);
 
 						insertStatement.Insert.Items.Add(new SqlSetExpression(field.Value, param.SqlParameter));
