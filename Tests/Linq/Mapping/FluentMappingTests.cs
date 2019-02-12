@@ -540,9 +540,9 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void Issue291Test2Attr([DataSources] string contex)
+		public void Issue291Test2Attr([DataSources] string context)
 		{
-			using (var db = GetDataContext(contex, new MappingSchema()))
+			using (var db = GetDataContext(context, new MappingSchema()))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 
@@ -582,9 +582,9 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void Issue291Test1Attr([DataSources] string contex)
+		public void Issue291Test1Attr([DataSources] string context)
 		{
-			using (var db = GetDataContext(contex, new MappingSchema()))
+			using (var db = GetDataContext(context, new MappingSchema()))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 				   .Entity<BaseClass>().HasTableName("my_table")
