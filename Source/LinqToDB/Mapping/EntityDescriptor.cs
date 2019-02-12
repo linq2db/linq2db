@@ -233,8 +233,9 @@ namespace LinqToDB.Mapping
 				if (attr.IsColumn)
 					SetColumn(attr, mappingSchema);
 
-			// Check if values could be skipped during insert => disable cache...
-			DoNotCacheObjectInsertQueries = Columns != null && Columns.Any(c => c.SkipValuesOnInsert != null && c.SkipValuesOnInsert.Any());
+			// Check if values could be skipped during insert/update => disable cache...
+			DoNotCacheObjectInsertQueries = Columns != null && (Columns.Any(c => c.SkipValuesOnInsert != null && c.SkipValuesOnInsert.Any()) ||
+			                                                    Columns.Any(c => c.SkipValuesOnUpdate != null && c.SkipValuesOnUpdate.Any()));
 		}
 
 		void SetColumn(ColumnAttribute attr, MappingSchema mappingSchema)

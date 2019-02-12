@@ -138,6 +138,11 @@ namespace LinqToDB.Mapping
 			{
 				SkipValuesOnInsert = skipInsertForValuesAttr.Values;
 			}
+			var skipUpdateForValuesAttr = mappingSchema.GetAttribute<SkipValuesOnUpdateAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			if (skipUpdateForValuesAttr?.Values.Count > 0)
+			{
+				SkipValuesOnUpdate = skipUpdateForValuesAttr.Values;
+			}
 		}
 
 		/// <summary>
@@ -253,6 +258,15 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <returns>The collection of values for which column should be skipped or <c>null</c> if skip is not configured.</returns>
 		public HashSet<object> SkipValuesOnInsert { get; private set; }
+
+		/// <summary>
+		/// Gets collection of values for which column should be skipped.
+		/// This values will affect only update operations with implicit columns specification like
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string)"/>
+		/// method and will be ignored when user explicitly specifies value for this column.
+		/// </summary>
+		/// <returns>The collection of values for which column should be skipped or <c>null</c> if skip is not configured.</returns>
+		public HashSet<object> SkipValuesOnUpdate { get; private set; }
 
 		/// <summary>
 		/// Gets whether a column is updatable.

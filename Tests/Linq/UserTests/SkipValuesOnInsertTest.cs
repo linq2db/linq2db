@@ -4,13 +4,12 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 
 using LinqToDB;
-using LinqToDB.Common;
 
 namespace Tests.UserTests
 {
 	public class SkipValuesOnInsertTest: TestBase
 	{
-		[Table("PR_1598_Table")]
+		[Table("PR_1598_Insert_Table")]
 		public class TestTable
 		{
 			[Column("Id"), PrimaryKey]
@@ -21,7 +20,7 @@ namespace Tests.UserTests
 			public Int32? Age { get; set; }
 		}
 
-		[Table("PR_1598_Null_Table")]
+		[Table("PR_1598_Insert_Null_Table")]
 		public class TestTableNull
 		{
 			[Column("Id"), PrimaryKey]
@@ -32,7 +31,7 @@ namespace Tests.UserTests
 			public Int32? Age { get; set; }
 		}
 
-		[Table("PR_1598_Fluent_Table")]
+		[Table("PR_1598_Insert_Fluent_Table")]
 		public class TestTableFluent
 		{
 			[Column("Id"), PrimaryKey]
@@ -43,7 +42,7 @@ namespace Tests.UserTests
 			public Int32? Age { get; set; }
 		}
 
-		[Table("PR_1598_Enum_Table")]
+		[Table("PR_1598_Insert_Enum_Table")]
 		public class TestTableEnum
 		{
 			public enum GenderType
@@ -202,7 +201,6 @@ namespace Tests.UserTests
 				}
 			}
 		}
-
 
 		[Test]
 		public void TestSkipWithFluentBuilder([DataSources] string context)

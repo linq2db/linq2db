@@ -4,29 +4,29 @@ using System.Collections.Generic;
 namespace LinqToDB.Mapping
 {
 	/// <summary>
-	/// Attribute for skipping specific values on insert.
+	/// Attribute for skipping specific values on update.
 	/// </summary>
 	[AttributeUsage(
 		AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Interface,
 		AllowMultiple = false, Inherited = true)]
-	public class SkipValuesOnInsertAttribute : Attribute
+	public class SkipValuesOnUpdateAttribute : Attribute
 	{
-		public SkipValuesOnInsertAttribute() { }
+		public SkipValuesOnUpdateAttribute() { }
 
 		/// <summary>  
 		/// Constructor. 
 		/// </summary>
 		/// <param name="values"> 
-		/// Values to skip on insert operations.
+		/// Values to skip on update operations.
 		/// </param>
-		public SkipValuesOnInsertAttribute(params object[] values)
+		public SkipValuesOnUpdateAttribute(params object[] values)
 		{
 			var valuesToSkip = values;
 			if (valuesToSkip == null)
 			{
-				Values = new HashSet<object>(){null};
+				Values = new HashSet<object>() { null };
 			}
-			else if(valuesToSkip.Length > 0)
+			else if (valuesToSkip.Length > 0)
 			{
 				Values = new HashSet<object>(values);
 			}
@@ -40,13 +40,13 @@ namespace LinqToDB.Mapping
 		public string Configuration { get; set; }
 
 		/// <summary>
-		/// Gets collection with values to skip on insert.
+		/// Gets collection with values to skip on update.
 		/// </summary>
 		public HashSet<object> Values { get; }
 
-      /// <summary>  Check if the passed value should be skipped on insert. </summary>
-      /// <param name="value">   The value that is checked for inserting. </param>
-      /// <returns>  True if value should be skipped on insert. </returns>
+		/// <summary>  Check if the passed value should be skipped on update. </summary>
+		/// <param name="value">   The value that is checked for updateing. </param>
+		/// <returns>  True if value should be skipped on update. </returns>
 		public virtual bool Skip(object value)
 		{
 			return Values?.Contains(value) ?? false;
