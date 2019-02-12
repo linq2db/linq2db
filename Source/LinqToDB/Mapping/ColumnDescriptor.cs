@@ -137,11 +137,13 @@ namespace LinqToDB.Mapping
 			if (skipInsertForValuesAttr?.Values.Count > 0)
 			{
 				SkipValuesOnInsert = skipInsertForValuesAttr.Values;
+				SkipValueOnInsert = skipInsertForValuesAttr.Skip;
 			}
 			var skipUpdateForValuesAttr = mappingSchema.GetAttribute<SkipValuesOnUpdateAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
 			if (skipUpdateForValuesAttr?.Values.Count > 0)
 			{
 				SkipValuesOnUpdate = skipUpdateForValuesAttr.Values;
+				SkipValueOnUpdate = skipUpdateForValuesAttr.Skip;
 			}
 		}
 
@@ -259,6 +261,11 @@ namespace LinqToDB.Mapping
 		/// <returns>The collection of values for which column should be skipped or <c>null</c> if skip is not configured.</returns>
 		public HashSet<object> SkipValuesOnInsert { get; private set; }
 
+		/// <summary>  
+      /// Delegate for checking values to be skipped during insert. 
+      /// </summary>
+		public Func<object, bool> SkipValueOnInsert { get; private set; }
+
 		/// <summary>
 		/// Gets collection of values for which column should be skipped.
 		/// This values will affect only update operations with implicit columns specification like
@@ -267,6 +274,11 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <returns>The collection of values for which column should be skipped or <c>null</c> if skip is not configured.</returns>
 		public HashSet<object> SkipValuesOnUpdate { get; private set; }
+
+		/// <summary>  
+		/// Delegate for checking values to be skipped during update. 
+		/// </summary>
+		public Func<object, bool> SkipValueOnUpdate { get; private set; }
 
 		/// <summary>
 		/// Gets whether a column is updatable.
