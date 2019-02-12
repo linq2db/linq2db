@@ -46,15 +46,12 @@ namespace LinqToDB.Linq
 					{
 						return false;
 					}
-					if (f.ColumnDescriptor.SkipValuesOnUpdate != null)
+					if (f.ColumnDescriptor.SkipValuesOnUpdate == null)
 					{
-						var value = f.ColumnDescriptor.MemberAccessor.Getter(obj);
-						if (f.ColumnDescriptor.SkipValuesOnUpdate.Contains(value))
-						{
-							return false;
-						}
+						return true;
 					}
-					return true;
+					var value = f.ColumnDescriptor.MemberAccessor.Getter(obj);
+					return !f.ColumnDescriptor.SkipValuesOnUpdate.Contains(value);
 				}).Except(keys).ToList();
 
 				if (fields.Count == 0)
