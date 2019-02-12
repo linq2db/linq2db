@@ -542,7 +542,7 @@ namespace Tests.Mapping
 		[Test]
 		public void Issue291Test2Attr([DataSources] string contex)
 		{
-			using (var db = GetDataContext(contex))
+			using (var db = GetDataContext(contex, new MappingSchema()))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 
@@ -574,9 +574,9 @@ namespace Tests.Mapping
 					DerivedClass res = db.GetTable<DerivedClass>().FirstOrDefault();
 					var count = db.GetTable<DerivedClass>().Count();
 
-					Assert.AreEqual(res.MyCol1, item.MyCol1);
-					Assert.AreNotEqual(res.NotACol, item.NotACol);
-					Assert.AreEqual(count, 1);
+					Assert.AreEqual(item.MyCol1, res.MyCol1);
+					Assert.AreNotEqual(item.NotACol, res.NotACol);
+					Assert.AreEqual(1, count);
 				}
 			}
 		}
@@ -584,7 +584,7 @@ namespace Tests.Mapping
 		[Test]
 		public void Issue291Test1Attr([DataSources] string contex)
 		{
-			using (var db = GetDataContext(contex))
+			using (var db = GetDataContext(contex, new MappingSchema()))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 				   .Entity<BaseClass>().HasTableName("my_table")
@@ -609,9 +609,9 @@ namespace Tests.Mapping
 					DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").FirstOrDefault();
 					var count = db.GetTable<DerivedClass>().Count();
 
-					Assert.AreEqual(res.MyCol1, item.MyCol1);
-					Assert.AreNotEqual(res.NotACol, item.NotACol);
-					Assert.AreEqual(count, 2);
+					Assert.AreEqual(item.MyCol1, res.MyCol1);
+					Assert.AreNotEqual(item.NotACol, res.NotACol);
+					Assert.AreEqual(2, count);
 				}
 			}
 		}
