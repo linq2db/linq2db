@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -59,7 +58,7 @@ namespace LinqToDB.Linq
 						{
 							param = GetParameter(type, dataContext, field);
 						}
-						if (field.ColumnDescriptor.SkipValuesOnInsert != null && field.ColumnDescriptor.SkipValuesOnInsert.Any())
+						if (field.ColumnDescriptor.SkipValuesOnInsert != null)
 						{
 							var value = field.ColumnDescriptor.GetValue(dataContext.MappingSchema, obj);
 							if (field.ColumnDescriptor.SkipValuesOnInsert.Contains(value))

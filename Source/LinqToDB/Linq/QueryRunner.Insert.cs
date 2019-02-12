@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq
 {
@@ -42,7 +39,7 @@ namespace LinqToDB.Linq
 					if (field.Value.IsInsertable)
 					{
 						var param = GetParameter(type, dataContext, field.Value);
-						if (field.Value.ColumnDescriptor.SkipValuesOnInsert != null && field.Value.ColumnDescriptor.SkipValuesOnInsert.Any())
+						if (field.Value.ColumnDescriptor.SkipValuesOnInsert != null)
 						{
 							var value = field.Value.ColumnDescriptor.GetValue(dataContext.MappingSchema, obj);
 							if (field.Value.ColumnDescriptor.SkipValuesOnInsert.Contains(value))
