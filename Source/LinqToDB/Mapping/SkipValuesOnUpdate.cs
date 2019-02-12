@@ -6,9 +6,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Attribute for skipping specific values on update.
 	/// </summary>
-	[AttributeUsage(
-		AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Interface,
-		AllowMultiple = false, Inherited = true)]
+	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 	public class SkipValuesOnUpdateAttribute : Attribute
 	{
 		public SkipValuesOnUpdateAttribute() { }
