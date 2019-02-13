@@ -30,41 +30,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
 
-		public override int CommandCount(SqlStatement statement)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			return statement.NeedsIdentity() ? 2 : 1;
-		}
+			var identityField = insertClause.Into.GetIdentityField();
 
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			var insertClause = Statement.GetInsertClause();
-			if (insertClause != null)
-			{
-				var into = insertClause.Into;
-				var attr = GetSequenceNameAttribute(into, false);
-				var sequenceName =
-					attr != null
-						? attr.SequenceName
-						: Convert(
-							$"{into.PhysicalName}_{into.GetIdentityField().PhysicalName}_seq",
-							ConvertType.NameToQueryField);
+			if (identityField == null)
+				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
-				sequenceName = Convert(sequenceName, ConvertType.NameToQueryTable);
-
-				var database = GetTableDatabaseName(into);
-
-				var schema = attr?.Schema != null
-						? Convert(attr.Schema, ConvertType.NameToSchema).ToString()
-						: GetTableSchemaName(into);
-				
-				AppendIndent()
-					.Append("SELECT currval(");
-
-				var sb = BuildTableName(new StringBuilder(), database, schema, sequenceName.ToString());
-
-				BuildValue(null, sb.ToString());
-				StringBuilder.AppendLine(")");
-			}
+			AppendIndent().AppendLine("RETURNING ");
+			AppendIndent().Append("\t");
+			BuildExpression(identityField, false, true);
+			StringBuilder.AppendLine();
+      
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()

@@ -96,15 +96,15 @@
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' OR '$(TargetFramework)' == 'netcoreapp1.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
 		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.4" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.1.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
 		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
 		<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
 		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
 
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
@@ -119,9 +119,9 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
 
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
 		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -14,6 +15,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
 
 using NpgsqlTypes;
 
@@ -27,9 +29,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Tests.DataProvider
 {
-	using LinqToDB.SchemaProvider;
 	using Model;
-	using System.Linq.Expressions;
 
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
