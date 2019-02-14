@@ -35,6 +35,8 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
 	{
+		private static readonly string _nextValSearchPattern = "nextval";
+
 		public PostgreSQLTests()
 		{
 			PassNullSql  = "SELECT \"ID\" FROM \"AllTypes\" WHERE :p IS NULL AND \"{0}\" IS NULL OR :p IS NOT NULL AND \"{0}\" = :p";
@@ -578,6 +580,52 @@ namespace Tests.DataProvider
 				db.GetTable<PostgreSQLSpecific.SequenceTest3>().Where(_ => _.ID == id).Delete();
 
 				Assert.AreEqual(0, db.GetTable<PostgreSQLSpecific.SequenceTest3>().Count(_ => _.Value == "SeqValue"));
+			}
+		}
+
+		[Test]
+		public void SequenceInsertWithIdentity_CustomNaming([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Where(_ => _.Value == "SeqValue").Delete();
+
+				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.SequenceCustomNamingTest { Value = "SeqValue" }));
+				var id2 = db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Single(_ => _.Value == "SeqValue").ID;
+
+				Assert.AreEqual(id1, id2);
+
+				db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Where(_ => _.ID == id1).Delete();
+
+				Assert.AreEqual(0, db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Count(_ => _.Value == "SeqValue"));
+			}
+		}
+
+		[Test]
+		public void SequenceInsertWithUserDefinedSequenceNameAttribute([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var table = new LinqToDB.SqlQuery.SqlTable(db.MappingSchema, typeof(PostgreSQLSpecific.SequenceTest1));
+				Assert.That(table.SequenceAttributes, Is.Not.Null);
+				Assert.That(table.SequenceAttributes.Length, Is.EqualTo(1));
+
+				db.Insert(new PostgreSQLSpecific.SequenceTest1 { Value = "SeqValue" });
+
+				Assert.That(db.LastQuery, Does.Contain(_nextValSearchPattern));
+			}
+		}
+		[Test]
+		public void SequenceInsertWithoutSequenceNameAttribute([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var table = new LinqToDB.SqlQuery.SqlTable(db.MappingSchema, typeof(PostgreSQLSpecific.SequenceTest2));
+				Assert.That(table.SequenceAttributes.IsNullOrEmpty());
+
+				db.Insert(new PostgreSQLSpecific.SequenceTest2 { Value = "SeqValue" });
+
+				Assert.That(db.LastQuery, Does.Not.Contains(_nextValSearchPattern));
 			}
 		}
 

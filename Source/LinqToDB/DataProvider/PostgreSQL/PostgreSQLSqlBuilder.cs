@@ -41,7 +41,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AppendIndent().Append("\t");
 			BuildExpression(identityField, false, true);
 			StringBuilder.AppendLine();
-
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -240,11 +239,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					var name     = Convert(attr.SequenceName, ConvertType.NameToQueryTable).ToString();
 					var database = GetTableDatabaseName(table);
-					var schema   = GetTableSchemaName  (table);
+					var schema   = attr.Schema != null
+						? Convert(attr.Schema, ConvertType.NameToSchema).ToString()
+						: GetTableSchemaName(table);
 
-					var sb = BuildTableName(new StringBuilder(), database, schema, name);
-
-					return new SqlExpression($"nextval('{sb}')", Precedence.Primary);
+					var sb = new StringBuilder();
+					sb.Append("nextval(");
+					ValueToSqlConverter.Convert(sb, BuildTableName(new StringBuilder(), database, schema, name).ToString());
+					sb.Append(")");
+					return new SqlExpression(sb.ToString(), Precedence.Primary);
 				}
 			}
 
