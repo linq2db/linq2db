@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace LinqToDB.Tools.EntityServices
 {
-	public class EntityEntry<T>
+	public class EntityMapEntry<T>
 	{
 		public T Entity { get; internal set; }
 

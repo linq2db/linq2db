@@ -11,13 +11,15 @@ namespace LinqToDB.Tools.EntityServices
 	using Common;
 
 	[PublicAPI]
-	public class IdentityMap
+	public class IdentityMap : IDisposable
 	{
-		public IdentityMap(IEntityServices entityServices)
+		public IdentityMap([NotNull] IDataContext dataContext)
 		{
-			entityServices.OnEntityCreated += EntityCreated;
+			_dataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
+			_dataContext.OnEntityCreated += OnEntityCreated;
 		}
 
+		readonly IDataContext                          _dataContext;
 		readonly ConcurrentDictionary<Type,IEntityMap> _entityMapDic = new ConcurrentDictionary<Type,IEntityMap>();
 
 		[NotNull]
@@ -25,12 +27,12 @@ namespace LinqToDB.Tools.EntityServices
 		{
 			return _entityMapDic.GetOrAdd(
 				entityType,
-				key => (IEntityMap)Activator.CreateInstance(typeof(EntityMap<>).MakeGenericType(key)));
+				key => (IEntityMap)Activator.CreateInstance(typeof(EntityMap<>).MakeGenericType(key), _dataContext));
 		}
 
-		void EntityCreated(EntityCreatedEventArgs args)
+		void OnEntityCreated(EntityCreatedEventArgs args)
 		{
-			GetOrAddEntityMap(args.Entity.GetType()).StoreEntity(args);
+			GetOrAddEntityMap(args.Entity.GetType()).MapEntity(args);
 		}
 
 		[NotNull]
@@ -61,10 +63,15 @@ namespace LinqToDB.Tools.EntityServices
 		}
 
 		[CanBeNull]
-		public T GetEntity<T>([NotNull] IDataContext context, [NotNull] object key)
+		public T GetEntity<T>([NotNull] object key)
 			where T : class, new()
 		{
-			return GetEntityMap<T>().GetEntity(context, key);
+			return GetEntityMap<T>().GetEntity(_dataContext, key);
+		}
+
+		public void Dispose()
+		{
+			_dataContext.OnEntityCreated -= OnEntityCreated;
 		}
 	}
 }

@@ -15,10 +15,9 @@ namespace Tests.Tools.EntityServices
 		[Test]
 		public void IdentityTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db  = new TestDataConnection())
+			using (var map = new IdentityMap(db))
 			{
-				var map = new IdentityMap(db);
-
 				var p1 = db.Person.First(p => p.ID == 1);
 				var p2 = db.Person.First(p => p.ID == 1);
 				var p3 = db.Person.First(p => p.ID == 2);
@@ -52,19 +51,18 @@ namespace Tests.Tools.EntityServices
 		[Test]
 		public void GetEntityTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db  = new TestDataConnection())
+			using (var map = new IdentityMap(db))
 			{
-				var map = new IdentityMap(db);
-
 				var p1 = db.Person.First(p => p.ID == 1);
-				var p2 = map.GetEntity<Person>(db, 1);
-				var p3 = map.GetEntity<Person>(db, new { ID = 1 });
+				var p2 = map.GetEntity<Person>(1);
+				var p3 = map.GetEntity<Person>(new { ID = 1 });
 
 				Assert.AreSame(p1, p2);
 				Assert.AreSame(p1, p3);
 
-				var p4 = map.GetEntity<Person>(db, 2);
-				var p5 = map.GetEntity<Person>(db, new { ID = 3L });
+				var p4 = map.GetEntity<Person>(2);
+				var p5 = map.GetEntity<Person>(new { ID = 3L });
 
 				Assert.That(
 					map.GetEntityEntries<Person>().Select(ee => new { ee.Entity, StoreCount = ee.DBCount, ee.CacheCount }),
@@ -75,7 +73,7 @@ namespace Tests.Tools.EntityServices
 						new { Entity = p5, StoreCount = 1, CacheCount = 0 },
 					}));
 
-				var c1 = map.GetEntity<Child>(db, new { ParentID = 1, ChildID = 11 });
+				var c1 = map.GetEntity<Child>(new { ParentID = 1, ChildID = 11 });
 
 				Assert.That(
 					map.GetEntityMap<Child>().Entities?.Values.Select(ee => new { ee.Entity, StoreCount = ee.DBCount, ee.CacheCount }),
@@ -90,10 +88,9 @@ namespace Tests.Tools.EntityServices
 		public void NegativeTest()
 		{
 			using (var db = new TestDataConnection())
+			using (var map = new IdentityMap(db))
 			{
-				var map = new IdentityMap(db);
-
-				Assert.Throws<LinqToDBConvertException>(() => map.GetEntity<Person>(db, new { ID1 = 1 }));
+				Assert.Throws<LinqToDBConvertException>(() => map.GetEntity<Person>(new { ID1 = 1 }));
 			}
 		}
 	}

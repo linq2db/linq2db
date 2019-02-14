@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Tools.EntityServices
@@ -15,30 +16,25 @@ namespace LinqToDB.Tools.EntityServices
 
 	interface IEntityMap
 	{
-		void        StoreEntity(EntityCreatedEventArgs args);
+		void        MapEntity(EntityCreatedEventArgs args);
 		IEnumerable GetEntities();
 	}
 
 	public class EntityMap<T> : IEntityMap
 		where T : class
 	{
+		public EntityMap(IDataContext dataContext)
+		{
+			_entities = new ConcurrentDictionary<T,EntityEntry<T>>(dataContext.GetKeyEqualityComparer<T>());
+		}
+
 		volatile ConcurrentDictionary<T,EntityEntry<T>> _entities;
 
 		[CanBeNull]
 		public IReadOnlyDictionary<T,EntityEntry<T>> Entities => _entities as IReadOnlyDictionary<T,EntityEntry<T>>;
 
-		void EnsureEntities(IDataContext context)
+		void IEntityMap.MapEntity(EntityCreatedEventArgs args)
 		{
-			if (_entities == null)
-				lock (this)
-					if (_entities == null)
-						_entities = new ConcurrentDictionary<T,EntityEntry<T>>(context.GetKeyEqualityComparer<T>());
-		}
-
-		void IEntityMap.StoreEntity(EntityCreatedEventArgs args)
-		{
-			EnsureEntities(args.DataContext);
-
 			var entity = (T)args.Entity;
 			var entry  = _entities.GetOrAdd(entity, key => new EntityEntry<T> { Entity = key });
 
@@ -148,8 +144,6 @@ namespace LinqToDB.Tools.EntityServices
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));
 			if (key     == null) throw new ArgumentNullException(nameof(key));
-
-			EnsureEntities(context);
 
 			if (_keyComparers == null)
 				lock (this)
