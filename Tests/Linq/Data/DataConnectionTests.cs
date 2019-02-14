@@ -279,5 +279,40 @@ namespace Tests.Data
 			if (exceptions.Count > 0)
 				throw new AggregateException(exceptions);
 		}
+
+		[Test]
+		public void TestOnBeforeConnectionOpenEvent()
+		{
+			var open = false;
+			var openAsync = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnBeforeConnectionOpen += (dc, cn) => open = true;
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => openAsync = true);
+				Assert.False(open);
+				Assert.False(openAsync);
+				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.True(open);
+				Assert.False(openAsync);
+			}
+		}
+
+		[Test]
+		public async Task TestAsyncOnBeforeConnectionOpenEvent()
+		{
+			var open = false;
+			var openAsync = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnBeforeConnectionOpen += (dc, cn) => open = true;
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => openAsync = true);
+				Assert.False(open);
+				Assert.False(openAsync);
+				await conn.SelectAsync(() => 1);
+				Assert.False(open);
+				Assert.True(openAsync);
+			}
+		}
+
 	}
 }

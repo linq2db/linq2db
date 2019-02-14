@@ -965,6 +965,7 @@ namespace LinqToDB.Data
 
 				if (_connection.State == ConnectionState.Closed)
 				{
+					OnBeforeConnectionOpen?.Invoke(this, _connection);
 					_connection.Open();
 					_closeConnection = true;
 					OnConnectionOpened?.Invoke(this, _connection);
@@ -985,6 +986,14 @@ namespace LinqToDB.Data
 
 		/// <inheritdoc />
 		public Action<EntityCreatedEventArgs> OnEntityCreated    { get; set; }
+
+		/// <summary>
+		/// Event, triggered right after connection created using <see cref="IDbConnection.Open"/> method.
+		/// </summary>
+		public event Action<DataConnection, IDbConnection> OnBeforeConnectionOpen;
+		/// Event, triggered right after connection opened using <see cref="DbConnection.OpenAsync()"/> methods.
+		/// </summary>
+		public event Func<DataConnection, IDbConnection, CancellationToken, Task> OnBeforeConnectionOpenAsync;
 
 		/// <summary>
 		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> method.
