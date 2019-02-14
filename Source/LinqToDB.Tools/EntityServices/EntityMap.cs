@@ -25,18 +25,18 @@ namespace LinqToDB.Tools.EntityServices
 	{
 		public EntityMap(IDataContext dataContext)
 		{
-			_entities = new ConcurrentDictionary<T,EntityEntry<T>>(dataContext.GetKeyEqualityComparer<T>());
+			_entities = new ConcurrentDictionary<T,EntityMapEntry<T>>(dataContext.GetKeyEqualityComparer<T>());
 		}
 
-		volatile ConcurrentDictionary<T,EntityEntry<T>> _entities;
+		volatile ConcurrentDictionary<T,EntityMapEntry<T>> _entities;
 
 		[CanBeNull]
-		public IReadOnlyDictionary<T,EntityEntry<T>> Entities => _entities as IReadOnlyDictionary<T,EntityEntry<T>>;
+		public IReadOnlyDictionary<T,EntityMapEntry<T>> Entities => _entities as IReadOnlyDictionary<T,EntityMapEntry<T>>;
 
 		void IEntityMap.MapEntity(EntityCreatedEventArgs args)
 		{
 			var entity = (T)args.Entity;
-			var entry  = _entities.GetOrAdd(entity, key => new EntityEntry<T> { Entity = key });
+			var entry  = _entities.GetOrAdd(entity, key => new EntityMapEntry<T> { Entity = key });
 
 			if (ReferenceEquals(args.Entity, entry.Entity) == false)
 				args.Entity = entry.Entity;

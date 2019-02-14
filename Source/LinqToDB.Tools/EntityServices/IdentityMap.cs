@@ -49,10 +49,10 @@ namespace LinqToDB.Tools.EntityServices
 		}
 
 		[NotNull]
-		public IEnumerable<EntityEntry<T>> GetEntityEntries<T>()
+		public IEnumerable<EntityMapEntry<T>> GetEntityEntries<T>()
 			where T : class
 		{
-			return GetEntityMap<T>().Entities?.Values ?? Array<EntityEntry<T>>.Empty;
+			return GetEntityMap<T>().Entities?.Values ?? Array<EntityMapEntry<T>>.Empty;
 		}
 
 		[NotNull]
