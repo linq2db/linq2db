@@ -41,7 +41,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AppendIndent().Append("\t");
 			BuildExpression(identityField, false, true);
 			StringBuilder.AppendLine();
-      
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -238,9 +237,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				if (attr != null)
 				{
-					var name = Convert(attr.SequenceName, ConvertType.NameToQueryTable).ToString();
+					var name     = Convert(attr.SequenceName, ConvertType.NameToQueryTable).ToString();
 					var database = GetTableDatabaseName(table);
-					var schema = attr.Schema != null
+					var schema   = attr.Schema != null
 						? Convert(attr.Schema, ConvertType.NameToSchema).ToString()
 						: GetTableSchemaName(table);
 
