@@ -287,8 +287,16 @@ namespace Tests.Data
 			var openAsync = false;
 			using (var conn = new DataConnection())
 			{
-				conn.OnBeforeConnectionOpen += (dc, cn) => open = true;
-				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => openAsync = true);
+				conn.OnBeforeConnectionOpen += (dc, cn) =>
+				{
+					if (cn.State == ConnectionState.Closed)
+						open = true;
+				};
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() =>
+				{
+					if (cn.State == ConnectionState.Closed)
+						openAsync = true;
+				});
 				Assert.False(open);
 				Assert.False(openAsync);
 				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
@@ -304,8 +312,16 @@ namespace Tests.Data
 			var openAsync = false;
 			using (var conn = new DataConnection())
 			{
-				conn.OnBeforeConnectionOpen += (dc, cn) => open = true;
-				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => openAsync = true);
+				conn.OnBeforeConnectionOpen += (dc, cn) =>
+					{
+						if (cn.State == ConnectionState.Closed)
+							open = true;
+					};
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => 
+						{
+							if (cn.State == ConnectionState.Closed)
+								openAsync = true;
+						});
 				Assert.False(open);
 				Assert.False(openAsync);
 				await conn.SelectAsync(() => 1);

@@ -961,6 +961,7 @@ namespace LinqToDB.Data
 
 					if (RetryPolicy != null)
 						_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);
+
 				}
 
 				if (_connection.State == ConnectionState.Closed)
@@ -988,10 +989,12 @@ namespace LinqToDB.Data
 		public Action<EntityCreatedEventArgs> OnEntityCreated    { get; set; }
 
 		/// <summary>
-		/// Event, triggered right after connection created using <see cref="IDbConnection.Open"/> method.
+		/// Event, triggered before connection opened using <see cref="IDbConnection.Open"/> method.
 		/// </summary>
 		public event Action<DataConnection, IDbConnection> OnBeforeConnectionOpen;
-		/// Event, triggered right after connection opened using <see cref="DbConnection.OpenAsync()"/> methods.
+
+		/// <summary>
+		/// Event, triggered before connection opened using <see cref="DbConnection.OpenAsync()"/> methods.
 		/// </summary>
 		public event Func<DataConnection, IDbConnection, CancellationToken, Task> OnBeforeConnectionOpenAsync;
 
