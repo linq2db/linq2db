@@ -841,6 +841,24 @@ namespace Tests.DataProvider
 				Assert.AreEqual(1, res);
 			}
 		}
+
+		[Table("FullTextIndexTest")]
+		private class FullTextIndexTable
+		{
+			public int Id { get; set; }
+			public string Field { get; set; } 
+		}
+
+		[Test]
+		public void FullTextIndexTest([MySqlDataContext(false)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+
+			//	var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+			
+			}
+		}
 	}
 
 	internal static class MySqlTestFunctions
