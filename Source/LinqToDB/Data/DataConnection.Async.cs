@@ -58,6 +58,10 @@ namespace LinqToDB.Data
 			{
 				try
 				{
+					var task = OnBeforeConnectionOpenAsync?.Invoke(this, _connection, cancellationToken);
+					if (task != null)
+						await task;
+
 					if (_connection is RetryingDbConnection retrying)
 						await retrying.OpenAsync(cancellationToken);
 					else
@@ -65,7 +69,7 @@ namespace LinqToDB.Data
 
 					_closeConnection = true;
 
-					var task = OnConnectionOpenedAsync?.Invoke(this, _connection, cancellationToken);
+					task = OnConnectionOpenedAsync?.Invoke(this, _connection, cancellationToken);
 					if (task != null)
 						await task;
 				}
