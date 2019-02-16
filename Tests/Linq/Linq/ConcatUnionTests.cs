@@ -884,7 +884,7 @@ namespace Tests.Linq
 					.Concat(testData.OfType<DerivedEntity>())
 					.ToArray();
 
-				AreEqual(expected, result, ComparerBuilder<BaseEntity>.GetEqualityComparer());
+				AreEqualWithComparer(expected, result);
 			}
 
 		}

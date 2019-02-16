@@ -213,7 +213,7 @@ namespace LinqToDB.Linq
 			Expression dataTypeExpression = Expression.Constant(DataType.Undefined);
 			Expression dbTypeExpression   = Expression.Constant(null, typeof(string));
 
-			var convertExpression = dataContext.MappingSchema.GetConvertExpression(new DbDataType(field.SystemType, field.DataType, field.DbType), 
+			var convertExpression = dataContext.MappingSchema.GetConvertExpression(new DbDataType(field.SystemType, field.DataType, field.DbType),
 				new DbDataType(typeof(DataParameter), field.DataType, field.DbType), createDefault: false);
 
 			if (convertExpression != null)
@@ -321,8 +321,9 @@ namespace LinqToDB.Linq
 				{
 					while (dr.Read())
 					{
-						yield return mapper.Map(runner, dr);
+						var value = mapper.Map(runner, dr);
 						runner.RowsCount++;
+						yield return value;
 					}
 				}
 			}

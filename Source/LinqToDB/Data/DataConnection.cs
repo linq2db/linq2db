@@ -28,7 +28,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : ICloneable, IEntityServices
+	public partial class DataConnection : ICloneable
 	{
 		#region .ctor
 
@@ -971,6 +971,7 @@ namespace LinqToDB.Data
 
 			if (_connection.State == ConnectionState.Closed)
 			{
+				OnBeforeConnectionOpen?.Invoke(this, _connection.Connection);
 				_connection.Open();
 				_closeConnection = true;
 				OnConnectionOpened?.Invoke(this, _connection.Connection);
@@ -990,6 +991,16 @@ namespace LinqToDB.Data
 
 		/// <inheritdoc />
 		public Action<EntityCreatedEventArgs> OnEntityCreated    { get; set; }
+
+		/// <summary>
+		/// Event, triggered before connection opened using <see cref="IDbConnection.Open"/> method.
+		/// </summary>
+		public event Action<DataConnection, IDbConnection> OnBeforeConnectionOpen;
+
+		/// <summary>
+		/// Event, triggered before connection opened using <see cref="DbConnection.OpenAsync()"/> methods.
+		/// </summary>
+		public event Func<DataConnection, IDbConnection, CancellationToken, Task> OnBeforeConnectionOpenAsync;
 
 		/// <summary>
 		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> method.

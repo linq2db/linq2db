@@ -179,7 +179,7 @@ namespace Tests.UserTests
 				var actual   = qryUnion.ToArray();
 				var expected = staticResult.ToArray();
 
-				AreEqual(expected, actual, ComparerBuilder<WmsResourceCombinedDTO>.GetEqualityComparer());
+				AreEqualWithComparer(expected, actual);
 			}
 		}
 	}

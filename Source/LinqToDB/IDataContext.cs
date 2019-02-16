@@ -15,7 +15,7 @@ namespace LinqToDB
 	/// Database connection abstraction interface.
 	/// </summary>
 	[PublicAPI]
-	public interface IDataContext : IDisposable
+	public interface IDataContext : IEntityServices, IDisposable
 	{
 		/// <summary>
 		/// Provider identifier.

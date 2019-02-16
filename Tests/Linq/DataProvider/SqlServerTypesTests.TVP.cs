@@ -1,14 +1,16 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Expressions;
-using Microsoft.SqlServer.Server;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using Tests.Tools;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+
+using Microsoft.SqlServer.Server;
+
+using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
@@ -134,7 +136,7 @@ namespace Tests.DataProvider
 			{
 				var result = db.QueryProc<TVPRecord>("TableTypeTestProc", parameterGetter(external));
 
-				AreEqual(TestData, result, ComparerBuilder<TVPRecord>.GetEqualityComparer(true));
+				AreEqualWithComparer(TestData, result);
 			}
 		}
 
@@ -149,7 +151,7 @@ namespace Tests.DataProvider
 				var result = from record in db.FromSql<TVPRecord>($"{parameterGetter(external)}")
 							 select new TVPRecord() { Id = record.Id, Name = record.Name };
 
-				AreEqual(TestData, result, ComparerBuilder<TVPRecord>.GetEqualityComparer(true));
+				AreEqualWithComparer(TestData, result);
 			}
 		}
 
@@ -162,10 +164,11 @@ namespace Tests.DataProvider
 			using (var external = new DataConnection(context))
 			using (var db = new DataConnection(context))
 			{
-				var result = from record in TableValue(db, parameterGetter(external))
-							 select new TVPRecord() { Id = record.Id, Name = record.Name };
+				var result =
+					from record in TableValue(db, parameterGetter(external))
+					select new TVPRecord() { Id = record.Id, Name = record.Name };
 
-				AreEqual(TestData, result, ComparerBuilder<TVPRecord>.GetEqualityComparer(true));
+				AreEqualWithComparer(TestData, result);
 			}
 		}
 
@@ -205,7 +208,7 @@ namespace Tests.DataProvider
 			{
 				var result = TableTypeTestProc(db, GetDataTable());
 
-				AreEqual(TestData, result, ComparerBuilder<TVPRecord>.GetEqualityComparer(true));
+				AreEqualWithComparer(TestData, result);
 			}
 		}
 

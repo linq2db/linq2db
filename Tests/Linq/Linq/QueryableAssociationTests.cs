@@ -437,7 +437,7 @@ AS RETURN
 					OtherFromSql  = e.OtherFromSql
 				});
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+				AreEqualWithComparer(expected, result);
 				DropFunction(db);
 			}
 		}

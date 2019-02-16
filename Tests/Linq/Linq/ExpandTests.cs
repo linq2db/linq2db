@@ -39,7 +39,7 @@ namespace Tests.Playground
 		[Test]
 		public void InvocationTestLocal([SQLiteDataSources] string context, [Values(1, 2)] int param)
 		{
-			Expression<Func<SampleClass, bool>> predicate = c => c.Value > param;
+			Expression<Func<SampleClass,bool>> predicate = c => c.Value > param;
 			var sampleData = GenerateData();
 
 			using (var db = GetDataContext(context))
@@ -52,7 +52,7 @@ namespace Tests.Playground
 					where predicate.Compile()(t)
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
@@ -73,7 +73,7 @@ namespace Tests.Playground
 					from t2 in sampleData.Where(predicate.Compile())
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
@@ -94,7 +94,7 @@ namespace Tests.Playground
 					from t2 in sampleData.Where(predicate.Compile())
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
@@ -113,7 +113,7 @@ namespace Tests.Playground
 					where GetTestPredicate(param).Compile()(t)
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
@@ -134,7 +134,7 @@ namespace Tests.Playground
 					where ids.Where(i => i < param).GroupBy(i => i).Select(i => i.Key).Contains(t.Id)
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
@@ -158,7 +158,7 @@ namespace Tests.Playground
 					sd.Value = compiled(param, sd.Value);
 				}
 
-				AreEqual(sampleData, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(sampleData, query);
 			}
 		}
 

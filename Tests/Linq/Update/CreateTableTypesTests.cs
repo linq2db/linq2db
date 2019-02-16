@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using JetBrains.Annotations;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
 
 using Newtonsoft.Json;
 
@@ -14,11 +17,9 @@ using NUnit.Framework;
 // ReSharper disable once CheckNamespace
 namespace Tests.xUpdate
 {
-	using Tools;
-
-	using ColumnBuilder        = Action<EntityMappingBuilder<CreateTableTypesTests.CreateTableTypes>>;
-	using ValueBuilder         = Action<CreateTableTypesTests.CreateTableTypes>;
-	using DefaultValueBuilder  = Action<string, CreateTableTypesTests.CreateTableTypes>;
+	using ColumnBuilder       = Action<EntityMappingBuilder<CreateTableTypesTests.CreateTableTypes>>;
+	using ValueBuilder        = Action<CreateTableTypesTests.CreateTableTypes>;
+	using DefaultValueBuilder = Action<string, CreateTableTypesTests.CreateTableTypes>;
 
 	[TestFixture]
 	public class CreateTableTypesTests : TestBase
@@ -47,7 +48,7 @@ namespace Tests.xUpdate
 			// see https://github.com/linq2db/linq2db/issues/1032
 			public List<(uint field1, string field2)> StringConverted;
 
-			public static IEqualityComparer<CreateTableTypes> Comparer = ComparerBuilder<CreateTableTypes>.GetEqualityComparer();
+			public static IEqualityComparer<CreateTableTypes> Comparer = ComparerBuilder.GetEqualityComparer<CreateTableTypes>();
 
 			public static List<(uint, string)> StringConvertedTestValue = new List<(uint, string)>
 			{

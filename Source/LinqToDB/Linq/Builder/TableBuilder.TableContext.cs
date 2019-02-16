@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -245,6 +246,7 @@ namespace LinqToDB.Linq.Builder
 				return _variable = Builder.BuildVariable(expr);
 			}
 
+			[UsedImplicitly]
 			static object OnEntityCreated(IDataContext context, object entity)
 			{
 				var onEntityCreated = ((IEntityServices)context).OnEntityCreated;

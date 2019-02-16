@@ -638,5 +638,27 @@ namespace Tests.Linq
 					where p.Sum > 1
 					select p);
 		}
+
+
+		[Test, ActiveIssue(1601)]
+		public void Issue1601([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var query = from q in db.Types
+							let datePlus2 = q.DateTimeValue.AddDays(2)
+							let x = db.Types.Sum(y => y.MoneyValue)
+							select new
+							{
+								Y1 = x < 0 ? 9 : x + 8,
+								Y2 = Math.Round(x + x)
+							};
+
+				query.ToList();
+
+				Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(db.LastQuery, "Types").Count);
+			}
+		}
+
 	}
 }
