@@ -50,7 +50,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			{
-				var field = ((ConstantExpression)expArgs.First()).Value;
+				var firstParam = expArgs.First();
+				var field = firstParam is ConstantExpression constant ? constant.Value : ((UnaryExpression)firstParam).Operand;
 
 				if (field is string)
 				{

@@ -1243,17 +1243,17 @@ namespace LinqToDB.Linq.Builder
 
 			var allowedParams = new HashSet<Expression> { ParametersParam };
 
-			var result = null == expr.Find(ex =>
+			var result = expr.NodeType == ExpressionType.Quote || null == expr.Find(ex =>
 			{
 				if (IsServerSideOnly(ex))
 					return true;
 
 				switch (ex.NodeType)
 				{
-					case ExpressionType.Parameter    :
+					case ExpressionType.Parameter:
 						return !allowedParams.Contains(ex);
 
-					case ExpressionType.Call:
+					case ExpressionType.Call     :
 						{
 							var mc = (MethodCallExpression)ex;
 							foreach (var arg in mc.Arguments)
