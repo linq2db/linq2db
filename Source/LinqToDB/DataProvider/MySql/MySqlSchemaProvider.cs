@@ -81,10 +81,10 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(@"
 			SELECT
-					CONCAT(k.CONSTRAINT_SCHEMA,'..',k.TABLE_NAME) as TableID,
-					k.CONSTRAINT_NAME                                           as PrimaryKeyName,
-					k.COLUMN_NAME                                               as ColumnName,
-					k.ORDINAL_POSITION                                          as Ordinal
+					CONCAT(k.CONSTRAINT_SCHEMA,'..',k.TABLE_NAME)	as TableID,
+					k.CONSTRAINT_NAME								as PrimaryKeyName,
+					k.COLUMN_NAME									as ColumnName,
+					k.ORDINAL_POSITION								as Ordinal
 				FROM
 					INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
 					JOIN
@@ -93,10 +93,10 @@ namespace LinqToDB.DataProvider.MySql
 						k.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND
 						k.CONSTRAINT_SCHEMA  = c.CONSTRAINT_SCHEMA AND
 						k.CONSTRAINT_NAME    = c.CONSTRAINT_NAME AND
-                        k.TABLE_NAME         = c.TABLE_NAME
+						k.TABLE_NAME         = c.TABLE_NAME
 				WHERE
 					c.CONSTRAINT_TYPE='PRIMARY KEY' AND
-                    c.CONSTRAINT_SCHEMA = database()  ")
+					c.CONSTRAINT_SCHEMA = database()")
 
 			.ToList();
 		}

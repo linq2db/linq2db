@@ -460,5 +460,5 @@ CREATE TABLE FullTextIndexTest (
 	id int UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
 	TestField TEXT(100),
 	FULLTEXT idx (TestField)
-) ENGINE=InnoDB;
+)
 GO
