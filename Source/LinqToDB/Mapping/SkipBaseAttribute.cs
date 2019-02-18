@@ -30,10 +30,10 @@ namespace LinqToDB.Mapping
 		/// <summary>  
 		/// Check if object contains values that should be skipped.
 		/// </summary>
-		/// <param name="obj">        The object. </param>
-		/// <param name="entityDescriptor"> The entity descriptor. </param>
-		/// <param name="columnDescriptor"> The column descriptor. </param>
-		/// <returns>  True if it succeeds, false if it fails. </returns>
+		/// <param name="obj">The object to check.</param>
+		/// <param name="entityDescriptor">The entity descriptor.</param>
+		/// <param name="columnDescriptor">The column descriptor.</param>
+		/// <returns><c>true</c> if object should be skipped for the operation.</returns>
 		public abstract bool ShouldSkip(object obj, EntityDescriptor entityDescriptor, ColumnDescriptor columnDescriptor);
 
       /// <summary>

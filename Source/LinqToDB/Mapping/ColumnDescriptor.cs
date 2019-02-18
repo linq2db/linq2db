@@ -273,7 +273,7 @@ namespace LinqToDB.Mapping
 		/// <param name="obj">The object containing the values for the operation.</param>
 		/// <param name="descriptor"><see cref="EntityDescriptor"/> of the current instance.</param>
 		/// <param name="flags">The flags that specify which operation should be checked.</param>
-		/// <returns>True if object contains values that should be skipped. </returns>
+		/// <returns><c>true</c> if object contains values that should be skipped. </returns>
 		public virtual bool ShouldSkip(object obj, EntityDescriptor descriptor, SkipModification flags)
 		{		
 			for (var i = 0; SkipBaseAttributes != null && i < SkipBaseAttributes.Length; i++)
