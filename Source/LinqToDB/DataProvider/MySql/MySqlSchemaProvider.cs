@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.MySql
 						k.CONSTRAINT_NAME    = c.CONSTRAINT_NAME AND
 						k.TABLE_NAME         = c.TABLE_NAME
 				WHERE
-					c.CONSTRAINT_TYPE='PRIMARY KEY' AND
+					c.CONSTRAINT_TYPE   ='PRIMARY KEY' AND
 					c.CONSTRAINT_SCHEMA = database()")
 			.ToList();
 		}
