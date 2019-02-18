@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using SqlQuery;
+	using Mapping;
 
 	static partial class QueryRunner
 	{
@@ -19,7 +20,7 @@ namespace LinqToDB.Linq
 				LinqToDB.Linq.Query.CacheCleaners.Add(() => _queryCache.Clear());
 			}
 
-			static Query<int> CreateQuery(IDataContext dataContext, T obj, string tableName, string databaseName, string schemaName, Type type)
+			static Query<int> CreateQuery(IDataContext dataContext, EntityDescriptor descriptor, T obj, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
@@ -36,17 +37,8 @@ namespace LinqToDB.Linq
 
 				foreach (var field in sqlTable.Fields)
 				{
-					var skippedValues = field.Value.ColumnDescriptor.SkipValuesOnInsert;
-					if (field.Value.IsInsertable || skippedValues!= null)
+					if (field.Value.IsInsertable && !field.Value.ColumnDescriptor.ShouldSkip(obj, descriptor, SkipModification.Insert))
 					{
-						if (skippedValues != null)
-						{
-							var value = field.Value.ColumnDescriptor.MemberAccessor.Getter(obj);
-							if (field.Value.ColumnDescriptor.SkipValuesOnInsert.Contains(value))
-							{
-								continue;
-							}
-						}
 						var param = GetParameter(type, dataContext, field.Value);
 						ei.Queries[0].Parameters.Add(param);
 
@@ -76,9 +68,9 @@ namespace LinqToDB.Linq
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(obj.GetType());
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.DoNotCacheObjectInsertQueries
-					? CreateQuery(dataContext, obj, tableName, databaseName, schemaName, type)
+					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type)
 					: _queryCache.GetOrAdd(key,
-						o => CreateQuery(dataContext, obj, tableName, databaseName, schemaName, type));
+						o => CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type));
 
 				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -93,9 +85,9 @@ namespace LinqToDB.Linq
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(obj.GetType());
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.DoNotCacheObjectInsertQueries
-					? CreateQuery(dataContext, obj, tableName, databaseName, schemaName, type)
+					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type)
 					: _queryCache.GetOrAdd(key,
-						o => CreateQuery(dataContext, obj, tableName, databaseName, schemaName, type));
+						o => CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type));
 
 				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 

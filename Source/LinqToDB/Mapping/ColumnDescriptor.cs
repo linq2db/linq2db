@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -133,17 +134,10 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			var skipInsertForValuesAttr = mappingSchema.GetAttribute<SkipValuesOnInsertAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
-			if (skipInsertForValuesAttr?.Values.Count > 0)
+			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			if (skipValueAttributes != null && skipValueAttributes.Length > 0)
 			{
-				SkipValuesOnInsert = skipInsertForValuesAttr.Values;
-				SkipValueOnInsert = skipInsertForValuesAttr.Skip;
-			}
-			var skipUpdateForValuesAttr = mappingSchema.GetAttribute<SkipValuesOnUpdateAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
-			if (skipUpdateForValuesAttr?.Values.Count > 0)
-			{
-				SkipValuesOnUpdate = skipUpdateForValuesAttr.Values;
-				SkipValueOnUpdate = skipUpdateForValuesAttr.Skip;
+				SkipBaseAttributes = skipValueAttributes;
 			}
 		}
 
@@ -253,32 +247,44 @@ namespace LinqToDB.Mapping
 		public bool           SkipOnInsert    { get; private set; }
 
 		/// <summary>
-		/// Gets collection of values for which column should be skipped.
-		/// This values will affect only insert operations with implicit columns specification like
-		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string)"/>
-		/// method and will be ignored when user explicitly specifies value for this column.
+		/// Gets whether the column has specific values that should be skipped on insert.
 		/// </summary>
-		/// <returns>The collection of values for which column should be skipped or <c>null</c> if skip is not configured.</returns>
-		public HashSet<object> SkipValuesOnInsert { get; private set; }
-
-		/// <summary>  
-      /// Delegate for checking values to be skipped during insert. 
-      /// </summary>
-		public Func<object, bool> SkipValueOnInsert { get; private set; }
+		public bool           HasValuesToSkipOnInsert
+		{
+			get { return SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Insert) != 0) ?? false; }
+		}
 
 		/// <summary>
-		/// Gets collection of values for which column should be skipped.
-		/// This values will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string)"/>
-		/// method and will be ignored when user explicitly specifies value for this column.
+		/// Gets whether the column has specific values that should be skipped on update.
 		/// </summary>
-		/// <returns>The collection of values for which column should be skipped or <c>null</c> if skip is not configured.</returns>
-		public HashSet<object> SkipValuesOnUpdate { get; private set; }
+		public bool           HasValuesToSkipOnUpdate
+		{
+			get { return SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Update) != 0) ?? false; }
+		}
 
-		/// <summary>  
-		/// Delegate for checking values to be skipped during update. 
+		/// <summary>
+		/// Gets whether the column has specific values that should be skipped on insert.
 		/// </summary>
-		public Func<object, bool> SkipValueOnUpdate { get; private set; }
+		private SkipBaseAttribute[] SkipBaseAttributes { get; }
+
+		/// <summary> 
+		/// Check if the passed object has values that should bes skipped based on the given flags. 
+		/// </summary>
+		/// <param name="obj">The object containing the values for the operation.</param>
+		/// <param name="descriptor"><see cref="EntityDescriptor"/> of the current instance.</param>
+		/// <param name="flags">The flags that specify which operation should be checked.</param>
+		/// <returns>True if object contains values that should be skipped. </returns>
+		public virtual bool ShouldSkip(object obj, EntityDescriptor descriptor, SkipModification flags)
+		{		
+			for (var i = 0; SkipBaseAttributes != null && i < SkipBaseAttributes.Length; i++)
+			{
+				if((SkipBaseAttributes[i].Affects & flags) != 0 && SkipBaseAttributes[i].ShouldSkip(obj, descriptor, this))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
 
 		/// <summary>
 		/// Gets whether a column is updatable.

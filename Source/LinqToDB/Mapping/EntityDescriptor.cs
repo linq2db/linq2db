@@ -89,6 +89,12 @@ namespace LinqToDB.Mapping
 		public bool DoNotCacheObjectInsertQueries { get; private set; }
 
 		/// <summary>
+		/// Gets a value indicating whether update queries should be cached based on
+		/// <see cref="SkipValuesOnInsertAttribute"/>.
+		/// </summary>
+		public bool DoNotCacheObjectUpdateQueries { get; private set; }
+
+		/// <summary>
 		/// Gets the dynamic columns store descriptor.
 		/// </summary>
 		public ColumnDescriptor DynamicColumnsStore { get; private set; }
@@ -232,10 +238,10 @@ namespace LinqToDB.Mapping
 			foreach (var attr in typeColumnAttrs.Concat(attrs))
 				if (attr.IsColumn)
 					SetColumn(attr, mappingSchema);
-
-			// Check if values could be skipped during insert/update => disable cache...
-			DoNotCacheObjectInsertQueries = Columns != null && (Columns.Any(c => c.SkipValuesOnInsert != null && c.SkipValuesOnInsert.Any()) ||
-			                                                    Columns.Any(c => c.SkipValuesOnUpdate != null && c.SkipValuesOnUpdate.Any()));
+			
+			// Check if values could be skipped during insert/update => disable queries cache.
+			DoNotCacheObjectInsertQueries = Columns != null && Columns.Any(c => c.HasValuesToSkipOnInsert);
+			DoNotCacheObjectUpdateQueries = Columns != null && Columns.Any(c => c.HasValuesToSkipOnUpdate);
 		}
 
 		void SetColumn(ColumnAttribute attr, MappingSchema mappingSchema)

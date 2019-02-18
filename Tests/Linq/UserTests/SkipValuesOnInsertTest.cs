@@ -20,6 +20,17 @@ namespace Tests.UserTests
 			public Int32? Age { get; set; }
 		}
 
+		[Table("PR_1598_Mixed_Table")]
+		public class TestTableMixed
+		{
+			[Column("Id"), PrimaryKey]
+			public Int32 Id { get; set; }
+			[Column("Name"), SkipValuesOnInsert("John"), SkipValuesOnUpdate("Max")]
+			public String Name { get; set; }
+			[Column("Age")]
+			public Int32? Age { get; set; }
+		}
+
 		[Table("PR_1598_Insert_Null_Table")]
 		public class TestTableNull
 		{
@@ -247,6 +258,48 @@ namespace Tests.UserTests
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Gender, TestTableEnum.GenderType.Undefined);
+				}
+			}
+		}
+
+		[Test]
+		public void TestSkipMixed([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (db.CreateLocalTable<TestTableMixed>())
+				{
+					var count = db.Insert(new TestTableMixed() { Id = 1, Name = "Jason", Age = 20 });
+
+					Assert.Greater(count, 0);
+
+					var r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1);
+
+					Assert.IsNotNull(r);
+					Assert.AreEqual(r.Name, "Jason");
+
+					r.Name = "Max";
+					count = db.Update(r);
+					Assert.Greater(count, 0);
+					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1);
+					Assert.IsNotNull(r);
+					Assert.AreEqual(r.Name, "Jason");
+
+					count = db.Insert(new TestTableMixed() { Id = 2, Name = "John", Age = 25 });
+
+					Assert.Greater(count, 0);
+
+					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2);
+
+					Assert.IsNotNull(r);
+					Assert.IsNull(r.Name);
+
+					r.Name = "Jessy";
+					count = db.Update(r);
+					Assert.Greater(count, 0);
+					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2);
+					Assert.IsNotNull(r);
+					Assert.AreEqual(r.Name, "Jessy");
 				}
 			}
 		}

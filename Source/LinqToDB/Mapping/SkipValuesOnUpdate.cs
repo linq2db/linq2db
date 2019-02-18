@@ -1,15 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Attribute for skipping specific values on update.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-	public class SkipValuesOnUpdateAttribute : Attribute
+	public class SkipValuesOnUpdateAttribute : SkipBaseAttribute
 	{
-		public SkipValuesOnUpdateAttribute() { }
+		public SkipValuesOnUpdateAttribute()
+		{
+			Affects = SkipModification.Update;
+		}
 
 		/// <summary>  
 		/// Constructor. 
@@ -17,7 +18,7 @@ namespace LinqToDB.Mapping
 		/// <param name="values"> 
 		/// Values to skip on update operations.
 		/// </param>
-		public SkipValuesOnUpdateAttribute(params object[] values)
+		public SkipValuesOnUpdateAttribute(params object[] values) : this()
 		{
 			var valuesToSkip = values;
 			if (valuesToSkip == null)
@@ -30,24 +31,32 @@ namespace LinqToDB.Mapping
 			}
 		}
 
+		/// <summary>  
+		/// Check if object contains values that should be skipped.
+		/// </summary>
+		/// <param name="obj">        The object. </param>
+		/// <param name="entityDescriptor"> The entity descriptor. </param>
+		/// <param name="columnDescriptor"> The column descriptor. </param>
+		/// <returns>  True if it succeeds, false if it fails. </returns>
+		public override bool ShouldSkip(object obj, EntityDescriptor entityDescriptor, ColumnDescriptor columnDescriptor)
+		{
+			// todo: replace MemberAccessor.Getter() with GetMemberValue
+			return Values?.Contains(columnDescriptor.MemberAccessor.Getter(obj)) ?? false;
+		}
+
+		public override SkipModification Affects { get; }
+
 		/// <summary>
 		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string Configuration { get; set; }
+		public override string Configuration { get; set; }
 
 		/// <summary>
 		/// Gets collection with values to skip on update.
 		/// </summary>
 		public HashSet<object> Values { get; }
 
-		/// <summary>  Check if the passed value should be skipped on update. </summary>
-		/// <param name="value">   The value that is checked for updateing. </param>
-		/// <returns>  True if value should be skipped on update. </returns>
-		public virtual bool Skip(object value)
-		{
-			return Values?.Contains(value) ?? false;
-		}
 	}
 }
