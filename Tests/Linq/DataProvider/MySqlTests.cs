@@ -785,6 +785,27 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		[Table("FullTextIndexTest")]
+		private class FullTextIndexTable
+		{
+			[Column("id")]
+			public int Id { get; set; }
+			[Column("TestField")]
+			public string TestField { get; set; }
+		}
+
+		[Test]
+		public void FullTextIndexTest([MySqlDataContext(false)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var res = schema.Tables.Where(c => c.ID.Contains("fulltextindex")).FirstOrDefault();
+				Assert.AreNotEqual(null, res);
+			}
+		}
+
 #endif
 
 		[Sql.Expression("@n:=@n+1", ServerSideOnly = true)]
@@ -842,23 +863,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table("FullTextIndexTest")]
-		private class FullTextIndexTable
-		{
-			public int Id { get; set; }
-			public string Field { get; set; } 
-		}
-
-		[Test]
-		public void FullTextIndexTest([MySqlDataContext(false)] string context)
-		{
-			using (var db = (DataConnection)GetDataContext(context))
-			{
-
-			//	var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-			
-			}
-		}
 	}
 
 	internal static class MySqlTestFunctions
