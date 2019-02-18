@@ -786,15 +786,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table("FullTextIndexTest")]
-		private class FullTextIndexTable
-		{
-			[Column("id")]
-			public int Id { get; set; }
-			[Column("TestField")]
-			public string TestField { get; set; }
-		}
-
 		[Test]
 		public void FullTextIndexTest([MySqlDataContext(false)] string context)
 		{
@@ -862,7 +853,6 @@ namespace Tests.DataProvider
 				Assert.AreEqual(1, res);
 			}
 		}
-
 	}
 
 	internal static class MySqlTestFunctions
