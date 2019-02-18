@@ -79,7 +79,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
-			
+			var dbConnection = (DbConnection)dataConnection.Connection;
 			return dataConnection.Query<PrimaryKeyInfo>(@"
 			SELECT
 					CONCAT(k.CONSTRAINT_SCHEMA, '..', k.TABLE_NAME) as TableID,
@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.MySql
 						k.CONSTRAINT_SCHEMA = c.CONSTRAINT_SCHEMA AND
 						k.CONSTRAINT_NAME = c.CONSTRAINT_NAME
 				WHERE
-					c.CONSTRAINT_TYPE = 'PRIMARY KEY'")
+					c.CONSTRAINT_TYPE = 'PRIMARY KEY'  ")
 
 			.ToList();
 		}
