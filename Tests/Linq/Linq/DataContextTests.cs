@@ -77,7 +77,7 @@ namespace Tests.Linq
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
-				var _db = new DataContext(db.DataProvider.Name, db.ConnectionString);
+				var _db  = new DataContext(db.DataProvider.Name, db.ConnectionString);
 				var _db1 = new DataContext(db.DataProvider.Name, "FakeConnectionString");
 
 				Assert.AreEqual(db.DataProvider.Name, _db.DataProvider.Name);
