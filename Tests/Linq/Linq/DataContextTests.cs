@@ -81,13 +81,8 @@ namespace Tests.Linq
 
 				Assert.AreEqual(db.DataProvider.Name, _db.DataProvider.Name);
 				Assert.AreEqual(db.ConnectionString, _db.ConnectionString);
+				Assert.Throws(typeof(LinqToDBException), () => new DataContext("FakeAdapter", db.ConnectionString));
 			}
-		}
-
-		[Test]
-		public void issue1513Test1()
-		{
-			Assert.Throws( typeof(LinqToDBException), () => new DataContext("FakeAdapterSQL", "SomeConnectionString"));
 		}
 	}
 }
