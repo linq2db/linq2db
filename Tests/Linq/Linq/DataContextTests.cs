@@ -78,10 +78,12 @@ namespace Tests.Linq
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
 				var _db = new DataContext(db.DataProvider.Name, db.ConnectionString);
+				var _db1 = new DataContext(db.DataProvider.Name, "FakeConnectionString");
 
 				Assert.AreEqual(db.DataProvider.Name, _db.DataProvider.Name);
 				Assert.AreEqual(db.ConnectionString, _db.ConnectionString);
 				Assert.Throws(typeof(LinqToDBException), () => new DataContext("FakeAdapter", db.ConnectionString));
+				Assert.Throws(typeof(System.ArgumentException), () => _db1.GetTable<Child>().FirstOrDefault());
 			}
 		}
 	}
