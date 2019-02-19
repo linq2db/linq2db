@@ -71,5 +71,23 @@ namespace Tests.Linq
 				ctx.KeepConnectionAlive = false;
 			}
 		}
+
+		[Test]
+		public void issue1513Test([DataSources(false)]string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var _db = new DataContext(db.DataProvider.Name, db.ConnectionString);
+
+				Assert.AreEqual(db.DataProvider.Name, _db.DataProvider.Name);
+				Assert.AreEqual(db.ConnectionString, _db.ConnectionString);
+			}
+		}
+
+		[Test]
+		public void issue1513Test1()
+		{
+			Assert.Throws( typeof(LinqToDBException), () => new DataContext("FakeAdapterSQL", "SomeConnectionString"));
+		}
 	}
 }
