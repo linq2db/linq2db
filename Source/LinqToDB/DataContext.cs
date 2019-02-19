@@ -67,10 +67,10 @@ namespace LinqToDB
 			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 			var dataProvider = DataConnection.GetDataProvider(providerName, connectionString);
-			DataProvider = dataProvider ?? throw new LinqToDBException($"DataProvider '{providerName}' not found.");
-			ContextID = DataProvider.Name;
+			DataProvider     = dataProvider ?? throw new LinqToDBException($"DataProvider '{providerName}' not found.");
+			ContextID        = DataProvider.Name;
 			ConnectionString = connectionString;
-			MappingSchema = DataProvider.MappingSchema;
+			MappingSchema    = DataProvider.MappingSchema;
 		}
 
 		/// <summary>
