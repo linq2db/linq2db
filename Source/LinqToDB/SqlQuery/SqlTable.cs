@@ -74,26 +74,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var column in ed.Columns)
 			{
-				var field = new SqlField
-				{
-					SystemType       = column.MemberType,
-					Name             = column.MemberName,
-					PhysicalName     = column.ColumnName,
-					CanBeNull        = column.CanBeNull,
-					IsPrimaryKey     = column.IsPrimaryKey,
-					PrimaryKeyOrder  = column.PrimaryKeyOrder,
-					IsIdentity       = column.IsIdentity,
-					IsInsertable     = !column.SkipOnInsert,
-					IsUpdatable      = !column.SkipOnUpdate,
-					DataType         = column.DataType,
-					DbType           = column.DbType,
-					Length           = column.Length,
-					Precision        = column.Precision,
-					Scale            = column.Scale,
-					CreateFormat     = column.CreateFormat,
-					CreateOrder      = column.Order,
-					ColumnDescriptor = column,
-				};
+				var field = new SqlField(column);
 
 				Add(field);
 
