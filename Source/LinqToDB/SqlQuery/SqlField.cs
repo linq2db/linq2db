@@ -146,11 +146,13 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			return sb
-				.Append('t')
-				.Append(Table.SourceID)
-				.Append('.')
-				.Append(Name);
+			if (Table != null)
+				sb
+					.Append('t')
+					.Append(Table.SourceID)
+					.Append('.');
+
+			return sb.Append(Name);
 		}
 
 		#endregion

@@ -477,7 +477,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (attribute != null)
 				{
-					var expr = attribute.GetExpression(Builder.MappingSchema, SelectQuery, call, e =>
+					var expr = attribute.GetExpression(Builder.DataContext, SelectQuery, call, e =>
 					{
 						var ex = e.Unwrap();
 
