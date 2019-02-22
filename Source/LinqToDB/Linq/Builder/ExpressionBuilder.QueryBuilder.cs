@@ -289,6 +289,24 @@ namespace LinqToDB.Linq.Builder
 							var memberAlias = ne.Members?[i].Name;
 							var newArgument =
 								a.Transform(ae => TransformExpression(context, ae, enforceServerSide, memberAlias));
+
+							// Update nullability
+							if (newArgument.NodeType == ExpressionType.Call)
+							{
+								var mc = (MethodCallExpression)newArgument;
+								var attr = MappingSchema.GetAttribute<Sql.ExpressionAttribute>(mc.Type, mc.Method);
+
+								if (attr != null && 
+								    attr.IsNullable == Sql.IsNullableType.IfAnyParameterNullable &&
+								    mc.Arguments.Count == 1 && mc.Method.ReturnParameter?.ParameterType.IsNullable() == true &&
+								    mc.Method.ReturnParameter.ParameterType != mc.Method.GetParameters()[0].ParameterType &&
+								    mc.Arguments[0] is ConvertFromDataReaderExpression readerExpression)
+								{
+									readerExpression.MakeNullable();
+									newArgument = readerExpression;
+								}
+							}
+
 							a = newArgument;
 							arguments.Add(a);
 						}
