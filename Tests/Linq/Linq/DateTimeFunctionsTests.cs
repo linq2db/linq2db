@@ -179,6 +179,29 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DatepartDynamicynamic(
+			[DataSources(ProviderName.Informix)] string context, 
+			[Values(
+				Sql.DateParts.Day, 
+				Sql.DateParts.Hour, 
+				Sql.DateParts.Minute, 
+				Sql.DateParts.Month,
+				Sql.DateParts.Year,
+				Sql.DateParts.Second
+				)] Sql.DateParts datepart)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected =
+					from t in Types select Sql.DatePart(datepart, t.DateTimeValue);
+				var result =
+					from t in db.Types select Sql.AsSql(Sql.DatePart(datepart, t.DateTimeValue));
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
 		public void Year([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -544,6 +567,36 @@ namespace Tests.Linq
 				AreEqual(
 					from t in Types select Sql.DateAdd(Sql.DateParts.Year, t.SmallIntValue, t.DateTimeValue).Value.Date,
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, t.SmallIntValue, t.DateTimeValue)).Value.Date);
+			}
+		}
+
+		public static DateTime Truncate(DateTime date, long resolution)
+	    {
+	        return new DateTime(date.Ticks - (date.Ticks % resolution), date.Kind);
+	    }
+
+		[Test]
+		public void AddDynamicFromColumn(
+			[DataSources(ProviderName.Informix)] string context, 
+			[Values(
+				Sql.DateParts.Day, 
+				Sql.DateParts.Hour, 
+				Sql.DateParts.Minute, 
+				Sql.DateParts.Month,
+				Sql.DateParts.Year,
+				Sql.DateParts.Second
+				)] Sql.DateParts datepart)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected =
+					(from t in Types select Sql.DateAdd(datepart, t.SmallIntValue, t.DateTimeValue)).Select(d =>
+						Truncate(d.Value, TimeSpan.TicksPerSecond));
+				var result =
+					(from t in db.Types select Sql.AsSql(Sql.DateAdd(datepart, t.SmallIntValue, t.DateTimeValue)))
+					.ToList().Select(d => Truncate(d.Value, TimeSpan.TicksPerSecond));
+
+				AreEqual(expected, result);
 			}
 		}
 

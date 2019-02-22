@@ -4,6 +4,7 @@ using System.Globalization;
 namespace LinqToDB
 {
 	using SqlQuery;
+	using Expressions;
 
 	using PN = ProviderName;
 
@@ -365,7 +366,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.Access,     "DatePart('{part}', {date})",               ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderAccess))]
 		[Sql.Extension(PN.SapHana,    "",                                         ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderSapHana))]
 		[Sql.Extension(PN.Oracle,     "",                                         ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderOracle))]
-		public static int? DatePart(Sql.DateParts part, [ExprParameter] DateTime? date)
+		public static int? DatePart([SqlQueryDependent] Sql.DateParts part, [ExprParameter] DateTime? date)
 		{
 			if (date == null)
 				return null;
@@ -391,6 +392,18 @@ namespace LinqToDB
 		#endregion DatePart
 
 		#region DateAdd
+
+		class DateAddBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				builder.AddExpression("part", part.ToString());
+				builder.AddParameter("date", builder.GetExpression("date"));
+				builder.AddParameter("number", builder.GetExpression("number"));
+				builder.Expression = "DateAdd({part}, {number}, {date})";
+			}
+		}
 
 		class DateAddBuilderOracle : Sql.IExtensionCallBuilder
 		{
@@ -686,7 +699,8 @@ namespace LinqToDB
 		}
 
 
-		[Sql.Function] 
+ 
+		[Sql.Extension(""               , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilder))]
 		[Sql.Extension(PN.Oracle,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderOracle))]
 		[Sql.Extension(PN.DB2,        "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderDB2))]
 		[Sql.Extension(PN.Informix,   "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderInformix))]
@@ -696,7 +710,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.Access,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderAccess))]
 		[Sql.Extension(PN.SapHana,    "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderSapHana))]
 		[Sql.Extension(PN.Firebird,   "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderFirebird))]
-		public static DateTime? DateAdd(Sql.DateParts part, double? number, DateTime? date)
+		public static DateTime? DateAdd([SqlQueryDependent] Sql.DateParts part, double? number, DateTime? date)
 		{
 			if (number == null || date == null)
 				return null;
