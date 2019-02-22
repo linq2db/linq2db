@@ -24,7 +24,7 @@ namespace LinqToDB.Expressions
 		readonly int          _idx;
 		readonly Expression   _dataReaderParam;
 		readonly IDataContext _dataContext;
-				 Type         _type;
+		         Type         _type;
 
 		public override Type           Type      => _type;
 		public override ExpressionType NodeType  => ExpressionType.Extension;
