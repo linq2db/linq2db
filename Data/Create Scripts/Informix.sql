@@ -52,7 +52,7 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M')
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M')
 GO
 -- Doctor Table Extension
 
@@ -308,4 +308,11 @@ CREATE TABLE TestMerge2
 
 	PRIMARY KEY(Id)
 )
+GO
+
+DROP PROCEDURE IF EXISTS AddIssue792Record
+GO
+CREATE PROCEDURE AddIssue792Record()
+	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
+END PROCEDURE
 GO

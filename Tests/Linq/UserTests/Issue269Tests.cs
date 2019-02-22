@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using LinqToDB;
 using NUnit.Framework;
 
@@ -7,21 +8,24 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue269Tests : TestBase
 	{
-		class TestDataContextSourceAttribute : DataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		class TestDataContextSourceAttribute : DataSourcesAttribute
 		{
 			public TestDataContextSourceAttribute() : base(
-				ProviderName.Access, ProviderName.SQLite, ProviderName.Oracle,
-				ProviderName.MySql, ProviderName.Sybase, 
+				ProviderName.Access, ProviderName.SQLiteClassic, ProviderName.Oracle,
+				ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Sybase, ProviderName.SybaseManaged,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.DB2,
+				ProviderName.SqlCe,
 				TestProvName.MySql57,
-				TestProvName.SQLiteMs, ProviderName.SqlServer2000, TestProvName.MariaDB)
+				ProviderName.SapHana,
+				ProviderName.SQLiteMS, ProviderName.SqlServer2000, TestProvName.MariaDB)
 			{
 			}
 		}
 
-		[Test, TestDataContextSource]
-		public void TestTake(string context)
+		[Test]
+		public void TestTake([TestDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -39,14 +43,14 @@ namespace Tests.UserTests
 						.OrderByDescending(per => per.FirstName)
 						.Select(c => c.Patient.Diagnosis)
 						.Take(1)
-						.Any(_ => _.Contains("with"))); 
+						.Any(_ => _.Contains("with")));
 
 				AreEqual(e, q);
 			}
 		}
 
-		[Test, TestDataContextSource]
-		public void TestDistinct(string context)
+		[Test]
+		public void TestDistinct([TestDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -57,6 +61,9 @@ namespace Tests.UserTests
 						.Select(c => c.Patient.Diagnosis)
 						.Distinct()
 						.Any(_ => _.Contains("with")));
+
+				// DISTINCT should be optimized out
+				Assert.That(q.EnumQueries().All(x => !x.Select.IsDistinct), Is.True);
 
 				var e = Patient
 					.Where(pat => Person
@@ -70,8 +77,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, TestDataContextSource]
-		public void TestSkipDistinct(string context)
+		[Test]
+		public void TestSkipDistinct([TestDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -97,8 +104,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, TestDataContextSource]
-		public void TestDistinctSkip(string context)
+		[Test]
+		public void TestDistinctSkip([TestDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -124,8 +131,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, TestDataContextSource]
-		public void TestSkip(string context)
+		[Test]
+		public void TestSkip([TestDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -148,6 +155,5 @@ namespace Tests.UserTests
 				AreEqual(e, q);
 			}
 		}
-
 	}
 }

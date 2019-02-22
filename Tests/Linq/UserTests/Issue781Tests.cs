@@ -13,8 +13,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue781Tests : TestBase
 	{
-		[Test, DataContextSource(false)]
-		public void TestCount(string context)
+		[Test]
+		public void TestCount([DataSources(false)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -31,8 +31,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void TestLongCount(string context)
+		[Test]
+		public void TestLongCount([DataSources(false)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -49,13 +49,17 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void TestHavingCount(string context)
+		[Test]
+		public void TestHavingCount([DataSources(false,
+				ProviderName.Access,  ProviderName.MySqlConnector, TestProvName.MariaDB, ProviderName.OracleManaged,
+				ProviderName.OracleNative, ProviderName.Sybase, ProviderName.SybaseManaged,
+				TestProvName.MySql57)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Count();
 
@@ -69,13 +73,17 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void TestHavingLongCount(string context)
+		[Test]
+		public void TestHavingLongCount([DataSources(false,
+				ProviderName.Access, ProviderName.MySqlConnector, TestProvName.MariaDB, ProviderName.OracleManaged,
+				ProviderName.OracleNative, ProviderName.Sybase, ProviderName.SybaseManaged,
+				TestProvName.MySql57)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient.Diagnosis)
 					.Having(_ => _.Key != null)
 					.LongCount();
 
@@ -89,8 +97,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void TestCountWithSelect(string context)
+		[Test]
+		public void TestCountWithSelect([DataSources(false)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -109,8 +117,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void TestLongCountWithSelect(string context)
+		[Test]
+		public void TestLongCountWithSelect([DataSources(false)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -129,13 +137,17 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void TestHavingCountWithSelect(string context)
+		[Test]
+		public void TestHavingCountWithSelect([DataSources(false,
+				ProviderName.Access, ProviderName.MySqlConnector, TestProvName.MariaDB, ProviderName.OracleManaged,
+				ProviderName.OracleNative, ProviderName.Sybase, ProviderName.SybaseManaged,
+				TestProvName.MySql57)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.Count();
@@ -151,13 +163,17 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void TestHavingLongCountWithSelect(string context)
+		[Test]
+		public void TestHavingLongCountWithSelect([DataSources(false,
+				ProviderName.Access, ProviderName.MySqlConnector, TestProvName.MariaDB, ProviderName.OracleManaged,
+				ProviderName.OracleNative, ProviderName.Sybase, ProviderName.SybaseManaged,
+				TestProvName.MySql57)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.LongCount();

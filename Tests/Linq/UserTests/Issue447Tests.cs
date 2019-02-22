@@ -11,8 +11,9 @@
 	public class Issue447Tests : TestBase
 	{
 		[Explicit("https://github.com/linq2db/linq2db/issues/447")]
-		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
-		public void TestLinq2DbComplexQuery2(string context)
+		[Category("Explicit")]
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestLinq2DbComplexQuery2([DataSources] string context)
 		{
 			var old = Configuration.Linq.UseBinaryAggregateExpression;
 			try
@@ -28,7 +29,7 @@
 					var param = Expression.Parameter(typeof(Model.Child));
 					Expression<Func<Model.Child, bool>> predicate = null;
 
-					for (int i = 0; i < array.Length; i++)
+					for (var i = 0; i < array.Length; i++)
 					{
 						var id = array[i];
 
@@ -54,8 +55,8 @@
 			}
 		}
 
-		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
-		public void TestLinq2DbComplexQuery3(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestLinq2DbComplexQuery3([DataSources] string context)
 		{
 			var old = Configuration.Linq.UseBinaryAggregateExpression;
 			try
@@ -71,7 +72,7 @@
 					var param = Expression.Parameter(typeof(Model.Child));
 					Expression<Func<Model.Child, bool>> predicate = null;
 
-					for (int i = 0; i < array.Length; i++)
+					for (var i = 0; i < array.Length; i++)
 					{
 						var id = array[i];
 
@@ -87,7 +88,7 @@
 					result = result.Where(predicate);
 
 					// StackOverflowException cannot be handled and will terminate process
-					result.ToString();
+					var _ = result.ToString();
 				}
 			}
 			finally
@@ -96,8 +97,8 @@
 			}
 		}
 
-		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
-		public void TestLinq2DbComplexQueryCache(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestLinq2DbComplexQueryCache([DataSources] string context)
 		{
 			var old = Configuration.Linq.UseBinaryAggregateExpression;
 			try
@@ -114,7 +115,7 @@
 					Expression<Func<Model.Child, bool>> predicate1 = null;
 					Expression<Func<Model.Child, bool>> predicate2 = null;
 
-					for (int i = 0; i < array.Length; i++)
+					for (var i = 0; i < array.Length; i++)
 					{
 						var id = array[i];
 
@@ -144,8 +145,8 @@
 			}
 		}
 
-		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
-		public void TestLinq2DbComplexQueryWithParameters(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestLinq2DbComplexQueryWithParameters([DataSources] string context)
 		{
 			var old = Configuration.Linq.UseBinaryAggregateExpression;
 			try

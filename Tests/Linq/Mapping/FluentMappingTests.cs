@@ -1,14 +1,17 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Mapping
 {
+	using Model;
+	using Tools;
+
 	[TestFixture]
 	public class FluentMappingTests : TestBase
 	{
@@ -43,12 +46,73 @@ namespace Tests.Mapping
 			public List<MyClass> Assosiations;
 		}
 
+		/// <summary>
+		/// [Table(Name = nameof(IInterfaceBase))]
+		/// </summary>
+		interface IInterfaceBase
+		{
+			/// <summary>
+			/// [Column(SkipOnUpdate = true)]
+			/// </summary>
+			int IntValue { get; set; }
+		}
+
+		interface IInheritedInterface : IInterfaceBase
+		{
+			/// <summary>
+			/// [Column(SkipOnUpdate = true, SkipOnInsert = true)]
+			/// </summary>
+			string StringValue { get; set; }
+		}
+
+		interface IInterface2
+		{
+			/// <summary>
+			/// [Column(SkipOnInsert = true]
+			/// </summary>
+			int MarkedOnType { get; set; }
+		}
+
 		class MyInheritedClass : MyBaseClass
 		{
 		}
 
 		class MyInheritedClass2 : MyInheritedClass
 		{
+		}
+
+		class MyInheritedClass3 : IInheritedInterface
+		{
+			public string StringValue { get; set; }
+			public int    IntValue    { get; set; }
+		}
+
+		class MyInheritedClass4 : MyInheritedClass3, IInterface2
+		{
+			public int MarkedOnType { get; set; }
+		}
+
+		[Test]
+		public void LowerCaseMappingTest()
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+			ms.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
+			{
+				entityDescriptor.TableName = entityDescriptor.TableName.ToLower();
+				foreach (var entityDescriptorColumn in entityDescriptor.Columns)
+				{
+					entityDescriptorColumn.ColumnName = entityDescriptorColumn.ColumnName.ToLower();
+				}
+			};
+
+			mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn();
+
+
+			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That(ed.TableName, Is.EqualTo("newname"));
+			Assert.That(ed.Columns.First().ColumnName, Is.EqualTo("id1"));
 		}
 
 		[Test]
@@ -198,7 +262,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void FluentAssociation()
+		public void FluentAssociation1()
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -207,6 +271,34 @@ namespace Tests.Mapping
 				.Association( e => e.Parent, e => e.ID, o => o.ID1 );
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
+		}
+
+		[Test]
+		public void FluentAssociation2()
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<MyClass>()
+				.Association( e => e.Parent, (e, o) => e.ID == o.ID1 );
+
+			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
+		}
+
+		[Test]
+		public void FluentAssociation3()
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<MyInheritedClass>()
+				.Association( e => e.Assosiations, (e, o) => e.Id == o.ID1 );
+
+			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
 
 			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
 		}
@@ -229,8 +321,8 @@ namespace Tests.Mapping
 			public string LastName  { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void FluentInheritance(string context)
+		[Test]
+		public void FluentInheritance([DataSources] string context)
 		{
 			var ms = MappingSchema.Default; // new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -241,7 +333,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(TestInheritancePerson));
 
-			Assert.That(ed.InheritanceMapping, Is.Not.EqualTo(0));
+			Assert.That(ed.InheritanceMapping.Count, Is.Not.EqualTo(0));
 
 			using (var db = GetDataContext(context, ms))
 			{
@@ -251,6 +343,74 @@ namespace Tests.Mapping
 				var jane = db.GetTable<TestInheritancePerson>().Where(_ => _.PersonID == 3).First();
 				Assert.That(jane, Is.TypeOf<TestInheritanceFemale>());
 
+			}
+		}
+
+		[Test]
+		public void FluentInheritance2([DataSources] string context)
+		{
+			var ms = MappingSchema.Default; // new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<TestInheritancePerson>()
+				.Inheritance(e => e.Gender, Gender.Male,   typeof(TestInheritanceMale))
+				.Inheritance(e => e.Gender, Gender.Female, typeof(TestInheritanceFemale));
+
+			var ed = ms.GetEntityDescriptor(typeof(TestInheritancePerson));
+
+			Assert.That(ed.InheritanceMapping.Count, Is.Not.EqualTo(0));
+
+			using (var db = GetDataContext(context, ms))
+			{
+				var john = db.GetTable<TestInheritanceMale>().Where(_ => _.PersonID == 1).FirstOrDefault();
+				Assert.IsNotNull(john);
+
+				var jane = db.GetTable<TestInheritanceFemale>().Where(_ => _.PersonID == 3).FirstOrDefault();
+				Assert.IsNotNull(jane);
+
+			}
+		}
+
+		class BaseEntity
+		{
+			public int Id { get; set; }
+
+			[NotColumn]
+			public int Value { get; set; }
+
+			public int ValueMethod()
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		class DescendantEntity : BaseEntity
+		{
+		}
+
+		[Test]
+		public void FluentInheritanceExpression([DataSources] string context)
+		{
+			var ms = MappingSchema.Default; // new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<DescendantEntity>()
+				.Property(e => e.Value).IsExpression(e => e.Id + 100)
+				.Member(e => e.ValueMethod()).IsExpression(e => e.Id + 1000);
+
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(
+				context,
+				"25",
+				new[] { new DescendantEntity{Id = 1, Value = 0}, new DescendantEntity{Id = 2, Value = 0} })
+			)
+			{
+				var items1 = table.Where(e => e.Value == 101).ToArray();
+				var items2 = table.Where(e => e.ValueMethod() == 1001).ToArray();
+
+				Assert.AreEqual(1, items1.Length);
+
+				AreEqualWithComparer(items1, items2);
 			}
 		}
 
@@ -326,5 +486,136 @@ namespace Tests.Mapping
 			Assert.AreEqual(0, ed1.Columns.Count(_ => _.IsPrimaryKey));
 
 		}
+
+		[Test]
+		public void InterfaceInheritance()
+		{
+			var ms = new MappingSchema();
+			var b  = ms.GetFluentMappingBuilder();
+
+			b.Entity<IInterfaceBase>()
+				.HasTableName(nameof(IInterfaceBase))
+				.Property(x => x.IntValue).HasSkipOnUpdate();
+
+			b.Entity<IInheritedInterface>()
+				.Property(x => x.StringValue).HasSkipOnUpdate().HasSkipOnInsert();
+
+			b.Entity<IInterface2>()
+				.Property(x => x.MarkedOnType).HasSkipOnInsert();
+
+			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass4));
+
+			Assert.AreEqual(nameof(IInterfaceBase), ed.TableName);
+
+			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.IntValue)]    .SkipOnUpdate);
+			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.StringValue)] .SkipOnInsert);
+			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.MarkedOnType)].SkipOnInsert);
+		}
+
+		/// issue 291 Tests
+		public enum GenericItemType
+		{
+			DerivedClass = 0,
+			DerivedClass1 = 1,
+		}
+
+		public class BaseClass
+		{
+			public string MyCol1;
+			public string NotACol;
+		}
+
+		public class DerivedClass : BaseClass
+		{
+			[Column(IsDiscriminator = true)]
+			public GenericItemType itemType = GenericItemType.DerivedClass;
+			public string SomeOtherField;
+
+		}
+
+		public class DerivedClass1 : BaseClass
+		{
+			[Column(IsDiscriminator = true)]
+			public GenericItemType itemType = GenericItemType.DerivedClass1;
+			public string SomeOtherField;
+		}
+
+		[Test]
+		public void Issue291Test2Attr([DataSources] string context)
+		{
+			using (var db = GetDataContext(context, new MappingSchema()))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+
+				   .Entity<BaseClass>().HasTableName("my_table")
+				   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
+				   {
+					   IsDefault = true,
+					   Type = typeof(DerivedClass),
+					   Code = GenericItemType.DerivedClass
+				   })
+				   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
+				   {
+					   Type = typeof(DerivedClass1),
+					   Code = GenericItemType.DerivedClass1
+				   })
+				  .Property(t => t.MyCol1).HasColumnName("my_col1")
+				  .Property(t => t.NotACol).IsNotColumn()
+
+				  .Entity<DerivedClass>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
+				  .Entity<DerivedClass1>().Property(t => t.SomeOtherField).HasColumnName("my_other_col");
+
+				using (db.CreateLocalTable<DerivedClass>())
+				{
+					DerivedClass item = new DerivedClass { NotACol = "test", MyCol1 = "MyCol1" };
+					db.Insert(item);
+					DerivedClass1 item1 = new DerivedClass1 { NotACol = "test" };
+					db.Insert(item1);
+
+					DerivedClass res = db.GetTable<DerivedClass>().FirstOrDefault();
+					var count = db.GetTable<DerivedClass>().Count();
+
+					Assert.AreEqual(item.MyCol1, res.MyCol1);
+					Assert.AreNotEqual(item.NotACol, res.NotACol);
+					Assert.AreEqual(1, count);
+				}
+			}
+		}
+
+		[Test]
+		public void Issue291Test1Attr([DataSources] string context)
+		{
+			using (var db = GetDataContext(context, new MappingSchema()))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+				   .Entity<BaseClass>().HasTableName("my_table")
+				   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
+				   {
+					   IsDefault = true,
+					   Type = typeof(DerivedClass),
+					   Code = GenericItemType.DerivedClass
+				   })
+				  .Property(t => t.MyCol1).HasColumnName("my_col1")
+				  .Property(t => t.NotACol).IsNotColumn()
+				  .Entity<DerivedClass>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
+				  .Entity<DerivedClass1>().Property(t => t.SomeOtherField).HasColumnName("my_other_col");
+
+				using (db.CreateLocalTable<DerivedClass>())
+				{
+					DerivedClass item = new DerivedClass { NotACol = "test", MyCol1 = "MyCol1" };
+					db.Insert(item);
+					DerivedClass1 item1 = new DerivedClass1 { NotACol = "test", MyCol1 = "MyCol2" };
+					db.Insert(item1);
+
+					DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").FirstOrDefault();
+					var count = db.GetTable<DerivedClass>().Count();
+
+					Assert.AreEqual(item.MyCol1, res.MyCol1);
+					Assert.AreNotEqual(item.NotACol, res.NotACol);
+					Assert.AreEqual(2, count);
+				}
+			}
+		}
+
 	}
 }

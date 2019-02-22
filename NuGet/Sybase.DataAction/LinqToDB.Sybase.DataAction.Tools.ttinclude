@@ -1,0 +1,3 @@
+<#@ assembly name="$(ProjectDir)\bin\$(ConfigurationName)\AdoNetCore.AseClient.dll" #>
+<#@ assembly name="$(ProjectDir)\bin\$(ConfigurationName)\linq2db.dll" #>
+<#@ include file="LinqToDB.Sybase.ttinclude" #>

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Linq;
-
-#if !NOASYNC
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-#endif
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -23,10 +21,18 @@ namespace Tests.xUpdate
 	using System.Collections.Generic;
 
 	[TestFixture]
+	[Order(10000)]
 	public class InsertTests : TestBase
 	{
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
-		public void DistinctInsert1(string context)
+		[Test]
+		public void DistinctInsert1(
+			[DataSources(
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -56,8 +62,15 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
-		public void DistinctInsert2(string context)
+		[Test]
+		public void DistinctInsert2(
+			[DataSources(
+				ProviderName.DB2,
+				ProviderName.Informix,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -83,8 +96,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Insert1(string context)
+		[Test]
+		public void Insert1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -111,8 +124,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Insert2(string context)
+		[Test]
+		public void Insert2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -137,10 +150,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
-		[Test, DataContextSource]
-		public async Task Insert2Async(string context)
+		[Test]
+		public async Task Insert2Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -165,10 +176,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#endif
-
-		[Test, DataContextSource]
-		public void Insert3(string context)
+		[Test]
+		public void Insert3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -195,10 +204,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
-		[Test, DataContextSource]
-		public async Task Insert3Async(string context)
+		[Test]
+		public async Task Insert3Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -225,10 +232,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#endif
-
-		[Test, DataContextSource]
-		public void Insert31(string context)
+		[Test]
+		public void Insert31([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -256,8 +261,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Insert4(string context)
+		[Test]
+		public void Insert4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -283,10 +288,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
-		[Test, DataContextSource]
-		public async Task Insert4Async(string context)
+		[Test]
+		public async Task Insert4Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -312,10 +315,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#endif
-
-		[Test, DataContextSource]
-		public void Insert5(string context)
+		[Test]
+		public void Insert5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -341,8 +342,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Insert6(string context)
+		[Test]
+		public void Insert6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -366,8 +367,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Insert7(string context)
+		[Test]
+		public void Insert7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -392,8 +393,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Insert8(string context)
+		[Test]
+		public void Insert8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -418,8 +419,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Insert9(string context)
+		[Test]
+		public void Insert9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -431,7 +432,7 @@ namespace Tests.xUpdate
 					db.Parent.Delete(p => p.ParentID > 1000);
 
 					db.Insert(new Parent { ParentID = id, Value1 = id });
-		
+
 					Assert.AreEqual(1,
 						db.Parent
 							.Where(p => p.ParentID == id)
@@ -462,8 +463,8 @@ namespace Tests.xUpdate
 			[Column] public short     SmallIntValue;
 		}
 
-		[Test, DataContextSource]
-		public void InsertArray1(string context)
+		[Test]
+		public void InsertArray1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -483,8 +484,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InsertArray2(string context)
+		[Test]
+		public void InsertArray2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -509,8 +510,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InsertArray3(string context)
+		[Test]
+		public void InsertArray3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -535,8 +536,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InsertArray4(string context)
+		[Test]
+		public void InsertArray4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -561,8 +562,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void InsertUnion1(string context)
+		[Test]
+		public void InsertUnion1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			Child.Count();
 
@@ -594,8 +595,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InsertEnum1(string context)
+		[Test]
+		public void InsertEnum1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -628,8 +629,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InsertEnum2(string context)
+		[Test]
+		public void InsertEnum2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -654,8 +655,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InsertEnum3(string context)
+		[Test]
+		public void InsertEnum3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -680,8 +681,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InsertNull(string context)
+		[Test]
+		public void InsertNull([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -704,8 +705,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InsertWithIdentity1(string context)
+		[Test]
+		public void InsertWithIdentity1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -728,10 +729,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
-		[Test, DataContextSource]
-		public async Task InsertWithIdentity1Async(string context)
+		[Test]
+		public async Task InsertWithIdentity1Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -754,10 +753,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#endif
-
-		[Test, DataContextSource]
-		public void InsertWithIdentity2(string context)
+		[Test]
+		public void InsertWithIdentity2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -778,10 +775,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
-		[Test, DataContextSource]
-		public async Task InsertWithIdentity2Async(string context)
+		[Test]
+		public async Task InsertWithIdentity2Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -802,10 +797,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#endif
-
-		[Test, DataContextSource]
-		public void InsertWithIdentity3(string context)
+		[Test]
+		public void InsertWithIdentity3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -826,8 +819,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InsertWithIdentity4(string context)
+		[Test]
+		public void InsertWithIdentity4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -852,10 +845,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
-		[Test, DataContextSource]
-		public async Task InsertWithIdentity4Async(string context)
+		[Test]
+		public async Task InsertWithIdentity4Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -880,10 +871,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#endif
-
-		[Test, DataContextSource]
-		public void InsertWithIdentity5(string context)
+		[Test]
+		public void InsertWithIdentity5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -912,12 +901,14 @@ namespace Tests.xUpdate
 		class GuidID
 		{
 			[Identity] public Guid ID;
-			           public int  Field1;
+					   public int  Field1;
 		}
 
-		[Test, IncludeDataContextSource(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void InsertWithGuidIdentity(string context)
+		[Test]
+		public void InsertWithGuidIdentity([IncludeDataSources(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -926,9 +917,11 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void InsertWithGuidIdentityOutput(string context)
+		[Test]
+		public void InsertWithGuidIdentityOutput([IncludeDataSources(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
+			string context)
 		{
 			try
 			{
@@ -945,9 +938,11 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void InsertWithIdentityOutput(string context)
+		[Test]
+		public void InsertWithIdentityOutput([IncludeDataSources(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -986,9 +981,11 @@ namespace Tests.xUpdate
 			[Identity] public Guid ID;
 		}
 
-		[Test, IncludeDataContextSource(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-		public void InsertWithGuidIdentity2(string context)
+		[Test]
+		public void InsertWithGuidIdentity2([IncludeDataSources(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -996,8 +993,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InsertOrUpdate1(string context)
+		[Test]
+		public void InsertOrUpdate1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1036,8 +1033,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[DataContextSource]
-		public void InsertOrUpdate2(string context)
+		[Test]
+		public void InsertOrUpdate2([DataSources(ProviderName.OracleNative)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1106,8 +1103,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InsertOrReplace1(string context)
+		[Test]
+		public void InsertOrReplace1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1141,10 +1138,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
-		[Test, DataContextSource]
-		public async Task InsertOrReplace1Async(string context)
+		[Test]
+		public async Task InsertOrReplace1Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1178,8 +1173,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#endif
-
 		[Test]
 		public void InsertOrReplaceWithIdentity()
 		{
@@ -1198,8 +1191,8 @@ namespace Tests.xUpdate
 			});
 		}
 
-		[Test, DataContextSource]
-		public void InsertOrUpdate3(string context)
+		[Test]
+		public void InsertOrUpdate3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1247,10 +1240,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
-		[Test, DataContextSource]
-		public async Task InsertOrUpdate3Async(string context)
+		[Test]
+		public async Task InsertOrUpdate3Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1298,10 +1289,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-#endif
-
-		[Test, IncludeDataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged)]
-		public void InsertBatch1(string context)
+		[Test]
+		public void InsertBatch1([IncludeDataSources(ProviderName.OracleNative, ProviderName.OracleManaged)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1322,8 +1312,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void InsertBatch2(string context)
+		[Test]
+		public void InsertBatch2([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1344,8 +1336,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Insert11(string context)
+		[Test]
+		public void Insert11([DataSources] string context)
 		{
 			var p = new ComplexPerson { Name = new FullName { FirstName = "fn", LastName = "ln" }, Gender = Gender.Male };
 
@@ -1371,8 +1363,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Insert12(string context)
+		[Test]
+		public void Insert12([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1394,8 +1386,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Insert13(string context)
+		[Test]
+		public void Insert13([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1422,10 +1414,11 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
+		[Test]
+		public void Insert14([DataSources(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2000,
-			ProviderName.SqlServer2005, ProviderName.Sybase)]
-		public void Insert14(string context)
+			ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1451,8 +1444,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Insert15(string context)
+		[Test]
+		public void Insert15([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1480,8 +1473,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.SqlCe, ProviderName.SapHana)]
-		public void InsertSingleIdentity(string context)
+		[Test]
+		public void InsertSingleIdentity([DataSources(
+			ProviderName.Informix, ProviderName.SqlCe, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1507,8 +1502,8 @@ namespace Tests.xUpdate
 			[Column(DataType = DataType.Int64)] public TimeSpan BigIntValue;
 		}
 
-		[Test, DataContextSource]
-		public void InsertConverted(string context)
+		[Test]
+		public void InsertConverted([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1538,8 +1533,8 @@ namespace Tests.xUpdate
 			[Column(DataType = DataType.Int64)] public TimeSpan? BigIntValue;
 		}
 
-		[Test, DataContextSource]
-		public void InsertConvertedNullable(string context)
+		[Test]
+		public void InsertConvertedNullable([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1558,6 +1553,233 @@ namespace Tests.xUpdate
 				finally
 				{
 					tbl.Delete(r => r.ID >= 1000);
+				}
+			}
+		}
+
+		[Test]
+		public void InsertWith([IncludeDataSources(false,
+			ProviderName.SqlServer2008)]//, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
+		{
+			var m = null as int?;
+
+			using (var db = GetDataContext(context))
+			{
+				(
+					from c in db.Child.With("INDEX(IX_ChildIndex)")
+					join id in db.GrandChild on c.ParentID equals id.ParentID
+					where id.ChildID == m
+					select c.ChildID
+				)
+				.Distinct()
+				.Insert(db.Parent, t => new Parent { ParentID = t });
+			}
+		}
+
+		internal static string GetTableName(string context, [CallerMemberName] string methodName = null)
+		{
+			var tableName  = "xxPerson";
+
+			if (context.StartsWith("Firebird"))
+			{
+				tableName += "_f";
+
+				if (context.EndsWith("LinqService"))
+					tableName += "l";
+
+				tableName += "_" + methodName;
+			}
+
+			if (context.StartsWith("Oracle"))
+			{
+				tableName += "_o";
+
+				if (context.EndsWith("LinqService"))
+					tableName += "l";
+			}
+
+			return tableName;
+		}
+
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[Test]
+		public void InsertByTableName([DataSources] string context)
+		{
+			const string schemaName = null;
+			var tableName  = GetTableName(context, "35");
+
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+
+					var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
+
+					Assert.AreEqual(tableName, table.TableName);
+					Assert.AreEqual(schemaName, table.SchemaName);
+
+					var person = new Person()
+					{
+						FirstName = "Steven",
+						LastName = "King",
+						Gender = Gender.Male,
+					};
+
+					// insert a row into the table
+					db.Insert(person, tableName: tableName, schemaName: schemaName);
+					var newId1 = db.InsertWithInt32Identity(person, tableName: tableName, schemaName: schemaName);
+					var newId2 = db.InsertWithIdentity(person, tableName: tableName, schemaName: schemaName);
+
+					var newCount = table.Count();
+					Assert.AreEqual(3, newCount);
+
+					Assert.AreNotEqual(newId1, newId2);
+
+					var integritycount = table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).Count();
+					Assert.AreEqual(3, integritycount);
+
+					table.Drop();
+				}
+				finally
+				{
+					db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				}
+			}
+		}
+
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[Test]
+		public async Task InsertByTableNameAsync([DataSources] string context)
+		{
+			const string schemaName = null;
+			var tableName  = GetTableName(context, "31");
+
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
+
+					Assert.AreEqual(tableName, table.TableName);
+					Assert.AreEqual(schemaName, table.SchemaName);
+
+					var person = new Person()
+					{
+						FirstName = "Steven",
+						LastName = "King",
+						Gender = Gender.Male,
+					};
+
+					// insert a row into the table
+					await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+					var newId1 = await db.InsertWithInt32IdentityAsync(person, tableName: tableName, schemaName: schemaName);
+					var newId2 = await db.InsertWithIdentityAsync(person, tableName: tableName, schemaName: schemaName);
+
+					var newCount = await table.CountAsync();
+					Assert.AreEqual(3, newCount);
+
+					Assert.AreNotEqual(newId1, newId2);
+
+					var integritycount = await table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).CountAsync();
+					Assert.AreEqual(3, integritycount);
+					await table.DropAsync();
+				}
+				finally
+				{
+					await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				}
+			}
+		}
+
+		[Test]
+		public void InsertOrReplaceByTableName([DataSources] string context)
+		{
+			const string schemaName = null;
+			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
+
+			using (var db = GetDataContext(context))
+			{
+				db.DropTable<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				var table = db.CreateTable<Patient>(tableName, schemaName: schemaName);
+
+				try
+				{
+					Assert.AreEqual(tableName, table.TableName);
+					Assert.AreEqual(schemaName, table.SchemaName);
+
+					var person1 = new Patient()
+					{
+						PersonID = 1,
+						Diagnosis = "ABC1",
+					};
+
+					var person2 = new Patient()
+					{
+						PersonID = 2,
+						Diagnosis = "ABC2",
+					};
+
+
+					db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
+					db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
+
+					Assert.AreEqual(2, table.Count());
+
+					db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
+					db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
+
+					Assert.AreEqual(2, table.Count());
+				}
+				finally
+				{
+					table.Drop(throwExceptionIfNotExists: false);
+				}
+			}
+		}
+
+		[Test]
+		public async Task InsertOrReplaceByTableNameAsync([DataSources] string context)
+		{
+			const string schemaName = null;
+			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
+
+			using (var db = GetDataContext(context))
+			{
+				await db.DropTableAsync<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				var table = await db.CreateTableAsync<Patient>(tableName, schemaName: schemaName);
+				try
+				{
+					Assert.AreEqual(tableName, table.TableName);
+					Assert.AreEqual(schemaName, table.SchemaName);
+
+					var person1 = new Patient()
+					{
+						PersonID = 1,
+						Diagnosis = "ABC1",
+					};
+
+					var person2 = new Patient()
+					{
+						PersonID = 2,
+						Diagnosis = "ABC2",
+					};
+
+
+					await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
+					await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
+
+					Assert.AreEqual(2, await table.CountAsync());
+
+					await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
+					await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
+
+					Assert.AreEqual(2, await table.CountAsync());
+				}
+				finally
+				{
+					await table.DropAsync(throwExceptionIfNotExists: false);
 				}
 			}
 		}

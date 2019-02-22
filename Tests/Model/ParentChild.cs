@@ -75,6 +75,12 @@ namespace Tests.Model
 		[Association(ThisKey = "ParentID", OtherKey = "ID")]
 		public LinqDataTypes Types;
 
+		[Association(ThisKey = "ParentID", OtherKey = "ParentID", ExpressionPredicate = "ChildrenPredicate", CanBeNull = true)]
+		public List<Child> ChildrenX { get; set; }
+
+		static Expression<Func<Parent, Child, bool>> ChildrenPredicate =>
+			(t, m) => Math.Abs(m.ChildID) > 3;
+
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID", ExpressionPredicate = "GrandChildrenPredicate" , CanBeNull = true)]
 		public List<GrandChild> GrandChildrenX { get; set; }
 
@@ -154,7 +160,7 @@ namespace Tests.Model
 	{
 		public GrandChild()
 		{
-			
+
 		}
 
 		public int? ParentID;
@@ -237,7 +243,7 @@ namespace Tests.Model
 			{
 				if ((int)value == 1)
 				{
-					
+
 				}
 
 				_Value1 = value;
@@ -269,7 +275,7 @@ namespace Tests.Model
 
 		public override string ToString()
 		{
-			return "ParentID: {0}, Value1: {1}".Args(ParentID, Value1);
+			return $"ParentID: {ParentID}, Value1: {Value1}";
 		}
 	}
 
@@ -501,7 +507,6 @@ namespace Tests.Model
 	#region Inheritance3
 
 	[Table(Name="Parent")]
-	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceBase3))]
 	[InheritanceMapping(Code = 1,    Type = typeof(ParentInheritance13))]
 	[InheritanceMapping(Code = 2,    Type = typeof(ParentInheritance13))]
 	public abstract class ParentInheritanceBase3
@@ -590,7 +595,7 @@ namespace Tests.Model
 
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
 		public static ITable<T> WithTabLock1<T>(IDataContext ctx)
-			where T : class 
+			where T : class
 		{
 			return ctx.GetTable<T>(null, _methodInfo.MakeGenericMethod(typeof(T)));
 		}
@@ -608,7 +613,7 @@ namespace Tests.Model
 
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
 		public static ITable<T> WithTabLock<T>(this IDataContext ctx)
-			where T : class 
+			where T : class
 		{
 			return ctx.GetTable<T>(null, _methodInfo.MakeGenericMethod(typeof(T)));
 		}

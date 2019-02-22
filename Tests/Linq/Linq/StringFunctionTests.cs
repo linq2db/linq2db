@@ -1,9 +1,11 @@
 ﻿using System;
-#if !NETSTANDARD
+
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.Data.Linq.SqlClient;
 #else
 using System.Data;
 #endif
+
 using System.Linq;
 
 using LinqToDB;
@@ -18,8 +20,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class StringFunctionTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Length(string context)
+		[Test]
+		public void Length([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -28,8 +30,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void ContainsConstant(string context)
+		[Test]
+		public void ContainsConstant([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -38,8 +40,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void ContainsConstant2(string context)
+		[Test]
+		public void ContainsConstant2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -48,8 +50,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void ContainsConstant3(string context)
+		[Test]
+		public void ContainsConstant3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -60,8 +62,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void ContainsConstant4(string context)
+		[Test]
+		public void ContainsConstant4([DataSources(ProviderName.Firebird, TestProvName.Firebird3)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -72,8 +74,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void ContainsConstant5(string context)
+		[Test]
+		public void ContainsConstant5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -82,8 +84,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void ContainsConstant41(string context)
+		[Test]
+		public void ContainsConstant41([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -95,8 +97,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void ContainsConstant51(string context)
+		[Test]
+		public void ContainsConstant51([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -107,8 +109,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void ContainsParameter1(string context)
+		[Test]
+		public void ContainsParameter1([DataSources] string context)
 		{
 			var str = "oh";
 
@@ -121,8 +123,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void ContainsParameter2(string context)
+		[Test]
+		public void ContainsParameter2([DataSources] string context)
 		{
 			var str = "o%h";
 
@@ -150,8 +152,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void ContainsParameter4(string context)
+		[Test]
+		public void ContainsParameter4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -177,15 +179,15 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix)]
-		public void ContainsNull(string context)
+		[Test]
+		public void ContainsNull([DataSources(ProviderName.Access, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				string firstName = null;
 				int?   id        = null;
 
-				var q =
+				var _ =
 				(
 					from p in db.Person
 					where
@@ -196,8 +198,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void StartsWith1(string context)
+		[Test]
+		public void StartsWith1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -206,8 +208,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Access)]
-		public void StartsWith2(string context)
+		[Test]
+		public void StartsWith2([DataSources(ProviderName.DB2, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -215,8 +217,8 @@ namespace Tests.Linq
 					from p in db.Person where "John123".StartsWith(p.FirstName) select p);
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Access)]
-		public void StartsWith3(string context)
+		[Test]
+		public void StartsWith3([DataSources(ProviderName.DB2, ProviderName.Access)] string context)
 		{
 			var str = "John123";
 
@@ -226,8 +228,8 @@ namespace Tests.Linq
 					from p in db.Person where str.StartsWith(p.FirstName) select p);
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Access)]
-		public void StartsWith4(string context)
+		[Test]
+		public void StartsWith4([DataSources(ProviderName.DB2, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -237,13 +239,13 @@ namespace Tests.Linq
 					select p1,
 					from p1 in db.Person
 					from p2 in db.Person
-					where p1.ID == p2.ID && 
+					where p1.ID == p2.ID &&
 						Sql.Like(p1.FirstName, p2.FirstName.Replace("%", "~%"), '~')
 					select p1);
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Access)]
-		public void StartsWith5(string context)
+		[Test]
+		public void StartsWith5([DataSources(ProviderName.DB2, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -257,8 +259,8 @@ namespace Tests.Linq
 					select p1);
 		}
 
-		[Test, DataContextSource]
-		public void EndsWith(string context)
+		[Test]
+		public void EndsWith([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -267,9 +269,9 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NETSTANDARD
-		[Test, DataContextSource]
-		public void Like11(string context)
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+		[Test]
+		public void Like11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -278,8 +280,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Like12(string context)
+		[Test]
+		public void Like12([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -287,10 +289,10 @@ namespace Tests.Linq
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
-#endif 
+#endif
 
-		[Test, DataContextSource]
-		public void Like21(string context)
+		[Test]
+		public void Like21([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -299,8 +301,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Like22(string context)
+		[Test]
+		public void Like22([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -309,8 +311,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
-		public void IndexOf11(string context)
+		[Test]
+		public void IndexOf11([DataSources(ProviderName.Informix, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -319,8 +321,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
-		public void IndexOf12(string context)
+		[Test]
+		public void IndexOf12([DataSources(ProviderName.Informix, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -329,8 +331,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
-		public void IndexOf2(string context)
+		[Test]
+		public void IndexOf2([DataSources(ProviderName.Informix, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -339,10 +341,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(
+		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
+		[Test]
+		public void IndexOf3([DataSources(
 			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix,
-			ProviderName.SqlCe, ProviderName.Sybase, ProviderName.Access, TestProvName.SQLiteMs)]
-		public void IndexOf3(string context)
+			ProviderName.SqlCe, ProviderName.Sybase, ProviderName.Access, ProviderName.SQLiteMS)]
+			string context)
 		{
 			var s = "e";
 			var n1 = 2;
@@ -355,9 +359,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, TestProvName.SQLiteMs)]
-		public void LastIndexOf1(string context)
+		[Test]
+		public void LastIndexOf1([DataSources(
+			ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix,
+			ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -366,8 +372,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, TestProvName.SQLiteMs)]
-		public void LastIndexOf2(string context)
+		[Test]
+		public void LastIndexOf2([DataSources(
+			ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe,
+			ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -377,8 +386,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, TestProvName.SQLiteMs)]
-		public void LastIndexOf3(string context)
+		[Test]
+		public void LastIndexOf3([DataSources(
+			ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe,
+			ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -388,8 +400,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
-		public void CharIndex1(string context)
+		[Test]
+		public void CharIndex1([DataSources(ProviderName.Informix, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -398,8 +410,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
-		public void CharIndex2(string context)
+		[Test]
+		public void CharIndex2([DataSources(ProviderName.Informix, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -408,8 +420,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void Left(string context)
+		[Test]
+		public void Left([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -418,8 +430,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void Right(string context)
+		[Test]
+		public void Right([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -428,8 +440,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void RightInSelect(string context)
+		[Test]
+		public void RightInSelect([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -438,8 +450,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Substring1(string context)
+		[Test]
+		public void Substring1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -448,8 +460,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Substring2(string context)
+		[Test]
+		public void Substring2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -458,8 +470,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, TestProvName.SQLiteMs)]
-		public void Reverse(string context)
+		[Test]
+		public void Reverse([DataSources(
+			ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe,
+			ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -468,8 +483,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void Stuff1(string context)
+		[Test]
+		public void Stuff1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -499,8 +514,10 @@ namespace Tests.Linq
 			[Column, NotNull] public int CategoryId;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Stuff2(string context)
+		[Test]
+		public void Stuff2([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -522,8 +539,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void Insert(string context)
+		[Test]
+		public void Insert([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -532,8 +549,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void Remove1(string context)
+		[Test]
+		public void Remove1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -542,8 +559,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void Remove2(string context)
+		[Test]
+		public void Remove2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -552,8 +569,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void Space(string context)
+		[Test]
+		public void Space([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -562,8 +579,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void PadRight(string context)
+		[Test]
+		public void PadRight([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -572,8 +589,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void PadRight1(string context)
+		[Test]
+		public void PadRight1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -582,8 +599,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void PadRight2(string context)
+		[Test]
+		public void PadRight2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -592,8 +609,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void PadLeft(string context)
+		[Test]
+		public void PadLeft([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -602,8 +619,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void PadLeft1(string context)
+		[Test]
+		public void PadLeft1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -612,8 +629,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
-		public void PadLeft2(string context)
+		[Test]
+		public void PadLeft2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -622,8 +639,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Replace(string context)
+		[Test]
+		public void Replace([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -632,44 +649,44 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Trim(string context)
+		[Test]
+		public void Trim([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Person where p.ID == 1 select new { p.ID, Name = "  " + p.FirstName + " " } into pp
 					where pp.Name.Trim() == "John" select pp;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TrimLeft(string context)
+		[Test]
+		public void TrimLeft([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Person where p.ID == 1 select new { p.ID, Name = "  " + p.FirstName + " " } into pp
 					where pp.Name.TrimStart() == "John " select pp;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TrimRight(string context)
+		[Test]
+		public void TrimRight([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Person where p.ID == 1 select new { p.ID, Name = "  " + p.FirstName + " " } into pp
 					where pp.Name.TrimEnd() == "  John" select pp;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
 
-		[Test, DataContextSource]
-		public void ToLower(string context)
+		[Test]
+		public void ToLower([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -678,8 +695,19 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void ToUpper(string context)
+		[Test]
+		public void ToLowerParameter([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var param = "JOHN";
+				var q = from p in db.Person where p.FirstName.ToLower() == param.ToLower() && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
+		public void ToUpper([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -688,8 +716,19 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompareTo(string context)
+		[Test]
+		public void ToUpperParam([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var param = "john";
+				var q = from p in db.Person where p.FirstName.ToUpper() == param.ToUpper() && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
+		public void CompareTo([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -698,8 +737,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompareToNotEqual1(string context)
+		[Test]
+		public void CompareToNotEqual1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -708,8 +747,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompareToNotEqual2(string context)
+		[Test]
+		public void CompareToNotEqual2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -718,8 +757,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompareTo1(string context)
+		[Test]
+		public void CompareTo1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -728,8 +767,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompareTo2(string context)
+		[Test]
+		public void CompareTo2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -738,8 +777,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompareTo21(string context)
+		[Test]
+		public void CompareTo21([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -748,8 +787,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompareTo22(string context)
+		[Test]
+		public void CompareTo22([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -758,9 +797,9 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NETSTANDARD
-		[Test, DataContextSource]
-		public void CompareTo3(string context)
+#if !NETSTANDARD1_6
+		[Test]
+		public void CompareTo3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -769,8 +808,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompareTo31(string context)
+		[Test]
+		public void CompareTo31([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -779,8 +818,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompareTo32(string context)
+		[Test]
+		public void CompareTo32([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -790,8 +829,8 @@ namespace Tests.Linq
 		}
 #endif
 
-		[Test, DataContextSource]
-		public void CompareOrdinal1(string context)
+		[Test]
+		public void CompareOrdinal1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -800,8 +839,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CompareOrdinal2(string context)
+		[Test]
+		public void CompareOrdinal2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -810,8 +849,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Compare1(string context)
+		[Test]
+		public void Compare1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -820,8 +859,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Compare2(string context)
+		[Test]
+		public void Compare2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -830,8 +869,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Compare3(string context)
+		[Test]
+		public void Compare3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -840,12 +879,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Compare4(string context)
+		[Test]
+		public void Compare4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2, true) == 0 && p.ID == 1 select p;
 #else
 				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2, StringComparison.OrdinalIgnoreCase) == 0 && p.ID == 1 select p;
@@ -854,8 +893,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void IsNullOrEmpty1(string context)
+		[Test]
+		public void IsNullOrEmpty1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -864,8 +903,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void IsNullOrEmpty2(string context)
+		[Test]
+		public void IsNullOrEmpty2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -11,14 +11,14 @@ using LinqToDB.DataProvider.SQLite;
 
 namespace Tests.DataProvider
 {
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 	using System.Configuration;
 #endif
 	[TestFixture]
 	public class ExpressionTests : TestBase
 	{
-		[Test, NorthwindDataContext(true)] // SQLite returns Int64 for column instead of Int32
-		public void Test1(string context)
+		[Test] // SQLite returns Int64 for column instead of Int32
+		public void Test1([NorthwindDataContext(true)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider     = DataConnection.GetDataProvider(context);

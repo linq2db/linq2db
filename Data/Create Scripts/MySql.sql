@@ -1,5 +1,4 @@
-﻿
-DROP TABLE IF EXISTS Doctor
+﻿DROP TABLE IF EXISTS Doctor
 GO
 DROP TABLE IF EXISTS Patient
 GO
@@ -51,7 +50,7 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M')
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M')
 GO
 
 CREATE OR REPLACE VIEW PersonView AS SELECT * FROM Person
@@ -192,8 +191,10 @@ CREATE TABLE AllTypes
 	timeDataType        time                         NULL,
 	yearDataType        year                         NULL,
 -- SKIP MySql57 BEGIN
+-- SKIP MySqlConnector BEGIN
 	year2DataType       year(2)                      NULL,
 -- SKIP MySql57 END
+-- SKIP MySqlConnector END
 -- SKIP MySql BEGIN
 -- SKIP MariaDB BEGIN
 	year2DataType       year(4)                      NULL,
@@ -414,4 +415,40 @@ CREATE TABLE TestMerge2
 
 	CONSTRAINT PK_TestMerge2 PRIMARY KEY CLUSTERED (Id)
 )
+GO
+DROP PROCEDURE IF EXISTS TestProcedure
+GO
+DROP FUNCTION IF EXISTS TestFunction
+GO
+CREATE PROCEDURE TestProcedure(IN param3 INT, INOUT param2 INT, OUT param1 INT)
+BEGIN
+	SELECT param2 + param2 INTO param2;
+	SELECT param3 + param2 INTO param1;
+	SELECT * FROM Person;
+END
+GO
+SET GLOBAL log_bin_trust_function_creators = 1;
+GO
+CREATE FUNCTION TestFunction(param INT)
+RETURNS VARCHAR(10)
+BEGIN
+	RETURN 'done';
+END
+GO
+DROP PROCEDURE IF EXISTS AddIssue792Record
+GO
+CREATE PROCEDURE AddIssue792Record()
+BEGIN
+	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
+END
+GO
+DROP PROCEDURE IF EXISTS `TestOutputParametersWithoutTableProcedure`
+GO
+CREATE PROCEDURE `TestOutputParametersWithoutTableProcedure`(
+	IN `aInParam` VARCHAR(256),
+	OUT `aOutParam` TINYINT(1)
+)
+BEGIN
+	SELECT 123 INTO aOutParam;
+END
 GO

@@ -27,11 +27,28 @@ namespace TestApp
 		static void Main(string[] args)
 		{
 			SqlServerTypes.Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
+			var defaultConfiguration = DataConnection.DefaultConfiguration;
+
+			if (defaultConfiguration == null)
+				throw new Exception("Default configuration is not detected");
+
+			Console.WriteLine("{0}: {1}",
+				defaultConfiguration,
+				DataConnection.GetConnectionString(defaultConfiguration));
+
+			if (DataConnection.GetDataProvider("Test") == null)
+				throw new Exception("DataProvider is not defined for configuration Test");
 
 			using (var db = new DataConnection())
 			{
 				var list = db.GetTable<AllTypes2>().ToList();
+				foreach (var item in list)
+				{
+					Console.WriteLine("{0}\t{1}", item.ID, item.geographyDataType);
+				}
 			}
+
+			Console.ReadLine();
 		}
 	}
 }

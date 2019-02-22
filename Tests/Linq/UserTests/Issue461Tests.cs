@@ -73,8 +73,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SelectToAnonimousTest1(string context)
+		[Test]
+		public void SelectToAnonimousTest1([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -90,8 +90,10 @@ namespace Tests.UserTests
 								   }).FirstOrDefault()
 							  }).ToList();
 
-				if (db is DataConnection)
-					Console.WriteLine(((DataConnection)db).LastQuery);
+#if !APPVEYOR
+				if (db is DataConnection connection)
+					Console.WriteLine(connection.LastQuery);
+#endif
 
 				var expected = from sep in Parent
 							   select new
@@ -108,8 +110,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SelecyToAnonimousTest2(string context)
+		[Test]
+		public void SelectToAnonymousTest2([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -126,8 +128,10 @@ namespace Tests.UserTests
 								   }).FirstOrDefault()
 							  }).ToList();
 
-				if (db is DataConnection)
-					Console.WriteLine(((DataConnection)db).LastQuery);
+#if !APPVEYOR
+				if (db is DataConnection connection)
+					Console.WriteLine(connection.LastQuery);
+#endif
 
 				var expected = from sep in Parent
 							   select new
@@ -145,8 +149,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SelectToTypeTest1(string context)
+		[Test]
+		public void SelectToTypeTest1([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -162,8 +166,10 @@ namespace Tests.UserTests
 								   }).FirstOrDefault()
 							  }).ToList();
 
-				if (db is DataConnection)
-					Console.WriteLine(((DataConnection)db).LastQuery);
+#if !APPVEYOR
+				if (db is DataConnection connection)
+					Console.WriteLine(connection.LastQuery);
+#endif
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder
@@ -180,8 +186,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SelectToTypeTest2(string context)
+		[Test]
+		public void SelectToTypeTest2([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -198,8 +204,10 @@ namespace Tests.UserTests
 								   }).FirstOrDefault()
 							  }).ToList();
 
-				if (db is DataConnection)
-					Console.WriteLine(((DataConnection)db).LastQuery);
+#if !APPVEYOR
+				if (db is DataConnection connection)
+					Console.WriteLine(connection.LastQuery);
+#endif
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder
@@ -218,39 +226,47 @@ namespace Tests.UserTests
 		}
 
 		// Sybase do not supports limiting subqueries
-		[Test, DataContextSource(true, ProviderName.Sybase, ProviderName.Informix)]
-		public void SelectPlainTest1(string context)
+		[Test]
+		public void SelectPlainTest1([DataSources(true,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Parent.Select(p =>    Child.Select(c => c.ParentID + 1).FirstOrDefault());
 				var result   = db.Parent.Select(p => db.Child.Select(c => c.ParentID + 1).FirstOrDefault());
 
-				if (db is DataConnection)
-					Console.WriteLine(((DataConnection)db).LastQuery);
+#if !APPVEYOR
+				if (db is DataConnection connection)
+					Console.WriteLine(connection.LastQuery);
+#endif
 
 				AreEqual(expected, result);
 			}
 		}
 
 		// Sybase do not supports limiting subqueries
-		[Test, DataContextSource(true, ProviderName.Sybase, ProviderName.Informix)]
-		public void SelectPlainTest2(string context)
+		[Test]
+		public void SelectPlainTest2([DataSources(true,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Parent.Select(p => new { Id = p.ParentID, V =    Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
 				var result   = db.Parent.Select(p => new { Id = p.ParentID, V = db.Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
 
-				if (db is DataConnection)
-					Console.WriteLine(((DataConnection)db).LastQuery);
+#if !APPVEYOR
+				if (db is DataConnection connection)
+					Console.WriteLine(connection.LastQuery);
+#endif
 
 				AreEqual(expected, result);
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SimpleSelectToType(string context)
+		[Test]
+		public void SimpleSelectToType([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -261,8 +277,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SimpleSelectToAnonimous(string context)
+		[Test]
+		public void SimpleSelectToAnonimous([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

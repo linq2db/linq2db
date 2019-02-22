@@ -3,6 +3,8 @@
 using LinqToDB;
 using LinqToDB.Mapping;
 
+//[assembly: System.Security.AllowPartiallyTrustedCallers]
+
 namespace Tests.Model
 {
 	[Table ("Person",     IsColumnAttributeRequired = false)]

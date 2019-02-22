@@ -47,11 +47,12 @@ namespace Tests.UserTests
 			public int IntValue { get; set; }
 		}
 
-		[Test, DataContextSource(false)]
-		public void Test(string context)
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[Test]
+		public void Test([DataSources(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
-			using (new LocalTable<Parent564>(db))
+			using (db.CreateLocalTable<Parent564>())
 			{
 				db.Insert(new Child564A() {StringValue = "SomeValue"});
 				db.Insert(new Child564B() {IntValue    = 911});

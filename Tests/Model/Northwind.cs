@@ -53,7 +53,7 @@ namespace Tests.Model
 		{
 			[PrimaryKey, NotNull] public string CustomerTypeID;
 			[Column]              public string CustomerDesc;
-			
+
 			[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID")]
 			public List<CustomerCustomerDemo> CustomerCustomerDemos;
 		}

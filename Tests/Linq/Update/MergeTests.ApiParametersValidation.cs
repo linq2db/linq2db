@@ -7,12 +7,12 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Linq;
+using LinqToDB.Async;
 
 using NUnit.Framework;
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	using Model;
 
@@ -26,8 +26,15 @@ namespace Tests.Merge
 				{
 					() => MergeExtensions.Merge<Child>(null),
 
+					() => MergeExtensions.Merge<Child>(null, "hint"),
+					() => MergeExtensions.Merge<Child>(new FakeTable<Child>(), null),
+
 					() => MergeExtensions.MergeInto<Child, Child>(null, new FakeTable<Child>()),
 					() => MergeExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), null),
+
+					() => MergeExtensions.MergeInto<Child, Child>(null, new FakeTable<Child>(), "hint"),
+					() => MergeExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), null, "hint"),
+					() => MergeExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), new FakeTable<Child>(), null),
 
 					() => MergeExtensions.Using<Child, Child>(null, new Child[0].AsQueryable()),
 					() => MergeExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null),
@@ -114,76 +121,28 @@ namespace Tests.Merge
 			Assert.Throws<ArgumentNullException>(action);
 		}
 
-		private class FakeMergeSource<TTarget, TSource> : IMergeableSource<TTarget, TSource>
+		class FakeMergeSource<TTarget, TSource> : IMergeableSource<TTarget, TSource>
 		{ }
 
-		private class FakeMergeUsing<TTarget> : IMergeableUsing<TTarget>
+		class FakeMergeUsing<TTarget> : IMergeableUsing<TTarget>
 		{ }
 
-		private class FakeMergeOn<TTarget, TSource> : IMergeableOn<TTarget, TSource>
+		class FakeMergeOn<TTarget, TSource> : IMergeableOn<TTarget, TSource>
 		{ }
 
-		private class FakeTable<TEntity> : ITable<TEntity>
+		class FakeTable<TEntity> : ITable<TEntity>
 		{
-			IDataContext IExpressionQuery.DataContext
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-			}
-
-			Type IQueryable.ElementType
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-			}
-
-			Expression IExpressionQuery.Expression
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-			}
-
-			Expression IQueryable.Expression
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-			}
+			IDataContext   IExpressionQuery.DataContext => throw new NotImplementedException();
+			Expression     IExpressionQuery.Expression  => throw new NotImplementedException();
+			string         IExpressionQuery.SqlText     => throw new NotImplementedException();
+			Type           IQueryable.      ElementType => throw new NotImplementedException();
+			Expression     IQueryable.      Expression  => throw new NotImplementedException();
+			IQueryProvider IQueryable.      Provider    => throw new NotImplementedException();
 
 			Expression IExpressionQuery<TEntity>.Expression
 			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-
-				set
-				{
-					throw new NotImplementedException();
-				}
-			}
-
-			IQueryProvider IQueryable.Provider
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-			}
-
-			string IExpressionQuery.SqlText
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
+				get => throw new NotImplementedException();
+				set => throw new NotImplementedException();
 			}
 
 			IQueryable IQueryProvider.CreateQuery(Expression expression)
@@ -206,12 +165,15 @@ namespace Tests.Merge
 				throw new NotImplementedException();
 			}
 
-#if !NOASYNC
 			Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
 			{
 				throw new NotImplementedException();
 			}
-#endif
+
+			IAsyncEnumerable<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression)
+			{
+				throw new NotImplementedException();
+			}
 
 			IEnumerator IEnumerable.GetEnumerator()
 			{
@@ -219,6 +181,15 @@ namespace Tests.Merge
 			}
 
 			IEnumerator<TEntity> IEnumerable<TEntity>.GetEnumerator()
+			{
+				throw new NotImplementedException();
+			}
+
+			public string DatabaseName { get; }
+			public string SchemaName   { get; }
+			public string TableName    { get; }
+
+			public string GetTableName()
 			{
 				throw new NotImplementedException();
 			}

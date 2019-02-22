@@ -26,11 +26,11 @@ namespace Tests.UserTests
 			public byte[] BlobValue;
 		}
 
-		[Test, DataContextSource]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new LocalTable<BlobClass>(db))
+			using (db.CreateLocalTable<BlobClass>())
 			{
 
 				db.Into(db.GetTable<BlobClass>())
@@ -54,11 +54,11 @@ namespace Tests.UserTests
 		}
 
 
-		[Test, DataContextSource]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new LocalTable<BlobClass>(db))
+			using (db.CreateLocalTable<BlobClass>())
 			{
 				db.InlineParameters = true;
 
@@ -82,11 +82,11 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new LocalTable<BlobClass>(db))
+			using (db.CreateLocalTable<BlobClass>())
 			{
 
 				var e = new BlobClass() {Id = 1, BlobValue = new byte[] {1, 2, 3}};
@@ -106,25 +106,26 @@ namespace Tests.UserTests
 		}
 
 
-		[Test, DataContextSource]
-		public void Test4(string context)
+		[Test]
+		public void Test4([DataSources] string context)
 		{
+			var tableName = nameof(BlobClass) + TestUtils.GetNext().ToString();
 			using (var db = GetDataContext(context))
-			using (new LocalTable<BlobClass>(db))
+			using (var table = db.CreateLocalTable<BlobClass>(tableName))
 			{
 				db.InlineParameters = true;
 
 				var e = new BlobClass() { Id = 1, BlobValue = new byte[] { 1, 2, 3 } };
 
-				db.Insert(e);
+				db.Insert(e, tableName);
 
-				var v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
+				var v = table.First(_ => _.Id == 1);
 
 				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue);
 
 				e.BlobValue = new byte[] { 3, 2, 1 };
 
-				v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
+				v = table.First(_ => _.Id == 1);
 
 				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue);
 			}

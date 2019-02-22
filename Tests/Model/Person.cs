@@ -24,11 +24,11 @@ namespace Tests.Model
 
 		// Firebird: it duplicates identity generation trigger job
 		//[SequenceName(ProviderName.Firebird, "PersonID")]
-		[Column("PersonID"), Identity, PrimaryKey] public int    ID;
-		[NotNull]                                  public string FirstName { get; set; }
-		[NotNull]                                  public string LastName;
-		[Nullable]                                 public string MiddleName;
-		                                           public Gender Gender;
+		[Column("PersonID"), Identity, PrimaryKey]     public int    ID;
+		[NotNull]                                      public string FirstName { get; set; }
+		[NotNull]                                      public string LastName;
+		[Nullable]                                     public string MiddleName;
+		[Column(DataType = DataType.Char, Length = 1)] public Gender Gender;
 
 		[NotColumn]
 		int IPerson.ID

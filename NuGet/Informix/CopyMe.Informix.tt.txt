@@ -1,0 +1,51 @@
+<#@ template language="C#" debug="True" hostSpecific="True"                          #>
+<#@ output extension=".generated.cs"                                                 #>
+<#@ include file="$(LinqToDBT4InformixTemplatesDirectory)LinqToDB.Informix.Tools.ttinclude" #>
+<#@ include file="$(LinqToDBT4InformixTemplatesDirectory)PluralizationService.ttinclude"    #>
+<# //@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Informix.Tools.ttinclude" #>
+<# //@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"    #>
+<#
+	/*
+		1. Download and install IBM Data Server Provider for .NET.
+
+		2. Add a reference to IBM.Data.Informix.dll.
+
+		3. Create new *.tt file (e.g. MyDatabase.tt) in a folder where you would like to generate your data model
+		   and copy content from this file to it. For example:
+
+			MyProject
+				DataModels
+					MyDatabase.tt
+
+		4. Modify the connection settings below to connect to your database.
+
+		5. Add connection string to the web/app.config file:
+
+			<connectionStrings>
+				<add name="MyDatabase"
+					connectionString="Host=MyServer;Service=9088;Server=ol_informix1170;Protocol=onsoctcp;Database=MyDatabase;UID=informix;PWD=TestPassword;"
+					providerName="IBM.Data.Informix"/>
+			</connectionStrings>
+
+		6. To access your database use the following code:
+
+			using (var db = new MyDatabaseDB())
+			{
+				var q =
+					from c in db.Customers
+					select c;
+
+				foreach (var c in q)
+					Console.WriteLine(c.ContactName);
+			}
+
+		7. See more at https://github.com/linq2db/t4models
+	*/
+
+	NamespaceName = "DataModels";
+
+	LoadInformixMetadata("MyServer", "9088", "ol_informix1170", "MyDatabase", "informix", "TestPassword");
+//	LoadInformixMetadata(string connectionString);
+
+	GenerateModel();
+#>

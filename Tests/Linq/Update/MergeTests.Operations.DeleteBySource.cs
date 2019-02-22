@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Linq;
 
-using LinqToDB.Data;
+using LinqToDB;
 
 using NUnit.Framework;
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	using Model;
 
 	public partial class MergeTests
 	{
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceDeleteBySource(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceDeleteBySource([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -38,8 +38,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceDeleteBySourceWithPredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceDeleteBySourceWithPredicate([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -66,8 +66,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceDeleteBySource(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceDeleteBySource([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -92,8 +92,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceDeleteBySourceWithPredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceDeleteBySourceWithPredicate([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -120,8 +120,9 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void AnonymousSourceDeleteBySourceWithPredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void AnonymousSourceDeleteBySourceWithPredicate(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -151,8 +152,9 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void AnonymousListSourceDeleteBySourceWithPredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void AnonymousListSourceDeleteBySourceWithPredicate(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -182,8 +184,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void DeleteBySourceReservedAndCaseNames(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void DeleteBySourceReservedAndCaseNames([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -214,8 +216,9 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void DeleteBySourceReservedAndCaseNamesFromList(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void DeleteBySourceReservedAndCaseNamesFromList(
+			[MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -241,6 +244,35 @@ namespace Tests.Merge
 				Assert.AreEqual(3, result.Count);
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[2], result[1], null, 203);
+				AssertRow(InitialTargetData[3], result[2], null, null);
+			}
+		}
+
+		[Test, Parallelizable(ParallelScope.None)]
+		public void DeleteBySourceFromPartialSourceProjection(
+			[MergeBySourceDataContextSource] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.Merge()
+					.Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
+					.OnTargetKey()
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == 1)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(3, result.Count);
+
+				AssertRow(InitialTargetData[1], result[0], null, null);
 				AssertRow(InitialTargetData[2], result[1], null, 203);
 				AssertRow(InitialTargetData[3], result[2], null, null);
 			}

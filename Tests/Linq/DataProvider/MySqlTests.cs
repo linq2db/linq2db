@@ -1,4 +1,7 @@
-﻿using System;
+﻿extern alias MySqlData;
+extern alias MySqlConnector;
+
+using System;
 using System.Data.Linq;
 using System.Linq;
 using System.Xml;
@@ -8,33 +11,42 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
-using MySql.Data.Types;
+using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal  = MySqlData::MySql.Data.Types.MySqlDecimal;
+using MySqlDataGeometry = MySqlData::MySql.Data.Types.MySqlGeometry;
+
+using MySqlConnectorDateTime = MySqlConnector::MySql.Data.Types.MySqlDateTime;
 
 namespace Tests.DataProvider
 {
 	using Model;
+	using System.Collections.Generic;
+	using System.Data;
+	using System.Diagnostics;
 
 	[TestFixture]
 	public class MySqlTests : DataProviderTestBase
 	{
-		[AttributeUsage(AttributeTargets.Method)]
-		class MySqlDataContextAttribute : IncludeDataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		class MySqlDataContextAttribute : IncludeDataSourcesAttribute
 		{
 			public MySqlDataContextAttribute()
 				: this(false)
 			{
 			}
 			public MySqlDataContextAttribute(bool includeLinqService)
-				: base(includeLinqService, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)
+				: base(includeLinqService, ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57)
 			{
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
-		public void TestParameters(string context)
+		[Test]
+		public void TestParameters([MySqlDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -47,56 +59,70 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
-		public void TestDataTypes(string context)
+		[Test]
+		public void TestDataTypes([MySqlDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(TestType<long?>         (conn, "bigintDataType",    DataType.Int64),               Is.EqualTo(1000000));
-				Assert.That(TestType<short?>        (conn, "smallintDataType",  DataType.Int16),               Is.EqualTo(25555));
-				Assert.That(TestType<sbyte?>        (conn, "tinyintDataType",   DataType.SByte),               Is.EqualTo(111));
-				Assert.That(TestType<int?>          (conn, "mediumintDataType", DataType.Int32),               Is.EqualTo(5555));
-				Assert.That(TestType<int?>          (conn, "intDataType",       DataType.Int32),               Is.EqualTo(7777777));
-				Assert.That(TestType<decimal?>      (conn, "numericDataType",   DataType.Decimal),             Is.EqualTo(9999999m));
-				Assert.That(TestType<decimal?>      (conn, "decimalDataType",   DataType.Decimal),             Is.EqualTo(8888888m));
-				            TestType<MySqlDecimal?> (conn, "decimalDataType",   DataType.Decimal);
-				Assert.That(TestType<double?>       (conn, "doubleDataType",    DataType.Double),              Is.EqualTo(20.31d));
-				Assert.That(TestType<float?>        (conn, "floatDataType",     DataType.Single),              Is.EqualTo(16.0f));
+				Assert.That(TestType<long?>						(conn, "bigintDataType",    DataType.Int64),               Is.EqualTo(1000000));
+				Assert.That(TestType<short?>					(conn, "smallintDataType",  DataType.Int16),               Is.EqualTo(25555));
+				Assert.That(TestType<sbyte?>					(conn, "tinyintDataType",   DataType.SByte),               Is.EqualTo(111));
+				Assert.That(TestType<int?>						(conn, "mediumintDataType", DataType.Int32),               Is.EqualTo(5555));
+				Assert.That(TestType<int?>						(conn, "intDataType",       DataType.Int32),               Is.EqualTo(7777777));
+				Assert.That(TestType<decimal?>					(conn, "numericDataType",   DataType.Decimal),             Is.EqualTo(9999999m));
+				Assert.That(TestType<decimal?>					(conn, "decimalDataType",   DataType.Decimal),             Is.EqualTo(8888888m));
+				Assert.That(TestType<double?>					(conn, "doubleDataType",    DataType.Double),              Is.EqualTo(20.31d));
+				Assert.That(TestType<float?>					(conn, "floatDataType",     DataType.Single),              Is.EqualTo(16.0f));
+				Assert.That(TestType<DateTime?>					(conn, "dateDataType",      DataType.Date),                Is.EqualTo(new DateTime(2012, 12, 12)));
+				Assert.That(TestType<DateTime?>					(conn, "datetimeDataType",  DataType.DateTime),            Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				Assert.That(TestType<DateTime?>					(conn, "datetimeDataType",  DataType.DateTime2),           Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				Assert.That(TestType<DateTime?>					(conn, "timestampDataType", DataType.Timestamp),           Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				Assert.That(TestType<TimeSpan?>					(conn, "timeDataType",      DataType.Time),                Is.EqualTo(new TimeSpan(12, 12, 12)));
+				Assert.That(TestType<int?>						(conn, "yearDataType",      DataType.Int32),               Is.EqualTo(1998));
+				Assert.That(TestType<int?>						(conn, "year2DataType",     DataType.Int32),               Is.EqualTo(context == TestProvName.MySql57 || context == ProviderName.MySqlConnector ? 1997 : 97));
+				Assert.That(TestType<int?>						(conn, "year4DataType",     DataType.Int32),               Is.EqualTo(2012));
 
-				Assert.That(TestType<DateTime?>     (conn, "dateDataType",      DataType.Date),                Is.EqualTo(new DateTime(2012, 12, 12)));
-				Assert.That(TestType<DateTime?>     (conn, "datetimeDataType",  DataType.DateTime),            Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-				Assert.That(TestType<DateTime?>     (conn, "datetimeDataType",  DataType.DateTime2),           Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-				Assert.That(TestType<MySqlDateTime?>(conn, "datetimeDataType",  DataType.DateTime),            Is.EqualTo(new MySqlDateTime(2012, 12, 12, 12, 12, 12, 0)));
-				Assert.That(TestType<DateTime?>     (conn, "timestampDataType", DataType.Timestamp),           Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-				Assert.That(TestType<TimeSpan?>     (conn, "timeDataType",      DataType.Time),                Is.EqualTo(new TimeSpan(12, 12, 12)));
-				Assert.That(TestType<int?>          (conn, "yearDataType",      DataType.Int32),               Is.EqualTo(1998));
-				Assert.That(TestType<int?>          (conn, "year2DataType",     DataType.Int32),               Is.EqualTo(context == TestProvName.MySql57 ? 1997 : 97));
-				Assert.That(TestType<int?>          (conn, "year4DataType",     DataType.Int32),               Is.EqualTo(2012));
+				Assert.That(TestType<char?>						(conn, "charDataType",      DataType.Char),                Is.EqualTo('1'));
+				Assert.That(TestType<string>					(conn, "charDataType",      DataType.Char),                Is.EqualTo("1"));
+				Assert.That(TestType<string>					(conn, "charDataType",      DataType.NChar),               Is.EqualTo("1"));
+				Assert.That(TestType<string>					(conn, "varcharDataType",   DataType.VarChar),             Is.EqualTo("234"));
+				Assert.That(TestType<string>					(conn, "varcharDataType",   DataType.NVarChar),            Is.EqualTo("234"));
+				Assert.That(TestType<string>					(conn, "textDataType",      DataType.Text),                Is.EqualTo("567"));
 
-				Assert.That(TestType<char?>         (conn, "charDataType",      DataType.Char),                Is.EqualTo('1'));
-				Assert.That(TestType<string>        (conn, "charDataType",      DataType.Char),                Is.EqualTo("1"));
-				Assert.That(TestType<string>        (conn, "charDataType",      DataType.NChar),               Is.EqualTo("1"));
-				Assert.That(TestType<string>        (conn, "varcharDataType",   DataType.VarChar),             Is.EqualTo("234"));
-				Assert.That(TestType<string>        (conn, "varcharDataType",   DataType.NVarChar),            Is.EqualTo("234"));
-				Assert.That(TestType<string>        (conn, "textDataType",      DataType.Text),                Is.EqualTo("567"));
+				Assert.That(TestType<byte[]>					(conn, "binaryDataType",    DataType.Binary),              Is.EqualTo(new byte[] {  97,  98,  99 }));
+				Assert.That(TestType<byte[]>					(conn, "binaryDataType",    DataType.VarBinary),           Is.EqualTo(new byte[] {  97,  98,  99 }));
+				Assert.That(TestType<byte[]>					(conn, "varbinaryDataType", DataType.Binary),              Is.EqualTo(new byte[] {  99, 100, 101 }));
+				Assert.That(TestType<byte[]>					(conn, "varbinaryDataType", DataType.VarBinary),           Is.EqualTo(new byte[] {  99, 100, 101 }));
+				Assert.That(TestType<Binary>					(conn, "varbinaryDataType", DataType.VarBinary).ToArray(), Is.EqualTo(new byte[] {  99, 100, 101 }));
+				Assert.That(TestType<byte[]>					(conn, "blobDataType",      DataType.Binary),              Is.EqualTo(new byte[] { 100, 101, 102 }));
+				Assert.That(TestType<byte[]>					(conn, "blobDataType",      DataType.VarBinary),           Is.EqualTo(new byte[] { 100, 101, 102 }));
+				Assert.That(TestType<byte[]>					(conn, "blobDataType",      DataType.Blob),                Is.EqualTo(new byte[] { 100, 101, 102 }));
 
-				Assert.That(TestType<byte[]>        (conn, "binaryDataType",    DataType.Binary),              Is.EqualTo(new byte[] {  97,  98,  99 }));
-				Assert.That(TestType<byte[]>        (conn, "binaryDataType",    DataType.VarBinary),           Is.EqualTo(new byte[] {  97,  98,  99 }));
-				Assert.That(TestType<byte[]>        (conn, "varbinaryDataType", DataType.Binary),              Is.EqualTo(new byte[] {  99, 100, 101 }));
-				Assert.That(TestType<byte[]>        (conn, "varbinaryDataType", DataType.VarBinary),           Is.EqualTo(new byte[] {  99, 100, 101 }));
-				Assert.That(TestType<Binary>        (conn, "varbinaryDataType", DataType.VarBinary).ToArray(), Is.EqualTo(new byte[] {  99, 100, 101 }));
-				Assert.That(TestType<byte[]>        (conn, "blobDataType",      DataType.Binary),              Is.EqualTo(new byte[] { 100, 101, 102 }));
-				Assert.That(TestType<byte[]>        (conn, "blobDataType",      DataType.VarBinary),           Is.EqualTo(new byte[] { 100, 101, 102 }));
-				Assert.That(TestType<byte[]>        (conn, "blobDataType",      DataType.Blob),                Is.EqualTo(new byte[] { 100, 101, 102 }));
+				Assert.That(TestType<ulong?>					(conn, "bitDataType"),                                     Is.EqualTo(5));
+				Assert.That(TestType<string>					(conn, "enumDataType"),                                    Is.EqualTo("Green"));
+				Assert.That(TestType<string>					(conn, "setDataType"),                                     Is.EqualTo("one"));
 
-				Assert.That(TestType<ulong?>        (conn, "bitDataType"),                                     Is.EqualTo(5));
-				Assert.That(TestType<string>        (conn, "enumDataType"),                                    Is.EqualTo("Green"));
-				Assert.That(TestType<string>        (conn, "setDataType"),                                     Is.EqualTo("one"));
+				if (context != ProviderName.MySqlConnector)
+				{
+					TestType<MySqlDataDecimal?>(conn, "decimalDataType", DataType.Decimal);
+
+					var dt1 = TestType<MySqlDataDateTime?>(conn, "datetimeDataType", DataType.DateTime);
+					var dt2 = new MySqlDataDateTime(2012, 12, 12, 12, 12, 12, 0)
+					{
+						TimezoneOffset = dt1.Value.TimezoneOffset
+					};
+
+					Assert.That(dt1, Is.EqualTo(dt2));
+				}
+				else
+				{
+					Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
+				}
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
-		public void TestDate(string context)
+		[Test]
+		public void TestDate([MySqlDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -109,8 +135,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
-		public void TestDateTime(string context)
+		[Test]
+		public void TestDateTime([MySqlDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -125,8 +151,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
-		public void TestChar(string context)
+		[Test]
+		public void TestChar([MySqlDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -156,8 +182,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
-		public void TestString(string context)
+		[Test]
+		public void TestString([MySqlDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -176,8 +202,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
-		public void TestBinary(string context)
+		[Test]
+		public void TestBinary([MySqlDataContext] string context)
 		{
 			var arr1 = new byte[] { 48, 57 };
 
@@ -195,8 +221,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
-		public void TestXml(string context)
+		[Test]
+		public void TestXml([MySqlDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -221,8 +247,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, MySqlDataContextAttribute]
-		public void TestEnum1(string context)
+		[Test]
+		public void TestEnum1([MySqlDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -233,8 +259,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
-		public void TestEnum2(string context)
+		[Test]
+		public void TestEnum2([MySqlDataContext] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -324,20 +350,32 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute, Ignore("It works too long.")]
-		public void BulkCopyMultipleRows(string context)
+		[Test, Ignore("It works too long.")]
+		public void BulkCopyMultipleRows([MySqlDataContext] string context)
 		{
 			BulkCopyTest(context, BulkCopyType.MultipleRows);
 		}
 
-		[Test, MySqlDataContextAttribute, Ignore("It works too long.")]
-		public void BulkCopyProviderSpecific(string context)
+		[Test, Explicit("It works too long.")]
+		public void BulkCopyRetrieveSequencesMultipleRows([MySqlDataContext] string context)
+		{
+			BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows);
+		}
+
+		[Test, Ignore("It works too long.")]
+		public void BulkCopyProviderSpecific([MySqlDataContext] string context)
 		{
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
 		}
 
-		[Test, MySqlDataContextAttribute]
-		public void BulkCopyLinqTypes(string context)
+		[Test, Explicit("It works too long.")]
+		public void BulkCopyRetrieveSequencesProviderSpecific([MySqlDataContext] string context)
+		{
+			BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
+		}
+
+		[Test]
+		public void BulkCopyLinqTypes([MySqlDataContext] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
@@ -346,24 +384,51 @@ namespace Tests.DataProvider
 					db.BulkCopy(
 						new BulkCopyOptions { BulkCopyType = bulkCopyType },
 						Enumerable.Range(0, 10).Select(n =>
-							new LinqDataTypes
-							{
-								ID            = 4000 + n,
-								MoneyValue    = 1000m + n,
-								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
-								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
-								SmallIntValue = (short)n
-							}
-						));
-
+						new LinqDataTypes
+						{
+							ID = 4000 + n,
+							MoneyValue = 1000m + n,
+							DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+							BoolValue = true,
+							GuidValue = Guid.NewGuid(),
+							SmallIntValue = (short)n
+						}));
 					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
 				}
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
-		public void TestTransaction1(string context)
+		static void BulkCopyRetrieveSequence(string context, BulkCopyType bulkCopyType)
+		{
+			var data = new[]
+			{
+				new Doctor { Taxonomy = "Neurologist"},
+				new Doctor { Taxonomy = "Sports Medicine"},
+				new Doctor { Taxonomy = "Optometrist"},
+				new Doctor { Taxonomy = "Pediatrics" },
+				new Doctor { Taxonomy = "Psychiatry" }
+			};
+
+			using (var db = new TestDataConnection(context))
+			{
+				var options = new BulkCopyOptions
+				{
+					MaxBatchSize = 5,
+					//RetrieveSequence = true,
+					KeepIdentity = true,
+					BulkCopyType = bulkCopyType,
+					NotifyAfter  = 3,
+					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+				};
+				db.BulkCopy(options, data.RetrieveIdentity(db));
+
+				foreach (var d in data)
+					Assert.That(d.PersonID, Is.GreaterThan(0));
+			}
+		}
+
+		[Test]
+		public void TestTransaction1([MySqlDataContext] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -381,8 +446,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
-		public void TestTransaction2(string context)
+		[Test]
+		public void TestTransaction2([MySqlDataContext] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -401,14 +466,19 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD
-		[Test, MySqlDataContext(false)]
-		public void SchemaProviderTest(string context)
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+		[Test]
+		public void SchemaProviderTest([MySqlDataContext] string context)
 		{
+			// MySqlConnector does not currently support GetSchema("Table")
+			// https://github.com/mysql-net/MySqlConnector/issues/375
+			if (context == ProviderName.MySqlConnector)
+				return;
+
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				var sp = db.DataProvider.GetSchemaProvider();
-				var schema = sp.GetSchema(db);
+				var schema = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
 
 				var systemTables = schema.Tables.Where(_ => _.CatalogName.Equals("sys", StringComparison.OrdinalIgnoreCase)).ToList();
 
@@ -418,6 +488,385 @@ namespace Tests.DataProvider
 				Assert.AreEqual(1, views.Count);
 			}
 		}
+
+		public static IEnumerable<ProcedureSchema> ProcedureTestCases
+		{
+			get
+			{
+				// create procedure
+				yield return new ProcedureSchema()
+				{
+					CatalogName     = "SET_BY_TEST",
+					ProcedureName   = "TestProcedure",
+					MemberName      = "TestProcedure",
+					IsDefaultSchema = true,
+					IsLoaded        = true,
+					Parameters      = new List<ParameterSchema>()
+					{
+						new ParameterSchema()
+						{
+							SchemaName    = "param3",
+							SchemaType    = "INT",
+							IsIn          = true,
+							ParameterName = "param3",
+							ParameterType = "int?",
+							SystemType    = typeof(int),
+							DataType      = DataType.Int32
+						},
+						new ParameterSchema()
+						{
+							SchemaName    = "param2",
+							SchemaType    = "INT",
+							IsIn          = true,
+							IsOut         = true,
+							ParameterName = "param2",
+							ParameterType = "int?",
+							SystemType    = typeof(int),
+							DataType      = DataType.Int32
+						},
+						new ParameterSchema()
+						{
+							SchemaName    = "param1",
+							SchemaType    = "INT",
+							IsOut         = true,
+							ParameterName = "param1",
+							ParameterType = "int?",
+							SystemType    = typeof(int),
+							DataType      = DataType.Int32
+						}
+					},
+					ResultTable = new TableSchema()
+					{
+						IsProcedureResult = true,
+						TypeName          = "TestProcedureResult",
+						Columns           = new List<ColumnSchema>()
+						{
+							new ColumnSchema()
+							{
+								ColumnName = "PersonID",
+								ColumnType = "INT",
+								MemberName = "PersonID",
+								MemberType = "int",
+								SystemType = typeof(int),
+								DataType   = DataType.Int32
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "FirstName",
+								ColumnType = "VARCHAR(50)",
+								MemberName = "FirstName",
+								MemberType = "string",
+								SystemType = typeof(string),
+								DataType   = DataType.VarChar
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "LastName",
+								ColumnType = "VARCHAR(50)",
+								MemberName = "LastName",
+								MemberType = "string",
+								SystemType = typeof(string),
+								DataType   = DataType.VarChar
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "MiddleName",
+								ColumnType = "VARCHAR(50)",
+								IsNullable = true,
+								MemberName = "MiddleName",
+								MemberType = "string",
+								SystemType = typeof(string),
+								DataType   = DataType.VarChar
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "Gender",
+								ColumnType = "CHAR(1)",
+								MemberName = "Gender",
+								MemberType = "char",
+								SystemType = typeof(char),
+								DataType   = DataType.Char
+							}
+						}
+					},
+					SimilarTables = new List<TableSchema>()
+					{
+						new TableSchema()
+						{
+							TableName = "person"
+						}
+					}
+				};
+
+				// create function
+				yield return new ProcedureSchema()
+				{
+					CatalogName     = "SET_BY_TEST",
+					ProcedureName   = "TestFunction",
+					MemberName      = "TestFunction",
+					IsFunction      = true,
+					IsDefaultSchema = true,
+					Parameters      = new List<ParameterSchema>()
+					{
+						new ParameterSchema()
+						{
+							SchemaType    = "VARCHAR",
+							IsResult      = true,
+							ParameterName = "par1",
+							ParameterType = "string",
+							SystemType    = typeof(string),
+							DataType      = DataType.VarChar
+						},
+						new ParameterSchema()
+						{
+							SchemaName    = "param",
+							SchemaType    = "INT",
+							IsIn          = true,
+							ParameterName = "param",
+							ParameterType = "int?",
+							SystemType    = typeof(int),
+							DataType      = DataType.Int32
+						}
+					}
+				};
+
+				// create function
+				yield return new ProcedureSchema()
+				{
+					CatalogName     = "SET_BY_TEST",
+					ProcedureName   = "TestOutputParametersWithoutTableProcedure",
+					MemberName      = "TestOutputParametersWithoutTableProcedure",
+					IsDefaultSchema = true,
+					IsLoaded        = true,
+					Parameters      = new List<ParameterSchema>()
+					{
+						new ParameterSchema()
+						{
+							SchemaName    = "aInParam",
+							SchemaType    = "VARCHAR",
+							IsIn          = true,
+							ParameterName = "aInParam",
+							ParameterType = "string",
+							SystemType    = typeof(string),
+							DataType      = DataType.VarChar
+						},
+						new ParameterSchema()
+						{
+							SchemaName    = "aOutParam",
+							SchemaType    = "TINYINT",
+							IsOut         = true,
+							ParameterName = "aOutParam",
+							ParameterType = "sbyte?",
+							SystemType    = typeof(sbyte),
+							DataType      = DataType.SByte
+						}
+					}
+				};
+			}
+		}
+
+		[Test]
+		public void ProceduresSchemaProviderTest(
+			[IncludeDataSources(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)] string context,
+			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
+		{
+			// TODO: add aggregate/udf functions test cases
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+
+				var procedures = schema.Procedures.Where(_ => _.ProcedureName == expectedProc.ProcedureName).ToList();
+
+				Assert.AreEqual(1, procedures.Count);
+
+				var procedure = procedures[0];
+
+				Assert.AreEqual(expectedProc.CatalogName.ToLower(), procedure.CatalogName.ToLower());
+				Assert.AreEqual(expectedProc.SchemaName,            procedure.SchemaName);
+				Assert.AreEqual(expectedProc.MemberName,            procedure.MemberName);
+				Assert.AreEqual(expectedProc.IsTableFunction,       procedure.IsTableFunction);
+				Assert.AreEqual(expectedProc.IsAggregateFunction,   procedure.IsAggregateFunction);
+				Assert.AreEqual(expectedProc.IsDefaultSchema,       procedure.IsDefaultSchema);
+				Assert.AreEqual(expectedProc.IsLoaded,              procedure.IsLoaded);
+
+				Assert.IsNull(procedure.ResultException);
+
+				Assert.AreEqual(expectedProc.Parameters.Count, procedure.Parameters.Count);
+
+				for (var i = 0; i < procedure.Parameters.Count; i++)
+				{
+					var actualParam = procedure.Parameters[i];
+					var expectedParam = expectedProc.Parameters[i];
+
+					Assert.IsNotNull(expectedParam);
+
+					Assert.AreEqual(expectedParam.SchemaName,           actualParam.SchemaName);
+					Assert.AreEqual(expectedParam.ParameterName,        actualParam.ParameterName);
+					Assert.AreEqual(expectedParam.SchemaType,           actualParam.SchemaType);
+					Assert.AreEqual(expectedParam.IsIn,                 actualParam.IsIn);
+					Assert.AreEqual(expectedParam.IsOut,                actualParam.IsOut);
+					Assert.AreEqual(expectedParam.IsResult,             actualParam.IsResult);
+					Assert.AreEqual(expectedParam.Size,                 actualParam.Size);
+					Assert.AreEqual(expectedParam.ParameterType,        actualParam.ParameterType);
+					Assert.AreEqual(expectedParam.SystemType,           actualParam.SystemType);
+					Assert.AreEqual(expectedParam.DataType,             actualParam.DataType);
+					Assert.AreEqual(expectedParam.ProviderSpecificType, actualParam.ProviderSpecificType);
+				}
+
+				if (expectedProc.ResultTable == null)
+				{
+					Assert.IsNull(procedure.ResultTable);
+
+					// maybe it is worth changing
+					Assert.IsNull(procedure.SimilarTables);
+				}
+				else
+				{
+					Assert.IsNotNull(procedure.ResultTable);
+
+					var expectedTable = expectedProc.ResultTable;
+					var actualTable = procedure.ResultTable;
+
+					Assert.AreEqual(expectedTable.ID,                 actualTable.ID);
+					Assert.AreEqual(expectedTable.CatalogName,        actualTable.CatalogName);
+					Assert.AreEqual(expectedTable.SchemaName,         actualTable.SchemaName);
+					Assert.AreEqual(expectedTable.TableName,          actualTable.TableName);
+					Assert.AreEqual(expectedTable.Description,        actualTable.Description);
+					Assert.AreEqual(expectedTable.IsDefaultSchema,    actualTable.IsDefaultSchema);
+					Assert.AreEqual(expectedTable.IsView,             actualTable.IsView);
+					Assert.AreEqual(expectedTable.IsProcedureResult,  actualTable.IsProcedureResult);
+					Assert.AreEqual(expectedTable.TypeName,           actualTable.TypeName);
+					Assert.AreEqual(expectedTable.IsProviderSpecific, actualTable.IsProviderSpecific);
+
+					Assert.IsNotNull(actualTable.ForeignKeys);
+					Assert.IsEmpty(actualTable.ForeignKeys);
+
+					Assert.AreEqual(expectedTable.Columns.Count, actualTable.Columns.Count);
+
+					foreach (var actualColumn in actualTable.Columns)
+					{
+						var expectedColumn = expectedTable.Columns
+							.Where(_ => _.ColumnName == actualColumn.ColumnName)
+							.SingleOrDefault();
+
+						Assert.IsNotNull(expectedColumn);
+
+						Assert.AreEqual(expectedColumn.ColumnType,           actualColumn.ColumnType);
+						Assert.AreEqual(expectedColumn.IsNullable,           actualColumn.IsNullable);
+						Assert.AreEqual(expectedColumn.IsIdentity,           actualColumn.IsIdentity);
+						Assert.AreEqual(expectedColumn.IsPrimaryKey,         actualColumn.IsPrimaryKey);
+						Assert.AreEqual(expectedColumn.PrimaryKeyOrder,      actualColumn.PrimaryKeyOrder);
+						Assert.AreEqual(expectedColumn.Description,          actualColumn.Description);
+						Assert.AreEqual(expectedColumn.MemberName,           actualColumn.MemberName);
+						Assert.AreEqual(expectedColumn.MemberType,           actualColumn.MemberType);
+						Assert.AreEqual(expectedColumn.ProviderSpecificType, actualColumn.ProviderSpecificType);
+						Assert.AreEqual(expectedColumn.SystemType,           actualColumn.SystemType);
+						Assert.AreEqual(expectedColumn.DataType,             actualColumn.DataType);
+						Assert.AreEqual(expectedColumn.SkipOnInsert,         actualColumn.SkipOnInsert);
+						Assert.AreEqual(expectedColumn.SkipOnUpdate,         actualColumn.SkipOnUpdate);
+						Assert.AreEqual(expectedColumn.Length,               actualColumn.Length);
+						Assert.AreEqual(expectedColumn.Precision,            actualColumn.Precision);
+						Assert.AreEqual(expectedColumn.Scale,                actualColumn.Scale);
+						Assert.AreEqual(actualTable,                         actualColumn.Table);
+					}
+
+					Assert.IsNotNull(procedure.SimilarTables);
+
+					foreach (var table in procedure.SimilarTables)
+					{
+						var tbl = expectedProc.SimilarTables
+							.Where(_ => _.TableName.ToLower() == table.TableName.ToLower())
+							.SingleOrDefault();
+
+						Assert.IsNotNull(tbl);
+					}
+				}
+			}
+		}
 #endif
+
+		[Sql.Expression("@n:=@n+1", ServerSideOnly = true)]
+		static int IncrementIndex()
+		{
+			throw new NotImplementedException();
+		}
+
+		[Description("https://stackoverflow.com/questions/50858172/linq2db-mysql-set-row-index/50958483")]
+		[Test]
+		public void RowIndexTest([MySqlDataContext] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.NextQueryHints.Add("**/*(SELECT @n := 0) `rowcounter`*/");
+				db.NextQueryHints.Add(", (SELECT @n := 0) `rowcounter`");
+
+				var q =
+					from p in db.Person
+					select new
+					{
+						rank = IncrementIndex(),
+						id   = p.ID
+					};
+
+				var list = q.ToList();
+			}
+		}
+
+		[Test]
+		public void TestTestProcedure([MySqlDataContext(false)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				int? param2 = 5;
+				int? param1 = 11;
+
+				var res = db.TestProcedure(123, ref param2, out param1);
+
+				Assert.AreEqual(10, param2);
+				Assert.AreEqual(133, param1);
+				AreEqual(db.GetTable<Person>(), res);
+			}
+		}
+
+		[Test]
+		public void TestTestOutputParametersWithoutTableProcedure([MySqlDataContext(false)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var res = db.TestOutputParametersWithoutTableProcedure("test", out var outParam);
+
+				Assert.AreEqual(123, outParam);
+				Assert.AreEqual(1, res);
+			}
+		}
+	}
+
+	internal static class MySqlTestFunctions
+	{
+		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		{
+			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
+				new DataParameter("aInParam", aInParam, DataType.VarChar),
+				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
+
+			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
+
+			return ret;
+		}
+
+		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
+		{
+			var ret = dataConnection.QueryProc<Person>("`TestProcedure`",
+				new DataParameter("param3", param3, DataType.Int32),
+				new DataParameter("param2", param2, DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("param1", null, DataType.Int32) { Direction = ParameterDirection.Output }).ToList();
+
+			param2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param2"]).Value);
+			param1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param1"]).Value);
+
+			return ret;
+		}
 	}
 }

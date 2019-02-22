@@ -1,0 +1,21 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"               #>
+<#@ output extension=".generated.cs"                                      #>
+<#@ include file="Shared.ttinclude"                                       #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.DB2.ttinclude" #>
+<#
+	NamespaceName = "DB2DataContext";
+
+	GenerateDataTypes = true;
+	GenerateDbTypes   = true;
+
+	//GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" };
+
+	LoadDB2Metadata(GetConnectionString("DB2"));
+
+	//GetProcedure("ADMINISTRATOR.PERSON_SELECTBYKEY").ResultTable = GetTable("ADMINISTRATOR.Person");
+
+	//GetColumn("ADMINISTRATOR.Person", "PersonID").MemberName = "122";
+	//GetFK    ("ADMINISTRATOR.Person", "ID1").MemberName = "122";
+
+	GenerateModel();
+#>

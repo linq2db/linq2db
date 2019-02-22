@@ -1,0 +1,144 @@
+<#@ include file="LinqToDB.ttinclude" #>
+<#
+	LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.ResolvePostgreSQL(
+		typeof(Npgsql.NpgsqlConnection).Assembly);
+
+	{
+		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
+		BeforeGenerateLinqToDBModel = () =>
+		{
+			beforeGenerateLinqToDBModel();
+			SetCaseSensitiveNames();
+
+			FixTableFunctions();
+			FixRecordResultFunctions();
+			FixVoidFunctions();
+			FixFunctionNames();
+		};
+	}
+#>
+<#+
+bool GenerateCaseSensitiveNames = false; // Defines whether to generate case sensitive or insensitive names
+
+// functions with multiple out parameters implemented by pgsql as functions with input parameters that return record with
+// value for each output parameter so we need to move out parameters to result value class field and map
+// record, returned by npgsql provider as object[], to this class
+// exception: functions with only one out parameter treat it as return parameter
+void FixRecordResultFunctions()
+{
+	var initMappingSchema = new Method(() => "void", "InitMappingSchema") { AccessModifier = AccessModifier.Partial };
+	DataContextObject.Members.Add(initMappingSchema);
+	foreach (var proc in Procedures.Values
+		.Where(p => p.IsFunction && !p.IsAggregateFunction && !p.IsTableFunction && p.ProcParameters.Any(pr => pr.IsOut)))
+	{
+		if (proc.ProcParameters.Count(pr => pr.IsOut) > 1)
+		{
+			var result = new Class(SchemaProviderBase.ToValidName(proc.ProcedureName + "Result"));
+			Model.Types.Add(result);
+
+			proc.ProcParameters.Add(new Parameter()
+			{
+				IsResult      = true,
+				ParameterType = result.Name
+			});
+
+			var mappings = new List<string>();
+			foreach (var outParam in proc.ProcParameters.Where(_ => _.IsOut))
+			{
+				result.Members.Add(new Property(() => outParam.ParameterType, outParam.ParameterName, null, null));
+				mappings.Add($"{outParam.ParameterName} = ({outParam.ParameterType})tuple[{mappings.Count}]");
+
+				if (outParam.IsIn)
+					outParam.IsOut = false;
+			}
+
+			proc.ProcParameters = proc.ProcParameters.Where(_ => !_.IsOut).ToList();
+
+			initMappingSchema.BodyBuilders.Add(() => new [] { $"MappingSchema.SetConvertExpression<object[], {result.Name}>(tuple => new {result.Name}() {{ {string.Join(", ", mappings)} }});" });
+		}
+		else // one parameter
+		{
+			var param = proc.ProcParameters.Single(_ => _.IsOut);
+			proc.ProcParameters.Remove(param);
+			proc.ProcParameters.Add(new Parameter()
+			{
+				IsResult      = true,
+				ParameterType = param.ParameterType
+			});
+		}
+	}
+}
+
+void FixFunctionNames()
+{
+	foreach (var proc in Procedures.Values)
+	{
+		if (proc.ProcedureName.Any(char.IsUpper))
+			proc.ProcedureName = "\"" + proc.ProcedureName + "\"";
+	}
+}
+
+void FixTableFunctions()
+{
+	foreach (var proc in Procedures.Values
+		.Where(p => p.IsTableFunction && p.ProcParameters.Any(pr => pr.IsOut)))
+	{
+		proc.ProcParameters = proc.ProcParameters.Where(pr => !pr.IsOut).ToList();
+	}
+}
+
+void FixVoidFunctions()
+{
+	// generated functions should return object for void-typed functions
+	foreach (var proc in Procedures.Values
+		.Where(p => p.IsFunction/* && !p.IsAggregateFunction*/ && !p.IsTableFunction && !p.ProcParameters.Any(pr => pr.IsResult)))
+	{
+		proc.ProcParameters.Add(new Parameter()
+		{
+			IsResult      = true,
+			ParameterType = "object",
+			SystemType    = typeof(object)
+		});
+	}
+}
+
+void SetCaseSensitiveNames()
+{
+	if (GenerateCaseSensitiveNames)
+	{
+		foreach (var t in Tables.Values)
+		{
+			if (t.TableName.Any(char.IsUpper))
+				t.TableName = "\"" + t.TableName + "\"";
+
+			foreach (var c in t.Columns.Values)
+			{
+				if (c.ColumnName.Any(char.IsUpper))
+					c.ColumnName = "\"" + c.ColumnName + "\"";
+			}
+		}
+	}
+}
+
+LinqToDB.Data.DataConnection GetPostgreSQLConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.CreateDataConnection(connectionString);
+}
+
+LinqToDB.Data.DataConnection GetPostgreSQLConnection(string server, string port, string database, string uid, string password)
+{
+	return GetPostgreSQLConnection(string.Format(@"Server={0};Port={1};Database={2};User Id={3};Password={4};Pooling=true;MinPoolSize=10;MaxPoolSize=100;", server, port, database, uid, password));
+}
+
+void LoadPostgreSQLMetadata(string connectionString)
+{
+	using (var dataConnection = GetPostgreSQLConnection(connectionString))
+		LoadMetadata(dataConnection);
+}
+
+void LoadPostgreSQLMetadata(string server, string port, string database, string uid, string password)
+{
+	using (var dataConnection = GetPostgreSQLConnection(server, port, database, uid, password))
+		LoadMetadata(dataConnection);
+}
+#>

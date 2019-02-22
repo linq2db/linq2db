@@ -1,0 +1,23 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                   #>
+<#@ output extension=".generated.cs"                                          #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SapHana.ttinclude" #>
+<#@ include file="Shared.ttinclude"                                           #>
+<#
+	NamespaceName = "SapHanaDataContext";
+
+	//GetSchemaOptions.IncludedSchemas = new[] { "TEST" };
+
+	// don't load procedures, that rise asserts or a lot of time to load
+	GetSchemaOptions.LoadProcedure = p =>
+		p.ProcedureName != "SERIES_GENERATE_TIME"
+		&& p.ProcedureName != "SERIES_DISAGGREGATE_TIME"
+		&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP"
+		&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP_WITH_PARAMETERS"
+		&& p.ProcedureName != "FULL_SYSTEM_INFO_DUMP_CREATE";
+	GenerateProcedureErrors = false;
+
+
+	LoadSapHanaMetadata(GetConnectionString("SapHana"));
+
+	GenerateModel();
+#>

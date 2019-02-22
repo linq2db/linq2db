@@ -16,8 +16,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ComplexTests : TestBase
 	{
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Contains1(string context)
+		[Test]
+		public void Contains1([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -59,8 +59,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Contains2(string context)
+		[Test]
+		public void Contains2([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -117,8 +117,8 @@ namespace Tests.Linq
 			return value ?? 777;
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
-		public void Contains3(string context)
+		[Test]
+		public void Contains3([DataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -160,8 +160,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
-		public void Contains4(string context)
+		[Test]
+		public void Contains4([DataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -201,8 +201,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase)]
-		public void Contains5(string context)
+		[Test]
+		public void Contains5([DataSources(
+			ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -213,8 +215,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void Contains6(string context)
+		[Test]
+		public void Contains6([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -225,8 +227,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Join1(string context)
+		[Test]
+		public void Join1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -287,8 +289,8 @@ namespace Tests.Linq
 			return q;
 		}
 
-		[Test, DataContextSource]
-		public void Join2(string context)
+		[Test]
+		public void Join2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -297,12 +299,12 @@ namespace Tests.Linq
 					from g in o.Parent.GrandChildren
 					select new { o, g };
 
-				var list = q.ToList();
+				var _ = q.ToList();
 			}
 		}
 
-		[Test, NorthwindDataContext]
-		public void ExpressionTest1(string context)
+		[Test]
+		public void ExpressionTest1([NorthwindDataContext] string context)
 		{
 			Expression<Func<Northwind.Customer,bool>> pred1 = cust=>cust.Country=="UK";
 			Expression<Func<Northwind.Customer,bool>> pred2 = cust=>cust.Country=="France";
@@ -316,7 +318,7 @@ namespace Tests.Linq
 
 			using (var db = new NorthwindDB(context))
 			{
-				var count = db.Customer.Count(final);
+				var _ = db.Customer.Count(final);
 			}
 		}
 
@@ -350,11 +352,11 @@ namespace Tests.Linq
 
 		[Table("GrandChild")]
 		[Column("GrandChildID", "Id")]
-		[Column("ChildID",      "InnerEnity.Id")]
+		[Column("ChildID",      "InnerEntity.Id")]
 		[Column("ParentID",     "InnerEntityType")]
 		public class LookupEntity : Entity
 		{
-			public Entity         InnerEnity      { get; set; }
+			public Entity         InnerEntity     { get; set; }
 			public TestEntityType InnerEntityType { get; set; }
 		}
 
@@ -429,11 +431,11 @@ namespace Tests.Linq
 			{
 				var res =
 					from rc in db.GetTable<TestEntity>()
-					join li in db.GetTable<LookupEntity>() on rc.Id equals li.InnerEnity.Id
+					join li in db.GetTable<LookupEntity>() on rc.Id equals li.InnerEntity.Id
 					where rc.EntityType == TestEntityType.Type1
 					select rc;
 
-				res.ToList();
+				var _ = res.ToList();
 			}
 		}
 
@@ -447,7 +449,7 @@ namespace Tests.Linq
 					join o in db.GetTable<SuperAccount>() on z.Owner.Id equals o.Id
 					select z;
 
-				zones.ToList();
+				var _ = zones.ToList();
 			}
 		}
 

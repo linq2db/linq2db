@@ -8,15 +8,20 @@
 	[TestFixture]
 	public class AnalyticTests : TestBase
 	{
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, 
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
-		public void Test(string context)
+		[Test]
+		public void Test(
+			[IncludeDataSources(
+				true,
+				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+				ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Rank1       = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID).ToValue(),
@@ -37,7 +42,7 @@
 						Count12     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 						Count14     = Sql.Ext.Count().Over().ToValue(),
 
-						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() + 
+						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() +
 									  Sql.Sqrt(Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue()) +
 									  Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue() +
 									  Sql.Ext.Count().Over().ToValue(),
@@ -47,9 +52,14 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			 ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
-		public void TestSubqueryOptimization(string context)
+		[Test]
+		public void TestSubqueryOptimization(
+			[IncludeDataSources(
+				true,
+				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+				ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -72,14 +82,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestExtensionsOracle(string context)
+		[Test]
+		public void TestExtensionsOracle([IncludeDataSources(
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Rank1       = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID, Sql.NullsPosition.First).ToValue(),
@@ -102,7 +114,7 @@
 						Count13     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1, Sql.NullsPosition.First).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 						Count14     = Sql.Ext.Count().Over().ToValue(),
 
-						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() + 
+						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() +
 									  Sql.Sqrt(Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue()) +
 									  Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue() +
 									  Sql.Ext.Count().Over().ToValue(),
@@ -112,8 +124,14 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleNative)]
-		public void TestAvg(string context)
+		[ActiveIssue(
+			Configurations = new[] { ProviderName.OracleManaged + ".LinqService", ProviderName.OracleNative + ".LinqService" },
+			Details = "Specified cast is not valid.")]
+		[Test]
+		public void TestAvg([IncludeDataSources(
+			true, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -139,14 +157,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestAvgOracle(string context)
+		[Test]
+		public void TestAvgOracle([IncludeDataSources(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						AvgNoOrder          = Sql.Ext.Average<double>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
@@ -218,14 +238,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestCorrOracle(string context)
+		[Test]
+		public void TestCorrOracle([IncludeDataSources(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						// type conversion tests
@@ -260,14 +282,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestCountOracle(string context)
+		[Test]
+		public void TestCountOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Count1    = Sql.Ext.Count().Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -289,8 +313,11 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
-		public void TestCount(string context)
+		[Test]
+		public void TestCount([IncludeDataSources(
+			true, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -318,14 +345,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestCovarPopOracle(string context)
+		[Test]
+		public void TestCovarPopOracle([IncludeDataSources(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						CovarPop1    = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -354,14 +383,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestCovarSampOracle(string context)
+		[Test]
+		public void TestCovarSampOracle([IncludeDataSources(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						CovarSamp1    = Sql.Ext.CovarSamp(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -390,14 +421,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestCumeDistOracle(string context)
+		[Test]
+		public void TestCumeDistOracle([IncludeDataSources(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						CumeDist1     = Sql.Ext.CumeDist<decimal>().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -405,9 +438,9 @@
 					};
 				Assert.IsNotEmpty(q.ToArray());
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						CumeDist1     = Sql.Ext.CumeDist<decimal>(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
@@ -417,14 +450,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestDenseRankOracle(string context)
+		[Test]
+		public void TestDenseRankOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						DenseRank1     = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -432,9 +467,9 @@
 					};
 				Assert.IsNotEmpty(q.ToArray());
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						DenseRank1     = Sql.Ext.DenseRank(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
@@ -443,14 +478,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestFirstValueOracle(string context)
+		[Test]
+		public void TestFirstValueOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						FirstValue1     = Sql.Ext.FirstValue(p.Value1, Sql.Nulls.Ignore).Over().ToValue(),
@@ -463,14 +500,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestLastValueOracle(string context)
+		[Test]
+		public void TestLastValueOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						LastValue1     = Sql.Ext.LastValue(p.Value1, Sql.Nulls.Ignore).Over().ToValue(),
@@ -483,14 +522,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestLagOracle(string context)
+		[Test]
+		public void TestLagOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Lag1     = Sql.Ext.Lag(p.Value1, Sql.Nulls.Respect, 1, 0).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -502,14 +543,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestLeadOracle(string context)
+		[Test]
+		public void TestLeadOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Lead1     = Sql.Ext.Lead(p.Value1, Sql.Nulls.Ignore).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -522,14 +565,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestListAggOracle(string context)
+		[Test]
+		public void TestListAggOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						ListAgg1  = Sql.Ext.ListAgg(c.ChildID).WithinGroup.OrderBy(p.Value1).ThenBy(p.ParentTest.Value1).ThenByDesc(c.ParentID).ToValue(),
@@ -546,14 +591,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestMaxOracle(string context)
+		[Test]
+		public void TestMaxOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Max1   = Sql.Ext.Max(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -572,9 +619,9 @@
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Max11  = Sql.Ext.Max(p.Value1, Sql.AggregateModifier.All).ToValue(),
@@ -584,8 +631,11 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle)]
-		public void TestMax(string context)
+		[Test]
+		public void TestMax([IncludeDataSources(
+			true, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.Oracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -611,14 +661,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestMedianOracle(string context)
+		[Test]
+		public void TestMedianOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Median1   = Sql.Ext.Median(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -644,14 +696,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestMinOracle(string context)
+		[Test]
+		public void TestMinOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Min1   = Sql.Ext.Min(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -672,8 +726,11 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
-		public void TestMin(string context)
+		[Test]
+		public void TestMin([IncludeDataSources(
+			true, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -699,14 +756,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestNthValueOracle(string context)
+		[Test]
+		public void TestNthValueOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						NthValue1   = Sql.Ext.NthValue(c.ChildID, 1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -726,14 +785,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestNTileOracle(string context)
+		[Test]
+		public void TestNTileOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						NTile1     = Sql.Ext.NTile(p.Value1.Value).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -744,14 +805,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestPercentileContOracle(string context)
+		[Test]
+		public void TestPercentileContOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						PercentileCont1  = Sql.Ext.PercentileCont<double>(0.5).WithinGroup.OrderBy(p.Value1).Over().PartitionBy(p.Value1, p.ParentID).ToValue(),
@@ -760,9 +823,9 @@
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						PercentileCont1  = Sql.Ext.PercentileCont<double>(0.5).WithinGroup.OrderByDesc(p.Value1).ToValue(),
@@ -774,14 +837,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestPercentileDiscOracle(string Discext)
+		[Test]
+		public void TestPercentileDiscOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
-			using (var db = GetDataContext(Discext))
+			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						PercentileDisc1  = Sql.Ext.PercentileDisc<double>(0.5).WithinGroup.OrderBy(p.Value1).Over().PartitionBy(p.Value1, p.ParentID).ToValue(),
@@ -790,9 +855,9 @@
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						PercentileDisc1  = Sql.Ext.PercentileDisc<double>(0.5).WithinGroup.OrderByDesc(p.Value1).ToValue(),
@@ -804,14 +869,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestPercentRankOracle(string context)
+		[Test]
+		public void TestPercentRankOracle([IncludeDataSources(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						PercentRank1     = Sql.Ext.PercentRank<double>().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -819,9 +886,9 @@
 					};
 				Assert.IsNotEmpty(q.ToArray());
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						PercentRank3     = Sql.Ext.PercentRank<double>(2, 3).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
@@ -830,14 +897,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestPercentRatioToReportOracle(string context)
+		[Test]
+		public void TestPercentRatioToReportOracle([IncludeDataSources(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						RatioToReport1     = Sql.Ext.RatioToReport<double>(1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -847,14 +916,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestRowNumberOracle(string context)
+		[Test]
+		public void TestRowNumberOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						RowNumber1     = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -864,14 +935,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestRankOracle(string context)
+		[Test]
+		public void TestRankOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Rank1     = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -879,9 +952,9 @@
 					};
 				Assert.IsNotEmpty(q.ToArray());
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Rank1     = Sql.Ext.Rank(1000).WithinGroup.OrderBy(p.Value1).ToValue(),
@@ -891,14 +964,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestRegrOracle(string context)
+		[Test]
+		public void TestRegrOracle([IncludeDataSources(
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						// type conversion tests
@@ -917,14 +992,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestStdDevOracle(string context)
+		[Test]
+		public void TestStdDevOracle([IncludeDataSources(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						StdDev1    = Sql.Ext.StdDev<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -945,8 +1022,12 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestStdDev(string context)
+		[Test]
+		public void TestStdDev([IncludeDataSources(
+			ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged,
+			ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -972,14 +1053,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestStdDevPopOracle(string context)
+		[Test]
+		public void TestStdDevPopOracle([IncludeDataSources(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						StdDevPop1   = Sql.Ext.StdDevPop<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1007,14 +1090,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestStdDevSampOracle(string context)
+		[Test]
+		public void TestStdDevSampOracle([IncludeDataSources(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						StdDevSamp1   = Sql.Ext.StdDevSamp<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1042,14 +1127,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestSumOracle(string context)
+		[Test]
+		public void TestSumOracle([IncludeDataSources(true,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Sum1   = Sql.Ext.Sum(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1060,9 +1147,9 @@
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Sum1   = Sql.Ext.Sum(p.Value1).ToValue(),
@@ -1072,14 +1159,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestVarPopOracle(string context)
+		[Test]
+		public void TestVarPopOracle([IncludeDataSources(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						VarPop1   = Sql.Ext.VarPop<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1107,14 +1196,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestVarSampOracle(string context)
+		[Test]
+		public void TestVarSampOracle([IncludeDataSources(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						VarSamp1   = Sql.Ext.VarSamp<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1143,14 +1234,16 @@
 		}
 
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestVarianceOracle(string context)
+		[Test]
+		public void TestVarianceOracle([IncludeDataSources(
+			ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Variance1    = Sql.Ext.Variance<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1190,14 +1283,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestKeepFirstOracle(string context)
+		[Test]
+		public void TestKeepFirstOracle([IncludeDataSources(
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Min         = Sql.Ext.Min(p.Value1).KeepFirst().OrderBy(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1210,14 +1305,16 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestKeepLastOracle(string context)
+		[Test]
+		public void TestKeepLastOracle([IncludeDataSources(
+			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Min         = Sql.Ext.Min(p.Value1).KeepLast().OrderBy(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),

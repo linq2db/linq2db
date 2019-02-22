@@ -1,0 +1,44 @@
+<#@ include file="LinqToDB.ttinclude" #>
+<#
+	LinqToDB.DataProvider.SQLite.SQLiteTools.ResolveSQLite(typeof(System.Data.SQLite.SQLiteConnection).Assembly);
+
+	{
+		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
+		BeforeGenerateLinqToDBModel = () =>
+		{
+			ConvertSQLiteMetadata();
+			beforeGenerateLinqToDBModel();
+		};
+	}
+#>
+<#+
+void ConvertSQLiteMetadata()
+{
+	foreach (var t in Tables.Values)
+		foreach (var fk in t.ForeignKeys.Values)
+			if (fk.MemberName.Length == 0 || char.IsDigit(fk.MemberName[0]))
+				fk.MemberName = "FK_" + fk.MemberName;
+}
+
+LinqToDB.Data.DataConnection GetSQLiteConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(connectionString);
+}
+
+LinqToDB.Data.DataConnection GetSQLiteConnection(string path, string database)
+{
+	return GetSQLiteConnection(string.Format("Data Source={0}", System.IO.Path.Combine(path, database)));
+}
+
+void LoadSQLiteMetadata(string connectionString)
+{
+	using (var dataConnection = GetSQLiteConnection(connectionString))
+		LoadMetadata(dataConnection);
+}
+
+void LoadSQLiteMetadata(string path, string database)
+{
+	using (var dataConnection = GetSQLiteConnection(path, database))
+		LoadMetadata(dataConnection);
+}
+#>

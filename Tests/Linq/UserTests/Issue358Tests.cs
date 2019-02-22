@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-
-using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -40,7 +36,7 @@ namespace Tests.UserTests
 				var sql = qry.ToString();
 
 				Assert.That(sql.IndexOf("NULL"), Is.GreaterThan(0), sql);
-			} 
+			}
 		}
 
 		[Test]
@@ -58,7 +54,26 @@ namespace Tests.UserTests
 				var sql = qry.ToString();
 
 				Assert.That(sql.IndexOf("NULL"), Is.GreaterThan(0), sql);
-			} 
+			}
+		}
+
+		[Test]
+		public void ContainsHasIsNullWithoutComparasionNullCheck()
+		{
+			using (new WithoutComparisonNullCheck())
+			using (var db = new TestDataConnection())
+			{
+				var filter = new[] {TestIssue358Enum.Value2};
+
+				var qry =
+					from p in db.GetTable<TestIssue358Class>()
+					where !!filter.Contains(p.MyEnum.Value)
+					select p;
+
+				var sql = qry.ToString();
+
+				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
+			}
 		}
 
 		[Test]
@@ -74,7 +89,7 @@ namespace Tests.UserTests
 				var sql = qry.ToString();
 
 				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
-			} 
+			}
 		}
 
 		[Test]
@@ -92,7 +107,7 @@ namespace Tests.UserTests
 				var sql = qry.ToString();
 
 				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
-			} 
+			}
 		}
 
 		static LinqDataTypes2 FixData(LinqDataTypes2 data)
@@ -101,8 +116,8 @@ namespace Tests.UserTests
 			return data;
 		}
 
-		[Test, DataContextSource]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -112,8 +127,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -123,8 +138,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -134,8 +149,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test4(string context)
+		[Test]
+		public void Test4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -147,8 +162,22 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test5(string context)
+		[Test]
+		public void Test4WithoutComparasionNullCheck([DataSources] string context)
+		{
+			using (new WithoutComparisonNullCheck())
+			using (var db = GetDataContext(context))
+			{
+				var bigintFilter = new Int64?[] {2};
+
+				AreEqual(FixData,
+					   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue) && _.BigIntValue != null),
+					db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
+			}
+		}
+
+		[Test]
+		public void Test5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -160,8 +189,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test6(string context)
+		[Test]
+		public void Test6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -173,8 +202,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test7(string context)
+		[Test]
+		public void Test7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -186,8 +215,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test8(string context)
+		[Test]
+		public void Test8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -199,8 +228,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test9(string context)
+		[Test]
+		public void Test9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -212,8 +241,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test81(string context)
+		[Test]
+		public void Test81([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -225,8 +254,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test91(string context)
+		[Test]
+		public void Test91([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -238,8 +267,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test82(string context)
+		[Test]
+		public void Test82([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -251,8 +280,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test92(string context)
+		[Test]
+		public void Test92([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

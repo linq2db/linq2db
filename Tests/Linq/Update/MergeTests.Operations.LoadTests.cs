@@ -3,18 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	using Model;
 
 	public partial class MergeTests
 	{
-		[Test, MergeDataContextSource]
-		public void BigSource(string context)
+		[Test]
+		public void BigSource([MergeDataContextSource] string context)
 		{
 			var batchSize = 2500;
 
@@ -23,7 +22,8 @@ namespace Tests.Merge
 				// ASE: you may need to increase memory procedure cache sizes like that:
 				// exec sp_configure 'max memory', NEW_MEMORY_SIZE
 				// exec sp_configure 'procedure cache size', NEW_CACHE_SIZE
-				case ProviderName.Sybase       : batchSize = 500; break;
+				case ProviderName.Sybase       :
+				case ProviderName.SybaseManaged: batchSize = 500; break;
 
 				// hard limit around 100 records
 				// also big queries could kill connection with server

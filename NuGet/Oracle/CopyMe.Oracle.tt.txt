@@ -1,0 +1,45 @@
+<#@ template language="C#" debug="True" hostSpecific="True"                        #>
+<#@ output extension=".generated.cs"                                               #>
+<#@ include file="$(LinqToDBT4OracleTemplatesDirectory)LinqToDB.Oracle.Tools.ttinclude" #>
+<#@ include file="$(LinqToDBT4OracleTemplatesDirectory)PluralizationService.ttinclude"  #>
+<# //@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Oracle.Tools.ttinclude" #>
+<# //@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"  #>
+<#
+	/*
+		1. Create new *.tt file (e.g. MyDatabase.tt) in a folder where you would like to generate your data model
+		   and copy content from this file to it. For example:
+
+			MyProject
+				DataModels
+					MyDatabase.tt
+
+		2. Modify the connection settings below to connect to your database.
+
+		3. Add connection string to the web/app.config file:
+
+			<connectionStrings>
+				<add name="MyDatabase" connectionString="Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=MyServer)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=MyDatabase)));User Id=MyUser;Password=MyPassword;" providerName="Oracle" />
+			</connectionStrings>
+
+		4. To access your database use the following code:
+
+			using (var db = new MyDatabaseDB())
+			{
+				var q =
+					from c in db.Customers
+					select c;
+
+				foreach (var c in q)
+					Console.WriteLine(c.ContactName);
+			}
+
+		5. See more at https://github.com/linq2db/t4models
+	*/
+
+	NamespaceName = "DataModels";
+
+	LoadOracleMetadata("MyServer", "1521", "MyDatabase", "MyUser", "MyPassword");
+//	LoadOracleMetadata(string connectionString);
+
+	GenerateModel();
+#>

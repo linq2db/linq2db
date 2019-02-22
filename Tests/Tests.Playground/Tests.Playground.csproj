@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\Build\linq2db.Default.props" />
+	<Import Project="..\..\Build\linq2db.Tests.Playground.props" />
+	<Import Project="..\..\Build\linq2db.Providers.props" />
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.Tests.Playground</AssemblyName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Base\Tests.Base.csproj" />
+		<ProjectReference Include="..\Model\Tests.Model.csproj" />
+
+		<None Include="..\..\Data\*">
+			<Link>Database/%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\Data\Create Scripts\*">
+			<Link>Database/Create Scripts/%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
+	</ItemGroup>
+
+	<!-- .NET Framework -->
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net46'">
+		<PlatformTarget>x86</PlatformTarget>
+	</PropertyGroup>
+</Project>

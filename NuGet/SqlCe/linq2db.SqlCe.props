@@ -1,0 +1,7 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+		<LinqToDBT4SqlCeTemplatesDirectory>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SqlCeTemplatesDirectory>
+		<LinqToDBT4SqlCeToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SqlCeToolsDirectory>
+		<LinqToDBT4ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ToolsDirectory>
+	</PropertyGroup>
+</Project>

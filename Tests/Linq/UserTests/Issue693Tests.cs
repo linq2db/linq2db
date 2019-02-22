@@ -24,6 +24,7 @@ namespace Tests.UserTests
 
 			[Column]public Gender  Gender     { get; set; }
 			[Column]public string  FirstName  { get; set; }
+			[DataType(DataType.NVarChar, Configuration = ProviderName.Sybase)]
 			[Column]public Test?   MiddleName { get; set; }
 			[Column]public string  LastName   { get; set; }
 		}
@@ -33,10 +34,11 @@ namespace Tests.UserTests
 			A
 		}
 
-		[Test, DataContextSource]
-		public void Issue693Test(string context)
+		[Test]
+		public void Issue693Test([DataSources] string context)
 		{
 			var ms = new MappingSchema();
+
 			ms.SetConverter<Test?, string>((obj) =>
 			{
 				if (obj != null)
@@ -44,7 +46,7 @@ namespace Tests.UserTests
 				return null;
 			});
 
-			ms.SetConverter<Test?, DataParameter>((obj) =>
+			ms.SetConverter<Test?,DataParameter>((obj) =>
 			{
 				if (obj != null)
 					return new DataParameter { Value = obj.ToString() };

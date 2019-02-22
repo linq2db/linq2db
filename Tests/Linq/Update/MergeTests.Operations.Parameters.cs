@@ -3,20 +3,23 @@ using System.Data.SqlClient;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
-namespace Tests.Merge
+// ReSharper disable once CheckNamespace
+namespace Tests.xUpdate
 {
 	using Model;
 
 	public partial class MergeTests
 	{
 		// ASE: just fails
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void TestParameters1(string context)
+		[Test]
+		public void TestParameters1([MergeDataContextSource(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -67,7 +70,7 @@ namespace Tests.Merge
 				var parametersCount = 8;
 
 				if (context == ProviderName.DB2)
-					parametersCount = 6;
+					parametersCount = 0;
 				else if (context == ProviderName.Firebird || context == TestProvName.Firebird3)
 					parametersCount = 4;
 
@@ -76,9 +79,12 @@ namespace Tests.Merge
 		}
 
 		// ASE: just fails
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void TestParameters3(string context)
+		[Test]
+		public void TestParameters3([MergeDataContextSource(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -129,7 +135,7 @@ namespace Tests.Merge
 				var parametersCount = 7;
 
 				if (context == ProviderName.DB2)
-					parametersCount = 5;
+					parametersCount = 0;
 				else if (context == ProviderName.Firebird || context == TestProvName.Firebird3)
 					parametersCount = 3;
 
@@ -137,8 +143,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void TestParameters2(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestParameters2([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -182,8 +188,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void TestParametersInListSourceProperty(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestParametersInListSourceProperty([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -222,8 +228,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void TestParametersInMatchCondition(string context)
+		[Test]
+		public void TestParametersInMatchCondition([MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -242,11 +248,15 @@ namespace Tests.Merge
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				var paramcount = 1;
+				if (context == ProviderName.DB2 || context == ProviderName.Informix)
+					paramcount = 0;
+
+				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
-		private static char GetParameterToken(string context)
+		private static char GetParameterToken([MergeDataContextSource] string context)
 		{
 			switch (context)
 			{
@@ -262,8 +272,10 @@ namespace Tests.Merge
 			return '@';
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void TestParametersInUpdateCondition(string context)
+		[Test]
+		public void TestParametersInUpdateCondition([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -282,12 +294,18 @@ namespace Tests.Merge
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				var paramcount = 1;
+				if (context == ProviderName.DB2)
+					paramcount = 0;
+
+				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void TestParametersInInsertCondition(string context)
+		[Test]
+		public void TestParametersInInsertCondition([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -306,13 +324,20 @@ namespace Tests.Merge
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				var paramcount = 1;
+				if (context == ProviderName.DB2)
+					paramcount = 0;
+
+				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void TestParametersInDeleteCondition(string context)
+		[Test]
+		public void TestParametersInDeleteCondition([MergeDataContextSource(
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -331,12 +356,16 @@ namespace Tests.Merge
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				var paramcount = 1;
+				if (context == ProviderName.DB2)
+					paramcount = 0;
+
+				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void TestParametersInDeleteBySourceCondition(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestParametersInDeleteBySourceCondition([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -358,8 +387,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void TestParametersInUpdateBySourceCondition(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestParametersInUpdateBySourceCondition([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -387,10 +416,12 @@ namespace Tests.Merge
 		}
 
 		// excluded providers use literal instead of parameter
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Informix,
-			ProviderName.SapHana)]
-		public void TestParametersInInsertCreate(string context)
+		[Test]
+		public void TestParametersInInsertCreate([MergeDataContextSource(
+			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Informix, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -425,10 +456,12 @@ namespace Tests.Merge
 		}
 
 		// excluded providers use literal instead of parameter
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Informix,
-			ProviderName.SapHana)]
-		public void TestParametersInUpdateExpression(string context)
+		[Test]
+		public void TestParametersInUpdateExpression([MergeDataContextSource(
+			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Informix, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -461,8 +494,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void TestParametersInUpdateBySourceExpression(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TestParametersInUpdateBySourceExpression([MergeBySourceDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -485,7 +518,12 @@ namespace Tests.Merge
 					.Merge();
 
 				Assert.AreEqual(1, rows);
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+
+				var paramcount = 1;
+				if (context == ProviderName.DB2)
+					paramcount = 0;
+
+				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 1).ToList();
 
@@ -495,8 +533,10 @@ namespace Tests.Merge
 		}
 
 		// FB, INFORMIX: supports this parameter, but for now we disable all parameters in source for them
-		[Test, MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
-		public void TestParametersInSourceFilter(string context)
+		[Test]
+		public void TestParametersInSourceFilter([MergeDataContextSource(
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -514,13 +554,21 @@ namespace Tests.Merge
 					.Merge();
 
 				AssertRowCount(1, rows, context);
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+
+				var paramcount = 1;
+				if (context == ProviderName.DB2)
+					paramcount = 0;
+
+				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
-		// FB, INFORMIX: doesn't support parameters in source select list
-		[Test, MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
-		public void TestParametersInSourceSelect(string context)
+		// FB, INFORMIX, Oracle: doesn't support parameters in source select list
+		[Test]
+		public void TestParametersInSourceSelect([MergeDataContextSource(
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -542,7 +590,11 @@ namespace Tests.Merge
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				var paramcount = 1;
+				if (context == ProviderName.DB2)
+					paramcount = 0;
+
+				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
 
@@ -552,8 +604,10 @@ namespace Tests.Merge
 		}
 
 		// Provider optimize scalar parameters
-		[Test, IncludeDataContextSource(false, ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
-		public void TestParametersInUpdateWithDeleteDeleteCondition(string context)
+		[Test]
+		public void TestParametersInUpdateWithDeleteDeleteCondition([IncludeDataSources(false,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

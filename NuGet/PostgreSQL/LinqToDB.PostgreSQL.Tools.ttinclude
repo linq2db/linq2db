@@ -1,0 +1,4 @@
+<#@ assembly name="$(LinqToDBT4PostgreSQLToolsDirectory)Npgsql.dll" #>
+<#@ assembly name="$(LinqToDBT4PostgreSQLToolsDirectory)System.Threading.Tasks.Extensions.dll" #>
+<#@ include file="LinqToDB.Tools.ttinclude" #>
+<#@ include file="LinqToDB.PostgreSQL.ttinclude" #>

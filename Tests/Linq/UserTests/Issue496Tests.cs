@@ -91,45 +91,12 @@ namespace Tests.UserTests
 		[Table("Child", IsColumnAttributeRequired = false)]
 		class Child5
 		{
-			        public int   ChildID;
-			[Column]public MyInt ParentID;
+			         public int   ChildID;
+			[Column] public MyInt ParentID;
 		}
 
-
-		public interface IEntityWithId<TKey>
-		{
-			TKey Id { get; }
-		}
-
-		[Table("Person", IsColumnAttributeRequired = false)]
-		class PersonEntity : IEntityWithId<int>
-		{
-			[Column]
-			public int PersonId;
-
-			[Column("PersonId")]
-			public int Id { get; set; }
-		}
-
-		IQueryable<T> GetById<T, TKey>(IDataContext db, TKey id)
-			where T: class, IEntityWithId<TKey> 
-//			where TKey : IEquatable<TKey>
-		{
-			return db.GetTable<T>().Where(r => r.Id.Equals(id));
-		}
-
-		[Test, DataContextSource]
-		public void ZzzTest(string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var zz = GetById<PersonEntity>(db, 5);
-				var str = zz.ToString();
-			}
-		}
-
-		[Test, DataContextSource]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -141,14 +108,14 @@ namespace Tests.UserTests
 				Assert.IsNotEmpty(children);
 
 				var expected = Child.Where(_ => _.ParentID == 1);
-				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = _.ParentID.Value });
+				var result = children.Select(_ => new Model.Child { ChildID = _.ChildID, ParentID = _.ParentID.Value });
 
 				AreEqual(expected, result);
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -161,8 +128,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -180,8 +147,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test4(string context)
+		[Test]
+		public void Test4([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -211,8 +178,8 @@ namespace Tests.UserTests
 			return schema;
 		}
 
-		[Test, DataContextSource]
-		public void Test5(string context)
+		[Test]
+		public void Test5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, GetMyIntSchema()))
 			{
@@ -230,8 +197,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test7(string context)
+		[Test]
+		public void Test7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, GetMyIntSchema()))
 			{
@@ -249,8 +216,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test9(string context)
+		[Test]
+		public void Test9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, GetMyIntSchema()))
 			{

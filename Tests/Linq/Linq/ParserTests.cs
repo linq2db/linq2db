@@ -718,7 +718,7 @@ namespace Tests.Linq
 				var sql = ctx.ConvertToSql(null, 0, ConvertFlags.Field);
 
 				Assert.AreEqual        (1, sql.Length);
-				Assert.IsAssignableFrom(typeof(SelectQuery.Column), sql[0].Sql);
+				Assert.IsAssignableFrom(typeof(SqlColumn), sql[0].Sql);
 			}
 		}
 
@@ -777,7 +777,7 @@ namespace Tests.Linq
 					select t;
 
 				var ctx = q.GetMyContext();
-				ctx.BuildExpression(null, 0);
+				ctx.BuildExpression(null, 0, false);
 
 				Assert.AreEqual(1, ctx.SelectQuery.Select.Columns.Count);
 			}
@@ -797,7 +797,7 @@ namespace Tests.Linq
 					select t;
 
 				var ctx = q.GetMyContext();
-				ctx.BuildExpression(null, 0);
+				ctx.BuildExpression(null, 0, false);
 
 				Assert.AreEqual(2, ctx.SelectQuery.Select.Columns.Count);
 			}
@@ -819,7 +819,7 @@ namespace Tests.Linq
 					select p;
 
 				var ctx = q.GetMyContext();
-				ctx.BuildExpression(null, 0);
+				ctx.BuildExpression(null, 0, false);
 
 				Assert.AreEqual(2, ctx.SelectQuery.Select.Columns.Count);
 			}
@@ -842,7 +842,7 @@ namespace Tests.Linq
 					select p;
 
 				var ctx = q.GetMyContext();
-				ctx.BuildExpression(null, 0);
+				ctx.BuildExpression(null, 0, false);
 
 				Assert.AreEqual(1, ctx.SelectQuery.Select.Columns.Count);
 			}
@@ -867,8 +867,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Join6(string context)
+		[Test]
+		public void Join6([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -879,19 +881,19 @@ namespace Tests.Linq
 
 				var ctx = q.GetMyContext();
 
-				ctx.BuildExpression(null, 0);
+				ctx.BuildExpression(null, 0, false);
 
 				var sql = db.GetSqlText(ctx.SelectQuery);
 
 				CompareSql(sql, @"
 					SELECT
-						[g1].[ParentID],
-						[g1].[ChildID],
-						[g1].[GrandChildID]
+						[g_1].[ParentID],
+						[g_1].[ChildID],
+						[g_1].[GrandChildID]
 					FROM
-						[GrandChild] [g1]
-							LEFT JOIN [Child] [t1] ON [g1].[ParentID] = [t1].[ParentID] AND [g1].[ChildID] = [t1].[ChildID]
-							INNER JOIN [Parent] [p] ON [t1].[ParentID] = [p].[ParentID]");
+						[GrandChild] [g_1]
+							LEFT JOIN [Child] [a_Child] ON [g_1].[ParentID] = [a_Child].[ParentID] AND [g_1].[ChildID] = [a_Child].[ChildID]
+							INNER JOIN [Parent] [p] ON [a_Child].[ParentID] = [p].[ParentID]");
 			}
 		}
 

@@ -1,0 +1,84 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\Build\linq2db.Default.props" />
+	<Import Project="..\..\Build\linq2db.Source.props" />
+
+	<PropertyGroup>
+		<AssemblyName>linq2db</AssemblyName>
+		<RootNamespace>LinqToDB</RootNamespace>
+
+		<PackageId>linq2db</PackageId>
+
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<DefineConstants>OVERRIDETOSTRING1;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
+		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
+		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
+		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
+		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
+
+		<Compile Remove="Compatibility\**\*.cs" />
+
+		<None Remove="SqlQuery\ReservedWordsFirebird.txt" />
+
+		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
+
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-18618-05">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+
+		<Compile Update="AsyncExtensions.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>AsyncExtensions.tt</DependentUpon>
+		</Compile>
+
+		<None Update="AsyncExtensions.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+
+
+	<!-- .NET Framework -->
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' ">
+		<Compile Remove="Metadata\SystemComponentModelDataAnnotationsSchemaAttributeReader.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+		<Compile Include="Compatibility\System\Threading\AsyncLocal.cs" />
+	</ItemGroup>
+
+
+	<!-- .NET Core -->
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' OR '$(TargetFramework)' == 'netcoreapp1.0' ">
+		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
+		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
+		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
+		<Compile Remove="ServiceModel\**\*.cs;" />
+		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
+		<Compile Remove="**\*SchemaProvider*.cs" />
+		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
+		<Compile Include="Compatibility\System\ICloneable.cs" />
+		<Compile Include="Compatibility\System\SerializableAttribute.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
+		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
+		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
+		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
+		<Compile Remove="ServiceModel\**\*.cs;" />
+		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
+		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
+		<Compile Include="Compatibility\System\Data\DataTableExtensions.cs" />
+		<Compile Include="Compatibility\System\Data\DataRowExtensions.cs" />
+	</ItemGroup>
+</Project>

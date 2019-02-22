@@ -2,7 +2,7 @@
 using System.Linq;
 
 using LinqToDB.Mapping;
-
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -72,34 +72,31 @@ namespace Tests.UserTests
 		{
 			using (var db = new TestDataConnection())
 			{
-				var q = (
+				var q1 = (
 					from t1 in db.GetTable<Table1>()
 					where t1.Field3 != null
 					select new
 					{
-						t1.Ref1.Ref4.Field6, t1.Ref3.Field4,
+						t1.Ref1.Ref4.Field6, 
+						t1.Ref3.Field4,
 						Field1 = t1.Ref2.Ref5.Field8 ?? string.Empty
 					}
 				).Distinct();
 
-				var sql1 = q.ToString();
+				var sql1 = q1.GetSelectQuery();
+				Assert.That(sql1.Select.IsDistinct, "Distinct not present");
 
 				var q2 =
-					from t3 in q
+					from t3 in q1
 					group t3 by new { t3.Field6, t3.Field4 }
 					into g
 					where g.Count() > 1
 					select new { g.Key.Field6, EngineeringCircuitNumber = g.Key.Field4, Count = g.Count() };
 
-				var sql2 = q2.ToString();
+				var distinct = q2.EnumQueries().FirstOrDefault(q => q.Select.IsDistinct);
 
-				var idx = sql2.IndexOf("DISTINCT");
-
-				Assert.That(idx, Is.GreaterThanOrEqualTo(0));
-
-				idx = sql2.IndexOf("Field8", idx);
-
-				Assert.That(idx, Is.GreaterThanOrEqualTo(0));
+				Assert.That(distinct, Is.Not.Null);
+				Assert.That(distinct.Select.Columns.Count, Is.EqualTo(3));
 			}
 		}
 	}

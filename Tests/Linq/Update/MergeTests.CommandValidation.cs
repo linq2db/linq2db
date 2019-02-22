@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
@@ -15,7 +16,7 @@ using LinqToDB.SqlProvider;
 
 using NUnit.Framework;
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	using Model;
 
@@ -71,6 +72,10 @@ namespace Tests.Merge
 					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAndThenDelete((t, s) => true, (t, s) => true)), "UpdateWithDelete operation not supported by TestProvider provider." },
 					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAndThenDelete((t, s) => true, (t, s) => true).UpdateWhenMatched((t, s) => t)).WithUpdateWithDelete(), "Update operation with UpdateWithDelete operation in the same Merge command not supported by TestProvider provider." },
 					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAndThenDelete((t, s) => true, (t, s) => true).DeleteWhenMatchedAnd((t, s) => true)).WithUpdateWithDelete(), "Delete operation with UpdateWithDelete operation in the same Merge command not supported by TestProvider provider." },
+
+					// hint specified for unsupported provider
+					new object[] { new ValidationTestMergeBuilder(new FakeTable<Child>().Merge("hint").Using(new Child[0]).OnTargetKey().InsertWhenNotMatched()), "Merge hints not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(new FakeTable<Child>().MergeInto(new FakeTable<Child>(), "hint").OnTargetKey().InsertWhenNotMatched()), "Merge hints not supported by TestProvider provider." },
 				}.Select((data, i) => new TestCaseData(data).SetName($"Merge.Validation.Negative.{i}"));
 			}
 		}
@@ -126,6 +131,11 @@ namespace Tests.Merge
 					// UpdateWithDelete validation
 					new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAnd((t, s) => true).DeleteWhenMatched()),
 					new ValidationTestMergeBuilder(merge.UpdateWhenMatchedThenDelete((t, s) => true)).WithUpdateWithDelete(),
+
+					// hint specified for supported provider
+					new ValidationTestMergeBuilder(new FakeTable<Child>().Merge("hint").Using(new Child[0]).OnTargetKey().InsertWhenNotMatched()).WithHints(),
+					new ValidationTestMergeBuilder(new FakeTable<Child>().MergeInto(new FakeTable<Child>(), "hint").OnTargetKey().InsertWhenNotMatched()).WithHints(),
+
 				}.Select((data, i) => new TestCaseData(data).SetName($"Merge.Validation.Positive.{i}"));
 			}
 		}
@@ -146,144 +156,55 @@ namespace Tests.Merge
 		{
 			private class FakeDataProvider : IDataProvider
 			{
-				string IDataProvider.ConnectionNamespace
-				{
-					get
-					{
-						throw new NotImplementedException();
-					}
-				}
+				string IDataProvider.ConnectionNamespace => throw new NotImplementedException();
 
-				Type IDataProvider.DataReaderType
-				{
-					get
-					{
-						throw new NotImplementedException();
-					}
-				}
+				Type IDataProvider.DataReaderType => throw new NotImplementedException();
 
-				MappingSchema IDataProvider.MappingSchema
-				{
-					get
-					{
-						return null;
-					}
-				}
+				MappingSchema IDataProvider.MappingSchema => null;
 
-				string IDataProvider.Name
-				{
-					get
-					{
-						return "TestProvider";
-					}
-				}
+				string IDataProvider.Name => "TestProvider";
 
-				SqlProviderFlags IDataProvider.SqlProviderFlags
-				{
-					get
-					{
-						throw new NotImplementedException();
-					}
-				}
+				SqlProviderFlags IDataProvider.SqlProviderFlags => throw new NotImplementedException();
 
-				BulkCopyRowsCopied IDataProvider.BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
-				{
-					throw new NotImplementedException();
-				}
+				BulkCopyRowsCopied IDataProvider.BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source) => throw new NotImplementedException();
 
-				Type IDataProvider.ConvertParameterType(Type type, DataType dataType)
-				{
-					throw new NotImplementedException();
-				}
+				Type IDataProvider.ConvertParameterType(Type type, DbDataType dataType) => throw new NotImplementedException();
 
-				IDbConnection IDataProvider.CreateConnection(string connectionString)
-				{
-					throw new NotImplementedException();
-				}
+				IDbConnection IDataProvider.CreateConnection(string connectionString) => throw new NotImplementedException();
 
-				ISqlBuilder IDataProvider.CreateSqlBuilder()
-				{
-					throw new NotImplementedException();
-				}
+				ISqlBuilder IDataProvider.CreateSqlBuilder() => throw new NotImplementedException();
 
-				void IDataProvider.DisposeCommand(DataConnection dataConnection)
-				{
-					throw new NotImplementedException();
-				}
+				void IDataProvider.DisposeCommand(DataConnection dataConnection) => throw new NotImplementedException();
 
-				IDisposable IDataProvider.ExecuteScope()
-				{
-					throw new NotImplementedException();
-				}
+				IDisposable IDataProvider.ExecuteScope() => throw new NotImplementedException();
 
-				CommandBehavior IDataProvider.GetCommandBehavior(CommandBehavior commandBehavior)
-				{
-					throw new NotImplementedException();
-				}
+				CommandBehavior IDataProvider.GetCommandBehavior(CommandBehavior commandBehavior) => throw new NotImplementedException();
 
-				object IDataProvider.GetConnectionInfo(DataConnection dataConnection, string parameterName)
-				{
-					throw new NotImplementedException();
-				}
+				object IDataProvider.GetConnectionInfo(DataConnection dataConnection, string parameterName) => throw new NotImplementedException();
 
-				Expression IDataProvider.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
-				{
-					throw new NotImplementedException();
-				}
+				Expression IDataProvider.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType) => throw new NotImplementedException();
 
-#if !NETSTANDARD
-				ISchemaProvider IDataProvider.GetSchemaProvider()
-				{
-					throw new NotImplementedException();
-				}
+#if !NETSTANDARD1_6
+				ISchemaProvider IDataProvider.GetSchemaProvider() => throw new NotImplementedException();
 #endif
 
-				ISqlOptimizer IDataProvider.GetSqlOptimizer()
-				{
-					throw new NotImplementedException();
-				}
+				ISqlOptimizer IDataProvider.GetSqlOptimizer() => throw new NotImplementedException();
 
-				void IDataProvider.InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters)
-				{
-					throw new NotImplementedException();
-				}
+				void IDataProvider.InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters) => throw new NotImplementedException();
 
-				bool IDataProvider.IsCompatibleConnection(IDbConnection connection)
-				{
-					throw new NotImplementedException();
-				}
+				bool IDataProvider.IsCompatibleConnection(IDbConnection connection) => throw new NotImplementedException();
 
-				bool? IDataProvider.IsDBNullAllowed(IDataReader reader, int idx)
-				{
-					throw new NotImplementedException();
-				}
+				bool? IDataProvider.IsDBNullAllowed(IDataReader reader, int idx) => throw new NotImplementedException();
 
-				int IDataProvider.Merge<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source, string tableName, string databaseName, string schemaName)
-				{
-					throw new NotImplementedException();
-				}
+				int IDataProvider.Merge<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source, string tableName, string databaseName, string schemaName) => throw new NotImplementedException();
 
-				int IDataProvider.Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
-				{
-					throw new NotImplementedException();
-				}
+				int IDataProvider.Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge) => throw new NotImplementedException();
 
-#if !NOASYNC
-				Task<int> IDataProvider.MergeAsync<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source, string tableName, string databaseName, string schemaName, CancellationToken token)
-				{
-					throw new NotImplementedException();
-				}
+				Task<int> IDataProvider.MergeAsync<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source, string tableName, string databaseName, string schemaName, CancellationToken token) => throw new NotImplementedException();
 
-				Task<int> IDataProvider.MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
-				{
-					throw new NotImplementedException();
-				}
-#endif
+				Task<int> IDataProvider.MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token) => throw new NotImplementedException();
 
-				void IDataProvider.SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
-				{
-					throw new NotImplementedException();
-				}
+				void IDataProvider.SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value) => throw new NotImplementedException();
 			}
 
 			private bool _bySourceOperationsSupported = false;
@@ -296,6 +217,8 @@ namespace Tests.Merge
 
 			private bool _updateWithDeleteOperationSupported = false;
 
+			private bool _mergeHintsSupported = false;
+
 			// initialize with SQL:2008 defaults (same as base class)
 			private int _operationsLimit = 0;
 
@@ -304,53 +227,19 @@ namespace Tests.Merge
 			{
 			}
 
-			protected override bool BySourceOperationsSupported
-			{
-				get
-				{
-					return _bySourceOperationsSupported;
-				}
-			}
+			protected override bool BySourceOperationsSupported => _bySourceOperationsSupported;
 
-			protected override bool DeleteOperationSupported
-			{
-				get
-				{
-					return _deleteOperationSupported;
-				}
-			}
+			protected override bool DeleteOperationSupported => _deleteOperationSupported;
 
-			protected override int MaxOperationsCount
-			{
-				get
-				{
-					return _operationsLimit;
-				}
-			}
+			protected override int MaxOperationsCount => _operationsLimit;
 
-			protected override bool OperationPredicateSupported
-			{
-				get
-				{
-					return _conditionsSupported;
-				}
-			}
+			protected override bool OperationPredicateSupported => _conditionsSupported;
 
-			protected override bool SameTypeOperationsAllowed
-			{
-				get
-				{
-					return _duplicateSameTypeOperations;
-				}
-			}
+			protected override bool SameTypeOperationsAllowed => _duplicateSameTypeOperations;
 
-			protected override bool UpdateWithDeleteOperationSupported
-			{
-				get
-				{
-					return _updateWithDeleteOperationSupported;
-				}
-			}
+			protected override bool UpdateWithDeleteOperationSupported => _updateWithDeleteOperationSupported;
+
+			protected override bool MergeHintsSupported => _mergeHintsSupported;
 
 			public ValidationTestMergeBuilder WithUpdateWithDelete()
 			{
@@ -387,14 +276,22 @@ namespace Tests.Merge
 				_duplicateSameTypeOperations = false;
 				return this;
 			}
+
+			public ValidationTestMergeBuilder WithHints()
+			{
+				_mergeHintsSupported = true;
+				return this;
+			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Sybase,
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
-			TestProvName.SqlAzure, ProviderName.Informix, ProviderName.SapHana,
-			ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
-		public void NotSupportedProviders(string context)
+		[Test]
+		public void NotSupportedProviders([DataSources(false,
+			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure,
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

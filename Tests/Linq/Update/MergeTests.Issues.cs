@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	using Model;
 
@@ -27,8 +27,11 @@ namespace Tests.Merge
 			public DateTime? datetime2DataType { get; set; }
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Issue200InSource(string context)
+		#region https://github.com/linq2db/linq2db/issues/200
+		[Test]
+		public void Issue200InSource([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -66,18 +69,18 @@ namespace Tests.Merge
 				Assert.AreEqual(2, cnt);
 				Assert.AreEqual(2, result.Length);
 
-				Assert.AreEqual(testData[0].ID, result[0].ID);
 				Assert.AreEqual(testData[0].datetime2DataType, result[0].datetime2DataType);
 				Assert.AreEqual(testData[0].datetimeoffsetDataType, result[0].datetimeoffsetDataType);
 
-				Assert.AreEqual(testData[1].ID, result[1].ID);
 				Assert.AreEqual(testData[1].datetime2DataType, result[1].datetime2DataType);
 				Assert.AreEqual(testData[1].datetimeoffsetDataType, result[1].datetimeoffsetDataType);
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Issue200InPredicate(string context)
+		[Test]
+		public void Issue200InPredicate([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -91,13 +94,11 @@ namespace Tests.Merge
 				{
 					new AllTypes2()
 					{
-						ID = 1,
 						datetimeoffsetDataType = dto,
 						datetime2DataType = dt
 					},
 					new AllTypes2()
 					{
-						ID = 2,
 						datetimeoffsetDataType = dto.AddTicks(1),
 						datetime2DataType = dt.AddTicks(1)
 					}
@@ -115,18 +116,18 @@ namespace Tests.Merge
 				Assert.AreEqual(2, cnt);
 				Assert.AreEqual(2, result.Length);
 
-				Assert.AreEqual(testData[0].ID, result[0].ID);
 				Assert.AreEqual(testData[0].datetime2DataType, result[0].datetime2DataType);
 				Assert.AreEqual(testData[0].datetimeoffsetDataType, result[0].datetimeoffsetDataType);
 
-				Assert.AreEqual(testData[1].ID, result[1].ID);
 				Assert.AreEqual(testData[1].datetime2DataType, result[1].datetime2DataType);
 				Assert.AreEqual(testData[1].datetimeoffsetDataType, result[1].datetimeoffsetDataType);
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Issue200InPredicate2(string context)
+		[Test]
+		public void Issue200InPredicate2([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -164,18 +165,18 @@ namespace Tests.Merge
 				Assert.AreEqual(2, cnt);
 				Assert.AreEqual(2, result.Length);
 
-				Assert.AreEqual(testData[0].ID, result[0].ID);
 				Assert.AreEqual(testData[0].datetime2DataType, result[0].datetime2DataType);
 				Assert.AreEqual(testData[0].datetimeoffsetDataType, result[0].datetimeoffsetDataType);
 
-				Assert.AreEqual(testData[1].ID, result[1].ID);
 				Assert.AreEqual(testData[1].datetime2DataType, result[1].datetime2DataType);
 				Assert.AreEqual(testData[1].datetimeoffsetDataType, result[1].datetimeoffsetDataType);
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Issue200InInsert(string context)
+		[Test]
+		public void Issue200InInsert([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -231,8 +232,10 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Issue200InUpdate(string context)
+		[Test]
+		public void Issue200InUpdate([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -246,13 +249,11 @@ namespace Tests.Merge
 				{
 					new AllTypes2()
 					{
-						ID = 1,
 						datetimeoffsetDataType = dto,
 						datetime2DataType = dt
 					},
 					new AllTypes2()
 					{
-						ID = 2,
 						datetimeoffsetDataType = dto.AddTicks(1),
 						datetime2DataType = dt.AddTicks(1)
 					}
@@ -286,13 +287,182 @@ namespace Tests.Merge
 				Assert.AreEqual(1, cnt);
 				Assert.AreEqual(2, result.Length);
 
-				Assert.AreEqual(testData[0].ID, result[0].ID);
 				Assert.AreEqual(dt2, result[0].datetime2DataType);
 				Assert.AreEqual(dto2, result[0].datetimeoffsetDataType);
 
-				Assert.AreEqual(testData[1].ID, result[1].ID);
 				Assert.AreEqual(testData[1].datetime2DataType, result[1].datetime2DataType);
 				Assert.AreEqual(testData[1].datetimeoffsetDataType, result[1].datetimeoffsetDataType);
+			}
+		}
+		#endregion
+
+		#region https://github.com/linq2db/linq2db/issues/1007
+
+		[Table("Person")]
+		class Person1007
+		{
+			[Column("PersonID"), Identity]
+			public int ID { get; set; }
+
+			[PrimaryKey]
+			public string FirstName { get; set; }
+
+			[Column]
+			public string LastName { get; set; }
+
+			[Column]
+			public string MiddleName { get; set; }
+
+			[Column]
+			public Gender Gender { get; set; }
+		}
+
+		[Test, Parallelizable(ParallelScope.None)]
+		public void Issue1007OnNewAPI([IdentityInsertMergeDataContextSource] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				var table = db.GetTable<TestMappingWithIdentity>();
+				table.Delete();
+
+				db.Insert(new TestMappingWithIdentity());
+
+				var lastId = table.Select(_ => _.Id).Max();
+
+				var source = new[]
+				{
+					new TestMappingWithIdentity()
+					{
+						Field = 10
+					}
+				};
+
+				var rows = table
+					.Merge()
+					.Using(source)
+					.On((s, t) => s.Field == null)
+					.InsertWhenNotMatched()
+					.UpdateWhenMatched()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(1, rows, context);
+
+				Assert.AreEqual(1, result.Count);
+
+				var newRecord = new TestMapping1();
+
+				Assert.AreEqual(lastId, result[0].Id);
+				Assert.AreEqual(10, result[0].Field);
+			}
+		}
+
+		[Ignore("Incorrect SQL generated by old API")]
+		[Test, Parallelizable(ParallelScope.None)]
+		public void Issue1007OnOldAPIv1([IdentityInsertMergeDataContextSource] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				var table = db.GetTable<TestMappingWithIdentity>();
+				table.Delete();
+
+				db.Insert(new TestMappingWithIdentity());
+
+				var lastId = table.Select(_ => _.Id).Max();
+
+				var source = new[]
+				{
+					new TestMappingWithIdentity()
+					{
+						Id = lastId,
+						Field = 10
+					}
+				};
+
+				var rows = db.Merge(source);
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(1, rows, context);
+
+				Assert.AreEqual(1, result.Count);
+
+				var newRecord = new TestMapping1();
+
+				Assert.AreEqual(lastId, result[0].Id);
+				Assert.AreEqual(10, result[0].Field);
+			}
+		}
+
+		// ASE: not supported by old Merge API
+		[Test, Parallelizable(ParallelScope.None)]
+		public void Issue1007OnOldAPIv2([IdentityInsertMergeDataContextSource(
+			ProviderName.Sybase, ProviderName.SybaseManaged)]
+			string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.Doctor.Delete();
+				db.Patient.Delete();
+
+				var table = db.GetTable<Person1007>();
+				table.Delete();
+
+				db.Insert(new Person1007()
+				{
+					FirstName = "first name",
+					LastName = "last name",
+					Gender = Gender.Female
+				});
+
+				var lastId = table.Select(_ => _.ID).Max();
+
+				var source = new[]
+				{
+					new Person1007()
+					{
+						FirstName = "first name",
+						LastName = "updated",
+						Gender = Gender.Male,
+						ID = 10
+					}
+				};
+
+				var rows = db.Merge(source);
+
+				var result = table.OrderBy(_ => _.ID).ToList();
+
+				AssertRowCount(1, rows, context);
+
+				Assert.AreEqual(1, result.Count);
+
+				var newRecord = new TestMapping1();
+
+				Assert.AreEqual(lastId, result[0].ID);
+				Assert.AreEqual("first name", result[0].FirstName);
+				Assert.AreEqual("updated", result[0].LastName);
+				Assert.AreEqual(Gender.Male, result[0].Gender);
+			}
+		}
+		#endregion
+
+		[Test]
+		public void TestDB2NullsInSource([IncludeDataSources(ProviderName.DB2)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.GetTable<MergeTypes>()
+					.TableName("TestMerge1")
+					.Merge()
+					.Using(new[] { new MergeTypes() { Id = 1 }, new MergeTypes() { Id = 2 } })
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.Merge();
 			}
 		}
 	}

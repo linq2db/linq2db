@@ -1,16 +1,18 @@
 ﻿USE master
 GO
 
-DROP DATABASE TestData
+DROP DATABASE {DBNAME}
 GO
 
-CREATE DATABASE TestData
+CREATE DATABASE {DBNAME}
 	ON master = '102400K'
 GO
 
-USE TestData
+USE {DBNAME}
 GO
 
+sp_configure 'enable unicode normalization', 0
+GO
 CREATE TABLE InheritanceParent
 (
 	InheritanceParentId int          NOT NULL,
@@ -51,7 +53,7 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M')
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M')
 GO
 -- Doctor Table Extension
 
@@ -84,11 +86,11 @@ INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoi
 GO
 
 
-CREATE TABLE Parent      (ParentID int, Value1 int NULL)
+CREATE TABLE Parent      (ParentID INT NULL, Value1 int NULL)
 GO
-CREATE TABLE Child       (ParentID int, ChildID int)
+CREATE TABLE Child       (ParentID int NULL, ChildID INT NULL)
 GO
-CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
+CREATE TABLE GrandChild  (ParentID INT NULL, ChildID INT NULL, GrandChildID INT NULL)
 GO
 
 CREATE TABLE LinqDataTypes
@@ -123,7 +125,7 @@ CREATE TABLE AllTypes
 	bigintDataType           bigint            NULL,
 	uBigintDataType          unsigned  bigint  NULL,
 	numericDataType          numeric           NULL,
-	bitDataType              bit           NOT NULL,
+	bitDataType              bit               default(0),
 	smallintDataType         smallint          NULL,
 	uSmallintDataType        unsigned smallint NULL,
 	decimalDataType          decimal           NULL,
@@ -159,8 +161,8 @@ GO
 INSERT INTO AllTypes
 (
 	bigintDataType, numericDataType, bitDataType, smallintDataType, decimalDataType, smallmoneyDataType,
-	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType, 
-	uBigintDataType, uSmallintDataType, uIntDataType, 
+	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType,
+	uBigintDataType, uSmallintDataType, uIntDataType,
 
 	datetimeDataType, smalldatetimeDataType, dateDataType, timeDataType,
 
@@ -244,3 +246,17 @@ CREATE TABLE TestMerge2
 
 	CONSTRAINT PK_TestMerge2 PRIMARY KEY CLUSTERED (Id)
 )
+
+GO
+CREATE TABLE TestMergeIdentity
+(
+	Id     int IDENTITY,
+	Field  int NULL,
+
+	CONSTRAINT PK_TestMergeIdentity PRIMARY KEY CLUSTERED (Id)
+)
+GO
+
+CREATE OR REPLACE PROCEDURE AddIssue792Record AS
+	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792')
+RETURN

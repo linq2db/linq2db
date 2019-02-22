@@ -1,0 +1,2 @@
+<#@ include file="LinqToDB.Tools.ttinclude" #>
+<#@ include file="LinqToDB.SqlCe.ttinclude" #>

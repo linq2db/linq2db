@@ -1,0 +1,49 @@
+<#@ template language="C#" debug="True" hostSpecific="True"                        #>
+<#@ output extension=".generated.cs"                                               #>
+<#@ include file="$(LinqToDBT4SybaseTemplatesDirectory)LinqToDB.Sybase.Tools.ttinclude" #>
+<#@ include file="$(LinqToDBT4SybaseTemplatesDirectory)PluralizationService.ttinclude"  #>
+<# //@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Sybase.Tools.ttinclude" #>
+<# //@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"  #>
+<#
+	/*
+		1. Download and install Sybase data provider for .NET.
+
+		2. Add a reference to Sybase.AdoNet2(4).AseClient.dll.
+
+		3. Create new *.tt file (e.g. MyDatabase.tt) in a folder where you would like to generate your data model
+		   and copy content from this file to it. For example:
+
+			MyProject
+				DataModels
+					MyDatabase.tt
+
+		4. Modify the connection settings below to connect to your database.
+
+		5. Add connection string to the web/app.config file:
+
+			<connectionStrings>
+				<add name="MyDatabase" connectionString="Data Source=MyServer;Port=5000;Database=MyDatabase;Uid=sa;Password=TestPassword;Charset=utf8;" providerName="Sybase" />
+			</connectionStrings>
+
+		6. To access your database use the following code:
+
+			using (var db = new MyDatabaseDB())
+			{
+				var q =
+					from c in db.Customers
+					select c;
+
+				foreach (var c in q)
+					Console.WriteLine(c.ContactName);
+			}
+
+		7. See more at https://github.com/linq2db/t4models
+	*/
+
+	NamespaceName = "DataModels";
+
+	LoadSybaseMetadata("MyServer", "5000", "MyDatabase", "sa", "TestPassword");
+//	LoadSybaseMetadata(string connectionString);
+
+	GenerateModel();
+#>

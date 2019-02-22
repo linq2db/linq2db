@@ -22,8 +22,9 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = false;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
-		public void Test1(string context)
+		[Test]
+		public void Test1([IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -44,7 +45,14 @@ namespace Tests.Linq
 				where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID.Value)
 				select new { p.ParentID, gc3 };
 
-				result.ToList();
+
+				var test = result.GenerateTestString();
+
+#if !APPVEYOR
+				Console.WriteLine(test);
+#endif
+
+				var _ = result.ToList();
 			}
 		}
 	}

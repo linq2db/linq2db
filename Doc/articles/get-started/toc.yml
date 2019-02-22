@@ -1,0 +1,4 @@
+- name: Installing LINQ To DB
+  href: install/index.md
+- name: .NET Framework (Console, WinForms, WPF, etc.)
+  href: full-dotnet/toc.yml

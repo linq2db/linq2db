@@ -13,9 +13,10 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue264Tests : TestBase
 	{
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		[Ignore("Need fix")]
-		public void Test(string context)
+		[Test]
+		public void Test1([IncludeDataSources(false,
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -28,7 +29,16 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expectedCount, actualCount);
+			}
+		}
 
+		[Test]
+		public void Test2([IncludeDataSources(false,
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
+		{
+			using (var db = new DataConnection(context))
+			{
 				var actual = db.GetTable<LinqDataTypes>()
 					.GroupBy(_ => new { month = ByMonth(_.DateTimeValue), year = ByYear(_.DateTimeValue) })
 					.Select(_ => _.Key).ToList();
@@ -41,8 +51,29 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TestWorkaround(string context)
+		[Test]
+		public void Test3([IncludeDataSources(false,
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var actual = db.GetTable<LinqDataTypes>()
+					.GroupBy(_ => ByMonth(_.DateTimeValue))
+					.Select(_ => _.Key).ToList();
+
+				var expected = Types
+					.GroupBy(_ => ByMonth(_.DateTimeValue))
+					.Select(_ => _.Key).ToList();
+
+				AreEqual(expected, actual);
+			}
+		}
+
+		[Test]
+		public void TestWorkaround([IncludeDataSources(false,
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{

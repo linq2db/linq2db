@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\Build\linq2db.Default.props" />
+	<Import Project="..\..\Build\linq2db.Tests.props" />
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.Tests.Base</AssemblyName>
+		<RootNamespace>Tests</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+
+		<ProjectReference Include="..\Model\Tests.Model.csproj" />
+	</ItemGroup>
+
+
+	<!-- .NET Framework -->
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net46' ">
+		<None Update="SqlServerTypes\x64\msvcr120.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="SqlServerTypes\x86\msvcr120.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
+	</ItemGroup>
+</Project>

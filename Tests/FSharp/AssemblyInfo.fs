@@ -4,6 +4,6 @@ open System
 open System.Reflection;
 open System.Runtime.InteropServices;
 
-[<assembly:AssemblyKeyFileAttribute("Tests.FSharp.snk")>]
+[<assembly:AssemblyKeyFileAttribute("..\..\Build\linq2db.snk")>]
 
 do()

@@ -1,22 +1,17 @@
-﻿using LinqToDB.Common;
-using LinqToDB.DataProvider;
-using LinqToDB.Extensions;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
+
+using LinqToDB.DataProvider;
+
+using NUnit.Framework;
 
 namespace Tests.Common
 {
 	[TestFixture]
 	public class DataToolsTests
 	{
-		private static readonly object[] _convertStringToSqlTestData = new object[]
+		static readonly object[] _convertStringToSqlTestData =
 		{
 			new object[] { ""        , null   , null, "''"                                               },
 			new object[] { ""        , "START", null, "START''"                                          },
@@ -49,20 +44,20 @@ namespace Tests.Common
 			new object[] { "\0'\0'\0", null   , null, "chr(0) & '''' & chr(0) & '''' & chr(0)"           },
 			new object[] { "\0'\0'\0", "START", null, "chr(0) & START'''' & chr(0) & START'''' & chr(0)" },
 
-			new object[] { "\r"      , null   , new char[] { '\r', '\n' }, "chr(13)"                                        },
-			new object[] { "\n"      , "START", new char[] { '\r', '\n' }, "chr(10)"                                        },
-			new object[] { "te\rst"  , null   , new char[] { '\r', '\n' }, "'te' & chr(13) & 'st'"                          },
-			new object[] { "te\nst"  , "START", new char[] { '\r', '\n' }, "START'te' & chr(10) & START'st'"                },
-			new object[] { "te\r\nst", null   , new char[] { '\r', '\n' }, "'te' & chr(13) & chr(10) & 'st'"                },
-			new object[] { "te\n\rst", "START", new char[] { '\r', '\n' }, "START'te' & chr(10) & chr(13) & START'st'"      },
-			new object[] { "te\r"    , null   , new char[] { '\r', '\n' }, "'te' & chr(13)"                                 },
-			new object[] { "te\n"    , "START", new char[] { '\r', '\n' }, "START'te' & chr(10)"                            },
-			new object[] { "\rst"    , null   , new char[] { '\r', '\n' }, "chr(13) & 'st'"                                 },
-			new object[] { "\nst"    , "START", new char[] { '\r', '\n' }, "chr(10) & START'st'"                            },
-			new object[] { "\0\r\0"  , null   , new char[] { '\r', '\n' }, "chr(0) & chr(13) & chr(0)"                      },
-			new object[] { "\0\n\0"  , "START", new char[] { '\r', '\n' }, "chr(0) & chr(10) & chr(0)"                      },
-			new object[] { "'\r'"    , null   , new char[] { '\r', '\n' }, "'''' & chr(13) & ''''"                          },
-			new object[] { "'\n'"    , "START", new char[] { '\r', '\n' }, "START'''' & chr(10) & START''''"                },
+			new object[] { "\r"      , null   , new[] { '\r', '\n' }, "chr(13)"                                   },
+			new object[] { "\n"      , "START", new[] { '\r', '\n' }, "chr(10)"                                   },
+			new object[] { "te\rst"  , null   , new[] { '\r', '\n' }, "'te' & chr(13) & 'st'"                     },
+			new object[] { "te\nst"  , "START", new[] { '\r', '\n' }, "START'te' & chr(10) & START'st'"           },
+			new object[] { "te\r\nst", null   , new[] { '\r', '\n' }, "'te' & chr(13) & chr(10) & 'st'"           },
+			new object[] { "te\n\rst", "START", new[] { '\r', '\n' }, "START'te' & chr(10) & chr(13) & START'st'" },
+			new object[] { "te\r"    , null   , new[] { '\r', '\n' }, "'te' & chr(13)"                            },
+			new object[] { "te\n"    , "START", new[] { '\r', '\n' }, "START'te' & chr(10)"                       },
+			new object[] { "\rst"    , null   , new[] { '\r', '\n' }, "chr(13) & 'st'"                            },
+			new object[] { "\nst"    , "START", new[] { '\r', '\n' }, "chr(10) & START'st'"                       },
+			new object[] { "\0\r\0"  , null   , new[] { '\r', '\n' }, "chr(0) & chr(13) & chr(0)"                 },
+			new object[] { "\0\n\0"  , "START", new[] { '\r', '\n' }, "chr(0) & chr(10) & chr(0)"                 },
+			new object[] { "'\r'"    , null   , new[] { '\r', '\n' }, "'''' & chr(13) & ''''"                     },
+			new object[] { "'\n'"    , "START", new[] { '\r', '\n' }, "START'''' & chr(10) & START''''"           },
 		};
 
 		[TestCaseSource(nameof(_convertStringToSqlTestData))]
@@ -74,7 +69,7 @@ namespace Tests.Common
 				sb,
 				"&",
 				startPrefix,
-				(strb, c) => strb.AppendFormat("chr({0})", ((int)c).ToString(CultureInfo.InvariantCulture)),
+				(strb, c) => strb.AppendFormat("chr({0})", c.ToString(CultureInfo.InvariantCulture)),
 				testString,
 				extraEscapes);
 

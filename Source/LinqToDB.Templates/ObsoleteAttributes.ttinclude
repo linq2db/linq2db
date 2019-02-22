@@ -1,0 +1,100 @@
+<#
+	{
+		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
+		var afterGenerateLinqToDBModel  = AfterGenerateLinqToDBModel;
+
+		var obsoleteTables = new List<Tuple<string,string,string>>();
+
+		BeforeGenerateLinqToDBModel = () =>
+		{
+			beforeGenerateLinqToDBModel();
+
+			foreach (var table in Tables.Values)
+			{
+				var idx = table.Description.IndexOf("[Obsolete");
+
+				if (idx >= 0)
+				{
+					var idx2 = table.Description.IndexOf(']', idx);
+
+					if (idx2 > idx)
+					{
+						var text = table.Description.Substring(idx + 1, idx2 - idx - 1);
+						var attr = new Attribute(text);
+						var info = Tuple.Create(table.Schema, table.Name, text);
+
+						if (obsoleteTables.All(a => a != info))
+							obsoleteTables.Add(info);
+						table.Attributes.Add(attr);
+						table.Description = table.Description.Substring(0, idx) + table.Description.Substring(idx2 + 1);
+					}
+				}
+
+				foreach (var c in table.Columns.Values)
+				{
+					idx = c.Description.IndexOf("[Obsolete");
+
+					if (idx >= 0)
+					{
+						var idx2 = c.Description.IndexOf(']', idx);
+
+						if (idx2 > idx)
+						{
+							var attr = new Attribute(c.Description.Substring(idx + 1, idx2 - idx - 1));
+
+							c.Attributes.Add(attr);
+							c.Description = c.Description.Substring(0, idx) + c.Description.Substring(idx2 + 1);
+						}
+					}
+				}
+			}
+		};
+
+		AfterGenerateLinqToDBModel = () =>
+		{
+			foreach (var tableInfo in obsoleteTables)
+			{
+				var schema       = tableInfo.Item1;
+				var name         = tableInfo.Item2;
+				var text         = tableInfo.Item3;
+				var obsoleteAttr = new Attribute(text);
+
+				foreach (var cm in GetTreeNodes(Model)
+					.OfType<MemberBase>()
+					.Where(t => t.BuildType() != null)
+					.Where(t => t.BuildType() == name || t.BuildType().Contains("<" + name + ">")))
+				{
+					// check schema
+
+					if (cm.Parent != null && cm.Parent.Parent != null)
+					{
+						var parent = cm.Parent.Parent;
+
+						if (parent is Table)
+						{
+							var table = (Table)parent;
+
+							if (schema == table.Schema)
+								if (cm.Attributes.All(a => a.Name != text))
+									cm.Attributes.Add(obsoleteAttr);
+						}
+						else if (parent is Class)
+						{
+							var cls = (Class)parent;
+
+							bool parentClassIncludesSchemaName = cls.Name.Equals(schema + "Schema", StringComparison.InvariantCultureIgnoreCase);
+							bool classIsForDefaultSchema       = cls.Name == DataContextName;
+							bool isExtensionMethod             = cls.Parent is Namespace || cls.Name == "TableExtensions";
+
+							if (classIsForDefaultSchema || parentClassIncludesSchemaName || isExtensionMethod)
+								if (cm.Attributes.All(a => a.Name != text))
+									cm.Attributes.Add(obsoleteAttr);
+						}
+					}
+				}
+			}
+
+			afterGenerateLinqToDBModel();
+		};
+	}
+#>

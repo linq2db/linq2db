@@ -6,27 +6,26 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	using Model;
 
 	public partial class MergeTests
 	{
-		// DB2, Firebird, Oracle: identity instert not supported
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Informix, ProviderName.SapHana)]
-		public void ImplicitIdentityInsert(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void ImplicitIdentityInsert([IdentityInsertMergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
 
+				var nextId = db.Person.Select(_ => _.ID).Max() + 1;
+
 				var rows = db.Person
 					.Merge()
 					.Using(
-						db.Person.Select(p => new Model.Person()
+						db.Person.Select(p => new Person()
 						{
 							ID = p.ID + 50,
 							FirstName = p.FirstName,
@@ -51,17 +50,16 @@ namespace Tests.Merge
 				AssertPerson(AssociationPersons[4], result[4]);
 				AssertPerson(AssociationPersons[5], result[5]);
 
-				AssociationPersons[2].ID += 50;
+				AssociationPersons[2].ID = nextId;
 				AssertPerson(AssociationPersons[2], result[6]);
 			}
 		}
 
-		// DB2, Firebird: identity instert not supported
 		// ASE: server dies
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
-		public void ExplicitIdentityInsert(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void ExplicitIdentityInsert([IdentityInsertMergeDataContextSource(
+			ProviderName.Sybase, ProviderName.SybaseManaged)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -107,8 +105,10 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void ExplicitNoIdentityInsert(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void ExplicitNoIdentityInsert([IdentityInsertMergeDataContextSource(
+			ProviderName.Sybase, ProviderName.SybaseManaged)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -149,6 +149,58 @@ namespace Tests.Merge
 				Assert.AreEqual("Inserted 1", result[6].FirstName);
 				Assert.AreEqual("Inserted 2", result[6].LastName);
 				Assert.IsNull(result[6].MiddleName);
+			}
+		}
+
+		// see https://github.com/linq2db/linq2db/issues/914
+		// rationale:
+		// we shouldn't ignore SkipOnInsert attribute for insert operation with implicit field list
+		[Test, Parallelizable(ParallelScope.None)]
+		public void ImplicitInsertIdentityWithSkipOnInsert(
+			[IdentityInsertMergeDataContextSource] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var table = db.GetTable<TestMappingWithIdentity>();
+				table.Delete();
+
+				db.Insert(new TestMappingWithIdentity());
+
+				var lastId = table.Select(_ => _.Id).Max();
+
+				var source = new[]
+				{
+					new TestMappingWithIdentity()
+					{
+						Field = 22,
+					},
+					new TestMappingWithIdentity()
+					{
+						Field = 23
+					}
+				};
+
+				var rows = table
+					.Merge()
+					.Using(source)
+					.On((s, t) => s.Field == t.Field)
+					.InsertWhenNotMatched()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(3, result.Count);
+
+				var newRecord = new TestMapping1();
+
+				Assert.AreEqual(lastId, result[0].Id);
+				Assert.AreEqual(null, result[0].Field);
+				Assert.AreEqual(lastId + 1, result[1].Id);
+				Assert.AreEqual(22, result[1].Field);
+				Assert.AreEqual(lastId + 2, result[2].Id);
+				Assert.AreEqual(23, result[2].Field);
 			}
 		}
 	}

@@ -1,0 +1,7 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+		<LinqToDBT4FirebirdTemplatesDirectory>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4FirebirdTemplatesDirectory>
+		<LinqToDBT4FirebirdToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4FirebirdToolsDirectory>
+		<LinqToDBT4ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ToolsDirectory>
+	</PropertyGroup>
+</Project>

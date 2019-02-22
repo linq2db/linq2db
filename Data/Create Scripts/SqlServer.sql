@@ -1,4 +1,13 @@
-﻿IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Doctor') AND type in (N'U'))
+﻿IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.SameTableName') AND type IN (N'U'))
+BEGIN DROP TABLE dbo.SameTableName END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.TestSchema_SameTableName') AND type IN (N'U'))
+BEGIN DROP TABLE dbo.TestSchema_SameTableName END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.SameTableName') AND type IN (N'U'))
+BEGIN DROP TABLE TestSchema.SameTableName END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Doctor') AND type in (N'U'))
 BEGIN DROP TABLE Doctor END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Patient') AND type in (N'U'))
@@ -9,6 +18,10 @@ BEGIN DROP TABLE InheritanceParent END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('InheritanceChild') AND type in (N'U'))
 BEGIN DROP TABLE InheritanceChild END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'TestProcedure' AND schema_id = SCHEMA_ID('TestSchema'))
+	DROP PROCEDURE TestSchema.TestProcedure
+GO
 
 CREATE TABLE InheritanceParent
 (
@@ -52,7 +65,7 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES (N'Jürgen', N'König',   'M')
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES (N'Jürgen', N'König', 'Ko', 'M')
 GO
 -- Doctor Table Extension
 
@@ -314,6 +327,28 @@ GO
 GRANT EXEC ON Person_SelectByName TO PUBLIC
 GO
 
+-- VariableResults
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'VariableResults')
+BEGIN DROP Procedure VariableResults END
+GO
+CREATE PROCEDURE VariableResults
+	@ReturnFullRow bit = 1
+AS
+BEGIN
+	IF @ReturnFullRow = 1
+	BEGIN
+		SELECT
+			1      as Code,
+			'Val1' as Value1,
+			'Val2' as Value2
+	END
+	ELSE
+		SELECT
+			'v' as Value1,
+			2   as Code
+END
+GO
 
 -- OutRefTest
 
@@ -447,7 +482,7 @@ GO
 INSERT INTO AllTypes
 (
 	bigintDataType, numericDataType, bitDataType, smallintDataType, decimalDataType, smallmoneyDataType,
-	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType, 
+	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType,
 
 	datetimeDataType, smalldatetimeDataType,
 
@@ -462,22 +497,22 @@ INSERT INTO AllTypes
 	xmlDataType
 )
 SELECT
-	     NULL,      NULL,  NULL,    NULL,    NULL,   NULL,    NULL, NULL,   NULL,  NULL,  NULL,
-	     NULL,      NULL,
-	     NULL,      NULL,  NULL,    NULL,    NULL,   NULL,
-	     NULL,      NULL,  NULL,
-	     NULL,      NULL,
-	     NULL,      NULL,  NULL,
-	     NULL
+		 NULL,      NULL,  NULL,    NULL,    NULL,   NULL,    NULL, NULL,   NULL,  NULL,  NULL,
+		 NULL,      NULL,
+		 NULL,      NULL,  NULL,    NULL,    NULL,   NULL,
+		 NULL,      NULL,  NULL,
+		 NULL,      NULL,
+		 NULL,      NULL,  NULL,
+		 NULL
 UNION ALL
 SELECT
 	 1000000,    9999999,     1,   25555, 2222222, 100000, 7777777,  100, 100000, 20.31, 16.2,
 	Cast('2012-12-12 12:12:12' as datetime),
-	           Cast('2012-12-12 12:12:12' as smalldatetime),
-	      '1',     '234', '567', '23233',  '3323',  '111',
-	        1,         2, Cast(3 as varbinary),
+			   Cast('2012-12-12 12:12:12' as smalldatetime),
+		  '1',     '234', '567', '23233',  '3323',  '111',
+			1,         2, Cast(3 as varbinary),
 	Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier),
-	                  10,
+					  10,
 	  '22322',    '3333',  2345,
 	'<root><element strattr="strvalue" intattr="12345"/></root>'
 
@@ -544,11 +579,13 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('GrandChild') A
 BEGIN DROP TABLE GrandChild END
 GO
 
-CREATE TABLE Parent      (ParentID int, Value1 int, _ID INT IDENTITY PRIMARY KEY)
+CREATE TABLE Parent     (ParentID int, Value1 int,  _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE Child       (ParentID int, ChildID int, _ID INT IDENTITY PRIMARY KEY)
+CREATE TABLE Child      (ParentID int, ChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
+CREATE INDEX IX_ChildIndex ON Child (ParentID)
+GO
+CREATE TABLE GrandChild (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
 
 -- SKIP SqlAzure.2012 BEGIN
@@ -564,7 +601,7 @@ GO
 CREATE FUNCTION GetParentByID(@id int)
 RETURNS TABLE
 AS
-RETURN 
+RETURN
 (
 	SELECT * FROM Parent WHERE ParentID = @id
 )
@@ -599,7 +636,7 @@ GO
 -- SKIP SqlServer.2005 BEGIN
 CREATE TABLE LinqDataTypes
 (
-	_ID            int IDENTITY  PRIMARY KEY,
+	_ID            int IDENTITY PRIMARY KEY,
 	ID             int,
 	MoneyValue     decimal(10,4),
 	DateTimeValue  datetime,
@@ -801,6 +838,9 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestMerge2') AND type in (N'U'))
 BEGIN DROP TABLE TestMerge2 END
 GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestMergeIdentity') AND type in (N'U'))
+BEGIN DROP TABLE TestMergeIdentity END
+GO
 CREATE TABLE TestMerge1
 (
 	Id     int NOT NULL CONSTRAINT PK_TestMerge1 PRIMARY KEY CLUSTERED,
@@ -865,4 +905,150 @@ CREATE TABLE TestMerge2
 	FieldEnumString VARCHAR(20)       NULL,
 	FieldEnumNumber INT               NULL
 )
+GO
+CREATE TABLE TestMergeIdentity
+(
+	Id     int NOT NULL IDENTITY(1,1) CONSTRAINT PK_TestMergeIdentity PRIMARY KEY CLUSTERED,
+	Field  int NULL
+)
+GO
+
+-- Generate schema
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchemaY') AND type in (N'U'))
+BEGIN DROP TABLE TestSchemaY END
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchemaX') AND type in (N'U'))
+BEGIN DROP TABLE TestSchemaX END
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.TestSchemaB') AND type in (N'U'))
+BEGIN DROP TABLE TestSchema.TestSchemaB END
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.TestSchemaA') AND type in (N'U'))
+BEGIN
+	DROP TABLE TestSchema.TestSchemaA
+	DROP SCHEMA [TestSchema]
+END
+GO
+
+EXEC('CREATE SCHEMA [TestSchema] AUTHORIZATION [dbo]');
+
+CREATE TABLE [dbo].[TestSchemaX]
+(
+	[TestSchemaXID] int NOT NULL CONSTRAINT [PK_TestSchemaX] PRIMARY KEY,
+	[Field1]        int NOT NULL
+);
+GO
+
+CREATE TABLE [dbo].[TestSchemaY]
+(
+	[TestSchemaXID]       INT NOT NULL,
+	[ParentTestSchemaXID] INT NOT NULL,
+	[OtherID]             INT NOT NULL,
+	CONSTRAINT [FK_TestSchemaY_TestSchemaX]       FOREIGN KEY (TestSchemaXID)       REFERENCES [TestSchemaX] ([TestSchemaXID]),
+	CONSTRAINT [FK_TestSchemaY_ParentTestSchemaX] FOREIGN KEY (ParentTestSchemaXID) REFERENCES [TestSchemaX] ([TestSchemaXID]),
+	CONSTRAINT [FK_TestSchemaY_OtherID]           FOREIGN KEY (TestSchemaXID)       REFERENCES [TestSchemaX] ([TestSchemaXID])
+);
+GO
+
+CREATE TABLE [TestSchema].[TestSchemaA]
+(
+	[TestSchemaAID] int NOT NULL CONSTRAINT [PK_TestSchema_TestSchemaA] PRIMARY KEY,
+	[Field1]        int NOT NULL
+);
+GO
+
+CREATE TABLE [TestSchema].[TestSchemaB]
+(
+	[TestSchemaBID]           INT NOT NULL,
+	[OriginTestSchemaAID]     INT NOT NULL,
+	[TargetTestSchemaAID]     INT NOT NULL,
+	[Target_Test_Schema_A_ID] INT NOT NULL,
+	CONSTRAINT [PK_TestSchema_TestSchemaB] PRIMARY KEY (TestSchemaBID),
+	CONSTRAINT [FK_TestSchema_TestSchemaBY_OriginTestSchemaA]  FOREIGN KEY (OriginTestSchemaAID)       REFERENCES [TestSchema].[TestSchemaA] ([TestSchemaAID]),
+	CONSTRAINT [FK_TestSchema_TestSchemaBY_TargetTestSchemaA]  FOREIGN KEY (TargetTestSchemaAID)       REFERENCES [TestSchema].[TestSchemaA] ([TestSchemaAID]),
+	CONSTRAINT [FK_TestSchema_TestSchemaBY_TargetTestSchemaA2] FOREIGN KEY ([Target_Test_Schema_A_ID]) REFERENCES [TestSchema].[TestSchemaA] ([TestSchemaAID])
+);
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'AddIssue792Record')
+	DROP Procedure AddIssue792Record
+GO
+CREATE Procedure AddIssue792Record
+AS
+BEGIN
+	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792')
+END
+GO
+GRANT EXEC ON AddIssue792Record TO PUBLIC
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Issue1144') AND type in (N'U'))
+BEGIN DROP TABLE Issue1144 END
+GO
+CREATE TABLE Issue1144
+(
+	id	INT
+	CONSTRAINT PK_Issue1144 PRIMARY KEY CLUSTERED (id ASC)
+)
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Column description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'COLUMN',@level2name=N'id'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Index description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'INDEX',@level2name=N'PK_Issue1144'
+
+GO
+CREATE TABLE dbo.SameTableName
+(
+	id	INT
+)
+GO
+CREATE TABLE dbo.TestSchema_SameTableName
+(
+	id	INT
+)
+GO
+CREATE TABLE TestSchema.SameTableName
+(
+	id	INT
+)
+GO
+-- SKIP SqlServer.2005 BEGIN
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.Issue1115') AND type in (N'U'))
+BEGIN DROP TABLE dbo.Issue1115 END
+GO
+
+CREATE TABLE Issue1115
+(
+	id    hierarchyid    NOT NULL CONSTRAINT PK_Issue1115 PRIMARY KEY CLUSTERED
+
+)
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'TableTypeTestProc')
+DROP PROC TableTypeTestProc
+GO
+IF EXISTS (SELECT * FROM sys.types WHERE name = 'TestTableType')
+DROP TYPE TestTableType
+GO
+CREATE TYPE TestTableType AS TABLE
+(
+	Id   INT,
+	Name NVARCHAR(10)
+)
+GO
+CREATE PROC TableTypeTestProc (
+	@table TestTableType READONLY
+)
+AS
+BEGIN
+	SELECT * FROM @table AS Result
+END
+GO
+-- SKIP SqlServer.2005 END
+CREATE PROCEDURE TestSchema.TestProcedure
+AS
+BEGIN
+	SELECT 1
+END
 GO

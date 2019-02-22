@@ -1,4 +1,6 @@
-﻿DROP Procedure Person_SelectByKey
+﻿DROP Procedure AddIssue792Record
+GO
+DROP Procedure Person_SelectByKey
 GO
 DROP Procedure Person_SelectAll
 GO
@@ -93,7 +95,7 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Tester", "Testerson", 
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Jane",   "Doe",       "F")
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Jürgen", "König",     "M")
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ("Jürgen", "König", "Ko", "M")
 GO
 
 INSERT INTO Doctor (PersonID, Taxonomy)   VALUES (1, "Psychiatry")
@@ -345,4 +347,8 @@ CREATE TABLE TestMerge2
 	FieldEnumString VARCHAR(20)       NULL,
 	FieldEnumNumber INT               NULL
 )
+GO
+CREATE Procedure AddIssue792Record
+AS
+	INSERT INTO AllTypes(char20DataType) VALUES('issue792')
 GO

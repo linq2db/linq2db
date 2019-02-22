@@ -1,0 +1,24 @@
+<#@ include file="LinqToDB.ttinclude" #>
+<#+
+LinqToDB.Data.DataConnection GetDB2Connection(string connectionString, LinqToDB.DataProvider.DB2.DB2Version version = LinqToDB.DataProvider.DB2.DB2Version.LUW)
+{
+	return LinqToDB.DataProvider.DB2.DB2Tools.CreateDataConnection(connectionString, version);
+}
+
+LinqToDB.Data.DataConnection GetDB2Connection(string server, string port, string database, string uid, string password)
+{
+	return GetDB2Connection(string.Format("Server={0}:{1};Database={2};UID={3};PWD={4};", server, port, database, uid, password));
+}
+
+void LoadDB2Metadata(string connectionString)
+{
+	using (var dataConnection = GetDB2Connection(connectionString))
+		LoadMetadata(dataConnection);
+}
+
+void LoadDB2Metadata(string server, string port, string database, string uid, string password)
+{
+	using (var dataConnection = GetDB2Connection(server, port, database, uid, password))
+		LoadMetadata(dataConnection);
+}
+#>
