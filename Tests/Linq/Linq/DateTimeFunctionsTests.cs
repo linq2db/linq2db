@@ -40,7 +40,10 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestampUtc };
-				Assert.AreEqual(DateTime.Now.Year, q.ToList().First().Now.Year);
+				var res = q.ToList().First().Now;
+				Assert.AreEqual(DateTime.UtcNow.Date, res.Date);
+				Assert.AreEqual(DateTime.UtcNow.Hour, res.Hour);
+				Assert.AreEqual(DateTime.UtcNow.Minute, res.Minute);
 			}
 		}
 
