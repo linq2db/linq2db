@@ -41,9 +41,9 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestampUtc };
 				var res = q.ToList().First().Now;
+				
 				Assert.AreEqual(DateTime.UtcNow.Date, res.Date);
 				Assert.AreEqual(DateTime.UtcNow.Hour, res.Hour);
-				Assert.AreEqual(DateTime.UtcNow.Minute, res.Minute);
 			}
 		}
 
