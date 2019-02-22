@@ -33,6 +33,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void CurrentTimestampUtc(
+			[DataSources(ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Oracle)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestampUtc };
+				Assert.AreEqual(DateTime.Now.Year, q.ToList().First().Now.Year);
+			}
+		}
+
+		[Test]
 		public void CurrentTimestampUpdate([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

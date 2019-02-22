@@ -716,6 +716,12 @@ namespace LinqToDB
 		[Sql.Function(PN.Sybase,   "GetDate",           ServerSideOnly = true, CanBeNull = false)]
 		public static DateTime CurrentTimestamp => throw new LinqException("The 'CurrentTimestamp' is server side only property.");
 
+		[Sql.Function(PN.SqlServer,    "SYSUTCDATETIME",         ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Expression(PN.SQLite,     "DATETIME('now')",        ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Function(PN.MySql,        "UTC_TIMESTAMP",          ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Expression(PN.PostgreSQL, "timezone('UTC', now())", ServerSideOnly = true, CanBeNull = false)]
+		public static DateTime CurrentTimestampUtc => throw new LinqException($"The '{nameof(CurrentTimestampUtc)}' is server side only property.");
+
 		[Sql.Property(             "CURRENT_TIMESTAMP", CanBeNull = false)]
 		[Sql.Property(PN.Informix, "CURRENT",           CanBeNull = false)]
 		[Sql.Property(PN.Access,   "Now",               CanBeNull = false)]
