@@ -557,23 +557,23 @@ namespace LinqToDB
 				string expStr;
 				switch (part)
 				{
-					case Sql.DateParts.Year        : expStr = "'{0} Year'"; break;
+					case Sql.DateParts.Year        : expStr = "{0} || ' Year'"; break;
 					case Sql.DateParts.Quarter     : 
-						expStr = "'{0} Month'"; 
+						expStr = "({0}) || ' Month'"; 
 						number = builder.Mul(number, 3);
 						break;
-					case Sql.DateParts.Month       : expStr = "'{0} Month'"; break;
+					case Sql.DateParts.Month       : expStr = "{0} || ' Month'"; break;
 					case Sql.DateParts.DayOfYear   : 
 					case Sql.DateParts.WeekDay     : 
-					case Sql.DateParts.Day         : expStr = "'{0} Day'";          break;
+					case Sql.DateParts.Day         : expStr = "{0} || ' Day'";          break;
 					case Sql.DateParts.Week        : 
-						expStr = "'{0} Day'"; 
+						expStr = "({0}) || ' Day'"; 
 						number = builder.Mul(number, 7);
 						break;
-					case Sql.DateParts.Hour        : expStr = "'{0} Hour'"; break;
-					case Sql.DateParts.Minute      : expStr = "'{0} Minute'"; break;
-					case Sql.DateParts.Second      : expStr = "'{0} Second'"; break;
-					case Sql.DateParts.Millisecond : expStr = "'{0} Millisecond'"; break;
+					case Sql.DateParts.Hour        : expStr = "{0} || ' Hour'"; break;
+					case Sql.DateParts.Minute      : expStr = "{0} || ' Minute'"; break;
+					case Sql.DateParts.Second      : expStr = "{0} || ' Second'"; break;
+					case Sql.DateParts.Millisecond : expStr = "{0} || ' Millisecond'"; break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
