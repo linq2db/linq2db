@@ -21,7 +21,7 @@ In other words **LINQ to DB is type-safe SQL**.
    - [Windowing/Analytic Functions](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html)
    - [Merge API](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
  - Extensibility:
-   - [Ability to Map Custom SQL to Static Functions(https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB/Sql/)
+   - [Ability to Map Custom SQL to Static Functions](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB/Sql/)
 
 Visit our [blog](http://blog.linq2db.com/) and see [Github.io documentation](https://linq2db.github.io/index.html) for more details.
 
