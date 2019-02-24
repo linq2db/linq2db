@@ -8,11 +8,11 @@ The SQL Class contains a number of functions implementing common DB Functions su
 
 Note that many of these are used automatically behind the scenes. For example, The provider will automatically translate something such as `table.SomeDateTimeField.Year` into the appropriate `DatePart` call.
 
-At the same time, some people prefer having LINQ (or even Lambda expressions) that read 'closer' to what the SQL will look like. And there are some constructs in many SQL dialects that do not have an equivalent operator/function in .NET.
+At the same time, some people prefer having LINQ (or even Lambda) expressions that read 'closer' to what the SQL will look like. Additionally, there are some constructs in many SQL dialects that do not have an equivalent operator/function in .NET.
 
-### Useful Built in Expressions/Functions:
+### Useful Built in Expressions/Functions (That have no direct equivalent in .NET):
 
- - `Sql.CurrentTimestamp` : Normally, `DateTime` instances passed in are parameterized. This includes `DateTime.Now`. `Sql.CurrentTimestamp` on the other hand will use the SQL Server's current time instead of the time on the .NET server executing the query.
+ - `Sql.CurrentTimestamp` : Normally, `DateTime` instances passed into queries are parameterized on the client side. This includes `DateTime.Now`. `Sql.CurrentTimestamp` on the other hand will use the Database Server's current time instead of the time on the .NET server executing the query.
 
  - `Sql.Between` : Allows you to use `Between(myTable.MyCol1,1,2)` instead of an expression such as `(myTable.MyCol1 >= 1 && myTable.MyCol1 <=2)`.
    - `Sql.NotBetween` : The inverse of `Sql.Between`
@@ -24,7 +24,7 @@ At the same time, some people prefer having LINQ (or even Lambda expressions) th
 
 ## `Sql.ExpressionAttribute`
 
-There are times where you may wish to add a more custom Expression into the LINQ provider. Consider the example of NullIf: While you can often use an expression such as `(table.SomeProperty == someValue ? table.SomeProperty : null)`, some people may prefer being able to write `SqlExpr.NullIf(table.SomeProperty)`. To do so, they merely would need to have a class such as this:
+There are times where you may wish to add a more custom Expression into the LINQ provider. Consider the example of NullIf: While you can often use an expression such as `(table.SomeProperty == someValue ? table.SomeProperty : null)`, this would typically become a `CASE` statemant, whereas some people may prefer being able to use the Database Server's Built in `NullIf` function via a call like `SqlExpr.NullIf(table.SomeProperty,someValue)`. To do so, they merely would need to have a class such as this:
 
 ```
 using Linq2db;

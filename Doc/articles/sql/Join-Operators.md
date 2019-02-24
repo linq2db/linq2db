@@ -1,6 +1,6 @@
 # Joins
 
-`LINQ To DB` supports full set of joins: INNER, LEFT, FULL, RIGHT, CROSS JOIN.
+`LINQ To DB` supports all standard SQL join types: INNER, LEFT, FULL, RIGHT, CROSS JOIN. For types that are not part of the standard LINQ syntax, Methods are provided to make intent clear.
 
 ## INNER JOIN
 
@@ -34,7 +34,7 @@ var query =
     select c;
 ```
 
-### Result SQL
+### Resulting SQL
 
 ```sql
 SELECT
@@ -66,7 +66,7 @@ var query =
     };
 ```
 
-### Result SQL
+### Resulting SQL
 
 ```sql
 SELECT
@@ -120,7 +120,7 @@ var query =
     select c;
 ``````
 
-### Result SQL
+### Resulting SQL
 
 ```sql
 SELECT
@@ -147,7 +147,7 @@ var query =
     select c;
 ```
 
-### Result SQL
+### Resulting SQL
 
 ```sql
 SELECT
@@ -174,7 +174,7 @@ var query =
     select c;
 ```
 
-### Result SQL
+### Resulting SQL
 
 ```sql
 SELECT
@@ -201,7 +201,7 @@ var query =
     select new {c, p};
 ```
 
-### Result SQL
+### Resulting SQL
 
 ```sql
 SELECT
