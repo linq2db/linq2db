@@ -207,8 +207,8 @@ WHERE
 	" + GetSchemaFilter("TABSCHEMA"))
 				.SelectMany(fk =>
 				{
-					var thisTable    = _columns.Where(c => c.TableID == fk.thisTable). OrderByDescending(c => c.Length).ToList();
-					var otherTable   = _columns.Where(c => c.TableID == fk.otherTable).OrderByDescending(c => c.Length).ToList();
+					var thisTable    = _columns.Where(c => c.TableID == fk.thisTable). OrderByDescending(c => c.Name.Length).ToList();
+					var otherTable   = _columns.Where(c => c.TableID == fk.otherTable).OrderByDescending(c => c.Name.Length).ToList();
 					var thisColumns  = fk.thisColumns. Trim();
 					var otherColumns = fk.otherColumns.Trim();
 
@@ -217,13 +217,10 @@ WHERE
 					for (var i = 0; thisColumns.Length > 0; i++)
 					{
 						var thisColumn  = thisTable. FirstOrDefault(c => thisColumns. StartsWith(c.Name));
-						if (thisColumn  == null)
-							continue;
-
 						var otherColumn = otherTable.FirstOrDefault(c => otherColumns.StartsWith(c.Name));
-						if (otherColumn == null)
-							continue;
 
+						if (thisColumn == null || otherColumn == null)
+							break;
 
 						list.Add(new ForeignKeyInfo
 						{

@@ -21,7 +21,7 @@ void CheckNameCasing()
 
 		if (!name.StartsWith("\""))
 			if (name.StartsWith("_") || name.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
-				t.TableName = "\\\"" + name + "\\\"";
+				t.TableName = "\"" + name + "\"";
 
 		foreach (var col in t.Columns.Values)
 		{
@@ -29,7 +29,7 @@ void CheckNameCasing()
 
 			if (!name.StartsWith("\""))
 				if (name.StartsWith("_") || name.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
-					col.ColumnName = "\\\"" + name + "\\\"";
+					col.ColumnName = "\"" + name + "\"";
 		}
 	}
 }
@@ -53,19 +53,19 @@ LinqToDB.Data.DataConnection GetFirebirdConnection(string server, string databas
 
 void LoadFirebirdMetadata(string connectionString)
 {
-	var dataConnection = GetFirebirdConnection(connectionString);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetFirebirdConnection(connectionString))
+		LoadMetadata(dataConnection);
 }
 
 void LoadFirebirdMetadata(string server, string database, string uid, string password)
 {
-	var dataConnection = GetFirebirdConnection(server, database, uid, password);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetFirebirdConnection(server, database, uid, password))
+		LoadMetadata(dataConnection);
 }
 
 void LoadFirebirdMetadata(string server, string database)
 {
-	var dataConnection = GetFirebirdConnection(server, database);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetFirebirdConnection(server, database))
+		LoadMetadata(dataConnection);
 }
 #>

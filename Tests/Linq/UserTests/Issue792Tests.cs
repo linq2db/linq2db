@@ -43,12 +43,13 @@ namespace Tests.UserTests
 			public string char20DataType;
 		}
 
-		[Test, DataContextSource(false,
+		[Test]
+		public void TestWithoutTransaction([DataSources(false,
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			// those providers miss procedure schema load implementation for now
 			ProviderName.Informix)]
-		public void TestWithoutTransaction(string context)
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -79,20 +80,21 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false,
+		[Test]
+		public void TestWithTransaction([DataSources(false,
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			// those providers miss procedure schema load implementation for now
 			ProviderName.Informix,
 			// those providers cannot load schema when in transaction
 			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged,
-			ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB, ProviderName.PostgreSQL,
+			ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MySql57, TestProvName.MariaDB, ProviderName.PostgreSQL,
 			ProviderName.SqlServer2000, ProviderName.SqlServer2005, TestProvName.SqlAzure,
 			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TestWithTransaction(string context)
+			string context)
 		{
 			using (var db = new DataConnection(context))
-			using (var ts = db.BeginTransaction())
+			using (db.BeginTransaction())
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();
 
@@ -113,14 +115,15 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(false,
+		[Test]
+		public void TestWithTransactionThrowsFromProvider([IncludeDataSources(false,
 			ProviderName.DB2,
 			ProviderName.SqlServer2000, ProviderName.SqlServer2005, TestProvName.SqlAzure,
 			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TestWithTransactionThrowsFromProvider(string context)
+			string context)
 		{
 			using (var db = new DataConnection(context))
-			using (var ts = db.BeginTransaction())
+			using (db.BeginTransaction())
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();
 
@@ -136,13 +139,14 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(false,
+		[Test]
+		public void TestWithTransactionThrowsFromLinqToDB([IncludeDataSources(false,
 			ProviderName.Sybase, ProviderName.SybaseManaged,
 			ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB)]
-		public void TestWithTransactionThrowsFromLinqToDB(string context)
+			string context)
 		{
 			using (var db = new DataConnection(context))
-			using (var ts = db.BeginTransaction())
+			using (db.BeginTransaction())
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();
 

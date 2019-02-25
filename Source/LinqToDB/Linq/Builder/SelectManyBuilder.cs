@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 
 							collection.SelectQuery.Where.ConcatSearchCondition(foundJoin.Condition);
 
-							((ISqlExpressionWalkable) collection.SelectQuery.Where).Walk(false, e =>
+							((ISqlExpressionWalkable) collection.SelectQuery.Where).Walk(new WalkOptions(), e =>
 							{
 								if (e is SqlColumn column)
 								{
@@ -110,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var tableSources = new HashSet<ISqlTableSource>();
 
-				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(false, e =>
+				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(new WalkOptions(), e =>
 				{
 					if (e is ISqlTableSource ts && !tableSources.Contains(ts))
 						tableSources.Add(ts);

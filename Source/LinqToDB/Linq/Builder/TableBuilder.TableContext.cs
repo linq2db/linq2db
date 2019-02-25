@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -264,6 +265,7 @@ namespace LinqToDB.Linq.Builder
 				return _variable = Builder.BuildVariable(expr);
 			}
 
+			[UsedImplicitly]
 			static object OnEntityCreated(IDataContext context, object entity)
 			{
 				var onEntityCreated = ((IEntityServices)context).OnEntityCreated;
@@ -361,13 +363,16 @@ namespace LinqToDB.Linq.Builder
 					}
 				).ToList();
 
-				Expression expr = Expression.MemberInit(
+				var initExpr = Expression.MemberInit(
 					Expression.New(objectType),
 						members
+							// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
 							.Where (m => !m.Column.MemberAccessor.IsComplex)
 							.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
 
-				var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
+				Expression expr = initExpr;
+
+				var hasComplex = members.Count > initExpr.Bindings.Count;
 				var loadWith   = GetLoadWith();
 
 				if (hasComplex || loadWith != null)
@@ -926,6 +931,14 @@ namespace LinqToDB.Linq.Builder
 					Expression expr  = null;
 					var        param = Expression.Parameter(typeof(T), "c");
 
+					var queryMethod = association.Association.GetQueryMethod(parent.Type, typeof(T));
+
+					if (queryMethod != null)
+					{
+						expr = queryMethod.GetBody(parent, Expression.Constant(association.Builder.DataContext));
+						return expr;
+					}
+
 					foreach (var cond in association.ParentAssociationJoin.Condition.Conditions.Take(association.RegularConditionCount))
 					{
 						SqlPredicate.ExprExpr p;
@@ -970,10 +983,13 @@ namespace LinqToDB.Linq.Builder
 					if (association.ExpressionPredicate != null)
 					{
 						var l  = association.ExpressionPredicate;
-						var ex = l.Body.Transform(e => e == l.Parameters[0] ? parent : e == l.Parameters[1] ? param : e);
+						var ex = l.GetBody(parent, param);
 
 						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
 					}
+
+					if (expr == null)
+						throw new LinqToDBException("Invalid association for LoadWith");
 
 					var predicate = Expression.Lambda<Func<T,bool>>(expr, param);
 
@@ -1004,16 +1020,15 @@ namespace LinqToDB.Linq.Builder
 					if (buildInfo != null && buildInfo.IsSubQuery)
 					{
 						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
+
+						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess ||
+						    expression.NodeType == ExpressionType.Call)
 						{
 							var tableLevel  = GetAssociation(expression, level);
 							var association = (AssociatedTableContext)tableLevel.Table;
 
 							if (association.IsList)
 							{
-								if (association.InnerContext != null)
-									return new SubQueryContext(association);
-
 								var ma     = expression.NodeType == ExpressionType.MemberAccess
 												? ((MemberExpression)buildInfo.Expression).Expression
 												: expression.NodeType == ExpressionType.Call

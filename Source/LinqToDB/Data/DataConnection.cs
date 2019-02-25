@@ -27,7 +27,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : ICloneable, IEntityServices
+	public partial class DataConnection : ICloneable
 	{
 		#region .ctor
 
@@ -146,6 +146,50 @@ namespace LinqToDB.Data
 			DataProvider     = dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider));
 			ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
 			MappingSchema    = DataProvider.MappingSchema;
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider, connection factory and mapping schema.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
+		/// <param name="connectionFactory">Database connection factory method.</param>
+		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider       dataProvider,
+			[JetBrains.Annotations.NotNull] Func<IDbConnection> connectionFactory,
+			[JetBrains.Annotations.NotNull] MappingSchema       mappingSchema)
+			: this(dataProvider, connectionFactory)
+		{
+			AddMappingSchema(mappingSchema);
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider and connection factory.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
+		/// <param name="connectionFactory">Database connection factory method.</param>
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider       dataProvider,
+			[JetBrains.Annotations.NotNull] Func<IDbConnection> connectionFactory)
+		{
+			if (dataProvider      == null) throw new ArgumentNullException(nameof(dataProvider));
+			if (connectionFactory == null) throw new ArgumentNullException(nameof(connectionFactory));
+
+			InitConfig();
+
+			DataProvider       = dataProvider;
+			MappingSchema      = DataProvider.MappingSchema;
+
+			_connectionFactory = () =>
+			{
+				var connection = connectionFactory();
+
+				if (!Configuration.AvoidSpecificDataProviderAPI && !DataProvider.IsCompatibleConnection(connection))
+					throw new LinqToDBException(
+						$"DataProvider '{DataProvider}' and connection '{connection}' are not compatible.");
+
+				return connection;
+			};
 		}
 
 		/// <summary>
@@ -895,10 +939,11 @@ namespace LinqToDB.Data
 
 		#region Connection
 
-		bool          _closeConnection;
-		bool          _disposeConnection = true;
-		bool          _closeTransaction;
-		IDbConnection _connection;
+		bool                _closeConnection;
+		bool                _disposeConnection = true;
+		bool                _closeTransaction;
+		IDbConnection       _connection;
+		Func<IDbConnection> _connectionFactory;
 
 		/// <summary>
 		/// Gets underlying database connection, used by current connection object.
@@ -909,14 +954,19 @@ namespace LinqToDB.Data
 			{
 				if (_connection == null)
 				{
-					_connection = DataProvider.CreateConnection(ConnectionString);
+					if (_connectionFactory != null)
+						_connection = _connectionFactory();
+					else
+						_connection = DataProvider.CreateConnection(ConnectionString);
 
 					if (RetryPolicy != null)
 						_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);
+
 				}
 
 				if (_connection.State == ConnectionState.Closed)
 				{
+					OnBeforeConnectionOpen?.Invoke(this, _connection);
 					_connection.Open();
 					_closeConnection = true;
 					OnConnectionOpened?.Invoke(this, _connection);
@@ -937,6 +987,16 @@ namespace LinqToDB.Data
 
 		/// <inheritdoc />
 		public Action<EntityCreatedEventArgs> OnEntityCreated    { get; set; }
+
+		/// <summary>
+		/// Event, triggered before connection opened using <see cref="IDbConnection.Open"/> method.
+		/// </summary>
+		public event Action<DataConnection, IDbConnection> OnBeforeConnectionOpen;
+
+		/// <summary>
+		/// Event, triggered before connection opened using <see cref="DbConnection.OpenAsync()"/> methods.
+		/// </summary>
+		public event Func<DataConnection, IDbConnection, CancellationToken, Task> OnBeforeConnectionOpenAsync;
 
 		/// <summary>
 		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> method.
@@ -1399,11 +1459,17 @@ namespace LinqToDB.Data
 		public object Clone()
 		{
 			var connection =
-				_connection == null                 ? null :
+				(_connection == null                 ? null :
 				_connection is ICloneable cloneable ? (IDbConnection)cloneable.Clone() :
-				                                      null;
+				                                      null) ?? _connectionFactory?.Invoke();
 
-			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
+			// https://github.com/linq2db/linq2db/issues/1486
+			// when there is no ConnectionString and provider doesn't support connection cloning
+			// try to get ConnectionString from _connection
+			// will not work for providers that remove security information from connection string
+			var connectionString = ConnectionString ?? (connection == null ? _connection?.ConnectionString : null);
+
+			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema);
 		}
 
 		#endregion

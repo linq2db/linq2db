@@ -3,11 +3,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Tools;
 
 namespace Tests.Playground
 {
+	using Tools;
+
 	[TestFixture]
 	public class ExpandTests : TestBase
 	{
@@ -35,9 +37,9 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InvocationTestLocal([SQLiteDataSources] string context)
+		public void InvocationTestLocal([SQLiteDataSources] string context, [Values(1, 2)] int param)
 		{
-			Expression<Func<SampleClass, bool>> predicate = c => c.Value > 1;
+			Expression<Func<SampleClass,bool>> predicate = c => c.Value > param;
 			var sampleData = GenerateData();
 
 			using (var db = GetDataContext(context))
@@ -50,14 +52,14 @@ namespace Tests.Playground
 					where predicate.Compile()(t)
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
 		[Test]
-		public void CompileTestLocal([SQLiteDataSources] string context)
+		public void CompileTestLocal([SQLiteDataSources] string context, [Values(1, 2)] int param)
 		{
-			Expression<Func<SampleClass, bool>> predicate = c => c.Value > 1;
+			Expression<Func<SampleClass, bool>> predicate = c => c.Value > param;
 			var sampleData = GenerateData();
 
 			using (var db = GetDataContext(context))
@@ -68,17 +70,17 @@ namespace Tests.Playground
 					select t;
 
 				var expected = from t in sampleData
-					from t2 in table.Where(predicate.Compile())
+					from t2 in sampleData.Where(predicate.Compile())
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
 		[Test]
-		public void NonCompileTestLocal([SQLiteDataSources] string context)
+		public void NonCompileTestLocal([SQLiteDataSources] string context, [Values(1, 2)] int param)
 		{
-			Expression<Func<SampleClass, bool>> predicate = c => c.Value > 1;
+			Expression<Func<SampleClass, bool>> predicate = c => c.Value > param;
 			var sampleData = GenerateData();
 
 			using (var db = GetDataContext(context))
@@ -89,15 +91,15 @@ namespace Tests.Playground
 					select t;
 
 				var expected = from t in sampleData
-					from t2 in table.Where(predicate)
+					from t2 in sampleData.Where(predicate.Compile())
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
 		[Test]
-		public void InvocationTestFunction([SQLiteDataSources] string context)
+		public void InvocationTestFunction([SQLiteDataSources] string context, [Values(1, 2)] int param)
 		{
 			var sampleData = GenerateData();
 
@@ -105,18 +107,18 @@ namespace Tests.Playground
 			using (var table = db.CreateLocalTable(sampleData))
 			{
 				var query = from t in table
-					where GetTestPredicate(1).Compile()(t)
+					where GetTestPredicate(param).Compile()(t)
 					select t;
 				var expected = from t in sampleData
-					where GetTestPredicate(1).Compile()(t)
+					where GetTestPredicate(param).Compile()(t)
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
 		[Test]
-		public void LocalInvocation([SQLiteDataSources] string context)
+		public void LocalInvocation([SQLiteDataSources] string context, [Values(2, 3)] int param)
 		{
 			var sampleData = GenerateData();
 
@@ -126,14 +128,39 @@ namespace Tests.Playground
 				var ids = new[] { 1, 2, 3, 4, 5, 6 };
 
 				var query = from t in table
-					where ids.Where(i => i < 3).GroupBy(i => i).Select(i => i.Key).Contains(t.Id)
+					where ids.Where(i => i < param).GroupBy(i => i).Select(i => i.Key).Contains(t.Id)
 					select t;
 				var expected = from t in sampleData
-					where ids.Where(i => i < 3).GroupBy(i => i).Select(i => i.Key).Contains(t.Id)
+					where ids.Where(i => i < param).GroupBy(i => i).Select(i => i.Key).Contains(t.Id)
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
+
+		[Test]
+		public void InvocationTestByInvoke([SQLiteDataSources] string context, [Values(1, 2)] int param)
+		{
+			var sampleData = GenerateData();
+
+			Expression<Func<int, int, int>> func = (p1, p2) => p1 * 10 + p2 * 2;
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(sampleData))
+			{
+				var query = table.AsQueryable();
+
+				query.Set(q => q.Value, q => func.Compile()(param, q.Value)).Update();
+
+				var compiled = func.Compile();
+				foreach (var sd in sampleData)
+				{
+					sd.Value = compiled(param, sd.Value);
+				}
+
+				AreEqualWithComparer(sampleData, query);
+			}
+		}
+
 	}
 }

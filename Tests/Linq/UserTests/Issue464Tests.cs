@@ -16,8 +16,8 @@ namespace Tests.UserTests
 	public class Issue464Tests : TestBase
 	{
 
-		[Test, DataContextSource(false)]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources(false)] string context)
 		{
 			var firebirdQuote = FirebirdSqlBuilder.IdentifierQuoteMode;
 

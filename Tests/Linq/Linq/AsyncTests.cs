@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Data;
 
@@ -15,8 +16,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class AsyncTests : TestBase
 	{
-		[Test, DataContextSource(false)]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources(false)] string context)
 		{
 			TestImpl(context);
 		}
@@ -32,8 +33,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context + ".LinqService"))
 			{
@@ -42,8 +43,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void TestForEach(string context)
+		[Test]
+		public void TestForEach([DataSources(false)] string context)
 		{
 			TestForEachImpl(context);
 		}
@@ -60,8 +61,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void TestExecute1(string context)
+		[Test]
+		public void TestExecute1([DataSources(false)] string context)
 		{
 			TestExecute1Impl(context);
 		}
@@ -78,8 +79,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void TestExecute2(string context)
+		[Test]
+		public void TestExecute2([DataSources(false)] string context)
 		{
 			using (var conn = new TestDataConnection(context))
 			{
@@ -91,8 +92,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void TestQueryToArray(string context)
+		[Test]
+		public void TestQueryToArray([DataSources(false)] string context)
 		{
 			TestQueryToArrayImpl(context);
 		}
@@ -112,8 +113,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public async Task FirstAsyncTest(string context)
+		[Test]
+		public async Task FirstAsyncTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -123,8 +124,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public async Task ContainsAsyncTest(string context)
+		[Test]
+		public async Task ContainsAsyncTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -136,8 +137,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public async Task TestFirstOrDefault(string context)
+		[Test]
+		public async Task TestFirstOrDefault([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -147,12 +148,12 @@ namespace Tests.Linq
 						where Sql.Ext.In(o.ParentID, 1, 2, 3, (int?)null) || o.ParentID == param
 						select o;
 
-				var zz = await resultQuery.FirstOrDefaultAsync();
+				var _ = await resultQuery.FirstOrDefaultAsync();
 			}
 		}
 
-		[Test, DataContextSource]
-		public async Task TakeSkipTest(string context)
+		[Test]
+		public async Task TakeSkipTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

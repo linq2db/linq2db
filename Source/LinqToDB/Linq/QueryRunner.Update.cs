@@ -86,7 +86,10 @@ namespace LinqToDB.Linq
 
 				var type = GetType<T>(obj, dataContext);
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
-				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
+				var ei   = Configuration.Linq.DisableQueryCache
+					? CreateQuery(dataContext, tableName, databaseName, schemaName, type)
+					: _queryCache.GetOrAdd(key,
+						o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -99,7 +102,10 @@ namespace LinqToDB.Linq
 
 				var type = GetType<T>(obj, dataContext);
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
-				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
+				var ei   = Configuration.Linq.DisableQueryCache
+					? CreateQuery(dataContext, tableName, databaseName, schemaName, type)
+					: _queryCache.GetOrAdd(key,
+						o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 

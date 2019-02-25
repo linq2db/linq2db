@@ -38,11 +38,13 @@ namespace Tests.UserTests
 			public List<Child> Children { get; set; }
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Firebird, ProviderName.SapHana
-			)]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources(
+			ProviderName.Access, ProviderName.DB2, ProviderName.Informix,
+			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
+			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+			ProviderName.Firebird, ProviderName.SapHana)]
+			string context)
 		{
 			var harnessIds = new int[2];
 

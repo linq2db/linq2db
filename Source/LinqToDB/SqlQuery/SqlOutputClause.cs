@@ -62,16 +62,16 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)SourceTable  )?.Walk(skipColumns, func);
-			((ISqlExpressionWalkable)DeletedTable )?.Walk(skipColumns, func);
-			((ISqlExpressionWalkable)InsertedTable)?.Walk(skipColumns, func);
-			((ISqlExpressionWalkable)OutputTable  )?.Walk(skipColumns, func);
+			((ISqlExpressionWalkable)SourceTable  )?.Walk(options, func);
+			((ISqlExpressionWalkable)DeletedTable )?.Walk(options, func);
+			((ISqlExpressionWalkable)InsertedTable)?.Walk(options, func);
+			((ISqlExpressionWalkable)OutputTable  )?.Walk(options, func);
 
 			if (HasOutputItems)
 				foreach (var t in OutputItems)
-					((ISqlExpressionWalkable)t).Walk(skipColumns, func);
+					((ISqlExpressionWalkable)t).Walk(options, func);
 
 			return null;
 		}

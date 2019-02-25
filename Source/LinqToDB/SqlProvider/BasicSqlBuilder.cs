@@ -348,7 +348,7 @@ namespace LinqToDB.SqlProvider
 				{
 					AppendIndent();
 					StringBuilder.Append("WITH ");
-	
+
 					if (IsRecursiveCteKeywordRequired && with.Clauses.Any(c => c.IsRecursive))
 						StringBuilder.Append("RECURSIVE ");
 
@@ -923,10 +923,19 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table;
-
 			AppendIndent().Append("DROP TABLE ");
-			BuildPhysicalTable(table, null);
+			BuildPhysicalTable(dropTable.Table, null);
+			StringBuilder.AppendLine();
+		}
+
+		protected void BuildDropTableStatementIfExists(SqlDropTableStatement dropTable)
+		{
+			AppendIndent().Append("DROP TABLE ");
+
+			if (dropTable.IfExists)
+				StringBuilder.Append("IF EXISTS ");
+
+			BuildPhysicalTable(dropTable.Table, null);
 			StringBuilder.AppendLine();
 		}
 
@@ -1314,7 +1323,7 @@ namespace LinqToDB.SqlProvider
 						StringBuilder.AppendLine();
 					if (appendParentheses)
 						AppendIndent().Append(")");
-					
+
 					break;
 
 				default                          :
@@ -2347,6 +2356,8 @@ namespace LinqToDB.SqlProvider
 		{
 			if (text.IsNullOrEmpty())
 				return text;
+
+			text = text.Replace("\r", "");
 
 	        var strArray = text.Split('\n');
 	        var sb = new StringBuilder();

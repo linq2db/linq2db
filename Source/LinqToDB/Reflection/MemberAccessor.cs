@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Linq;
-using LinqToDB.Common;
 
 namespace LinqToDB.Reflection
 {
+	using Common;
 	using Expressions;
 	using Extensions;
 	using Mapping;
 
 	public class MemberAccessor
 	{
-		static readonly ConstructorInfo ArgumentExceptionConstructorInfo = typeof(ArgumentException).GetConstructor(new[] {typeof(string)}) ??
-					            throw new Exception($"Can not retrieve information about constructor for {nameof(ArgumentException)}");
+		static readonly ConstructorInfo ArgumentExceptionConstructorInfo =
+			typeof(ArgumentException).GetConstructor(new[] {typeof(string)}) ??
+				throw new Exception($"Can not retrieve information about constructor for {nameof(ArgumentException)}");
 
 		internal MemberAccessor(TypeAccessor typeAccessor, string memberName)
 		{
@@ -62,7 +63,7 @@ namespace LinqToDB.Reflection
 							var info = infos[i];
 							var next = Expression.MakeMemberAccess(ex, info.member);
 
-							if (i == infos.Length - 1) 
+							if (i == infos.Length - 1)
 								return Expression.Assign(ret, next);
 
 							if (next.Type.IsClassEx() || next.Type.IsNullable())
@@ -70,10 +71,10 @@ namespace LinqToDB.Reflection
 								var local = Expression.Variable(next.Type);
 
 								return Expression.Block(
-									new[] { local }, 
+									new[] { local },
 									Expression.Assign(local, next) as Expression,
 									Expression.IfThen(
-										Expression.NotEqual(local, Expression.Constant(null)), 
+										Expression.NotEqual(local, Expression.Constant(null)),
 										MakeGetter(local, i + 1)));
 							}
 
@@ -164,7 +165,7 @@ namespace LinqToDB.Reflection
 
 						SetterExpression = Expression.Lambda(
 							Expression.Block(
-								new[] { fakeParam }, 
+								new[] { fakeParam },
 								Expression.Assign(fakeParam, Expression.Constant(0))),
 							objParam,
 							valueParam);

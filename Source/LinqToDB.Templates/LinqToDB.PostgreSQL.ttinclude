@@ -26,7 +26,8 @@ bool GenerateCaseSensitiveNames = false; // Defines whether to generate case sen
 // exception: functions with only one out parameter treat it as return parameter
 void FixRecordResultFunctions()
 {
-	var initMappingSchema = DataContextObject.Members.OfType<Method>().Single(m => m.Name == "InitMappingSchema");
+	var initMappingSchema = new Method(() => "void", "InitMappingSchema") { AccessModifier = AccessModifier.Partial };
+	DataContextObject.Members.Add(initMappingSchema);
 	foreach (var proc in Procedures.Values
 		.Where(p => p.IsFunction && !p.IsAggregateFunction && !p.IsTableFunction && p.ProcParameters.Any(pr => pr.IsOut)))
 	{
@@ -73,7 +74,7 @@ void FixFunctionNames()
 	foreach (var proc in Procedures.Values)
 	{
 		if (proc.ProcedureName.Any(char.IsUpper))
-			proc.ProcedureName = "\\\"" + proc.ProcedureName + "\\\"";
+			proc.ProcedureName = "\"" + proc.ProcedureName + "\"";
 	}
 }
 
@@ -108,12 +109,12 @@ void SetCaseSensitiveNames()
 		foreach (var t in Tables.Values)
 		{
 			if (t.TableName.Any(char.IsUpper))
-				t.TableName = "\\\"" + t.TableName + "\\\"";
+				t.TableName = "\"" + t.TableName + "\"";
 
 			foreach (var c in t.Columns.Values)
 			{
 				if (c.ColumnName.Any(char.IsUpper))
-					c.ColumnName = "\\\"" + c.ColumnName + "\\\"";
+					c.ColumnName = "\"" + c.ColumnName + "\"";
 			}
 		}
 	}
@@ -131,13 +132,13 @@ LinqToDB.Data.DataConnection GetPostgreSQLConnection(string server, string port,
 
 void LoadPostgreSQLMetadata(string connectionString)
 {
-	var dataConnection = GetPostgreSQLConnection(connectionString);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetPostgreSQLConnection(connectionString))
+		LoadMetadata(dataConnection);
 }
 
 void LoadPostgreSQLMetadata(string server, string port, string database, string uid, string password)
 {
-	var dataConnection = GetPostgreSQLConnection(server, port, database, uid, password);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetPostgreSQLConnection(server, port, database, uid, password))
+		LoadMetadata(dataConnection);
 }
 #>

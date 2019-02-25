@@ -18,10 +18,11 @@ namespace Tests.xUpdate
 	using Model;
 
 	[TestFixture]
+//	[Order(10000)]
 	public class UpdateTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Update1(string context)
+		[Test]
+		public void Update1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -43,8 +44,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public async Task Update1Async(string context)
+		[Test]
+		public async Task Update1Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -66,8 +67,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Update2(string context)
+		[Test]
+		public void Update2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -89,8 +90,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public async Task Update2Async(string context)
+		[Test]
+		public async Task Update2Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -112,8 +113,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Update3(string context)
+		[Test]
+		public void Update3([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -135,8 +136,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Update4(string context)
+		[Test]
+		public void Update4([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -162,8 +163,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public async Task Update4Async(string context)
+		[Test]
+		public async Task Update4Async([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -189,8 +190,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Update5(string context)
+		[Test]
+		public void Update5([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -216,8 +217,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Update6(string context)
+		[Test]
+		public void Update6([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -243,8 +244,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Update7(string context)
+		[Test]
+		public void Update7([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -277,8 +278,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Update8(string context)
+		[Test]
+		public void Update8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -305,16 +306,16 @@ namespace Tests.xUpdate
 		[Test]
 		public void Update9(
 			[DataSources(
-				ProviderName.Informix,
-				ProviderName.SqlCe,
-				ProviderName.DB2,
+			ProviderName.Informix,
+			ProviderName.SqlCe,
+			ProviderName.DB2,
 				ProviderName.Firebird, TestProvName.Firebird3,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-				ProviderName.Access,
-				ProviderName.SapHana)]
+			ProviderName.Access,
+			ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -346,16 +347,16 @@ namespace Tests.xUpdate
 		[Test]
 		public void Update10(
 			[DataSources(
-				ProviderName.Informix,
-				ProviderName.SqlCe,
-				ProviderName.DB2,
+			ProviderName.Informix,
+			ProviderName.SqlCe,
+			ProviderName.DB2,
 				ProviderName.Firebird, TestProvName.Firebird3,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-				ProviderName.Access,
-				ProviderName.SapHana)]
+			ProviderName.Access,
+			ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -384,8 +385,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		//[Test, DataContextSource]
-		public void Update11(string context)
+		//[Test]
+		public void Update11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -474,8 +475,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void UpdateComplex1(string context)
+		[Test]
+		public void UpdateComplex1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -509,8 +510,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public async Task UpdateComplex1Async(string context)
+		[Test]
+		public async Task UpdateComplex1Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -545,8 +546,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void UpdateComplex2(string context)
+		[Test]
+		public void UpdateComplex2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -583,8 +584,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void UpdateAssociation1(string context)
+		[Test]
+		public void UpdateAssociation1([DataSources(
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -614,8 +617,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public async Task UpdateAssociation1Async(string context)
+		[Test]
+		public async Task UpdateAssociation1Async([DataSources(
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -645,8 +650,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void UpdateAssociation2(string context)
+		[Test]
+		public void UpdateAssociation2([DataSources(
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -676,8 +683,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void UpdateAssociation3(string context)
+		[Test]
+		public void UpdateAssociation3([DataSources(
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -707,8 +716,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void UpdateAssociation4(string context)
+		[Test]
+		public void UpdateAssociation4([DataSources(
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -778,15 +789,15 @@ namespace Tests.xUpdate
 		public void UpdateAssociation5(
 			[DataSources(
 				false,
-				ProviderName.Access,
-				ProviderName.DB2,
-				ProviderName.Firebird,
-				ProviderName.Informix,
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Firebird,
+			ProviderName.Informix,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SqlCe,
+			ProviderName.SqlCe,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-				ProviderName.SapHana)]
+			ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = new DataConnection(context))
@@ -810,8 +821,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void AsUpdatableTest(string context)
+		[Test]
+		public void AsUpdatableTest([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -847,8 +858,8 @@ namespace Tests.xUpdate
 			[Column]        public int? GrandChildID;
 		}
 
-		[Test, DataContextSource]
-		public void UpdateNullablePrimaryKey(string context)
+		[Test]
+		public void UpdateNullablePrimaryKey([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -867,15 +878,15 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateTop(
 			[DataSources(
-				ProviderName.Access,
-				ProviderName.DB2,
+			ProviderName.Access,
+			ProviderName.DB2,
 				ProviderName.Firebird, TestProvName.Firebird3,
-				ProviderName.Informix,
+			ProviderName.Informix,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-				ProviderName.SqlCe,
-				ProviderName.SqlServer2000,
-				ProviderName.SapHana)]
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
+			ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -908,16 +919,16 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateTakeOrdered(
 			[DataSources(
-				ProviderName.Access,
-				ProviderName.DB2,
+			ProviderName.Access,
+			ProviderName.DB2,
 				ProviderName.Firebird, TestProvName.Firebird3,
-				ProviderName.Informix,
+			ProviderName.Informix,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000,
 				ProviderName.SapHana,
-				ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB,
+				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MySql57, TestProvName.MariaDB,
 				ProviderName.Sybase, ProviderName.SybaseManaged,
 				ProviderName.OracleNative, ProviderName.OracleManaged)]
 			string context)
@@ -955,16 +966,16 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateSkipTake(
 			[DataSources(
-				ProviderName.Access,
-				ProviderName.DB2,
+			ProviderName.Access,
+			ProviderName.DB2,
 				ProviderName.Firebird, TestProvName.Firebird3,
-				ProviderName.Informix,
+			ProviderName.Informix,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000,
 				ProviderName.SapHana,
-				ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB,
+				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MySql57, TestProvName.MariaDB,
 				ProviderName.Sybase, ProviderName.SybaseManaged,
 				ProviderName.OracleNative, ProviderName.OracleManaged)]
 			string context)
@@ -1005,14 +1016,14 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateTakeNotOrdered(
 			[DataSources(
-				ProviderName.Access,
-				ProviderName.DB2,
+			ProviderName.Access,
+			ProviderName.DB2,
 				ProviderName.Firebird, TestProvName.Firebird3,
-				ProviderName.Informix,
+			ProviderName.Informix,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
 				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-				ProviderName.SqlCe,
-				ProviderName.SqlServer2000,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
 				ProviderName.SapHana)]
 			string context)
 		{
@@ -1045,8 +1056,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix, ProviderName.SqlCe)]
-		public void UpdateSetSelect(string context)
+		[Test]
+		public void UpdateSetSelect([DataSources(
+			ProviderName.Access, ProviderName.Informix, ProviderName.SqlCe)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1077,7 +1090,7 @@ namespace Tests.xUpdate
 				ProviderName.Informix,
 				ProviderName.Firebird, TestProvName.Firebird3,
 				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.Sybase, ProviderName.SybaseManaged,
 				ProviderName.SapHana)]
 			string context)
@@ -1117,8 +1130,11 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Sybase)]
-		public void UpdateIssue321Regression(string context)
+		[Test]
+		public void UpdateIssue321Regression([DataSources(
+			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird,
+			TestProvName.Firebird3, ProviderName.Sybase)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1160,8 +1176,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource()]
-		public void UpdateMultipleColumns(string context)
+		[Test()]
+		public void UpdateMultipleColumns([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1201,12 +1217,14 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
-		[Test, DataContextSource]
-		public void UpdateByTableName(string context)
+		[ActiveIssue(
+			Configurations = new [] { ProviderName.OracleNative },
+			Details = "ORA-00955: name is already used by an existing object")]
+		[Test]
+		public void UpdateByTableName([DataSources] string context)
 		{
 			const string schemaName = null;
-			const string tableName  = "xxPerson";
+			var tableName  = InsertTests.GetTableName(context, "32");
 
 			using (var db = GetDataContext(context))
 			{
@@ -1245,11 +1263,14 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public async Task UpdateByTableNameAsync(string context)
+		[ActiveIssue(
+			Configurations = new [] { ProviderName.OracleNative },
+			Details = "ORA-00955: name is already used by an existing object")]
+		[Test]
+		public async Task UpdateByTableNameAsync([DataSources] string context)
 		{
 			const string schemaName = null;
-			const string tableName  = "xxPerson";
+			var tableName  = InsertTests.GetTableName(context, "33");
 
 			using (var db = GetDataContext(context))
 			{
@@ -1287,6 +1308,5 @@ namespace Tests.xUpdate
 				await table.DropAsync();
 			}
 		}
-
 	}
 }

@@ -15,10 +15,7 @@ namespace Tests.Linq
 	{
 		partial class GenericQueryBase
 		{
-			protected IQueryable<IdlPatient> AllPatients2
-			{
-				get { return m_ds.Patients(); }
-			}
+			protected IQueryable<IdlPatient> AllPatients2 => m_ds.Patients();
 		}
 
 		public class GenericConcatQuery1 : GenericQueryBase
@@ -45,8 +42,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.MySql)]
-		public void TestMono03Mono(string context)
+		[Test]
+		public void TestMono03Mono([IncludeDataSources(ProviderName.MySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.That(new GenericConcatQuery1(db, new object[] { "A", 1 }).Query().ToList(), Is.Not.Null);

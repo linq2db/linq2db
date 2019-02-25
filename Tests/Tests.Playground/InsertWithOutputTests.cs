@@ -3,7 +3,7 @@ using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
-using Tests.Tools;
+using LinqToDB.Tools.Comparers;
 
 namespace Tests.Playground
 {
@@ -94,7 +94,7 @@ namespace Tests.Playground
 						Value = s.Value + 100,
 						ValueStr = s.ValueStr + 100,
 					}),
-					output, ComparerBuilder<DestinationTable>.GetEqualityComparer());
+					output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}
 

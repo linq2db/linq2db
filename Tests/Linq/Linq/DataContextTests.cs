@@ -12,8 +12,11 @@ namespace Tests.Linq
 	[TestFixture]
 	public class DataContextTests : TestBase
 	{
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana)]
-		public void TestContext(string context)
+		[Test]
+		public void TestContext([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014, ProviderName.SapHana)]
+			string context)
 		{
 			var ctx = new DataContext(context);
 
@@ -39,8 +42,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana)]
-		public void TestContextToString(string context)
+		[Test]
+		public void TestContextToString([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014, ProviderName.SapHana)]
+			string context)
 		{
 			using (var ctx = new DataContext(context))
 			{
@@ -54,8 +60,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Issue210(string context)
+		[Test]
+		public void Issue210([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			string context)
 		{
 			using (var ctx = new DataContext(context))
 			{

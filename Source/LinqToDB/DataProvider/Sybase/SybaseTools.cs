@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Reflection;
-using LinqToDB.Common;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Sybase
 {
 	using Data;
-	using LinqToDB.Configuration;
+	using Common;
+	using Configuration;
+	using Extensions;
 
 	public static class SybaseTools
 	{
@@ -28,9 +28,9 @@ namespace LinqToDB.DataProvider.Sybase
 
 				var _ =
 					File.Exists(Path.Combine(path, (NativeAssemblyName = "Sybase.AdoNet45.AseClient") + ".dll")) ||
-					File.Exists(Path.Combine(path, (NativeAssemblyName = "Sybase.AdoNet4.AseClient") + ".dll")) ||
+					File.Exists(Path.Combine(path, (NativeAssemblyName = "Sybase.AdoNet4.AseClient")  + ".dll")) ||
 					File.Exists(Path.Combine(path, (NativeAssemblyName = "Sybase.AdoNet35.AseClient") + ".dll")) ||
-					File.Exists(Path.Combine(path, (NativeAssemblyName = "Sybase.AdoNet2.AseClient") + ".dll"));
+					File.Exists(Path.Combine(path, (NativeAssemblyName = "Sybase.AdoNet2.AseClient")  + ".dll"));
 			}
 			catch
 			{
@@ -76,8 +76,7 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		private static string _detectedProviderName;
-
-		public static string DetectedProviderName =>
+		public  static string  DetectedProviderName =>
 			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
 
 		private static SybaseDataProvider DetectedProvider =>
@@ -136,6 +135,7 @@ namespace LinqToDB.DataProvider.Sybase
 			IEnumerable<T>             source,
 			int                        maxBatchSize       = 1000,
 			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			where T : class
 		{
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions

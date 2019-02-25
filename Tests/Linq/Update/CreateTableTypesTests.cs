@@ -1,19 +1,25 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using JetBrains.Annotations;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using Newtonsoft.Json;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Tests.Tools;
+using LinqToDB.Tools.Comparers;
 
+using Newtonsoft.Json;
+
+using NUnit.Framework;
+
+// ReSharper disable once CheckNamespace
 namespace Tests.xUpdate
 {
-	using ColumnBuilder        = Action<EntityMappingBuilder<CreateTableTypesTests.CreateTableTypes>>;
-	using ValueBuilder         = Action<CreateTableTypesTests.CreateTableTypes>;
-	using DefaultValueBuilder  = Action<string, CreateTableTypesTests.CreateTableTypes>;
+	using ColumnBuilder       = Action<EntityMappingBuilder<CreateTableTypesTests.CreateTableTypes>>;
+	using ValueBuilder        = Action<CreateTableTypesTests.CreateTableTypes>;
+	using DefaultValueBuilder = Action<string, CreateTableTypesTests.CreateTableTypes>;
 
 	[TestFixture]
 	public class CreateTableTypesTests : TestBase
@@ -42,7 +48,7 @@ namespace Tests.xUpdate
 			// see https://github.com/linq2db/linq2db/issues/1032
 			public List<(uint field1, string field2)> StringConverted;
 
-			public static IEqualityComparer<CreateTableTypes> Comparer = ComparerBuilder<CreateTableTypes>.GetEqualityComparer();
+			public static IEqualityComparer<CreateTableTypes> Comparer = ComparerBuilder.GetEqualityComparer<CreateTableTypes>();
 
 			public static List<(uint, string)> StringConvertedTestValue = new List<(uint, string)>
 			{
@@ -73,6 +79,7 @@ namespace Tests.xUpdate
 		// TODO: add length validation to fields with length (text/binary)
 		static IEnumerable<(ColumnBuilder, ValueBuilder, DefaultValueBuilder, Func<string, bool>, Func<string, bool>)> TestCases
 		{
+			[UsedImplicitly]
 			get
 			{
 				yield return (e => e.HasColumn(_ => _.Int32),                                  v => v.Int32              = 1                                   , null,                                                                                                                        null,                            null);
@@ -145,16 +152,16 @@ namespace Tests.xUpdate
 			MappingSchema.Default.SetConverter<string, List<(uint, string)>>(JsonConvert.DeserializeObject<List<(uint, string)>>);
 
 			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable<CreateTableTypes>())
+			using (var table = db.CreateLocalTable<CreateTableTypes>(context, "1"))
 			{
-				var defaultValue = new CreateTableTypes() { Id = 1 };
-				var testValue    = new CreateTableTypes() { Id = 2 };
+				var defaultValue = new CreateTableTypes { Id = 1 };
+				var testValue    = new CreateTableTypes { Id = 2 };
 
 				testCase.defaultValueBuilder?.Invoke(context, defaultValue);
 				testCase.valueBuilder(testValue);
 
-				db.Insert(defaultValue);
-				db.Insert(testValue);
+				db.Insert(defaultValue, table.TableName);
+				db.Insert(testValue,    table.TableName);
 
 				if (testCase.skipAssert?.Invoke(context) != true)
 					AreEqual(new[] { defaultValue, testValue }, table.OrderBy(_ => _.Id), CreateTableTypes.Comparer);

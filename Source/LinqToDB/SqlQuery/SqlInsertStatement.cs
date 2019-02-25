@@ -42,12 +42,12 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
-			With?.Walk(skipColumns, func);
-			((ISqlExpressionWalkable)_insert)?.Walk(skipColumns, func);
+			With?.Walk(options, func);
+			((ISqlExpressionWalkable)_insert)?.Walk(options, func);
 
-			SelectQuery = (SelectQuery)SelectQuery.Walk(skipColumns, func);
+			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
 
 			return null;
 		}

@@ -491,6 +491,7 @@ namespace LinqToDB.Linq.Builder
 				switch (flags)
 				{
 					case ConvertFlags.Field :
+					case ConvertFlags.Key   :
 					case ConvertFlags.All   :
 						return ProcessScalar(
 							expression,
@@ -980,7 +981,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Parameter    :
 					if (sequence != null)
 						return action(2, sequence, newExpression, nextLevel, memberExpression);
-					throw new NotImplementedException();
+					break;
 
 				case ExpressionType.New          :
 				case ExpressionType.MemberInit   :

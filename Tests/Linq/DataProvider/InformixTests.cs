@@ -4,7 +4,7 @@ using LinqToDB;
 using LinqToDB.Data;
 
 using IBM.Data.Informix;
-
+using LinqToDB.DataProvider.Informix;
 using NUnit.Framework;
 
 namespace Tests.DataProvider
@@ -22,8 +22,8 @@ namespace Tests.DataProvider
 			PassValueSql = "SELECT ID FROM {1} WHERE {0} = ?";
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestDataTypes(string context)
+		[Test]
+		public void TestDataTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -58,9 +58,11 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void BulkCopyLinqTypes(string context)
+		[Test]
+		public void BulkCopyLinqTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
+			InformixTools.ResolveInformix(typeof(IBM.Data.Informix.IfxConnection).Assembly);
+
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
 				using (var db = new DataConnection(context))
@@ -82,6 +84,19 @@ namespace Tests.DataProvider
 					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
 				}
 			}
+		}
+
+//		[Test]
+		public void Driver([IncludeDataSources(CurrentProvider)] string context)
+		{
+//			InformixTools.ResolveInformix(typeof(IBM.Data.Informix.IfxConnection).Assembly);
+//
+//			var dr = null as IfxDataReader;
+//
+//			var _ = dr.GetBigInt(0);
+
+			var tm = new IfxTimeSpan(0);
+			var _ = IfxTimeSpan.Null;
 		}
 	}
 }

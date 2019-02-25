@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -19,12 +19,13 @@ namespace Tests.Linq
 			public int Id;
 
 			[Column("char20DataType")]
-			[Column(Configuration = ProviderName.SqlCe,      IsColumn = false)]
-			[Column(Configuration = ProviderName.DB2,        IsColumn = false)]
-			[Column(Configuration = ProviderName.PostgreSQL, IsColumn = false)]
-			[Column(Configuration = ProviderName.MySql,      IsColumn = false)]
-			[Column(Configuration = TestProvName.MySql57,    IsColumn = false)]
-			[Column(Configuration = TestProvName.MariaDB,    IsColumn = false)]
+			[Column(Configuration = ProviderName.SqlCe,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.DB2,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
+			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.MySqlConnector, IsColumn = false)]
+			[Column(Configuration = TestProvName.MySql57,        IsColumn = false)]
+			[Column(Configuration = TestProvName.MariaDB,        IsColumn = false)]
 			public string String;
 
 			[Column("ncharDataType")]
@@ -32,6 +33,7 @@ namespace Tests.Linq
 			[Column("CHAR20DATATYPE" , Configuration = ProviderName.DB2)]
 			[Column("char20DataType" , Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , Configuration = ProviderName.MySql)]
+			[Column("char20DataType" , Configuration = ProviderName.MySqlConnector)]
 			[Column("char20DataType" , Configuration = TestProvName.MySql57)]
 			[Column("char20DataType" , Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
@@ -46,12 +48,13 @@ namespace Tests.Linq
 			public int Id;
 
 			[Column("char20DataType")]
-			[Column(Configuration = ProviderName.SqlCe,      IsColumn = false)]
-			[Column(Configuration = ProviderName.DB2,        IsColumn = false)]
-			[Column(Configuration = ProviderName.PostgreSQL, IsColumn = false)]
-			[Column(Configuration = ProviderName.MySql,      IsColumn = false)]
-			[Column(Configuration = TestProvName.MySql57,    IsColumn = false)]
-			[Column(Configuration = TestProvName.MariaDB,    IsColumn = false)]
+			[Column(Configuration = ProviderName.SqlCe,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.DB2,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
+			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.MySqlConnector, IsColumn = false)]
+			[Column(Configuration = TestProvName.MySql57,		 IsColumn = false)]
+			[Column(Configuration = TestProvName.MariaDB,		 IsColumn = false)]
 			public char? Char;
 
 			[Column("ncharDataType"  , DataType = DataType.NChar)]
@@ -59,6 +62,7 @@ namespace Tests.Linq
 			[Column("CHAR20DATATYPE" , DataType = DataType.NChar, Configuration = ProviderName.DB2)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySql)]
+			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySqlConnector)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MySql57)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
@@ -67,7 +71,7 @@ namespace Tests.Linq
 
 		// most of ending characters here trimmed by default by .net string TrimX methods
 		// unicode test cases not used for String
-		private static StringTestTable[] StringTestData = new[]
+		static readonly StringTestTable[] StringTestData =
 		{
 			new StringTestTable() { String = "test01",      NString = "test01"        },
 			new StringTestTable() { String = "test02  ",    NString = "test02  "      },
@@ -94,8 +98,8 @@ namespace Tests.Linq
 		};
 
 		// TODO: MySql57 disabled due to encoding issues on CI
-		[Test, DataContextSource(false, TestProvName.MySql57, ProviderName.Informix)]
-		public void StringTrimming(string context)
+		[Test]
+		public void StringTrimming([DataSources(false, TestProvName.MySql57, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -145,7 +149,7 @@ namespace Tests.Linq
 			}
 		}
 
-		private static CharTestTable[] GetCharData(string context)
+		private static CharTestTable[] GetCharData([DataSources] string context)
 		{
 			// filter out null-character test cases for servers/providers without support
 			if (   context.Contains(ProviderName.PostgreSQL)
@@ -172,7 +176,7 @@ namespace Tests.Linq
 			return CharTestData;
 		}
 
-		private static StringTestTable[] GetStringData(string context)
+		private static StringTestTable[] GetStringData([DataSources] string context)
 		{
 			// filter out null-character test cases for servers/providers without support
 			if (context.Contains(ProviderName.PostgreSQL)
@@ -204,7 +208,7 @@ namespace Tests.Linq
 			return StringTestData;
 		}
 
-		private static CharTestTable[] CharTestData = new[]
+		static readonly CharTestTable[] CharTestData =
 		{
 			new CharTestTable() { Char = ' ',    NChar = ' '      },
 			new CharTestTable() { Char = '\x09', NChar = '\x09'   },
@@ -230,8 +234,8 @@ namespace Tests.Linq
 		};
 
 		// TODO: MySql57 disabled due to encoding issues on CI
-		[Test, DataContextSource(false, TestProvName.MySql57, ProviderName.Informix)]
-		public void CharTrimming(string context)
+		[Test]
+		public void CharTrimming([DataSources(false, TestProvName.MySql57, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -284,6 +288,8 @@ namespace Tests.Linq
 
 						if (context == ProviderName.MySql
 							  || context == ProviderName.MySql + ".LinqService"
+							  || context == ProviderName.MySqlConnector
+							  || context == ProviderName.MySqlConnector + ".LinqService"
 							  || context == TestProvName.MySql57
 							  || context == TestProvName.MySql57 + ".LinqService"
 							  || context == TestProvName.MariaDB
@@ -304,7 +310,7 @@ namespace Tests.Linq
 			}
 		}
 
-		private static bool SkipChar(string context)
+		private static bool SkipChar([DataSources] string context)
 		{
 			return context == ProviderName.SqlCe
 				|| context == ProviderName.SqlCe      + ".LinqService"
@@ -312,7 +318,9 @@ namespace Tests.Linq
 				|| context == ProviderName.DB2        + ".LinqService"
 				|| context.Contains(ProviderName.PostgreSQL)
 				|| context == ProviderName.MySql
-				|| context == ProviderName.MySql      + ".LinqService"
+				|| context == ProviderName.MySql + ".LinqService"
+				|| context == ProviderName.MySqlConnector
+				|| context == ProviderName.MySqlConnector + ".LinqService"
 				|| context == TestProvName.MySql57
 				|| context == TestProvName.MySql57    + ".LinqService"
 				|| context == TestProvName.MariaDB

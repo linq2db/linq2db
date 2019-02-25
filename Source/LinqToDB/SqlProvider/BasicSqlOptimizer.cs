@@ -127,7 +127,7 @@ namespace LinqToDB.SqlProvider
 					var ordered = TopoSorting.TopoSort(foundCte.Keys, i => foundCte[i]).ToList();
 
 					Utils.MakeUniqueNames(ordered, n => !ReservedWords.IsReserved(n), c => c.Name, (c, n) => c.Name = n,
-						c => "CTE_1", StringComparer.OrdinalIgnoreCase);
+						c => c.Name.IsNullOrEmpty() ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
 
 					select.With = new SqlWithClause();
 					select.With.Clauses.AddRange(ordered);
@@ -1463,7 +1463,7 @@ namespace LinqToDB.SqlProvider
 
 		public void OptimizeJoins(SqlStatement statement)
 		{
-			((ISqlExpressionWalkable) statement).Walk(false, element =>
+			((ISqlExpressionWalkable) statement).Walk(new WalkOptions(), element =>
 			{
 				if (element is SelectQuery query)
 					new JoinOptimizer().OptimizeJoins(statement, query);

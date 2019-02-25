@@ -126,19 +126,19 @@ LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string databa
 
 void LoadSqlServerMetadata(string connectionString)
 {
-	var dataConnection = GetSqlServerConnection(connectionString);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetSqlServerConnection(connectionString))
+		LoadMetadata(dataConnection);
 }
 
 void LoadSqlServerMetadata(string server, string database)
 {
-	var dataConnection = GetSqlServerConnection(server, database);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetSqlServerConnection(server, database))
+		LoadMetadata(dataConnection);
 }
 
 void LoadSqlServerMetadata(string server, string database, string user, string password)
 {
-	var dataConnection = GetSqlServerConnection(server, database, user, password);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetSqlServerConnection(server, database, user, password))
+		LoadMetadata(dataConnection);
 }
 #>

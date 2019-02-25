@@ -1,26 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<Import Project="..\..\Build\linq2db.Default.props" />
+	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net45;net46;netcoreapp2.0;netstandard1.6;netstandard2.0</TargetFrameworks>
 		<AssemblyName>linq2db</AssemblyName>
 		<RootNamespace>LinqToDB</RootNamespace>
 
 		<PackageId>linq2db</PackageId>
-		<PackageTags>linq;linq2db;LinqToDB;ORM;database;DB;SQL;SqlServer;Access;SqlCe;SqlServerCe;MySql;Firebird;SQLite;Sybase;Oracle;ODP;PostgreSQL;DB2;Informix;SapHana</PackageTags>
-		<PackageIconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</PackageIconUrl>
-		<PackageProjectUrl>http://linq2db.com</PackageProjectUrl>
-		<PackageLicenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</PackageLicenseUrl>
 
-		<Configurations>Debug;Release</Configurations>
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
-		<EnableSourceLink Condition="'$(TRAVIS)' == true">false</EnableSourceLink>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)'=='Release'">
-		<DebugType>pdbonly</DebugType>
-		<DebugSymbols>true</DebugSymbols>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -28,8 +16,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-
 		<EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
 		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
@@ -42,9 +28,10 @@
 
 		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
 
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" />
-
-		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-18618-05">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
 
 		<Compile Update="AsyncExtensions.generated.cs">
 			<DesignTime>True</DesignTime>
@@ -62,20 +49,6 @@
 	<!-- .NET Framework -->
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' ">
-		<Reference Include="Microsoft.CSharp" />
-		<Reference Include="System" />
-		<Reference Include="System.Configuration" />
-		<Reference Include="System.Core" />
-		<Reference Include="System.Data.DataSetExtensions" />
-		<Reference Include="System.Data.Linq" />
-		<Reference Include="System.Data.Services" />
-		<Reference Include="System.ServiceModel" />
-		<Reference Include="System.Web.Services" />
-		<Reference Include="System.Xml.Linq" />
-		<Reference Include="System.Data" />
-		<Reference Include="System.Xml" />
-		<Reference Include="System.Runtime.Serialization" />
-
 		<Compile Remove="Metadata\SystemComponentModelDataAnnotationsSchemaAttributeReader.cs" />
 	</ItemGroup>
 
@@ -83,20 +56,10 @@
 		<Compile Include="Compatibility\System\Threading\AsyncLocal.cs" />
 	</ItemGroup>
 
-	<!-- .NET Standard -->
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
-		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.4" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
-		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
-		<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
-		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
-		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
+	<!-- .NET Core -->
 
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' OR '$(TargetFramework)' == 'netcoreapp1.0' ">
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
 		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
 		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
@@ -108,39 +71,12 @@
 		<Compile Include="Compatibility\System\SerializableAttribute.cs" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
-
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
 		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
 		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
 		<Compile Remove="ServiceModel\**\*.cs;" />
 		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
-		<Compile Remove="**\*SchemaProvider11111*.cs" />
-		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
-		<Compile Include="Compatibility\System\Data\DataTableExtensions.cs" />
-		<Compile Include="Compatibility\System\Data\DataRowExtensions.cs" />
-	</ItemGroup>
-
-
-	<!-- .NET Core -->
-
-	<PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp2.0'">
-		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
-	</PropertyGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
-
-		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
-		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
-		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
-		<Compile Remove="ServiceModel\**\*.cs;" />
-		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
-		<Compile Remove="**\*SchemaProvider11111*.cs" />
 		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
 		<Compile Include="Compatibility\System\Data\DataTableExtensions.cs" />
 		<Compile Include="Compatibility\System\Data\DataRowExtensions.cs" />

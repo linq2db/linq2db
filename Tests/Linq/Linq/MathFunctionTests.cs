@@ -10,8 +10,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class MathFunctionTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Abs(string context)
+		[Test]
+		public void Abs([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -19,8 +19,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Abs(p.MoneyValue) where t > 0 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.SQLiteMS)]
-		public void Acos(string context)
+		[Test]
+		public void Acos([DataSources(ProviderName.Access, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -28,8 +28,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Acos((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.SQLiteMS)]
-		public void Asin(string context)
+		[Test]
+		public void Asin([DataSources(ProviderName.Access, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -37,8 +37,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Asin((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Atan(string context)
+		[Test]
+		public void Atan([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -46,8 +46,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Atan((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.SQLiteMS)]
-		public void Atan2(string context)
+		[Test]
+		public void Atan2([DataSources(ProviderName.Access, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -55,8 +55,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Atan2((double)p.MoneyValue / 15, 0) * 15) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Ceiling1(string context)
+		[Test]
+		public void Ceiling1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -64,8 +64,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Ceiling(-(p.MoneyValue + 1)) where t != 0 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Ceiling2(string context)
+		[Test]
+		public void Ceiling2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -73,8 +73,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Ceiling(p.MoneyValue) where t != 0 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Cos(string context)
+		[Test]
+		public void Cos([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -82,8 +82,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Cos((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Cosh(string context)
+		[Test]
+		public void Cosh([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -91,8 +91,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Cosh((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Cot(string context)
+		[Test]
+		public void Cot([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -100,8 +100,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Sql.Cot((double)p.MoneyValue / 15).Value * 15) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Degrees1(string context)
+		[Test]
+		public void Degrees1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -109,8 +109,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Sql.Degrees(p.MoneyValue).Value) where t != 0.1m select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Degrees2(string context)
+		[Test]
+		public void Degrees2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -118,8 +118,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Sql.Degrees((double)p.MoneyValue).Value where t != 0.1 select Math.Floor(t));
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Degrees3(string context)
+		[Test]
+		public void Degrees3([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -127,8 +127,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Sql.Degrees((int)p.MoneyValue).Value where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Exp(string context)
+		[Test]
+		public void Exp([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -136,8 +136,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Exp((double)p.MoneyValue)) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Floor(string context)
+		[Test]
+		public void Floor([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -145,8 +145,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(-(p.MoneyValue + 1)) where t != 0 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Log(string context)
+		[Test]
+		public void Log([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -154,8 +154,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Log((double)p.MoneyValue)) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Log2(string context)
+		[Test]
+		public void Log2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -163,8 +163,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Log((double)p.MoneyValue, 2)) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Log10(string context)
+		[Test]
+		public void Log10([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -172,8 +172,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Log10((double)p.MoneyValue)) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource]
-		public void Max(string context)
+		[Test]
+		public void Max([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -181,8 +181,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Max(p.MoneyValue, 5.1m) where t != 0 select t);
 		}
 
-		[Test, DataContextSource]
-		public void Min(string context)
+		[Test]
+		public void Min([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -190,8 +190,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Min(p.MoneyValue, 5) where t != 0 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Pow(string context)
+		[Test]
+		public void Pow([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -199,8 +199,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Pow((double)p.MoneyValue, 3)) where t != 0 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Round1(string context)
+		[Test]
+		public void Round1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -208,8 +208,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round(p.MoneyValue) where t != 0 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Round2(string context)
+		[Test]
+		public void Round2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -217,8 +217,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round((double)p.MoneyValue) where t != 0 select t);
 		}
 
-		[Test, DataContextSource]
-		public void Round3(string context)
+		[Test]
+		public void Round3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -226,8 +226,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round(p.MoneyValue, 1) where t != 0 && t != 7 select t);
 		}
 
-		[Test, DataContextSource]
-		public void Round4(string context)
+		[Test]
+		public void Round4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -235,8 +235,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1) where t != 0 select Math.Round(t, 5));
 		}
 
-		[Test, DataContextSource]
-		public void Round5(string context)
+		[Test]
+		public void Round5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -244,8 +244,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round(p.MoneyValue, MidpointRounding.AwayFromZero) where t != 0 select t);
 		}
 
-		[Test, DataContextSource]
-		public void Round6(string context)
+		[Test]
+		public void Round6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -253,8 +253,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round((double)p.MoneyValue, MidpointRounding.AwayFromZero) where t != 0 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Round7(string context)
+		[Test]
+		public void Round7([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -262,8 +262,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round(p.MoneyValue, MidpointRounding.ToEven) where t != 0 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Round8(string context)
+		[Test]
+		public void Round8([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -271,8 +271,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round((double)p.MoneyValue, MidpointRounding.ToEven) where t != 0 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void Round9(string context)
+		[Test]
+		public void Round9([DataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -280,8 +280,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round(p.MoneyValue, 1, MidpointRounding.AwayFromZero) where t != 0 select t);
 		}
 
-		[Test, DataContextSource]
-		public void Round10(string context)
+		[Test]
+		public void Round10([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -289,8 +289,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 && t != 7 select t);
 		}
 
-		[Test, DataContextSource]
-		public void Round11(string context)
+		[Test]
+		public void Round11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -298,8 +298,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 select Math.Round(t, 5));
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void Round12(string context)
+		[Test]
+		public void Round12([DataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] string context)
 		{
 			var mp = MidpointRounding.AwayFromZero;
 
@@ -309,8 +309,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round(p.MoneyValue, 1, mp) where t != 0 && t != 7 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Sign(string context)
+		[Test]
+		public void Sign([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -318,8 +318,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Sign(p.MoneyValue) where t != 0 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Sin(string context)
+		[Test]
+		public void Sin([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -327,8 +327,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Sin((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Sinh(string context)
+		[Test]
+		public void Sinh([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -336,8 +336,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Sinh((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Sqrt(string context)
+		[Test]
+		public void Sqrt([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -345,8 +345,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Sqrt((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Tan(string context)
+		[Test]
+		public void Tan([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -354,8 +354,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Tan((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Tanh(string context)
+		[Test]
+		public void Tanh([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -363,8 +363,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Tanh((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Truncate1(string context)
+		[Test]
+		public void Truncate1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -372,8 +372,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Truncate(p.MoneyValue) where t != 0.1m select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Truncate2(string context)
+		[Test]
+		public void Truncate2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

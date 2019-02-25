@@ -1,44 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\..\Build\linq2db.Default.props" />
+	<Import Project="..\..\Build\linq2db.Tests.props" />
 
-  <PropertyGroup>
-		<TargetFrameworks>net452;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
-		<NoWarn>$(NoWarn)</NoWarn>
+	<PropertyGroup>
+		<NoWarn>$(NoWarn);FS0988</NoWarn>
 		<AssemblyName>linq2db.Tests.FSharp</AssemblyName>
-		<Configurations>Debug;Release;AppVeyor;NET.45;CORE.1;CORE.2</Configurations>
 	</PropertyGroup>
-
-	<PropertyGroup Condition=" '$(Configuration)' == 'AppVeyor' ">
-		<DefineConstants>RELEASE;APPVEYOR</DefineConstants>
-		<DebugSymbols>false</DebugSymbols>
-		<Optimize>true</Optimize>
-	</PropertyGroup>
-
-	<PropertyGroup Condition=" '$(Configuration)' == 'NET.45' ">
-		<TargetFrameworks>net452;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>full</DebugType>
-		<Optimize>false</Optimize>
-	</PropertyGroup>
-
-	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.1' ">
-		<TargetFrameworks>netcoreapp1.0;net452;netcoreapp2.0</TargetFrameworks>
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>full</DebugType>
-		<Optimize>false</Optimize>
-	</PropertyGroup>
-
-	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.2' ">
-		<TargetFrameworks>netcoreapp2.0;net452;netcoreapp1.0</TargetFrameworks>
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>full</DebugType>
-		<Optimize>false</Optimize>
-	</PropertyGroup>
-
 
 	<ItemGroup>
 		<Compile Include="AssemblyInfo.fs" />
@@ -51,18 +19,9 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
-		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Update="FSharp.Core" Version="4.3.4" />
-	  <PackageReference Update="System.ValueTuple" Version="4.5.0" />
+		<PackageReference Update="FSharp.Core" Version="4.6.1" />
 	</ItemGroup>
-	<!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-			 Other similar extension points exist, see Microsoft.Common.targets.
-	<Target Name="BeforeBuild">
-	</Target>
-	<Target Name="AfterBuild">
-	</Target>
-	-->
 </Project>

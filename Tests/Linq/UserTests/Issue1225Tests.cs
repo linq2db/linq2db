@@ -68,20 +68,20 @@ namespace Tests.UserTests
 			public LastInChain Container { get; set; }
 		}
 
-		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
-		[Test, DataContextSource]
-		public void Test(string context)
+		[ActiveIssue("Unsupported by Informix?", Configurations = new[] { ProviderName.Informix })]
+		[Test]
+		public void Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				using (db.CreateLocalTable<Task>())
-				using (db.CreateLocalTable<TaskStage>())
+				using (var t  = db.CreateLocalTable<Task>())
+				using (var ts = db.CreateLocalTable<TaskStage>())
 				{
-					db.Insert(new Task { Id = 1 });
-					db.Insert(new Task { Id = 2 });
-					db.Insert(new TaskStage { Id = 2, TaskId = 1, Actual = true });
+					db.Insert(new Task      { Id = 1 }, t.TableName);
+					db.Insert(new Task      { Id = 2 }, t.TableName);
+					db.Insert(new TaskStage { Id = 2, TaskId = 1, Actual = true }, ts.TableName);
 
-					var query = db.GetTable<Task>()
+					var query = t
 							.GroupBy(it => new GroupByWrapper()
 							{
 								GroupByContainer = new LastInChain()
