@@ -1348,5 +1348,35 @@ namespace Tests.DataProvider
 			}
 		}
 #endif
+		[Table("Issue1613")]
+		private class Issue1613Table
+		{
+			[Column("dt"), Nullable] 
+			public DateTimeOffset? DateTimeOffset { get; set; }
+		}
+		[Test]
+		public void Issue1613Test([AllSqlServerDataContext] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.CreateTable<Issue1613Table>();
+				
+				var table = db.GetTable<Issue1613Table>();
+				
+				db.Insert(new Issue1613Table{DateTimeOffset = null});
+				db.Insert(new Issue1613Table{DateTimeOffset = DateTimeOffset.Now.AddDays(1)});
+				db.Insert(new Issue1613Table{DateTimeOffset = DateTimeOffset.Now.AddDays(2)});
+				db.Insert(new Issue1613Table{DateTimeOffset = DateTimeOffset.Now.AddDays(3)});
+				db.Insert(new Issue1613Table{DateTimeOffset = DateTimeOffset.Now.AddDays(4)});
+
+				var query1 = table.GroupBy(x => x.DateTimeOffset).Select(g => g.Key).ToList();
+
+				var query2 = table.Select(r => r.DateTimeOffset).ToList();
+				
+				db.DropTable<Issue1613Table>();
+				
+			}
+		}
+
 	}
 }
