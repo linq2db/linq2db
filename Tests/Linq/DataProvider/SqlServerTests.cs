@@ -1375,12 +1375,12 @@ namespace Tests.DataProvider
 			using (var table = db.CreateLocalTable(GenerateData()))
 			{ 
 
-			var query1 = table.GroupBy(x => x.DateTimeOffset).Select(g => g.Key).ToList();
+				var query1 = table.GroupBy(x => x.DateTimeOffset).Select(g => g.Key).ToList();
 
-			var query2 = table.Select(r => r.DateTimeOffset).ToList();
+				var query2 = table.Select(r => r.DateTimeOffset).ToList();
 
-			Assert.AreEqual(5, query1.Count);
-			Assert.AreEqual(5, query2.Count);
+				Assert.AreEqual(5, query1.Count);
+				Assert.AreEqual(5, query2.Count);
 
 			}
 		}
