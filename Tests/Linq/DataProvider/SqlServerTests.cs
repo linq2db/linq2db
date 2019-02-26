@@ -1369,19 +1369,47 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue1613Test([AllSqlServerDataContext] string context)
+		public void Issue1613Test1([AllSqlServerDataContext] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateData()))
 			{ 
 
 				var query1 = table.GroupBy(x => x.DateTimeOffset).Select(g => g.Key).ToList();
-
 				var query2 = table.Select(r => r.DateTimeOffset).ToList();
 
 				Assert.AreEqual(5, query1.Count);
 				Assert.AreEqual(5, query2.Count);
+			}
+		}
+		
+		[Test, ActiveIssue(1613)]
+		public void Issue1613Test2([AllSqlServerDataContext] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(GenerateData()))
+			{ 
 
+				var query1 = table.GroupBy(x => x.DateTimeOffset.Value.Date).Select(g => g.Key).ToList();
+				var query2 = table.Select(r => r.DateTimeOffset.Value.Date).ToList();
+
+				Assert.AreEqual(5, query1.Count);
+				Assert.AreEqual(5, query2.Count);
+			}
+		}
+
+		[Test, ActiveIssue(1613)]
+		public void Issue1613Test3([AllSqlServerDataContext] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(GenerateData()))
+			{ 
+
+				var query1 = table.GroupBy(x => x.DateTimeOffset.Value.TimeOfDay).Select(g => g.Key).ToList();
+				var query2 = table.Select(r => r.DateTimeOffset.Value.TimeOfDay).ToList();
+
+				Assert.AreEqual(5, query1.Count);
+				Assert.AreEqual(5, query2.Count);
 			}
 		}
 	}
