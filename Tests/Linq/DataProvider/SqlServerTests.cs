@@ -1380,6 +1380,7 @@ namespace Tests.DataProvider
 
 				Assert.AreEqual(5, query1.Count);
 				Assert.AreEqual(5, query2.Count);
+				Assert.AreEqual(query1, query2);
 			}
 		}
 		
@@ -1395,6 +1396,7 @@ namespace Tests.DataProvider
 
 				Assert.AreEqual(5, query1.Count);
 				Assert.AreEqual(5, query2.Count);
+				Assert.AreEqual(query1, query2);
 			}
 		}
 
@@ -1410,6 +1412,7 @@ namespace Tests.DataProvider
 
 				Assert.AreEqual(5, query1.Count);
 				Assert.AreEqual(5, query2.Count);
+				Assert.AreEqual(query1, query2);
 			}
 		}
 	}
