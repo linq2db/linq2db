@@ -346,6 +346,14 @@ namespace LinqToDB.Expressions
 
 						break;
 					}
+
+				default:
+					{
+						if (expr is IVisitedExpression custom)
+							custom.CustomVisit(func);
+
+						break;
+					}
 			}
 
 			func(expr);
@@ -626,6 +634,13 @@ namespace LinqToDB.Expressions
 					{
 						if (expr.CanReduce)
 							Visit(expr.Reduce(), func);
+
+						break;
+					}
+				default:
+					{
+						if (expr is IVisitedExpression custom)
+							custom.CustomVisit(func);
 
 						break;
 					}
@@ -915,6 +930,14 @@ namespace LinqToDB.Expressions
 						return Find(expr.Reduce(), func);
 
 					break;
+
+				default:
+					{
+						if (expr is IVisitedExpression custom)
+							return custom.CustomFind(func);
+
+						break;
+					}
 			}
 
 			return null;
@@ -1142,6 +1165,13 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Switch                : return TransformX((SwitchExpression)expr, func);
 				case ExpressionType.Try                   : return TransformX((TryExpression)expr,    func);
 				case ExpressionType.Extension             : return TransformXE(expr,                  func);
+				default:
+					{
+						if (expr is IVisitedExpression custom)
+							return custom.CustomTransform(func);
+
+						break;
+					}
 			}
 
 			throw new InvalidOperationException();
