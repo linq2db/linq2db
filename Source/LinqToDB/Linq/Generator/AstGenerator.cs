@@ -30,7 +30,7 @@ namespace LinqToDB.Linq.Generator
 
 		private Dictionary<IQuerySource, SqlTableSource> _tableSources = new Dictionary<IQuerySource, SqlTableSource>();
 
-		SqlTableSource GenerateTableSource(ISqlTableSource current, IQuerySource querySource)
+		SqlTableSource GenerateTableSource(SqlTableSource current, IQuerySource querySource)
 		{
 			ISqlTableSource source;
 			switch (querySource)
@@ -39,6 +39,13 @@ namespace LinqToDB.Linq.Generator
 					{
 						source = new SqlTable(MappingSchema, querySource.ItemType);
 						break;
+					}
+				case JoinClause jc:
+					{
+						var joinType = JoinType.Inner;
+						var ts = GenerateTableSource(current, jc.Outer);
+						current.Joins.Add(new SqlJoinedTable(joinType, ts, querySource.ItemName, false));
+						return current;
 					}
 				default:
 					throw new NotImplementedException($"Can not create TableSource for '{querySource.GetType().Name}'");

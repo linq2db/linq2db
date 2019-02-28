@@ -20,12 +20,25 @@ namespace Tests.Playground
 			[Column] public int Value { get; set; }
 		}
 
+		[Table]
+		class OtherClass
+		{
+			[Column] public int OtherId    { get; set; }
+			[Column] public int OtherValue { get; set; }
+		}
+
 		[Test]
 		public void SampleSelectTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<SampleClass>())
+			using (db.CreateLocalTable<SampleClass>())
+			using (db.CreateLocalTable<OtherClass>())
 			{
+//				var query = from q in db.GetTable<SampleClass>()
+//					join q2 in db.GetTable<OtherClass>() on q.Id equals q2.OtherId
+//					where q.Id > 0
+//					select new { q.Id, q2.OtherValue };
+
 				var query = from q in db.GetTable<SampleClass>()
 					where q.Id > 0
 					select q;
