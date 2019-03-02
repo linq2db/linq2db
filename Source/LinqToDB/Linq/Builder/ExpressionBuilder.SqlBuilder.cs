@@ -2194,8 +2194,8 @@ namespace LinqToDB.Linq.Builder
 
 					dataTypeAccessorExpression = Expression.PropertyOrField(accessorExpression, "DataType");
 					dbTypeAccessorExpression   = Expression.PropertyOrField(accessorExpression, "DbType");
-					accessorExpression         = Expression.PropertyOrField(accessorExpression, "Value");
 					sizeAccessorExpression     = Expression.PropertyOrField(accessorExpression, "Size");
+					accessorExpression         = Expression.PropertyOrField(accessorExpression, "Value");
 				}
 				else
 				{
