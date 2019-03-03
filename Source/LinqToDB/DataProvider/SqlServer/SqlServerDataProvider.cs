@@ -273,7 +273,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					case SqlDbType.VarChar:
 						{
 							var strValue = value as string;
-							if (strValue != null && strValue.Length > 8000)
+							if ((strValue != null && strValue.Length > 8000) || (value != null && strValue == null))
 								param.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 8000 && (strValue == null || strValue.Length <= dataType.Length))
 								param.Size = dataType.Length.Value;
@@ -285,7 +285,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					case SqlDbType.NVarChar:
 						{
 							var strValue = value as string;
-							if (strValue != null && strValue.Length > 4000)
+							if ((strValue != null && strValue.Length > 4000) || (value != null && strValue == null))
 								param.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 4000 && (strValue == null || strValue.Length <= dataType.Length))
 								param.Size = dataType.Length.Value;
@@ -297,7 +297,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					case SqlDbType.VarBinary:
 						{
 							var binaryValue = value as byte[];
-							if (binaryValue != null && binaryValue.Length > 8000)
+							if ((binaryValue != null && binaryValue.Length > 8000) || (value != null && binaryValue == null))
 								param.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 8000 && (binaryValue == null || binaryValue.Length <= dataType.Length))
 								param.Size = dataType.Length.Value;

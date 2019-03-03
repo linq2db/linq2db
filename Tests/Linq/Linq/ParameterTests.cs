@@ -15,7 +15,7 @@ using Tests.Model;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class ParameterTests : TestBase
+	public partial class ParameterTests : TestBase
 	{
 		[Test]
 		public void InlineParameter([DataSources] string context)
@@ -179,132 +179,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void SqlServerNVarChar4000ParameterSize([SqlServerDataSources] string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p = "abc";
-				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
-
-				Console.WriteLine(sql);
-
-				Assert.That(sql, Contains.Substring("(4000)"));
-			}
-		}
-
-		[Test]
-		public void SqlServerVarChar8000ParameterSize([SqlServerDataSources] string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p = "abc";
-				var sql = db.GetTable<AllTypes>().Where(t => t.VarcharDataType == p).ToString();
-
-				Console.WriteLine(sql);
-
-				Assert.That(sql, Contains.Substring("(8000)"));
-			}
-		}
-
-		[Test]
-		public void SqlServerVarBinary8000ParameterSize([SqlServerDataSources] string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p = new byte[] { 1 };
-				var sql = db.GetTable<AllTypes>().Where(t => t.VarBinaryDataType == p).ToString();
-
-				Console.WriteLine(sql);
-
-				Assert.That(sql, Contains.Substring("(8000)"));
-			}
-		}
-
-		[Test]
-		public void SqlServerNVarCharKnownParameterSize([SqlServerDataSources] string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p = "abc";
-				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.NVarcharDataType == p).ToString();
-
-				Console.WriteLine(sql);
-
-				Assert.That(sql, Contains.Substring("(20)"));
-			}
-		}
-
-		[Test]
-		public void SqlServerVarCharKnownParameterSize([SqlServerDataSources] string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p = "abc";
-				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.VarcharDataType == p).ToString();
-
-				Console.WriteLine(sql);
-
-				Assert.That(sql, Contains.Substring("(20)"));
-			}
-		}
-
-		[Test]
-		public void SqlServerVarBinaryKnownParameterSize([SqlServerDataSources] string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p = new byte[] { 1 };
-				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.VarBinaryDataType == p).ToString();
-
-				Console.WriteLine(sql);
-
-				Assert.That(sql, Contains.Substring("(1)"));
-			}
-		}
-
-		[Test]
-		public void SqlServerNVarCharKnownOverflowParameterSize([SqlServerDataSources] string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p = "abcdeabcdeabcdeabcde1";
-				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.NVarcharDataType == p).ToString();
-
-				Console.WriteLine(sql);
-
-				Assert.That(sql, Contains.Substring("(4000)"));
-			}
-		}
-
-		[Test]
-		public void SqlServerVarCharKnownOverflowParameterSize([SqlServerDataSources] string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p = "abcdeabcdeabcdeabcde1";
-				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.VarcharDataType == p).ToString();
-
-				Console.WriteLine(sql);
-
-				Assert.That(sql, Contains.Substring("(8000)"));
-			}
-		}
-
-		[Test]
-		public void SqlServerVarBinaryKnownOverflowParameterSize([SqlServerDataSources] string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var p = new byte[] { 1, 2 };
-				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.VarBinaryDataType == p).ToString();
-
-				Console.WriteLine(sql);
-
-				Assert.That(sql, Contains.Substring("(8000)"));
-			}
-		}
-
 		class AllTypes
 		{
 			public decimal DecimalDataType;
@@ -312,17 +186,6 @@ namespace Tests.Linq
 			public byte[]  VarBinaryDataType;
 			[Column(DataType = DataType.VarChar)]
 			public string  VarcharDataType;
-		}
-
-		[Table("AllTypes")]
-		class AllTypesWithLength
-		{
-			[Column(Length = 1)]
-			public byte[] VarBinaryDataType;
-			[Column(DataType = DataType.VarChar, Length = 20)]
-			public string VarcharDataType;
-			[Column(Length = 20)]
-			public string NVarcharDataType;
 		}
 
 		// Excluded providers inline such parameter
