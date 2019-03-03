@@ -785,6 +785,18 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		[Test]
+		public void FullTextIndexTest([MySqlDataContext(false)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var res = schema.Tables.Where(c => c.ID.Contains("fulltextindex")).FirstOrDefault();
+				Assert.AreNotEqual(null, res);
+			}
+		}
+
 #endif
 
 		[Sql.Expression("@n:=@n+1", ServerSideOnly = true)]
