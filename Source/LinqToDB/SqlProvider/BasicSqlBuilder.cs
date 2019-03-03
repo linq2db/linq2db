@@ -3150,18 +3150,18 @@ namespace LinqToDB.SqlProvider
 				{
 					switch (parameter.DbType)
 					{
-						//case DbType.AnsiString           :
-						//case DbType.AnsiStringFixedLength:
-						//case DbType.String               :
-						//case DbType.StringFixedLength    :
-						//	{
-						//		var value = parameter.Value as string;
+						case DbType.AnsiString           :
+						case DbType.AnsiStringFixedLength:
+						case DbType.String               :
+						case DbType.StringFixedLength    :
+							{
+								var value = parameter.Value as string;
 
-						//		if (!string.IsNullOrEmpty(value))
-						//			sb.Append('(').Append(value.Length).Append(')');
+								if (!string.IsNullOrEmpty(value))
+									sb.Append('(').Append(value.Length).Append(')');
 
-						//		break;
-						//	}
+								break;
+							}
 						case DbType.Decimal:
 							{
 								var value = parameter.Value;
@@ -3174,13 +3174,13 @@ namespace LinqToDB.SqlProvider
 
 								break;
 							}
-						//case DbType.Binary:
-						//	{
-						//		if (parameter.Value is byte[] value)
-						//			sb.Append('(').Append(value.Length).Append(')');
+						case DbType.Binary:
+							{
+								if (parameter.Value is byte[] value)
+									sb.Append('(').Append(value.Length).Append(')');
 
-						//		break;
-						//	}
+								break;
+							}
 					}
 				}
 			}

@@ -662,7 +662,7 @@ namespace Tests.Linq
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].NVarChar);
 					Assert.AreEqual(value, records[0].NVarChar.Value);
-					Assert.That(sql.Contains("NVarChar -- String"));
+					Assert.That(sql.Contains("NVarChar(5000) -- String"));
 				}
 			}
 		}
@@ -688,7 +688,7 @@ namespace Tests.Linq
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].VarChar);
 					Assert.AreEqual(value, records[0].VarChar.Value);
-					Assert.That(sql.Contains(" VarChar -- AnsiString"));
+					Assert.That(sql.Contains(" VarChar(10000) -- AnsiString"));
 				}
 			}
 		}
@@ -717,7 +717,7 @@ namespace Tests.Linq
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].VarBinary);
 					Assert.AreEqual(value, records[0].VarBinary.Value);
-					Assert.That(sql.Contains("VarBinary -- Binary"));
+					Assert.That(sql.Contains("VarBinary(10000) -- Binary"));
 				}
 			}
 		}
