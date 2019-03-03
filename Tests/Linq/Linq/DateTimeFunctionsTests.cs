@@ -876,5 +876,17 @@ namespace Tests.Linq
 					});
 			}
 		}
+
+		[Test, ActiveIssue(1615)]
+		public void issue1615Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var datePart = Sql.DateParts.Day;
+				AreEqual(
+					from t in    Types select           Sql.DateAdd(datePart, 5, t.DateTimeValue). Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(datePart, 5, t.DateTimeValue)).Value.Date);
+			}
+		}
 	}
 }
