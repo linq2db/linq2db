@@ -1583,7 +1583,7 @@ namespace Tests.xUpdate
 
 			if (context.StartsWith("Firebird"))
 			{
-				tableName += "_f";
+				tableName += context.StartsWith(TestProvName.Firebird3) ? "_f3" : "_f";
 
 				if (context.EndsWith("LinqService"))
 					tableName += "l";
