@@ -38,7 +38,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			return func(this) && Sequence1.VisitParentFirst(func) && Sequence2.VisitParentFirst(func);
 		}
 
-		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, MemberExpression ma)
+		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression ma)
 		{
 			throw new NotImplementedException();
 		}

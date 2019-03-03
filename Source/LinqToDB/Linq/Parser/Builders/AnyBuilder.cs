@@ -1,13 +1,14 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Expressions;
 using LinqToDB.Linq.Parser.Clauses;
 
 namespace LinqToDB.Linq.Parser.Builders
 {
-	public class TakeBuilder : MethodCallBuilder
+	public class AnyBuilder : MethodCallBuilder
 	{
 		private static readonly MethodInfo[] _supported =
-			{ ParsingMethods.Take };
+			{ ParsingMethods.Any, ParsingMethods.AnyPredicate };
 
 		public override MethodInfo[] SupportedMethods()
 		{
@@ -18,7 +19,18 @@ namespace LinqToDB.Linq.Parser.Builders
 		{
 			var sequence = builder.BuildSequence(new ParseBuildInfo(), methodCallExpression.Arguments[0]);
 			parseBuildInfo.Sequence.AddClause(sequence);
-			parseBuildInfo.Sequence.AddClause(new TakeClause(builder.ConvertExpression(methodCallExpression.Arguments[1])));
+
+			if (methodCallExpression.Arguments.Count > 1)
+			{
+				var sr = builder.GetSourceReference(sequence);
+
+				var lambda = (LambdaExpression)methodCallExpression.Arguments[1].Unwrap();
+				var where = lambda.GetBody(sr);
+
+				sequence.AddClause(new WhereClause(builder.ConvertExpression(where)));
+			}
+
+			sequence.AddClause(new AnyClause());
 			return parseBuildInfo.Sequence;
 		}
 	}

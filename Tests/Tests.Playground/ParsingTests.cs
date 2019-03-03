@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using LinqToDB;
 using LinqToDB.Linq.Generator;
@@ -34,17 +35,32 @@ namespace Tests.Playground
 			using (db.CreateLocalTable<SampleClass>())
 			using (db.CreateLocalTable<OtherClass>())
 			{
-//				var query = from q in db.GetTable<SampleClass>()
-//					join q2 in db.GetTable<OtherClass>() on q.Id equals q2.OtherId
-//					where q.Id > 0
-//					select new { q.Id, q2.OtherValue };
-
-				var query = from q in db.GetTable<SampleClass>()
+				var query1 = from q in db.GetTable<SampleClass>()
+					join q2 in db.GetTable<OtherClass>() on q.Id equals q2.OtherId
 					where q.Id > 0
-					select q;
+					select new
+					{
+						q.Id, 
+						q2.OtherValue, 
+						AnyMember = db.GetTable<OtherClass>().Where(s => s.OtherId > q.Id).Any()
+					};
 
-				var parser = new ModelParser();
-				var model = parser.ParseModel(query.Expression);
+				var query2 = from q in query1
+					where q.AnyMember
+					select new
+					{
+						ValidId = q.Id,
+						Value = q.OtherValue
+					};
+
+//				var query = from q in db.GetTable<SampleClass>()
+//					where q.Id > 0
+//					select q;
+
+				var parameter = Expression.Parameter(db.GetType());
+				var parser = new ModelTranslator(db.MappingSchema, parameter);
+				var expression = parser.PrepareExpressionForTranslation(query2.Expression);
+				var model = parser.ParseModel(expression);
 
 				var generator = new AstGenerator(db);
 				var sql = generator.GenerateStatement(model);

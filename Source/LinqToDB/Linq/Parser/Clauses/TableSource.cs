@@ -26,10 +26,11 @@ namespace LinqToDB.Linq.Parser.Clauses
 			return func(this);
 		}
 
-		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, MemberExpression ma)
+		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression expression)
 		{
 			var table = (SqlTable)tableSource;
 
+			var ma = (MemberExpression)expression;
 			SqlField field;
 			if (!table.Fields.TryGetValue(ma.Member.Name, out field))
 				throw new LinqToDBException($"Can not find field for expression '{ma}'");

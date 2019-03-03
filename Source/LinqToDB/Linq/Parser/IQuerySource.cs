@@ -9,6 +9,6 @@ namespace LinqToDB.Linq.Parser
 		Type ItemType { get; }
 		string ItemName { get; }
 
-		ISqlExpression ConvertToSql(ISqlTableSource tableSource, MemberExpression ma);
+		ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression expression);
 	}
 }

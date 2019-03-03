@@ -7,14 +7,14 @@ namespace LinqToDB.Linq.Parser.Builders
 	public class UnionBuilder : MethodCallBuilder
 	{
 		private static readonly MethodInfo[] _supported =
-			{ ParsingMethods.UnionMethod };
+			{ ParsingMethods.Union };
 
 		public override MethodInfo[] SupportedMethods()
 		{
 			return _supported;
 		}
 
-		public override Sequence BuildSequence(ModelParser builder, ParseBuildInfo parseBuildInfo, MethodCallExpression methodCallExpression)
+		public override Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, MethodCallExpression methodCallExpression)
 		{
 			var b1 = new ParseBuildInfo();
 			var b2 = new ParseBuildInfo();

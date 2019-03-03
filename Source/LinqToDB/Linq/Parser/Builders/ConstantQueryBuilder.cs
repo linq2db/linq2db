@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Parser.Builders
 			}
 		}
 
-		public override Sequence BuildSequence(ModelParser builder, ParseBuildInfo parseBuildInfo, Expression expression)
+		public override Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, Expression expression)
 		{
 			var query = expression.EvaluateExpression();
 			var itemType = query.GetType().GetGenericArgumentsEx()[0];

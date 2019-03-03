@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			return func(this);
 		}
 
-		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, MemberExpression ma)
+		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression ma)
 		{
 			throw new NotImplementedException();
 		}

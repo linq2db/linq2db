@@ -1,11 +1,12 @@
 ﻿using System.Linq.Expressions;
+using LinqToDB.Linq.Parser.Clauses;
 
 namespace LinqToDB.Linq.Parser.Builders
 {
 	public abstract class BaseBuilder
 	{
 		public abstract bool CanBuild(Expression expression);
-		public abstract Sequence BuildSequence(ModelParser builder, ParseBuildInfo parseBuildInfo, Expression expression);
+		public abstract Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, Expression expression);
 	}
 
 }

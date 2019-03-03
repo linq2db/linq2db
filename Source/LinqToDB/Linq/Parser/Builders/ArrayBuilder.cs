@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Parser.Builders
 			return expression.NodeType == ExpressionType.NewArrayInit;
 		}
 
-		public override Sequence BuildSequence(ModelParser builder, ParseBuildInfo parseBuildInfo, Expression expression)
+		public override Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, Expression expression)
 		{
 			var newArray = (NewArrayExpression)expression;
 			var sequence = new ArraySource(newArray.Type, "", expression);

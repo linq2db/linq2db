@@ -7,14 +7,14 @@ namespace LinqToDB.Linq.Parser.Builders
 	public class SkipBuilder : MethodCallBuilder
 	{
 		private static readonly MethodInfo[] _supported =
-			{ ParsingMethods.TakeMethod };
+			{ ParsingMethods.Take };
 
 		public override MethodInfo[] SupportedMethods()
 		{
 			return _supported;
 		}
 
-		public override Sequence BuildSequence(ModelParser builder, ParseBuildInfo parseBuildInfo, MethodCallExpression methodCallExpression)
+		public override Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, MethodCallExpression methodCallExpression)
 		{
 			var sequence = builder.BuildSequence(new ParseBuildInfo(), methodCallExpression.Arguments[0]);
 			parseBuildInfo.Sequence.AddClause(sequence);

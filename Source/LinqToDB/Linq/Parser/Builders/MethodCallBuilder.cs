@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Linq.Parser.Clauses;
 
 namespace LinqToDB.Linq.Parser.Builders
 {
@@ -14,7 +15,7 @@ namespace LinqToDB.Linq.Parser.Builders
 
 		public abstract MethodInfo[] SupportedMethods();
 
-		public override Sequence BuildSequence(ModelParser builder, ParseBuildInfo parseBuildInfo, Expression expression)
+		public override Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, Expression expression)
 		{
 			return BuildSequence(builder, parseBuildInfo, (MethodCallExpression)expression);
 		}
@@ -24,7 +25,7 @@ namespace LinqToDB.Linq.Parser.Builders
 			return methodExpression.IsOneOfMethods(SupportedMethods());
 		}
 
-		public abstract Sequence BuildSequence(ModelParser builder, ParseBuildInfo parseBuildInfo,
+		public abstract Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo,
 			MethodCallExpression methodCallExpression);
 	}
 }

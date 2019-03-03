@@ -7,17 +7,17 @@ namespace LinqToDB.Linq.Parser.Clauses
 {
 	public class JoinClause : BaseClause, IQuerySource
 	{
-		public IQuerySource Outer { get; }
+		public IQuerySource Inner { get; }
 		public Expression OuterKeySelector { get; }
 		public Expression InnerKeySelector { get; }
 
-		public JoinClause([NotNull] string itemName, [NotNull] Type itemType, [NotNull] IQuerySource outer,
+		public JoinClause([NotNull] string itemName, [NotNull] Type itemType, [NotNull] IQuerySource inner,
 			[NotNull] Expression outerKeySelector,
 			[NotNull] Expression innerKeySelector)
 		{
 			ItemName = itemName ?? throw new ArgumentNullException(nameof(itemName));
 			ItemType = itemType ?? throw new ArgumentNullException(nameof(itemType));
-			Outer = outer ?? throw new ArgumentNullException(nameof(outer));
+			Inner = inner ?? throw new ArgumentNullException(nameof(inner));
 			OuterKeySelector = outerKeySelector ?? throw new ArgumentNullException(nameof(outerKeySelector));
 			InnerKeySelector = innerKeySelector ?? throw new ArgumentNullException(nameof(innerKeySelector));
 		}
@@ -35,9 +35,9 @@ namespace LinqToDB.Linq.Parser.Clauses
 		public Type ItemType { get; }
 		public string ItemName { get; }
 
-		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, MemberExpression ma)
+		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression ma)
 		{
-			throw new NotImplementedException();
+			return Inner.ConvertToSql(tableSource, ma);
 		}
 
 	}

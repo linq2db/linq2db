@@ -8,14 +8,14 @@ namespace LinqToDB.Linq.Parser.Builders
 	public class SelectManyBuilder : MethodCallBuilder
 	{
 		private static readonly MethodInfo[] _supported =
-			{ ParsingMethods.SelectManyMethod1, ParsingMethods.SelectManyMethod2 };
+			{ ParsingMethods.SelectMany, ParsingMethods.SelectManyProjection };
 
 		public override MethodInfo[] SupportedMethods()
 		{
 			return _supported;
 		}
 
-		public override Sequence BuildSequence(ModelParser builder, ParseBuildInfo parseBuildInfo, MethodCallExpression methodCallExpression)
+		public override Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, MethodCallExpression methodCallExpression)
 		{
 			var bi = new ParseBuildInfo();
 			var sequence = builder.BuildSequence(bi, methodCallExpression.Arguments[0]);
@@ -32,7 +32,9 @@ namespace LinqToDB.Linq.Parser.Builders
 			{
 				var selector = (LambdaExpression)methodCallExpression.Arguments[2].Unwrap();
 				var selectorExpression = selector.GetBody(mainReference, collectionReference);
-				var selectorClause = new ProjectionClause(selectorExpression.Type, selector.Parameters[0].Name, selectorExpression);
+//				var selectorClause = new ProjectionClause(selectorExpression.Type, selector.Parameters[0].Name, selectorExpression);
+				var selectorClause = new SelectClause(selectorExpression);
+				builder.RegisterSource(selectorClause);
 
 				bi.Sequence.AddClause(selectorClause);
 			}

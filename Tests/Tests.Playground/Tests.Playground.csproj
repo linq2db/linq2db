@@ -25,6 +25,8 @@
 		</None>
 
 		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
+
+		<PackageReference Include="Remotion.Linq" Version="2.2.0" />
 	</ItemGroup>
 
 	<!-- .NET Framework -->

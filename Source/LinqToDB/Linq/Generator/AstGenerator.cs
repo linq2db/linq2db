@@ -18,7 +18,6 @@ using LinqToDB.Linq.Parser.Clauses;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
-using LinqToDB.Common;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Generator
@@ -30,22 +29,31 @@ namespace LinqToDB.Linq.Generator
 
 		private Dictionary<IQuerySource, SqlTableSource> _tableSources = new Dictionary<IQuerySource, SqlTableSource>();
 
-		SqlTableSource GenerateTableSource(SqlTableSource current, IQuerySource querySource)
+		SqlTableSource GenerateTableSource(SqlTableSource current, IQuerySource querySource, out bool shouldAdd)
 		{
 			ISqlTableSource source;
+			shouldAdd = false;
 			switch (querySource)
 			{
 				case TableSource ts:
 					{
 						source = new SqlTable(MappingSchema, querySource.ItemType);
+						shouldAdd = true;
 						break;
 					}
 				case JoinClause jc:
 					{
 						var joinType = JoinType.Inner;
-						var ts = GenerateTableSource(current, jc.Outer);
+						var ts = GenerateTableSource(current, jc.Inner, out _);
 						current.Joins.Add(new SqlJoinedTable(joinType, ts, querySource.ItemName, false));
-						return current;
+						source = ts;
+						break;
+					}
+				case SelectClause sc:
+					{
+						source = new SelectQuery();
+						shouldAdd = true;
+						break;
 					}
 				default:
 					throw new NotImplementedException($"Can not create TableSource for '{querySource.GetType().Name}'");
@@ -54,7 +62,19 @@ namespace LinqToDB.Linq.Generator
 			return new SqlTableSource(source, querySource.ItemName);
 		}
 
-		private Dictionary<IQuerySource, SqlTableSource> _registeredTableSources = new Dictionary<IQuerySource, SqlTableSource>();
+		class QuerySourceRegistry
+		{
+			public QuerySourceRegistry(SelectQuery selectQuery, SqlTableSource tableSource)
+			{
+				SelectQuery = selectQuery;
+				TableSource = tableSource;
+			}
+
+			public SelectQuery SelectQuery { get; }
+			public SqlTableSource TableSource { get; }
+		}
+
+		private Dictionary<IQuerySource, QuerySourceRegistry> _registeredTableSources = new Dictionary<IQuerySource, QuerySourceRegistry>();
 
 		void GenerateStatementInternal(SelectQuery selectQuery, Sequence sequence)
 		{
@@ -64,26 +84,83 @@ namespace LinqToDB.Linq.Generator
 			{
 				if (clause is IQuerySource qs)
 				{
-					current = GenerateTableSource(current, qs);
-					_registeredTableSources.Add(qs, current);
-					selectQuery.From.Tables.Add(current);
+					current = GenerateTableSource(current, qs, out var shouldAdd);
+					_registeredTableSources.Add(qs, new QuerySourceRegistry(selectQuery, current));
+					if (shouldAdd)
+						selectQuery.From.Tables.Add(current);
 				}
-				else
+
+				switch (clause)
 				{
-					switch (clause)
-					{
-						case WhereClause where:
-							{
-								var conditions = isGrouping
-									? selectQuery.Having.SearchCondition.Conditions
-									: selectQuery.Where.SearchCondition.Conditions;
-								BuildSearchCondition(selectQuery, where.SearchExpression, conditions, false);
-								break;
-							}
-					}
+					case Sequence seq:
+						{
+							var select = new SelectQuery();
+							GenerateStatementInternal(@select, seq);
+
+							current = new SqlTableSource(@select, "");
+							selectQuery.From.Tables.Add(current);
+							break;
+						}
+					case SelectClause select:
+						{
+							RegisterSelectorTransformation(selectQuery, current, @select.Selector);
+							break;
+						}
+					case WhereClause where:
+						{
+							var conditions = isGrouping
+								? selectQuery.Having.SearchCondition.Conditions
+								: selectQuery.Where.SearchCondition.Conditions;
+							BuildSearchCondition(selectQuery, @where.SearchExpression, conditions, false);
+							break;
+						}
 				}
 			}
 
+		}
+
+		class MemberTransformationInfo
+		{
+			public MemberTransformationInfo(SelectQuery selectQuery, SqlTableSource tableSource, Expression transformation)
+			{
+				SelectQuery = selectQuery;
+				TableSource = tableSource;
+				Transformation = transformation;
+			}
+
+			public SqlTableSource TableSource { get; }
+			public SelectQuery SelectQuery { get; }
+			public Expression Transformation { get; }
+		}
+
+		private Dictionary<MemberInfo, MemberTransformationInfo> _memberTransformations = new Dictionary<MemberInfo, MemberTransformationInfo>();
+
+		private void RegisterSelectorTransformation(SelectQuery selectQuery, SqlTableSource current,
+			Expression selector)
+		{
+			switch (selector.NodeType)
+			{
+				case ExpressionType.New:
+					{
+						var newExpr = (NewExpression)selector;
+						for (int i = 0; i < newExpr.Members.Count; i++)
+						{
+							var member = newExpr.Members[i];
+							var argument = newExpr.Arguments[i];
+
+							// we assume that for higher level it will be other transformations
+							_memberTransformations.Remove(member);
+							_memberTransformations.Add(member, new MemberTransformationInfo(selectQuery, current, argument));
+						}
+						break;
+					}
+			}
+		}
+
+		private MemberTransformationInfo GetMemberTransformation(MemberInfo memberInfo)
+		{
+			_memberTransformations.TryGetValue(memberInfo, out var result);
+			return result;
 		}
 
 		public AstGenerator([JetBrains.Annotations.NotNull] IDataContext dataContext)
@@ -815,20 +892,19 @@ namespace LinqToDB.Linq.Generator
 
 		ISqlPredicate ConvertObjectNullComparison(SelectQuery context, Expression left, Expression right, bool isEqual)
 		{
-//			if (right.NodeType == ExpressionType.Constant && ((ConstantExpression)right).Value == null)
-//			{
-//				if (left.NodeType == ExpressionType.MemberAccess || left.NodeType == ExpressionType.Parameter)
-//				{
-//					var ctx = GetContext(context, left);
-//
-//					if (ctx != null && ctx.IsExpression(left, 0, RequestFor.Object).Result)
-//					{
-//						return new SqlPredicate.Expr(new SqlValue(!isEqual));
-//					}
-//				}
-//			}
-//
-//			return null;
+			if (right.NodeType == ExpressionType.Constant && ((ConstantExpression)right).Value == null)
+			{
+				if (left.NodeType == ExpressionType.MemberAccess || left.NodeType == ExpressionType.Parameter)
+				{
+
+					if (left.Type.IsClassEx())
+					{
+						return new SqlPredicate.Expr(new SqlValue(!isEqual));
+					}
+				}
+			}
+
+			return null;
 
 			throw new NotImplementedException();
 		}
@@ -837,6 +913,105 @@ namespace LinqToDB.Linq.Generator
 
 		#region ConvertObjectComparison
 
+		bool IsNullConstant(Expression expr)
+		{
+			return expr.NodeType == ExpressionType.Constant && ((ConstantExpression)expr).Value == null;
+		}
+
+		Expression RemoveNullPropagation(Expression expr)
+		{
+			switch (expr.NodeType)
+			{
+				case ExpressionType.Conditional:
+					var conditional = (ConditionalExpression)expr;
+					if (conditional.Test.NodeType == ExpressionType.NotEqual)
+					{
+						var binary = (BinaryExpression)conditional.Test;
+						if (IsNullConstant(binary.Right))
+						{
+							if (IsNullConstant(conditional.IfFalse))
+							{
+								return conditional.IfTrue.Transform(e => RemoveNullPropagation(e));
+							}
+						}
+					}
+					else if (conditional.Test.NodeType == ExpressionType.Equal)
+					{
+						var binary = (BinaryExpression)conditional.Test;
+						if (IsNullConstant(binary.Right))
+						{
+							if (IsNullConstant(conditional.IfTrue))
+							{
+								return conditional.IfFalse.Transform(e => RemoveNullPropagation(e));
+							}
+						}
+					}
+					break;
+			}
+
+			return expr;
+		}
+
+		public bool ProcessProjection(Dictionary<MemberInfo,Expression> members, Expression expression)
+		{
+			switch (expression.NodeType)
+			{
+				// new { ... }
+				//
+				case ExpressionType.New        :
+					{
+						var expr = (NewExpression)expression;
+
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
+// ReSharper disable HeuristicUnreachableCode
+						if (expr.Members == null)
+							return false;
+// ReSharper restore HeuristicUnreachableCode
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
+
+						for (var i = 0; i < expr.Members.Count; i++)
+						{
+							var member = expr.Members[i];
+
+							var converted = expr.Arguments[i].Transform(e => RemoveNullPropagation(e));
+							members.Add(member, converted);
+
+							if (member is MethodInfo info)
+								members.Add(info.GetPropertyInfo(), converted);
+						}
+
+						return true;
+					}
+
+				// new MyObject { ... }
+				//
+				case ExpressionType.MemberInit :
+					{
+						var expr = (MemberInitExpression)expression;
+						var dic  = TypeAccessor.GetAccessor(expr.Type).Members
+							.Select((m,i) => new { m, i })
+							.ToDictionary(_ => _.m.MemberInfo.Name, _ => _.i);
+
+						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic.ContainsKey(b.Member.Name) ? dic[b.Member.Name] : 1000000))
+						{
+							var converted = binding.Expression.Transform(e => RemoveNullPropagation(e));
+							members.Add(binding.Member, converted);
+
+							if (binding.Member is MethodInfo info)
+								members.Add(info.GetPropertyInfo(), converted);
+						}
+
+						return true;
+					}
+
+				// .Select(p => everything else)
+				//
+				default                        :
+					return false;
+			}
+		}
+
+
 		public ISqlPredicate ConvertObjectComparison(
 			ExpressionType nodeType,
 			SelectQuery  leftContext,
@@ -844,50 +1019,47 @@ namespace LinqToDB.Linq.Generator
 			SelectQuery  rightContext,
 			Expression     right)
 		{
-//			var qsl = GetContext(leftContext,  left);
-//			var qsr = GetContext(rightContext, right);
-//
-//			var sl = qsl != null && qsl.IsExpression(left,  0, RequestFor.Object).Result;
-//			var sr = qsr != null && qsr.IsExpression(right, 0, RequestFor.Object).Result;
-//
-//			bool      isNull;
-//			SqlInfo[] lcols;
-//
-//			var rmembers = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
-//
-//			if (sl == false && sr == false)
-//			{
-//				var lmembers = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
-//
-//				var isl = ProcessProjection(lmembers, left);
-//				var isr = ProcessProjection(rmembers, right);
-//
-//				if (!isl && !isr)
-//					return null;
-//
-//				if (lmembers.Count == 0)
-//				{
-//					var r = right;
-//					right = left;
-//					left  = r;
-//
-//					var c = rightContext;
-//					rightContext = leftContext;
-//					leftContext  = c;
-//
-//					var q = qsr;
-//					qsl = q;
-//
-//					sr = false;
-//
-//					var lm = lmembers;
-//					lmembers = rmembers;
-//					rmembers = lm;
-//				}
-//
-//				isNull = right is ConstantExpression expression && expression.Value == null;
-//				lcols  = lmembers.Select(m => new SqlInfo(m.Key) { Sql = ConvertToSql(leftContext, m.Value) }).ToArray();
-//			}
+
+
+			//TODO
+			var sl = left.Type.IsClassEx();
+			var sr = left.Type.IsClassEx();
+
+			bool      isNull;
+			SqlInfo[] lcols;
+
+			var rmembers = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
+
+			if (sl == false && sr == false)
+			{
+				var lmembers = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
+
+				var isl = ProcessProjection(lmembers, left);
+				var isr = ProcessProjection(rmembers, right);
+
+				if (!isl && !isr)
+					return null;
+
+				if (lmembers.Count == 0)
+				{
+					var r = right;
+					right = left;
+					left  = r;
+
+					var c = rightContext;
+					rightContext = leftContext;
+					leftContext  = c;
+
+					sr = false;
+
+					var lm = lmembers;
+					lmembers = rmembers;
+					rmembers = lm;
+				}
+
+				isNull = right is ConstantExpression expression && expression.Value == null;
+				lcols  = lmembers.Select(m => new SqlInfo(m.Key) { Sql = ConvertToSql(leftContext, m.Value) }).ToArray();
+			}
 //			else
 //			{
 //				if (sl == false)
@@ -3517,7 +3689,7 @@ namespace LinqToDB.Linq.Generator
 			return ConvertToSql(context, expr);
 		}
 
-		public SqlTableSource GetTableSource(IQuerySource querySource)
+		private QuerySourceRegistry GetTableSourceRegistry(IQuerySource querySource)
 		{
 			if (!_registeredTableSources.TryGetValue(querySource, out var value))
 			{
@@ -3724,11 +3896,7 @@ namespace LinqToDB.Linq.Generator
 							return converted;
 						}
 
-						if (ma.Expression is QuerySourceReferenceExpression reference)
-						{
-							var ts = GetTableSource(reference.QuerySource);
-							return reference.QuerySource.ConvertToSql(ts.Source, ma);
-						}
+						return ConvertMemberAccessToSql(context, ma, false);
 
 						break;
 
@@ -3912,6 +4080,54 @@ namespace LinqToDB.Linq.Generator
 			}
 
 			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+		}
+
+		private Dictionary<Expression, ISqlExpression> _memberMappingHelper = new Dictionary<Expression, ISqlExpression>();
+
+		private ISqlExpression ConvertMemberAccessToSql(SelectQuery context, MemberExpression ma, bool generateColumn)
+		{
+			if (_memberMappingHelper.TryGetValue(ma, out var result))
+				return result;
+
+			QuerySourceReferenceExpression realOwner = null;
+			Expression current = ma.Expression;
+			List<MemberTransformationInfo> sourcesStack = new List<MemberTransformationInfo>();
+
+			while (current != null)
+			{
+				if (current is QuerySourceReferenceExpression reference)
+				{
+					realOwner = reference;
+					break;
+				}
+				else if (current.NodeType == ExpressionType.MemberAccess)
+				{
+					var transformed = GetMemberTransformation(((MemberExpression)current).Member);
+					if (transformed == null)
+						break;
+					sourcesStack.Add(transformed);
+					current = transformed.Transformation;
+				}
+			}
+
+			if (realOwner == null)
+				throw new LinqToDBException($"Expression '{ma}' can not be converted to SQL");
+
+			var querySourceRegistry = GetTableSourceRegistry(realOwner.QuerySource);
+			result = realOwner.QuerySource.ConvertToSql(querySourceRegistry.TableSource.Source, ma);
+
+//			for (int i = sourcesStack.Count - 1; i >= 0; i--)
+//			{
+//				if (querySourceRegistry.TableSource != sourcesStack[i].TableSource)
+//				{
+//					var q = sourcesStack[i].SelectQuery;
+//					result = q.Select.Columns[q.Select.Add(result)];
+//				}
+//			}
+
+			_memberMappingHelper.Add(ma, result);
+
+			return result;
 		}
 
 		ISqlExpression ConvertToSqlConvertible(SelectQuery context, Expression expression)
@@ -4261,7 +4477,7 @@ namespace LinqToDB.Linq.Generator
 		{
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
-			return ModelParser.IsSequence(buildInfo.Expression);
+			return ModelTranslator.IsSequence(buildInfo.Expression);
 		}
 
 	}

@@ -7,14 +7,14 @@ namespace LinqToDB.Linq.Parser.Builders
 	public class GetTableBuilder : MethodCallBuilder
 	{
 		private static readonly MethodInfo[] _supported =
-			{ ParsingMethods.GetTableMethod };
+			{ ParsingMethods.GetTable };
 
 		public override MethodInfo[] SupportedMethods()
 		{
 			return _supported;
 		}
 
-		public override Sequence BuildSequence(ModelParser builder, ParseBuildInfo parseBuildInfo, MethodCallExpression methodCallExpression)
+		public override Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, MethodCallExpression methodCallExpression)
 		{
 			var sequence = new TableSource(methodCallExpression.Method.GetGenericArguments()[0], "");
 			builder.RegisterSource(sequence);

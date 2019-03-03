@@ -5,18 +5,21 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
-	public class ArraySource : BaseClause, IQuerySource
+	public class SelectClause : BaseClause, IQuerySource
 	{
-		public ArraySource([NotNull] Type itemType, string itemName, [NotNull] Expression arrayExpression)
+		public Expression Selector { get; set; }
+
+		public SelectClause([NotNull] Type itemType, [NotNull] string itemName, [NotNull] Expression selector)
 		{
+			Selector = selector ?? throw new ArgumentNullException(nameof(selector));
 			ItemType = itemType ?? throw new ArgumentNullException(nameof(itemType));
-			ItemName = itemName;
-			ArrayExpression = arrayExpression ?? throw new ArgumentNullException(nameof(arrayExpression));
+			ItemName = itemName ?? throw new ArgumentNullException(nameof(itemName));
 		}
 
-		public Type ItemType { get; }
-		public string ItemName { get; }
-		public Expression ArrayExpression { get; }
+		public SelectClause([NotNull] Expression selector) : this(selector.Type, "", selector)
+		{
+			
+		}
 
 		public override BaseClause Visit(Func<BaseClause, BaseClause> func)
 		{
@@ -28,10 +31,12 @@ namespace LinqToDB.Linq.Parser.Clauses
 			return func(this);
 		}
 
+		public Type ItemType { get; }
+		public string ItemName { get; }
+
 		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression ma)
 		{
 			throw new NotImplementedException();
 		}
-
 	}
 }

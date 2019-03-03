@@ -9,14 +9,14 @@ namespace LinqToDB.Linq.Parser.Builders
 	public class WhereMethodBuilder : MethodCallBuilder
 	{
 		private static readonly MethodInfo[] _supported =
-			{ ParsingMethods.WhereMethod };
+			{ ParsingMethods.Where };
 
 		public override MethodInfo[] SupportedMethods()
 		{
 			return _supported;
 		}
 
-		public override Sequence BuildSequence(ModelParser builder, ParseBuildInfo parseBuildInfo, MethodCallExpression methodCallExpression)
+		public override Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, MethodCallExpression methodCallExpression)
 		{
 			var sequence = builder.BuildSequence(parseBuildInfo, methodCallExpression.Arguments[0]);
 
@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Parser.Builders
 			var lambda = (LambdaExpression)methodCallExpression.Arguments[1].Unwrap();
 			var whereExpression = lambda.GetBody(sr);
 
-			parseBuildInfo.Sequence.AddClause(new WhereClause(whereExpression));
+			parseBuildInfo.Sequence.AddClause(new WhereClause(builder.ConvertExpression(whereExpression)));
 			return parseBuildInfo.Sequence;
 		}
 	}
