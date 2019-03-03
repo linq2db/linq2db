@@ -73,17 +73,36 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void issue1513Test([DataSources(false)]string context)
+		public void ProviderConnectionStringConstructorTest1([DataSources(false)]string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
-				var _db  = new DataContext(db.DataProvider.Name, db.ConnectionString);
-				var _db1 = new DataContext(db.DataProvider.Name, "FakeConnectionString");
+				Assert.Throws(typeof(LinqToDBException), () => new DataContext("BAD", db.ConnectionString));
+			}
 
-				Assert.AreEqual(db.DataProvider.Name, _db.DataProvider.Name);
-				Assert.AreEqual(db.ConnectionString, _db.ConnectionString);
-				Assert.Throws(typeof(LinqToDBException), () => new DataContext("FakeAdapter", db.ConnectionString));
-				Assert.Throws(typeof(System.ArgumentException), () => _db1.GetTable<Child>().FirstOrDefault());
+		}
+		[Test]
+		public void ProviderConnectionStringConstructorTest2([DataSources(false)]string context)
+		{
+			using (var db  = (TestDataConnection)GetDataContext(context))
+			using (var db1 = new DataContext(db.DataProvider.Name, "BAD"))
+			{
+				Assert.Throws(typeof(ArgumentException), () => db1.GetTable<Child>().ToList());
+			}
+		}
+
+		[Test]
+		public void ProviderConnectionStringConstructorTest3([DataSources(false)]string context)
+		{
+			using (var db  = (TestDataConnection)GetDataContext(context))
+			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString))
+			{
+				Assert.AreEqual(db.DataProvider.Name, db1.DataProvider.Name);
+				Assert.AreEqual(db.ConnectionString , db1.ConnectionString);
+
+				AreEqual(
+					db .GetTable<Child>().OrderBy(_ => _.ChildID).ToList(),
+					db1.GetTable<Child>().OrderBy(_ => _.ChildID).ToList());
 			}
 		}
 	}

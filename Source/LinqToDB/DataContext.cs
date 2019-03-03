@@ -64,7 +64,7 @@ namespace LinqToDB
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		public DataContext([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString)
 		{
-			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
+			if (providerName     == null) throw new ArgumentNullException(nameof(providerName));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 			var dataProvider = DataConnection.GetDataProvider(providerName, connectionString);
 			DataProvider     = dataProvider ?? throw new LinqToDBException($"DataProvider '{providerName}' not found.");
