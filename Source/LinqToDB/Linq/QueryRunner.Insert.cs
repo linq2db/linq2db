@@ -67,7 +67,7 @@ namespace LinqToDB.Linq
 				var type = GetType<T>(obj, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(obj.GetType());
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName, type };
-				var ei   = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.DoNotCacheObjectInsertQueries
+				var ei   = Common.Configuration.Linq.DisableQueryCache || (entityDescriptor.SkipModificationFlags & SkipModification.Insert) != 0
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type)
 					: _queryCache.GetOrAdd(key,
 						o => CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type));
@@ -84,7 +84,7 @@ namespace LinqToDB.Linq
 				var type = GetType<T>(obj, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(obj.GetType());
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName, type };
-				var ei   = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.DoNotCacheObjectInsertQueries
+				var ei   = Common.Configuration.Linq.DisableQueryCache || (entityDescriptor.SkipModificationFlags & SkipModification.Insert) != 0
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type)
 					: _queryCache.GetOrAdd(key,
 						o => CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type));

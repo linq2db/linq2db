@@ -229,7 +229,7 @@ namespace Tests.UserTests
 					var r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1);
 
 					Assert.IsNotNull(r);
-					Assert.IsNull(r.Age);
+					Assert.AreEqual(r.Age, 0);
 				}
 			}
 		}

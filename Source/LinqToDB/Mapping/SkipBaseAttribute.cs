@@ -3,26 +3,7 @@
 namespace LinqToDB.Mapping
 {
 	/// <summary>
-	/// Flags for specifying skip modifications used for Attributes based on <see cref="SkipBaseAttribute"/>.
-	/// </summary>
-	[Flags]
-	public enum SkipModification
-	{
-      /// <summary>
-      /// A value should be skipped on insert.
-      /// </summary>
-		Insert = 0x1,
-		/// <summary>
-		/// A value should be skipped on update.
-		/// </summary>
-      Update = 0x2
-	}
-
-	/// <summary>
-	/// Abstract Attribute to be used for skipping value for
-	/// <see cref="SkipValuesOnInsertAttribute"/> based on <see cref="SkipModification.Insert"></see> or 
-	/// <see cref="SkipValuesOnUpdateAttribute"/> based on <see cref="SkipModification.Update"/>/> or a
-	/// custom Attribute derived from this to override <see cref="ShouldSkip"/>
+	/// Abstract Attribute to be used for skipping values
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
 	public abstract class SkipBaseAttribute : Attribute

@@ -138,6 +138,7 @@ namespace LinqToDB.Mapping
 			if (skipValueAttributes != null && skipValueAttributes.Length > 0)
 			{
 				SkipBaseAttributes = skipValueAttributes;
+				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
 			}
 		}
 
@@ -267,6 +268,11 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		private SkipBaseAttribute[] SkipBaseAttributes { get; }
 
+		/// <summary>
+		/// Gets flags for which operation values are skipped.
+		/// </summary>
+		public SkipModification SkipModificationFlags { get; }
+
 		/// <summary> 
 		/// Check if the passed object has values that should bes skipped based on the given flags. 
 		/// </summary>
@@ -275,10 +281,15 @@ namespace LinqToDB.Mapping
 		/// <param name="flags">The flags that specify which operation should be checked.</param>
 		/// <returns><c>true</c> if object contains values that should be skipped. </returns>
 		public virtual bool ShouldSkip(object obj, EntityDescriptor descriptor, SkipModification flags)
-		{		
-			for (var i = 0; SkipBaseAttributes != null && i < SkipBaseAttributes.Length; i++)
+		{
+			if (SkipBaseAttributes == null)
 			{
-				if((SkipBaseAttributes[i].Affects & flags) != 0 && SkipBaseAttributes[i].ShouldSkip(obj, descriptor, this))
+				return false;
+			}
+	
+			foreach (var skipBaseAttribute in SkipBaseAttributes)
+			{
+				if ((skipBaseAttribute.Affects & flags) != 0 && skipBaseAttribute.ShouldSkip(obj, descriptor, this))
 				{
 					return true;
 				}

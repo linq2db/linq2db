@@ -1,24 +1,42 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.Mapping
 {
 	/// <summary>
-	/// Attribute for skipping specific values on update.
+	/// Flags for specifying skip modifications used for Attributes based on <see cref="SkipBaseAttribute"/>.
 	/// </summary>
-	public class SkipValuesOnUpdateAttribute : SkipBaseAttribute
+	[Flags]
+	public enum SkipModification
 	{
-		public SkipValuesOnUpdateAttribute()
-		{
-			Affects = SkipModification.Update;
-		}
-
-		/// <summary>  
-		/// Constructor. 
+		/// <summary> 
+		/// No value should be skipped.
 		/// </summary>
-		/// <param name="values"> 
-		/// Values to skip on update operations.
-		/// </param>
-		public SkipValuesOnUpdateAttribute(params object[] values) : this()
+		None = 0x0,
+		/// <summary> 
+		/// A value should be skipped on insert.
+		/// </summary>
+		Insert = 0x1,
+		/// <summary> 
+		/// A value should be skipped on update.
+		/// </summary>
+		Update = 0x2
+	}
+
+	/// <summary>
+	/// Abstract Attribute to be used for skipping value for
+	/// <see cref="SkipValuesOnInsertAttribute"/> based on <see cref="SkipModification.Insert"></see> or 
+	/// <see cref="SkipValuesOnUpdateAttribute"/> based on <see cref="SkipModification.Update"/>/> or a
+	/// custom Attribute derived from this to override <see cref="SkipBaseAttribute.ShouldSkip"/>
+	/// </summary>
+	public abstract class SkipValuesByListAttribute: SkipBaseAttribute
+	{
+		/// <summary>
+		/// Gets collection with values to skip.
+		/// </summary>
+		protected HashSet<object> Values { get; set; }
+
+		protected SkipValuesByListAttribute(params object[] values)
 		{
 			var valuesToSkip = values;
 			if (valuesToSkip == null)
@@ -44,19 +62,12 @@ namespace LinqToDB.Mapping
 			return Values?.Contains(columnDescriptor.MemberAccessor.Getter(obj)) ?? false;
 		}
 
-		public override SkipModification Affects { get; }
-
 		/// <summary>
 		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
 		public override string Configuration { get; set; }
-
-		/// <summary>
-		/// Gets collection with values to skip on update.
-		/// </summary>
-		public HashSet<object> Values { get; }
 
 	}
 }
