@@ -75,7 +75,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(1546)]
 		public void GroupByWithCast([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -114,7 +113,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(1546)]
 		public void GroupByWithTwoCasts([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

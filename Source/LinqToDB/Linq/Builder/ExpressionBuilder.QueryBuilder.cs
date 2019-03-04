@@ -308,9 +308,27 @@ namespace LinqToDB.Linq.Builder
 										&& parameter.ParameterType.IsValueTypeEx()
 										&& mc.Arguments[0] is ConvertFromDataReaderExpression readerExpression)
 									{
-										readerExpression.MakeNullable();
-										newArgument = readerExpression;
+										newArgument = readerExpression.MakeNullable();
 									}
+								}
+							}
+							else if (newArgument.NodeType == ExpressionType.Convert || newArgument.NodeType == ExpressionType.ConvertChecked)
+							{
+								var conv = (UnaryExpression)newArgument;
+								if (ne.Members?[i].GetMemberType().IsNullable() == true
+								    && conv.Operand is ConvertFromDataReaderExpression readerExpression
+								    && !readerExpression.Type.IsNullable())
+								{
+									newArgument = readerExpression.MakeNullable();
+								}
+							}
+							else if (newArgument.NodeType == ExpressionType.Extension &&
+							         newArgument is ConvertFromDataReaderExpression readerExpression)
+							{
+								if (ne.Members?[i].GetMemberType().IsNullable() == true &&
+								    !readerExpression.Type.IsNullable())
+								{
+									newArgument = readerExpression.MakeNullable();
 								}
 							}
 

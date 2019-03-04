@@ -213,12 +213,15 @@ namespace LinqToDB.Expressions
 			return $"ConvertFromDataReaderExpression<{_type.Name}>({_idx})";
 		}
 
-		public void MakeNullable()
+		public ConvertFromDataReaderExpression MakeNullable()
 		{
 			if (Type.IsValueTypeEx())
 			{
-				_type = typeof(Nullable<>).MakeGenericType(Type);
+				var type = typeof(Nullable<>).MakeGenericType(Type);
+				return new ConvertFromDataReaderExpression(type, _idx, _dataReaderParam, _dataContext);
 			}
+
+			return this;
 		}
 
 	}
