@@ -305,7 +305,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									var parameter = mc.Method.GetParameters()[0];
 									if (mc.Method.ReturnParameter?.ParameterType != parameter.ParameterType 
-										&& parameter.ParameterType.IsValueType 
+										&& parameter.ParameterType.IsValueTypeEx()
 										&& mc.Arguments[0] is ConvertFromDataReaderExpression readerExpression)
 									{
 										readerExpression.MakeNullable();

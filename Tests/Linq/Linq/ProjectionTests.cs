@@ -58,7 +58,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToNullableTes([SQLiteDataSources(true)] string context)
+		public void ToNullableTest([SQLiteDataSources(true)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<SomeEntity>(new[]{new SomeEntity{Id = 1, OtherId = 3} }))
@@ -71,6 +71,122 @@ namespace Tests.Linq
 				var result = query.First();
 
 				Assert.That(result.IsActual, Is.Null);
+			}
+		}
+
+		[Test]
+		[ActiveIssue(1546)]
+		public void GroupByWithCast([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person
+					.GroupBy(_ => new
+					{
+						group = _.ID,
+						key = new
+						{
+							// cast
+							id = (int?)_.Patient.PersonID,
+							value = _.Patient.Diagnosis
+						}
+					})
+					.Having(auto16031 => auto16031.Key.group == 1)
+					.Select(_ => new
+					{
+						x = new
+						{
+							@value = _.Key.key.@value,
+							id = _.Key.key.id
+						},
+						y = _.Average(auto16033 => auto16033.ID)
+					})
+					.OrderByDescending(_ => _.x.value)
+					.Take(1000);
+
+				var result = query.ToList();
+
+				Assert.AreEqual(1, result.Count);
+				Assert.AreEqual(1, result[0].y);
+				Assert.IsNull(result[0].x.value);
+				Assert.IsNull(result[0].x.id);
+			}
+		}
+
+		[Test]
+		[ActiveIssue(1546)]
+		public void GroupByWithTwoCasts([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person
+					.GroupBy(_ => new
+					{
+						group = _.ID,
+						key = new
+						{
+							// cast
+							id = (int?)_.Patient.PersonID,
+							value = _.Patient.Diagnosis
+						}
+					})
+					.Having(auto16031 => auto16031.Key.group == 1)
+					.Select(_ => new
+					{
+						x = new
+						{
+							@value = _.Key.key.@value,
+							// cast int? to int?
+							id = (int?)_.Key.key.id
+						},
+						y = _.Average(auto16033 => auto16033.ID)
+					})
+					.OrderByDescending(_ => _.x.value)
+					.Take(1000);
+
+				var result = query.ToList();
+
+				Assert.AreEqual(1, result.Count);
+				Assert.AreEqual(1, result[0].y);
+				Assert.IsNull(result[0].x.value);
+				Assert.IsNull(result[0].x.id);
+			}
+		}
+
+		[Test]
+		public void GroupByWithToNullable([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person
+					.GroupBy(_ => new
+					{
+						group = _.ID,
+						key = new
+						{
+							id = Sql.ToNullable(_.Patient.PersonID),
+							value = _.Patient.Diagnosis
+						}
+					})
+					.Having(auto16031 => auto16031.Key.group == 1)
+					.Select(_ => new
+					{
+						x = new
+						{
+							@value = _.Key.key.@value,
+							id = _.Key.key.id
+						},
+						y = _.Average(auto16033 => auto16033.ID)
+					})
+					.OrderByDescending(_ => _.x.value)
+					.Take(1000);
+
+				var result = query.ToList();
+
+				Assert.AreEqual(1, result.Count);
+				Assert.AreEqual(1, result[0].y);
+				Assert.IsNull(result[0].x.value);
+				Assert.IsNull(result[0].x.id);
 			}
 		}
 	}
