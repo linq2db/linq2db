@@ -75,7 +75,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByWithCast([DataSources] string context)
+		public void GroupByWithCast([DataSources(ProviderName.MySql, TestProvName.MySql57)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -113,7 +113,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByWithTwoCasts([DataSources] string context)
+		public void GroupByWithTwoCasts([DataSources(ProviderName.MySql, TestProvName.MySql57)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -152,7 +152,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByWithToNullable([DataSources] string context)
+		public void GroupByWithToNullable([DataSources(ProviderName.MySql, TestProvName.MySql57)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
