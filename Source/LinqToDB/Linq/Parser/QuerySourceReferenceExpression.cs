@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq.Expressions;
+using LinqToDB.Common;
 using LinqToDB.Expressions;
+using LinqToDB.Linq.Parser.Clauses;
 
 namespace LinqToDB.Linq.Parser
 {
@@ -20,7 +22,10 @@ namespace LinqToDB.Linq.Parser
 
 	    public override string ToString ()
 	    {
-		      return $"({QuerySource.ItemType})" + "[" + (QuerySource.ItemName ?? string.Empty) + "]";
+		    var str = $"REF<{QuerySource.ItemType.Name}>({QuerySource.QuerySourceId})";
+		    if (!QuerySource.ItemName.IsNullOrEmpty())
+			    str = "[" + (QuerySource.ItemName ?? string.Empty) + "]";
+		    return str;
 	    }
 
 	    public override void CustomVisit(Action<Expression> func)
@@ -44,5 +49,19 @@ namespace LinqToDB.Linq.Parser
 	    {
 		    return func(this);
 	    }
+
+		public override bool CustomEquals(Expression other)
+		{
+			if (other.GetType() != GetType())
+				return false;
+
+			var otherExpr = (QuerySourceReferenceExpression)other;
+			return (otherExpr.QuerySource == QuerySource);
+		}
+
+		public override int GetHashCode()
+		{
+			return (QuerySource != null ? QuerySource.GetHashCode() : 0);
+		}
 	}
 }

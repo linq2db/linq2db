@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Reflection;
 using JetBrains.Annotations;
 using LinqToDB.SqlQuery;
 
@@ -13,8 +14,10 @@ namespace LinqToDB.Linq.Parser.Clauses
 			ItemName = itemName;
 			Sequence1 = sequence1 ?? throw new ArgumentNullException(nameof(sequence1));
 			Sequence2 = sequence2 ?? throw new ArgumentNullException(nameof(sequence2));
+			QuerySourceId = QuerySourceHelper.GetNexSourceId();
 		}
 
+		public int QuerySourceId { get; }
 		public Type ItemType { get; }
 		public string ItemName { get; }
 
@@ -36,6 +39,11 @@ namespace LinqToDB.Linq.Parser.Clauses
 		public override bool VisitParentFirst(Func<BaseClause, bool> func)
 		{
 			return func(this) && Sequence1.VisitParentFirst(func) && Sequence2.VisitParentFirst(func);
+		}
+
+		public bool DoesContainMember(MemberInfo memberInfo)
+		{
+			throw new NotImplementedException();
 		}
 
 		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression ma)

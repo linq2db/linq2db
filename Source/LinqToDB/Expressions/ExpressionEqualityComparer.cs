@@ -274,7 +274,13 @@ namespace LinqToDB.Expressions
 //                        break;
 //                    }
                     default:
-                        throw new NotImplementedException();
+	                    if (obj is ICustomExpression custom)
+	                    {
+		                    hashCode += (hashCode * 397) ^ obj.GetHashCode();
+							break;
+	                    }
+						else
+							throw new NotImplementedException();
                 }
 
                 return hashCode;

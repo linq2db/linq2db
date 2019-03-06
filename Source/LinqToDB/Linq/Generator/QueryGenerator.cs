@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -22,14 +23,15 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Generator
 {
-	public class AstGenerator
+	public class QueryGenerator
 	{
+		public ModelTranslator Translator { get; }
 		public IDataContext DataContext { get; }
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
 		private Dictionary<IQuerySource, SqlTableSource> _tableSources = new Dictionary<IQuerySource, SqlTableSource>();
 
-		SqlTableSource GenerateTableSource(SqlTableSource current, IQuerySource querySource, out bool shouldAdd)
+		SqlTableSource GenerateTableSource(SelectQuery selectQuery, SqlTableSource current, IQuerySource querySource, out bool shouldAdd)
 		{
 			ISqlTableSource source;
 			shouldAdd = false;
@@ -44,9 +46,10 @@ namespace LinqToDB.Linq.Generator
 				case JoinClause jc:
 					{
 						var joinType = JoinType.Inner;
-						var ts = GenerateTableSource(current, jc.Inner, out _);
-						current.Joins.Add(new SqlJoinedTable(joinType, ts, querySource.ItemName, false));
-						source = ts;
+						var ts = GenerateTableSource(selectQuery, current, jc.Inner, out _);
+						_registeredTableSources.Add(jc.Inner, new QuerySourceRegistry(selectQuery, ts, MappingSchema));
+						current.Joins.Add(new SqlJoinedTable(joinType, ts, false));
+						return ts;
 						break;
 					}
 				case SelectClause sc:
@@ -64,28 +67,51 @@ namespace LinqToDB.Linq.Generator
 
 		class QuerySourceRegistry
 		{
-			public QuerySourceRegistry(SelectQuery selectQuery, SqlTableSource tableSource)
+			private Dictionary<MemberInfo, MemberTransformationInfo> _memberTransformations = new Dictionary<MemberInfo, MemberTransformationInfo>();
+
+			public QuerySourceRegistry(SelectQuery selectQuery, SqlTableSource tableSource, MappingSchema mappingSchema)
 			{
 				SelectQuery = selectQuery;
 				TableSource = tableSource;
+				MappingSchema = mappingSchema;
 			}
 
 			public SelectQuery SelectQuery { get; }
 			public SqlTableSource TableSource { get; }
+			public MappingSchema MappingSchema { get; }
+
+			private void RegisterSelectorTransformation(SelectQuery selectQuery, SqlTableSource current,
+				Expression selector)
+			{
+				foreach (var mapping in GeneratorHelper.GetMemberMapping(selector, MappingSchema))
+				{
+					// we assume that for higher level it will be other transformations. REVISE!
+					_memberTransformations.Remove(mapping.Item1);
+					_memberTransformations.Add(mapping.Item1, new MemberTransformationInfo(selectQuery, current, mapping.Item2));
+					RegisterSelectorTransformation(selectQuery, current, mapping.Item2);
+				}
+			}
+
+			private MemberTransformationInfo GetMemberTransformation(MemberInfo memberInfo)
+			{
+				_memberTransformations.TryGetValue(memberInfo, out var result);
+				return result;
+			}
+
 		}
 
 		private Dictionary<IQuerySource, QuerySourceRegistry> _registeredTableSources = new Dictionary<IQuerySource, QuerySourceRegistry>();
 
-		void GenerateStatementInternal(SelectQuery selectQuery, Sequence sequence)
+		void GenerateStatementInternal(SelectQuery selectQuery, Sequence sequence, List<IStreamedData> dataStream)
 		{
 			SqlTableSource current = null;
 			bool isGrouping = false;
 			foreach (var clause in sequence.Clauses)
 			{
-				if (clause is IQuerySource qs)
+				if (clause is IQuerySource qs && !(clause is SelectClause))
 				{
-					current = GenerateTableSource(current, qs, out var shouldAdd);
-					_registeredTableSources.Add(qs, new QuerySourceRegistry(selectQuery, current));
+					current = GenerateTableSource(selectQuery, current, qs, out var shouldAdd);
+					_registeredTableSources.Add(qs, new QuerySourceRegistry(selectQuery, current, MappingSchema));
 					if (shouldAdd)
 						selectQuery.From.Tables.Add(current);
 				}
@@ -95,15 +121,15 @@ namespace LinqToDB.Linq.Generator
 					case Sequence seq:
 						{
 							var select = new SelectQuery();
-							GenerateStatementInternal(@select, seq);
+							GenerateStatementInternal(select, seq, dataStream);
 
-							current = new SqlTableSource(@select, "");
+							current = new SqlTableSource(select, "");
 							selectQuery.From.Tables.Add(current);
 							break;
 						}
-					case SelectClause select:
+					case SelectClause selectClause:
 						{
-							RegisterSelectorTransformation(selectQuery, current, @select.Selector);
+							RegisterSelectorTransformation(selectQuery, current, selectClause, selectClause.Selector);
 							break;
 						}
 					case WhereClause where:
@@ -128,53 +154,112 @@ namespace LinqToDB.Linq.Generator
 				Transformation = transformation;
 			}
 
+			public override string ToString()
+			{
+				return $" -> {Transformation}";
+			}
+
 			public SqlTableSource TableSource { get; }
 			public SelectQuery SelectQuery { get; }
 			public Expression Transformation { get; }
 		}
 
-		private Dictionary<MemberInfo, MemberTransformationInfo> _memberTransformations = new Dictionary<MemberInfo, MemberTransformationInfo>();
+		private Dictionary<MemberExpression, MemberTransformationInfo> _memberTransformations = new Dictionary<MemberExpression, MemberTransformationInfo>(new ExpressionEqualityComparer());
 
-		private void RegisterSelectorTransformation(SelectQuery selectQuery, SqlTableSource current,
+		private void RegisterSelectorTransformation(SelectQuery selectQuery, SqlTableSource current, IQuerySource querySource,
 			Expression selector)
 		{
-			switch (selector.NodeType)
+			void RegisterLevel(Expression objExpression, Expression argument)
 			{
-				case ExpressionType.New:
-					{
-						var newExpr = (NewExpression)selector;
-						for (int i = 0; i < newExpr.Members.Count; i++)
-						{
-							var member = newExpr.Members[i];
-							var argument = newExpr.Arguments[i];
-
-							// we assume that for higher level it will be other transformations
-							_memberTransformations.Remove(member);
-							_memberTransformations.Add(member, new MemberTransformationInfo(selectQuery, current, argument));
-						}
-						break;
-					}
+				foreach (var mapping in GeneratorHelper.GetMemberMapping(argument, MappingSchema))
+				{
+					var ma = Expression.MakeMemberAccess(objExpression, mapping.Item1);
+					_memberTransformations.Add(ma, new MemberTransformationInfo(selectQuery, current, mapping.Item2));
+					RegisterLevel(ma, mapping.Item2);
+				}
 			}
+
+			var refExpression = Translator.GetSourceReference(querySource);
+			RegisterLevel(refExpression, selector);
 		}
 
-		private MemberTransformationInfo GetMemberTransformation(MemberInfo memberInfo)
+		private MemberTransformationInfo GetMemberTransformation(MemberExpression memberExpression)
 		{
-			_memberTransformations.TryGetValue(memberInfo, out var result);
+			_memberTransformations.TryGetValue(memberExpression, out var result);
 			return result;
 		}
 
-		public AstGenerator([JetBrains.Annotations.NotNull] IDataContext dataContext)
+		public QueryGenerator(ModelTranslator translator, [JetBrains.Annotations.NotNull] IDataContext dataContext)
 		{
+			Translator = translator;
 			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 		}
 
-		public SqlStatement GenerateStatement(Sequence sequence)
+		public Tuple<SqlStatement, Expression> GenerateStatement(Sequence sequence)
 		{
 			var selectQuery = new SelectQuery();
-			GenerateStatementInternal(selectQuery, sequence);
-			return new SqlSelectStatement(selectQuery);
+			GenerateStatementInternal(selectQuery, sequence, new List<IStreamedData>());
+			var projection = GenerateProjection(selectQuery, sequence);
+			return Tuple.Create((SqlStatement)new SqlSelectStatement(selectQuery), projection);
 		}
 
+		private Expression GenerateProjection(SelectQuery selectQuery, Sequence sequence)
+		{
+			Expression result = null;
+
+			for (int i = sequence.Clauses.Count - 1; i >= 0; i--)
+			{
+				var clause = sequence.Clauses[i];
+				if (clause is SelectClause selectClause)
+				{
+					result = GenerateProjection(selectQuery, selectClause.Selector, e => -1); 
+					break;
+				}
+			}
+
+			if (result == null)
+				throw new LinqToDBException("Sequence does not have SelectClause");
+
+			return result;
+		}
+
+		private Expression GenerateProjection(SelectQuery selectQuery, Expression selector, Func<ISqlExpression, int> registerExpression)
+		{
+			var result = selector.Transform(e =>
+			{
+				switch (e.NodeType)
+				{
+					case ExpressionType.New:
+						{
+							var newExpr = (NewExpression)selector;
+							if (newExpr.Members.Count > 0)
+							{
+								var arguments = new List<Expression>();
+								for (int i = 0; i < newExpr.Members.Count; i++)
+								{
+									var member = newExpr.Members[i];
+									var argument = GenerateProjection(selectQuery, newExpr.Arguments[i], sqlExpr => selectQuery.Select.Add(sqlExpr));
+									arguments.Add(argument);
+								}
+
+								return newExpr.Update(arguments);
+							}
+							break;
+						}
+					default:
+						{
+							var sqlExpr = ConvertToSql(selectQuery, e);
+							var idx = registerExpression(sqlExpr);
+							e = new ConvertFromDataReaderExpression(e.Type, idx, null, null);
+							break;
+						}
+				}
+
+				return e;
+			});
+
+			return result;
+		}
 
 		#region Public Members
 
@@ -3896,7 +3981,7 @@ namespace LinqToDB.Linq.Generator
 							return converted;
 						}
 
-						return ConvertMemberAccessToSql(context, ma, false);
+						return ConvertMemberAccessToSql(context, ma, null);
 
 						break;
 
@@ -4067,6 +4152,7 @@ namespace LinqToDB.Linq.Generator
 					{
 						if (expression.CanReduce)
 							return ConvertToSql(context, expression.Reduce());
+
 						break;
 					}
 			}
@@ -4082,8 +4168,58 @@ namespace LinqToDB.Linq.Generator
 			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
 		}
 
-		private Dictionary<Expression, ISqlExpression> _memberMappingHelper = new Dictionary<Expression, ISqlExpression>();
+		private Dictionary<MemberExpression, ISqlExpression> _memberMappingHelper = new Dictionary<MemberExpression, ISqlExpression>(new ExpressionEqualityComparer());
 
+		private ISqlExpression ConvertMemberAccessToSql(SelectQuery selectQuery, MemberExpression ma, MemberInfo mi)
+		{
+			if (_memberMappingHelper.TryGetValue(ma, out var result))
+				return result;
+
+			var transformed = GetMemberTransformation(ma);
+			if (transformed != null)
+			{
+//				if (transformed.Transformation.NodeType == ExpressionType.MemberAccess)
+//				{
+//					result = ConvertMemberAccessToSql(transformed.SelectQuery,
+//						(MemberExpression)transformed.Transformation, null);
+////					result = selectQuery.Select.Columns[selectQuery.Select.Add(result)];
+//				}
+//				else if (transformed.Transformation is QuerySourceReferenceExpression reference)
+//				{
+//					result = ConvertMemberAccessToSql(transformed.SelectQuery,
+//						Expression.MakeMemberAccess(reference, mi ?? ma.Member), null);
+////					result = selectQuery.Select.Columns[selectQuery.Select.Add(result)];
+//				}
+//				else
+				result = ConvertToSql(transformed.SelectQuery, transformed.Transformation);
+
+				if (!(result is SqlColumn column) || column.Parent != transformed.SelectQuery)
+				{
+					result = transformed.SelectQuery.Select.Columns[transformed.SelectQuery.Select.Add(result)];
+				}
+			}
+			else
+			{
+				if (ma.Expression is QuerySourceReferenceExpression reference)
+				{
+					var querySourceRegistry = GetTableSourceRegistry(reference.QuerySource);
+					result = reference.QuerySource.ConvertToSql(querySourceRegistry.TableSource.Source, ma);
+					result = querySourceRegistry.SelectQuery.Select.Columns[querySourceRegistry.SelectQuery.Select.Add(result)];
+				}
+				else if (ma.Expression is MemberExpression subMemberExpression)
+				{
+					result = ConvertMemberAccessToSql(selectQuery, subMemberExpression, mi ?? ma.Member);
+				}
+			}
+
+			if (mi == null)
+				_memberMappingHelper.Add(ma, result);
+
+			return result;
+		}
+
+
+/*
 		private ISqlExpression ConvertMemberAccessToSql(SelectQuery context, MemberExpression ma, bool generateColumn)
 		{
 			if (_memberMappingHelper.TryGetValue(ma, out var result))
@@ -4114,6 +4250,7 @@ namespace LinqToDB.Linq.Generator
 				throw new LinqToDBException($"Expression '{ma}' can not be converted to SQL");
 
 			var querySourceRegistry = GetTableSourceRegistry(realOwner.QuerySource);
+
 			result = realOwner.QuerySource.ConvertToSql(querySourceRegistry.TableSource.Source, ma);
 
 //			for (int i = sourcesStack.Count - 1; i >= 0; i--)
@@ -4129,6 +4266,7 @@ namespace LinqToDB.Linq.Generator
 
 			return result;
 		}
+*/
 
 		ISqlExpression ConvertToSqlConvertible(SelectQuery context, Expression expression)
 		{

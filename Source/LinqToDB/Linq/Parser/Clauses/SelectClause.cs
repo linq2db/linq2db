@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Reflection;
 using JetBrains.Annotations;
 using LinqToDB.SqlQuery;
 
@@ -14,6 +15,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			Selector = selector ?? throw new ArgumentNullException(nameof(selector));
 			ItemType = itemType ?? throw new ArgumentNullException(nameof(itemType));
 			ItemName = itemName ?? throw new ArgumentNullException(nameof(itemName));
+			QuerySourceId = QuerySourceHelper.GetNexSourceId();
 		}
 
 		public SelectClause([NotNull] Expression selector) : this(selector.Type, "", selector)
@@ -31,8 +33,14 @@ namespace LinqToDB.Linq.Parser.Clauses
 			return func(this);
 		}
 
+		public int QuerySourceId { get; }
 		public Type ItemType { get; }
 		public string ItemName { get; }
+
+		public bool DoesContainMember(MemberInfo memberInfo)
+		{
+			throw new NotImplementedException();
+		}
 
 		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression ma)
 		{

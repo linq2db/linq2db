@@ -349,7 +349,7 @@ namespace LinqToDB.Expressions
 
 				default:
 					{
-						if (expr is IVisitedExpression custom)
+						if (expr is ICustomExpression custom)
 							custom.CustomVisit(func);
 
 						break;
@@ -639,7 +639,7 @@ namespace LinqToDB.Expressions
 					}
 				default:
 					{
-						if (expr is IVisitedExpression custom)
+						if (expr is ICustomExpression custom)
 							custom.CustomVisit(func);
 
 						break;
@@ -933,7 +933,7 @@ namespace LinqToDB.Expressions
 
 				default:
 					{
-						if (expr is IVisitedExpression custom)
+						if (expr is ICustomExpression custom)
 							return custom.CustomFind(func);
 
 						break;
@@ -1167,7 +1167,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Extension             : return TransformXE(expr,                  func);
 				default:
 					{
-						if (expr is IVisitedExpression custom)
+						if (expr is ICustomExpression custom)
 							return custom.CustomTransform(func);
 
 						break;

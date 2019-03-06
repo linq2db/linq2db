@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
@@ -45,5 +46,10 @@ namespace LinqToDB.Linq.Parser.Clauses
 
 		public abstract BaseClause Visit(Func<BaseClause, BaseClause> func);
 		public abstract bool VisitParentFirst(Func<BaseClause, bool> func);
+
+		public virtual void TransformExpression(Func<Expression, Expression> func)
+		{
+
+		}
 	}
 }

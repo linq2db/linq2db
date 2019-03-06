@@ -34,7 +34,8 @@ namespace LinqToDB.Linq.Parser.Builders
 			var joinedType = selector.Type;
 
 			parseBuildInfo.Sequence.AddClause(
-				new JoinClause(
+				new 
+					JoinClause(
 					selectorLambda.Parameters[1].Name,
 					joinedType,
 					innerSequence.GetQuerySource(), builder.ConvertExpression(outerKey), builder.ConvertExpression(innerKey)));

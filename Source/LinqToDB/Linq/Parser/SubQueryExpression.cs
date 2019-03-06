@@ -46,5 +46,14 @@ namespace LinqToDB.Linq.Parser
 		{
 			return func(this);
 		}
+
+		public override bool CustomEquals(Expression other)
+		{
+			if (other.GetType() != GetType())
+				return false;
+
+			var otherExpr = (SubQueryExpression)other;
+			return (otherExpr.Sequence == Sequence) && (otherExpr.ItemType == ItemType);
+		}
 	}
 }

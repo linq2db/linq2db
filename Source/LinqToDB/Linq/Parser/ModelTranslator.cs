@@ -59,7 +59,8 @@ namespace LinqToDB.Linq.Parser
 		private Dictionary<ParameterExpression, QuerySourceReferenceExpression> _registeredSources = new Dictionary<ParameterExpression, QuerySourceReferenceExpression>();
 		private readonly Dictionary<IQuerySource, QuerySourceReferenceExpression> _registeredSources2 = new Dictionary<IQuerySource, QuerySourceReferenceExpression>();
 
-		public Sequence BuildSequence(ParseBuildInfo parseBuildInfo, Expression expression)
+
+		private static BaseBuilder FindBuilder(Expression expression)
 		{
 			if (expression.NodeType == ExpressionType.Call)
 			{
@@ -70,9 +71,7 @@ namespace LinqToDB.Linq.Parser
 					foreach (var builder in builders)
 					{
 						if (builder.CanBuild(expression))
-						{
-							return builder.BuildSequence(this, parseBuildInfo, expression);
-						}
+							return builder;
 					}
 
 				}
@@ -82,12 +81,18 @@ namespace LinqToDB.Linq.Parser
 				foreach (var builder in _otherBuilders)
 				{
 					if (builder.CanBuild(expression))
-					{
-						return builder.BuildSequence(this, parseBuildInfo, expression);
-					}
+						return builder;
 				}
-
 			}
+
+			return null;
+		}
+
+		public Sequence BuildSequence(ParseBuildInfo parseBuildInfo, Expression expression)
+		{
+			var builder = FindBuilder(expression);
+			if (builder != null)
+				return builder.BuildSequence(this, parseBuildInfo, expression);
 
 			throw new NotImplementedException();
 		}
@@ -435,6 +440,23 @@ namespace LinqToDB.Linq.Parser
 					return subquery;
 				}
 
+//				switch (e.NodeType)
+//				{
+//					case ExpressionType.Equal:
+//						{
+//							var binary = (BinaryExpression)e;
+//							if (binary.Left.)
+//						}
+//				}
+
+//				switch (e.NodeType)
+//				{
+//					case ExpressionType.New:
+//						return new UnifiedNewExpression((NewExpression)e);
+//					case ExpressionType.MemberInit:
+//						return new UnifiedNewExpression((MemberInitExpression)e);
+//				}
+
 				return e;
 			});
 			return result;
@@ -501,34 +523,7 @@ namespace LinqToDB.Linq.Parser
 
 		public static bool IsSequence(Expression expression)
 		{
-			if (expression.NodeType == ExpressionType.Call)
-			{
-				var mc = (MethodCallExpression)expression;
-
-				if (_methodCallBuilders.TryGetValue(mc.Method.EnsureDefinition(), out var builders))
-				{
-					foreach (var builder in builders)
-					{
-						if (builder.CanBuild(expression))
-						{
-							return true;
-						}
-					}
-
-				}
-			}
-			else
-			{
-				foreach (var builder in _otherBuilders)
-				{
-					if (builder.CanBuild(expression))
-					{
-						return true;
-					}
-				}
-			}
-
-			return false;
+			return FindBuilder(expression) != null;
 		}
 
 	}

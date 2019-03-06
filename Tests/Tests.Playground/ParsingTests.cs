@@ -41,16 +41,22 @@ namespace Tests.Playground
 					select new
 					{
 						q.Id, 
-						q2.OtherValue, 
-						AnyMember = db.GetTable<OtherClass>().Where(s => s.OtherId > q.Id).Any()
+						CalcValue = (1 + q.Id) * 2,
+						SubComplex = new
+						{
+							q2.OtherValue
+						}
 					};
 
 				var query2 = from q in query1
-					where q.AnyMember
 					select new
 					{
-						ValidId = q.Id,
-						Value = q.OtherValue
+						q.CalcValue,
+						Complex = new
+						{
+							ValidId = q.Id,
+							Value = q.SubComplex.OtherValue
+						}
 					};
 
 //				var query = from q in db.GetTable<SampleClass>()
@@ -62,11 +68,20 @@ namespace Tests.Playground
 				var expression = parser.PrepareExpressionForTranslation(query2.Expression);
 				var model = parser.ParseModel(expression);
 
-				var generator = new AstGenerator(db);
+				var generator = new QueryGenerator(parser, db);
 				var sql = generator.GenerateStatement(model);
 
+				var finalized = db.GetSqlOptimizer().Finalize(sql.Item1);
+//				var finalized = sql.Item1;
+
+				var sbRaw = new StringBuilder();
+				finalized.ToString(sbRaw, new Dictionary<IQueryElement, IQueryElement>());
+
+				var sqlStr = sbRaw.ToString();
+				Console.WriteLine(sqlStr);
+
 				var sb = new StringBuilder();
-				sql.ToString(sb, new Dictionary<IQueryElement, IQueryElement>());
+				db.CreateSqlProvider().BuildSql(0, finalized, sb, 0);
 
 				Console.WriteLine(sb.ToString());
 			}

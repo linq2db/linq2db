@@ -2949,6 +2949,7 @@ namespace LinqToDB.SqlProvider
 					return ((SqlTable)table).Alias;
 
 				default:
+					return "BLA!";
 					throw new InvalidOperationException();
 			}
 		}
