@@ -3,7 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !TRAVIS
@@ -15,7 +15,7 @@ using Tests.Model;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class ParameterTests : TestBase
+	public partial class ParameterTests : TestBase
 	{
 		[Test]
 		public void InlineParameter([DataSources] string context)
@@ -183,6 +183,9 @@ namespace Tests.Linq
 		{
 			public decimal DecimalDataType;
 			public byte[]  BinaryDataType;
+			public byte[]  VarBinaryDataType;
+			[Column(DataType = DataType.VarChar)]
+			public string  VarcharDataType;
 		}
 
 		// Excluded providers inline such parameter
@@ -213,7 +216,7 @@ namespace Tests.Linq
 
 				Console.WriteLine(sql);
 
-				Assert.That(sql, Contains.Substring("(3)").Or.Contains("Blob"));
+				Assert.That(sql, Contains.Substring("(3)").Or.Contains("Blob").Or.Contains("(8000)"));
 			}
 		}
 

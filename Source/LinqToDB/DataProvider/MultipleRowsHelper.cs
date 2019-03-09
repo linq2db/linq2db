@@ -79,7 +79,10 @@ namespace LinqToDB.DataProvider
 						value = dataParameter.Value;
 
 					Parameters.Add(new DataParameter(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, value,
-						column.DataType, column.DbType));
+						column.DataType, column.DbType)
+					{
+						Size = column.Length
+					});
 				}
 
 				StringBuilder.Append(",");

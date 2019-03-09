@@ -576,17 +576,18 @@ namespace LinqToDB.Mapping
 		}
 
 		static bool IsSimple (ref DbDataType type) 
-			=> type.DataType == DataType.Undefined && string.IsNullOrEmpty(type.DbType);
+			=> type.DataType == DataType.Undefined && string.IsNullOrEmpty(type.DbType) && type.Length == null;
 
-		static DbDataType Simplify(ref DbDataType type)
+		static void Simplify(ref DbDataType type)
 		{
 			if (!string.IsNullOrEmpty(type.DbType))
-				return type.WithDbType(null);
+				type = type.WithDbType(null);
 
 			if (type.DataType != DataType.Undefined)
-				return type.WithDataType(DataType.Undefined);
+				type = type.WithDataType(DataType.Undefined);
 
-			return type;
+			if (type.Length != null)
+				type = type.WithLength(null);
 		}
 
 		internal ConvertInfo.LambdaInfo GetConverter(DbDataType from, DbDataType to, bool create)
@@ -603,9 +604,9 @@ namespace LinqToDB.Mapping
 				}
 
 				if (!IsSimple(ref from))
-					from = Simplify(ref from);
+					Simplify(ref from);
 				else if (!IsSimple(ref to))
-					to = Simplify(ref to);
+					Simplify(ref to);
 				else break;
 
 			} while (true);
