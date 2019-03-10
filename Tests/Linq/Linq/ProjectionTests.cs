@@ -42,7 +42,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AssociationTest([SQLiteDataSources(true)] string context)
+		public void AssociationTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<SomeEntity>(new[]{new SomeEntity{Id = 1, OtherId = 3} }))
@@ -58,7 +58,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToNullableTest([SQLiteDataSources(true)] string context)
+		public void ToNullableTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<SomeEntity>(new[]{new SomeEntity{Id = 1, OtherId = 3} }))
