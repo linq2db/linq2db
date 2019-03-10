@@ -29,15 +29,6 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class OracleTests : TestBase
 	{
-		[AttributeUsage(AttributeTargets.Parameter)]
-		class OracleDataContextAttribute : IncludeDataSourcesAttribute
-		{
-			public OracleDataContextAttribute(bool includeLinqService = false)
-				: base(includeLinqService, ProviderName.OracleNative, ProviderName.OracleManaged)
-			{
-			}
-		}
-
 		string _pathThroughSql = "SELECT :p FROM sys.dual";
 		string  PathThroughSql
 		{
@@ -49,7 +40,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestParameters([OracleDataContext] string context)
+		public void TestParameters([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -92,7 +83,7 @@ namespace Tests.DataProvider
 
 		*/
 		[Test]
-		public void TestDataTypes([OracleDataContext] string context)
+		public void TestDataTypes([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -173,7 +164,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestNumerics([OracleDataContext] string context)
+		public void TestNumerics([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -221,7 +212,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDate([OracleDataContext] string context)
+		public void TestDate([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -233,7 +224,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestSmallDateTime([OracleDataContext] string context)
+		public void TestSmallDateTime([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -245,7 +236,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDateTime([OracleDataContext] string context)
+		public void TestDateTime([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -261,7 +252,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDateTime2([OracleDataContext] string context)
+		public void TestDateTime2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -277,7 +268,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDateTimeOffset([OracleDataContext] string context)
+		public void TestDateTimeOffset([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -316,7 +307,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestChar([OracleDataContext] string context)
+		public void TestChar([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -354,7 +345,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestString([OracleDataContext] string context)
+		public void TestString([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -390,7 +381,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestBinary([OracleDataContext] string context)
+		public void TestBinary([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var arr1 = new byte[] {       0x30, 0x39 };
 			var arr2 = new byte[] { 0, 0, 0x30, 0x39 };
@@ -432,7 +423,6 @@ namespace Tests.DataProvider
 #if NET46
 
 		[Test]
-		[ActiveIssue("ArgumentNullException: Value cannot be null. Parameter name: connection", Configurations = new[] { ProviderName.OracleNative })]
 		public void TestOracleNativeTypes([IncludeDataSources(ProviderName.OracleNative)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -452,7 +442,7 @@ namespace Tests.DataProvider
 #endif
 
 		[Test]
-		public void TestGuid([OracleDataContext] string context)
+		public void TestGuid([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -467,7 +457,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestXml([OracleDataContext] string context)
+		public void TestXml([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			if (OracleTools.IsXmlTypeSupported)
 			{
@@ -496,7 +486,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestEnum1([OracleDataContext] string context)
+		public void TestEnum1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -508,7 +498,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestEnum2([OracleDataContext] string context)
+		public void TestEnum2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -522,7 +512,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTreatEmptyStringsAsNulls([OracleDataContext] string context)
+		public void TestTreatEmptyStringsAsNulls([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -618,7 +608,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTimeSpan([OracleDataContext] string context)
+		public void TestTimeSpan([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -631,7 +621,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void DateTimeTest1([OracleDataContext] string context)
+		public void DateTimeTest1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -652,7 +642,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void NVarchar2InsertTest([OracleDataContext] string context)
+		public void NVarchar2InsertTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new DataConnection(context))
 			using (db.BeginTransaction())
@@ -677,7 +667,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void NVarchar2UpdateTest([OracleDataContext] string context)
+		public void NVarchar2UpdateTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new DataConnection(context))
 			using (db.BeginTransaction())
@@ -737,7 +727,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void DateTimeTest2([OracleDataContext] string context)
+		public void DateTimeTest2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			// Set custom DateTime to SQL converter.
 			//
@@ -795,7 +785,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void ClauseDateTimeWithoutJointure([OracleDataContext] string context)
+		public void ClauseDateTimeWithoutJointure([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var date = DateTime.Today;
 			using (var db = new DataConnection(context))
@@ -814,7 +804,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void ClauseDateTimeWithJointure([OracleDataContext] string context)
+		public void ClauseDateTimeWithJointure([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var date = DateTime.Today;
 			using (var db = new DataConnection(context))
@@ -838,7 +828,7 @@ namespace Tests.DataProvider
 #region Sequence
 
 		[Test]
-		public void SequenceInsert([OracleDataContext] string context)
+		public void SequenceInsert([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -854,7 +844,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void SequenceInsertWithIdentity([OracleDataContext] string context)
+		public void SequenceInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -912,7 +902,7 @@ namespace Tests.DataProvider
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void BulkCopyLinqTypesMultipleRows(
-			[OracleDataContext] string context,
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
 				AlternativeBulkCopy.InsertAll,
 				AlternativeBulkCopy.InsertDual,
@@ -933,7 +923,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void BulkCopyLinqTypesProviderSpecific(
-			[OracleDataContext] string context,
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
 				AlternativeBulkCopy.InsertAll,
 				AlternativeBulkCopy.InsertDual,
@@ -954,7 +944,7 @@ namespace Tests.DataProvider
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void BulkCopyRetrieveSequencesProviderSpecific(
-			[OracleDataContext] string context,
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
 				AlternativeBulkCopy.InsertAll,
 				AlternativeBulkCopy.InsertDual,
@@ -975,7 +965,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void BulkCopyRetrieveSequencesMultipleRows(
-			[OracleDataContext] string context,
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
 				AlternativeBulkCopy.InsertAll,
 				AlternativeBulkCopy.InsertDual,
@@ -996,7 +986,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void BulkCopyRetrieveSequencesRowByRow(
-			[OracleDataContext] string context,
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
 				AlternativeBulkCopy.InsertAll,
 				AlternativeBulkCopy.InsertDual,
@@ -1094,7 +1084,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void BulkCopy1MultipleRows(
-			[OracleDataContext] string context,
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
 				AlternativeBulkCopy.InsertAll,
 				AlternativeBulkCopy.InsertDual,
@@ -1115,7 +1105,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void BulkCopy1ProviderSpecific(
-			[OracleDataContext] string context,
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
 				AlternativeBulkCopy.InsertAll,
 				AlternativeBulkCopy.InsertDual,
@@ -1169,7 +1159,7 @@ namespace Tests.DataProvider
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void BulkCopy21MultipleRows(
-			[OracleDataContext] string context,
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
 				AlternativeBulkCopy.InsertAll,
 				AlternativeBulkCopy.InsertDual,
@@ -1190,7 +1180,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void BulkCopy21ProviderSpecific(
-			[OracleDataContext] string context,
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
 				AlternativeBulkCopy.InsertAll,
 				AlternativeBulkCopy.InsertDual,
@@ -1241,7 +1231,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void BulkCopy22MultipleRows(
-			[OracleDataContext] string context,
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
 				AlternativeBulkCopy.InsertAll,
 				AlternativeBulkCopy.InsertDual,
@@ -1262,7 +1252,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void BulkCopy22ProviderSpecific(
-			[OracleDataContext] string context,
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
 				AlternativeBulkCopy.InsertAll,
 				AlternativeBulkCopy.InsertDual,
@@ -1294,7 +1284,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void LongAliasTest([OracleDataContext] string context)
+		public void LongAliasTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -1317,7 +1307,7 @@ namespace Tests.DataProvider
 #region XmlTable
 
 		[Test]
-		public void XmlTableTest1([OracleDataContext] string context)
+		public void XmlTableTest1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -1338,7 +1328,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void XmlTableTest2([OracleDataContext] string context)
+		public void XmlTableTest2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -1363,7 +1353,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void XmlTableTest3([OracleDataContext] string context)
+		public void XmlTableTest3([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -1393,7 +1383,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void XmlTableTest4([OracleDataContext] string context)
+		public void XmlTableTest4([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -1412,7 +1402,7 @@ namespace Tests.DataProvider
 		static string _data;
 
 		[Test]
-		public void XmlTableTest5([OracleDataContext] string context)
+		public void XmlTableTest5([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -1445,7 +1435,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void XmlTableTest6([OracleDataContext] string context)
+		public void XmlTableTest6([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -1470,7 +1460,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void XmlTableTest7([OracleDataContext] string context)
+		public void XmlTableTest7([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -1505,7 +1495,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void XmlTableTest8([OracleDataContext] string context)
+		public void XmlTableTest8([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -1534,7 +1524,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void XmlTableTest9([OracleDataContext] string context)
+		public void XmlTableTest9([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -1565,9 +1555,7 @@ namespace Tests.DataProvider
 #endregion
 
 		[Test]
-		public void TestOrderByFirst1([IncludeDataSources(false,
-			ProviderName.OracleNative, ProviderName.OracleManaged)]
-			string context)
+		public void TestOrderByFirst1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1590,9 +1578,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestOrderByFirst2([IncludeDataSources(false,
-			ProviderName.OracleNative, ProviderName.OracleManaged)]
-			string context)
+		public void TestOrderByFirst2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1614,9 +1600,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestOrderByFirst3([IncludeDataSources(false,
-			ProviderName.OracleNative, ProviderName.OracleManaged)]
-			string context)
+		public void TestOrderByFirst3([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1647,7 +1631,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void OverflowTest([OracleDataContext] string context)
+		public void OverflowTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var func = OracleTools.DataReaderGetDecimal;
 			try
@@ -1732,7 +1716,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void UseAlternativeBulkCopyInsertIntoTest([OracleDataContext] string context)
+		public void UseAlternativeBulkCopyInsertIntoTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var data = new List<UseAlternativeBulkCopy>(100);
 			for (var i = 0; i < 100; i++)
@@ -1759,7 +1743,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void UseAlternativeBulkCopyInsertDualTest([OracleDataContext] string context)
+		public void UseAlternativeBulkCopyInsertDualTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var data = new List<UseAlternativeBulkCopy>(100);
 			for (var i = 0; i < 100; i++)
@@ -1819,7 +1803,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void ClobTest1([OracleDataContext] string context)
+		public void ClobTest1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -1841,7 +1825,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void ClobBulkCopyTest(
-			[OracleDataContext] string context,
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
 				AlternativeBulkCopy.InsertAll,
 				AlternativeBulkCopy.InsertDual,
@@ -1878,7 +1862,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue515Test([OracleDataContext] string context)
+		public void Issue515Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1898,7 +1882,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue612Test([OracleDataContext] string context)
+		public void Issue612Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1924,7 +1908,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue612TestDefaultTSTZPrecisonCanDiffersOfUpTo9Ticks([OracleDataContext] string context)
+		public void Issue612TestDefaultTSTZPrecisonCanDiffersOfUpTo9Ticks([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1957,7 +1941,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void PersonSelectByKey([OracleDataContext] string context)
+		public void PersonSelectByKey([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1975,7 +1959,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue539([OracleDataContext] string context)
+		public void Issue539([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2016,8 +2000,8 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
-		public void Issue723Test1([OracleDataContext] string context)
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		public void Issue723Test1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var ms = new MappingSchema();
 			using (var db = (DataConnection)GetDataContext(context, ms))
@@ -2068,8 +2052,8 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
-		public void Issue723Test2([OracleDataContext] string context)
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		public void Issue723Test2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue723Table>())
@@ -2091,7 +2075,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue731Test([OracleDataContext] string context)
+		public void Issue731Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue731Table>())
@@ -2299,7 +2283,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestLowercaseIdentifiersQuotation([OracleDataContext] string context)
+		public void TestLowercaseIdentifiersQuotation([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

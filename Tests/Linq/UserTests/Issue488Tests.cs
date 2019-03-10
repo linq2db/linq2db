@@ -26,7 +26,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test1([IncludeDataSources(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] string context)
+		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -44,7 +44,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([IncludeDataSources(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] string context)
+		public void Test2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

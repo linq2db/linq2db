@@ -29,8 +29,8 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.DB2,
 				ProviderName.Informix,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -67,8 +67,8 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.DB2,
 				ProviderName.Informix,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -905,10 +905,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithGuidIdentity([IncludeDataSources(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-			string context)
+		public void InsertWithGuidIdentity([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -918,10 +915,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithGuidIdentityOutput([IncludeDataSources(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-			string context)
+		public void InsertWithGuidIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			try
 			{
@@ -939,10 +933,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithIdentityOutput([IncludeDataSources(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-			string context)
+		public void InsertWithIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -982,10 +973,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithGuidIdentity2([IncludeDataSources(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-			string context)
+		public void InsertWithGuidIdentity2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -1034,7 +1022,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertOrUpdate2([DataSources(ProviderName.OracleNative)] string context)
+		[ActiveIssue("InsertOrUpdate() == -1", Configuration = ProviderName.OracleNative)]
+		public void InsertOrUpdate2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1290,7 +1279,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertBatch1([IncludeDataSources(ProviderName.OracleNative, ProviderName.OracleManaged)]
+		public void InsertBatch1([IncludeDataSources(TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1313,9 +1302,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertBatch2([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void InsertBatch2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1417,7 +1404,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Insert14([DataSources(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2000,
-			ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			ProviderName.SqlServer2005, TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1558,7 +1545,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWith([IncludeDataSources(false,
+		public void InsertWith([IncludeDataSources(
 			ProviderName.SqlServer2008)]//, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 			string context)
 		{
@@ -1602,7 +1589,7 @@ namespace Tests.xUpdate
 			return tableName;
 		}
 
-		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void InsertByTableName([DataSources] string context)
 		{
@@ -1649,7 +1636,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public async Task InsertByTableNameAsync([DataSources] string context)
 		{

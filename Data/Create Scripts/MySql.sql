@@ -461,4 +461,12 @@ CREATE TABLE FullTextIndexTest (
 	TestField TEXT(100),
 	FULLTEXT idx (TestField)
 )
+-- SKIP MySql57 BEGIN
+-- SKIP MariaDB BEGIN
+-- SKIP MySqlConnector BEGIN
+	ENGINE=MyISAM
+-- SKIP MySql57 END
+-- SKIP MariaDB END
+-- SKIP MySqlConnector END
+;
 GO

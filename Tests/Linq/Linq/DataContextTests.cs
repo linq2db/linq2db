@@ -13,10 +13,7 @@ namespace Tests.Linq
 	public class DataContextTests : TestBase
 	{
 		[Test]
-		public void TestContext([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014, ProviderName.SapHana)]
-			string context)
+		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
 		{
 			var ctx = new DataContext(context);
 
@@ -43,10 +40,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestContextToString([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014, ProviderName.SapHana)]
-			string context)
+		public void TestContextToString([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
 		{
 			using (var ctx = new DataContext(context))
 			{
@@ -61,9 +55,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue210([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void Issue210([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var ctx = new DataContext(context))
 			{
@@ -73,7 +65,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ProviderConnectionStringConstructorTest1([DataSources(false)]string context)
+		public void ProviderConnectionStringConstructorTest1([DataSources(false)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
@@ -82,7 +74,7 @@ namespace Tests.Linq
 
 		}
 		[Test]
-		public void ProviderConnectionStringConstructorTest2([DataSources(false)]string context)
+		public void ProviderConnectionStringConstructorTest2([DataSources(false)] string context)
 		{
 			using (var db  = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(db.DataProvider.Name, "BAD"))
@@ -92,7 +84,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ProviderConnectionStringConstructorTest3([DataSources(false)]string context)
+		[ActiveIssue("Unstable issue with Sybase vs Sybase.Managed DataProvider.Name", Configuration = TestProvName.AllSybase)]
+		public void ProviderConnectionStringConstructorTest3([DataSources(false)] string context)
 		{
 			using (var db  = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString))

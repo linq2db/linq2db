@@ -763,6 +763,7 @@ namespace LinqToDB.ServiceModel
 
 							Append((int)elem.ValueType.DataType);
 							Append(elem.ValueType.DbType);
+							Append(elem.ValueType.Length);
 
 							Append(elem.SystemType, elem.Value);
 							break;
@@ -1380,7 +1381,7 @@ namespace LinqToDB.ServiceModel
 							var isQueryParameter = ReadBool();
 							var dataType         = (DataType)ReadInt();
 							var dbType           = ReadString();
-							var dbSize           = ReadInt();
+							var dbSize           = ReadNullableInt();
 							var likeStart        = ReadString();
 							var likeEnd          = ReadString();
 							var replaceLike      = ReadBool();
@@ -1431,11 +1432,12 @@ namespace LinqToDB.ServiceModel
 						{
 							var dataType   = (DataType)ReadInt();
 							var dbType     = ReadString();
+							var length     = ReadNullableInt();
 
 							var systemType = Read<Type>();
 							var value      = ReadValue(systemType);
 
-							obj = new SqlValue(new DbDataType(systemType, dataType, dbType), value);
+							obj = new SqlValue(new DbDataType(systemType, dataType, dbType, length), value);
 
 							break;
 						}
