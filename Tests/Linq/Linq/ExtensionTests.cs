@@ -51,6 +51,51 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TableNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var table1 = db.GetTable<ParenTable>();
+				var table2 = table1.TableName("Parent2");
+				var table3 = table2.TableName("Parent3");
+
+				Assert.AreEqual(table1.TableName, "ParenTable");
+				Assert.AreEqual(table2.TableName, "Parent2");
+				Assert.AreEqual(table3.TableName, "Parent3");
+			}
+		}
+
+		[Test]
+		public void DatabaseNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var table1 = db.GetTable<ParenTable>();
+				var table2 = table1.DatabaseName("db2");
+				var table3 = table2.DatabaseName("db3");
+
+				Assert.AreEqual(table1.DatabaseName, null);
+				Assert.AreEqual(table2.DatabaseName, "db2");
+				Assert.AreEqual(table3.DatabaseName, "db3");
+			}
+		}
+
+		[Test]
+		public void SchemaNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var table1 = db.GetTable<ParenTable>();
+				var table2 = table1.SchemaName("schema2");
+				var table3 = table2.SchemaName("schema3");
+
+				Assert.AreEqual(table1.SchemaName, null);
+				Assert.AreEqual(table2.SchemaName, "schema2");
+				Assert.AreEqual(table3.SchemaName, "schema3");
+			}
+		}
+
+		[Test]
 		public void GetTableNameTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
