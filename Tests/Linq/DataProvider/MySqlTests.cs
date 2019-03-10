@@ -32,21 +32,8 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class MySqlTests : DataProviderTestBase
 	{
-		[AttributeUsage(AttributeTargets.Parameter)]
-		class MySqlDataContextAttribute : IncludeDataSourcesAttribute
-		{
-			public MySqlDataContextAttribute()
-				: this(false)
-			{
-			}
-			public MySqlDataContextAttribute(bool includeLinqService)
-				: base(includeLinqService, ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57)
-			{
-			}
-		}
-
 		[Test]
-		public void TestParameters([MySqlDataContext] string context)
+		public void TestParameters([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -60,7 +47,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDataTypes([MySqlDataContext] string context)
+		public void TestDataTypes([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -122,7 +109,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDate([MySqlDataContext] string context)
+		public void TestDate([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -136,7 +123,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDateTime([MySqlDataContext] string context)
+		public void TestDateTime([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -152,7 +139,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestChar([MySqlDataContext] string context)
+		public void TestChar([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -183,7 +170,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestString([MySqlDataContext] string context)
+		public void TestString([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -203,7 +190,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestBinary([MySqlDataContext] string context)
+		public void TestBinary([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			var arr1 = new byte[] { 48, 57 };
 
@@ -222,7 +209,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestXml([MySqlDataContext] string context)
+		public void TestXml([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -248,7 +235,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestEnum1([MySqlDataContext] string context)
+		public void TestEnum1([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -260,7 +247,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestEnum2([MySqlDataContext] string context)
+		public void TestEnum2([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -351,31 +338,31 @@ namespace Tests.DataProvider
 		}
 
 		[Test, Ignore("It works too long.")]
-		public void BulkCopyMultipleRows([MySqlDataContext] string context)
+		public void BulkCopyMultipleRows([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			BulkCopyTest(context, BulkCopyType.MultipleRows);
 		}
 
 		[Test, Explicit("It works too long.")]
-		public void BulkCopyRetrieveSequencesMultipleRows([MySqlDataContext] string context)
+		public void BulkCopyRetrieveSequencesMultipleRows([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows);
 		}
 
 		[Test, Ignore("It works too long.")]
-		public void BulkCopyProviderSpecific([MySqlDataContext] string context)
+		public void BulkCopyProviderSpecific([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
 		}
 
 		[Test, Explicit("It works too long.")]
-		public void BulkCopyRetrieveSequencesProviderSpecific([MySqlDataContext] string context)
+		public void BulkCopyRetrieveSequencesProviderSpecific([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
 		}
 
 		[Test]
-		public void BulkCopyLinqTypes([MySqlDataContext] string context)
+		public void BulkCopyLinqTypes([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
@@ -428,7 +415,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTransaction1([MySqlDataContext] string context)
+		public void TestTransaction1([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -447,7 +434,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTransaction2([MySqlDataContext] string context)
+		public void TestTransaction2([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -468,7 +455,7 @@ namespace Tests.DataProvider
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[Test]
-		public void SchemaProviderTest([MySqlDataContext] string context)
+		public void SchemaProviderTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			// MySqlConnector does not currently support GetSchema("Table")
 			// https://github.com/mysql-net/MySqlConnector/issues/375
@@ -667,7 +654,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void ProceduresSchemaProviderTest(
-			[IncludeDataSources(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)] string context,
+			[IncludeDataSources(TestProvName.AllMySqlData)] string context,
 			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
 		{
 			// TODO: add aggregate/udf functions test cases
@@ -787,7 +774,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void FullTextIndexTest([MySqlDataContext(false)] string context)
+		public void FullTextIndexTest([IncludeDataSources(TestProvName.AllMySqlData)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -807,7 +794,7 @@ namespace Tests.DataProvider
 
 		[Description("https://stackoverflow.com/questions/50858172/linq2db-mysql-set-row-index/50958483")]
 		[Test]
-		public void RowIndexTest([MySqlDataContext] string context)
+		public void RowIndexTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -827,7 +814,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTestProcedure([MySqlDataContext(false)] string context)
+		public void TestTestProcedure([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -843,7 +830,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTestOutputParametersWithoutTableProcedure([MySqlDataContext(false)] string context)
+		public void TestTestOutputParametersWithoutTableProcedure([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{

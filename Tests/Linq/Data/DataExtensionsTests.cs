@@ -14,7 +14,7 @@ namespace Tests.Data
 	public class DataExtensionsTests : TestBase
 	{
 		[Test]
-		public void TestScalar1([IncludeDataSources(ProviderName.SqlServer)] string context)
+		public void TestScalar1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -25,7 +25,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestScalar2([IncludeDataSources(ProviderName.SqlServer)] string context)
+		public void TestScalar2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -36,7 +36,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestScalar3([IncludeDataSources(ProviderName.SqlServer)] string context)
+		public void TestScalar3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -53,7 +53,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestObject1([IncludeDataSources(ProviderName.SqlServer)] string context)
+		public void TestObject1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -64,7 +64,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestObject2([IncludeDataSources(ProviderName.SqlServer)] string context)
+		public void TestObject2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -154,7 +154,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestStruct1([IncludeDataSources(ProviderName.SqlServer)] string context)
+		public void TestStruct1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -165,7 +165,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDataReader([IncludeDataSources(ProviderName.SqlServer)] string context)
+		public void TestDataReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn   = new DataConnection(context))
 			using (var reader = conn.ExecuteReader("SELECT 1; SELECT '2'"))
@@ -205,9 +205,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDataParameterMapping2([IncludeDataSources(false,
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestDataParameterMapping2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -222,9 +220,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDataParameterMapping3([IncludeDataSources(false,
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestDataParameterMapping3([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var ms = new MappingSchema();
 

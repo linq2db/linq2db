@@ -50,11 +50,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestHavingCount([DataSources(false,
-				ProviderName.Access,  ProviderName.MySqlConnector, TestProvName.MariaDB, ProviderName.OracleManaged,
-				ProviderName.OracleNative, ProviderName.Sybase, ProviderName.SybaseManaged,
-				TestProvName.MySql57)]
-			string context)
+		public void TestHavingCount([DataSources(false, ProviderName.Access, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.MySql57, ProviderName.MySqlConnector)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -74,11 +70,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestHavingLongCount([DataSources(false,
-				ProviderName.Access, ProviderName.MySqlConnector, TestProvName.MariaDB, ProviderName.OracleManaged,
-				ProviderName.OracleNative, ProviderName.Sybase, ProviderName.SybaseManaged,
-				TestProvName.MySql57)]
-			string context)
+		public void TestHavingLongCount([DataSources(false, ProviderName.Access, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.MySql57, ProviderName.MySqlConnector)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -138,11 +130,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestHavingCountWithSelect([DataSources(false,
-				ProviderName.Access, ProviderName.MySqlConnector, TestProvName.MariaDB, ProviderName.OracleManaged,
-				ProviderName.OracleNative, ProviderName.Sybase, ProviderName.SybaseManaged,
-				TestProvName.MySql57)]
-			string context)
+		public void TestHavingCountWithSelect([DataSources(false, ProviderName.Access, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.MySql57, ProviderName.MySqlConnector)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -165,9 +153,8 @@ namespace Tests.UserTests
 
 		[Test]
 		public void TestHavingLongCountWithSelect([DataSources(false,
-				ProviderName.Access, ProviderName.MySqlConnector, TestProvName.MariaDB, ProviderName.OracleManaged,
-				ProviderName.OracleNative, ProviderName.Sybase, ProviderName.SybaseManaged,
-				TestProvName.MySql57)]
+				ProviderName.Access, TestProvName.AllOracle, TestProvName.AllSybase,
+				TestProvName.MySql57, ProviderName.MySqlConnector)]
 			string context)
 		{
 			using (var db = new DataConnection(context))

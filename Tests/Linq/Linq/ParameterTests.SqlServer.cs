@@ -165,7 +165,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerNVarChar4000ParameterSize([SqlServerDataSources] string context)
+		public void SqlServerNVarChar4000ParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -179,7 +179,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerVarChar8000ParameterSize([SqlServerDataSources] string context)
+		public void SqlServerVarChar8000ParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -193,7 +193,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerVarBinary8000ParameterSize([SqlServerDataSources] string context)
+		public void SqlServerVarBinary8000ParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -207,7 +207,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerNVarCharKnownParameterSize([SqlServerDataSources] string context)
+		public void SqlServerNVarCharKnownParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -221,7 +221,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerVarCharKnownParameterSize([SqlServerDataSources] string context)
+		public void SqlServerVarCharKnownParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -235,7 +235,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerVarBinaryKnownParameterSize([SqlServerDataSources] string context)
+		public void SqlServerVarBinaryKnownParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -249,7 +249,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerNVarCharKnownOverflowParameterSize([SqlServerDataSources] string context)
+		public void SqlServerNVarCharKnownOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -263,7 +263,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerVarCharKnownOverflowParameterSize([SqlServerDataSources] string context)
+		public void SqlServerVarCharKnownOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -277,7 +277,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerVarBinaryKnownOverflowParameterSize([SqlServerDataSources] string context)
+		public void SqlServerVarBinaryKnownOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -291,7 +291,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomNVarChar4000ParameterSize([SqlServerDataSources] string context)
+		public void SqlServerCustomNVarChar4000ParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -306,7 +306,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarChar8000ParameterSize([SqlServerDataSources] string context)
+		public void SqlServerCustomVarChar8000ParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -321,7 +321,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarBinary8000ParameterSize([SqlServerDataSources] string context)
+		public void SqlServerCustomVarBinary8000ParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -336,7 +336,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomNVarCharKnownParameterSize([SqlServerDataSources] string context)
+		public void SqlServerCustomNVarCharKnownParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -351,7 +351,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarCharKnownParameterSize([SqlServerDataSources] string context)
+		public void SqlServerCustomVarCharKnownParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -366,7 +366,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarBinaryKnownParameterSize([SqlServerDataSources] string context)
+		public void SqlServerCustomVarBinaryKnownParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -381,7 +381,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomNVarCharKnownOverflowParameterSize([SqlServerDataSources] string context)
+		public void SqlServerCustomNVarCharKnownOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -396,7 +396,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarCharKnownOverflowParameterSize([SqlServerDataSources] string context)
+		public void SqlServerCustomVarCharKnownOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -411,7 +411,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarBinaryKnownOverflowParameterSize([SqlServerDataSources] string context)
+		public void SqlServerCustomVarBinaryKnownOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -426,7 +426,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomNVarCharMaxOverflowParameterSize([SqlServerDataSources] string context)
+		public void SqlServerCustomNVarCharMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -452,7 +452,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarCharMaxOverflowParameterSize([SqlServerDataSources] string context)
+		public void SqlServerCustomVarCharMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -478,7 +478,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarBinaryMaxOverflowParameterSize([SqlServerDataSources] string context)
+		public void SqlServerCustomVarBinaryMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -507,7 +507,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomNVarChar4000ParameterSizeAsDataParameter([SqlServerDataSources] string context)
+		public void SqlServerCustomNVarChar4000ParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -522,7 +522,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarChar8000ParameterSizeAsDataParameter([SqlServerDataSources] string context)
+		public void SqlServerCustomVarChar8000ParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -537,7 +537,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarBinary8000ParameterSizeAsDataParameter([SqlServerDataSources] string context)
+		public void SqlServerCustomVarBinary8000ParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -552,7 +552,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomNVarCharKnownParameterSizeAsDataParameter([SqlServerDataSources] string context)
+		public void SqlServerCustomNVarCharKnownParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -567,7 +567,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarCharKnownParameterSizeAsDataParameter([SqlServerDataSources] string context)
+		public void SqlServerCustomVarCharKnownParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -582,7 +582,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarBinaryKnownParameterSizeAsDataParameter([SqlServerDataSources] string context)
+		public void SqlServerCustomVarBinaryKnownParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -597,7 +597,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomNVarCharKnownOverflowParameterSizeAsDataParameter([SqlServerDataSources] string context)
+		public void SqlServerCustomNVarCharKnownOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -612,7 +612,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarCharKnownOverflowParameterSizeAsDataParameter([SqlServerDataSources] string context)
+		public void SqlServerCustomVarCharKnownOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -627,7 +627,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarBinaryKnownOverflowParameterSizeAsDataParameter([SqlServerDataSources] string context)
+		public void SqlServerCustomVarBinaryKnownOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -642,7 +642,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomNVarCharMaxOverflowParameterSizeAsDataParameter([SqlServerDataSources] string context)
+		public void SqlServerCustomNVarCharMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -668,7 +668,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarCharMaxOverflowParameterSizeAsDataParameter([SqlServerDataSources] string context)
+		public void SqlServerCustomVarCharMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{
@@ -694,7 +694,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarBinaryMaxOverflowParameterSizeAsDataParameter([SqlServerDataSources] string context)
+		public void SqlServerCustomVarBinaryMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context, new MappingSchema()))
 			{

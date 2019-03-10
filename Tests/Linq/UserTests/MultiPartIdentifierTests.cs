@@ -74,8 +74,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

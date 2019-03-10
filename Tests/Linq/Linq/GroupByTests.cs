@@ -1445,7 +1445,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByExtraFieldBugTest([IncludeDataSources(ProviderName.MySql)] string context)
+		public void GroupByExtraFieldBugTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			// https://github.com/igor-tkachev/LinqToDB/issues/42
 			// extra field is generated in the GROUP BY clause, for example:
@@ -1765,8 +1765,9 @@ namespace Tests.Linq
 			public int RandValue;
 		}
 
-		//////[Test]
-		public void GroupByCustomEntity1([DataSources(ProviderName.Informix, ProviderName.Sybase)] string context)
+		[Test]
+		[ActiveIssue("AseException : There is no host variable corresponding to the one specified by the PARAM datastream. This means that this variable '@rand' was not used in the preceding DECLARE CURSOR or SQL command.", Configuration = TestProvName.AllSybase)]
+		public void GroupByCustomEntity1([DataSources] string context)
 		{
 			var rand = new Random().Next(5);
 			//var rand = new Random();
@@ -1808,9 +1809,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByCustomEntity2([DataSources(
-			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
-			string context)
+		public void GroupByCustomEntity2([DataSources(ProviderName.Informix, TestProvName.AllSybase)] string context)
 		{
 			var rand = new Random().Next(5);
 

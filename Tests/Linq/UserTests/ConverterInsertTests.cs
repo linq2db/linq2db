@@ -77,9 +77,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue("What is this test???")]
+		//[ActiveIssue("What is this test???")]
 		[Test]
-		public void TestFail([IncludeDataSources(true, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+		public void TestFail([IncludeDataSources(true, TestProvName.AllSQLite)]
 			string context)
 		{
 			try

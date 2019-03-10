@@ -119,6 +119,8 @@ namespace Tests
 			_setHstore = GetSetParameter(connectionType   , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Hstore");
 			_setJson = GetSetParameter(connectionType     , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Json");
 			_setJsonb = GetSetParameter(connectionType    , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Jsonb");
+
+			_setNativeParameterType = GetSetParameter<object>(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType);
 		}
 
 		static Action<IDbDataParameter> _setMoney;
@@ -130,6 +132,8 @@ namespace Tests
 		static Action<IDbDataParameter> _setHstore;
 		static Action<IDbDataParameter> _setJsonb;
 		static Action<IDbDataParameter> _setJson;
+
+		static Action<IDbDataParameter, object> _setNativeParameterType;
 
 		private void SetConverterToV3NpgsqlInet(Type from, Type to)
 		{
@@ -340,6 +344,31 @@ namespace Tests
 				case DataType.Dictionary: _setHstore(parameter)   ; return;
 				case DataType.Json      : _setJson(parameter)     ; return;
 				case DataType.BinaryJson: _setJsonb(parameter)    ; return;
+
+				case DataType.SByte:
+				case DataType.UInt16:
+				case DataType.UInt32:
+				case DataType.UInt64:
+				case DataType.DateTime2:
+				case DataType.DateTimeOffset:
+				case DataType.VarNumeric:
+				case DataType.Decimal:
+					break;
+
+				default:
+					{
+						if (_setNativeParameterType != null && !string.IsNullOrEmpty(dataType.DbType))
+						{
+							var nativeType = GetNativeType(dataType.DbType);
+							if (nativeType != null)
+							{
+								_setNativeParameterType(parameter, nativeType);
+								return;
+							}
+						}
+
+						break;
+					}
 			}
 
 			base.SetParameterType(parameter, dataType);

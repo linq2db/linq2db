@@ -140,10 +140,7 @@ namespace Tests.Exceptions
 		}
 
 		[Test]
-		public void Issue589([IncludeDataSources(
-				ProviderName.SqlCe, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
-				ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void Issue589([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

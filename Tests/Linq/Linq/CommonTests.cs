@@ -18,8 +18,7 @@ namespace Tests.Linq
 	public class CommonTests : TestBase
 	{
 		[Test]
-		public void CheckNullTest([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void CheckNullTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -163,7 +162,7 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.Informix })]
+		[ActiveIssue(Configuration = ProviderName.Informix)]
 		[Test]
 		public void PreferServerFunc1([DataSources] string context)
 		{
@@ -173,7 +172,7 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length);
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.Informix })]
+		[ActiveIssue(Configuration = ProviderName.Informix)]
 		[Test]
 		public void PreferServerFunc2([DataSources] string context)
 		{

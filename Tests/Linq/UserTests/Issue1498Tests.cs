@@ -54,7 +54,7 @@ namespace Tests.UserTests
 		[Test]
 		[ActiveIssue(
 			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
-			Configurations = new [] { ProviderName.Firebird, TestProvName.Firebird3 })]
+			Configuration = TestProvName.AllFirebird)]
 		public void TestAttributesByKey([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -78,7 +78,7 @@ namespace Tests.UserTests
 		[Test]
 		[ActiveIssue(
 			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
-			Configurations = new [] { ProviderName.Firebird, TestProvName.Firebird3 })]
+			Configuration = TestProvName.AllFirebird)]
 		public void TestAttributesByExpression([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -102,7 +102,7 @@ namespace Tests.UserTests
 		[Test]
 		[ActiveIssue(
 			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
-			Configurations = new [] { ProviderName.Firebird, TestProvName.Firebird3 })]
+			Configuration = TestProvName.AllFirebird)]
 		public void TestAttributesByQuery([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -126,7 +126,7 @@ namespace Tests.UserTests
 		[Test]
 		[ActiveIssue(
 			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
-			Configurations = new [] { ProviderName.Firebird, TestProvName.Firebird3 })]
+			Configuration = TestProvName.AllFirebird)]
 		public void TestFluentAssociationByExpression([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -163,7 +163,7 @@ namespace Tests.UserTests
 		[Test]
 		[ActiveIssue(
 			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
-			Configurations = new [] { ProviderName.Firebird, TestProvName.Firebird3 })]
+			Configuration = TestProvName.AllFirebird)]
 		public void TestFluentAssociationByKeys([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -200,7 +200,7 @@ namespace Tests.UserTests
 		[Test]
 		[ActiveIssue(
 			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
-			Configurations = new [] { ProviderName.Firebird, TestProvName.Firebird3 })]
+			Configuration = TestProvName.AllFirebird)]
 		public void TestFluentAssociationByQuery([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
@@ -242,7 +242,7 @@ namespace Tests.UserTests
 		[Test]
 		[ActiveIssue(
 			"lock conflict on no wait transaction unsuccessful metadata update object TABLE \"MESSAGE\" is in use",
-			Configurations = new [] { ProviderName.Firebird, TestProvName.Firebird3 })]
+			Configuration = TestProvName.AllFirebird)]
 		public void TestFluentAssociationByQueryWithKeys([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
