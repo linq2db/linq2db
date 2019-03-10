@@ -19,7 +19,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FieldNameTests1([SQLiteDataSources] string context)
+		public void FieldNameTests1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>("sample_table_temp", new[]{new SampleClass{Id = 1, Value = 2} }))
@@ -41,7 +41,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FieldNameTests2([SQLiteDataSources] string context)
+		public void FieldNameTests2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>("sample_table_temp", new[]{new SampleClass{Id = 1, Value = 2} }))
@@ -197,7 +197,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ExprPredicateTest([SQLiteDataSources] string context)
+		public void ExprPredicateTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var sampleData = new[]
 			{
