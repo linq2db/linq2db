@@ -24,9 +24,7 @@ namespace Tests.DataProvider
 	public class SQLiteTests : TestBase
 	{
 		[Test]
-		public void TestParameters(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestParameters([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -57,9 +55,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDataTypes(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestDataTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -153,9 +149,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestNumerics(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestNumerics([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -214,9 +208,7 @@ namespace Tests.DataProvider
 
 		[ActiveIssue("https://system.data.sqlite.org/index.html/tktview/fb9e4b30874d83042e09c2f791d6065fc5e73a4b")]
 		[Test]
-		public void TestDoubleRoundTrip(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestDoubleRoundTrip([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -237,9 +229,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestNumericsDouble(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestNumericsDouble([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -251,9 +241,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDateTime(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestDateTime([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -269,9 +257,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestChar(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestChar([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -322,9 +308,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestString(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestString([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -364,9 +348,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestBinary(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestBinary([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var arr1 = new byte[] { 1 };
 			var arr2 = new byte[] { 2 };
@@ -395,9 +377,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestGuid(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestGuid([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -417,9 +397,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestObject(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestObject([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -433,9 +411,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestXml(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestXml([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -460,9 +436,7 @@ namespace Tests.DataProvider
 		/// same value back out equivalent in value
 		/// </summary>
 		[Test]
-		public void TestJson(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestJson([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -479,9 +453,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestEnum1(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestEnum1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -493,9 +465,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestEnum2(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TestEnum2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -518,9 +488,7 @@ namespace Tests.DataProvider
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void CreateDatabase(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void CreateDatabase([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			try
 			{
@@ -546,9 +514,7 @@ namespace Tests.DataProvider
 #endif
 
 		[Test]
-		public void BulkCopyLinqTypes(
-			[IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void BulkCopyLinqTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{

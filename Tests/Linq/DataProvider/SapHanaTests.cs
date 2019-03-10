@@ -220,6 +220,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[ActiveIssue("Binary literal regression", Configuration = ProviderName.SapHana)]
 		public void TestBinaryParameterSelect([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var arr1 = new byte[] { 46, 127, 0, 5 };
@@ -478,7 +479,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("SAP HANA 1 only?", Configurations = new[] { CurrentProvider })]
+		[ActiveIssue("SAP HANA 1 only?", Configuration = CurrentProvider)]
 		[Test]
 		public void CalculationViewLinqQuery([IncludeDataSources(CurrentProvider)] string context)
 		{

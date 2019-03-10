@@ -237,9 +237,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByDistinctFailTest(
-			[IncludeDataSources(true, ProviderName.SqlCe)]
-			string context)
+		public void OrderByDistinctFailTest([IncludeDataSources(true, ProviderName.SqlCe)] string context)
 		{
 			var testData = GetTestData();
 
@@ -265,7 +263,7 @@ namespace Tests.Linq
 			var testData = GetTestData();
 
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
+			using (var table = db.CreateLocalTable(context, "O1", testData))
 			{
 				var actual = table
 					.OrderBy(x => x.OrderData1 % 3)
@@ -294,7 +292,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void OrderByDistinctNoTransformTests(
-			[DataSources(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
+			[DataSources(TestProvName.AllFirebird, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
 			string context)
 		{
 			var testData = GetTestData();
@@ -324,7 +322,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void OrderByDistinctPartialTransformTests(
-			[DataSources(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
+			[DataSources(TestProvName.AllFirebird, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
 			string context)
 		{
 			var testData = GetTestData();
@@ -415,7 +413,7 @@ namespace Tests.Linq
 			var testData = GetTestData();
 
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
+			using (var table = db.CreateLocalTable(context, "O2", testData))
 			{
 				var subQuery1 =
 					table.OrderBy(t => t.OrderData1)
@@ -449,9 +447,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void DoubleOrderBy(
-			[DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)]
-			string context)
+		public void DoubleOrderBy([DataSources(TestProvName.AllSybase)] string context)
 		{
 			var testData = GetTestData();
 

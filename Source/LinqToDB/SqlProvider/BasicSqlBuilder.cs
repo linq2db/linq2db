@@ -2287,7 +2287,7 @@ namespace LinqToDB.SqlProvider
 						}
 						else
 						{
-							BuildValue(new SqlDataType(parm.DataType, parm.SystemType, 0, 0, 0, parm.DbType), parm.Value);
+							BuildValue(new SqlDataType(parm.DataType, parm.SystemType, parm.DbSize, 0, 0, parm.DbType), parm.Value);
 						}
 					}
 

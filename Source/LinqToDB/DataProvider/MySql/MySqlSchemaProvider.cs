@@ -79,33 +79,25 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
-			var dbConnection = (DbConnection)dataConnection.Connection;
-			var pks          = dbConnection.GetSchema("IndexColumns");
-			var idxs         = dbConnection.GetSchema("Indexes");
-
-			return
-			(
-				from pk  in pks. AsEnumerable()
-				join idx in idxs.AsEnumerable()
-					on
-						pk. Field<string>("INDEX_CATALOG") + "." +
-						pk. Field<string>("INDEX_SCHEMA")  + "." +
-						pk. Field<string>("INDEX_NAME")    + "." +
-						pk. Field<string>("TABLE_NAME")
-					equals
-						idx.Field<string>("INDEX_CATALOG") + "." +
-						idx.Field<string>("INDEX_SCHEMA")  + "." +
-						idx.Field<string>("INDEX_NAME")    + "." +
-						idx.Field<string>("TABLE_NAME")
-				where idx.Field<bool>("PRIMARY")
-				select new PrimaryKeyInfo
-				{
-					TableID        = pk.Field<string>("INDEX_SCHEMA") + ".." + pk.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = pk.Field<string>("INDEX_NAME"),
-					ColumnName     = pk.Field<string>("COLUMN_NAME"),
-					Ordinal        = pk.Field<int>   ("ORDINAL_POSITION"),
-				}
-			).ToList();
+			return dataConnection.Query<PrimaryKeyInfo>(@"
+			SELECT
+					CONCAT(k.CONSTRAINT_SCHEMA,'..',k.TABLE_NAME)  as TableID,
+					k.CONSTRAINT_NAME                              as PrimaryKeyName,
+					k.COLUMN_NAME                                  as ColumnName,
+					k.ORDINAL_POSITION                             as Ordinal
+				FROM
+					INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
+					JOIN
+						INFORMATION_SCHEMA.TABLE_CONSTRAINTS c
+					ON
+						k.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND
+						k.CONSTRAINT_SCHEMA  = c.CONSTRAINT_SCHEMA AND
+						k.CONSTRAINT_NAME    = c.CONSTRAINT_NAME AND
+						k.TABLE_NAME         = c.TABLE_NAME
+				WHERE
+					c.CONSTRAINT_TYPE   ='PRIMARY KEY' AND
+					c.CONSTRAINT_SCHEMA = database()")
+			.ToList();
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)

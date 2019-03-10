@@ -45,7 +45,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestAnonymous([IncludeDataSources(false, ProviderName.SQLite)] string context)
+		public void TestAnonymous([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -77,7 +77,7 @@ CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastNam
 		}
 
 		[Test]
-		public void TestDirect([IncludeDataSources(false, ProviderName.SQLite)] string context)
+		public void TestDirect([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
