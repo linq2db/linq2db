@@ -19,8 +19,48 @@ namespace Tests.Infrastructure
 
 		[Test]
 		[ActiveIssue(
+			Configurations = new[] { TestProvName.AllFirebird },
+			Details = "Active Issue Testing: comma-separated providers")]
+		public void CommaSeparatedConfigurationsTest([IncludeDataSources(TestProvName.NoopProvider, TestProvName.AllFirebird)]
+			string configuration)
+		{
+			switch (configuration)
+			{
+				case TestProvName.NoopProvider:
+					return;
+				case TestProvName.Firebird3:
+				case ProviderName.Firebird:
+					Assert.Fail("This test should be available only for explicit run");
+					break;
+			}
+
+			Assert.Fail($"Unexpected configuration: {configuration}");
+		}
+
+		[Test]
+		[ActiveIssue(
+			Configuration = TestProvName.AllFirebird,
+			Details = "Active Issue Testing: configuration and comma-separated providers")]
+		public void CommaSeparatedConfigurationTest([IncludeDataSources(TestProvName.NoopProvider, TestProvName.AllFirebird)]
+			string configuration)
+		{
+			switch (configuration)
+			{
+				case TestProvName.NoopProvider:
+					return;
+				case TestProvName.Firebird3:
+				case ProviderName.Firebird:
+					Assert.Fail("This test should be available only for explicit run");
+					break;
+			}
+
+			Assert.Fail($"Unexpected configuration: {configuration}");
+		}
+
+		[Test]
+		[ActiveIssue(
 			Configurations = new[] { ProviderName.SQLiteClassic, TestProvName.NoopProvider },
-			Details = "Active Issue Testing: sqlite disabled")]
+			Details        = "Active Issue Testing: sqlite disabled")]
 		public void OneProviderDisabledTest([IncludeDataSources(true,
 			TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
 			string configuration)

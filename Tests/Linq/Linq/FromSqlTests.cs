@@ -291,7 +291,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestAsosciation(
-			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context, 
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, 
 			[Values(14, 15)] int startId
 		)
 		{
@@ -322,7 +322,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestTableValueFunction(
-			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context,
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[Values(0, 1)] int offset)
 		{
 			using (var db = GetDataContext(context))
@@ -352,7 +352,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestScalar(
-			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

@@ -1644,11 +1644,10 @@ namespace Tests.xUpdate
 		}
 		#endregion
 
-
 		// https://imgflip.com/i/2a6oc8
 		[ActiveIssue(
-			Configurations = new[] { ProviderName.Sybase, ProviderName.SybaseManaged },
-			Details        = "Cross-join doesn't work in Sybase. Also see SqlLinqCrossJoinSubQuery test")]
+			Configuration = TestProvName.AllSybase,
+			Details       = "Cross-join doesn't work in Sybase. Also see SqlLinqCrossJoinSubQuery test")]
 		[Test]
 		public void CrossJoinedSourceWithSingleFieldSelection([MergeDataContextSource] string context)
 		{
@@ -1714,7 +1713,7 @@ namespace Tests.xUpdate
 
 		// same as CrossJoinedSourceWithSingleFieldSelection test but with server-side sort
 		// it returns incorrectly ordered data for DB2 and Oracle for some reason
-		[ActiveIssue]
+		[ActiveIssue(Configurations = new[] { ProviderName.DB2, TestProvName.AllOracle, TestProvName.AllSybase })]
 		[Test]
 		public void SortedMergeResultsIssue([MergeDataContextSource] string context)
 		{

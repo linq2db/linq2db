@@ -34,6 +34,7 @@ namespace Tests.Tools
 		}
 
 		[Test]
+		[SetCulture("en-US")]
 		public void TestDiagnosticString2()
 		{
 			var str = new[]

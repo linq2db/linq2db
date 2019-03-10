@@ -836,7 +836,7 @@ namespace Tests.Linq
 			[DataSources(
 					false,
 					ProviderName.DB2,
-					ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+					TestProvName.AllPostgreSQL,
 					ProviderName.SapHana)]
 				string context)
 		{

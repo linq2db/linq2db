@@ -44,6 +44,12 @@ namespace LinqToDB.Tools
 
 				for (var i = 0; i < ta.Members.Count; i++)
 				{
+					if (item == null)
+					{
+						values[i] = "<NULL RECORD>";
+						continue;
+					}
+
 					var member = ta.Members[i];
 					var value  = member.GetValue(item);
 					var type   = ta.Members[i].Type.ToNullableUnderlying();

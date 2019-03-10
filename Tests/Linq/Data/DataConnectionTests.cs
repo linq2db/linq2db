@@ -102,10 +102,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void GetDataProviderTest([IncludeDataSources(false,
-			ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void GetDataProviderTest([IncludeDataSources(ProviderName.DB2, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 
@@ -252,8 +249,10 @@ namespace Tests.Data
 			}
 		}
 
+		// informix connection limits interfere with test
 		[Test]
-		public void MultipleConnectionsTest([DataSources] string context)
+		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
+		public void MultipleConnectionsTest([DataSources(ProviderName.Informix)] string context)
 		{
 			var exceptions = new ConcurrentBag<Exception>();
 

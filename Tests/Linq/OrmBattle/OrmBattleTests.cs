@@ -635,10 +635,10 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(result, new GenericEqualityComparer<Order>(o => o.OrderID)));
 		}
 
-		[Test, Category("Ordering"), ActiveIssue(573)]
+		[Test, Category("Ordering")]
+		[ActiveIssue("Bad database data", Configuration = TestProvName.AllSQLiteNorthwind)]
 		public void OrderByDistinctTest([NorthwindDataContext] string context)
 		{
-			//TODO: sdanyliv: data in Northwind.sqlite is broken
 			Setup(context);
 			var result = db.Customer
 				.OrderBy(c => c.CompanyName)
@@ -655,11 +655,11 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(result));
 		}
 
-		[Test, ActiveIssue(573)]
+		[Test]
 		[Category("Ordering")]
+		[ActiveIssue("Bad database data", Configuration = TestProvName.AllSQLiteNorthwind)]
 		public void OrderBySelectManyTest([NorthwindDataContext] string context)
 		{
-			//TODO: sdanyliv: data in Northwind.sqlite is broken
 			Setup(context);
 			var result =
 				from c in db.Customer.OrderBy(c => c.ContactName)
@@ -1323,10 +1323,10 @@ namespace Tests.OrmBattle
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test, Category("Join"), ActiveIssue(573)]
+		[Test, Category("Join")]
+		[ActiveIssue("Bad database data", Configuration = TestProvName.AllSQLiteNorthwind)]
 		public void LeftJoinTest([NorthwindDataContext] string context)
 		{
-			//TODO: sdanyliv: Same as in GroupJoinTest, p.Category.CategoryID - is an association.
 			Setup(context);
 			var result =
 				from c in db.Category
@@ -1401,7 +1401,7 @@ namespace Tests.OrmBattle
 
 		#region Complex tests
 
-		[Test, Category("WindowsOnly"), ActiveIssue(592)]
+		[Test, Category("WindowsOnly")]
 		public void ComplexTest1([NorthwindDataContext] string context)
 		{
 			using (new AllowMultipleQuery())

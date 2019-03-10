@@ -12,10 +12,11 @@ namespace Tests.UserTests
 {
 	// https://github.com/linq2db/linq2db.LINQPad/issues/10
 	[TestFixture]
+	[Category("SkipCI")]
 	public class Issue0010Tests : TestBase
 	{
 		[Test, SkipCategory("Access.12")]
-		public void Test([IncludeDataSources(false, ProviderName.Access)] string context)
+		public void Test([IncludeDataSources(ProviderName.Access)] string context)
 		{
 			using (var db = new DataConnection(new AccessDataProvider(), "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\issue_10_linqpad.accdb;"))
 			{
