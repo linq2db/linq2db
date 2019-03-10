@@ -80,6 +80,12 @@ namespace Tests
 				case ProviderName.OracleNative:
 				case ProviderName.OracleManaged:
 				case ProviderName.PostgreSQL:
+				case ProviderName.PostgreSQL92:
+				case ProviderName.PostgreSQL93:
+				case ProviderName.PostgreSQL95:
+				case TestProvName.PostgreSQL10:
+				case TestProvName.PostgreSQL11:
+				case TestProvName.PostgreSQLLatest:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
@@ -152,9 +158,16 @@ namespace Tests
 					return "Database\\TestData";
 				case ProviderName.SapHana:
 				case ProviderName.MySql:
+				case ProviderName.MySqlConnector:
 				case TestProvName.MariaDB:
 				case TestProvName.MySql57:
 				case ProviderName.PostgreSQL:
+				case ProviderName.PostgreSQL92:
+				case ProviderName.PostgreSQL93:
+				case ProviderName.PostgreSQL95:
+				case TestProvName.PostgreSQL10:
+				case TestProvName.PostgreSQL11:
+				case TestProvName.PostgreSQLLatest:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
@@ -205,6 +218,41 @@ namespace Tests
 			}
 			catch
 			{
+				db.DropTable<T>(tableName, throwExceptionIfNotExists:false);
+				return new TempTable<T>(db, tableName);
+			}
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(
+			this IDataContext db, string context, string methodName, string tableName = null)
+		{
+			if (context.StartsWith(ProviderName.Firebird))
+			{
+				var ctx = context
+					.Replace(ProviderName.Firebird, "f")
+					.Replace("LinqService",         "ls")
+					.Replace(".",                   "");
+
+				tableName = $"{tableName ?? typeof(T).Name}_{ctx}_{methodName}";
+			}
+
+			if (context.StartsWith(ProviderName.Oracle))
+			{
+				var ctx = context
+					.Replace(ProviderName.OracleNative,  "on")
+					.Replace(ProviderName.OracleManaged, "om")
+					.Replace("LinqService",              "ls")
+					.Replace(".",                        "");
+
+				tableName = $"{tableName ?? typeof(T).Name}_{ctx}_{methodName}";
+			}
+
+			try
+			{
+				return new TempTable<T>(db, tableName);
+			}
+			catch
+			{
 				db.DropTable<T>(tableName);
 				return new TempTable<T>(db, tableName);
 			}
@@ -231,6 +279,29 @@ namespace Tests
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items)
 		{
 			return CreateLocalTable(db, null, items);
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(
+			this IDataContext db, string context, string methodName, IEnumerable<T> items)
+		{
+			string tableName = null;
+
+			if (context.StartsWith(ProviderName.Firebird))
+			{
+				var ctx = context
+					.Replace(ProviderName.Firebird, "f")
+					.Replace("LinqService",         "ls")
+					.Replace(".",                   "");
+
+				tableName = $"{typeof(T).Name}_{ctx}_{methodName}_{GetNext()}";
+
+				// object name limit in FB prior to v4 is 31 character
+				// 28 chars used to support PK_ prefix for primary key
+				if (tableName.Length > 28)
+					tableName = tableName.Substring(tableName.Length - 28);
+			}
+
+			return CreateLocalTable(db, tableName, items);
 		}
 	}
 }

@@ -37,20 +37,23 @@ namespace SQLiteDataContext
 		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
-		public ITable<TestT4Casing>      TestT4Casing        { get { return this.GetTable<TestT4Casing>(); } }
+		public ITable<TestT4Casing>      TestT4Casings       { get { return this.GetTable<TestT4Casing>(); } }
 
 		public TestDataDB()
 		{
 			InitDataContext();
+			InitMappingSchema();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
+			InitMappingSchema();
 		}
 
-		partial void InitDataContext();
+		partial void InitDataContext  ();
+		partial void InitMappingSchema();
 	}
 
 	[Table("AllTypes")]
@@ -368,7 +371,7 @@ namespace SQLiteDataContext
 		/// FK_Doctor_0_0
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor")]
-		public static IQueryable<Person> People(this Doctor obj, IDataContext db)
+		public static IQueryable<Person> People0(this Doctor obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID);
 		}
@@ -377,9 +380,9 @@ namespace SQLiteDataContext
 		/// FK_Doctor_0_0
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor")]
-		public static Person Person(this Doctor obj, IDataContext db)
+		public static Doctor Person0(this Person obj, IDataContext db)
 		{
-			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).First();
+			return db.GetTable<Doctor>().Where(c => c.PersonID == obj.PersonID).First();
 		}
 
 		#endregion
@@ -399,9 +402,9 @@ namespace SQLiteDataContext
 		/// FK_ForeignKeyTable_0_0
 		/// </summary>
 		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_ForeignKeyTable_0_0", BackReferenceName="ForeignKeyTables")]
-		public static PrimaryKeyTable PrimaryKeyTable(this ForeignKeyTable obj, IDataContext db)
+		public static ForeignKeyTable PrimaryKeyTable(this PrimaryKeyTable obj, IDataContext db)
 		{
-			return db.GetTable<PrimaryKeyTable>().Where(c => c.ID == obj.PrimaryKeyTableID).First();
+			return db.GetTable<ForeignKeyTable>().Where(c => c.PrimaryKeyTableID == obj.ID).First();
 		}
 
 		#endregion
@@ -412,7 +415,7 @@ namespace SQLiteDataContext
 		/// FK_Patient_0_0
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_0_0", BackReferenceName="Patient")]
-		public static IQueryable<Person> People(this Patient obj, IDataContext db)
+		public static IQueryable<Person> People1(this Patient obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID);
 		}
@@ -421,9 +424,9 @@ namespace SQLiteDataContext
 		/// FK_Patient_0_0
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_0_0", BackReferenceName="Patient")]
-		public static Person Person(this Patient obj, IDataContext db)
+		public static Patient Person1(this Person obj, IDataContext db)
 		{
-			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).First();
+			return db.GetTable<Patient>().Where(c => c.PersonID == obj.PersonID).First();
 		}
 
 		#endregion
@@ -443,9 +446,9 @@ namespace SQLiteDataContext
 		/// FK_Doctor_0_0_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public static Doctor Doctor(this Person obj, IDataContext db)
+		public static Person Doctor(this Doctor obj, IDataContext db)
 		{
-			return db.GetTable<Doctor>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
+			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
 		}
 
 		/// <summary>
@@ -461,9 +464,9 @@ namespace SQLiteDataContext
 		/// FK_Patient_0_0_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public static Patient Patient(this Person obj, IDataContext db)
+		public static Person Patient(this Patient obj, IDataContext db)
 		{
-			return db.GetTable<Patient>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
+			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
 		}
 
 		#endregion

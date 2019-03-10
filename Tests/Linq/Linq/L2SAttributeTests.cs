@@ -74,8 +74,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class L2SAttributeTests : TestBase
 	{
-		[Test, IncludeDataContextSource(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void IsDbGeneratedTest(string context)
+		[Test]
+		public void IsDbGeneratedTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

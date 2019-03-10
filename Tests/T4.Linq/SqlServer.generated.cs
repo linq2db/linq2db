@@ -24,8 +24,8 @@ namespace DataModel
 {
 	/// <summary>
 	/// Database       : Northwind
-	/// Data Source    : DBHost\SQLSERVER2012
-	/// Server Version : 11.00.2218
+	/// Data Source    : DBHost2\SQLSERVER2012
+	/// Server Version : 11.00.7001
 	/// </summary>
 	public partial class NorthwindDB : LinqToDB.Data.DataConnection
 	{
@@ -59,15 +59,21 @@ namespace DataModel
 		public ITable<Supplier>                   Suppliers                    { get { return this.GetTable<Supplier>(); } }
 		public ITable<Territory>                  Territories                  { get { return this.GetTable<Territory>(); } }
 
+		public void InitMappingSchema()
+		{
+		}
+
 		public NorthwindDB(int i)
 		{
 			InitDataContext();
+			InitMappingSchema();
 		}
 
 		public NorthwindDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
+			InitMappingSchema();
 		}
 
 		partial void InitDataContext();
@@ -90,7 +96,7 @@ namespace DataModel
 		private static MethodInfo _freeTextTableMethod1 = typeof(NorthwindDB).GetMethod("FreeTextTable", new Type[] { typeof(string), typeof(string) });
 
 		[FreeTextTableExpression]
-		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(string field, string text)
+		public ITable<FreeTextKey<TKey>> FreeTextTable0<TTable, TKey>(string field, string text)
 		{
 			return this.GetTable<FreeTextKey<TKey>>(
 				this,
@@ -107,7 +113,7 @@ namespace DataModel
 				.Single();
 
 		[FreeTextTableExpression]
-		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(Expression<Func<TTable,string>> fieldSelector, string text)
+		public ITable<FreeTextKey<TKey>> FreeTextTable1<TTable, TKey>(Expression<Func<TTable,string>> fieldSelector, string text)
 		{
 			return this.GetTable<FreeTextKey<TKey>>(
 				this,
@@ -287,14 +293,14 @@ namespace DataModel
 		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Employees_Employees", BackReferenceName="FK_Employees_Employees_BackReferences")]
-		public Employee FK_Employees_Employee { get; set; }
+		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Employees_Employees", BackReferenceName="FkEmployeesEmployeesBackReferences")]
+		public Employee FkEmployeesEmployee { get; set; }
 
 		/// <summary>
 		/// FK_Employees_Employees_BackReference
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public List<Employee> FK_Employees_Employees_BackReferences { get; set; }
+		public List<Employee> FkEmployeesEmployeesBackReferences { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees_BackReference
@@ -676,10 +682,10 @@ namespace DataModel
 	{
 		#region CustOrderHist
 
-		public static IEnumerable<CustOrderHistResult> CustOrderHist(this DataConnection dataConnection, string @CustomerID)
+		public static List<CustOrderHistResult> CustOrderHist(this DataConnection dataConnection, string @CustomerID)
 		{
 			return dataConnection.QueryProc<CustOrderHistResult>("[Northwind]..[CustOrderHist]",
-				new DataParameter("@CustomerID", @CustomerID, DataType.NChar));
+				new DataParameter("@CustomerID", @CustomerID, DataType.NChar)).ToList();
 		}
 
 		public partial class CustOrderHistResult
@@ -692,10 +698,10 @@ namespace DataModel
 
 		#region CustOrdersDetail
 
-		public static IEnumerable<CustOrdersDetailResult> CustOrdersDetail(this DataConnection dataConnection, int? @OrderID)
+		public static List<CustOrdersDetailResult> CustOrdersDetail(this DataConnection dataConnection, int? @OrderID)
 		{
 			return dataConnection.QueryProc<CustOrdersDetailResult>("[Northwind]..[CustOrdersDetail]",
-				new DataParameter("@OrderID", @OrderID, DataType.Int32));
+				new DataParameter("@OrderID", @OrderID, DataType.Int32)).ToList();
 		}
 
 		public partial class CustOrdersDetailResult
@@ -711,10 +717,10 @@ namespace DataModel
 
 		#region CustOrdersOrders
 
-		public static IEnumerable<CustOrdersOrdersResult> CustOrdersOrders(this DataConnection dataConnection, string @CustomerID)
+		public static List<CustOrdersOrdersResult> CustOrdersOrders(this DataConnection dataConnection, string @CustomerID)
 		{
 			return dataConnection.QueryProc<CustOrdersOrdersResult>("[Northwind]..[CustOrdersOrders]",
-				new DataParameter("@CustomerID", @CustomerID, DataType.NChar));
+				new DataParameter("@CustomerID", @CustomerID, DataType.NChar)).ToList();
 		}
 
 		public partial class CustOrdersOrdersResult
@@ -729,11 +735,11 @@ namespace DataModel
 
 		#region EmployeeSalesByCountry
 
-		public static IEnumerable<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
 			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Northwind]..[Employee Sales by Country]",
 				new DataParameter("@Beginning_Date", @Beginning_Date, DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    DataType.DateTime));
+				new DataParameter("@Ending_Date",    @Ending_Date,    DataType.DateTime)).ToList();
 		}
 
 		public partial class EmployeeSalesByCountryResult
@@ -750,11 +756,11 @@ namespace DataModel
 
 		#region SalesByYear
 
-		public static IEnumerable<SalesByYearResult> SalesByYear(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<SalesByYearResult> SalesByYear(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
 			return dataConnection.QueryProc<SalesByYearResult>("[Northwind]..[Sales by Year]",
 				new DataParameter("@Beginning_Date", @Beginning_Date, DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    DataType.DateTime));
+				new DataParameter("@Ending_Date",    @Ending_Date,    DataType.DateTime)).ToList();
 		}
 
 		public partial class SalesByYearResult
@@ -769,11 +775,11 @@ namespace DataModel
 
 		#region SalesByCategory
 
-		public static IEnumerable<SalesByCategoryResult> SalesByCategory(this DataConnection dataConnection, string @CategoryName, string @OrdYear)
+		public static List<SalesByCategoryResult> SalesByCategory(this DataConnection dataConnection, string @CategoryName, string @OrdYear)
 		{
 			return dataConnection.QueryProc<SalesByCategoryResult>("[Northwind]..[SalesByCategory]",
 				new DataParameter("@CategoryName", @CategoryName, DataType.NVarChar),
-				new DataParameter("@OrdYear",      @OrdYear,      DataType.NVarChar));
+				new DataParameter("@OrdYear",      @OrdYear,      DataType.NVarChar)).ToList();
 		}
 
 		public partial class SalesByCategoryResult
@@ -786,9 +792,9 @@ namespace DataModel
 
 		#region TenMostExpensiveProducts
 
-		public static IEnumerable<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this DataConnection dataConnection)
+		public static List<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this DataConnection dataConnection)
 		{
-			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Northwind]..[Ten Most Expensive Products]");
+			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Northwind]..[Ten Most Expensive Products]").ToList();
 		}
 
 		public partial class TenMostExpensiveProductsResult
@@ -882,63 +888,467 @@ namespace DataModel
 			return table.FirstOrDefault(t =>
 				t.TerritoryID == TerritoryID);
 		}
+
+		#region Associations
+
+		#region Category Associations
+
+		/// <summary>
+		/// FK_Products_Categories_BackReference
+		/// </summary>
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<Product> Products0(this Category obj, IDataContext db)
+		{
+			return db.GetTable<Product>().Where(c => c.CategoryID == obj.CategoryID);
+		}
+
+		#endregion
+
+		#region Customer Associations
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_Customers_BackReference
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes0(this Customer obj, IDataContext db)
+		{
+			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerID == obj.CustomerID);
+		}
+
+		/// <summary>
+		/// FK_Orders_Customers_BackReference
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<Order> Orders0(this Customer obj, IDataContext db)
+		{
+			return db.GetTable<Order>().Where(c => c.CustomerID == obj.CustomerID);
+		}
+
+		#endregion
+
+		#region CustomerCustomerDemo Associations
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_Customers
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
+		public static IQueryable<Customer> Customers0(this CustomerCustomerDemo obj, IDataContext db)
+		{
+			return db.GetTable<Customer>().Where(c => c.CustomerID == obj.CustomerID);
+		}
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_Customers
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
+		public static CustomerCustomerDemo Customer0(this Customer obj, IDataContext db)
+		{
+			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerID == obj.CustomerID).First();
+		}
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo
+		/// </summary>
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo", BackReferenceName="CustomerCustomerDemoes")]
+		public static IQueryable<CustomerDemographic> CustomerTypes(this CustomerCustomerDemo obj, IDataContext db)
+		{
+			return db.GetTable<CustomerDemographic>().Where(c => c.CustomerTypeID == obj.CustomerTypeID);
+		}
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo
+		/// </summary>
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo", BackReferenceName="CustomerCustomerDemoes")]
+		public static CustomerCustomerDemo CustomerType(this CustomerDemographic obj, IDataContext db)
+		{
+			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerTypeID == obj.CustomerTypeID).First();
+		}
+
+		#endregion
+
+		#region CustomerDemographic Associations
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_BackReference
+		/// </summary>
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes1(this CustomerDemographic obj, IDataContext db)
+		{
+			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerTypeID == obj.CustomerTypeID);
+		}
+
+		#endregion
+
+		#region Employee Associations
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees_BackReference
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<EmployeeTerritory> EmployeeTerritories0(this Employee obj, IDataContext db)
+		{
+			return db.GetTable<EmployeeTerritory>().Where(c => c.EmployeeID == obj.EmployeeID);
+		}
+
+		/// <summary>
+		/// FK_Employees_Employees
+		/// </summary>
+		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Employees_Employees", BackReferenceName="FkEmployeesEmployeesBackReferences")]
+		public static IQueryable<Employee> FkEmployeesEmployees(this Employee obj, IDataContext db)
+		{
+			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.ReportsTo);
+		}
+
+		/// <summary>
+		/// FK_Employees_Employees
+		/// </summary>
+		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Employees_Employees", BackReferenceName="FkEmployeesEmployeesBackReferences")]
+		public static Employee FkEmployeesEmployee(this Employee obj, IDataContext db)
+		{
+			return db.GetTable<Employee>().Where(c => c.ReportsTo == obj.EmployeeID).FirstOrDefault();
+		}
+
+		/// <summary>
+		/// FK_Employees_Employees_BackReference
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<Employee> FkEmployeesEmployeesBackReferences(this Employee obj, IDataContext db)
+		{
+			return db.GetTable<Employee>().Where(c => c.ReportsTo == obj.EmployeeID);
+		}
+
+		/// <summary>
+		/// FK_Orders_Employees_BackReference
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<Order> Orders1(this Employee obj, IDataContext db)
+		{
+			return db.GetTable<Order>().Where(c => c.EmployeeID == obj.EmployeeID);
+		}
+
+		#endregion
+
+		#region EmployeeTerritory Associations
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
+		public static IQueryable<Employee> Employees0(this EmployeeTerritory obj, IDataContext db)
+		{
+			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.EmployeeID);
+		}
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
+		public static EmployeeTerritory Employee0(this Employee obj, IDataContext db)
+		{
+			return db.GetTable<EmployeeTerritory>().Where(c => c.EmployeeID == obj.EmployeeID).First();
+		}
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Territories
+		/// </summary>
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Territories", BackReferenceName="EmployeeTerritories")]
+		public static IQueryable<Territory> Territories0(this EmployeeTerritory obj, IDataContext db)
+		{
+			return db.GetTable<Territory>().Where(c => c.TerritoryID == obj.TerritoryID);
+		}
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Territories
+		/// </summary>
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Territories", BackReferenceName="EmployeeTerritories")]
+		public static EmployeeTerritory Territory(this Territory obj, IDataContext db)
+		{
+			return db.GetTable<EmployeeTerritory>().Where(c => c.TerritoryID == obj.TerritoryID).First();
+		}
+
+		#endregion
+
+		#region Order Associations
+
+		/// <summary>
+		/// FK_Orders_Customers
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
+		public static IQueryable<Customer> Customers1(this Order obj, IDataContext db)
+		{
+			return db.GetTable<Customer>().Where(c => c.CustomerID == obj.CustomerID);
+		}
+
+		/// <summary>
+		/// FK_Orders_Customers
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
+		public static Order Customer1(this Customer obj, IDataContext db)
+		{
+			return db.GetTable<Order>().Where(c => c.CustomerID == obj.CustomerID).FirstOrDefault();
+		}
+
+		/// <summary>
+		/// FK_Orders_Employees
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
+		public static IQueryable<Employee> Employees1(this Order obj, IDataContext db)
+		{
+			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.EmployeeID);
+		}
+
+		/// <summary>
+		/// FK_Orders_Employees
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
+		public static Order Employee1(this Employee obj, IDataContext db)
+		{
+			return db.GetTable<Order>().Where(c => c.EmployeeID == obj.EmployeeID).FirstOrDefault();
+		}
+
+		/// <summary>
+		/// FK_Order_Details_Orders_BackReference
+		/// </summary>
+		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<OrderDetail> OrderDetails0(this Order obj, IDataContext db)
+		{
+			return db.GetTable<OrderDetail>().Where(c => c.ID == obj.OrderID);
+		}
+
+		/// <summary>
+		/// FK_Orders_Shippers
+		/// </summary>
+		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Shippers", BackReferenceName="Orders")]
+		public static IQueryable<Shipper> Shippers(this Order obj, IDataContext db)
+		{
+			return db.GetTable<Shipper>().Where(c => c.ShipperID == obj.ShipVia);
+		}
+
+		/// <summary>
+		/// FK_Orders_Shippers
+		/// </summary>
+		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Shippers", BackReferenceName="Orders")]
+		public static Order Shipper(this Shipper obj, IDataContext db)
+		{
+			return db.GetTable<Order>().Where(c => c.ShipVia == obj.ShipperID).FirstOrDefault();
+		}
+
+		#endregion
+
+		#region OrderDetail Associations
+
+		/// <summary>
+		/// FK_Order_Details_Orders
+		/// </summary>
+		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
+		public static IQueryable<Order> Orders2(this OrderDetail obj, IDataContext db)
+		{
+			return db.GetTable<Order>().Where(c => c.OrderID == obj.ID);
+		}
+
+		/// <summary>
+		/// FK_Order_Details_Orders
+		/// </summary>
+		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
+		public static OrderDetail Order(this Order obj, IDataContext db)
+		{
+			return db.GetTable<OrderDetail>().Where(c => c.ID == obj.OrderID).First();
+		}
+
+		/// <summary>
+		/// FK_Order_Details_Products
+		/// </summary>
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Order_Details_Products", BackReferenceName="OrderDetails")]
+		public static IQueryable<Product> Products1(this OrderDetail obj, IDataContext db)
+		{
+			return db.GetTable<Product>().Where(c => c.ProductID == obj.ProductID);
+		}
+
+		/// <summary>
+		/// FK_Order_Details_Products
+		/// </summary>
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Order_Details_Products", BackReferenceName="OrderDetails")]
+		public static OrderDetail Product(this Product obj, IDataContext db)
+		{
+			return db.GetTable<OrderDetail>().Where(c => c.ProductID == obj.ProductID).First();
+		}
+
+		#endregion
+
+		#region Product Associations
+
+		/// <summary>
+		/// FK_Products_Categories
+		/// </summary>
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Products_Categories", BackReferenceName="Products")]
+		public static IQueryable<Category> Categories(this Product obj, IDataContext db)
+		{
+			return db.GetTable<Category>().Where(c => c.CategoryID == obj.CategoryID);
+		}
+
+		/// <summary>
+		/// FK_Products_Categories
+		/// </summary>
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Products_Categories", BackReferenceName="Products")]
+		public static Product Category(this Category obj, IDataContext db)
+		{
+			return db.GetTable<Product>().Where(c => c.CategoryID == obj.CategoryID).FirstOrDefault();
+		}
+
+		/// <summary>
+		/// FK_Order_Details_Products_BackReference
+		/// </summary>
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<OrderDetail> OrderDetails1(this Product obj, IDataContext db)
+		{
+			return db.GetTable<OrderDetail>().Where(c => c.ProductID == obj.ProductID);
+		}
+
+		/// <summary>
+		/// FK_Products_Suppliers
+		/// </summary>
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Products_Suppliers", BackReferenceName="Products")]
+		public static IQueryable<Supplier> Suppliers(this Product obj, IDataContext db)
+		{
+			return db.GetTable<Supplier>().Where(c => c.SupplierID == obj.SupplierID);
+		}
+
+		/// <summary>
+		/// FK_Products_Suppliers
+		/// </summary>
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Products_Suppliers", BackReferenceName="Products")]
+		public static Product Supplier(this Supplier obj, IDataContext db)
+		{
+			return db.GetTable<Product>().Where(c => c.SupplierID == obj.SupplierID).FirstOrDefault();
+		}
+
+		#endregion
+
+		#region Region Associations
+
+		/// <summary>
+		/// FK_Territories_Region_BackReference
+		/// </summary>
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<Territory> Territories1(this Region obj, IDataContext db)
+		{
+			return db.GetTable<Territory>().Where(c => c.RegionID == obj.RegionID);
+		}
+
+		#endregion
+
+		#region Shipper Associations
+
+		/// <summary>
+		/// FK_Orders_Shippers_BackReference
+		/// </summary>
+		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<Order> Orders3(this Shipper obj, IDataContext db)
+		{
+			return db.GetTable<Order>().Where(c => c.ShipVia == obj.ShipperID);
+		}
+
+		#endregion
+
+		#region Supplier Associations
+
+		/// <summary>
+		/// FK_Products_Suppliers_BackReference
+		/// </summary>
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<Product> Products2(this Supplier obj, IDataContext db)
+		{
+			return db.GetTable<Product>().Where(c => c.SupplierID == obj.SupplierID);
+		}
+
+		#endregion
+
+		#region Territory Associations
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Territories_BackReference
+		/// </summary>
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<EmployeeTerritory> EmployeeTerritories1(this Territory obj, IDataContext db)
+		{
+			return db.GetTable<EmployeeTerritory>().Where(c => c.TerritoryID == obj.TerritoryID);
+		}
+
+		/// <summary>
+		/// FK_Territories_Region
+		/// </summary>
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Territories_Region", BackReferenceName="Territories")]
+		public static IQueryable<Region> Regions(this Territory obj, IDataContext db)
+		{
+			return db.GetTable<Region>().Where(c => c.RegionID == obj.RegionID);
+		}
+
+		/// <summary>
+		/// FK_Territories_Region
+		/// </summary>
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Territories_Region", BackReferenceName="Territories")]
+		public static Territory Region(this Region obj, IDataContext db)
+		{
+			return db.GetTable<Territory>().Where(c => c.RegionID == obj.RegionID).First();
+		}
+
+		#endregion
+
+		#endregion
 	}
 
 	/// <summary>
 	/// Database       : TestData
-	/// Data Source    : DBHost\SQLSERVER2008
-	/// Server Version : 10.50.4042
+	/// Data Source    : DBHost2\SQLSERVER2014
+	/// Server Version : 12.00.6024
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
-		public ITable<AllTypes2>         AllTypes2           { get { return this.GetTable<AllTypes2>(); } }
-		public ITable<BinaryData>        BinaryData          { get { return this.GetTable<BinaryData>(); } }
-		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
-		public ITable<DataTypeTest>      DataTypeTests       { get { return this.GetTable<DataTypeTest>(); } }
-		public ITable<DecimalOverflow>   DecimalOverflows    { get { return this.GetTable<DecimalOverflow>(); } }
-		public ITable<Doctor>            Doctors             { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>        GrandChildren       { get { return this.GetTable<GrandChild>(); } }
-		public ITable<GuidID>            GuidIDs             { get { return this.GetTable<GuidID>(); } }
-		public ITable<GuidID2>           GuidID2             { get { return this.GetTable<GuidID2>(); } }
-		public ITable<IndexTable>        IndexTables         { get { return this.GetTable<IndexTable>(); } }
-		public ITable<IndexTable2>       IndexTable2         { get { return this.GetTable<IndexTable2>(); } }
-		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
-		public ITable<InheritanceParent> InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<LinqDataType>      LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<NameTest>          NameTests           { get { return this.GetTable<NameTest>(); } }
+		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
+		public ITable<AllTypes2>               AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
+		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
+		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
+		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
+		public ITable<GrandChild>              GrandChildren            { get { return this.GetTable<GrandChild>(); } }
+		public ITable<GuidID>                  GuidIds                  { get { return this.GetTable<GuidID>(); } }
+		public ITable<GuidID2>                 GuidID2                  { get { return this.GetTable<GuidID2>(); } }
+		public ITable<IndexTable>              IndexTables              { get { return this.GetTable<IndexTable>(); } }
+		public ITable<IndexTable2>             IndexTable2              { get { return this.GetTable<IndexTable2>(); } }
+		public ITable<InheritanceChild>        InheritanceChildren      { get { return this.GetTable<InheritanceChild>(); } }
+		public ITable<InheritanceParent>       InheritanceParents       { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<Issue1115>               Issue1115                { get { return this.GetTable<Issue1115>(); } }
+		public ITable<Issue1144>               Issue1144                { get { return this.GetTable<Issue1144>(); } }
+		public ITable<LinqDataType>            LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<NameTest>                NameTests                { get { return this.GetTable<NameTest>(); } }
 		/// <summary>
 		/// This is Parent table
 		/// </summary>
-		public ITable<Parent>            Parents             { get { return this.GetTable<Parent>(); } }
-		public ITable<ParentChildView>   ParentChildViews    { get { return this.GetTable<ParentChildView>(); } }
-		public ITable<ParentView>        ParentViews         { get { return this.GetTable<ParentView>(); } }
-		public ITable<Patient>           Patients            { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>            People              { get { return this.GetTable<Person>(); } }
-		public ITable<SqlType>           SqlTypes            { get { return this.GetTable<SqlType>(); } }
-		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
-		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
-		public ITable<TestSchema1>       TestSchema1         { get { return this.GetTable<TestSchema1>(); } }
-		public ITable<TestSchema2>       TestSchema2         { get { return this.GetTable<TestSchema2>(); } }
-		public ITable<TestSchemaX>       TestSchemaX         { get { return this.GetTable<TestSchemaX>(); } }
-		public ITable<TestSchemaY>       TestSchemaY         { get { return this.GetTable<TestSchemaY>(); } }
-		public ITable<TestTable2>        TestTable2          { get { return this.GetTable<TestTable2>(); } }
-		public ITable<TestTable3>        TestTable3          { get { return this.GetTable<TestTable3>(); } }
+		public ITable<Parent>                  Parents                  { get { return this.GetTable<Parent>(); } }
+		public ITable<ParentChildView>         ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
+		public ITable<ParentView>              ParentViews              { get { return this.GetTable<ParentView>(); } }
+		public ITable<Patient>                 Patients                 { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>                  People                   { get { return this.GetTable<Person>(); } }
+		public ITable<SameTableName>           SameTableNames           { get { return this.GetTable<SameTableName>(); } }
+		public ITable<SqlType>                 SqlTypes                 { get { return this.GetTable<SqlType>(); } }
+		public ITable<TestIdentity>            TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestMerge1>              TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>              TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestMergeIdentity>       TestMergeIdentities      { get { return this.GetTable<TestMergeIdentity>(); } }
+		public ITable<TestSchemaSameTableName> TestSchemaSameTableNames { get { return this.GetTable<TestSchemaSameTableName>(); } }
+		public ITable<TestSchemaX>             TestSchemaX              { get { return this.GetTable<TestSchemaX>(); } }
+		public ITable<TestSchemaY>             TestSchemaY              { get { return this.GetTable<TestSchemaY>(); } }
+
+		public void InitMappingSchema()
+		{
+		}
 
 		#region Schemas
 
-		public Test1Schema.DataContext      Test1      { get; set; }
-		public Test2Schema.DataContext      Test2      { get; set; }
-		public Test3_dasdSchema.DataContext Test3_dasd { get; set; }
-		public MySchemaSchema.DataContext   MySchema   { get; set; }
+		public MySchemaSchema.DataContext MySchema { get; set; }
 
 		public void InitSchemas()
 		{
-			Test1      = new Test1Schema.     DataContext(this);
-			Test2      = new Test2Schema.     DataContext(this);
-			Test3_dasd = new Test3_dasdSchema.DataContext(this);
-			MySchema   = new MySchemaSchema.  DataContext(this);
+			MySchema = new MySchemaSchema.DataContext(this);
 		}
 
 		#endregion
@@ -947,6 +1357,7 @@ namespace DataModel
 		{
 			InitSchemas();
 			InitDataContext();
+			InitMappingSchema();
 		}
 
 		public TestDataDB(string configuration)
@@ -954,6 +1365,7 @@ namespace DataModel
 		{
 			InitSchemas();
 			InitDataContext();
+			InitMappingSchema();
 		}
 
 		partial void InitDataContext();
@@ -984,7 +1396,7 @@ namespace DataModel
 		private static MethodInfo _freeTextTableMethod1 = typeof(TestDataDB).GetMethod("FreeTextTable", new Type[] { typeof(string), typeof(string) });
 
 		[FreeTextTableExpression]
-		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(string field, string text)
+		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable, TKey>(string field, string text)
 		{
 			return this.GetTable<FreeTextKey<TKey>>(
 				this,
@@ -1001,7 +1413,7 @@ namespace DataModel
 				.Single();
 
 		[FreeTextTableExpression]
-		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(Expression<Func<TTable,string>> fieldSelector, string text)
+		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable, TKey>(Expression<Func<TTable,string>> fieldSelector, string text)
 		{
 			return this.GetTable<FreeTextKey<TKey>>(
 				this,
@@ -1042,10 +1454,10 @@ namespace DataModel
 		[Column("imageDataType",            DbType="image",             DataType=DataType.Image),                                                Nullable            ] public byte[]          ImageDataType            { get; set; } // image
 		[Column("timestampDataType",        DbType="timestamp",         DataType=DataType.Timestamp,      SkipOnInsert=true, SkipOnUpdate=true), Nullable            ] public byte[]          TimestampDataType        { get; set; } // timestamp
 		[Column("uniqueidentifierDataType", DbType="uniqueidentifier",  DataType=DataType.Guid),                                                 Nullable            ] public Guid?           UniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column("sql_variantDataType",      DbType="sql_variant",       DataType=DataType.Variant),                                              Nullable            ] public object          SqlVariantdatatype       { get; set; } // sql_variant
-		[Column("nvarchar_max_DataType",    DbType="nvarchar(max)",     DataType=DataType.NVarChar,       Length=int.MaxValue),                  Nullable            ] public string          NvarcharMaxDatatype      { get; set; } // nvarchar(max)
-		[Column("varchar_max_DataType",     DbType="varchar(max)",      DataType=DataType.VarChar,        Length=int.MaxValue),                  Nullable            ] public string          VarcharMaxDatatype       { get; set; } // varchar(max)
-		[Column("varbinary_max_DataType",   DbType="varbinary(max)",    DataType=DataType.VarBinary,      Length=int.MaxValue),                  Nullable            ] public byte[]          VarbinaryMaxDatatype     { get; set; } // varbinary(max)
+		[Column("sql_variantDataType",      DbType="sql_variant",       DataType=DataType.Variant),                                              Nullable            ] public object          SqlVariantDataType       { get; set; } // sql_variant
+		[Column("nvarchar_max_DataType",    DbType="nvarchar(max)",     DataType=DataType.NVarChar,       Length=int.MaxValue),                  Nullable            ] public string          NvarcharMaxDataType      { get; set; } // nvarchar(max)
+		[Column("varchar_max_DataType",     DbType="varchar(max)",      DataType=DataType.VarChar,        Length=int.MaxValue),                  Nullable            ] public string          VarcharMaxDataType       { get; set; } // varchar(max)
+		[Column("varbinary_max_DataType",   DbType="varbinary(max)",    DataType=DataType.VarBinary,      Length=int.MaxValue),                  Nullable            ] public byte[]          VarbinaryMaxDataType     { get; set; } // varbinary(max)
 		[Column("xmlDataType",              DbType="xml",               DataType=DataType.Xml),                                                  Nullable            ] public string          XmlDataType              { get; set; } // xml
 		[Column("datetime2DataType",        DbType="datetime2(7)",      DataType=DataType.DateTime2,      Precision=7),                          Nullable            ] public DateTime?       Datetime2DataType        { get; set; } // datetime2(7)
 		[Column("datetimeoffsetDataType",   DbType="datetimeoffset(7)", DataType=DataType.DateTimeOffset, Precision=7),                          Nullable            ] public DateTimeOffset? DatetimeoffsetDataType   { get; set; } // datetimeoffset(7)
@@ -1074,14 +1486,6 @@ namespace DataModel
 		[Column("geometryDataType",       DbType="geometry",          DataType=DataType.Udt),                         Nullable            ] public SqlGeometry     GeometryDataType       { get; set; } // geometry
 	}
 
-	[Table(Database="TestData", Name="BinaryData")]
-	public partial class BinaryData
-	{
-		[Column(DbType="int",             DataType=DataType.Int32),                                           PrimaryKey, Identity] public int    BinaryDataID { get; set; } // int
-		[Column(DbType="timestamp",       DataType=DataType.Timestamp, SkipOnInsert=true, SkipOnUpdate=true), NotNull             ] public byte[] Stamp        { get; set; } // timestamp
-		[Column(DbType="varbinary(1024)", DataType=DataType.VarBinary, Length=1024),                          NotNull             ] public byte[] Data         { get; set; } // varbinary(1024)
-	}
-
 	[Table(Database="TestData", Name="Child")]
 	public partial class Child
 	{
@@ -1091,33 +1495,6 @@ namespace DataModel
 		/// </summary>
 		[Column(       DbType="int", DataType=DataType.Int32), Nullable            ] public int? ChildID  { get; set; } // int
 		[Column("_ID", DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  Id       { get; set; } // int
-	}
-
-	[Table(Database="TestData", Name="DataTypeTest")]
-	public partial class DataTypeTest
-	{
-		[Column(             DbType="int",              DataType=DataType.Int32),                            PrimaryKey, Identity] public int       DataTypeID { get; set; } // int
-		[Column("Binary_",   DbType="binary(50)",       DataType=DataType.Binary,    Length=50),             Nullable            ] public byte[]    Binary     { get; set; } // binary(50)
-		[Column("Boolean_",  DbType="bit",              DataType=DataType.Boolean),                          Nullable            ] public bool?     Boolean    { get; set; } // bit
-		[Column("Byte_",     DbType="tinyint",          DataType=DataType.Byte),                             Nullable            ] public byte?     Byte       { get; set; } // tinyint
-		[Column("Bytes_",    DbType="varbinary(50)",    DataType=DataType.VarBinary, Length=50),             Nullable            ] public byte[]    Bytes      { get; set; } // varbinary(50)
-		[Column("Char_",     DbType="char(1)",          DataType=DataType.Char,      Length=1),              Nullable            ] public char?     Char       { get; set; } // char(1)
-		[Column("DateTime_", DbType="datetime",         DataType=DataType.DateTime),                         Nullable            ] public DateTime? Datetime   { get; set; } // datetime
-		[Column("Decimal_",  DbType="decimal(20, 2)",   DataType=DataType.Decimal,   Precision=20, Scale=2), Nullable            ] public decimal?  Decimal    { get; set; } // decimal(20, 2)
-		[Column("Double_",   DbType="float",            DataType=DataType.Double),                           Nullable            ] public double?   Double     { get; set; } // float
-		[Column("Guid_",     DbType="uniqueidentifier", DataType=DataType.Guid),                             Nullable            ] public Guid?     Guid       { get; set; } // uniqueidentifier
-		[Column("Int16_",    DbType="smallint",         DataType=DataType.Int16),                            Nullable            ] public short?    Int16      { get; set; } // smallint
-		[Column("Int32_",    DbType="int",              DataType=DataType.Int32),                            Nullable            ] public int?      Int32      { get; set; } // int
-		[Column("Int64_",    DbType="bigint",           DataType=DataType.Int64),                            Nullable            ] public long?     Int64      { get; set; } // bigint
-		[Column("Money_",    DbType="money",            DataType=DataType.Money),                            Nullable            ] public decimal?  Money      { get; set; } // money
-		[Column("SByte_",    DbType="tinyint",          DataType=DataType.Byte),                             Nullable            ] public byte?     Sbyte      { get; set; } // tinyint
-		[Column("Single_",   DbType="real",             DataType=DataType.Single),                           Nullable            ] public float?    Single     { get; set; } // real
-		[Column("Stream_",   DbType="varbinary(50)",    DataType=DataType.VarBinary, Length=50),             Nullable            ] public byte[]    Stream     { get; set; } // varbinary(50)
-		[Column("String_",   DbType="nvarchar(50)",     DataType=DataType.NVarChar,  Length=50),             Nullable            ] public string    String     { get; set; } // nvarchar(50)
-		[Column("UInt16_",   DbType="smallint",         DataType=DataType.Int16),                            Nullable            ] public short?    Uint16     { get; set; } // smallint
-		[Column("UInt32_",   DbType="int",              DataType=DataType.Int32),                            Nullable            ] public int?      Uint32     { get; set; } // int
-		[Column("UInt64_",   DbType="bigint",           DataType=DataType.Int64),                            Nullable            ] public long?     Uint64     { get; set; } // bigint
-		[Column("Xml_",      DbType="xml",              DataType=DataType.Xml),                              Nullable            ] public string    Xml        { get; set; } // xml
 	}
 
 	[Table(Database="TestData", Name="DecimalOverflow")]
@@ -1222,6 +1599,21 @@ namespace DataModel
 		[Column(DbType="nvarchar(50)", DataType=DataType.NVarChar, Length=50),    Nullable         ] public string Name                { get; set; } // nvarchar(50)
 	}
 
+	[Table(Database="TestData", Name="Issue1115")]
+	public partial class Issue1115
+	{
+		[Column("id", DbType="hierarchyid", DataType=DataType.Udt), PrimaryKey, NotNull] public SqlHierarchyId Id { get; set; } // hierarchyid
+	}
+
+	[Table(Database="TestData", Name="Issue1144")]
+	public partial class Issue1144
+	{
+		/// <summary>
+		/// Column description
+		/// </summary>
+		[Column("id", DbType="int", DataType=DataType.Int32), PrimaryKey, NotNull] public int Id { get; set; } // int
+	}
+
 	[Table(Database="TestData", Name="LinqDataTypes")]
 	public partial class LinqDataType
 	{
@@ -1315,6 +1707,12 @@ namespace DataModel
 		#endregion
 	}
 
+	[Table(Database="TestData", Name="SameTableName")]
+	public partial class SameTableName
+	{
+		[Column("id", DbType="int", DataType=DataType.Int32), Nullable] public int? Id { get; set; } // int
+	}
+
 	[Table(Database="TestData", Name="SqlTypes")]
 	public partial class SqlType
 	{
@@ -1384,50 +1782,17 @@ namespace DataModel
 		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            FieldEnumNumber { get; set; } // int
 	}
 
-	[Table(Database="TestData", Name="TestSchema1")]
-	public partial class TestSchema1
+	[Table(Database="TestData", Name="TestMergeIdentity")]
+	public partial class TestMergeIdentity
 	{
-		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, NotNull] public int TestSchema1ID { get; set; } // int
-		[Column(DbType="int", DataType=DataType.Int32),             NotNull] public int Field1        { get; set; } // int
-
-		#region Associations
-
-		/// <summary>
-		/// FK_TestSchema2_ParentTestSchema1_BackReference
-		/// </summary>
-		[Association(ThisKey="TestSchema1ID", OtherKey="ParentTestSchema1ID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public List<TestSchema2> TestSchema2ParentTestSchemata { get; set; }
-
-		/// <summary>
-		/// FK_TestSchema2_TestSchema1_BackReference
-		/// </summary>
-		[Association(ThisKey="TestSchema1ID", OtherKey="TestSchema1ID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public List<TestSchema2> TestSchemata { get; set; }
-
-		#endregion
+		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  Id    { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Nullable            ] public int? Field { get; set; } // int
 	}
 
-	[Table(Database="TestData", Name="TestSchema2")]
-	public partial class TestSchema2
+	[Table(Database="TestData", Name="TestSchema_SameTableName")]
+	public partial class TestSchemaSameTableName
 	{
-		[Column(DbType="int", DataType=DataType.Int32), NotNull] public int TestSchema1ID       { get; set; } // int
-		[Column(DbType="int", DataType=DataType.Int32), NotNull] public int ParentTestSchema1ID { get; set; } // int
-
-		#region Associations
-
-		/// <summary>
-		/// FK_TestSchema2_ParentTestSchema1
-		/// </summary>
-		[Association(ThisKey="ParentTestSchema1ID", OtherKey="TestSchema1ID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema2_ParentTestSchema1", BackReferenceName="TestSchema2ParentTestSchemata")]
-		public TestSchema1 ParentTestSchema1 { get; set; }
-
-		/// <summary>
-		/// FK_TestSchema2_TestSchema1
-		/// </summary>
-		[Association(ThisKey="TestSchema1ID", OtherKey="TestSchema1ID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema2_TestSchema1", BackReferenceName="TestSchemata")]
-		public TestSchema1 TestSchema1 { get; set; }
-
-		#endregion
+		[Column("id", DbType="int", DataType=DataType.Int32), Nullable] public int? Id { get; set; } // int
 	}
 
 	[Table(Database="TestData", Name="TestSchemaX")]
@@ -1448,7 +1813,7 @@ namespace DataModel
 		/// FK_TestSchemaY_OtherID_BackReference
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public List<TestSchemaY> TestSchemaYOtherIDs { get; set; }
+		public List<TestSchemaY> TestSchemaYOtherIds { get; set; }
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX_BackReference
@@ -1471,8 +1836,8 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_OtherID
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIDs")]
-		public TestSchemaX FK_TestSchemaY_OtherID { get; set; }
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
+		public TestSchemaX FkTestSchemaYOtherID { get; set; }
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX
@@ -1489,133 +1854,36 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="TestData", Name="TestTable2")]
-	public partial class TestTable2
-	{
-		[Column(DbType="int",           DataType=DataType.Int32),                  PrimaryKey,  Identity] public int       ID          { get; set; } // int
-		[Column(DbType="nvarchar(50)",  DataType=DataType.NVarChar,  Length=50),   NotNull              ] public string    Name        { get; set; } // nvarchar(50)
-		[Column(DbType="nvarchar(250)", DataType=DataType.NVarChar,  Length=250),     Nullable          ] public string    Description { get; set; } // nvarchar(250)
-		[Column(DbType="datetime2(7)",  DataType=DataType.DateTime2, Precision=7),    Nullable          ] public DateTime? CreatedOn   { get; set; } // datetime2(7)
-	}
-
-	[Table(Database="TestData", Name="TestTable3")]
-	public partial class TestTable3
-	{
-		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey, NotNull] public int    ID   { get; set; } // int
-		[Column(DbType="nvarchar(50)", DataType=DataType.NVarChar, Length=50),             NotNull] public string Name { get; set; } // nvarchar(50)
-	}
-
 	public static partial class TestDataDBStoredProcedures
 	{
-		#region PersonDelete
+		#region AddIssue792Record
 
-		public static int PersonDelete(this DataConnection dataConnection, int? @PersonID)
+		public static int AddIssue792Record(this DataConnection dataConnection)
 		{
-			return dataConnection.ExecuteProc("[TestData]..[Person_Delete]",
-				new DataParameter("@PersonID", @PersonID, DataType.Int32));
+			return dataConnection.ExecuteProc("[TestData]..[AddIssue792Record]");
 		}
 
 		#endregion
 
-		#region ScalarDatareader
+		#region DuplicateColumnNames
 
-		public static IEnumerable<ScalarDatareaderresult> ScalarDatareader(this DataConnection dataConnection)
+		public static List<DuplicateColumnNamesResult> DuplicateColumnNames(this DataConnection dataConnection)
 		{
-			return dataConnection.QueryProc<ScalarDatareaderresult>("[TestData]..[Scalar_DataReader]");
+			var ms = dataConnection.MappingSchema;
+
+			return dataConnection.QueryProc(dataReader =>
+				new DuplicateColumnNamesResult
+				{
+					id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
+				},
+				"[TestData]..[DuplicateColumnNames]").ToList();
 		}
 
-		public partial class ScalarDatareaderresult
+		public partial class DuplicateColumnNamesResult
 		{
-			public int?   intField    { get; set; }
-			public string stringField { get; set; }
-		}
-
-		#endregion
-
-		#region PatientSelectall
-
-		public static IEnumerable<PatientSelectallresult> PatientSelectall(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<PatientSelectallresult>("[TestData]..[Patient_SelectAll]");
-		}
-
-		public partial class PatientSelectallresult
-		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public char   Gender     { get; set; }
-			public string Diagnosis  { get; set; }
-		}
-
-		#endregion
-
-		#region ScalarOutputparameter
-
-		public static int ScalarOutputparameter(this DataConnection dataConnection, ref int? @outputInt, ref string @outputString)
-		{
-			var ret = dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
-				new DataParameter("@outputInt",    @outputInt,    DataType.Int32)   { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@outputString", @outputString, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
-
-			@outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputInt"]).   Value);
-			@outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputString"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region PatientSelectbyname
-
-		public static IEnumerable<PatientSelectbynameresult> PatientSelectbyname(this DataConnection dataConnection, string @firstName, string @lastName)
-		{
-			return dataConnection.QueryProc<PatientSelectbynameresult>("[TestData]..[Patient_SelectByName]",
-				new DataParameter("@firstName", @firstName, DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
-		}
-
-		public partial class PatientSelectbynameresult
-		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public char   Gender     { get; set; }
-			public string Diagnosis  { get; set; }
-		}
-
-		#endregion
-
-		#region OutRefTest
-
-		public static int OutRefTest(this DataConnection dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string @str, ref string @outputStr, ref string @inputOutputStr)
-		{
-			var ret = dataConnection.ExecuteProc("[TestData]..[OutRefTest]",
-				new DataParameter("@ID",             @ID,             DataType.Int32),
-				new DataParameter("@outputID",       @outputID,       DataType.Int32)   { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@inputOutputID",  @inputOutputID,  DataType.Int32)   { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@str",            @str,            DataType.VarChar),
-				new DataParameter("@outputStr",      @outputStr,      DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
-				new DataParameter("@inputOutputStr", @inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
-
-			@outputID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputID"]).      Value);
-			@inputOutputID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputID"]). Value);
-			@outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
-			@inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region ScalarReturnparameterwithobject
-
-		public static IEnumerable<Person> ScalarReturnparameterwithobject(this DataConnection dataConnection, int? @id)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Scalar_ReturnParameterWithObject]",
-				new DataParameter("@id", @id, DataType.Int32));
+			               public int    id      { get; set; }
+			[Column("id")] public string Column2 { get; set; }
 		}
 
 		#endregion
@@ -1637,123 +1905,151 @@ namespace DataModel
 
 		#endregion
 
-		#region SelectImplicitColumn
+		#region OutRefTest
 
-		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this DataConnection dataConnection)
+		public static int OutRefTest(this DataConnection dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string @str, ref string @outputStr, ref string @inputOutputStr)
 		{
-			var ms = dataConnection.MappingSchema;
+			var ret = dataConnection.ExecuteProc("[TestData]..[OutRefTest]",
+				new DataParameter("@ID",             @ID,             DataType.Int32),
+				new DataParameter("@outputID",       @outputID,       DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@inputOutputID",  @inputOutputID,  DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@str",            @str,            DataType.VarChar),
+				new DataParameter("@outputStr",      @outputStr,      DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
+				new DataParameter("@inputOutputStr", @inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
-			return dataConnection.QueryProc(dataReader =>
-				new SelectImplicitColumnResult
-				{
-					Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
-				},
-				"[TestData]..[SelectImplicitColumn]");
-		}
+			@outputID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputID"]).      Value);
+			@inputOutputID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputID"]). Value);
+			@outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
+			@inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
 
-		public partial class SelectImplicitColumnResult
-		{
-			[Column("")] public int Column1 { get; set; }
-		}
-
-		#endregion
-
-		#region DuplicateColumnNames
-
-		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this DataConnection dataConnection)
-		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new DuplicateColumnNamesResult
-				{
-					id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
-				},
-				"[TestData]..[DuplicateColumnNames]");
-		}
-
-		public partial class DuplicateColumnNamesResult
-		{
-			               public int    id      { get; set; }
-			[Column("id")] public string Column2 { get; set; }
+			return ret;
 		}
 
 		#endregion
 
-		#region PersonSelectbykey
+		#region PatientSelectAll
 
-		public static IEnumerable<Person> PersonSelectbykey(this DataConnection dataConnection, int? @id)
+		public static List<PatientSelectAllResult> PatientSelectAll(this DataConnection dataConnection)
 		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByKey]",
-				new DataParameter("@id", @id, DataType.Int32));
+			return dataConnection.QueryProc<PatientSelectAllResult>("[TestData]..[Patient_SelectAll]").ToList();
+		}
+
+		public partial class PatientSelectAllResult
+		{
+			public int    PersonID   { get; set; }
+			public string FirstName  { get; set; }
+			public string LastName   { get; set; }
+			public string MiddleName { get; set; }
+			public char   Gender     { get; set; }
+			public string Diagnosis  { get; set; }
 		}
 
 		#endregion
 
-		#region PersonSelectall
+		#region PatientSelectByName
 
-		public static IEnumerable<Person> PersonSelectall(this DataConnection dataConnection)
+		public static List<PatientSelectByNameResult> PatientSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
 		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectAll]");
-		}
-
-		#endregion
-
-		#region PersonSelectbyname
-
-		public static IEnumerable<Person> PersonSelectbyname(this DataConnection dataConnection, string @firstName, string @lastName)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByName]",
+			return dataConnection.QueryProc<PatientSelectByNameResult>("[TestData]..[Patient_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
+				new DataParameter("@lastName",  @lastName,  DataType.NVarChar)).ToList();
+		}
+
+		public partial class PatientSelectByNameResult
+		{
+			public int    PersonID   { get; set; }
+			public string FirstName  { get; set; }
+			public string LastName   { get; set; }
+			public string MiddleName { get; set; }
+			public char   Gender     { get; set; }
+			public string Diagnosis  { get; set; }
 		}
 
 		#endregion
 
-		#region PersonSelectlistbyname
+		#region PersonDelete
 
-		public static IEnumerable<Person> PersonSelectlistbyname(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static int PersonDelete(this DataConnection dataConnection, int? @PersonID)
 		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectListByName]",
-				new DataParameter("@firstName", @firstName, DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
+			return dataConnection.ExecuteProc("[TestData]..[Person_Delete]",
+				new DataParameter("@PersonID", @PersonID, DataType.Int32));
 		}
 
 		#endregion
 
 		#region PersonInsert
 
-		public static IEnumerable<PersonInsertresult> PersonInsert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
+		public static List<PersonInsertResult> PersonInsert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
 		{
-			return dataConnection.QueryProc<PersonInsertresult>("[TestData]..[Person_Insert]",
+			return dataConnection.QueryProc<PersonInsertResult>("[TestData]..[Person_Insert]",
 				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
 				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
 				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
-				new DataParameter("@Gender",     @Gender,     DataType.Char));
+				new DataParameter("@Gender",     @Gender,     DataType.Char)).ToList();
 		}
 
-		public partial class PersonInsertresult
+		public partial class PersonInsertResult
 		{
 			public int? PersonID { get; set; }
 		}
 
 		#endregion
 
-		#region PersonInsertOutputparameter
+		#region PersonInsertOutputParameter
 
-		public static int PersonInsertOutputparameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
+		public static int PersonInsertOutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
 		{
 			var ret = dataConnection.ExecuteProc("[TestData]..[Person_Insert_OutputParameter]",
-				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
-				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
+				new DataParameter("@FirstName", @FirstName, DataType.NVarChar),
+				new DataParameter("@LastName", @LastName, DataType.NVarChar),
 				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
-				new DataParameter("@Gender",     @Gender,     DataType.Char),
-				new DataParameter("@PersonID",   @PersonID,   DataType.Int32)    { Direction = ParameterDirection.InputOutput });
+				new DataParameter("@Gender",   @Gender,   DataType.Char),
+				new DataParameter("@PersonID", @PersonID, DataType.Int32) { Direction = ParameterDirection.InputOutput });
 
 			@PersonID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@PersonID"]).Value);
 
 			return ret;
+		}
+
+		#endregion
+
+		#region PersonSelectAll
+
+		public static List<Person> PersonSelectAll(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectAll]").ToList();
+		}
+
+		#endregion
+
+		#region PersonSelectByKey
+
+		public static List<Person> PersonSelectByKey(this DataConnection dataConnection, int? @id)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByKey]",
+				new DataParameter("@id", @id, DataType.Int32)).ToList();
+		}
+
+		#endregion
+
+		#region PersonSelectByName
+
+		public static List<Person> PersonSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByName]",
+				new DataParameter("@firstName", @firstName, DataType.NVarChar),
+				new DataParameter("@lastName",  @lastName,  DataType.NVarChar)).ToList();
+		}
+
+		#endregion
+
+		#region PersonSelectListByName
+
+		public static List<Person> PersonSelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectListByName]",
+				new DataParameter("@firstName", @firstName, DataType.NVarChar),
+				new DataParameter("@lastName",  @lastName,  DataType.NVarChar)).ToList();
 		}
 
 		#endregion
@@ -1771,16 +2067,57 @@ namespace DataModel
 		}
 
 		#endregion
-	}
 
-	public static partial class SqlFunctions
-	{
-		#region ScalarReturnparameter
+		#region SelectImplicitColumn
 
-		[Sql.Function(Name=".Scalar_ReturnParameter", ServerSideOnly=true)]
-		public static int? ScalarReturnparameter()
+		public static List<SelectImplicitColumnResult> SelectImplicitColumn(this DataConnection dataConnection)
 		{
-			throw new InvalidOperationException();
+			var ms = dataConnection.MappingSchema;
+
+			return dataConnection.QueryProc(dataReader =>
+				new SelectImplicitColumnResult
+				{
+					Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
+				},
+				"[TestData]..[SelectImplicitColumn]").ToList();
+		}
+
+		public partial class SelectImplicitColumnResult
+		{
+			[Column("")] public int Column1 { get; set; }
+		}
+
+		#endregion
+
+		#region TableTypeTestProc
+
+		public static List<TableTypeTestProcResult> TableTypeTestProc(this DataConnection dataConnection, DataTable @table)
+		{
+			return dataConnection.QueryProc<TableTypeTestProcResult>("[TestData]..[TableTypeTestProc]",
+				new DataParameter("@table", @table, DataType.Structured){ DbType = "[dbo].[TestTableType]" }).ToList();
+		}
+
+		public partial class TableTypeTestProcResult
+		{
+			public int?   Id   { get; set; }
+			public string Name { get; set; }
+		}
+
+		#endregion
+
+		#region VariableResults
+
+		public static List<VariableResultsResult> VariableResults(this DataConnection dataConnection, bool? @ReturnFullRow)
+		{
+			return dataConnection.QueryProc<VariableResultsResult>("[TestData]..[VariableResults]",
+				new DataParameter("@ReturnFullRow", @ReturnFullRow, DataType.Boolean)).ToList();
+		}
+
+		public partial class VariableResultsResult
+		{
+			public int    Code   { get; set; }
+			public string Value1 { get; set; }
+			public string Value2 { get; set; }
 		}
 
 		#endregion
@@ -1800,22 +2137,10 @@ namespace DataModel
 				t.ID == ID);
 		}
 
-		public static BinaryData Find(this ITable<BinaryData> table, int BinaryDataID)
-		{
-			return table.FirstOrDefault(t =>
-				t.BinaryDataID == BinaryDataID);
-		}
-
 		public static Child Find(this ITable<Child> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
-		}
-
-		public static DataTypeTest Find(this ITable<DataTypeTest> table, int DataTypeID)
-		{
-			return table.FirstOrDefault(t =>
-				t.DataTypeID == DataTypeID);
 		}
 
 		public static DecimalOverflow Find(this ITable<DecimalOverflow> table, decimal Decimal1)
@@ -1874,6 +2199,18 @@ namespace DataModel
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
+		public static Issue1115 Find(this ITable<Issue1115> table, SqlHierarchyId Id)
+		{
+			return table.FirstOrDefault(t =>
+				(bool)(t.Id == Id));
+		}
+
+		public static Issue1144 Find(this ITable<Issue1144> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
 		public static LinqDataType Find(this ITable<LinqDataType> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
@@ -1922,10 +2259,10 @@ namespace DataModel
 				t.Id == Id);
 		}
 
-		public static TestSchema1 Find(this ITable<TestSchema1> table, int TestSchema1ID)
+		public static TestMergeIdentity Find(this ITable<TestMergeIdentity> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
-				t.TestSchema1ID == TestSchema1ID);
+				t.Id == Id);
 		}
 
 		public static TestSchemaX Find(this ITable<TestSchemaX> table, int TestSchemaXID)
@@ -1934,125 +2271,313 @@ namespace DataModel
 				t.TestSchemaXID == TestSchemaXID);
 		}
 
-		public static TestTable2 Find(this ITable<TestTable2> table, int ID)
+		#region Associations
+
+		#region Doctor Associations
+
+		/// <summary>
+		/// FK_Doctor_Person
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
+		public static IQueryable<Person> People0(this Doctor obj, IDataContext db)
 		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
+			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID);
 		}
 
-		public static TestTable3 Find(this ITable<TestTable3> table, int ID)
+		/// <summary>
+		/// FK_Doctor_Person
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
+		public static Doctor Person0(this Person obj, IDataContext db)
 		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-	}
-
-	public static partial class Test1Schema
-	{
-		public partial class DataContext
-		{
-			public ITable<Table1>    Table1    { get { return _dataContext.GetTable<Table1>(); } }
-			public ITable<Table2543> Table2543 { get { return _dataContext.GetTable<Table2543>(); } }
-
-			private readonly IDataContext _dataContext;
-
-			public DataContext(IDataContext dataContext)
-			{
-				_dataContext = dataContext;
-			}
-		}
-
-		[Table(Database="TestData", Schema="Test1", Name="Table_1")]
-		public partial class Table1
-		{
-			[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey,  NotNull] public int    ID   { get; set; } // int
-			[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10),    Nullable         ] public string Name { get; set; } // nchar(10)
-		}
-
-		[Table(Database="TestData", Schema="Test1", Name="Table_2_543")]
-		public partial class Table2543
-		{
-			[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey,  NotNull] public int    ID   { get; set; } // int
-			[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10),    Nullable         ] public string Name { get; set; } // nchar(10)
-		}
-
-		#region Table Extensions
-
-		public static Table1 Find(this ITable<Table1> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
-		public static Table2543 Find(this ITable<Table2543> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
+			return db.GetTable<Doctor>().Where(c => c.PersonID == obj.PersonID).First();
 		}
 
 		#endregion
-	}
 
-	public static partial class Test2Schema
-	{
-		public partial class DataContext
+		#region IndexTable Associations
+
+		/// <summary>
+		/// FK_Patient2_IndexTable_BackReference
+		/// </summary>
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public static IQueryable<IndexTable2> Patients0(this IndexTable obj, IDataContext db)
 		{
-			public ITable<Table2543> Table2543 { get { return _dataContext.GetTable<Table2543>(); } }
-
-			private readonly IDataContext _dataContext;
-
-			public DataContext(IDataContext dataContext)
-			{
-				_dataContext = dataContext;
-			}
+			return db.GetTable<IndexTable2>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1);
 		}
 
-		[Table(Database="TestData", Schema="Test2", Name="Table_2_543")]
-		public partial class Table2543
+		/// <summary>
+		/// FK_Patient2_IndexTable_BackReference
+		/// </summary>
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public static IndexTable Patient0(this IndexTable2 obj, IDataContext db)
 		{
-			[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey,  NotNull] public int    ID   { get; set; } // int
-			[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10),    Nullable         ] public string Name { get; set; } // nchar(10)
-		}
-
-		#region Table Extensions
-
-		public static Table2543 Find(this ITable<Table2543> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
+			return db.GetTable<IndexTable>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1).FirstOrDefault();
 		}
 
 		#endregion
-	}
 
-	public static partial class Test3_dasdSchema
-	{
-		public partial class DataContext
+		#region IndexTable2 Associations
+
+		/// <summary>
+		/// FK_Patient2_IndexTable
+		/// </summary>
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
+		public static IQueryable<IndexTable> Patient2IndexTables(this IndexTable2 obj, IDataContext db)
 		{
-			public ITable<Table2543> Table2543 { get { return _dataContext.GetTable<Table2543>(); } }
-
-			private readonly IDataContext _dataContext;
-
-			public DataContext(IDataContext dataContext)
-			{
-				_dataContext = dataContext;
-			}
+			return db.GetTable<IndexTable>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1);
 		}
 
-		[Table(Database="TestData", Schema="Test3_dasd", Name="Table_2_543")]
-		public partial class Table2543
+		/// <summary>
+		/// FK_Patient2_IndexTable
+		/// </summary>
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
+		public static IndexTable2 Patient2IndexTable(this IndexTable obj, IDataContext db)
 		{
-			[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey,  NotNull] public int    ID   { get; set; } // int
-			[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10),    Nullable         ] public string Name { get; set; } // nchar(10)
+			return db.GetTable<IndexTable2>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1).First();
 		}
 
-		#region Table Extensions
+		#endregion
 
-		public static Table2543 Find(this ITable<Table2543> table, int ID)
+		#region Patient Associations
+
+		/// <summary>
+		/// FK_Patient_Person
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
+		public static IQueryable<Person> People1(this Patient obj, IDataContext db)
 		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
+			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID);
 		}
+
+		/// <summary>
+		/// FK_Patient_Person
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
+		public static Patient Person1(this Person obj, IDataContext db)
+		{
+			return db.GetTable<Patient>().Where(c => c.PersonID == obj.PersonID).First();
+		}
+
+		#endregion
+
+		#region Person Associations
+
+		/// <summary>
+		/// FK_Doctor_Person_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public static IQueryable<Doctor> Doctors(this Person obj, IDataContext db)
+		{
+			return db.GetTable<Doctor>().Where(c => c.PersonID == obj.PersonID);
+		}
+
+		/// <summary>
+		/// FK_Doctor_Person_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public static Person Doctor(this Doctor obj, IDataContext db)
+		{
+			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
+		}
+
+		/// <summary>
+		/// FK_Patient_Person_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public static IQueryable<Patient> Patients1(this Person obj, IDataContext db)
+		{
+			return db.GetTable<Patient>().Where(c => c.PersonID == obj.PersonID);
+		}
+
+		/// <summary>
+		/// FK_Patient_Person_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public static Person Patient1(this Patient obj, IDataContext db)
+		{
+			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
+		}
+
+		#endregion
+
+		#region TestSchemaA Associations
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference
+		/// </summary>
+		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<MySchemaSchema.TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAId == obj.TestSchemaAID);
+		}
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference
+		/// </summary>
+		[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<MySchemaSchema.TestSchemaB> TestSchemaBYOriginTestSchemaA(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.OriginTestSchemaAID == obj.TestSchemaAID);
+		}
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference
+		/// </summary>
+		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<MySchemaSchema.TestSchemaB> TestSchemaBYTargetTestSchemaA(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAID == obj.TestSchemaAID);
+		}
+
+		#endregion
+
+		#region TestSchemaB Associations
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
+		/// </summary>
+		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
+		public static IQueryable<MySchemaSchema.TestSchemaA> FKTargetTestSchemaA0(this MySchemaSchema.TestSchemaB obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.TargetTestSchemaAID);
+		}
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
+		/// </summary>
+		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
+		public static MySchemaSchema.TestSchemaB FKTargetTestSchemaA1(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAID == obj.TestSchemaAID).First();
+		}
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
+		/// </summary>
+		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
+		public static IQueryable<MySchemaSchema.TestSchemaA> OriginTestSchemaA0(this MySchemaSchema.TestSchemaB obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.OriginTestSchemaAID);
+		}
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
+		/// </summary>
+		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
+		public static MySchemaSchema.TestSchemaB OriginTestSchemaA1(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.OriginTestSchemaAID == obj.TestSchemaAID).First();
+		}
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
+		/// </summary>
+		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
+		public static IQueryable<MySchemaSchema.TestSchemaA> TargetTestSchemaA0(this MySchemaSchema.TestSchemaB obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.TargetTestSchemaAId);
+		}
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
+		/// </summary>
+		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
+		public static MySchemaSchema.TestSchemaB TargetTestSchemaA1(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAId == obj.TestSchemaAID).First();
+		}
+
+		#endregion
+
+		#region TestSchemaX Associations
+
+		/// <summary>
+		/// FK_TestSchemaY_TestSchemaX_BackReference
+		/// </summary>
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<TestSchemaY> TestSchemaY(this TestSchemaX obj, IDataContext db)
+		{
+			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
+		}
+
+		/// <summary>
+		/// FK_TestSchemaY_OtherID_BackReference
+		/// </summary>
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<TestSchemaY> TestSchemaYOtherIds(this TestSchemaX obj, IDataContext db)
+		{
+			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
+		}
+
+		/// <summary>
+		/// FK_TestSchemaY_ParentTestSchemaX_BackReference
+		/// </summary>
+		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public static IQueryable<TestSchemaY> TestSchemaYParentTestSchemaX(this TestSchemaX obj, IDataContext db)
+		{
+			return db.GetTable<TestSchemaY>().Where(c => c.ParentTestSchemaXID == obj.TestSchemaXID);
+		}
+
+		#endregion
+
+		#region TestSchemaY Associations
+
+		/// <summary>
+		/// FK_TestSchemaY_OtherID
+		/// </summary>
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
+		public static IQueryable<TestSchemaX> FkTestSchemaYOtherIds(this TestSchemaY obj, IDataContext db)
+		{
+			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
+		}
+
+		/// <summary>
+		/// FK_TestSchemaY_OtherID
+		/// </summary>
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
+		public static TestSchemaY FkTestSchemaYOtherID(this TestSchemaX obj, IDataContext db)
+		{
+			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
+		}
+
+		/// <summary>
+		/// FK_TestSchemaY_ParentTestSchemaX
+		/// </summary>
+		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
+		public static IQueryable<TestSchemaX> ParentTestSchemaX0(this TestSchemaY obj, IDataContext db)
+		{
+			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.ParentTestSchemaXID);
+		}
+
+		/// <summary>
+		/// FK_TestSchemaY_ParentTestSchemaX
+		/// </summary>
+		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
+		public static TestSchemaY ParentTestSchemaX1(this TestSchemaX obj, IDataContext db)
+		{
+			return db.GetTable<TestSchemaY>().Where(c => c.ParentTestSchemaXID == obj.TestSchemaXID).First();
+		}
+
+		/// <summary>
+		/// FK_TestSchemaY_TestSchemaX
+		/// </summary>
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
+		public static IQueryable<TestSchemaX> TestSchemaX0(this TestSchemaY obj, IDataContext db)
+		{
+			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
+		}
+
+		/// <summary>
+		/// FK_TestSchemaY_TestSchemaX
+		/// </summary>
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
+		public static TestSchemaY TestSchemaX1(this TestSchemaX obj, IDataContext db)
+		{
+			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
+		}
+
+		#endregion
 
 		#endregion
 	}
@@ -2061,8 +2586,9 @@ namespace DataModel
 	{
 		public partial class DataContext
 		{
-			public ITable<TestSchemaA> TestSchemaA { get { return _dataContext.GetTable<TestSchemaA>(); } }
-			public ITable<TestSchemaB> TestSchemaB { get { return _dataContext.GetTable<TestSchemaB>(); } }
+			public ITable<SameTableName> SameTableNames { get { return _dataContext.GetTable<SameTableName>(); } }
+			public ITable<TestSchemaA>   TestSchemaA    { get { return _dataContext.GetTable<TestSchemaA>(); } }
+			public ITable<TestSchemaB>   TestSchemaB    { get { return _dataContext.GetTable<TestSchemaB>(); } }
 
 			private readonly IDataContext _dataContext;
 
@@ -2070,6 +2596,12 @@ namespace DataModel
 			{
 				_dataContext = dataContext;
 			}
+		}
+
+		[Table(Database="TestData", Schema="TestSchema", Name="SameTableName")]
+		public partial class SameTableName
+		{
+			[Column("id", DbType="int", DataType=DataType.Int32), Nullable] public int? Id { get; set; } // int
 		}
 
 		[Table(Database="TestData", Schema="TestSchema", Name="TestSchemaA")]
@@ -2079,6 +2611,12 @@ namespace DataModel
 			[Column(DbType="int", DataType=DataType.Int32),             NotNull] public int Field1        { get; set; } // int
 
 			#region Associations
+
+			/// <summary>
+			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference
+			/// </summary>
+			[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+			public List<MySchemaSchema.TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences { get; set; }
 
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference
@@ -2098,11 +2636,18 @@ namespace DataModel
 		[Table(Database="TestData", Schema="TestSchema", Name="TestSchemaB")]
 		public partial class TestSchemaB
 		{
-			[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, NotNull] public int TestSchemaBID       { get; set; } // int
-			[Column(DbType="int", DataType=DataType.Int32),             NotNull] public int OriginTestSchemaAID { get; set; } // int
-			[Column(DbType="int", DataType=DataType.Int32),             NotNull] public int TargetTestSchemaAID { get; set; } // int
+			[Column(                           DbType="int", DataType=DataType.Int32), PrimaryKey, NotNull] public int TestSchemaBID       { get; set; } // int
+			[Column(                           DbType="int", DataType=DataType.Int32),             NotNull] public int OriginTestSchemaAID { get; set; } // int
+			[Column(                           DbType="int", DataType=DataType.Int32),             NotNull] public int TargetTestSchemaAID { get; set; } // int
+			[Column("Target_Test_Schema_A_ID", DbType="int", DataType=DataType.Int32),             NotNull] public int TargetTestSchemaAId { get; set; } // int
 
 			#region Associations
+
+			/// <summary>
+			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
+			/// </summary>
+			[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
+			public MySchemaSchema.TestSchemaA FKTargetTestSchemaA { get; set; }
 
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
@@ -2111,10 +2656,34 @@ namespace DataModel
 			public MySchemaSchema.TestSchemaA OriginTestSchemaA { get; set; }
 
 			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
+			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
 			/// </summary>
-			[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
+			[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
 			public MySchemaSchema.TestSchemaA TargetTestSchemaA { get; set; }
+
+			#endregion
+		}
+
+		public static partial class TestDataDBStoredProcedures
+		{
+			#region TestProcedure
+
+			public static List<TestProcedureResult> TestProcedure(DataConnection dataConnection)
+			{
+				var ms = dataConnection.MappingSchema;
+
+				return dataConnection.QueryProc(dataReader =>
+					new TestProcedureResult
+					{
+						Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
+					},
+					"[TestData].[TestSchema].[TestProcedure]").ToList();
+			}
+
+			public partial class TestProcedureResult
+			{
+				[Column("")] public int Column1 { get; set; }
+			}
 
 			#endregion
 		}

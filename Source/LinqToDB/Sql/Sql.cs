@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -14,7 +15,6 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using Common;
 	using Extensions;
 	using Expressions;
 	using Linq;
@@ -25,21 +25,31 @@ namespace LinqToDB
 	{
 		#region Common Functions
 
-		[Sql.Expression("*", ServerSideOnly = true)]
+		/// <summary>
+		/// Generates '*'.
+		/// </summary>
+		/// <returns></returns>
+		[Sql.Expression("*", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Primary)]
 		public static object[] AllColumns()
 		{
 			throw new LinqException("'AllColumns' is only server-side method.");
 		}
 
+		/// <summary>
+		/// Enforces generating SQL even if an expression can be calculated locally.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="obj">Expression to generate SQL.</param>
+		/// <returns>Returns 'obj'.</returns>
 		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0, ServerSideOnly = true)]
+		[Sql.Expression("{0}", 0, ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T AsSql<T>(T obj)
 		{
 			return obj;
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0, ServerSideOnly = true, InlineParameters = true)]
+		[Sql.Expression("{0}", 0, ServerSideOnly = true, InlineParameters = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T ToSql<T>(T obj)
 		{
 			return obj;
@@ -67,7 +77,7 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0)]
+		[Sql.Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T? ToNullable<T>(T value)
 			where T : struct
 		{
@@ -76,27 +86,27 @@ namespace LinqToDB
 
 		[Obsolete("Use ToNotNullable instead.")]
 		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0)]
+		[Sql.Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T ConvertNullable<T>(T? value)
 			where T : struct
 		{
-			return value ?? default(T);
+			return value ?? default;
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0)]
+		[Sql.Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T ToNotNull<T>(T? value)
 			where T : struct
 		{
-			return value ?? default(T);
+			return value ?? default;
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0)]
+		[Sql.Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T ToNotNullable<T>(T? value)
 			where T : struct
 		{
-			return value ?? default(T);
+			return value ?? default;
 		}
 
 		[Sql.Expression("{0} BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
@@ -152,7 +162,7 @@ namespace LinqToDB
 
 		class NoConvertBuilder : Sql.IExtensionCallBuilder
 		{
-			private static readonly MethodInfo _method = MethodHelper.GetMethodInfo(Sql.ConvertRemover<int, int>, 0).GetGenericMethodDefinition();
+			private static readonly MethodInfo _method = MethodHelper.GetMethodInfo(ConvertRemover<int, int>, 0).GetGenericMethodDefinition();
 
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -177,8 +187,7 @@ namespace LinqToDB
 				var sqlExpr = builder.ConvertExpressionToSql(newExpr);
 				sqlExpr     = new QueryVisitor().Convert(sqlExpr, e =>
 				{
-					var func = e as SqlFunction;
-					if (func != null && func.Name == "$Convert_Remover$")
+					if (e is SqlFunction func && func.Name == "$Convert_Remover$")
 					{
 						return func.Parameters[0];
 					}
@@ -189,7 +198,7 @@ namespace LinqToDB
 			}
 		}
 
-		[Sql.Extension("", BuilderType = typeof(NoConvertBuilder), ServerSideOnly = true)]
+		[Sql.Extension("", BuilderType = typeof(NoConvertBuilder), ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T NoConvert<T>(T expr)
 		{
 			return expr;
@@ -199,12 +208,12 @@ namespace LinqToDB
 
 		#region Guid Functions
 
-		[Sql.Function  (PN.Oracle,   "Sys_Guid", ServerSideOnly=true)]
-		[Sql.Function  (PN.Firebird, "Gen_Uuid", ServerSideOnly=true)]
-		[Sql.Function  (PN.MySql,    "Uuid",     ServerSideOnly=true)]
-		[Sql.Expression(PN.Sybase,   "NewID(1)", ServerSideOnly=true)]
-		[Sql.Expression(PN.SapHana,  "SYSUUID",  ServerSideOnly=true)]
-		[Sql.Function  (             "NewID",    ServerSideOnly=true)]
+		[Sql.Function  (PN.Oracle,   "Sys_Guid", ServerSideOnly=true, CanBeNull = false)]
+		[Sql.Function  (PN.Firebird, "Gen_Uuid", ServerSideOnly=true, CanBeNull = false)]
+		[Sql.Function  (PN.MySql,    "Uuid",     ServerSideOnly=true, CanBeNull = false)]
+		[Sql.Expression(PN.Sybase,   "NewID(1)", ServerSideOnly=true, CanBeNull = false)]
+		[Sql.Expression(PN.SapHana,  "SYSUUID",  ServerSideOnly=true, CanBeNull = false)]
+		[Sql.Function  (             "NewID",    ServerSideOnly=true, CanBeNull = false)]
 		public static Guid NewGuid()
 		{
 			return Guid.NewGuid();
@@ -215,7 +224,7 @@ namespace LinqToDB
 		#region Convert Functions
 
 		[CLSCompliant(false)]
-		[Sql.Function("Convert", 0, 1, ServerSideOnly = true)]
+		[Sql.Function("Convert", 0, 1, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
 			var dt = Common.ConvertTo<TTo>.From(from);
@@ -223,7 +232,7 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Function("Convert", 0, 1, 2, ServerSideOnly = true)]
+		[Sql.Function("Convert", 0, 1, 2, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert<TTo, TFrom>(TTo to, TFrom from, int format)
 		{
 			var dt = Common.ConvertTo<TTo>.From(from);
@@ -231,7 +240,7 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Function("Convert", 0, 1)]
+		[Sql.Function("Convert", 0, 1, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert2<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -254,7 +263,7 @@ namespace LinqToDB
 			}
 		}
 
-		[Sql.Expression("{0}")]
+		[Sql.Expression("{0}", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static TimeSpan? DateToTime(DateTime? date)
 		{
 			return date == null ? null : (TimeSpan?)new TimeSpan(date.Value.Ticks);
@@ -397,7 +406,7 @@ namespace LinqToDB
 		[Sql.Expression(PN.DB2LUW,    "CHARACTER_LENGTH({0},CODEUNITS32)", PreferServerSide = true)]
 		public static int? Length(string str)
 		{
-			return str == null ? null : (int?)str.Length;
+			return str?.Length;
 		}
 
 		[Sql.Function  (                                                PreferServerSide = true)]
@@ -437,9 +446,9 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Sql.Function]
-		[Sql.Function(PN.DB2,     "Locate")]
-		[Sql.Function(PN.MySql,   "Locate")]
-		[Sql.Function(PN.SapHana, "Locate", 1, 0)]
+		[Sql.Function(PN.DB2,      "Locate")]
+		[Sql.Function(PN.MySql,    "Locate")]
+		[Sql.Function(PN.SapHana,  "Locate", 1, 0)]
 		[Sql.Function(PN.Firebird, "Position")]
 		public static int? CharIndex(string value, string str)
 		{
@@ -497,14 +506,14 @@ namespace LinqToDB
 			return new string(chars);
 		}
 
-		[Sql.Function(PreferServerSide = true)]
+		[Sql.Function(                      PreferServerSide = true)]
 		[Sql.Function(PN.SQLite, "LeftStr", PreferServerSide = true)]
 		public static string Left(string str, int? length)
 		{
 			return length == null || str == null || str.Length < length? null: str.Substring(1, length.Value);
 		}
 
-		[Sql.Function(PreferServerSide = true)]
+		[Sql.Function(                       PreferServerSide = true)]
 		[Sql.Function(PN.SQLite, "RightStr", PreferServerSide = true)]
 		public static string Right(string str, int? length)
 		{
@@ -571,54 +580,54 @@ namespace LinqToDB
 		[Sql.Function]
 		public static string Trim(string str)
 		{
-			return str == null ? null : str.Trim();
+			return str?.Trim();
 		}
 
 		[Sql.Function("LTrim")]
 		public static string TrimLeft(string str)
 		{
-			return str == null ? null : str.TrimStart();
+			return str?.TrimStart();
 		}
 
 		[Sql.Function("RTrim")]
 		public static string TrimRight(string str)
 		{
-			return str == null ? null : str.TrimEnd();
+			return str?.TrimEnd();
 		}
 
-		[Sql.Expression(PN.DB2, "Strip({0}, B, {1})")]
 		[Sql.Function]
+		[Sql.Expression(PN.DB2, "Strip({0}, B, {1})")]
 		public static string Trim(string str, char? ch)
 		{
 			return str == null || ch == null ? null : str.Trim(ch.Value);
 		}
 
 		[Sql.Expression(PN.DB2, "Strip({0}, L, {1})")]
-		[Sql.Function  (                  "LTrim")]
+		[Sql.Function  (        "LTrim")]
 		public static string TrimLeft(string str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimStart(ch.Value);
 		}
 
 		[Sql.Expression(PN.DB2, "Strip({0}, T, {1})")]
-		[Sql.Function  (                  "RTrim")]
+		[Sql.Function  (        "RTrim")]
 		public static string TrimRight(string str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimEnd(ch.Value);
 		}
 
-		[Sql.Function(ServerSideOnly = true)]
+		[Sql.Function(                    ServerSideOnly = true)]
 		[Sql.Function(PN.Access, "LCase", ServerSideOnly = true)]
 		public static string Lower(string str)
 		{
-			return str == null ? null : str.ToLower();
+			return str?.ToLower();
 		}
 
-		[Sql.Function(ServerSideOnly = true)]
+		[Sql.Function(                    ServerSideOnly = true)]
 		[Sql.Function(PN.Access, "UCase", ServerSideOnly = true)]
 		public static string Upper(string str)
 		{
-			return str == null ? null : str.ToUpper();
+			return str?.ToUpper();
 		}
 
 		class ConcatAttribute : Sql.ExpressionAttribute
@@ -692,26 +701,37 @@ namespace LinqToDB
 
 		#region DateTime Functions
 
-		[Sql.Property(             "CURRENT_TIMESTAMP")]
-		[Sql.Property(PN.Informix, "CURRENT")]
-		[Sql.Property(PN.Access,   "Now")]
+		[Sql.Property(             "CURRENT_TIMESTAMP", CanBeNull = false)]
+		[Sql.Property(PN.Informix, "CURRENT",           CanBeNull = false)]
+		[Sql.Property(PN.Access,   "Now",               CanBeNull = false)]
 		public static DateTime GetDate()
 		{
 			return DateTime.Now;
 		}
 
-		[Sql.Property(             "CURRENT_TIMESTAMP", ServerSideOnly = true)]
-		[Sql.Property(PN.Informix, "CURRENT",           ServerSideOnly = true)]
-		[Sql.Property(PN.Access,   "Now",               ServerSideOnly = true)]
-		[Sql.Function(PN.SqlCe,    "GetDate",           ServerSideOnly = true)]
-		[Sql.Function(PN.Sybase,   "GetDate",           ServerSideOnly = true)]
-		public static DateTime CurrentTimestamp => throw new LinqException("The 'CurrentTimestamp' is server side only property.");
+		[Sql.Property(             "CURRENT_TIMESTAMP", ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Property(PN.Informix, "CURRENT",           ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Property(PN.Access,   "Now",               ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Function(PN.SqlCe,    "GetDate",           ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Function(PN.Sybase,   "GetDate",           ServerSideOnly = true, CanBeNull = false)]
+		public static DateTime CurrentTimestamp => throw new LinqException("'CurrentTimestamp' is server side only property.");
 
-		[Sql.Property(             "CURRENT_TIMESTAMP")]
-		[Sql.Property(PN.Informix, "CURRENT")]
-		[Sql.Property(PN.Access,   "Now")]
-		[Sql.Function(PN.SqlCe,    "GetDate")]
-		[Sql.Function(PN.Sybase,   "GetDate")]
+		[Sql.Function  (PN.SqlServer , "SYSUTCDATETIME"                      , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Function  (PN.Sybase    , "GETUTCDATE"                          , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Expression(PN.SQLite    , "DATETIME('now')"                     , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Function  (PN.MySql     , "UTC_TIMESTAMP"                       , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Expression(PN.PostgreSQL, "timezone('UTC', now())"              , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Expression(PN.DB2       , "CURRENT TIMESTAMP - CURRENT TIMEZONE", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Subtraction)]
+		[Sql.Expression(PN.Oracle    , "SYS_EXTRACT_UTC(SYSTIMESTAMP)"       , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
+		[Sql.Property  (PN.SapHana   , "CURRENT_UTCTIMESTAMP"                , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
+		[Sql.Expression(PN.Informix  , "datetime(1970-01-01 00:00:00) year to second + (dbinfo('utc_current')/86400)::int::char(9)::interval day(9) to day + (mod(dbinfo('utc_current'), 86400))::char(5)::interval second(5) to second", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
+		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;
+
+		[Sql.Property(             "CURRENT_TIMESTAMP", CanBeNull = false)]
+		[Sql.Property(PN.Informix, "CURRENT",           CanBeNull = false)]
+		[Sql.Property(PN.Access,   "Now",               CanBeNull = false)]
+		[Sql.Function(PN.SqlCe,    "GetDate",           CanBeNull = false)]
+		[Sql.Function(PN.Sybase,   "GetDate",           CanBeNull = false)]
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
 		[Sql.Function]
@@ -792,9 +812,11 @@ namespace LinqToDB
 				var str  = string.Format(Expression, pstr ?? part.ToString());
 				var type = member.GetMemberType();
 
+				var canBeNull = args.Skip(1).Any(p => p.CanBeNull);
+
 				return _isExpression ?
-					                new SqlExpression(type, str, Precedence, ConvertArgs(member, args)) :
-					(ISqlExpression)new SqlFunction  (type, str, ConvertArgs(member, args));
+					                new SqlExpression(type, str, Precedence, ConvertArgs(member, args)) { CanBeNull = canBeNull } :
+					(ISqlExpression)new SqlFunction  (type, str,             ConvertArgs(member, args)) { CanBeNull = canBeNull } ;
 			}
 		}
 
@@ -886,7 +908,7 @@ namespace LinqToDB
 			throw new InvalidOperationException();
 		}
 
-		[Sql.Property("@@DATEFIRST")]
+		[Sql.Property("@@DATEFIRST", CanBeNull = false)]
 		public static int DateFirst => 7;
 
 		[Sql.Function]

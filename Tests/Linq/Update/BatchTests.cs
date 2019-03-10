@@ -10,10 +10,11 @@ namespace Tests.xUpdate
 	using Model;
 
 	[TestFixture]
+	[Order(10000)]
 	public class BatchTests : TestBase
 	{
-		[Test, DataContextSource(false)]
-		public void Transaction(string context)
+		[Test]
+		public void Transaction([DataSources(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -37,8 +38,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void NoTransaction(string context)
+		[Test]
+		public void NoTransaction([DataSources(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

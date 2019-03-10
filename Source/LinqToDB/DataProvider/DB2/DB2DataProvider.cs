@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider.DB2
 {
 	using Data;
+	using Common;
 	using Extensions;
 	using Mapping;
 	using SchemaProvider;
@@ -180,61 +181,68 @@ namespace LinqToDB.DataProvider.DB2
 
 		static Action<IDbDataParameter> _setBlob;
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			if (value is sbyte)
+			if (value is sbyte sb)
 			{
-				value    = (short)(sbyte)value;
-				dataType = DataType.Int16;
+				value    = (short)sb;
+				dataType = dataType.WithDataType(DataType.Int16);
 			}
-			else if (value is byte)
+			else if (value is byte b)
 			{
-				value    = (short)(byte)value;
-				dataType = DataType.Int16;
+				value    = (short)b;
+				dataType = dataType.WithDataType(DataType.Int16);
 			}
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
-				case DataType.UInt16     : dataType = DataType.Int32;    break;
-				case DataType.UInt32     : dataType = DataType.Int64;    break;
-				case DataType.UInt64     : dataType = DataType.Decimal;  break;
-				case DataType.VarNumeric : dataType = DataType.Decimal;  break;
-				case DataType.DateTime2  : dataType = DataType.DateTime; break;
+				case DataType.UInt16     : dataType = dataType.WithDataType(DataType.Int32);    break;
+				case DataType.UInt32     : dataType = dataType.WithDataType(DataType.Int64);    break;
+				case DataType.UInt64     : dataType = dataType.WithDataType(DataType.Decimal);  break;
+				case DataType.VarNumeric : dataType = dataType.WithDataType(DataType.Decimal);  break;
+				case DataType.DateTime2  : dataType = dataType.WithDataType(DataType.DateTime); break;
 				case DataType.Char       :
 				case DataType.VarChar    :
 				case DataType.NChar      :
 				case DataType.NVarChar   :
-					     if (value is Guid) value = ((Guid)value).ToString();
-					else if (value is bool)
-						value = Common.ConvertTo<char>.From((bool)value);
-					break;
+					{
+						     if (value is Guid g) value = g.ToString();
+						else if (value is bool b) value = ConvertTo<char>.From(b);
+						break;
+					}
 				case DataType.Boolean    :
 				case DataType.Int16      :
-					if (value is bool)
 					{
-						value    = (bool)value ? 1 : 0;
-						dataType = DataType.Int16;
+						if (value is bool b)
+						{
+							value    = b ? 1 : 0;
+							dataType = dataType.WithDataType(DataType.Int16);
+						}
+						break;
 					}
-					break;
 				case DataType.Guid       :
-					if (value is Guid)
 					{
-						value    = ((Guid)value).ToByteArray();
-						dataType = DataType.VarBinary;
+						if (value is Guid g)
+						{
+							value    = g.ToByteArray();
+							dataType = dataType.WithDataType(DataType.VarBinary);
+						}
+						if (value == null)
+							dataType = dataType.WithDataType(DataType.VarBinary);
+						break;
 					}
-					if (value == null)
-						dataType = DataType.VarBinary;
-					break;
 				case DataType.Binary     :
 				case DataType.VarBinary  :
-					if (value is Guid) value = ((Guid)value).ToByteArray();
-					else if (parameter.Size == 0 && value != null && value.GetType().Name == "DB2Binary")
 					{
-						dynamic v = value;
-						if (v.IsNull)
-							value = DBNull.Value;
+						if (value is Guid g) value = g.ToByteArray();
+						else if (parameter.Size == 0 && value != null && value.GetType().Name == "DB2Binary")
+						{
+							dynamic v = value;
+							if (v.IsNull)
+								value = DBNull.Value;
+						}
+						break;
 					}
-					break;
 				case DataType.Blob       :
 					base.SetParameter(parameter, "@" + name, dataType, value);
 					_setBlob(parameter);
@@ -248,14 +256,14 @@ namespace LinqToDB.DataProvider.DB2
 
 		DB2BulkCopy _bulkCopy;
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new DB2BulkCopy(GetConnectionType());
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}

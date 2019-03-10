@@ -39,8 +39,14 @@ namespace LinqToDB.SqlQuery
 				{
 					switch (Expression)
 					{
-						case SqlField  field  : return field.Alias ?? field.PhysicalName;
-						case SqlColumn column : return column.Alias;
+						case SqlField    field  : return field.Alias ?? field.PhysicalName;
+						case SqlColumn   column : return column.Alias;
+						case SelectQuery query:
+							{
+								if (query.Select.Columns.Count == 1 && query.Select.Columns[0].Alias != "*")
+									return query.Select.Columns[0].Alias;
+								break;
+							}
 					}
 				}
 
@@ -211,10 +217,13 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			if (!(skipColumns && Expression is SqlColumn))
-				Expression = Expression.Walk(skipColumns, func);
+			if (!(options.SkipColumns && Expression is SqlColumn))
+				Expression = Expression.Walk(options, func);
+
+			if (options.ProcessParent)
+				Parent = (SelectQuery)func(Parent);
 
 			return func(this);
 		}

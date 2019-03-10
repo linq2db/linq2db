@@ -29,26 +29,6 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class OracleTests : TestBase
 	{
-		[AttributeUsage(AttributeTargets.Method)]
-		class OracleDataContextAttribute : IncludeDataContextSourceAttribute
-		{
-			public OracleDataContextAttribute(bool includeLinqService = false)
-				: base(includeLinqService, ProviderName.OracleNative, ProviderName.OracleManaged)
-			{
-			}
-		}
-
-		[AttributeUsage(AttributeTargets.Method)]
-		class OracleDataContextWithBulkCopyAttribute : OracleDataContextAttribute
-		{
-			protected override IEnumerable<Tuple<object[], string>> GetParameters(string provider)
-			{
-				yield return Tuple.Create(new object[] { provider, AlternativeBulkCopy.InsertAll  }, (string)null);
-				yield return Tuple.Create(new object[] { provider, AlternativeBulkCopy.InsertDual }, (string)null);
-				yield return Tuple.Create(new object[] { provider, AlternativeBulkCopy.InsertInto }, (string)null);
-			}
-		}
-
 		string _pathThroughSql = "SELECT :p FROM sys.dual";
 		string  PathThroughSql
 		{
@@ -59,8 +39,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void TestParameters(string context)
+		[Test]
+		public void TestParameters([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -102,8 +82,8 @@ namespace Tests.DataProvider
 			(of course only if it is Windows machine)
 
 		*/
-		[Test, OracleDataContext]
-		public void TestDataTypes(string context)
+		[Test]
+		public void TestDataTypes([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -183,8 +163,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test, OracleDataContext]
-		public void TestNumerics(string context)
+		[Test]
+		public void TestNumerics([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -231,8 +211,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void TestDate(string context)
+		[Test]
+		public void TestDate([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -243,8 +223,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void TestSmallDateTime(string context)
+		[Test]
+		public void TestSmallDateTime([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -255,8 +235,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void TestDateTime(string context)
+		[Test]
+		public void TestDateTime([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -271,8 +251,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void TestDateTime2(string context)
+		[Test]
+		public void TestDateTime2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -287,8 +267,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void TestDateTimeOffset(string context)
+		[Test]
+		public void TestDateTimeOffset([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -326,8 +306,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void TestChar(string context)
+		[Test]
+		public void TestChar([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -364,8 +344,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void TestString(string context)
+		[Test]
+		public void TestString([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -400,8 +380,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void TestBinary(string context)
+		[Test]
+		public void TestBinary([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var arr1 = new byte[] {       0x30, 0x39 };
 			var arr2 = new byte[] { 0, 0, 0x30, 0x39 };
@@ -423,43 +403,46 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.OracleManaged)]
-		public void TestOracleManagedTypes(string context)
+		[Test]
+		public void TestOracleManagedTypes([IncludeDataSources(ProviderName.OracleManaged)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
 				var arr = new byte[] { 0x30, 0x39 };
 
-				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleBinary>   ("SELECT to_blob('3039')           FROM sys.dual").     Value, Is.EqualTo(arr));
-				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleBlob>     ("SELECT to_blob('3039')           FROM sys.dual").     Value, Is.EqualTo(arr));
-				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleDecimal>  ("SELECT Cast(1        as decimal) FROM sys.dual").     Value, Is.EqualTo(1));
-				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleString>   ("SELECT Cast('12345' as char(6))  FROM sys.dual").     Value, Is.EqualTo("12345 "));
+				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleBinary>   ("SELECT to_blob('3039')          FROM sys.dual").      Value, Is.EqualTo(arr));
+				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleBlob>     ("SELECT to_blob('3039')          FROM sys.dual").      Value, Is.EqualTo(arr));
+				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleDecimal>  ("SELECT Cast(1       as decimal) FROM sys.dual").      Value, Is.EqualTo(1));
+				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleString>   ("SELECT Cast('12345' as char(6)) FROM sys.dual").      Value, Is.EqualTo("12345 "));
 				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleClob>     ("SELECT ntextDataType     FROM AllTypes WHERE ID = 2").Value, Is.EqualTo("111"));
 				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleDate>     ("SELECT datetimeDataType  FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
 				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleTimeStamp>("SELECT datetime2DataType FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 			}
 		}
 
-		[ActiveIssue("ArgumentNullException: Value cannot be null. Parameter name: connection", Configuration = ProviderName.OracleNative)]
-		[Test, IncludeDataContextSource(ProviderName.OracleNative)]
-		public void TestOracleNativeTypes(string context)
+#if NET46
+
+		[Test]
+		public void TestOracleNativeTypes([IncludeDataSources(ProviderName.OracleNative)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
 				var arr = new byte[] { 0x30, 0x39 };
 
-				Assert.That(conn.Execute<OracleBinary>   ("SELECT to_blob('3039')           FROM sys.dual").     Value, Is.EqualTo(arr));
-				Assert.That(conn.Execute<OracleBlob>     ("SELECT to_blob('3039')           FROM sys.dual").     Value, Is.EqualTo(arr));
-				Assert.That(conn.Execute<OracleDecimal>  ("SELECT Cast(1        as decimal) FROM sys.dual").     Value, Is.EqualTo(1));
-				Assert.That(conn.Execute<OracleString>   ("SELECT Cast('12345' as char(6))  FROM sys.dual").     Value, Is.EqualTo("12345 "));
-				Assert.That(conn.Execute<OracleClob>     ("SELECT ntextDataType     FROM AllTypes WHERE ID = 2").Value, Is.EqualTo("111"));
-				Assert.That(conn.Execute<OracleDate>     ("SELECT datetimeDataType  FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-				Assert.That(conn.Execute<OracleTimeStamp>("SELECT datetime2DataType FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleBinary>   ("SELECT to_blob('3039')          FROM sys.dual").      Value, Is.EqualTo(arr));
+				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleBlob>     ("SELECT to_blob('3039')          FROM sys.dual").      Value, Is.EqualTo(arr));
+				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleDecimal>  ("SELECT Cast(1       as decimal) FROM sys.dual").      Value, Is.EqualTo(1));
+				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleString>   ("SELECT Cast('12345' as char(6)) FROM sys.dual").      Value, Is.EqualTo("12345 "));
+				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleClob>     ("SELECT ntextDataType     FROM AllTypes WHERE ID = 2").Value, Is.EqualTo("111"));
+				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleDate>     ("SELECT datetimeDataType  FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleTimeStamp>("SELECT datetime2DataType FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void TestGuid(string context)
+#endif
+
+		[Test]
+		public void TestGuid([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -473,8 +456,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void TestXml(string context)
+		[Test]
+		public void TestXml([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			if (OracleTools.IsXmlTypeSupported)
 			{
@@ -502,8 +485,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, OracleDataContext]
-		public void TestEnum1(string context)
+		[Test]
+		public void TestEnum1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -514,8 +497,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void TestEnum2(string context)
+		[Test]
+		public void TestEnum2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -528,8 +511,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void TestTreatEmptyStringsAsNulls(string context)
+		[Test]
+		public void TestTreatEmptyStringsAsNulls([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -581,7 +564,7 @@ namespace Tests.DataProvider
 				.Where(_ => value == _.StringValue2);
 		}
 
-		#region DateTime Tests
+#region DateTime Tests
 
 		[Table(Name="ALLTYPES")]
 		public partial class ALLTYPE
@@ -624,8 +607,8 @@ namespace Tests.DataProvider
 			[NotNull, Column("duration")]  public TimeSpan Duration { get; set; }
 		}
 
-		[Test, OracleDataContext]
-		public void TestTimeSpan(string context)
+		[Test]
+		public void TestTimeSpan([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -637,8 +620,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void DateTimeTest1(string context)
+		[Test]
+		public void DateTimeTest1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -658,8 +641,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void NVarchar2InsertTest(string context)
+		[Test]
+		public void NVarchar2InsertTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new DataConnection(context))
 			using (db.BeginTransaction())
@@ -683,8 +666,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void NVarchar2UpdateTest(string context)
+		[Test]
+		public void NVarchar2UpdateTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new DataConnection(context))
 			using (db.BeginTransaction())
@@ -712,8 +695,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSourceAttribute(ProviderName.OracleNative)]
-		public void SelectDateTime(string context)
+		[Test]
+		public void SelectDateTime([IncludeDataSources(ProviderName.OracleNative)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -743,8 +726,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void DateTimeTest2(string context)
+		[Test]
+		public void DateTimeTest2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			// Set custom DateTime to SQL converter.
 			//
@@ -801,8 +784,8 @@ namespace Tests.DataProvider
 				});
 		}
 
-		[Test, OracleDataContext]
-		public void ClauseDateTimeWithoutJointure(string context)
+		[Test]
+		public void ClauseDateTimeWithoutJointure([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var date = DateTime.Today;
 			using (var db = new DataConnection(context))
@@ -820,8 +803,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void ClauseDateTimeWithJointure(string context)
+		[Test]
+		public void ClauseDateTimeWithJointure([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var date = DateTime.Today;
 			using (var db = new DataConnection(context))
@@ -840,12 +823,12 @@ namespace Tests.DataProvider
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Sequence
+#region Sequence
 
-		[Test, OracleDataContext]
-		public void SequenceInsert(string context)
+		[Test]
+		public void SequenceInsert([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -860,8 +843,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void SequenceInsertWithIdentity(string context)
+		[Test]
+		public void SequenceInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -878,9 +861,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region BulkCopy
+#region BulkCopy
 
 		static void BulkCopyLinqTypes(string context, BulkCopyType bulkCopyType)
 		{
@@ -917,8 +900,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy(ParallelScope = ParallelScope.None)]
-		public void BulkCopyLinqTypesMultipleRows(string context, AlternativeBulkCopy useAlternativeBulkCopy)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void BulkCopyLinqTypesMultipleRows(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			try
 			{
@@ -932,8 +921,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy]
-		public void BulkCopyLinqTypesProviderSpecific(string context, AlternativeBulkCopy useAlternativeBulkCopy)
+		[Test]
+		public void BulkCopyLinqTypesProviderSpecific(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			try
 			{
@@ -947,8 +942,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy(ParallelScope = ParallelScope.None)]
-		public void BulkCopyRetrieveSequencesProviderSpecific(string context, AlternativeBulkCopy useAlternativeBulkCopy)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void BulkCopyRetrieveSequencesProviderSpecific(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			try
 			{
@@ -962,8 +963,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy]
-		public void BulkCopyRetrieveSequencesMultipleRows(string context, AlternativeBulkCopy useAlternativeBulkCopy)
+		[Test]
+		public void BulkCopyRetrieveSequencesMultipleRows(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			try
 			{
@@ -977,8 +984,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy]
-		public void BulkCopyRetrieveSequencesRowByRow(string context, AlternativeBulkCopy useAlternativeBulkCopy)
+		[Test]
+		public void BulkCopyRetrieveSequencesRowByRow(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			try
 			{
@@ -1069,8 +1082,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy]
-		public void BulkCopy1MultipleRows(string context, AlternativeBulkCopy useAlternativeBulkCopy)
+		[Test]
+		public void BulkCopy1MultipleRows(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			try
 			{
@@ -1084,8 +1103,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy]
-		public void BulkCopy1ProviderSpecific(string context, AlternativeBulkCopy useAlternativeBulkCopy)
+		[Test]
+		public void BulkCopy1ProviderSpecific(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			try
 			{
@@ -1132,8 +1157,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy(ParallelScope = ParallelScope.None)]
-		public void BulkCopy21MultipleRows(string context, AlternativeBulkCopy useAlternativeBulkCopy)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void BulkCopy21MultipleRows(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			try
 			{
@@ -1147,8 +1178,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy]
-		public void BulkCopy21ProviderSpecific(string context, AlternativeBulkCopy useAlternativeBulkCopy)
+		[Test]
+		public void BulkCopy21ProviderSpecific(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			try
 			{
@@ -1192,8 +1229,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy]
-		public void BulkCopy22MultipleRows(string context, AlternativeBulkCopy useAlternativeBulkCopy)
+		[Test]
+		public void BulkCopy22MultipleRows(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			try
 			{
@@ -1207,8 +1250,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy]
-		public void BulkCopy22ProviderSpecific(string context, AlternativeBulkCopy useAlternativeBulkCopy)
+		[Test]
+		public void BulkCopy22ProviderSpecific(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			try
 			{
@@ -1222,9 +1271,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region CreateTest
+#region CreateTest
 
 		[Table]
 		class TempTestTable
@@ -1234,8 +1283,8 @@ namespace Tests.DataProvider
 			public long Id { get; set; }
 		}
 
-		[Test, OracleDataContext]
-		public void LongAliasTest(string context)
+		[Test]
+		public void LongAliasTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -1253,12 +1302,12 @@ namespace Tests.DataProvider
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region XmlTable
+#region XmlTable
 
-		[Test, OracleDataContext]
-		public void XmlTableTest1(string context)
+		[Test]
+		public void XmlTableTest1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -1278,8 +1327,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void XmlTableTest2(string context)
+		[Test]
+		public void XmlTableTest2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -1303,8 +1352,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void XmlTableTest3(string context)
+		[Test]
+		public void XmlTableTest3([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -1333,8 +1382,8 @@ namespace Tests.DataProvider
 			public string Field2;
 		}
 
-		[Test, OracleDataContext]
-		public void XmlTableTest4(string context)
+		[Test]
+		public void XmlTableTest4([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -1352,8 +1401,8 @@ namespace Tests.DataProvider
 
 		static string _data;
 
-		[Test, OracleDataContext]
-		public void XmlTableTest5(string context)
+		[Test]
+		public void XmlTableTest5([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -1385,8 +1434,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void XmlTableTest6(string context)
+		[Test]
+		public void XmlTableTest6([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -1410,8 +1459,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void XmlTableTest7(string context)
+		[Test]
+		public void XmlTableTest7([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -1445,8 +1494,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void XmlTableTest8(string context)
+		[Test]
+		public void XmlTableTest8([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -1474,8 +1523,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void XmlTableTest9(string context)
+		[Test]
+		public void XmlTableTest9([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -1503,10 +1552,10 @@ namespace Tests.DataProvider
 			}
 		}
 
-		#endregion
+#endregion
 
-		[Test, IncludeDataContextSource(false, ProviderName.OracleNative, ProviderName.OracleManaged)]
-		public void TestOrderByFirst1(string context)
+		[Test]
+		public void TestOrderByFirst1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1528,8 +1577,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.OracleNative, ProviderName.OracleManaged)]
-		public void TestOrderByFirst2(string context)
+		[Test]
+		public void TestOrderByFirst2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1550,8 +1599,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.OracleNative, ProviderName.OracleManaged)]
-		public void TestOrderByFirst3(string context)
+		[Test]
+		public void TestOrderByFirst3([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1581,8 +1630,8 @@ namespace Tests.DataProvider
 			[Column] public decimal Decimal3;
 		}
 
-		[Test, OracleDataContext]
-		public void OverflowTest(string context)
+		[Test]
+		public void OverflowTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var func = OracleTools.DataReaderGetDecimal;
 			try
@@ -1628,8 +1677,8 @@ namespace Tests.DataProvider
 			[Column] public OracleDecimal Decimal3;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.OracleManaged)]
-		public void OverflowTest2(string context)
+		[Test]
+		public void OverflowTest2([IncludeDataSources(ProviderName.OracleManaged)] string context)
 		{
 			var func = OracleTools.DataReaderGetDecimal;
 			try
@@ -1666,8 +1715,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void UseAlternativeBulkCopyInsertIntoTest(string context)
+		[Test]
+		public void UseAlternativeBulkCopyInsertIntoTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var data = new List<UseAlternativeBulkCopy>(100);
 			for (var i = 0; i < 100; i++)
@@ -1693,8 +1742,8 @@ namespace Tests.DataProvider
 
 		}
 
-		[Test, OracleDataContext]
-		public void UseAlternativeBulkCopyInsertDualTest(string context)
+		[Test]
+		public void UseAlternativeBulkCopyInsertDualTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var data = new List<UseAlternativeBulkCopy>(100);
 			for (var i = 0; i < 100; i++)
@@ -1753,8 +1802,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void ClobTest1(string context)
+		[Test]
+		public void ClobTest1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -1774,8 +1823,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopyAttribute]
-		public void ClobBulkCopyTest(string context, AlternativeBulkCopy useAlternativeBulkCopy)
+		[Test]
+		public void ClobBulkCopyTest(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			var data = new List<ClobEntity>(new[] {new ClobEntity(1), new ClobEntity(2)});
 
@@ -1806,8 +1861,8 @@ namespace Tests.DataProvider
 			public DateTimeOffset DateTimeOffsetValue;
 		}
 
-		[Test, OracleDataContext]
-		public void Issue515Test(string context)
+		[Test]
+		public void Issue515Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1826,8 +1881,8 @@ namespace Tests.DataProvider
 
 		}
 
-		[Test, OracleDataContext]
-		public void Issue612Test(string context)
+		[Test]
+		public void Issue612Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1852,8 +1907,8 @@ namespace Tests.DataProvider
 
 		}
 
-		[Test, OracleDataContext]
-		public void Issue612TestDefaultTSTZPrecisonCanDiffersOfUpTo9Ticks(string context)
+		[Test]
+		public void Issue612TestDefaultTSTZPrecisonCanDiffersOfUpTo9Ticks([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1885,8 +1940,8 @@ namespace Tests.DataProvider
 				new DataParameter { Name = "retCursor", DataType = DataType.Cursor, Direction = ParameterDirection.ReturnValue });
 		}
 
-		[Test, OracleDataContext(false)]
-		public void PersonSelectByKey(string context)
+		[Test]
+		public void PersonSelectByKey([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1903,8 +1958,8 @@ namespace Tests.DataProvider
 			[Column,             Nullable] public byte[]  GUIDDATATYPE   { get; set; } // RAW(16)
 		}
 
-		[Test, OracleDataContext]
-		public void Issue539(string context)
+		[Test]
+		public void Issue539([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1944,20 +1999,21 @@ namespace Tests.DataProvider
 			public string StringValue;
 		}
 
+		[Test]
 		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
-		[Test, OracleDataContext]
-		public void Issue723Test1(string context)
+		public void Issue723Test1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var ms = new MappingSchema();
-			using (var db = new TestDataConnection(context))
+			using (var db = (DataConnection)GetDataContext(context, ms))
 			{
-				db.AddMappingSchema(ms);
-
 				var currentUser = db.Execute<string>("SELECT user FROM dual");
 				db.Execute("GRANT CREATE ANY TRIGGER TO " + currentUser);
 				db.Execute("GRANT CREATE ANY SEQUENCE TO " + currentUser);
 				db.Execute("GRANT DROP ANY TRIGGER TO " + currentUser);
 				db.Execute("GRANT DROP ANY SEQUENCE TO " + currentUser);
+
+				try {db.Execute("DROP USER Issue723Schema CASCADE");} catch { }
+
 				db.Execute("CREATE USER Issue723Schema IDENTIFIED BY password");
 
 				try
@@ -1995,9 +2051,9 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
 		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
-		[Test, OracleDataContext]
-		public void Issue723Test2(string context)
+		public void Issue723Test2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue723Table>())
@@ -2018,8 +2074,8 @@ namespace Tests.DataProvider
 
 		}
 
-		[Test, OracleDataContext]
-		public void Issue731Test(string context)
+		[Test]
+		public void Issue731Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue731Table>())
@@ -2086,8 +2142,8 @@ namespace Tests.DataProvider
 			[Column("datetimeoffsetDataType")] public MyDate MyDate;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.OracleManaged)]
-		public void CustomMappingNonstandardTypeTest(string context)
+		[Test]
+		public void CustomMappingNonstandardTypeTest([IncludeDataSources(ProviderName.OracleManaged)] string context)
 		{
 			var dataProvider = (DataProviderBase)DataConnection.GetDataProvider(context);
 
@@ -2185,8 +2241,8 @@ namespace Tests.DataProvider
 			public bool? NullableBoolProp { get; set; }
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.OracleManaged)]
-		public void BooleanMappingTests(string context)
+		[Test]
+		public void BooleanMappingTests([IncludeDataSources(ProviderName.OracleManaged)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -2226,8 +2282,8 @@ namespace Tests.DataProvider
 			public int Id { get; set; }
 		}
 
-		[Test, OracleDataContext]
-		public void TestLowercaseIdentifiersQuotation(string context)
+		[Test]
+		public void TestLowercaseIdentifiersQuotation([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

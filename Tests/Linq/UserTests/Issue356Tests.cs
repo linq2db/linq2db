@@ -9,8 +9,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue356Tests : TestBase
 	{
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.PostgreSQL)]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -24,12 +24,12 @@ namespace Tests.UserTests
 					.SelectMany(x => expectedUnion.Where(c => c.ParentID == x.ParentID).Select(z => new {x.ParentID, z.ChildID}))
 					.Take(10);
 
-				AreEqual(expected, result);
+				AreEqual(expected, result, src => src.OrderBy(_ => _.ParentID).ThenBy(_ => _.ChildID));
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Access)]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources(TestProvName.AllSybase, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -49,8 +49,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(true, ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources(ProviderName.Access, ProviderName.SqlServer2000, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

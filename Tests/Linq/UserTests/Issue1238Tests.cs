@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
+
 using NUnit.Framework;
+
 using Tests.Model;
 using Tests.xUpdate;
 
@@ -22,9 +23,10 @@ namespace Tests.UserTests
 		}
 
 		// PostgreSQL disabled because it needs real primary key on database side
+		// DB2 needs merge api + arraycontext features from 3.0
 		[ActiveIssue(1239, Configuration = ProviderName.DB2)]
-		[Test, DataContextSource(false, ProviderName.PostgreSQL)]
-		public void TestInsertOrUpdate(string context)
+		[Test]
+		public void TestInsertOrUpdate([DataSources(false, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -64,8 +66,11 @@ namespace Tests.UserTests
 		}
 
 		// PostgreSQL disabled because it needs real primary key on database side
-		[Test, DataContextSource(false, ProviderName.PostgreSQL)]
-		public void TestInsertOrReplace(string context)
+		[ActiveIssue(
+			Configuration = ProviderName.DB2,
+			Details       = "ERROR [42610] [IBM][DB2/NT64] SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		[Test]
+		public void InsertOrReplaceTest([DataSources(false, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -89,8 +94,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, MergeTests.MergeDataContextSource]
-		public void TestMerge(string context)
+		[Test]
+		public void TestMerge([MergeTests.MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -126,8 +131,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, MergeTests.MergeDataContextSource]
-		public void TestMergeOnExplicit(string context)
+		[Test]
+		public void TestMergeOnExplicit([MergeTests.MergeDataContextSource] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())

@@ -93,8 +93,9 @@ namespace Tests.Samples
 		}
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
-		[Test, IncludeDataContextSource(false, ProviderName.SQLiteClassic)]
-		public void StandardExceptionExecuteReader(string context)
+		[Test]
+		public void StandardExceptionExecuteReader([IncludeDataSources(ProviderName.SQLiteClassic)]
+			string context)
 		{
 			Assert.Throws<SQLiteException>(() =>
 			{
@@ -106,8 +107,8 @@ namespace Tests.Samples
 		}
 #endif
 
-		[Test, DataContextSource(false)]
-		public void InterceptedExceptionExecuteReader(string context)
+		[Test]
+		public void InterceptedExceptionExecuteReader([DataSources(false)] string context)
 		{
 			var ret = new Retry();
 

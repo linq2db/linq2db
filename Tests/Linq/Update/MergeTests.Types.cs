@@ -2,7 +2,6 @@
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -65,6 +64,7 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
 			[Column(IsColumn = false, Configuration = ProviderName.Access)]
 			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
+			[Column(IsColumn = false, Configuration = ProviderName.MySqlConnector)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
 			[Column(IsColumn = false, Configuration = ProviderName.SapHana)]
 			[Column("FieldDateTime2")]
@@ -101,6 +101,7 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
 			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
+			[Column(IsColumn = false, Configuration = ProviderName.MySqlConnector)]
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
 			[Column(IsColumn = false, Configuration = ProviderName.OracleManaged)]
 			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
@@ -352,8 +353,8 @@ namespace Tests.xUpdate
 		// But was:  '4'
 		// at Tests.Merge.MergeTests.AssertChar
 		[ActiveIssue("ORA-22053: overflow error", Configuration = ProviderName.OracleNative)]
-		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
-		public void TestMergeTypes(string context)
+		[Test]
+		public void TestMergeTypes([DataSources(false, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -489,7 +490,7 @@ namespace Tests.xUpdate
 					expected = expected.Value.AddTicks(-trimmable);
 				}
 
-				if (context == ProviderName.PostgreSQL)
+				if (context.Contains(ProviderName.PostgreSQL))
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
 			}
 
@@ -500,6 +501,7 @@ namespace Tests.xUpdate
 				&& context != ProviderName.Firebird
 				&& context != TestProvName.Firebird3
 				&& context != ProviderName.MySql
+				&& context != ProviderName.MySqlConnector
 				&& context != TestProvName.MySql57
 				&& context != TestProvName.MariaDB
 				&& context != ProviderName.Access
@@ -518,6 +520,7 @@ namespace Tests.xUpdate
 			{
 				if (expected == ' '
 					&& (   context == ProviderName.MySql
+					    || context == ProviderName.MySqlConnector
 						|| context == TestProvName.MariaDB
 						|| context == TestProvName.MySql57))
 					expected = '\0';
@@ -532,6 +535,7 @@ namespace Tests.xUpdate
 			{
 				if (expected == ' '
 					&& (context == ProviderName.MySql
+					    || context == ProviderName.MySqlConnector
 						|| context == TestProvName.MariaDB
 						|| context == TestProvName.MySql57))
 					expected = '\0';
@@ -544,8 +548,8 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (context == TestProvName.MySql57 && expected.Value.Millisecond > 500)
-					expected = expected.Value.AddSeconds(1);
+				if ((context == TestProvName.MySql57 || context == ProviderName.MySqlConnector)
+				    && expected.Value.Millisecond > 500) expected = expected.Value.AddSeconds(1);
 
 				if (context == ProviderName.Sybase || context == ProviderName.SybaseManaged)
 				{
@@ -568,6 +572,7 @@ namespace Tests.xUpdate
 				}
 
 				if (   context == ProviderName.MySql
+				    || context == ProviderName.MySqlConnector
 					|| context == TestProvName.MariaDB
 					|| context == TestProvName.MySql57
 					|| context == ProviderName.Oracle
@@ -609,6 +614,7 @@ namespace Tests.xUpdate
 				|| context == ProviderName.SQLiteClassic
 				|| context == ProviderName.SQLiteMS
 				|| context == ProviderName.MySql
+				|| context == ProviderName.MySqlConnector
 				// MySql57 and MariaDB work, but column is disabled...
 				|| context == TestProvName.MySql57
 				|| context == TestProvName.MariaDB
@@ -652,6 +658,12 @@ namespace Tests.xUpdate
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
 						break;
 					case ProviderName.PostgreSQL:
+					case ProviderName.PostgreSQL92:
+					case ProviderName.PostgreSQL93:
+					case ProviderName.PostgreSQL95:
+					case TestProvName.PostgreSQL10:
+					case TestProvName.PostgreSQL11:
+					case TestProvName.PostgreSQLLatest:
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10) * 10);
 						break;
 					case ProviderName.DB2:
@@ -665,8 +677,10 @@ namespace Tests.xUpdate
 			Assert.AreEqual(expected, actual);
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void TestTypesInsertByMerge(string context)
+		[Test]
+		public void TestTypesInsertByMerge([MergeDataContextSource(
+			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

@@ -8,15 +8,15 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class AggregationTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void NonNullableMax1(string context)
+		[Test]
+		public void NonNullableMax1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.Throws(typeof(InvalidOperationException), () => db.Parent.Where(_ => _.ParentID < 0).Max(_ => _.ParentID));
 		}
 
-		[Test, DataContextSource]
-		public void NonNullableMax2(string context)
+		[Test]
+		public void NonNullableMax2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -31,8 +31,8 @@ namespace Tests.Exceptions
 			}
 		}
 
-		[Test, DataContextSource]
-		public void NonNullableAverage(string context)
+		[Test]
+		public void NonNullableAverage([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.Throws(typeof(InvalidOperationException), () => db.Parent.Where(_ => _.ParentID < 0).Average(_ => _.ParentID));

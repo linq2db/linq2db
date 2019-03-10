@@ -24,8 +24,8 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class FirebirdTests : DataProviderTestBase
 	{
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestParameters(string context)
+		[Test]
+		public void TestParameters([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -38,8 +38,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestDataTypes(string context)
+		[Test]
+		public void TestDataTypes([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -131,8 +131,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestNumerics(string context)
+		[Test]
+		public void TestNumerics([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -182,8 +182,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestDateTime(string context)
+		[Test]
+		public void TestDateTime([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -198,8 +198,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestChar(string context)
+		[Test]
+		public void TestChar([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -231,8 +231,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestString(string context)
+		[Test]
+		public void TestString([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -258,8 +258,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestBinary(string context)
+		[Test]
+		public void TestBinary([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			var arr1 = new byte[] { 50, 51         };
 			var arr2 = new byte[] { 49, 50, 51, 52 };
@@ -286,8 +286,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestGuid(string context)
+		[Test]
+		public void TestGuid([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -306,8 +306,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestGuid2(string context)
+		[Test]
+		public void TestGuid2([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -324,8 +324,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestXml(string context)
+		[Test]
+		public void TestXml([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -350,8 +350,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestEnum1(string context)
+		[Test]
+		public void TestEnum1([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -362,8 +362,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void TestEnum2(string context)
+		[Test]
+		public void TestEnum2([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -376,8 +376,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void SequenceInsert(string context)
+		[Test]
+		public void SequenceInsert([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -392,8 +392,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void SequenceInsertWithIdentity(string context)
+		[Test]
+		public void SequenceInsertWithIdentity([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -416,8 +416,8 @@ namespace Tests.DataProvider
 			[Column]     public DateTime timestampDataType { get; set; } // TIMESTAMP
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void DataProviderTest(string context)
+		[Test]
+		public void DataProviderTest([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var con = new FbConnection(DataConnection.GetConnectionString(context)))
 			using (var dbm = new DataConnection(new FirebirdDataProvider(), con))
@@ -433,8 +433,8 @@ namespace Tests.DataProvider
 			public byte[] BinaryValue { get; set; }
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void ForcedInlineParametersInSelectClauseTest(string context)
+		[Test]
+		public void ForcedInlineParametersInSelectClauseTest([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -445,8 +445,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void BulkCopyLinqTypes(string context)
+		[Test]
+		public void BulkCopyLinqTypes([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
@@ -474,15 +474,15 @@ namespace Tests.DataProvider
 		[Table]
 		public class Issue76Entity
 		{
-			[Column] public long   Id        { get; set; } 
-			[Column] public string Caption   { get; set; } 
-			[Column] public long?  ParentId  { get; set; } 
+			[Column] public long   Id         { get; set; }
+			[Column] public string Caption    { get; set; }
+			[Column] public long?  ParentId   { get; set; }
 
-					 public bool HasChildren { get; set; }
+			         public bool   HasChildren { get; set; }
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void Issue76(string context)
+		[Test]
+		public void Issue76([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Quote))
 			using (var db = GetDataContext(context))
@@ -520,9 +520,9 @@ namespace Tests.DataProvider
 			public int Field;
 		}
 
-		[Test]
+		[Test, Parallelizable(ParallelScope.None)]
 		public void DropTableTest(
-			[IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)] string context,
+			[IncludeDataSources(true, TestProvName.AllFirebird)] string context,
 			[Values] FirebirdIdentifierQuoteMode quoteMode,
 			[Values] bool withIdentity,
 			[Values] bool throwIfNotExists)
@@ -539,8 +539,17 @@ namespace Tests.DataProvider
 				{
 					// first drop deletes table if it remains from previous test run
 					// second drop deletes non-existing table
-					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
-					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
+					db.DropTable<TTable>(throwExceptionIfNotExists: false);
+
+					try
+					{
+						db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
+					}
+					catch when(throwIfNotExists)
+					{
+					}
+
+
 					db.CreateTable<TTable>();
 					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
 				}

@@ -7,34 +7,42 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common;
 	using LinqToDB.Extensions;
 
 	public class SqlDataType : ISqlExpression
 	{
 		#region Init
 
-		public SqlDataType(DataType dbType)
+		public SqlDataType(DataType dataType)
 		{
-			var defaultType = GetDataType(dbType);
+			var defaultType = GetDataType(dataType);
 
-			DataType  = dbType;
+			DataType  = dataType;
 			Type      = defaultType.Type;
 			Length    = defaultType.Length;
 			Precision = defaultType.Precision;
 			Scale     = defaultType.Scale;
 		}
 
-		public SqlDataType(DataType dbType, int? length)
+		public SqlDataType(DbDataType dataType)
 		{
-			DataType = dbType;
-			Type     = GetDataType(dbType).Type;
+			DataType  = dataType.DataType;
+			Type      = dataType.SystemType;
+			DbType    = dataType.DbType;
+		}
+
+		public SqlDataType(DataType dataType, int? length)
+		{
+			DataType = dataType;
+			Type     = GetDataType(dataType).Type;
 			Length   = length;
 		}
 
-		public SqlDataType(DataType dbType, int? precision, int? scale)
+		public SqlDataType(DataType dataType, int? precision, int? scale)
 		{
-			DataType  = dbType;
-			Type      = GetDataType(dbType).Type;
+			DataType  = dataType;
+			Type      = GetDataType(dataType).Type;
 			Precision = precision;
 			Scale     = scale;
 		}
@@ -74,32 +82,32 @@ namespace LinqToDB.SqlQuery
 			Scale     = scale;
 		}
 
-		public SqlDataType(DataType dbType, [JetBrains.Annotations.NotNull]Type type)
+		public SqlDataType(DataType dataType, [JetBrains.Annotations.NotNull]Type type)
 		{
-			var defaultType = GetDataType(dbType);
+			var defaultType = GetDataType(dataType);
 
-			DataType  = dbType;
+			DataType  = dataType;
 			Type      = type ?? throw new ArgumentNullException(nameof(type));
 			Length    = defaultType.Length;
 			Precision = defaultType.Precision;
 			Scale     = defaultType.Scale;
 		}
 
-		public SqlDataType(DataType dbType, [JetBrains.Annotations.NotNull] Type type, int length)
+		public SqlDataType(DataType dataType, [JetBrains.Annotations.NotNull] Type type, int length)
 		{
 			if (length <= 0)    throw new ArgumentOutOfRangeException(nameof(length));
 
-			DataType = dbType;
+			DataType = dataType;
 			Type     = type ?? throw new ArgumentNullException(nameof(type));
 			Length   = length;
 		}
 
-		public SqlDataType(DataType dbType, [JetBrains.Annotations.NotNull] Type type, int precision, int scale)
+		public SqlDataType(DataType dataType, [JetBrains.Annotations.NotNull] Type type, int precision, int scale)
 		{
 			if (precision <= 0) throw new ArgumentOutOfRangeException(nameof(precision));
 			if (scale     <  0) throw new ArgumentOutOfRangeException(nameof(scale));
 
-			DataType  = dbType;
+			DataType  = dataType;
 			Type      = type ?? throw new ArgumentNullException(nameof(type));
 			Precision = precision;
 			Scale     = scale;
@@ -110,6 +118,7 @@ namespace LinqToDB.SqlQuery
 		#region Public Members
 
 		public DataType DataType  { get; }
+		public string   DbType    { get; }
 		public Type     Type      { get; }
 		public int?     Length    { get; }
 		public int?     Precision { get; }
@@ -346,22 +355,23 @@ namespace LinqToDB.SqlQuery
 
 		#region Default Types
 
-		internal SqlDataType(DataType dbType, Type type, int? length, int? precision, int? scale)
+		internal SqlDataType(DataType dataType, Type type, int? length, int? precision, int? scale, string dbType = null)
 		{
-			DataType  = dbType;
+			DataType  = dataType;
 			Type      = type;
 			Length    = length;
 			Precision = precision;
 			Scale     = scale;
+			DbType    = dbType;
 		}
 
-		SqlDataType(DataType dbType, Type type, Func<DataType,int> length, int precision, int scale)
-			: this(dbType, type, length(dbType), precision, scale)
+		SqlDataType(DataType dataType, Type type, Func<DataType,int> length, int precision, int scale, string dbType = null)
+			: this(dataType, type, length(dataType), precision, scale, dbType)
 		{
 		}
 
-		SqlDataType(DataType dbType, Type type, int length, Func<DataType,int> precision, int scale)
-			: this(dbType, type, length, precision(dbType), scale)
+		SqlDataType(DataType dataType, Type type, int length, Func<DataType,int> precision, int scale, string dbType = null)
+			: this(dataType, type, length, precision(dataType), scale, dbType)
 		{
 		}
 
@@ -472,7 +482,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			return func(this);
 		}
@@ -511,7 +521,7 @@ namespace LinqToDB.SqlQuery
 				return this;
 
 			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlDataType(DataType, Type, Length, Precision, Scale));
+				objectTree.Add(this, clone = new SqlDataType(DataType, Type, Length, Precision, Scale, DbType));
 
 			return clone;
 		}
@@ -525,6 +535,9 @@ namespace LinqToDB.SqlQuery
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
 			sb.Append(DataType);
+
+			if (!string.IsNullOrEmpty(DbType))
+				sb.Append($":\"{DbType}\"");
 
 			if (Length != 0)
 				sb.Append('(').Append(Length).Append(')');

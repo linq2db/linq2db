@@ -2,6 +2,7 @@
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -24,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsAggregate(builder.MappingSchema);
+			return methodCall.IsAggregate(builder.MappingSchema) || methodCall.IsAsyncExtension(MethodNames);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -58,8 +59,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var ex = e.Unwrap();
 
-					var l = ex as LambdaExpression;
-					if (l != null)
+					if (ex is LambdaExpression l)
 					{
 						var p = sequence.Parent;
 						var ctx = new ExpressionContext(buildInfo.Parent, sequence, l);
@@ -73,14 +73,14 @@ namespace LinqToDB.Linq.Builder
 				});
 			}
 
+			var methodName = methodCall.Method.Name.Replace("Async", "");
+
 			if (sqlExpression == null)
 			{
 				var sql = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
 
-				if (sql.Length == 1 && sql[0] is SelectQuery)
+				if (sql.Length == 1 && sql[0] is SelectQuery query)
 				{
-					var query = (SelectQuery)sql[0];
-
 					if (query.Select.Columns.Count == 1)
 					{
 						var join = query.OuterApply();
@@ -92,14 +92,14 @@ namespace LinqToDB.Linq.Builder
 				if (attr != null)
 					sqlExpression = attr.GetExpression(methodCall.Method, sql);
 				else
-					sqlExpression = new SqlFunction(methodCall.Type, methodCall.Method.Name, true, sql);
+					sqlExpression = new SqlFunction(methodCall.Type, methodName, true, sql);
 			}
 
 			if (sqlExpression == null)
 				throw new LinqToDBException("Invalid Aggregate function implementation");
 
 			context.Sql        = context.SelectQuery;
-			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression);
+			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodName);
 
 			return context;
 		}
@@ -117,6 +117,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				_returnType = methodCall.Method.ReturnType;
 				_methodName = methodCall.Method.Name;
+
+				if (_returnType.IsGenericTypeEx() && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
+				{
+					_returnType = _returnType.GetGenericArgumentsEx()[0];
+					_methodName = _methodName.Replace("Async", "");
+				}
 			}
 
 			readonly string    _methodName;

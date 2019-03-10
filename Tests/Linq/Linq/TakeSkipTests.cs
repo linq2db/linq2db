@@ -14,8 +14,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class TakeSkipTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Take1(string context)
+		[Test]
+		public void Take1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -29,36 +29,36 @@ namespace Tests.Linq
 			Assert.AreEqual(n, (from ch in db.Child select ch).Take(n).ToList().Count);
 		}
 
-		[Test, DataContextSource]
-		public void Take2(string context)
+		[Test]
+		public void Take2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TakeParam(db, 1);
 		}
 
-		[Test, DataContextSource]
-		public void Take3(string context)
+		[Test]
+		public void Take3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(3, (from ch in db.Child where ch.ChildID > 3 || ch.ChildID < 4 select ch).Take(3).ToList().Count);
 		}
 
-		[Test, DataContextSource]
-		public void Take4(string context)
+		[Test]
+		public void Take4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(3, (from ch in db.Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch).Take(3).ToList().Count);
 		}
 
-		[Test, DataContextSource]
-		public void Take5(string context)
+		[Test]
+		public void Take5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(3, db.Child.Take(3).ToList().Count);
 		}
 
-		[Test, DataContextSource]
-		public void Take6(string context)
+		[Test]
+		public void Take6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -68,23 +68,23 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Take7(string context)
+		[Test]
+		public void Take7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(3, db.Child.Take(() => 3).ToList().Count);
 		}
 
-		[Test, DataContextSource]
-		public void Take8(string context)
+		[Test]
+		public void Take8([DataSources] string context)
 		{
 			var n = 3;
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(3, db.Child.Take(() => n).ToList().Count);
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void TakeCount(string context)
+		[Test]
+		public void TakeCount([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -92,15 +92,15 @@ namespace Tests.Linq
 					db.Child.Take(5).Count());
 		}
 
-		[Test, DataContextSource]
-		public void Skip1(string context)
+		[Test]
+		public void Skip1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(Child.Skip(3), db.Child.Skip(3));
 		}
 
-		[Test, DataContextSource]
-		public void Skip2(string context)
+		[Test]
+		public void Skip2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -108,8 +108,8 @@ namespace Tests.Linq
 					(from ch in db.Child where ch.ChildID > 3 || ch.ChildID < 4 select ch).Skip(3));
 		}
 
-		[Test, DataContextSource]
-		public void Skip3(string context)
+		[Test]
+		public void Skip3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -117,8 +117,8 @@ namespace Tests.Linq
 					(from ch in db.Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch).Skip(3));
 		}
 
-		[Test, DataContextSource]
-		public void Skip4(string context)
+		[Test]
+		public void Skip4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -128,8 +128,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Skip5(string context)
+		[Test]
+		public void Skip5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -137,23 +137,28 @@ namespace Tests.Linq
 					db.Child.OrderByDescending(c => c.ChildID).ThenBy(c => c.ParentID + 1).Skip(3));
 		}
 
-		[Test, DataContextSource]
-		public void Skip6(string context)
+		[Test]
+		public void Skip6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(Child.Skip(3), db.Child.Skip(() => 3));
 		}
 
-		[Test, DataContextSource]
-		public void Skip7(string context)
+		[Test]
+		public void Skip7([DataSources] string context)
 		{
 			var n = 3;
 			using (var db = GetDataContext(context))
 				AreEqual(Child.Skip(n), db.Child.Skip(() => n));
 		}
 
-		[Test, DataContextSource(ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void SkipCount(string context)
+		[Test]
+		public void SkipCount([DataSources(
+			ProviderName.SqlServer2000,
+			TestProvName.AllSybase,
+			TestProvName.AllSQLite,
+			ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -161,8 +166,8 @@ namespace Tests.Linq
 					db.Child.Skip(2).Count());
 		}
 
-		[Test, DataContextSource]
-		public void SkipTake1(string context)
+		[Test]
+		public void SkipTake1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -172,8 +177,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SkipTake2(string context)
+		[Test]
+		public void SkipTake2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -183,8 +188,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SkipTake3(string context)
+		[Test]
+		public void SkipTake3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -194,8 +199,13 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Access)]
-		public void SkipTake4(string context)
+		[Test]
+		public void SkipTake4([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.SqlServer2000,
+			TestProvName.AllSybase,
+			ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -205,8 +215,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SkipTake5(string context)
+		[Test]
+		public void SkipTake5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -244,8 +254,13 @@ namespace Tests.Linq
 			AreEqual(q4, q2);
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void SkipTake6(string context)
+		[Test]
+		public void SkipTake6([DataSources(
+			ProviderName.SqlCe, ProviderName.SqlServer2000,
+			TestProvName.AllSybase,
+			TestProvName.AllSQLite,
+			ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -254,8 +269,13 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void SkipTakeCount(string context)
+		[Test]
+		public void SkipTakeCount([DataSources(
+			ProviderName.SqlCe, ProviderName.SqlServer2000,
+			TestProvName.AllSybase,
+			TestProvName.AllSQLite,
+			ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -263,8 +283,8 @@ namespace Tests.Linq
 					db.Child.Skip(2).Take(5).Count());
 		}
 
-		[Test, DataContextSource]
-		public void SkipFirst(string context)
+		[Test]
+		public void SkipFirst([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -277,8 +297,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void ElementAt1(string context)
+		[Test]
+		public void ElementAt1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -286,8 +306,8 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAt(3));
 		}
 
-		[Test, DataContextSource]
-		public void ElementAt2(string context)
+		[Test]
+		public void ElementAt2([DataSources] string context)
 		{
 			var n = 3;
 			using (var db = GetDataContext(context))
@@ -296,8 +316,8 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAt(() => n));
 		}
 
-		[Test, DataContextSource]
-		public async Task ElementAt2Async(string context)
+		[Test]
+		public async Task ElementAt2Async([DataSources] string context)
 		{
 			var n = 3;
 			using (var db = GetDataContext(context))
@@ -306,8 +326,8 @@ namespace Tests.Linq
 					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtAsync(() => n));
 		}
 
-		[Test, DataContextSource]
-		public void ElementAtDefault1(string context)
+		[Test]
+		public void ElementAtDefault1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -315,15 +335,15 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(3));
 		}
 
-		[Test, DataContextSource]
-		public void ElementAtDefault2(string context)
+		[Test]
+		public void ElementAtDefault2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(300000));
 		}
 
-		[Test, DataContextSource]
-		public void ElementAtDefault3(string context)
+		[Test]
+		public void ElementAtDefault3([DataSources] string context)
 		{
 			var n = 3;
 			using (var db = GetDataContext(context))
@@ -332,8 +352,8 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
 		}
 
-		[Test, DataContextSource]
-		public async Task ElementAtDefault3Async(string context)
+		[Test]
+		public async Task ElementAtDefault3Async([DataSources] string context)
 		{
 			var n = 3;
 			using (var db = GetDataContext(context))
@@ -342,16 +362,16 @@ namespace Tests.Linq
 					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefaultAsync(() => n));
 		}
 
-		[Test, DataContextSource]
-		public void ElementAtDefault4(string context)
+		[Test]
+		public void ElementAtDefault4([DataSources] string context)
 		{
 			var n = 300000;
 			using (var db = GetDataContext(context))
 				Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
 		}
 
-		[Test, DataContextSource]
-		public void ElementAtDefault5(string context)
+		[Test]
+		public void ElementAtDefault5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -359,8 +379,8 @@ namespace Tests.Linq
 					db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(3));
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TakeWithPercent(string context)
+		[Test]
+		public void TakeWithPercent([IncludeDataSources(ProviderName.Access, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -374,8 +394,8 @@ namespace Tests.Linq
 
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TakeWithPercent1(string context)
+		[Test]
+		public void TakeWithPercent1([IncludeDataSources(ProviderName.Access, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -389,8 +409,8 @@ namespace Tests.Linq
 
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TakeWithTies(string context)
+		[Test]
+		public void TakeWithTies([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -405,8 +425,8 @@ namespace Tests.Linq
 
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TakeWithTies2(string context)
+		[Test]
+		public void TakeWithTies2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -421,8 +441,8 @@ namespace Tests.Linq
 
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void SkipTakeWithTies(string context)
+		[Test]
+		public void SkipTakeWithTies([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -432,15 +452,16 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SqlCe, ProviderName.SQLiteMS)]
-		public void TakeWithHintsFails(string context)
+		[Test]
+		public void TakeWithHintsFails([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.Throws<LinqException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void TakeSkipJoin(string context)
+		[Test]
+		public void TakeSkipJoin([DataSources(TestProvName.AllSybase)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{

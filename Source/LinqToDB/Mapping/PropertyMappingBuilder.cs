@@ -8,6 +8,7 @@ namespace LinqToDB.Mapping
 	using Expressions;
 	using Extensions;
 	using SqlQuery;
+	using System.Collections.Generic;
 
 	/// <summary>
 	/// Column or association fluent mapping builder.
@@ -26,11 +27,8 @@ namespace LinqToDB.Mapping
 			[JetBrains.Annotations.NotNull] EntityMappingBuilder<T>    entity,
 			[JetBrains.Annotations.NotNull] Expression<Func<T,object>> memberGetter)
 		{
-			if (entity       == null) throw new ArgumentNullException("entity");
-			if (memberGetter == null) throw new ArgumentNullException("memberGetter");
-
-			_entity       = entity;
-			_memberGetter = memberGetter;
+			_entity       = entity       ?? throw new ArgumentNullException(nameof(entity));
+			_memberGetter = memberGetter ?? throw new ArgumentNullException(nameof(memberGetter));
 			_memberInfo   = MemberHelper.MemberOf(memberGetter);
 
 			if (_memberInfo.ReflectedTypeEx() != typeof(T))
@@ -94,13 +92,99 @@ namespace LinqToDB.Mapping
 		/// <param name="prop">Association member getter expression.</param>
 		/// <param name="thisKey">This association key getter expression.</param>
 		/// <param name="otherKey">Other association key getter expression.</param>
+		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns association mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
-			Expression<Func<T, S>> prop,
+			Expression<Func<T, S>>   prop,
 			Expression<Func<T, ID1>> thisKey,
-			Expression<Func<S, ID2>> otherKey)
+			Expression<Func<S, ID2>> otherKey,
+			bool                     canBeNull = true)
 		{
-			return _entity.Association( prop, thisKey, otherKey );
+			return _entity.Association(prop, thisKey, otherKey, canBeNull);
+		}
+
+		/// <summary>
+		/// Adds association mapping to current column's entity.
+		/// </summary>
+		/// <typeparam name="S">Association member type.</typeparam>
+		/// <typeparam name="ID1">This association side key type.</typeparam>
+		/// <typeparam name="ID2">Other association side key type.</typeparam>
+		/// <param name="prop">Association member getter expression.</param>
+		/// <param name="thisKey">This association key getter expression.</param>
+		/// <param name="otherKey">Other association key getter expression.</param>
+		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
+			[JetBrains.Annotations.NotNull] Expression<Func<T, IEnumerable<S>>> prop,
+			[JetBrains.Annotations.NotNull] Expression<Func<T, ID1>>            thisKey,
+			[JetBrains.Annotations.NotNull] Expression<Func<S, ID2>>            otherKey,
+			                                bool                                canBeNull = true)
+		{
+			return _entity.Association(prop, thisKey, otherKey, canBeNull);
+		}
+
+		/// <summary>
+		/// Adds association mapping to current column's entity.
+		/// </summary>
+		/// <typeparam name="TOther">Other association side type</typeparam>
+		/// <param name="prop">Association member getter expression.</param>
+		/// <param name="predicate">Predicate expression.</param>
+		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Association<TOther>(
+			[JetBrains.Annotations.NotNull] Expression<Func<T, IEnumerable<TOther>>> prop,
+			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther, bool>>        predicate,
+			                                bool                                     canBeNull = true)
+		{
+			return _entity.Association(prop, predicate, canBeNull);
+		}
+
+		/// <summary>
+		/// Adds association mapping to current column's entity.
+		/// </summary>
+		/// <typeparam name="TOther">Other association side type</typeparam>
+		/// <param name="prop">Association member getter expression.</param>
+		/// <param name="predicate">Predicate expression</param>
+		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Association<TOther>(
+			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther>>       prop,
+			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther, bool>> predicate,
+			                                bool                              canBeNull = true)
+		{
+			return _entity.Association(prop, predicate, canBeNull);
+		}
+
+		/// <summary>
+		/// Adds association mapping to current column's entity.
+		/// </summary>
+		/// <typeparam name="TOther">Other association side type</typeparam>
+		/// <param name="prop">Association member getter expression.</param>
+		/// <param name="queryExpression">Query expression.</param>
+		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Association<TOther>(
+			[JetBrains.Annotations.NotNull] Expression<Func<T, IEnumerable<TOther>>>              prop,
+			[JetBrains.Annotations.NotNull] Expression<Func<T, IDataContext, IQueryable<TOther>>> queryExpression,
+			                                bool                                     canBeNull = true)
+		{
+			return _entity.Association(prop, queryExpression, canBeNull);
+		}
+
+		/// <summary>
+		/// Adds association mapping to current column's entity.
+		/// </summary>
+		/// <typeparam name="TOther">Other association side type</typeparam>
+		/// <param name="prop">Association member getter expression.</param>
+		/// <param name="queryExpression">Query expression.</param>
+		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Association<TOther>(
+			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther>>       prop,
+			[JetBrains.Annotations.NotNull] Expression<Func<T, IDataContext, IQueryable<TOther>>> queryExpression,
+			                                bool                              canBeNull = true)
+		{
+			return _entity.Association(prop, queryExpression, canBeNull);
 		}
 
 		/// <summary>

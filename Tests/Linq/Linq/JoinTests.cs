@@ -11,7 +11,7 @@ namespace Tests.Linq
 {
 	using Model;
 
-	public static class EnumerableExtesions
+	public static class EnumerableExtensions
 	{
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TResult>(
 			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
@@ -108,8 +108,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class JoinTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void InnerJoin1(string context)
+		[Test]
+		public void InnerJoin1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -119,8 +119,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID, FirstName = p2.FirstName });
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoin2(string context)
+		[Test]
+		public void InnerJoin2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -130,8 +130,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID, FirstName = p2.FirstName });
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoin3(string context)
+		[Test]
+		public void InnerJoin3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -143,8 +143,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID, FirstName = p2.p2.FirstName, LastName = p2.p3.LastName });
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoin4(string context)
+		[Test]
+		public void InnerJoin4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -155,8 +155,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID, FirstName = p2.FirstName, LastName = p3.LastName });
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoin5(string context)
+		[Test]
+		public void InnerJoin5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -167,8 +167,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID, FirstName = p2.FirstName, LastName = p3.LastName });
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoin6(string context)
+		[Test]
+		public void InnerJoin6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -178,8 +178,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID, FirstName = p2.FirstName });
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoin7(string context)
+		[Test]
+		public void InnerJoin7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -198,8 +198,8 @@ namespace Tests.Linq
 					select t);
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoin8(string context)
+		[Test]
+		public void InnerJoin8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -217,8 +217,8 @@ namespace Tests.Linq
 					select t);
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void InnerJoin9(string context)
+		[Test]
+		public void InnerJoin9([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -232,8 +232,8 @@ namespace Tests.Linq
 					select g);
 		}
 
-		[Test, DataContextSource]
-		public void InnerJoin10(string context)
+		[Test]
+		public void InnerJoin10([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -247,8 +247,8 @@ namespace Tests.Linq
 					select new { p.ParentID, q1.GrandChildID });
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoin1(string context)
+		[Test]
+		public void GroupJoin1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -262,8 +262,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoin2(string context)
+		[Test]
+		public void GroupJoin2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -286,8 +286,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoin3(string context)
+		[Test]
+		public void GroupJoin3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -321,8 +321,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoin4(string context)
+		[Test]
+		public void GroupJoin4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -352,8 +352,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoin5(string context)
+		[Test]
+		public void GroupJoin5([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -369,8 +369,8 @@ namespace Tests.Linq
 					select lj1.First());
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoin51(string context)
+		[Test]
+		public void GroupJoin51([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -396,8 +396,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoin52(string context)
+		[Test]
+		public void GroupJoin52([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -412,8 +412,8 @@ namespace Tests.Linq
 					select lj1.First().ParentID);
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoin53(string context)
+		[Test]
+		public void GroupJoin53([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -428,8 +428,8 @@ namespace Tests.Linq
 					select lj1.Select(_ => _.ParentID).First());
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoin54(string context)
+		[Test]
+		public void GroupJoin54([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -445,8 +445,8 @@ namespace Tests.Linq
 					select new { p1 = lj1.Count(), p2 = lj1.First() });
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoin6(string context)
+		[Test]
+		public void GroupJoin6([DataSources] string context)
 		{
 			var n = 1;
 
@@ -480,8 +480,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void GroupJoin7(string context)
+		[Test]
+		public void GroupJoin7([DataSources(TestProvName.AllFirebird)] string context)
 		{
 			var n = 1;
 
@@ -515,9 +515,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
-		[Test, DataContextSource]
-		public void GroupJoin8(string context)
+		[Test]
+		public void GroupJoin8([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -531,8 +530,8 @@ namespace Tests.Linq
 					select new { Child = g.FirstOrDefault() });
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoin9(string context)
+		[Test]
+		public void GroupJoin9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -640,8 +639,8 @@ namespace Tests.Linq
 						));
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoinAny1(string context)
+		[Test]
+		public void GroupJoinAny1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -653,8 +652,8 @@ namespace Tests.Linq
 					select new { p.ParentID, n = t.Any() });
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoinAny2(string context)
+		[Test]
+		public void GroupJoinAny2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -666,8 +665,8 @@ namespace Tests.Linq
 					select new { p.ParentID, n = t.Select(t1 => t1.ChildID > 0).Any() });
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoinAny3(string context)
+		[Test]
+		public void GroupJoinAny3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -679,8 +678,8 @@ namespace Tests.Linq
 					select new { p.ParentID, n = c.Any() });
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoinAny4(string context)
+		[Test]
+		public void GroupJoinAny4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -690,8 +689,8 @@ namespace Tests.Linq
 					select new { p.ParentID, n = (from c in db.Child where p.ParentID == c.ParentID select c).Any() });
 		}
 
-		[Test, DataContextSource]
-		public void GroupJoinAny5(string context)
+		[Test]
+		public void GroupJoinAny5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -704,8 +703,8 @@ namespace Tests.Linq
 					select new { n = t.Any() });
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoin1(string context)
+		[Test]
+		public void LeftJoin1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -722,8 +721,8 @@ namespace Tests.Linq
 					select new { p, ch });
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoin2(string context)
+		[Test]
+		public void LeftJoin2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -738,8 +737,8 @@ namespace Tests.Linq
 					select new { p, ch });
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoin3(string context)
+		[Test]
+		public void LeftJoin3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -747,8 +746,8 @@ namespace Tests.Linq
 					from c in db.Child select c.Parent);
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoin4(string context)
+		[Test]
+		public void LeftJoin4([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -790,8 +789,8 @@ namespace Tests.Linq
 			[Column] public int ChildID;
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoin5(string context)
+		[Test]
+		public void LeftJoin5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -804,14 +803,14 @@ namespace Tests.Linq
 
 				CountedChild.Count = 0;
 
-				var list = q.ToList();
+				var _ = q.ToList();
 
 				Assert.AreEqual(0, CountedChild.Count);
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoin6(string context)
+		[Test]
+		public void LeftJoin6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -827,8 +826,8 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(577)]
-		[Test, DataContextSource]
-		public void MultipleLeftJoin(string context)
+		[Test]
+		public void MultipleLeftJoin([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -852,8 +851,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SubQueryJoin(string context)
+		[Test]
+		public void SubQueryJoin([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -876,8 +875,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void ReferenceJoin1(string context)
+		[Test]
+		public void ReferenceJoin1([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -885,8 +884,8 @@ namespace Tests.Linq
 					from c in db.Child join g in db.GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID });
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void ReferenceJoin2(string context)
+		[Test]
+		public void ReferenceJoin2([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -898,8 +897,8 @@ namespace Tests.Linq
 					select new { c.ParentID, g.GrandChildID });
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void JoinByAnonymousTest(string context)
+		[Test]
+		public void JoinByAnonymousTest([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -911,8 +910,8 @@ namespace Tests.Linq
 					select new { p.ParentID, c.ChildID });
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void FourTableJoin(string context)
+		[Test]
+		public void FourTableJoin([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -929,8 +928,8 @@ namespace Tests.Linq
 					select new { p, c1Key = c1.ChildID, c2Key = c2.GrandChildID, c3Key = c3.GrandChildID });
 		}
 
-		[Test, DataContextSource]
-		public void ProjectionTest1(string context)
+		[Test]
+		public void ProjectionTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -945,8 +944,8 @@ namespace Tests.Linq
 					select p1.ID1.Value);
 		}
 
-		[Test, DataContextSource]
-		public void LeftJoinTest(string context)
+		[Test]
+		public void LeftJoinTest([DataSources] string context)
 		{
 			// Reproduces the problem described here: http://rsdn.ru/forum/prj.rfd/4221837.flat.aspx
 			using (var db = GetDataContext(context))
@@ -962,8 +961,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void LeftJoinTest2(string context)
+		[Test]
+		public void LeftJoinTest2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			// THIS TEST MUST BE RUN IN RELEASE CONFIGURATION (BECAUSE IT PASSES UNDER DEBUG CONFIGURATION)
 			// Reproduces the problem described here: http://rsdn.ru/forum/prj.rfd/4221837.flat.aspx
@@ -982,8 +981,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Explicit, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012/*, ProviderName.SqlServer2014*/)]
-		public void StackOverflow(string context)
+		[Test, Explicit]
+		public void StackOverflow([IncludeDataSources(
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012/*, ProviderName.SqlServer2014*/)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1005,8 +1006,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
-		public void ApplyJoin(string context)
+		[Test]
+		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1015,12 +1016,12 @@ namespace Tests.Linq
 					from p in new Model.Functions(db).GetParentByID(ch.Parent.ParentID)
 					select p;
 
-				q.ToList();
+				var _ = q.ToList();
 			}
 		}
 
-		[Test, DataContextSource]
-		public void BltIssue257(string context)
+		[Test]
+		public void BltIssue257([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1038,12 +1039,12 @@ namespace Tests.Linq
 						Count             = b.Count()
 					};
 
-				q.ToList();
+				var _ = q.ToList();
 			}
 		}
 
-		[Test, DataContextSource]
-		public void NullJoin1(string context)
+		[Test]
+		public void NullJoin1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1056,8 +1057,8 @@ namespace Tests.Linq
 					select p2);
 		}
 
-		[Test, DataContextSource]
-		public void NullJoin2(string context)
+		[Test]
+		public void NullJoin2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1074,8 +1075,8 @@ namespace Tests.Linq
 					select p2);
 		}
 
-		[Test, DataContextSource]
-		public void NullWhereJoin(string context)
+		[Test]
+		public void NullWhereJoin([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1088,8 +1089,10 @@ namespace Tests.Linq
 					select p2);
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.SqlCe, ProviderName.SqlServer2000)]
-		public void JoinSubQueryCount(string context)
+		[Test]
+		public void JoinSubQueryCount([DataSources(
+			ProviderName.Access, ProviderName.SqlCe, ProviderName.SqlServer2000)]
+			string context)
 		{
 			var n = 1;
 
@@ -1109,8 +1112,8 @@ namespace Tests.Linq
 					);
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe)]
-		public void JoinSubQuerySum(string context)
+		[Test]
+		public void JoinSubQuerySum([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1128,8 +1131,8 @@ namespace Tests.Linq
 					);
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.SqlServer2012)]
-		public void FromLeftJoinTest(string context)
+		[Test]
+		public void FromLeftJoinTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1145,14 +1148,17 @@ namespace Tests.Linq
 					select new { p.ParentID }
 					;
 
-				var list = q.ToList();
+				var _ = q.ToList();
 			}
 		}
 
 		public class AllJoinsSourceAttribute : IncludeDataSourcesAttribute
 		{
-			public AllJoinsSourceAttribute() : base(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
-				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird, ProviderName.PostgreSQL)
+			public AllJoinsSourceAttribute() : base(
+				TestProvName.AllSqlServer2005Plus,
+				TestProvName.AllOracle,
+				TestProvName.AllFirebird,
+				TestProvName.AllPostgreSQL)
 			{
 			}
 		}
@@ -1175,8 +1181,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlLeftJoinSimple1(string context)
+		[Test]
+		public void SqlLeftJoinSimple1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1194,8 +1200,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlLeftJoinSimple2(string context)
+		[Test]
+		public void SqlLeftJoinSimple2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1282,8 +1288,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlLinqLeftJoinSimple1(string context)
+		[Test]
+		public void SqlLinqLeftJoinSimple1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1299,8 +1305,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SqlLinqLeftJoinSimple2(string context)
+		[Test]
+		public void SqlLinqLeftJoinSimple2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1366,11 +1372,11 @@ namespace Tests.Linq
 		}
 
 		// https://imgflip.com/i/2a6oc8
-		[ActiveIssue(Configuration = ProviderName.Sybase       , Details = "Cross-join doesn't work in Sybase")]
-		[ActiveIssue(Configuration = ProviderName.SybaseManaged, Details = "Cross-join doesn't work in Sybase")]
+		[ActiveIssue(
+			Configuration = TestProvName.AllSybase,
+			Details       = "Cross-join doesn't work in Sybase")]
 		[Test]
-		[DataContextSource]
-		public void SqlLinqCrossJoinSubQuery(string context)
+		public void SqlLinqCrossJoinSubQuery([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1510,7 +1516,7 @@ namespace Tests.Linq
 		/// </summary>
 		/// <param name="context"></param>
 		[Test]
-		public void JoinBuildersConflicts([IncludeDataSources(false, ProviderName.SQLiteClassic)] string context)
+		public void JoinBuildersConflicts([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

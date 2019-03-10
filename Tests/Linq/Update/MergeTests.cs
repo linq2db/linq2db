@@ -12,28 +12,13 @@ namespace Tests.xUpdate
 	using Model;
 
 	[TestFixture]
+//	[Order(10101)]
 	public partial class MergeTests : TestBase
 	{
-		public class MergeUpdateWithDeleteDataContextSourceAttribute : IncludeDataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		public class MergeDataContextSourceAttribute : DataSourcesAttribute
 		{
-			public MergeUpdateWithDeleteDataContextSourceAttribute()
-				: base(false, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)
-			{
-			}
-		}
-
-		public class MergeBySourceDataContextSourceAttribute : IncludeDataContextSourceAttribute
-		{
-			public MergeBySourceDataContextSourceAttribute()
-				: base(false, TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)
-			{
-				ParallelScope = ParallelScope.None;
-			}
-		}
-
-		public class MergeDataContextSourceAttribute : DataContextSourceAttribute
-		{
-			static string[] Unsupported = new []
+			static string[] Unsupported =
 			{
 				ProviderName.Access,
 				ProviderName.SqlCe,
@@ -45,7 +30,11 @@ namespace Tests.xUpdate
 				ProviderName.PostgreSQL92,
 				ProviderName.PostgreSQL93,
 				ProviderName.PostgreSQL95,
+				TestProvName.PostgreSQL10,
+				TestProvName.PostgreSQL11,
+				TestProvName.PostgreSQLLatest,
 				ProviderName.MySql,
+				ProviderName.MySqlConnector,
 				TestProvName.MySql57,
 				TestProvName.MariaDB
 			};
@@ -53,11 +42,11 @@ namespace Tests.xUpdate
 			public MergeDataContextSourceAttribute(params string[] except)
 				: base(false, Unsupported.Concat(except).ToArray())
 			{
-				ParallelScope = ParallelScope.None;
 			}
 		}
 
-		public class IdentityInsertMergeDataContextSourceAttribute : IncludeDataContextSourceAttribute
+		[AttributeUsage(AttributeTargets.Parameter)]
+		public class IdentityInsertMergeDataContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			static string[] Supported = new[]
 			{
@@ -65,13 +54,13 @@ namespace Tests.xUpdate
 				ProviderName.SybaseManaged,
 				ProviderName.SqlServer2008,
 				ProviderName.SqlServer2012,
-				ProviderName.SqlServer2014
+				ProviderName.SqlServer2014,
+				TestProvName.SqlAzure
 			};
 
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
 				: base(false, Supported.Except(except).ToArray())
 			{
-				ParallelScope = ParallelScope.None;
 			}
 		}
 
@@ -214,8 +203,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void TestDataGenerationTest(string context)
+		[Test]
+		public void TestDataGenerationTest([DataSources(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

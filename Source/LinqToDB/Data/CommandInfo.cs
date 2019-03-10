@@ -6,6 +6,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -277,8 +278,9 @@ namespace LinqToDB.Data
 			{
 				if (rd.Read())
 				{
-					var objectReader = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText);
-					var isFaulted    = false;
+					var additionalKey = GetCommandAdditionalKey(rd);
+					var objectReader  = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
+					var isFaulted     = false;
 
 					do
 					{
@@ -294,7 +296,7 @@ namespace LinqToDB.Data
 								throw;
 
 							isFaulted    = true;
-							objectReader = GetObjectReader2<T>(DataConnection, rd, DataConnection.Command.CommandText);
+							objectReader = GetObjectReader2<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
 							result       = objectReader(rd);
 						}
 
@@ -386,8 +388,9 @@ namespace LinqToDB.Data
 			{
 				if (await rd.ReadAsync(cancellationToken))
 				{
-					var objectReader = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText);
-					var isFaulted    = false;
+					var additionalKey = GetCommandAdditionalKey(rd);
+					var objectReader  = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
+					var isFaulted     = false;
 
 					do
 					{
@@ -403,7 +406,7 @@ namespace LinqToDB.Data
 								throw;
 
 							isFaulted    = true;
-							objectReader = GetObjectReader2<T>(DataConnection, rd, DataConnection.Command.CommandText);
+							objectReader = GetObjectReader2<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
 							result       = objectReader(rd);
 						}
 
@@ -562,7 +565,8 @@ namespace LinqToDB.Data
 			{
 				if (rd.Read())
 				{
-					var objectReader = GetObjectReader<T>(DataConnection, rd, CommandText);
+					var additionalKey = GetCommandAdditionalKey(rd);
+					var objectReader  = GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey);
 
 #if DEBUG
 					//var value = rd.GetValue(0);
@@ -575,11 +579,11 @@ namespace LinqToDB.Data
 					}
 					catch (InvalidCastException)
 					{
-						return GetObjectReader2<T>(DataConnection, rd, CommandText)(rd);
+						return GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
 					}
 					catch (FormatException)
 					{
-						return GetObjectReader2<T>(DataConnection, rd, CommandText)(rd);
+						return GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
 					}
 				}
 			}
@@ -643,13 +647,14 @@ namespace LinqToDB.Data
 			{
 				if (await rd.ReadAsync(cancellationToken))
 				{
+					var additionalKey = GetCommandAdditionalKey(rd);
 					try
 					{
-						return GetObjectReader<T>(DataConnection, rd, CommandText)(rd);
+						return GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey)(rd);
 					}
 					catch (InvalidCastException)
 					{
-						return GetObjectReader2<T>(DataConnection, rd, CommandText)(rd);
+						return GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
 					}
 				}
 			}
@@ -689,8 +694,9 @@ namespace LinqToDB.Data
 		{
 			if (rd.Read())
 			{
-				var objectReader = GetObjectReader<T>(DataConnection, rd, sql);
-				var isFaulted    = false;
+				var additionalKey = GetCommandAdditionalKey(rd);
+				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
+				var isFaulted     = false;
 
 				do
 				{
@@ -706,7 +712,7 @@ namespace LinqToDB.Data
 							throw;
 
 						isFaulted    = true;
-						objectReader = GetObjectReader2<T>(DataConnection, rd, sql);
+						objectReader = GetObjectReader2<T>(DataConnection, rd, sql, additionalKey);
 						result       = objectReader(rd);
 					}
 
@@ -720,13 +726,14 @@ namespace LinqToDB.Data
 		{
 			if (rd.Read())
 			{
+				var additionalKey = GetCommandAdditionalKey(rd);
 				try
 				{
-					return GetObjectReader<T>(DataConnection, rd, sql)(rd);
+					return GetObjectReader<T>(DataConnection, rd, sql, additionalKey)(rd);
 				}
 				catch (InvalidCastException)
 				{
-					return GetObjectReader2<T>(DataConnection, rd, sql)(rd);
+					return GetObjectReader2<T>(DataConnection, rd, sql, additionalKey)(rd);
 				}
 			}
 
@@ -767,8 +774,9 @@ namespace LinqToDB.Data
 		{
 			if (await rd.ReadAsync(cancellationToken))
 			{
-				var objectReader = GetObjectReader<T>(DataConnection, rd, sql);
-				var isFaulted    = false;
+				var additionalKey = GetCommandAdditionalKey(rd);
+				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
+				var isFaulted     = false;
 
 				do
 				{
@@ -784,7 +792,7 @@ namespace LinqToDB.Data
 							throw;
 
 						isFaulted    = true;
-						objectReader = GetObjectReader2<T>(DataConnection, rd, sql);
+						objectReader = GetObjectReader2<T>(DataConnection, rd, sql, additionalKey);
 						result       = objectReader(rd);
 					}
 
@@ -798,13 +806,14 @@ namespace LinqToDB.Data
 		{
 			if (await rd.ReadAsync(cancellationToken))
 			{
+				var additionalKey = GetCommandAdditionalKey(rd);
 				try
 				{
-					return GetObjectReader<T>(DataConnection, rd, sql)(rd);
+					return GetObjectReader<T>(DataConnection, rd, sql, additionalKey)(rd);
 				}
 				catch (InvalidCastException)
 				{
-					return GetObjectReader2<T>(DataConnection, rd, sql)(rd);
+					return GetObjectReader2<T>(DataConnection, rd, sql, additionalKey)(rd);
 				}
 			}
 
@@ -824,15 +833,17 @@ namespace LinqToDB.Data
 			{
 				var p        = dataConnection.Command.CreateParameter();
 				var dataType = parameter.DataType;
+				var dbType   = parameter.DbType;
+				var size     = parameter.Size;
 				var value    = parameter.Value;
 
 				if (dataType == DataType.Undefined && value != null)
 					dataType = dataConnection.MappingSchema.GetDataType(value.GetType()).DataType;
 
 				if (parameter.Direction != null) p.Direction = parameter.Direction.Value;
-				if (parameter.Size      != null) p.Size      = parameter.Size.     Value;
+				if (size                != null) p.Size      = size.               Value;
 
-				dataConnection.DataProvider.SetParameter(p, parameter.Name, dataType, value);
+				dataConnection.DataProvider.SetParameter(p, parameter.Name, new DbDataType(value != null ? value.GetType() : typeof(object), dataType, dbType, size), value);
 				dataConnection.Command.Parameters.Add(p);
 			}
 		}
@@ -899,6 +910,7 @@ namespace LinqToDB.Data
 
 		static readonly PropertyInfo _dataParameterName     = MemberHelper.PropertyOf<DataParameter>(p => p.Name);
 		static readonly PropertyInfo _dataParameterDataType = MemberHelper.PropertyOf<DataParameter>(p => p.DataType);
+		static readonly PropertyInfo _dataParameterDbType   = MemberHelper.PropertyOf<DataParameter>(p => p.DbType);
 		static readonly PropertyInfo _dataParameterValue    = MemberHelper.PropertyOf<DataParameter>(p => p.Value);
 
 		static DataParameter[] GetDataParameters(DataConnection dataConnection, object parameters)
@@ -929,9 +941,9 @@ namespace LinqToDB.Data
 							Expression.Assign(obj, Expression.Convert(p, type)),
 							Expression.NewArrayInit(
 								typeof(DataParameter),
-								td.Columns.Select(m =>
+								td.Columns.Select(column =>
 								{
-									if (m.MemberType == typeof(DataParameter))
+									if (column.MemberType == typeof(DataParameter))
 									{
 										var pobj = Expression.Parameter(typeof(DataParameter));
 
@@ -939,17 +951,20 @@ namespace LinqToDB.Data
 											new[] { pobj },
 											new Expression[]
 											{
-												Expression.Assign(pobj, Expression.PropertyOrField(obj, m.MemberName)),
+												Expression.Assign(pobj, Expression.PropertyOrField(obj, column.MemberName)),
 												Expression.MemberInit(
 													Expression.New(typeof(DataParameter)),
 													Expression.Bind(
 														_dataParameterName,
 														Expression.Coalesce(
 															Expression.MakeMemberAccess(pobj, _dataParameterName),
-															Expression.Constant(m.ColumnName))),
+															Expression.Constant(column.ColumnName))),
 													Expression.Bind(
 														_dataParameterDataType,
 														Expression.MakeMemberAccess(pobj, _dataParameterDataType)),
+													Expression.Bind(
+														_dataParameterDbType,
+														Expression.MakeMemberAccess(pobj, _dataParameterDbType)),
 													Expression.Bind(
 														_dataParameterValue,
 														Expression.Convert(
@@ -958,8 +973,8 @@ namespace LinqToDB.Data
 											});
 									}
 
-									var memberType  = m.MemberType.ToNullableUnderlying();
-									var valueGetter = Expression.PropertyOrField(obj, m.MemberName) as Expression;
+									var memberType  = column.MemberType.ToNullableUnderlying();
+									var valueGetter = Expression.PropertyOrField(obj, column.MemberName) as Expression;
 									var mapper      = dataConnection.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
 
 									if (mapper != null)
@@ -967,13 +982,13 @@ namespace LinqToDB.Data
 										return Expression.Call(
 											MemberHelper.MethodOf(() => PrepareDataParameter(null, null)),
 											mapper.GetBody(valueGetter),
-											Expression.Constant(m.ColumnName));
+											Expression.Constant(column.ColumnName));
 									}
 
 									if (memberType.IsEnumEx())
 									{
 										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType);
-										var convExpr = dataConnection.MappingSchema.GetConvertExpression(m.MemberType, mapType);
+										var convExpr = dataConnection.MappingSchema.GetConvertExpression(column.MemberType, mapType);
 
 										memberType  = mapType;
 										valueGetter = convExpr.GetBody(valueGetter);
@@ -983,10 +998,13 @@ namespace LinqToDB.Data
 										Expression.New(typeof(DataParameter)),
 										Expression.Bind(
 											_dataParameterName,
-											Expression.Constant(m.ColumnName)),
+											Expression.Constant(column.ColumnName)),
 										Expression.Bind(
 											_dataParameterDataType,
-											Expression.Constant(dataConnection.MappingSchema.GetDataType(memberType).DataType)),
+											Expression.Constant(column.DataType != DataType.Undefined ? column.DataType : dataConnection.MappingSchema.GetDataType(memberType).DataType)),
+										Expression.Bind(
+											_dataParameterDbType,
+											Expression.Constant(column.DbType, typeof(string))),
 										Expression.Bind(
 											_dataParameterValue,
 											Expression.Convert(valueGetter, typeof(object))));
@@ -1017,15 +1035,20 @@ namespace LinqToDB.Data
 
 		struct QueryKey : IEquatable<QueryKey>
 		{
-			public QueryKey(Type type, int configID, string sql)
+			public QueryKey(Type type, int configID, string sql, [CanBeNull] string additionalKey)
 			{
-				_type     = type;
-				_configID = configID;
-				_sql      = sql;
+				_type          = type;
+				_configID      = configID;
+				_sql           = sql;
+				_additionalKey = additionalKey;
 
 				unchecked
 				{
-					_hashCode = -1521134295 * (-1521134295 * (-1521134295 * 639348056 + _type.GetHashCode()) + _configID.GetHashCode()) + _sql.GetHashCode();
+					var hashCode = _type.GetHashCode();
+					hashCode = (hashCode * 397) ^ _configID;
+					hashCode = (hashCode * 397) ^ (_sql?.GetHashCode() ?? 0);
+					hashCode = (hashCode * 397) ^ (_additionalKey?.GetHashCode() ?? 0);
+					_hashCode = hashCode;
 				}
 			}
 
@@ -1038,6 +1061,7 @@ namespace LinqToDB.Data
 			readonly Type   _type;
 			readonly int    _configID;
 			readonly string _sql;
+			readonly string _additionalKey;
 
 			public override int GetHashCode()
 			{
@@ -1047,9 +1071,10 @@ namespace LinqToDB.Data
 			public bool Equals(QueryKey other)
 			{
 				return
-					_type     == other._type &&
-					_sql      == other._sql  &&
-					_configID == other._configID
+					_type          == other._type   &&
+					_sql           == other._sql    &&
+					_additionalKey == other._additionalKey &&
+					_configID      == other._configID
 					;
 			}
 		}
@@ -1065,9 +1090,31 @@ namespace LinqToDB.Data
 			_parameterReaders.Clear();
 		}
 
-		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader, string sql)
+		string GetCommandAdditionalKey(IDataReader rd)
 		{
-			var key = new QueryKey(typeof(T), dataConnection.ID, sql);
+			return DataConnection.Command.CommandType == CommandType.StoredProcedure
+				? GetFieldsKey(rd)
+				: null;
+		}
+
+		static string GetFieldsKey(IDataReader dataReader)
+		{
+			var sb = new StringBuilder();
+
+			for (int i = 0; i < dataReader.FieldCount; i++)
+			{
+				sb.Append(dataReader.GetName(i))
+					.Append(',')
+					.Append(dataReader.GetFieldType(i))
+					.Append(';');
+			}
+
+			return sb.ToString();
+		}
+
+		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string additionalKey)
+		{
+			var key = new QueryKey(typeof(T), dataConnection.ID, sql, additionalKey);
 
 			if (!_objectReaders.TryGetValue(key, out var func))
 			{
@@ -1078,9 +1125,9 @@ namespace LinqToDB.Data
 			return (Func<IDataReader,T>)func;
 		}
 
-		static Func<IDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader, string sql)
+		static Func<IDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string additionalKey)
 		{
-			var key = new QueryKey(typeof(T), dataConnection.ID, sql);
+			var key = new QueryKey(typeof(T), dataConnection.ID, sql, additionalKey);
 
 			var func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
 				new ConvertFromDataReaderExpression(type, idx, dataReaderExpr, dataConnection).Reduce());
@@ -1108,7 +1155,7 @@ namespace LinqToDB.Data
 			{
 				var td = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 
-				if (td.InheritanceMapping.Count > 0)
+				if (td.InheritanceMapping.Count > 0 || td.HasComplexColumns)
 				{
 					var    readerBuilder = new RecordReaderBuilder(dataConnection, typeof(T), dataReader);
 					return readerBuilder.BuildReaderFunction<T>();

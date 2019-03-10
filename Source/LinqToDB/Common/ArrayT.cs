@@ -7,7 +7,7 @@ namespace LinqToDB.Common
 	/// <summary>
 	/// Empty array instance helper.
 	/// </summary>
-	/// <typeparam name="T">Aray element type.</typeparam>
+	/// <typeparam name="T">Array element type.</typeparam>
 	[PublicAPI]
 	public static class Array<T>
 	{

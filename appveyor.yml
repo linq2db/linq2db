@@ -10,8 +10,8 @@ branches:
     - /dev.*/
 
 environment:
-  assemblyVersion: 2.6.0
-  packageVersion: 2.6.0
+  assemblyVersion: 2.7.0
+  packageVersion: 2.7.0
   docfxuser: "ili"
   docfxmail: "docfx@linq2db.com"
   docfxsecret:
@@ -64,7 +64,7 @@ before_build:
     }
 
     .\Build\AppVeyor.FixVersionProps.ps1  -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
-    .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion
+    .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion $env:APPVEYOR_REPO_BRANCH
 
     $startPath = "$($env:appveyor_build_folder)\Data"
     $sqlInstance = "(local)\SQL2014"
@@ -85,8 +85,8 @@ before_build:
     iex "& $cmd"
 
     # Access ACE provider
-    (New-Object Net.WebClient).DownloadFile("https://download.microsoft.com/download/f/d/8/fd8c20d8-e38a-48b6-8691-542403b91da1/AccessDatabaseEngine.exe", "$env:appveyor_build_folder\AccessDatabaseEngine.exe")
-    .\AccessDatabaseEngine.exe /quiet
+    #(New-Object Net.WebClient).DownloadFile("https://download.microsoft.com/download/f/d/8/fd8c20d8-e38a-48b6-8691-542403b91da1/AccessDatabaseEngine.exe", "$env:appveyor_build_folder\AccessDatabaseEngine.exe")
+    #.\AccessDatabaseEngine.exe /quiet
 
     # docfx build & deploy
     if ($env:docfxsecret)

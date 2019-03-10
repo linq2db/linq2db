@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
@@ -47,9 +48,11 @@ namespace LinqToDB.DataProvider
 				lock (SyncRoot)
 					if (_connectionType == null)
 					{
-						_connectionType = Type.GetType(ConnectionTypeName, true);
+						var connectionType = Type.GetType(ConnectionTypeName, true);
 
-						OnConnectionTypeCreated(_connectionType);
+						OnConnectionTypeCreated(connectionType);
+
+						_connectionType = connectionType;
 					}
 
 			return _connectionType;
@@ -88,18 +91,22 @@ namespace LinqToDB.DataProvider
 				lock (SyncRoot)
 					if (_connectionType == null)
 					{
+						Type connectionType;
+
 						if (DbFactoryProviderName == null)
-							_connectionType = Type.GetType(ConnectionTypeName, true);
+							connectionType = Type.GetType(ConnectionTypeName, true);
 						else
 						{
-							_connectionType = Type.GetType(ConnectionTypeName, false);
+							connectionType = Type.GetType(ConnectionTypeName, false);
 
-							if (_connectionType == null)
+							if (connectionType == null)
 								using (var db = DbProviderFactories.GetFactory(DbFactoryProviderName).CreateConnection())
-									_connectionType = db.GetType();
+									connectionType = db.GetType();
 						}
 
-						OnConnectionTypeCreated(_connectionType);
+						OnConnectionTypeCreated(connectionType);
+
+						_connectionType = connectionType;
 					}
 
 			return _connectionType;
@@ -130,6 +137,25 @@ namespace LinqToDB.DataProvider
 		}
 
 		#region Expression Helpers
+
+		protected Action<IDbDataParameter, TResult> GetSetParameter<TResult>(
+			Type connectionType,
+			string parameterTypeName, string propertyName, Type dbType)
+		{
+			var pType = connectionType.AssemblyEx().GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+
+			var p = Expression.Parameter(typeof(IDbDataParameter));
+			var v = Expression.Parameter(typeof(TResult));
+			var l = Expression.Lambda<Action<IDbDataParameter, TResult>>(
+				Expression.Assign(
+					Expression.PropertyOrField(
+						Expression.Convert(p, pType),
+						propertyName),
+					Expression.Convert(v, dbType)),
+				p, v);
+
+			return l.Compile();
+		}
 
 		protected Action<IDbDataParameter> GetSetParameter(
 			Type connectionType,
@@ -185,16 +211,34 @@ namespace LinqToDB.DataProvider
 		// {
 		//     ReaderExpressions[new ReaderInfo { FieldType = typeof(T), DataTypeName = dataTypeName }] = expr;
 		// }
-		protected void SetField(Type fieldType, string dataTypeName, string methodName)
+		protected bool SetField(Type fieldType, string dataTypeName, string methodName, bool throwException = true)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter      = Expression.Parameter(typeof(int),    "i");
 
+			MethodCallExpression call;
+
+			if (throwException)
+			{
+				call = Expression.Call(dataReaderParameter, methodName, null, indexParameter);
+			}
+			else
+			{
+				var methodInfo = DataReaderType.GetMethodsEx().FirstOrDefault(m => m.Name == methodName);
+
+				if (methodInfo == null)
+					return false;
+
+				call = Expression.Call(dataReaderParameter, methodInfo, indexParameter);
+			}
+
 			ReaderExpressions[new ReaderInfo { FieldType = fieldType, DataTypeName = dataTypeName }] =
 				Expression.Lambda(
-					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
+					call,
 					dataReaderParameter,
 					indexParameter);
+
+			return true;
 		}
 
 		// SetProviderField<MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
@@ -239,17 +283,34 @@ namespace LinqToDB.DataProvider
 		// {
 		//     ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
 		// }
-		protected void SetProviderField(Type toType, Type fieldType, string methodName)
+		protected bool SetProviderField(Type toType, Type fieldType, string methodName, bool throwException = true)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter      = Expression.Parameter(typeof(int),    "i");
-			var methodCall          = Expression.Call(dataReaderParameter, methodName, null, indexParameter) as Expression;
+
+			Expression methodCall;
+
+			if (throwException)
+			{
+				methodCall = Expression.Call(dataReaderParameter, methodName, null, indexParameter);
+			}
+			else
+			{
+				var methodInfo = DataReaderType.GetMethodsEx().FirstOrDefault(m => m.Name == methodName);
+
+				if (methodInfo == null)
+					return false;
+
+				methodCall = Expression.Call(dataReaderParameter, methodInfo, indexParameter);
+			}
 
 			if (methodCall.Type != toType)
 				methodCall = Expression.Convert(methodCall, toType);
 
 			ReaderExpressions[new ReaderInfo { ToType = toType, ProviderFieldType = fieldType }] =
 				Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+
+			return true;
 		}
 
 		#endregion

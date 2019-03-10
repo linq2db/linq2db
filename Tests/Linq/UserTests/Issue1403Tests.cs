@@ -42,8 +42,8 @@ namespace Tests.UserTests
 			public string EventDescription { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<MyClass1>())
@@ -61,8 +61,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<MyClass2>())
@@ -80,8 +80,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<MyClass3>())

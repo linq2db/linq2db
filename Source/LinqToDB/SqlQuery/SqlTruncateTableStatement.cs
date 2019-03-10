@@ -31,9 +31,9 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Table)?.Walk(skipColumns, func);
+			((ISqlExpressionWalkable)Table)?.Walk(options, func);
 
 			return null;
 		}
@@ -43,7 +43,7 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			var clone = new SqlDropTableStatement();
+			var clone = new SqlTruncateTableStatement();
 
 			if (Table != null)
 				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);

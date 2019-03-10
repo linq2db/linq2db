@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -393,6 +394,25 @@ namespace LinqToDB.Expressions
 					return eq1.EqualsTo(eq2, info);
 				}
 			}
+			else if (expr1.Value is IEnumerable list1 && expr2.Value is IEnumerable list2)
+			{
+				var enum1 = list1.GetEnumerator();
+				var enum2 = list2.GetEnumerator();
+				using (enum1 as IDisposable)
+				using (enum2 as IDisposable)
+				{
+					while (enum1.MoveNext())
+					{
+						if (!enum2.MoveNext() || !object.Equals(enum1.Current, enum2.Current))
+							return false;
+					}
+
+					if (enum2.MoveNext())
+						return false;
+				}
+
+				return true;
+			}
 
 			return !info.CompareConstantValues || expr1.Value == expr2.Value;
 		}
@@ -433,10 +453,7 @@ namespace LinqToDB.Expressions
 
 					if (dependentAttribute != null)
 					{
-						var obj1 = expr1.Arguments[i].EvaluateExpression();
-						var obj2 = expr2.Arguments[i].EvaluateExpression();
-
-						if (!dependentAttribute.ObjectsEqual(obj1, obj2))
+						if (!dependentAttribute.ExpressionsEqual(expr1.Arguments[i], expr2.Arguments[i], (e1, e2) => e1.EqualsTo(e2, info)))
 							return false;
 					}
 					else
@@ -948,6 +965,13 @@ namespace LinqToDB.Expressions
 			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions);
 		}
 
+		public static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)
+		{
+			var type = method.Method.DeclaringType;
+
+			return type == typeof(AsyncExtensions);
+		}
+
 		public static bool IsAggregate(this MethodCallExpression methodCall, MappingSchema mapping)
 		{
 			if (methodCall.IsQueryable(AggregationBuilder.MethodNames))
@@ -972,6 +996,16 @@ namespace LinqToDB.Expressions
 			if (method.IsQueryable())
 				foreach (var name in names)
 					if (method.Method.Name == name)
+						return true;
+
+			return false;
+		}
+
+		public static bool IsAsyncExtension(this MethodCallExpression method, params string[] names)
+		{
+			if (method.IsAsyncExtension())
+				foreach (var name in names)
+					if (method.Method.Name == name + "Async")
 						return true;
 
 			return false;
@@ -1028,6 +1062,20 @@ namespace LinqToDB.Expressions
 			return expression;
 		}
 
+		/// <summary>
+		/// Returns part of expression based on its level.
+		/// </summary>
+		/// <param name="expression">Base expression that needs decomposition.</param>
+		/// <param name="mapping">Maping schema.</param>
+		/// <param name="level">Level that should be to be extracted.</param>
+		/// <returns>Exstracted expression.</returns>
+		/// <example>
+		/// This sample shows what method returns for expression [c.ParentId].
+		/// <code>
+		/// expression.GetLevelExpression(mapping, 0) == [c]
+		/// expression.GetLevelExpression(mapping, 1) == [c.ParentId]
+		/// </code>
+		/// </example>
 		public static Expression GetLevelExpression(this Expression expression, MappingSchema mapping, int level)
 		{
 			var current = 0;

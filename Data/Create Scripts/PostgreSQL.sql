@@ -34,7 +34,7 @@ GO
 
 
 CREATE TABLE "Person"
-( 
+(
 	--PersonID   INTEGER PRIMARY KEY DEFAULT NEXTVAL('Seq'),
 	"PersonID"   SERIAL PRIMARY KEY,
 	"FirstName"  VARCHAR(50) NOT NULL,
@@ -50,7 +50,7 @@ INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Tester', 'Test
 GO
 INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Jane',   'Doe',       'F')
 GO
-INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Jürgen', 'König',     'M')
+INSERT INTO "Person" ("FirstName", "LastName", "MiddleName", "Gender") VALUES ('Jürgen', 'König', 'Ko', 'M')
 GO
 -- Doctor Table Extension
 
@@ -168,6 +168,9 @@ GO
 DROP TABLE IF EXISTS "SequenceTest3"
 GO
 
+DROP TABLE IF EXISTS "SequenceCustomNamingTest"
+GO
+
 DROP SEQUENCE IF EXISTS SequenceTestSeq
 GO
 
@@ -179,6 +182,10 @@ GO
 
 CREATE SEQUENCE "SequenceTest2_ID_seq" INCREMENT 1 START 1
 GO
+
+DROP SEQUENCE IF EXISTS test_schema."SequenceCustomNamingTest__seq__"
+GO
+
 
 CREATE TABLE "SequenceTest1"
 (
@@ -200,7 +207,6 @@ CREATE TABLE "SequenceTest3"
 	"Value" VARCHAR(50)
 )
 GO
-
 
 DROP TABLE IF EXISTS "TestIdentity"
 GO
@@ -270,11 +276,22 @@ CREATE TABLE "AllTypes"
 	"inetDataType"        inet                     NULL,
 	"cidrDataType"        cidr                     NULL,
 	"macaddrDataType"     macaddr                  NULL,
-	--PGSQL 10+
-	--"macaddr8DataType"  macaddr8                 NULL,
+-- SKIP PostgreSQL.9.2 BEGIN
+-- SKIP PostgreSQL.9.3 BEGIN
+-- SKIP PostgreSQL.9.5 BEGIN
+-- SKIP PostgreSQL BEGIN
+	"macaddr8DataType"  macaddr8                   NULL,
+-- SKIP PostgreSQL.9.2 END
+-- SKIP PostgreSQL.9.3 END
+-- SKIP PostgreSQL.9.5 END
+-- SKIP PostgreSQL END
 
 	"jsonDataType"        json                     NULL,
-	"jsonbDataType"       jsonb                    NULL,
+-- SKIP PostgreSQL.9.2 BEGIN
+-- SKIP PostgreSQL.9.3 BEGIN
+"jsonbDataType"       jsonb                    NULL,
+-- SKIP PostgreSQL.9.2 END
+-- SKIP PostgreSQL.9.3 END
 
 	"xmlDataType"         xml                      NULL,
 	"varBitDataType"      varbit                   NULL
@@ -429,6 +446,18 @@ GO
 
 CREATE SEQUENCE test_schema."TestSchemaIdentity_ID_seq" INCREMENT 1 START 1
 GO
+
+
+CREATE SEQUENCE test_schema."SequenceCustomNamingTest__seq__" INCREMENT 1 START 1
+GO
+
+CREATE TABLE "SequenceCustomNamingTest"
+(
+	"ID"    INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema."SequenceCustomNamingTest__seq__"'),
+	"Value" VARCHAR(50)
+)
+GO
+
 
 CREATE TABLE test_schema."TestSchemaIdentity" (
 	"ID" INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema."TestSchemaIdentity_ID_seq"')

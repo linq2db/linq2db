@@ -22,11 +22,8 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SybaseTests : TestBase
 	{
-		const string CurrentProvider     = ProviderName.Sybase;
-		const string CurrentProviderCore = ProviderName.SybaseManaged;
-
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestParameters(string context)
+		[Test]
+		public void TestParameters([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -56,8 +53,8 @@ namespace Tests.DataProvider
 			Assert.That(actualValue, Is.EqualTo(expectedValue));
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestDataTypes(string context)
+		[Test]
+		public void TestDataTypes([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -152,8 +149,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType, "bit");
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestNumerics(string context)
+		[Test]
+		public void TestNumerics([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -206,8 +203,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestDate(string context)
+		[Test]
+		public void TestDate([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -220,8 +217,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestSmallDateTime(string context)
+		[Test]
+		public void TestSmallDateTime([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -235,8 +232,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestDateTime(string context)
+		[Test]
+		public void TestDateTime([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -251,8 +248,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestTimeSpan(string context)
+		[Test]
+		public void TestTimeSpan([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -268,8 +265,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestChar(string context)
+		[Test]
+		public void TestChar([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -312,8 +309,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestString(string context)
+		[Test]
+		public void TestString([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -365,14 +362,14 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void TestUnicodeString(
-			[IncludeDataSources(false, CurrentProvider, CurrentProviderCore)] string context,
-			[ValueSource(nameof(StringTestCases))] Tuple<string, string> testCase)
+			[IncludeDataSources(TestProvName.AllSybase)] string context,
+			[ValueSource(nameof(StringTestCases))] Tuple<string,string> testCase)
 		{
 			using (var conn = new DataConnection(context))
 			{
 				var value = testCase.Item1;
 				var literal = testCase.Item2;
-				
+
 				// test raw literals queries
 				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as char)"),               Is.EqualTo(value));
 				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as varchar)"),            Is.EqualTo(value));
@@ -397,8 +394,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestBinary(string context)
+		[Test]
+		public void TestBinary([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			var arr1 = new byte[] { 57, 48        };
 			var arr2 = new byte[] { 57, 48, 0, 0  };
@@ -428,8 +425,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestGuid(string context)
+		[Test]
+		public void TestGuid([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -448,8 +445,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestTimestamp(string context)
+		[Test]
+		public void TestTimestamp([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -460,8 +457,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestXml(string context)
+		[Test]
+		public void TestXml([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -486,8 +483,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestEnum1(string context)
+		[Test]
+		public void TestEnum1([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -498,8 +495,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestEnum2(string context)
+		[Test]
+		public void TestEnum2([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -512,8 +509,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void BulkCopyLinqTypes(string context)
+		[Test]
+		public void BulkCopyLinqTypes([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{

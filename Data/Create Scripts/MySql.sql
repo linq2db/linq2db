@@ -1,5 +1,4 @@
-﻿
-DROP TABLE IF EXISTS Doctor
+﻿DROP TABLE IF EXISTS Doctor
 GO
 DROP TABLE IF EXISTS Patient
 GO
@@ -51,7 +50,7 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M')
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M')
 GO
 
 CREATE OR REPLACE VIEW PersonView AS SELECT * FROM Person
@@ -192,8 +191,10 @@ CREATE TABLE AllTypes
 	timeDataType        time                         NULL,
 	yearDataType        year                         NULL,
 -- SKIP MySql57 BEGIN
+-- SKIP MySqlConnector BEGIN
 	year2DataType       year(2)                      NULL,
 -- SKIP MySql57 END
+-- SKIP MySqlConnector END
 -- SKIP MySql BEGIN
 -- SKIP MariaDB BEGIN
 	year2DataType       year(4)                      NULL,
@@ -426,6 +427,8 @@ BEGIN
 	SELECT * FROM Person;
 END
 GO
+SET GLOBAL log_bin_trust_function_creators = 1;
+GO
 CREATE FUNCTION TestFunction(param INT)
 RETURNS VARCHAR(10)
 BEGIN
@@ -448,4 +451,22 @@ CREATE PROCEDURE `TestOutputParametersWithoutTableProcedure`(
 BEGIN
 	SELECT 123 INTO aOutParam;
 END
+GO
+
+DROP TABLE IF EXISTS FullTextIndexTest
+GO
+
+CREATE TABLE FullTextIndexTest (
+	id int UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
+	TestField TEXT(100),
+	FULLTEXT idx (TestField)
+)
+-- SKIP MySql57 BEGIN
+-- SKIP MariaDB BEGIN
+-- SKIP MySqlConnector BEGIN
+	ENGINE=MyISAM
+-- SKIP MySql57 END
+-- SKIP MariaDB END
+-- SKIP MySqlConnector END
+;
 GO

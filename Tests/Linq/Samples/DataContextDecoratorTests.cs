@@ -81,6 +81,8 @@ namespace Tests.Samples
 			{
 				return _context.IsDBNullAllowed(reader, idx);
 			}
+
+			public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
 		}
 
 		public class Entity

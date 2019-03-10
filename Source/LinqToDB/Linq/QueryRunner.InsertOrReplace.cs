@@ -16,6 +16,11 @@ namespace LinqToDB.Linq
 		{
 			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
+			static InsertOrReplace()
+			{
+				Linq.Query.CacheCleaners.Add(() => _queryCache.Clear());
+			}
+
 			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
@@ -123,7 +128,9 @@ namespace LinqToDB.Linq
 
 				var type = GetType<T>(obj, dataContext);
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type };
-				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schema, type));
+				var ei   = Common.Configuration.Linq.DisableQueryCache
+					? CreateQuery(dataContext, tableName, databaseName, schema, type)
+					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schema, type));
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -135,7 +142,9 @@ namespace LinqToDB.Linq
 
 				var type = GetType<T>(obj, dataContext);
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type };
-				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName, type));
+				var ei   = Common.Configuration.Linq.DisableQueryCache
+					? CreateQuery(dataContext, tableName, schema, databaseName, type)
+					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName, type));
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 
@@ -162,6 +171,8 @@ namespace LinqToDB.Linq
 							p.Expression,
 							p.Accessor,
 							p.DataTypeAccessor,
+							p.DbTypeAccessor,
+							p.SizeAccessor,
 							dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null
 						))
 					.Where(p => p.SqlParameter != null)

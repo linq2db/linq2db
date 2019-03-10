@@ -1,18 +1,18 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"                                 #>
 <#@ output extension=".generated.cs"                                                        #>
-<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"             #>
-<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude"           #>
-<#@ include file="..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude"             #>
+<#@ include file="Shared.ttinclude"                                                         #>
 <#@ include file="SqlServer.ttinclude"                                                      #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\Microsoft.SqlServer.Types.dll"  #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\linq2db.dll"                    #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"             #>
+<#@ include file="..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude"             #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\Microsoft.SqlServer.Types.dll" #>
 <#
 //	NamespaceName   = "DataContext";
 //	DataContextName = "NorthwindDB";
 	DatabaseName    = null;//"Northwind";
 	GenerateDatabaseName = true;
 	OneToManyAssociationType = "List<{0}>";
-
+	GenerateSchemaAsType = true;
+	GenerateAssociationExtensions = true;
 //	BaseEntityClass = "object";
 
 //	GenerateBackReferences = false;
@@ -25,11 +25,12 @@
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
 
-	GenerateSchemaAsType = true;
+	//GenerateSchemaAsType = true;
 
 	SchemaNameMapping.Add("TestSchema", "MySchema");
 
-	LoadSqlServerMetadata(@"Server=DBHost\SQLSERVER2012;Database=Northwind;User Id=sa;Password=TestPassword");
+	GenerateProcedureResultAsList = true;
+	LoadSqlServerMetadata(GetConnectionString("Northwind"));
 
 	Tables["Order Details"].Columns["OrderID"]. MemberName = "ID";
 
@@ -47,6 +48,6 @@
 
 	//GenerateConstructors = false;
 
-	LoadSqlServerMetadata(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.2014"));
 	GenerateModel();
 #>
