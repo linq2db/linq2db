@@ -51,7 +51,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableNameImmutable([SQLiteDataSources] string context)
+		public void TableNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -66,7 +66,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatabaseNameImmutable([SQLiteDataSources] string context)
+		public void DatabaseNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -81,7 +81,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SchemaNameImmutable([SQLiteDataSources] string context)
+		public void SchemaNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
