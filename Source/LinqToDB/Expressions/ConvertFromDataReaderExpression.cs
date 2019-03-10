@@ -24,7 +24,7 @@ namespace LinqToDB.Expressions
 		readonly int          _idx;
 		readonly Expression   _dataReaderParam;
 		readonly IDataContext _dataContext;
-		readonly Type         _type;
+		         Type         _type;
 
 		public override Type           Type      => _type;
 		public override ExpressionType NodeType  => ExpressionType.Extension;
@@ -212,5 +212,17 @@ namespace LinqToDB.Expressions
 		{
 			return $"ConvertFromDataReaderExpression<{_type.Name}>({_idx})";
 		}
+
+		public ConvertFromDataReaderExpression MakeNullable()
+		{
+			if (Type.IsValueTypeEx())
+			{
+				var type = typeof(Nullable<>).MakeGenericType(Type);
+				return new ConvertFromDataReaderExpression(type, _idx, _dataReaderParam, _dataContext);
+			}
+
+			return this;
+		}
+
 	}
 }
