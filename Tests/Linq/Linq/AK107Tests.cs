@@ -44,9 +44,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UserInsert([IncludeDataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged)]
-			string context)
+		public void UserInsert([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -56,8 +54,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UserInsertWithIdentity([IncludeDataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged)]
+		public void UserInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -68,8 +65,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UserLinqInsert([IncludeDataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged)]
+		public void UserLinqInsert([IncludeDataSources(TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -80,8 +76,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UserLinqInsertWithIdentity([IncludeDataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged)]
+		public void UserLinqInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -92,8 +87,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContractInsert([IncludeDataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged)]
+		public void ContractInsert([IncludeDataSources(TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -108,8 +102,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContractInsertWithIdentity([IncludeDataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged)]
+		public void ContractInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -127,8 +120,7 @@ namespace Tests.Linq
 		static long ContractSequence { get; set;  }
 
 		[Test]
-		public void ContractLinqInsert([IncludeDataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged)]
+		public void ContractLinqInsert([IncludeDataSources(TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -149,8 +141,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContractLinqInsertWithIdentity([IncludeDataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged)]
+		public void ContractLinqInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -165,8 +156,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContractLinqManyInsert([IncludeDataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged)]
+		public void ContractLinqManyInsert([IncludeDataSources(TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

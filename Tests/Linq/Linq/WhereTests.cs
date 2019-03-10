@@ -29,7 +29,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MakeSubQueryWithParam([DataSources(ProviderName.Firebird)] string context)
+		public void MakeSubQueryWithParam([DataSources] string context)
 		{
 			var n = 1;
 
@@ -643,8 +643,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CheckLeftJoin3([DataSources(
-			ProviderName.Firebird, ProviderName.Sybase, ProviderName.Access)]
+		public void CheckLeftJoin3([DataSources(ProviderName.Access)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -717,7 +716,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CheckNull3([DataSources(ProviderName.SqlCe, ProviderName.Firebird)] string context)
+		public void CheckNull3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			int? n = 1;
 
@@ -1273,9 +1272,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereBooleanTest2(
-			[DataSources(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Firebird, TestProvName.Firebird3)]
-			string context)
+		public void WhereBooleanTest2([DataSources(TestProvName.AllSybase, TestProvName.AllFirebird)] string context)
 		{
 			void AreEqualLocal(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases,bool>> predicate)
 			{

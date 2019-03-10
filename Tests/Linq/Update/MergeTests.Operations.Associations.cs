@@ -12,7 +12,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test, Parallelizable(ParallelScope.None)]
-		public void OtherSourceAssociationInDeleteBySourcePredicate([MergeBySourceDataContextSource] string context)
+		public void OtherSourceAssociationInDeleteBySourcePredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -300,7 +300,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void OtherSourceAssociationInUpdateBySource([MergeBySourceDataContextSource] string context)
+		public void OtherSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -342,7 +342,7 @@ namespace Tests.xUpdate
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void OtherSourceAssociationInUpdateBySourcePredicate(
-			[MergeBySourceDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -428,7 +428,7 @@ namespace Tests.xUpdate
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void SameSourceAssociationInDeleteBySourcePredicate(
-			[MergeBySourceDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -720,7 +720,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void SameSourceAssociationInUpdateBySource([MergeBySourceDataContextSource] string context)
+		public void SameSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -763,7 +763,7 @@ namespace Tests.xUpdate
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void SameSourceAssociationInUpdateBySourcePredicate(
-			[MergeBySourceDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -885,7 +885,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceAssociationInUpdateWithDeleteDeletePredicate(
-			[MergeUpdateWithDeleteDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -920,7 +920,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void OtherSourceAssociationInUpdateWithDeleteDeletePredicate(
-			[MergeUpdateWithDeleteDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())

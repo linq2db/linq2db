@@ -104,7 +104,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue("Unsupported column datatype", Configurations = new[] { ProviderName.OracleNative })]
+		[ActiveIssue("Unsupported column datatype for BulkCopyType.ProviderSpecific", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void KeepIdentity_SkipOnInsertFalse(
 			[DataSources(false)]string context,

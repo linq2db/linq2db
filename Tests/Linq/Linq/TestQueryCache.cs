@@ -28,7 +28,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void BasicOperations([IncludeDataSources(false, ProviderName.SQLiteMS)] string context, [Values("Value1", "Value2")] string columnName)
+		public void BasicOperations([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values("Value1", "Value2")] string columnName)
 		{
 			var ms = CreateMappingSchema(columnName);
 
@@ -58,7 +58,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task BasicOperationsAsync([IncludeDataSources(false, ProviderName.SQLiteMS)] string context, [Values("Value1", "Value2")] string columnName)
+		public async Task BasicOperationsAsync([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values("Value1", "Value2")] string columnName)
 		{
 			var ms = CreateMappingSchema(columnName);
 
@@ -88,7 +88,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSchema([IncludeDataSources(false, ProviderName.SQLiteMS)] string context)
+		public void TestSchema([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
 			void TestMethod(string columnName, string schemaName = null)
 			{

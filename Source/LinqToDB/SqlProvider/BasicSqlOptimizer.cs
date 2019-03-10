@@ -860,6 +860,7 @@ namespace LinqToDB.SqlProvider
 							{
 								parameterExpr2.DataType = field.DataType;
 								parameterExpr2.DbType   = field.DbType;
+								parameterExpr2.DbSize   = field.Length;
 							}
 						}
 
@@ -874,6 +875,7 @@ namespace LinqToDB.SqlProvider
 							{
 								parameterExpr1.DataType = field.DataType;
 								parameterExpr1.DbType   = field.DbType;
+								parameterExpr1.DbSize   = field.Length;
 							}
 						}
 

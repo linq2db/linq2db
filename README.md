@@ -1,6 +1,7 @@
 # LINQ to DB
 
 [![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db)](https://www.nuget.org/profiles/LinqToDB)
+[![Stack Exchange questions](https://img.shields.io/stackexchange/stackoverflow/t/linq2db.svg?label=stackoverflow)](https://stackoverflow.com/questions/tagged/linq2db) 
 
 [![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg?style=social)](https://twitter.com/linq2db)
 
