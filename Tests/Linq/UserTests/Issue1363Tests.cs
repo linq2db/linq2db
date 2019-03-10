@@ -28,22 +28,14 @@ namespace Tests.UserTests
 		{
 			ProviderName.Access,
 			ProviderName.SqlCe,
-			ProviderName.MySql,
-			ProviderName.MySqlConnector,
-			TestProvName.MariaDB,
-			TestProvName.MySql57,
+			TestProvName.AllMySql,
 			ProviderName.DB2,
-			ProviderName.Sybase,
-			ProviderName.SybaseManaged,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
+			TestProvName.AllSybase,
+			TestProvName.AllFirebird,
 			ProviderName.Informix
 		})]
 		[Test, Parallelizable(ParallelScope.None)]
-		public void TestInsert([DataSources(
-			ProviderName.Access, ProviderName.SqlCe, ProviderName.MySql,
-			TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+		public void TestInsert([DataSources(ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

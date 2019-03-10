@@ -152,7 +152,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var typeId = Guid.NewGuid();
 

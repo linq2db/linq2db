@@ -286,11 +286,12 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void NotSupportedProviders([DataSources(false,
-			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure,
-			ProviderName.Informix, ProviderName.SapHana, ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+			ProviderName.DB2, TestProvName.AllFirebird,
+			TestProvName.AllOracle,
+			TestProvName.AllSybase,
+			TestProvName.AllSqlServer,
+			ProviderName.Informix,
+			ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))

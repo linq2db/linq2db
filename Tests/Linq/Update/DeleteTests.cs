@@ -162,11 +162,11 @@ namespace Tests.xUpdate
 				ProviderName.Access,
 				ProviderName.DB2,
 				ProviderName.Informix,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
 				ProviderName.SqlCe,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-				ProviderName.Firebird, TestProvName.Firebird3,
+				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
 				ProviderName.SapHana)]
 			string context)
 		{
@@ -201,11 +201,11 @@ namespace Tests.xUpdate
 				ProviderName.Access,
 				ProviderName.DB2,
 				ProviderName.Informix,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
 				ProviderName.SqlCe,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-				ProviderName.Firebird, TestProvName.Firebird3,
 				ProviderName.SapHana)]
 			string context)
 		{
@@ -249,11 +249,11 @@ namespace Tests.xUpdate
 				ProviderName.Access,
 				ProviderName.DB2,
 				ProviderName.Informix,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
 				ProviderName.SqlCe,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-				ProviderName.Firebird, TestProvName.Firebird3,
 				ProviderName.SapHana)]
 			string context)
 		{
@@ -293,15 +293,15 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteTop(
 			[DataSources(
-			ProviderName.Access,
-			ProviderName.DB2,
-				ProviderName.Firebird, TestProvName.Firebird3,
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
 				ProviderName.Informix,
-				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.SqlCe,
-			ProviderName.SqlServer2000,
+				TestProvName.AllMySql,
+				ProviderName.SqlCe,
+				ProviderName.SqlServer2000,
 				ProviderName.SapHana)]
 			string context)
 		{
@@ -373,9 +373,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MultipleDelete([DataSources(
-			false, ProviderName.Informix)]
-			string context)
+		public void MultipleDelete([DataSources(false, ProviderName.Informix)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -398,7 +396,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void DeleteByTableName([DataSources] string context)
 		{
@@ -432,7 +430,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public async Task DeleteByTableNameAsync([DataSources] string context)
 		{

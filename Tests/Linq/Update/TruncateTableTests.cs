@@ -21,7 +21,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TruncateTableTest([DataSources(ProviderName.OracleNative, ProviderName.Firebird)] string context)
+		public void TruncateTableTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -40,10 +40,10 @@ namespace Tests.xUpdate
 			[Column]                       public decimal Field1;
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
+		// SAP hana not related to oracle this issue, we just cannot use two ActiveIssue attributes
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative, ProviderName.SapHana })]
 		[Test]
-		public void TruncateIdentityTest([DataSources(
-			ProviderName.OracleNative, ProviderName.Informix)]
+		public void TruncateIdentityTest([DataSources(ProviderName.Informix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -73,7 +73,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TruncateIdentityNoResetTest([DataSources(ProviderName.OracleNative)] string context)
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		public void TruncateIdentityNoResetTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
