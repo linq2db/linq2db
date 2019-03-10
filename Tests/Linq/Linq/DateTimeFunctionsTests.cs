@@ -33,6 +33,49 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void CurrentTimestampUtcClientSide()
+		{
+			var delta = Sql.CurrentTimestampUtc - DateTime.UtcNow;
+			Assert.IsTrue(delta.Between(TimeSpan.FromSeconds(-1), TimeSpan.FromSeconds(1)));
+			Assert.AreEqual(DateTimeKind.Utc, Sql.CurrentTimestampUtc.Kind);
+		}
+
+		[Test]
+		public void CurrentTimestampUtc(
+			[DataSources(ProviderName.Access, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
+
+				var delta = dbUtcNow - DateTime.UtcNow;
+				Assert.IsTrue(delta.Between(TimeSpan.FromSeconds(-5), TimeSpan.FromSeconds(5)));
+
+				// we don't set kind
+				Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
+			}
+		}
+
+		[Test]
+		[ActiveIssue("DateTime value deserialized incorrectly over linqservice", SkipForNonLinqService = true)]
+		public void CurrentTimestampUtcClientSideParameter(
+			[IncludeDataSources(true, ProviderName.Access, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
+
+				var delta = dbUtcNow - DateTime.UtcNow;
+				Assert.IsTrue(delta.Between(TimeSpan.FromSeconds(-5), TimeSpan.FromSeconds(5)));
+
+				// we don't set kind
+				Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
+			}
+		}
+
+		[Test]
 		public void CurrentTimestampUpdate([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -859,7 +902,7 @@ namespace Tests.Linq
 		}
 
 		[Test, ActiveIssue(1615)]
-		public void issue1615Test([DataSources] string context)
+		public void Issue1615Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
