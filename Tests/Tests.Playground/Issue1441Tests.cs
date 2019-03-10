@@ -10,59 +10,77 @@ namespace Tests.Playground
 	{
 
 		[Table("Authors")]
-        internal sealed class Author
-        {
-            [PrimaryKey, Column(CanBeNull = false)]
-            public int Id { get; set; }
+		internal sealed class Author
+		{
+			[PrimaryKey, Column(CanBeNull = false)]
+			public int Id { get; set; }
 
-            [Column(CanBeNull = false, DataType = DataType.NVarChar, Length = 100)]
-            public string Name { get; set; }
-        }
+			[Column(CanBeNull = false, DataType = DataType.NVarChar, Length = 100)]
+			public string Name { get; set; }
+		}
 
-        [Table("Books")]
-        internal sealed class Book
-        {
-            [PrimaryKey, Column(CanBeNull = false)]
-            public int Id { get; set; }
+		[Table("Books")]
+		internal sealed class Book
+		{
+			[PrimaryKey, Column(CanBeNull = false)]
+			public int Id { get; set; }
 
-            [Column(CanBeNull = false)]
-            public int AuthorId { get; set; }
+			[Column(CanBeNull = false)]
+			public int AuthorId { get; set; }
 
-            [Column(CanBeNull = false, DataType = DataType.NVarChar, Length = 100)]
-            public string Title { get; set; }
-        }
+			[Column(CanBeNull = false, DataType = DataType.NVarChar, Length = 100)]
+			public string Title { get; set; }
+		}
 
 		[Test]
-		public void SampleSelectTest([DataSources] string context)
+		public void SampleSelectTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-            using (var authorsTable = db.CreateLocalTable<Author>())
-            using (var booksTable = db.CreateLocalTable<Book>())
-            {
-                IQueryable<Author> authors = authorsTable;
+			using (var authorsTable = db.CreateLocalTable<Author>())
+			using (var booksTable = db.CreateLocalTable<Book>())
+			{
+				IQueryable<Author> authors = authorsTable;
 
-                var onlyWithBooks = true; // Some filter logic
+				var onlyWithBooks = true; // Some filter logic
 
-                if (onlyWithBooks)
-                {
-                    // This causes StackOverflowException
-                    authors =
-                        from book in booksTable
-                        from author in authors.InnerJoin(author => author.Id == book.AuthorId)
-                        select author;
+				if (onlyWithBooks)
+				{
+					// This causes StackOverflowException
+					authors =
+						from book in booksTable
+						from author in authors.InnerJoin(author => author.Id == book.AuthorId)
+						select author;
+				}
 
-                    /* This works fine
-                    authors =
-                        from author in authors
-                        from book in booksTable.InnerJoin(book => book.AuthorId == author.Id)
-                        select author;
-                    */
-                }
+				var authorsList = authors.ToList();
 
-                var authorsList = authors.ToList();
+				// Consume authors list
+			}
+		}
 
-                // Consume authors list
-            }
+		[Test]
+		public void SampleSelectTest2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var authorsTable = db.CreateLocalTable<Author>())
+			using (var booksTable = db.CreateLocalTable<Book>())
+			{
+				IQueryable<Author> authors = authorsTable;
+
+				var onlyWithBooks = true; // Some filter logic
+
+				if (onlyWithBooks)
+				{
+					authors =
+						from author in authors
+						from book in booksTable.InnerJoin(book => book.AuthorId == author.Id)
+						select author;
+				}
+
+				var authorsList = authors.ToList();
+
+				// Consume authors list
+			}
 		}
 
 	}
