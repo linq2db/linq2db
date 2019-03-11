@@ -78,7 +78,5 @@
 		<Compile Remove="ServiceModel\**\*.cs;" />
 		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
 		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
-		<Compile Include="Compatibility\System\Data\DataTableExtensions.cs" />
-		<Compile Include="Compatibility\System\Data\DataRowExtensions.cs" />
 	</ItemGroup>
 </Project>
