@@ -377,8 +377,8 @@ namespace LinqToDB.Mapping
 				var getterExpr = MemberAccessor.GetterExpression.GetBody(Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type));
 
 				var expr = mappingSchema.GetConvertExpression(
-					new DbDataType(MemberType, DataType, DbType), 
-					new DbDataType(typeof(DataParameter), DataType, DbType), createDefault : false);
+					new DbDataType(MemberType, DataType, DbType, Length), 
+					new DbDataType(typeof(DataParameter), DataType, DbType, Length), createDefault : false);
 
 				if (expr != null)
 				{

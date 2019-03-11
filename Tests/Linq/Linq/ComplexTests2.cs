@@ -413,7 +413,7 @@ namespace Tests.ComplexTests2
 			}
 		}
 
-		[ActiveIssue("cnt = -1", Configurations = new[] { ProviderName.OracleNative })]
+		[ActiveIssue("cnt = -1", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void TestInsertUsingDerivedObjectUsingFluentMapping([DataSources] string context)
 		{
@@ -459,7 +459,7 @@ namespace Tests.ComplexTests2
 			}
 		}
 
-		[ActiveIssue("cnt = -1", Configurations = new[] { ProviderName.OracleNative })]
+		[ActiveIssue("cnt = -1", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void TestInheritanceByBaseType([DataSources] string context)
 		{

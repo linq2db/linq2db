@@ -289,6 +289,49 @@ namespace LinqToDB.Linq.Builder
 							var memberAlias = ne.Members?[i].Name;
 							var newArgument =
 								a.Transform(ae => TransformExpression(context, ae, enforceServerSide, memberAlias));
+
+							// Update nullability
+							if (newArgument.NodeType == ExpressionType.Call)
+							{
+								var mc = (MethodCallExpression)newArgument;
+								var attr = MappingSchema.GetAttribute<Sql.ExpressionAttribute>(mc.Type, mc.Method);
+
+								if (attr != null 
+								    && attr.IsNullable == Sql.IsNullableType.IfAnyParameterNullable 
+								    && mc.Arguments.Count == 1 
+									&& attr.Expression == "{0}" 
+								    && mc.Method.ReturnParameter?.ParameterType.IsNullable() == true
+								)
+								{
+									var parameter = mc.Method.GetParameters()[0];
+									if (mc.Method.ReturnParameter?.ParameterType != parameter.ParameterType 
+										&& parameter.ParameterType.IsValueTypeEx()
+										&& mc.Arguments[0] is ConvertFromDataReaderExpression readerExpression)
+									{
+										newArgument = readerExpression.MakeNullable();
+									}
+								}
+							}
+							else if (newArgument.NodeType == ExpressionType.Convert || newArgument.NodeType == ExpressionType.ConvertChecked)
+							{
+								var conv = (UnaryExpression)newArgument;
+								if (ne.Members?[i].GetMemberType().IsNullable() == true
+								    && conv.Operand is ConvertFromDataReaderExpression readerExpression
+								    && !readerExpression.Type.IsNullable())
+								{
+									newArgument = readerExpression.MakeNullable();
+								}
+							}
+							else if (newArgument.NodeType == ExpressionType.Extension &&
+							         newArgument is ConvertFromDataReaderExpression readerExpression)
+							{
+								if (ne.Members?[i].GetMemberType().IsNullable() == true &&
+								    !readerExpression.Type.IsNullable())
+								{
+									newArgument = readerExpression.MakeNullable();
+								}
+							}
+
 							a = newArgument;
 							arguments.Add(a);
 						}

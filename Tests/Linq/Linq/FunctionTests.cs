@@ -305,8 +305,8 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.DB2,
 				ProviderName.Informix,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -321,8 +321,8 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.DB2,
 				ProviderName.Informix,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -468,9 +468,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MatchFtsTest([IncludeDataSources(true,
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void MatchFtsTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

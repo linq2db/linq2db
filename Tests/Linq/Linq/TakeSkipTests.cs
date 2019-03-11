@@ -84,7 +84,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeCount([DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)] string context)
+		public void TakeCount([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -154,8 +154,10 @@ namespace Tests.Linq
 
 		[Test]
 		public void SkipCount([DataSources(
-			ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged,
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
+			ProviderName.SqlServer2000,
+			TestProvName.AllSybase,
+			TestProvName.AllSQLite,
+			ProviderName.Access)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -199,8 +201,10 @@ namespace Tests.Linq
 
 		[Test]
 		public void SkipTake4([DataSources(
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlServer2000,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Access)]
+			TestProvName.AllSQLite,
+			ProviderName.SqlServer2000,
+			TestProvName.AllSybase,
+			ProviderName.Access)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -252,8 +256,10 @@ namespace Tests.Linq
 
 		[Test]
 		public void SkipTake6([DataSources(
-			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged,
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
+			ProviderName.SqlCe, ProviderName.SqlServer2000,
+			TestProvName.AllSybase,
+			TestProvName.AllSQLite,
+			ProviderName.Access)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -265,8 +271,10 @@ namespace Tests.Linq
 
 		[Test]
 		public void SkipTakeCount([DataSources(
-			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged,
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
+			ProviderName.SqlCe, ProviderName.SqlServer2000,
+			TestProvName.AllSybase,
+			TestProvName.AllSQLite,
+			ProviderName.Access)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -372,10 +380,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithPercent([IncludeDataSources(
-			ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void TakeWithPercent([IncludeDataSources(ProviderName.Access, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -390,10 +395,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithPercent1([IncludeDataSources(
-			ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void TakeWithPercent1([IncludeDataSources(ProviderName.Access, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -408,10 +410,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithTies([IncludeDataSources(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void TakeWithTies([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -427,10 +426,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithTies2([IncludeDataSources(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void TakeWithTies2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -446,10 +442,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SkipTakeWithTies([IncludeDataSources(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void SkipTakeWithTies([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -460,16 +453,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithHintsFails([IncludeDataSources(
-			ProviderName.SQLiteClassic, ProviderName.SqlCe, ProviderName.SQLiteMS)]
-			string context)
+		public void TakeWithHintsFails([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.Throws<LinqException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
 		}
 
 		[Test]
-		public void TakeSkipJoin([DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)]
+		public void TakeSkipJoin([DataSources(TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

@@ -178,6 +178,7 @@ namespace LinqToDB.Linq
 							p.Accessor,
 							p.DataTypeAccessor,
 							p.DbTypeAccessor,
+							p.SizeAccessor,
 							dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null
 						))
 					.Where(p => p.SqlParameter != null)

@@ -23,8 +23,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test1([IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -481,7 +481,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin7([DataSources(ProviderName.Firebird, TestProvName.Firebird3)] string context)
+		public void GroupJoin7([DataSources(TestProvName.AllFirebird)] string context)
 		{
 			var n = 1;
 
@@ -515,7 +515,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void GroupJoin8([DataSources] string context)
 		{
@@ -963,8 +962,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeftJoinTest2([IncludeDataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void LeftJoinTest2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			// THIS TEST MUST BE RUN IN RELEASE CONFIGURATION (BECAUSE IT PASSES UNDER DEBUG CONFIGURATION)
 			// Reproduces the problem described here: http://rsdn.ru/forum/prj.rfd/4221837.flat.aspx
@@ -1009,12 +1007,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ApplyJoin(
-			[IncludeDataSources(
-				false,
-				ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
-			string context)
+		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1139,7 +1132,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FromLeftJoinTest([IncludeDataSources(true, ProviderName.SqlServer2012)] string context)
+		public void FromLeftJoinTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1161,9 +1154,11 @@ namespace Tests.Linq
 
 		public class AllJoinsSourceAttribute : IncludeDataSourcesAttribute
 		{
-			public AllJoinsSourceAttribute() : base(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
-				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)
+			public AllJoinsSourceAttribute() : base(
+				TestProvName.AllSqlServer2005Plus,
+				TestProvName.AllOracle,
+				TestProvName.AllFirebird,
+				TestProvName.AllPostgreSQL)
 			{
 			}
 		}
@@ -1378,8 +1373,8 @@ namespace Tests.Linq
 
 		// https://imgflip.com/i/2a6oc8
 		[ActiveIssue(
-			Configurations = new[] { ProviderName.Sybase, ProviderName.SybaseManaged },
-			Details        = "Cross-join doesn't work in Sybase")]
+			Configuration = TestProvName.AllSybase,
+			Details       = "Cross-join doesn't work in Sybase")]
 		[Test]
 		public void SqlLinqCrossJoinSubQuery([DataSources] string context)
 		{
@@ -1521,7 +1516,7 @@ namespace Tests.Linq
 		/// </summary>
 		/// <param name="context"></param>
 		[Test]
-		public void JoinBuildersConflicts([IncludeDataSources(false, ProviderName.SQLiteClassic)] string context)
+		public void JoinBuildersConflicts([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

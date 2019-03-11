@@ -102,10 +102,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void GetDataProviderTest([IncludeDataSources(false,
-			ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void GetDataProviderTest([IncludeDataSources(ProviderName.DB2, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 
@@ -252,8 +249,10 @@ namespace Tests.Data
 			}
 		}
 
+		// informix connection limits interfere with test
 		[Test]
-		public void MultipleConnectionsTest([DataSources] string context)
+		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
+		public void MultipleConnectionsTest([DataSources(ProviderName.Informix)] string context)
 		{
 			var exceptions = new ConcurrentBag<Exception>();
 
@@ -279,5 +278,56 @@ namespace Tests.Data
 			if (exceptions.Count > 0)
 				throw new AggregateException(exceptions);
 		}
+
+		[Test]
+		public void TestOnBeforeConnectionOpenEvent()
+		{
+			var open = false;
+			var openAsync = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnBeforeConnectionOpen += (dc, cn) =>
+				{
+					if (cn.State == ConnectionState.Closed)
+						open = true;
+				};
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() =>
+				{
+					if (cn.State == ConnectionState.Closed)
+						openAsync = true;
+				});
+				Assert.False(open);
+				Assert.False(openAsync);
+				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.True(open);
+				Assert.False(openAsync);
+			}
+		}
+
+		[Test]
+		public async Task TestAsyncOnBeforeConnectionOpenEvent()
+		{
+			var open = false;
+			var openAsync = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnBeforeConnectionOpen += (dc, cn) =>
+					{
+						if (cn.State == ConnectionState.Closed)
+							open = true;
+					};
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => 
+						{
+							if (cn.State == ConnectionState.Closed)
+								openAsync = true;
+						});
+				Assert.False(open);
+				Assert.False(openAsync);
+				await conn.SelectAsync(() => 1);
+				Assert.False(open);
+				Assert.True(openAsync);
+			}
+		}
+
 	}
 }

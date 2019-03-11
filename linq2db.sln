@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3
 		Build\linq2db.Default.props = Build\linq2db.Default.props
 		Build\linq2db.Providers.props = Build\linq2db.Providers.props
 		Build\linq2db.snk = Build\linq2db.snk
+		Build\linq2db.Source.props = Build\linq2db.Source.props
 		Build\linq2db.Tests.props = Build\linq2db.Tests.props
 	EndProjectSection
 EndProject
@@ -243,6 +244,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySqlConnector", "MySqlConn
 		NuGet\MySqlConnector\LinqToDB.MySqlConnector.Tools.ttinclude = NuGet\MySqlConnector\LinqToDB.MySqlConnector.Tools.ttinclude
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Tools", "Source\LinqToDB.Tools\LinqToDB.Tools.csproj", "{B6D0309F-61AA-4F2B-B918-5446609CBECD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		AppVeyor|Any CPU = AppVeyor|Any CPU
@@ -339,6 +342,14 @@ Global
 		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Travis|Any CPU.ActiveCfg = Debug|Any CPU
 		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Travis|Any CPU.Build.0 = Debug|Any CPU
+		{B6D0309F-61AA-4F2B-B918-5446609CBECD}.AppVeyor|Any CPU.ActiveCfg = Release|Any CPU
+		{B6D0309F-61AA-4F2B-B918-5446609CBECD}.AppVeyor|Any CPU.Build.0 = Release|Any CPU
+		{B6D0309F-61AA-4F2B-B918-5446609CBECD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6D0309F-61AA-4F2B-B918-5446609CBECD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6D0309F-61AA-4F2B-B918-5446609CBECD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6D0309F-61AA-4F2B-B918-5446609CBECD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6D0309F-61AA-4F2B-B918-5446609CBECD}.Travis|Any CPU.ActiveCfg = Release|Any CPU
+		{B6D0309F-61AA-4F2B-B918-5446609CBECD}.Travis|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -371,6 +382,7 @@ Global
 		{1FC89283-09FB-444B-BF70-F76B3E3A83BB} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{4E3D4705-F037-4536-A45D-7AF52BB017DC} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{B4080869-A89C-4996-938C-D7F42E9AA3CB} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
+		{B6D0309F-61AA-4F2B-B918-5446609CBECD} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

@@ -29,9 +29,7 @@ namespace Tests.xUpdate
 
 		#region https://github.com/linq2db/linq2db/issues/200
 		[Test]
-		public void Issue200InSource([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void Issue200InSource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -78,9 +76,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue200InPredicate([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void Issue200InPredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -125,9 +121,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue200InPredicate2([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void Issue200InPredicate2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -174,9 +168,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue200InInsert([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void Issue200InInsert([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -233,9 +225,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue200InUpdate([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void Issue200InUpdate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())

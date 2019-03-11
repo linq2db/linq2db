@@ -1,12 +1,13 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Tests.Tools
+namespace LinqToDB.Tools.Comparers
 {
-	internal class EnumerableEqualityComparer : EqualityComparer<IEnumerable>
+	class EnumerableEqualityComparer : EqualityComparer<IEnumerable>
 	{
-		public static new EnumerableEqualityComparer Default { get; } = new EnumerableEqualityComparer();
+		public new static EnumerableEqualityComparer Default { get; } = new EnumerableEqualityComparer();
 
 		public override int GetHashCode(IEnumerable obj)
 		{

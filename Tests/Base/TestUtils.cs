@@ -293,7 +293,12 @@ namespace Tests
 					.Replace("LinqService",         "ls")
 					.Replace(".",                   "");
 
-				tableName = $"{typeof(T).Name}_{ctx}_{methodName}";
+				tableName = $"{typeof(T).Name}_{ctx}_{methodName}_{GetNext()}";
+
+				// object name limit in FB prior to v4 is 31 character
+				// 28 chars used to support PK_ prefix for primary key
+				if (tableName.Length > 28)
+					tableName = tableName.Substring(tableName.Length - 28);
 			}
 
 			return CreateLocalTable(db, tableName, items);

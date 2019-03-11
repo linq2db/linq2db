@@ -860,7 +860,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatInheritance([IncludeDataSources(false, ProviderName.SQLiteClassic)] string context)
+		public void TestConcatInheritance([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			var testData = new[]
 			{
@@ -884,7 +884,7 @@ namespace Tests.Linq
 					.Concat(testData.OfType<DerivedEntity>())
 					.ToArray();
 
-				AreEqual(expected, result, ComparerBuilder<BaseEntity>.GetEqualityComparer());
+				AreEqualWithComparer(expected, result);
 			}
 
 		}

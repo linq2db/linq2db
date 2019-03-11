@@ -1,11 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
-namespace Tests.Tools
+namespace LinqToDB.Tools.Comparers
 {
-	internal class BitArrayEqualityComparer : EqualityComparer<BitArray>
+	class BitArrayEqualityComparer : EqualityComparer<BitArray>
 	{
-		public static new BitArrayEqualityComparer Default { get; } = new BitArrayEqualityComparer();
+		public new static BitArrayEqualityComparer Default { get; } = new BitArrayEqualityComparer();
 
 		public override int GetHashCode(BitArray obj)
 		{

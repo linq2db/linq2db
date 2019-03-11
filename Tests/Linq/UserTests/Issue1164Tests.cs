@@ -13,7 +13,7 @@ namespace Tests.UserTests
 	public class Issue1164Tests : TestBase
 	{
 		[Test]
-		public void Test([IncludeDataSources(false, ProviderName.Access)] string context)
+		public void Test([IncludeDataSources(ProviderName.Access)] string context)
 		{
 			using (var db = new DataConnection(new AccessDataProvider(), "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\issue_1164.mdb;"))
 			{

@@ -52,7 +52,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task FirstAsync([SQLiteDataSources(true)] string context)
+		public async Task FirstAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>((db, id, token) =>
 				(from c in db.GetTable<AsyncDataTable>()
@@ -94,7 +94,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task FirstOrDefaultAsync([SQLiteDataSources(true)] string context)
+		public async Task FirstOrDefaultAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>((db, id, token) =>
 				(from c in db.GetTable<AsyncDataTable>()
@@ -136,7 +136,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SingleAsync([SQLiteDataSources(true)] string context)
+		public async Task SingleAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>((db, id, token) =>
 				(from c in db.GetTable<AsyncDataTable>()
@@ -159,18 +159,25 @@ namespace Tests.Linq
 		[Test]
 		public async Task SinglePredicateAsync([DataSources] string context)
 		{
-			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>((db, id, token) =>
-				(from c in db.GetTable<AsyncDataTable>()
-				where c.Id == id
-				select new AsyncDataProjection
-				{
-					Id = id,
-					Value = c.Id
-				}).SingleAsync(c => c.Id == id, token));
-
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(context, "SPA", GenerateData()))
+			using (var lt = db.CreateLocalTable(context, "SPA", GenerateData()))
 			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<AsyncDataTable>()
+						.HasTableName(lt.TableName);
+
+				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>(
+				(bd, id, token) =>
+					(
+						from c in bd.GetTable<AsyncDataTable>()
+						where c.Id == id
+						select new AsyncDataProjection
+						{
+							Id = id,
+							Value = c.Id
+						}
+					).SingleAsync(c => c.Id == id, token));
+
 				var result = await query(db, 2, CancellationToken.None);
 				Assert.AreEqual(2, result.Id);
 				Assert.AreEqual(2, result.Value);
@@ -178,7 +185,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SingleOrDefaultAsync([SQLiteDataSources(true)] string context)
+		public async Task SingleOrDefaultAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>((db, id, token) =>
 				(from c in db.GetTable<AsyncDataTable>()
@@ -201,18 +208,25 @@ namespace Tests.Linq
 		[Test]
 		public async Task SingleOrDefaultPredicateAsync([DataSources] string context)
 		{
-			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>((db, id, token) =>
-				(from c in db.GetTable<AsyncDataTable>()
-				where c.Id == id
-				select new AsyncDataProjection
-				{
-					Id = id,
-					Value = c.Id
-				}).SingleOrDefaultAsync(c => c.Id == id, token));
-
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(context, "SODPA", GenerateData()))
+			using (var lt = db.CreateLocalTable(context, "SODPA", GenerateData()))
 			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<AsyncDataTable>()
+						.HasTableName(lt.TableName);
+
+				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>(
+					(bd, id, token) =>
+					(
+						from c in bd.GetTable<AsyncDataTable>()
+						where c.Id == id
+						select new AsyncDataProjection
+						{
+							Id = id,
+							Value = c.Id
+						}
+					).SingleOrDefaultAsync(c => c.Id == id, token));
+
 				var result = await query(db, 2, CancellationToken.None);
 				Assert.AreEqual(2, result.Id);
 				Assert.AreEqual(2, result.Value);
@@ -220,7 +234,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task AnyAsync([SQLiteDataSources(true)] string context)
+		public async Task AnyAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<bool>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id == id).AnyAsync(token));
@@ -248,7 +262,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task CountAsync([SQLiteDataSources(true)] string context)
+		public async Task CountAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id == id).CountAsync(token));
@@ -276,7 +290,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task LongCountAsync([SQLiteDataSources(true)] string context)
+		public async Task LongCountAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<long>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id == id).LongCountAsync(token));
@@ -305,14 +319,19 @@ namespace Tests.Linq
 
 
 		[Test]
-		public async Task MinAsync([SQLiteDataSources(true)] string context)
+		public async Task MinAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>((db, id, token) =>
-				db.GetTable<AsyncDataTable>().Where(c => c.Id > id).Select(c => c.Id).MinAsync(token));
-
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(GenerateData()))
+			using (var lt = db.CreateLocalTable(context, "MA1", GenerateData()))
 			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<AsyncDataTable>()
+						.HasTableName(lt.TableName);
+
+				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>(
+					(bd, id, token) =>
+						bd.GetTable<AsyncDataTable>().Where(c => c.Id > id).Select(c => c.Id).MinAsync(token));
+
 				var result = await query(db, 2, CancellationToken.None);
 				Assert.AreEqual(3, result);
 			}
@@ -321,19 +340,24 @@ namespace Tests.Linq
 		[Test]
 		public async Task MinSelectorAsync([DataSources] string context)
 		{
-			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>((db, id, token) =>
-				db.GetTable<AsyncDataTable>().Where(c => c.Id > id).MinAsync(c => c.Id, token));
-
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(context, "MSA1", GenerateData()))
+			using (var lt = db.CreateLocalTable(context, "MSA1", GenerateData()))
 			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<AsyncDataTable>()
+						.HasTableName(lt.TableName);
+
+				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>(
+					(bd, id, token) =>
+						bd.GetTable<AsyncDataTable>().Where(c => c.Id > id).MinAsync(c => c.Id, token));
+
 				var result = await query(db, 2, CancellationToken.None);
 				Assert.AreEqual(3, result);
 			}
 		}
 
 		[Test]
-		public async Task MaxAsync([SQLiteDataSources(true)] string context)
+		public async Task MaxAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id > id).Select(c => c.Id).MaxAsync(token));
@@ -361,7 +385,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task AllAsync([SQLiteDataSources(true)] string context)
+		public async Task AllAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<bool>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().AllAsync(c => c.Id == id, token));
@@ -375,7 +399,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task ContainsAsync([SQLiteDataSources(true)] string context)
+		public async Task ContainsAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<bool>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Select(c => c.Id).ContainsAsync(id, token));
@@ -391,7 +415,7 @@ namespace Tests.Linq
 		#region SumAsync
 
 		[Test]
-		public async Task SumAsyncInt([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncInt([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).Select(c => (int)c.Id).SumAsync(token));
@@ -405,7 +429,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncIntN([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncIntN([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int?>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).Select(c => (int?)c.Id).SumAsync(token));
@@ -419,7 +443,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncLong([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncLong([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<long>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).Select(c => (long)c.Id).SumAsync(token));
@@ -433,7 +457,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncLongN([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncLongN([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<long?>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).Select(c => (long?)c.Id).SumAsync(token));
@@ -447,7 +471,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncFloat([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncFloat([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<float>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).Select(c => (float)c.Id).SumAsync(token));
@@ -461,7 +485,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncFloatN([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncFloatN([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<float?>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).Select(c => (float?)c.Id).SumAsync(token));
@@ -475,7 +499,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncDouble([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncDouble([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<double>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).Select(c => (double)c.Id).SumAsync(token));
@@ -489,7 +513,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncDoubleN([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncDoubleN([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<double?>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).Select(c => (double?)c.Id).SumAsync(token));
@@ -503,7 +527,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncDecimal([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncDecimal([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<decimal>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).Select(c => (decimal)c.Id).SumAsync(token));
@@ -517,7 +541,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncDecimalN([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncDecimalN([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<decimal?>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).Select(c => (decimal?)c.Id).SumAsync(token));
@@ -534,7 +558,7 @@ namespace Tests.Linq
 		#region SumAsyncSelector
 
 		[Test]
-		public async Task SumAsyncSelectorInt([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncSelectorInt([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).SumAsync(c => (int)c.Id, token));
@@ -548,7 +572,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncSelectorIntN([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncSelectorIntN([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int?>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).SumAsync(c => (int?)c.Id, token));
@@ -562,7 +586,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncSelectorLong([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncSelectorLong([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<long>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).SumAsync(c => (long)c.Id, token));
@@ -576,7 +600,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncSelectorLongN([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncSelectorLongN([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<long?>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).SumAsync(c => (long?)c.Id, token));
@@ -590,7 +614,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncSelectorFloat([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncSelectorFloat([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<float>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).SumAsync(c => (float)c.Id, token));
@@ -604,7 +628,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncSelectorFloatN([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncSelectorFloatN([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<float?>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).SumAsync(c => (float?)c.Id, token));
@@ -618,7 +642,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncSelectorDouble([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncSelectorDouble([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<double>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).SumAsync(c => (double)c.Id, token));
@@ -632,7 +656,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncSelectorDoubleN([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncSelectorDoubleN([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<double?>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).SumAsync(c => (double?)c.Id, token));
@@ -646,7 +670,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncSelectorDecimal([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncSelectorDecimal([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<decimal>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).SumAsync(c => (decimal)c.Id, token));
@@ -660,7 +684,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SumAsyncSelectorDecimalN([SQLiteDataSources(true)] string context)
+		public async Task SumAsyncSelectorDecimalN([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<decimal?>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).SumAsync(c => (decimal?)c.Id, token));
@@ -678,7 +702,7 @@ namespace Tests.Linq
 		#region Average
 
 		[Test]
-		public async Task AverageAsyncLong([SQLiteDataSources(true)] string context)
+		public async Task AverageAsyncLong([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<double>>((db, id, token) =>
 				db.GetTable<AsyncDataTable>().Where(c => c.Id < id).Select(c => (long)c.Id).AverageAsync(token));
