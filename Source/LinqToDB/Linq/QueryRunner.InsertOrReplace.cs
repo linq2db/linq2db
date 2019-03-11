@@ -74,7 +74,8 @@ namespace LinqToDB.Linq
 				// Update.
 				//
 				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
-				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys).ToList();
+				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj, descriptor, SkipModification.Update))
+				                     .Except(keys).ToList();
 
 				if (keys.Count == 0)
 					throw new LinqException("InsertOrReplace method requires the '{0}' table to have a primary key.", sqlTable.Name);
@@ -130,7 +131,8 @@ namespace LinqToDB.Linq
 				var type = GetType<T>(obj, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(obj.GetType());
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type };
-				var ei   = Common.Configuration.Linq.DisableQueryCache || (entityDescriptor.SkipModificationFlags & SkipModification.Insert) != 0
+				var ei   = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || 
+				           entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schema, type)
 					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schema, type));
 
@@ -145,7 +147,8 @@ namespace LinqToDB.Linq
 				var type = GetType<T>(obj, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(obj.GetType());
 				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type };
-				var ei   = Common.Configuration.Linq.DisableQueryCache || (entityDescriptor.SkipModificationFlags & SkipModification.Insert) != 0
+				var ei   = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || 
+				           entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, schema, databaseName, type)
 					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, entityDescriptor, obj, tableName, schema, databaseName, type));
 

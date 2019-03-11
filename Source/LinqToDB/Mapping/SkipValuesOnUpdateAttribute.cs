@@ -14,7 +14,7 @@
 		public SkipValuesOnUpdateAttribute(params object[] values) : base(values){ }
 
 		/// <summary>
-		/// Operations that affects skipping a value.
+		/// Operations, affected by value skipping.
 		/// </summary>
 		public override SkipModification Affects => SkipModification.Update;
 	}
