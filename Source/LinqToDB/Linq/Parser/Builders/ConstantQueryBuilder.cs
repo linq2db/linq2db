@@ -36,6 +36,11 @@ namespace LinqToDB.Linq.Parser.Builders
 			{
 				parseBuildInfo.Sequence.AddClause(new TableSource(itemType, ""));
 			}
+			else if (typeof(ExpressionQueryImpl<>).IsSameOrParentOf(query.GetType()))
+			{
+				var queryable = (IQueryable)query;
+				builder.BuildSequence(parseBuildInfo, queryable.Expression);
+			}
 			else
 			{
 				parseBuildInfo.Sequence.AddClause(new ArrayQueryClause(itemType, "", query));

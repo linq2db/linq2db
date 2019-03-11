@@ -1,14 +1,15 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using JetBrains.Annotations;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
 	public class TableSource : BaseClause, IQuerySource
 	{
-		public TableSource([NotNull] Type itemType, string itemName)
+		public TableSource([JetBrains.Annotations.NotNull] Type itemType, string itemName)
 		{
 			ItemType = itemType ?? throw new ArgumentNullException(nameof(itemType));
 			ItemName = itemName;
@@ -29,9 +30,10 @@ namespace LinqToDB.Linq.Parser.Clauses
 			return func(this);
 		}
 
-		public bool DoesContainMember(MemberInfo memberInfo)
+		public bool DoesContainMember(MemberInfo memberInfo, MappingSchema mappingSchema)
 		{
-			throw new NotImplementedException();
+			var ed = mappingSchema.GetEntityDescriptor(ItemType);
+			return ed.Columns.Any(c => Equals(c.MemberInfo, memberInfo));
 		}
 
 		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression expression)

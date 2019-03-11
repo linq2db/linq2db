@@ -60,19 +60,23 @@ namespace LinqToDB.Linq.Generator
 					}
 				case ExpressionType.MemberInit:
 					{
-						var newExpression = ((MemberInitExpression)expression).NewExpression;
-						return newExpression.Members
-							.Select((m, i) => Tuple.Create(m, newExpression.Arguments[i]));
+						var memberInitExpression = ((MemberInitExpression)expression);
+						return memberInitExpression.Bindings
+							.Where(b => b.BindingType == MemberBindingType.Assignment)
+							.Select(b => Tuple.Create(((MemberAssignment)b).Member, ((MemberAssignment)b).Expression));
 					}
 			}
 
 			if (expression.Type.IsClassEx())
 			{
-				var entityDescriptor = mappingSchema.GetEntityDescriptor(expression.Type);
+				return expression.Type.GetProperties().Select(p =>
+					Tuple.Create<MemberInfo, Expression>(p, Expression.MakeMemberAccess(expression, p)));
 
-				return entityDescriptor.Columns
-					.Select(c => Tuple.Create(c.MemberInfo, (Expression)Expression.MakeMemberAccess(expression, c.MemberInfo)))
-					.ToArray();				
+				var entityDescriptor = mappingSchema.GetEntityDescriptor(expression.Type);
+//
+//				return entityDescriptor.Columns
+//					.Select(c => Tuple.Create(c.MemberInfo, (Expression)Expression.MakeMemberAccess(expression, c.MemberInfo)))
+//					.ToArray();				
 			}
 
 			return Enumerable.Empty<Tuple<MemberInfo, Expression>>();

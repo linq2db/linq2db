@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using JetBrains.Annotations;
+using LinqToDB.Linq.Generator;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
@@ -10,7 +12,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 	{
 		public Expression Selector { get; set; }
 
-		public SelectClause([NotNull] Type itemType, [NotNull] string itemName, [NotNull] Expression selector)
+		public SelectClause([JetBrains.Annotations.NotNull] Type itemType, [JetBrains.Annotations.NotNull] string itemName, [JetBrains.Annotations.NotNull] Expression selector)
 		{
 			Selector = selector ?? throw new ArgumentNullException(nameof(selector));
 			ItemType = itemType ?? throw new ArgumentNullException(nameof(itemType));
@@ -18,7 +20,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			QuerySourceId = QuerySourceHelper.GetNexSourceId();
 		}
 
-		public SelectClause([NotNull] Expression selector) : this(selector.Type, "", selector)
+		public SelectClause([JetBrains.Annotations.NotNull] Expression selector) : this(selector.Type, "", selector)
 		{
 			
 		}
@@ -37,9 +39,14 @@ namespace LinqToDB.Linq.Parser.Clauses
 		public Type ItemType { get; }
 		public string ItemName { get; }
 
-		public bool DoesContainMember(MemberInfo memberInfo)
+		private MemberInfo[] _members;
+
+		public bool DoesContainMember(MemberInfo memberInfo, MappingSchema mappingSchema)
 		{
-			throw new NotImplementedException();
+			if (_members == null)
+				_members = GeneratorHelper.GetMemberMapping(Selector, mappingSchema).Select(t => t.Item1).ToArray();
+
+			return _members.Any(m => Equals(m, memberInfo));
 		}
 
 		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression ma)

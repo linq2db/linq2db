@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
@@ -31,7 +32,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			return func(this);
 		}
 
-		public bool DoesContainMember(MemberInfo memberInfo)
+		public bool DoesContainMember(MemberInfo memberInfo, MappingSchema mappingSchema)
 		{
 			throw new NotImplementedException();
 		}

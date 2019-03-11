@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using JetBrains.Annotations;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
 	public class ArraySource : BaseClause, IQuerySource
 	{
-		public ArraySource([NotNull] Type itemType, string itemName, [NotNull] Expression arrayExpression)
+		public ArraySource([JetBrains.Annotations.NotNull] Type itemType, string itemName, [JetBrains.Annotations.NotNull] Expression arrayExpression)
 		{
 			ItemType = itemType ?? throw new ArgumentNullException(nameof(itemType));
 			ItemName = itemName;
@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			return func(this);
 		}
 
-		public bool DoesContainMember(MemberInfo memberInfo)
+		public bool DoesContainMember(MemberInfo memberInfo, MappingSchema mappingSchema)
 		{
 			throw new NotImplementedException();
 		}

@@ -17,15 +17,15 @@ namespace Tests.Playground
 		[Table]
 		class SampleClass
 		{
-			[Column] public int Id    { get; set; }
-			[Column] public int Value { get; set; }
+			[Column, PrimaryKey] public int Id    { get; set; }
+			[Column] public int? Value { get; set; }
 		}
 
 		[Table]
 		class OtherClass
 		{
-			[Column] public int OtherId    { get; set; }
-			[Column] public int OtherValue { get; set; }
+			[Column, PrimaryKey] public int OtherId    { get; set; }
+			[Column] public int? OtherValue { get; set; }
 		}
 
 		[Test]
@@ -35,16 +35,21 @@ namespace Tests.Playground
 			using (db.CreateLocalTable<SampleClass>())
 			using (db.CreateLocalTable<OtherClass>())
 			{
-				var query1 = from q in db.GetTable<SampleClass>()
-					join q2 in db.GetTable<OtherClass>() on q.Id equals q2.OtherId
-					where q.Id > 0
+				var limitedClass = db.GetTable<SampleClass>().Select(c => new SampleClass { Value = c.Value, Id = c.Id });
+
+				var query1 =
+					from s1 in db.GetTable<SampleClass>()
+					from s2 in limitedClass.Where(ss => ss.Value == s1.Value)
+					join o1 in db.GetTable<OtherClass>() on new { s1.Id, s1.Value } equals new
+						{ Id = o1.OtherId, Value = o1.OtherValue }
+					where s1.Id > 0
 					select new
 					{
-						q.Id, 
-						CalcValue = (1 + q.Id) * 2,
+						s1.Id,
+						CalcValue = (1 + s1.Id) * 2,
 						SubComplex = new
 						{
-							q2.OtherValue
+							o1.OtherValue
 						}
 					};
 
@@ -56,7 +61,7 @@ namespace Tests.Playground
 						{
 							ValidId = q.Id,
 							Value = q.SubComplex.OtherValue
-						}
+						},
 					};
 
 //				var query = from q in db.GetTable<SampleClass>()

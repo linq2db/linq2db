@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
@@ -10,7 +11,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			SearchExpression = searchExpression;
 		}
 
-		public Expression SearchExpression { get; }
+		public Expression SearchExpression { get; private set; }
 
 		public override BaseClause Visit(Func<BaseClause, BaseClause> func)
 		{
@@ -20,6 +21,11 @@ namespace LinqToDB.Linq.Parser.Clauses
 		public override bool VisitParentFirst(Func<BaseClause, bool> func)
 		{
 			return func(this);
+		}
+
+		public override void TransformExpression(Func<Expression, Expression> func)
+		{
+			SearchExpression = SearchExpression.Transform(func);
 		}
 	}
 }

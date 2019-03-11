@@ -48,7 +48,12 @@ namespace LinqToDB.Linq.Generator
 						var joinType = JoinType.Inner;
 						var ts = GenerateTableSource(selectQuery, current, jc.Inner, out _);
 						_registeredTableSources.Add(jc.Inner, new QuerySourceRegistry(selectQuery, ts, MappingSchema));
-						current.Joins.Add(new SqlJoinedTable(joinType, ts, false));
+
+						var condition = CorrectEquality(jc.Condition);
+						var searchCondition = new SqlSearchCondition();
+						BuildSearchCondition(selectQuery, condition, searchCondition.Conditions);
+						current.Joins.Add(new SqlJoinedTable(joinType, ts, false, searchCondition));
+
 						return ts;
 						break;
 					}
@@ -67,8 +72,6 @@ namespace LinqToDB.Linq.Generator
 
 		class QuerySourceRegistry
 		{
-			private Dictionary<MemberInfo, MemberTransformationInfo> _memberTransformations = new Dictionary<MemberInfo, MemberTransformationInfo>();
-
 			public QuerySourceRegistry(SelectQuery selectQuery, SqlTableSource tableSource, MappingSchema mappingSchema)
 			{
 				SelectQuery = selectQuery;
@@ -79,25 +82,6 @@ namespace LinqToDB.Linq.Generator
 			public SelectQuery SelectQuery { get; }
 			public SqlTableSource TableSource { get; }
 			public MappingSchema MappingSchema { get; }
-
-			private void RegisterSelectorTransformation(SelectQuery selectQuery, SqlTableSource current,
-				Expression selector)
-			{
-				foreach (var mapping in GeneratorHelper.GetMemberMapping(selector, MappingSchema))
-				{
-					// we assume that for higher level it will be other transformations. REVISE!
-					_memberTransformations.Remove(mapping.Item1);
-					_memberTransformations.Add(mapping.Item1, new MemberTransformationInfo(selectQuery, current, mapping.Item2));
-					RegisterSelectorTransformation(selectQuery, current, mapping.Item2);
-				}
-			}
-
-			private MemberTransformationInfo GetMemberTransformation(MemberInfo memberInfo)
-			{
-				_memberTransformations.TryGetValue(memberInfo, out var result);
-				return result;
-			}
-
 		}
 
 		private Dictionary<IQuerySource, QuerySourceRegistry> _registeredTableSources = new Dictionary<IQuerySource, QuerySourceRegistry>();
@@ -137,7 +121,7 @@ namespace LinqToDB.Linq.Generator
 							var conditions = isGrouping
 								? selectQuery.Having.SearchCondition.Conditions
 								: selectQuery.Where.SearchCondition.Conditions;
-							BuildSearchCondition(selectQuery, @where.SearchExpression, conditions, false);
+							BuildSearchCondition(selectQuery, CorrectEquality(where.SearchExpression), conditions);
 							break;
 						}
 				}
@@ -174,7 +158,7 @@ namespace LinqToDB.Linq.Generator
 				foreach (var mapping in GeneratorHelper.GetMemberMapping(argument, MappingSchema))
 				{
 					var ma = Expression.MakeMemberAccess(objExpression, mapping.Item1);
-					_memberTransformations.Add(ma, new MemberTransformationInfo(selectQuery, current, mapping.Item2));
+					_memberTransformations.Add(ma, new MemberTransformationInfo(selectQuery, current, RemoveNullPropagation(mapping.Item2)));
 					RegisterLevel(ma, mapping.Item2);
 				}
 			}
@@ -185,7 +169,28 @@ namespace LinqToDB.Linq.Generator
 
 		private MemberTransformationInfo GetMemberTransformation(MemberExpression memberExpression)
 		{
-			_memberTransformations.TryGetValue(memberExpression, out var result);
+			if (!_memberTransformations.TryGetValue(memberExpression, out var result))
+			{
+//				var owner = memberExpression.Expression;
+//				if (owner is MemberExpression me)
+//				{
+//					var ownerTransformation = GetMemberTransformation(me);
+//					if (ownerTransformation != null)
+//					{
+//						if (ownerTransformation.Transformation is QuerySourceReferenceExpression reference)
+//						{
+//							if (!reference.QuerySource.DoesContainMember(memberExpression.Member, MappingSchema))
+//								return null;
+//							var registry = GetTableSourceRegistry(reference.QuerySource);
+//							var newInfo = new MemberTransformationInfo(registry.SelectQuery, registry.TableSource,
+//								Expression.MakeMemberAccess(reference, memberExpression.Member));
+//							_memberTransformations.Add(memberExpression, newInfo);
+//
+//							return newInfo;
+//						}
+//					}
+//				}
+			};
 			return result;
 		}
 
@@ -201,6 +206,62 @@ namespace LinqToDB.Linq.Generator
 			GenerateStatementInternal(selectQuery, sequence, new List<IStreamedData>());
 			var projection = GenerateProjection(selectQuery, sequence);
 			return Tuple.Create((SqlStatement)new SqlSelectStatement(selectQuery), projection);
+		}
+
+		private Expression CorrectEquality(Expression expression)
+		{
+			var result = expression.Transform(e =>
+			{
+				switch (e.NodeType)
+				{
+					case ExpressionType.Equal:
+						{
+							var binary = (BinaryExpression)e;
+							if (binary.Left.Type.IsClassEx())
+							{
+								if (binary.Left.NodeType == ExpressionType.New)
+								{
+									var membersLeft  = GeneratorHelper.GetMemberMapping(binary.Left, MappingSchema);
+									var membersRight = GeneratorHelper.GetMemberMapping(binary.Right, MappingSchema);
+
+									var newComparison = membersLeft
+										.Join(membersRight, l => l.Item1.Name, r => r.Item1.Name,
+											(l, r) => Expression.Equal(CorrectEquality(l.Item2), CorrectEquality(r.Item2)))
+										.Aggregate((i1, i2) => Expression.AndAlso(i1, i2));
+
+									e = CorrectEquality(newComparison);
+								}
+								else
+								{
+									//TODO: add methods for IQuerySource to return needed projections
+									throw new NotImplementedException();
+								}
+							}
+							else
+							{
+								var leftSql = ConvertToSql(null, binary.Left);
+								if (leftSql.CanBeNull)
+								{
+									var rightSql = ConvertToSql(null, binary.Right);
+									if (rightSql.CanBeNull)
+									{
+										var newExpression =  Expression.OrElse(binary, Expression.AndAlso(
+											Expression.Equal(CorrectEquality(binary.Left), new DefaultValueExpression(MappingSchema, binary.Left.Type)),
+											Expression.Equal(CorrectEquality(binary.Right), new DefaultValueExpression(MappingSchema, binary.Right.Type))));
+
+										e = newExpression;
+									}
+								}
+							}
+
+							break;
+						}
+				}
+
+				return e;
+			});
+
+			return result;
 		}
 
 		private Expression GenerateProjection(SelectQuery selectQuery, Sequence sequence)
@@ -314,7 +375,7 @@ namespace LinqToDB.Linq.Generator
 
 		#region Search Condition Builder
 
-		internal void BuildSearchCondition(SelectQuery context, Expression expression, List<SqlCondition> conditions, bool isNotExpression)
+		internal void BuildSearchCondition(SelectQuery context, Expression expression, List<SqlCondition> conditions)
 		{
 			switch (expression.NodeType)
 			{
@@ -323,8 +384,8 @@ namespace LinqToDB.Linq.Generator
 					{
 						var e = (BinaryExpression)expression;
 
-						BuildSearchCondition(context, e.Left,  conditions, isNotExpression);
-						BuildSearchCondition(context, e.Right, conditions, isNotExpression);
+						BuildSearchCondition(context, e.Left,  conditions);
+						BuildSearchCondition(context, e.Right, conditions);
 
 						break;
 					}
@@ -340,81 +401,13 @@ namespace LinqToDB.Linq.Generator
 						var e           = (BinaryExpression)expression;
 						var orCondition = new SqlSearchCondition();
 
-						BuildSearchCondition(context, e.Left,  orCondition.Conditions, isNotExpression);
+						BuildSearchCondition(context, e.Left,  orCondition.Conditions);
 						orCondition.Conditions[orCondition.Conditions.Count - 1].IsOr = true;
-						BuildSearchCondition(context, e.Right, orCondition.Conditions, isNotExpression);
+						BuildSearchCondition(context, e.Right, orCondition.Conditions);
 
 						conditions.Add(new SqlCondition(false, orCondition));
 
 						break;
-					}
-
-				case ExpressionType.Not    :
-					{
-						var e            = expression as UnaryExpression;
-						var notCondition = new SqlSearchCondition();
-
-						BuildSearchCondition(context, e.Operand, notCondition.Conditions, true);
-
-						var isNot = true;
-
-						if (notCondition.Conditions.Count == 1)
-						{
-							var sqlCondition = notCondition.Conditions[0];
-							if (sqlCondition.Predicate is SqlPredicate.NotExpr p)
-							{
-								p.IsNot = !p.IsNot;
-								var checkIsNullLocal = CheckIsNull(sqlCondition.Predicate, true, isNotExpression);
-								conditions.Add(checkIsNullLocal ?? sqlCondition);
-							}
-							else
-							{
-								sqlCondition.Predicate = BasicSqlOptimizer.OptimizePredicate(sqlCondition.Predicate, ref isNot);
-								var checkIsNullLocal   = CheckIsNull(sqlCondition.Predicate, isNot, isNotExpression);
-								conditions.Add(checkIsNullLocal ?? new SqlCondition(isNot, sqlCondition.Predicate));
-							}
-
-							break;
-						}
-
-						for (var i = 0; i < notCondition.Conditions.Count; i++)
-						{
-							var cond = notCondition.Conditions[i];
-							var checkIsNull = CheckIsNull(cond.Predicate, false, isNotExpression);
-							if (checkIsNull != null)
-								cond = checkIsNull;
-							notCondition.Conditions[i] = cond;
-						}
-
-						conditions.Add(new SqlCondition(true, notCondition));
-
-						break;
-					}
-
-				case ExpressionType.Equal :
-					{
-						if (expression.Type == typeof(bool))
-						{
-							var e = (BinaryExpression)expression;
-
-							Expression ce = null, ee = null;
-
-							if      (e.Left.NodeType  == ExpressionType.Constant) { ce = e.Left;  ee = e.Right; }
-							else if (e.Right.NodeType == ExpressionType.Constant) { ce = e.Right; ee = e.Left; }
-
-							if (ce != null)
-							{
-								var value = ((ConstantExpression)ce).Value;
-
-								if (value is bool b && b == false)
-								{
-									BuildSearchCondition(context, Expression.Not(ee), conditions, isNotExpression);
-									return;
-								}
-							}
-						}
-
-						goto default;
 					}
 
 				default                    :
@@ -436,7 +429,7 @@ namespace LinqToDB.Linq.Generator
 						}
 					}
 
-					conditions.Add(CheckIsNull(predicate, false, isNotExpression) ?? new SqlCondition(false, predicate));
+					conditions.Add(new SqlCondition(false, predicate));
 
 					break;
 			}
@@ -759,31 +752,45 @@ namespace LinqToDB.Linq.Generator
 				}
 			}
 
+			bool IsNullValue(Expression exp)
+			{
+				return (exp.NodeType == ExpressionType.Constant && ((ConstantExpression)exp).Value == null) ||
+				       (exp is DefaultValueExpression);
+			}
+
 			switch (nodeType)
 			{
-				case ExpressionType.Equal    :
-				case ExpressionType.NotEqual :
-
-					var p = ConvertObjectComparison(nodeType, query, left, query, right);
-					if (p != null)
-						return p;
-
-					p = ConvertObjectNullComparison(query, left, right, nodeType == ExpressionType.Equal);
-					if (p != null)
-						return p;
-
-					p = ConvertObjectNullComparison(query, right, left, nodeType == ExpressionType.Equal);
-					if (p != null)
-						return p;
-
-					if (left.NodeType == ExpressionType.New || right.NodeType == ExpressionType.New)
+				case ExpressionType.Equal:
+				case ExpressionType.NotEqual:
 					{
-						p = ConvertNewObjectComparison(query, nodeType, left, right);
-						if (p != null)
-							return p;
-					}
+						if (IsNullValue(left))
+						{
+							var tmp = left;
+							left = right;
+							right = tmp;
+						}
 
-					break;
+						SqlPredicate predicate;
+
+						if (IsNullValue(left))
+							predicate = new SqlPredicate.Expr(new SqlValue(nodeType == ExpressionType.Equal));
+						else
+						{
+							if (IsNullValue(right))
+								predicate = new SqlPredicate.IsNull(ConvertToSql(query, left),
+									nodeType == ExpressionType.NotEqual);
+							else
+								predicate = new SqlPredicate.ExprExpr(
+									ConvertToSql(query, left),
+									nodeType == ExpressionType.Equal
+										? SqlPredicate.Operator.Equal
+										: SqlPredicate.Operator.NotEqual,
+									ConvertToSql(query, right));
+
+						}
+
+						return predicate;
+					}
 			}
 
 			SqlPredicate.Operator op;
@@ -3818,7 +3825,7 @@ namespace LinqToDB.Linq.Generator
 				case ExpressionType.LessThanOrEqual    :
 					{
 						var condition = new SqlSearchCondition();
-						BuildSearchCondition(context, expression, condition.Conditions, expression.NodeType == ExpressionType.Not);
+						BuildSearchCondition(context, expression, condition.Conditions);
 						return condition;
 					}
 
@@ -4141,7 +4148,7 @@ namespace LinqToDB.Linq.Generator
 				case ExpressionType.TypeIs :
 					{
 						var condition = new SqlSearchCondition();
-						BuildSearchCondition(context, expression, condition.Conditions, false);
+						BuildSearchCondition(context, expression, condition.Conditions);
 						return condition;
 					}
 
@@ -4178,19 +4185,6 @@ namespace LinqToDB.Linq.Generator
 			var transformed = GetMemberTransformation(ma);
 			if (transformed != null)
 			{
-//				if (transformed.Transformation.NodeType == ExpressionType.MemberAccess)
-//				{
-//					result = ConvertMemberAccessToSql(transformed.SelectQuery,
-//						(MemberExpression)transformed.Transformation, null);
-////					result = selectQuery.Select.Columns[selectQuery.Select.Add(result)];
-//				}
-//				else if (transformed.Transformation is QuerySourceReferenceExpression reference)
-//				{
-//					result = ConvertMemberAccessToSql(transformed.SelectQuery,
-//						Expression.MakeMemberAccess(reference, mi ?? ma.Member), null);
-////					result = selectQuery.Select.Columns[selectQuery.Select.Add(result)];
-//				}
-//				else
 				result = ConvertToSql(transformed.SelectQuery, transformed.Transformation);
 
 				if (!(result is SqlColumn column) || column.Parent != transformed.SelectQuery)

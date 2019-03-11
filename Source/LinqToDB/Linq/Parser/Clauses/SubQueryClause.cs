@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using JetBrains.Annotations;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
-	public class SubQueryClause : BaseClause, IQuerySource
+	public class SelectManyClause : BaseClause, IQuerySource
 	{
 		private readonly IQuerySource _querySource;
 		public Sequence Sequence { get; }
 
-		public SubQueryClause([NotNull] Sequence sequence)
+		public SelectManyClause([JetBrains.Annotations.NotNull] Sequence sequence)
 		{
 			_querySource = sequence.GetQuerySource();
 			Sequence = sequence ?? throw new ArgumentNullException(nameof(sequence));
@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			var sequence = (Sequence)Sequence.Visit(func);
 			var current = this;
 			if (sequence != Sequence)
-				current = new SubQueryClause(sequence);
+				current = new SelectManyClause(sequence);
 			return func(current);
 		}
 
@@ -36,7 +36,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			return func(this) && Sequence.VisitParentFirst(func);
 		}
 
-		public bool DoesContainMember(MemberInfo memberInfo)
+		public bool DoesContainMember(MemberInfo memberInfo, MappingSchema mappingSchema)
 		{
 			throw new NotImplementedException();
 		}

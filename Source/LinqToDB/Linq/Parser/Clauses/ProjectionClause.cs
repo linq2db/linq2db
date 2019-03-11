@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using JetBrains.Annotations;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 	{
 		public Expression ProjectionExpression { get; }
 
-		public ProjectionClause([NotNull] Type itemType, string itemName, [NotNull] Expression projectionExpression)
+		public ProjectionClause([JetBrains.Annotations.NotNull] Type itemType, string itemName, [JetBrains.Annotations.NotNull] Expression projectionExpression)
 		{
 			ItemType = itemType ?? throw new ArgumentNullException(nameof(itemType));
 			ItemName = itemName;
@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			return func(this);
 		}
 
-		public bool DoesContainMember(MemberInfo memberInfo)
+		public bool DoesContainMember(MemberInfo memberInfo, MappingSchema mappingSchema)
 		{
 			throw new NotImplementedException();
 		}

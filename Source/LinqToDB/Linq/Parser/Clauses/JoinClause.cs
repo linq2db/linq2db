@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using JetBrains.Annotations;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
@@ -9,14 +9,14 @@ namespace LinqToDB.Linq.Parser.Clauses
 	public class JoinClause : BaseClause, IQuerySource
 	{
 		public IQuerySource Inner { get; }
-		[NotNull]
+		[JetBrains.Annotations.NotNull]
 		public Expression Condition { get; }
 		public Expression OuterKeySelector { get; }
 		public Expression InnerKeySelector { get; }
 
-		public JoinClause([NotNull] string itemName, [NotNull] Type itemType, [NotNull] IQuerySource inner,
-			[NotNull] Expression outerKeySelector,
-			[NotNull] Expression innerKeySelector)
+		public JoinClause([JetBrains.Annotations.NotNull] string itemName, [JetBrains.Annotations.NotNull] Type itemType, [JetBrains.Annotations.NotNull] IQuerySource inner,
+			[JetBrains.Annotations.NotNull] Expression outerKeySelector,
+			[JetBrains.Annotations.NotNull] Expression innerKeySelector)
 		{
 			ItemName = itemName ?? throw new ArgumentNullException(nameof(itemName));
 			ItemType = itemType ?? throw new ArgumentNullException(nameof(itemType));
@@ -27,8 +27,8 @@ namespace LinqToDB.Linq.Parser.Clauses
 			QuerySourceId = QuerySourceHelper.GetNexSourceId();
 		}
 
-		public JoinClause([NotNull] string itemName, [NotNull] Type itemType, [NotNull] IQuerySource inner,
-			[NotNull] Expression condition)
+		public JoinClause([JetBrains.Annotations.NotNull] string itemName, [JetBrains.Annotations.NotNull] Type itemType, [JetBrains.Annotations.NotNull] IQuerySource inner,
+			[JetBrains.Annotations.NotNull] Expression condition)
 		{
 			ItemName = itemName ?? throw new ArgumentNullException(nameof(itemName));
 			ItemType = itemType ?? throw new ArgumentNullException(nameof(itemType));
@@ -51,7 +51,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 		public Type ItemType { get; }
 		public string ItemName { get; }
 
-		public bool DoesContainMember(MemberInfo memberInfo)
+		public bool DoesContainMember(MemberInfo memberInfo, MappingSchema mappingSchema)
 		{
 			throw new NotImplementedException();
 		}

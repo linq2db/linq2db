@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using JetBrains.Annotations;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
 	public class UnionClause : BaseClause, IQuerySource
 	{
-		public UnionClause([NotNull] Type itemType, string itemName, [NotNull] Sequence sequence1, [NotNull] Sequence sequence2)
+		public UnionClause([JetBrains.Annotations.NotNull] Type itemType, string itemName, [JetBrains.Annotations.NotNull] Sequence sequence1, [JetBrains.Annotations.NotNull] Sequence sequence2)
 		{
 			ItemType = itemType ?? throw new ArgumentNullException(nameof(itemType));
 			ItemName = itemName;
@@ -41,7 +41,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			return func(this) && Sequence1.VisitParentFirst(func) && Sequence2.VisitParentFirst(func);
 		}
 
-		public bool DoesContainMember(MemberInfo memberInfo)
+		public bool DoesContainMember(MemberInfo memberInfo, MappingSchema mappingSchema)
 		{
 			throw new NotImplementedException();
 		}
