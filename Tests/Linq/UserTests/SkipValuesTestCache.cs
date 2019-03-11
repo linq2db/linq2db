@@ -4,6 +4,7 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 
 using LinqToDB;
+using LinqToDB.Linq;
 
 namespace Tests.UserTests
 {
@@ -14,111 +15,90 @@ namespace Tests.UserTests
 		{
 			[Column("Id"), PrimaryKey]
 			public Int32 Id { get; set; }
-			[Column("Name"), SkipValuesOnInsert("John", "Max"), SkipValuesOnUpdate("Manuel")]
+			[Column("Name")]
 			public String Name { get; set; }
-			[Column("Age"), SkipValuesOnInsert(2, 5)]
+			[Column("Age"), SkipValuesOnInsert(1), SkipValuesOnUpdate(1)]
 			public Int32? Age { get; set; }
 		}
-
-
+		
 		[Test]
-		public void TestSkipInsert([DataSources] string context)
+		public void TestSkipInsertUpdate([DataSources] string context, [Values(1, 2, 1)] int value)
 		{
 			using (var db = GetDataContext(context))
 			{
 				using (db.CreateLocalTable<TestTable>())
 				{
-					var count = db.Insert(new TestTable() { Id = 1, Name = "John", Age = 14 });
+					var count = db.Insert(new TestTable() { Id = 1, Name = "John", Age = value });
 
 					Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
 
 					Assert.IsNotNull(r);
-					Assert.IsNull(r.Name);
+					if (value == 2)
+					{
+						Assert.AreEqual(r.Age, 2);
+					}
+					else
+					{
+						Assert.IsNull(r.Age);
+					}
 
-					count = db.Insert(new TestTable() { Id = 2, Name = "Franki", Age = 15 });
+					r.Age = value;
+					count = db.Update(r);
 
 					Assert.Greater(count, 0);
-
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2);
-
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
 					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Name, "Franki");
+					if (value == 2)
+					{
+						Assert.AreEqual(r.Age, 2);
+					}
+					else
+					{
+						Assert.IsNull(r.Age);
+					}
 				}
 			}
 		}
 
 		[Test]
-		public void TestSkipUpdate([DataSources] string context)
+		public void TestSkipInsertOrReplace([DataSources] string context, [Values(1, 2, 1)] int value)
 		{
 			using (var db = GetDataContext(context))
 			{
 				using (db.CreateLocalTable<TestTable>())
 				{
-					var count = db.Insert(new TestTable() { Id = 1, Name = "Manuel", Age = 14 });
+					var count = db.InsertOrReplace(new TestTable() { Id = 1, Name = "John", Age = value });
 
 					Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
 
 					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Name, "Manuel");
+					if (value == 2)
+					{
+						Assert.AreEqual(r.Age, 2);
+					}
+					else
+					{
+						Assert.IsNull(r.Age);
+					}
 
-					r.Name = "Jacob";
-					r.Age = 15;
-					count = db.Update(r);
-					Assert.Greater(count, 0);
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Age, 15);
-					Assert.AreEqual(r.Name, "Jacob");
-
-					r.Name = "Manuel";
-					r.Age = 22;
-					count = db.Update(r);
-					Assert.Greater(count, 0);
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Age, 22);
-					Assert.AreEqual(r.Name, "Jacob");
-				}
-			}
-		}
-
-		[Test]
-		public void TestSkipInsertOrReplace([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				using (db.CreateLocalTable<TestTable>())
-				{
-					var count = db.InsertOrReplace(new TestTable() { Id = 1, Name = "Manuel", Age = 14 });
-
-					Assert.Greater(count, 0);
-
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
-
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Name, "Manuel");
-
-					r.Name = "Jacob";
-					r.Age = 15;
+					r.Age = value;
 					count = db.InsertOrReplace(r);
-					Assert.Greater(count, 0);
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Age, 15);
-					Assert.AreEqual(r.Name, "Jacob");
 
-					r.Name = "Manuel";
-					r.Age = 22;
-					count = db.InsertOrReplace(r);
 					Assert.Greater(count, 0);
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
 					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Age, 22);
-					Assert.AreEqual(r.Name, "Jacob");
+					if (value == 2)
+					{
+						Assert.AreEqual(r.Age, 2);
+					}
+					else
+					{
+						Assert.IsNull(r.Age);
+					}
 				}
 			}
 		}
