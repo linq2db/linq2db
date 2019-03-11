@@ -5,13 +5,13 @@
 	/// </summary>
 	public class SkipValuesOnInsertAttribute : SkipValuesByListAttribute
 	{
-		/// <summary>  
-		/// Constructor. 
+		/// <summary>
+		/// Constructor.
 		/// </summary>
-		/// <param name="values"> 
+		/// <param name="values">
 		/// Values to skip on insert operations.
 		/// </param>
-		public SkipValuesOnInsertAttribute(params object[] values) : base(values){ }
+		public SkipValuesOnInsertAttribute(params object[] values) : base(values) { }
 
 		/// <summary>
 		/// Operations, affected by value skipping.

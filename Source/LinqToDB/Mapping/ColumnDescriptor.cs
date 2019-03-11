@@ -32,12 +32,12 @@ namespace LinqToDB.Mapping
 			if (MemberInfo.IsFieldEx())
 			{
 				var fieldInfo = (FieldInfo)MemberInfo;
-				MemberType = fieldInfo.FieldType;
+				MemberType    = fieldInfo.FieldType;
 			}
 			else if (MemberInfo.IsPropertyEx())
 			{
 				var propertyInfo = (PropertyInfo)MemberInfo;
-				MemberType = propertyInfo.PropertyType;
+				MemberType       = propertyInfo.PropertyType;
 			}
 
 			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;
@@ -137,7 +137,7 @@ namespace LinqToDB.Mapping
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
 			if (skipValueAttributes != null && skipValueAttributes.Length > 0)
 			{
-				SkipBaseAttributes = skipValueAttributes;
+				SkipBaseAttributes    = skipValueAttributes;
 				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
 			}
 		}
@@ -250,18 +250,12 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on insert.
 		/// </summary>
-		public bool           HasValuesToSkipOnInsert
-		{
-			get { return SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Insert) != 0) ?? false; }
-		}
+		public bool           HasValuesToSkipOnInsert => SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Insert) != 0) ?? false;
 
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on update.
 		/// </summary>
-		public bool           HasValuesToSkipOnUpdate
-		{
-			get { return SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Update) != 0) ?? false; }
-		}
+		public bool           HasValuesToSkipOnUpdate => SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Update) != 0) ?? false;
 
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on insert.
@@ -274,7 +268,7 @@ namespace LinqToDB.Mapping
 		public SkipModification SkipModificationFlags { get; }
 
 		/// <summary> 
-		/// Check if the passed object has values that should bes skipped based on the given flags. 
+		/// Checks if the passed object has values that should bes skipped based on the given flags. 
 		/// </summary>
 		/// <param name="obj">The object containing the values for the operation.</param>
 		/// <param name="descriptor"><see cref="EntityDescriptor"/> of the current instance.</param>
@@ -283,17 +277,12 @@ namespace LinqToDB.Mapping
 		public virtual bool ShouldSkip(object obj, EntityDescriptor descriptor, SkipModification flags)
 		{
 			if (SkipBaseAttributes == null)
-			{
 				return false;
-			}
 	
 			foreach (var skipBaseAttribute in SkipBaseAttributes)
-			{
 				if ((skipBaseAttribute.Affects & flags) != 0 && skipBaseAttribute.ShouldSkip(obj, descriptor, this))
-				{
 					return true;
-				}
-			}
+
 			return false;
 		}
 

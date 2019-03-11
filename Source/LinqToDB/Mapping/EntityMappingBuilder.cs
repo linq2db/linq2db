@@ -444,42 +444,12 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Adds option for skipping values for column on current entity during insert.
-		/// </summary>
-		/// <param name="func">Column member getter expression.</param>
-		/// <param name="values">Values that should be skipped during insert.</param>
-		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<T> HasSkipValuesOnInsert(Expression<Func<T, object>> func, HashSet<object> values)
-		{
-			return SetAttribute(func, 
-				true, 
-			   _ => new SkipValuesOnInsertAttribute(values) {Configuration = Configuration}, 
-			   (_, a) => { },
-			   a => a.Configuration);
-		}
-
-		/// <summary>
 		/// Adds option for skipping values for column on current entity during update.
 		/// </summary>
 		/// <param name="func">Column member getter expression.</param>
 		/// <param name="values">Values that should be skipped during update.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
 		public EntityMappingBuilder<T> HasSkipValuesOnUpdate(Expression<Func<T, object>> func, params object[] values)
-		{
-			return SetAttribute(func,
-			                    true,
-			                    _ => new SkipValuesOnUpdateAttribute(values) { Configuration = Configuration },
-			                    (_, a) => { },
-			                    a => a.Configuration);
-		}
-
-		/// <summary>
-		/// Adds option for skipping values for column on current entity during update.
-		/// </summary>
-		/// <param name="func">Column member getter expression.</param>
-		/// <param name="values">Values that should be skipped during update.</param>
-		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<T> HasSkipValuesOnUpdate(Expression<Func<T, object>> func, HashSet<object> values)
 		{
 			return SetAttribute(func,
 			                    true,

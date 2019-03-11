@@ -30,7 +30,6 @@ namespace Tests.UserTests
 			}
 
 			public override SkipModification Affects { get; }
-			public override string Configuration { get; set; }
 		}
 
 		[Table("PR_1598_SkipCustom_Table")]

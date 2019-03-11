@@ -85,13 +85,12 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
-				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(obj.GetType());
-				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
-				var ei   = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
+				var type             = GetType<T>(obj, dataContext);
+				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
+				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type)
-					: _queryCache.GetOrAdd(key,
-						o => CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type));
+					: _queryCache.GetOrAdd(new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type },
+						o            => CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type));
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -102,13 +101,12 @@ namespace LinqToDB.Linq
 				if (Equals(default, obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
-				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(obj.GetType());
-				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
-				var ei   = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
+				var type             = GetType<T>(obj, dataContext);
+				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
+				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type)
-					: _queryCache.GetOrAdd(key,
-						o => CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type));
+					: _queryCache.GetOrAdd(new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type },
+						o            => CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type));
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 
