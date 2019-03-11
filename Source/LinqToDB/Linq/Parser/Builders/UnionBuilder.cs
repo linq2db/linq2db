@@ -16,11 +16,10 @@ namespace LinqToDB.Linq.Parser.Builders
 
 		public override Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, MethodCallExpression methodCallExpression)
 		{
-			var b1 = new ParseBuildInfo();
-			var b2 = new ParseBuildInfo();
-			builder.BuildSequence(b1, methodCallExpression.Arguments[0]);
-			builder.BuildSequence(b2, methodCallExpression.Arguments[1]);
-			var union = new UnionClause(methodCallExpression.Arguments[0].Type.GetGenericArguments()[0], "", b1.Sequence, b2.Sequence);
+			var sequence1 = builder.BuildSequence(new ParseBuildInfo(), methodCallExpression.Arguments[0]);
+			var sequence2 = builder.BuildSequence(new ParseBuildInfo(), methodCallExpression.Arguments[1]);
+			var union = new UnionClause(methodCallExpression.Arguments[0].Type.GetGenericArguments()[0], "", sequence1, sequence2);
+
 			parseBuildInfo.Sequence.AddClause(union);
 			return parseBuildInfo.Sequence;
 		}

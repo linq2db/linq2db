@@ -276,7 +276,7 @@ namespace LinqToDB.Expressions
                     default:
 	                    if (obj is ICustomExpression custom)
 	                    {
-		                    hashCode += (hashCode * 397) ^ obj.GetHashCode();
+		                    hashCode += (hashCode * 397) ^ custom.GetHashCode();
 							break;
 	                    }
 						else

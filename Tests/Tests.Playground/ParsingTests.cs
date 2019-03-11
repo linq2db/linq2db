@@ -91,5 +91,41 @@ namespace Tests.Playground
 				Console.WriteLine(sb.ToString());
 			}
 		}		
+
+		[Test]
+		public void UnionTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var limitedClass = db.GetTable<SampleClass>().Select(c => new SampleClass { Value = c.Value });
+
+				var query1 =
+					db.GetTable<SampleClass>().Where(c => c.Id >= 0)
+						.Union(limitedClass);
+
+				var parameter = Expression.Parameter(db.GetType());
+				var parser = new ModelTranslator(db.MappingSchema, parameter);
+				var expression = parser.PrepareExpressionForTranslation(query1.Expression);
+				var model = parser.ParseModel(expression);
+
+				var generator = new QueryGenerator(parser, db);
+				var sql = generator.GenerateStatement(model);
+
+				var finalized = db.GetSqlOptimizer().Finalize(sql.Item1);
+//				var finalized = sql.Item1;
+
+				var sbRaw = new StringBuilder();
+				finalized.ToString(sbRaw, new Dictionary<IQueryElement, IQueryElement>());
+
+				var sqlStr = sbRaw.ToString();
+				Console.WriteLine(sqlStr);
+
+				var sb = new StringBuilder();
+				db.CreateSqlProvider().BuildSql(0, finalized, sb, 0);
+
+				Console.WriteLine(sb.ToString());
+			}
+		}		
+
 	}
 }
