@@ -797,8 +797,13 @@ namespace LinqToDB.Expressions
 
 						if (!ue.Operand.Type.IsEnumEx())
 							return ue.Operand.Unwrap();
-
-						break;
+						else
+						{
+							var ext = ex;
+							while (ext.NodeType == ExpressionType.Convert || ext.NodeType == ExpressionType.ConvertChecked)
+								ext = ((UnaryExpression)ext).Operand;
+							return ext;
+						}
 					}
 			}
 
