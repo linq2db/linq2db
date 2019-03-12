@@ -11,7 +11,7 @@
 		/// <param name="values">
 		/// Values to skip on update operations.
 		/// </param>
-		public SkipValuesOnUpdateAttribute(params object[] values) : base(values) { }
+		public SkipValuesOnUpdateAttribute(params object[] values) : base(values ?? new object[] { null }) { }
 
 		/// <summary>
 		/// Operations, affected by value skipping.

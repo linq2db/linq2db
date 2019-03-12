@@ -143,13 +143,10 @@ namespace Tests.UserTests
 		[Test]
 		public void TestSkipNull([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using (var db = GetDataContext(context))
 			{
 				using (db.CreateLocalTable<TestTableNull>())
 				{
-					// Change default value, so that null is not inserted as default.
-					db.MappingSchema.SetDefaultValue(typeof(Int32?), 0);
-
 					var count = db.Insert(new TestTableNull() { Id = 1, Name = "Tommy", Age = null });
 
 					Assert.Greater(count, 0);
