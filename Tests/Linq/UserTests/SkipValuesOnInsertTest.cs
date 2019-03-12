@@ -195,7 +195,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestSkipNull([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, new MappingSchema()))
 			{
 				// Change default value, so that null is not inserted as default.
 				db.MappingSchema.SetDefaultValue(typeof(Int32?), 0);
@@ -216,8 +216,11 @@ namespace Tests.UserTests
 		[Test]
 		public void TestSkipWithFluentBuilder([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, new MappingSchema()))
 			{
+				// Change default value, so that null is not inserted as default.
+				db.MappingSchema.SetDefaultValue(typeof(Int32?), 0);
+
 				var mapping = db.MappingSchema.GetFluentMappingBuilder();
 				mapping.Entity<TestTableFluent>().HasSkipValuesOnInsert(t => t.Age, 2, 5);
 				using (db.CreateLocalTable<TestTableFluent>())

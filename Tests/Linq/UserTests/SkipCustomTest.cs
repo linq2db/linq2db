@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	public class SkipCustomTest: TestBase
+	public class SkipCustomTest : TestBase
 	{
 		public class SkipCustomAttribute : SkipBaseAttribute
 		{
