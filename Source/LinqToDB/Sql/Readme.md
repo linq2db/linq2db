@@ -1,18 +1,18 @@
 # SQL Extensions
 
-This Folder Contains SQL Extensions for Linq2Db, as well as components to help you build your own Extensions.
+This folder contains SQL extensions for linq2db, as well as components to help you build your own extensions.
 
 ## `Sql`
 
-The SQL Class contains a number of functions implementing common DB Functions such as `Between` or `CurrentTimestamp`. [The XMLDocs provide a list of all the provided functions](https://linq2db.github.io/api/LinqToDB.Sql.html).
+The SQL class contains a number of functions implementing common DB functions such as `Between` or `CurrentTimestamp`. [The XMLDocs provide a list of all the provided functions](https://linq2db.github.io/api/LinqToDB.Sql.html).
 
 Note that many of these are used automatically behind the scenes. For example, The provider will automatically translate something such as `table.SomeDateTimeField.Year` into the appropriate `DatePart` call.
 
-At the same time, some people prefer having LINQ (or even Lambda) expressions that read 'closer' to what the SQL will look like. Additionally, there are some constructs in many SQL dialects that do not have an equivalent operator/function in .NET.
+At the same time, some people prefer having LINQ (or even lambda) expressions that read 'closer' to what the SQL will look like. Additionally, there are some constructs in many SQL dialects that do not have an equivalent operator/function in .NET.
 
-### Useful Built in Expressions/Functions (That have no direct equivalent in .NET):
+### Useful built in Expressions/Functions (That have no direct equivalent in .NET):
 
- - `Sql.CurrentTimestamp` : Normally, `DateTime` instances passed into queries are parameterized on the client side. This includes `DateTime.Now`. `Sql.CurrentTimestamp` on the other hand will use the Database Server's current time instead of the time on the .NET server executing the query.
+ - `Sql.CurrentTimestamp` : Normally, `DateTime` instances passed into queries are parameterized on the client side. This includes `DateTime.Now`. `Sql.CurrentTimestamp` on the other hand will use the database server's current time instead of the time on the .NET server executing the query.
 
  - `Sql.Between` : Allows you to use `Between(myTable.MyCol1,1,2)` instead of an expression such as `(myTable.MyCol1 >= 1 && myTable.MyCol1 <=2)`.
    - `Sql.NotBetween` : The inverse of `Sql.Between`
@@ -24,7 +24,7 @@ At the same time, some people prefer having LINQ (or even Lambda) expressions th
 
 ## `Sql.ExpressionAttribute`
 
-There are times where you may wish to add a more custom Expression into the LINQ provider. Consider the example of NullIf: While you can often use an expression such as `(table.SomeProperty == someValue ? table.SomeProperty : null)`, this would typically become a `CASE` statemant, whereas some people may prefer being able to use the Database Server's Built in `NullIf` function via a call like `SqlExpr.NullIf(table.SomeProperty,someValue)`. To do so, they merely would need to have a class such as this:
+There are times where you may wish to add a more custom expression into the LINQ provider. Consider the example of NullIf: While you can often use an expression such as `(table.SomeProperty == someValue ? table.SomeProperty : null)`, this would typically become a `CASE` statement, whereas some people may prefer being able to use the database server's built in `NullIf` function via a call like `SqlExpr.NullIf(table.SomeProperty,someValue)`. To do so, they merely would need to have a class such as this:
 
 ```
 using Linq2db;
@@ -47,7 +47,7 @@ namespace MyProject
 }
 ```
 
-Additionally, you may write Server-Specific patterns as needed. Take the example of checking if a VARCHAR value is convertable to a positive Integer and is not a decimal value. In SQL Server, you can do this with some clever use of `ISNUMERIC`. However, in SQLite, the only reliable way to do so is with GLOB. The below example shows how you can specify provider-specifc usages.
+Additionally, you may write server-specific patterns as needed. Take the example of checking if a VARCHAR value is convertable to a positive integer and is not a decimal value. In SQL Server, you can do this with some clever use of `ISNUMERIC`. However, in SQLite, the only reliable way to do so is with GLOB. The below example shows how you can specify provider-specifc usages.
 
 ```
 using Linq2db;
@@ -73,17 +73,17 @@ namespace MyProject
 
 ### Useful Attribute Properties:
 
- - `PreferServerSide` : This will tell Linq2Db that you would prefer for the expression to be evaluated on the server if possible.
+ - `PreferServerSide` : This will tell linq2db that you would prefer for the expression to be evaluated on the server if possible.
 
- - `ServerSideOnly` : This will tell Linq2Db that if the expression cannot be executed on the server (For example, it is inside a another method call that cannot be translated) that an exception should be thrown. This is useful when attempting to guarantee that filtering is done on the server (avoiding transferring large amounts of data.)
+ - `ServerSideOnly` : This will tell linq2db that if the expression cannot be executed on the server (For example, it is inside a another method call that cannot be translated) that an exception should be thrown. This is useful when attempting to guarantee that filtering is done on the server (avoiding transferring large amounts of data.)
 
- - `InlineParameters` : Normally Linq2Db will parametetrize any variables passed into the expression. If this is set to true however, the values will instead be passed as (escaped) literals. Please note scalar values passed in will always be inlined, regardless of this parameter.
+ - `InlineParameters` : Normally linq2db will parametetrize any variables passed into the expression. If this is set to true however, the values will instead be passed as (escaped) literals. Please note scalar values passed in will always be inlined, regardless of this parameter.
 
- - `IsPredicate` : In the case of Expressions that are boolean, Linq2Db will normally add a `= 1` when the server requires it (such as SqlServer). If this is set to `true`, Linq2Db will not add this.  
+ - `IsPredicate` : In the case of expressions that are boolean, linq2db will normally add a `= 1` when the server requires it (such as SqlServer). If this is set to `true`, linq2db will not add this.  
 
 ## `Sql.FunctionAttribute`
 
-`Sql.FunctionAttribute` is a more specific case of Expression: consider it a convenience method when calling a server function with known paarameters. For example, if you wanted to use IsNumeric in a more normal Fashion:
+`Sql.FunctionAttribute` is a more specific case of the `ExpressionAttribute`: consider it a convenience method when calling a server function with known parameters. For example, if you wanted to use IsNumeric in a more normal fashion:
 
 ```
 using Linq2db;

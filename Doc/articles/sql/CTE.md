@@ -13,7 +13,7 @@ See documentation for Transact SQL: [WITH common_table_expression](https://docs.
 
 ## Defining simple CTE
 
-CTE in `LINQ To DB` is also `IQueryable`. Any `IQueryable` can be converted to CTE with the extension method `AsCte("optional_name")`.
+CTE in `LINQ To DB` also implements `IQueryable`. Any `IQueryable` can be converted to CTE with the extension method `AsCte("optional_name")`.
 
 ```cs
 var employeeSubordinatesReport  =
@@ -33,7 +33,7 @@ var employeeSubordinatesReportCte = employeeSubordinatesReport
                                      .AsCte("EmployeeSubordinatesReport");
 ```
 
-The Variable `employeeSubordinatesReportCte` can now be reused in other parts of linq query.
+The variable `employeeSubordinatesReportCte` can now be reused in other parts of linq query.
 
 ```cs
 var result =
@@ -97,7 +97,7 @@ FROM
 
 ## Defining recursive CTE
 
-> Recursive CTEs are special in the sense they are allowed to reference themselves! Because of this special ability, you can use recursive CTEs to solve problems other queries cannot. Recursive CTEs are really good at working with hierarchical data such as org charts for bill of materials. (Further Reading: [Recursive CTEs Explained](https://www.essentialsql.com/recursive-ctes-explained/))
+> Recursive CTEs are special in the sense they are allowed to reference themselves! Because of this special ability, you can use recursive CTEs to solve problems other queries cannot. Recursive CTEs are really good at working with hierarchical data such as org charts for bill of materials. (Further reading: [Recursive CTEs Explained](https://www.essentialsql.com/recursive-ctes-explained/))
 
 CTEs have limitations that are not handled by `LINQ To DB`, so you have to be aware of them before start of usage - [Guidelines for Defining and Using Recursive Common Table Expressions](https://docs.microsoft.com/en-us/sql/t-sql/queries/with-common-table-expression-transact-sql?view=sql-server-2017#guidelines-for-defining-and-using-recursive-common-table-expressions)
 
