@@ -58,7 +58,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue("DateTime value deserialized incorrectly over linqservice", SkipForNonLinqService = true)]
 		public void CurrentTimestampUtcClientSideParameter(
 			[IncludeDataSources(true, ProviderName.Access, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]
 			string context)
