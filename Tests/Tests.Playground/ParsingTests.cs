@@ -103,9 +103,11 @@ namespace Tests.Playground
 				var subQuery =
 					db.GetTable<SampleClass>().Where(c => c.Id >= 0)
 						.Select(c => new SampleClass { Value = c.Value })
-						.Union(limitedClass);
+						.Concat(limitedClass);
 
-				var query1 = subQuery.Select(c => new { c.Id });
+//				var query1 = subQuery.Select(c => new { c.Id });
+				var query1 = subQuery.Select(c => new { c.Value, c.ReferenceId });
+//				var query1 = subQuery;
 
 //				var limitedClass = db.GetTable<SampleClass>().Select(c => new { Id = new { c.Id, Value = (int?)null }});
 //

@@ -1713,6 +1713,13 @@ namespace LinqToDB.Expressions
 				{
 					return expr;
 				}
+
+				default:
+					{
+						if (expr is ICustomExpression custom)
+							return custom.CustomTransform(e => func(e).Expression);
+						break;
+					}
 			}
 
 			throw new InvalidOperationException();

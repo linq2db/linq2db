@@ -30,7 +30,7 @@ namespace LinqToDB.Linq.Generator
 
 		private readonly Dictionary<IQuerySource, QuerySourceRegistry> _registeredTableSources = new Dictionary<IQuerySource, QuerySourceRegistry>();
 		private readonly Dictionary<MemberExpression, MemberTransformationInfo> _memberTransformations = CreateTransformationDictionary();
-		private Dictionary<IQuerySource, SetRegistration> _setSelectors = new Dictionary<IQuerySource, SetRegistration>();
+		private readonly Dictionary<BaseSetClause, SetRegistration> _setSelectors = new Dictionary<BaseSetClause, SetRegistration>();
 
 		static Dictionary<MemberExpression, MemberTransformationInfo> CreateTransformationDictionary()
 		{
@@ -169,12 +169,12 @@ namespace LinqToDB.Linq.Generator
 					case BaseSetClause setClause:
 						{
 							var selector = CombineSetClause(setClause, selectQuery, current);
-							RegisterSelectorTransformation(selectQuery, current, setClause, selector);
-							if (setClause.AllFieldsRequired)
-							{
-								// simulate generation
+//							RegisterSelectorTransformation(selectQuery, current, setClause, selector);
+//							if (setClause.AllFieldsRequired)
+//							{
+//								// simulate generation
 //								GenerateProjection(selector, (e, sql) => e);
-							}
+//							}
 
 							break;
 						}
@@ -319,11 +319,11 @@ namespace LinqToDB.Linq.Generator
 					result = GenerateProjection(selectClause.Selector, registerExpression); 
 					break;
 				}
-				else if (clause is UnionClause union)
+				else if (clause is BaseSetClause setClause)
 				{
-					if (!_setSelectors.TryGetValue(union, out var registration))
+					if (!_setSelectors.TryGetValue(setClause, out var registration))
 						throw new LinqToDBException("Invalid registration for Set clause");
-					result = GenerateProjection(registration.Selector.Reduce(), registerExpression);
+					result = GenerateProjection(registration.Selector, registerExpression);
 
 					break;
 				}
@@ -393,8 +393,8 @@ namespace LinqToDB.Linq.Generator
 
 		private Expression CombineSetClause(BaseSetClause setClause, SelectQuery selectQuery, SqlTableSource tableSource)
 		{
-			var setQuerySource = new SetQuerySource(setClause);
-			var reference = Translator.GetSourceReference(setQuerySource);
+			//var setQuerySource = new SetQuerySource(setClause);
+			var reference = Translator.GetSourceReference(setClause);
 
 			var projection1 = GenerateProjection(setClause.Sequence1, null);
 			var projection2 = GenerateProjection(setClause.Sequence2, null);
@@ -410,16 +410,19 @@ namespace LinqToDB.Linq.Generator
 
 			var setRegistration = new SetRegistration();
 
-			RegisterSelectorTransformation(sequence1Registration.SelectQuery, sequence1Registration.TableSource, setQuerySource, projection1, setRegistration.Sequence1Transformations);
-			RegisterSelectorTransformation(sequence2Registration.SelectQuery, sequence2Registration.TableSource, setQuerySource, projection2, setRegistration.Sequence2Transformations);
+			RegisterSelectorTransformation(sequence1Registration.SelectQuery, sequence1Registration.TableSource, setClause, projection1, setRegistration.Sequence1Transformations);
+			RegisterSelectorTransformation(sequence2Registration.SelectQuery, sequence2Registration.TableSource, setClause, projection2, setRegistration.Sequence2Transformations);
 
-			var combineSelector = CombineSelector((UnifiedNewExpression)s1, (UnifiedNewExpression)s2);
-			setRegistration.Selector = combineSelector.Reduce();
+			var unifiedNewExpression = CombineSelector((UnifiedNewExpression)s1, (UnifiedNewExpression)s2);
+			setRegistration.Selector = unifiedNewExpression.Reduce();
 			_setSelectors.Add(setClause, setRegistration);
 
-			RegisterTableSource(selectQuery, setQuerySource, tableSource);
+			if (setClause.AllFieldsRequired)
+			{
+				GenerateProjection(setRegistration.Selector, (e, sql) => e);
+			}
 
-			RegisterSelectorTransformation(selectQuery, current, setClause, selector);
+//			RegisterTableSource(selectQuery, setQuerySource, tableSource);
 
 
 			return setRegistration.Selector;
@@ -474,7 +477,7 @@ namespace LinqToDB.Linq.Generator
 									arguments.Add(argument);
 								}
 
-								return newExpr.Update(arguments);
+								return new TransformInfo(newExpr.Update(arguments), false);
 							}
 							break;
 						}
@@ -485,7 +488,7 @@ namespace LinqToDB.Linq.Generator
 							var bindings = memberInit.Bindings.Where(b => b.BindingType == MemberBindingType.Assignment)
 								.Select(b => Expression.Bind(b.Member, GenerateProjection(((MemberAssignment)b).Expression,
 									registerExpression))).ToArray();
-							return memberInit.Update(newExpression, bindings);
+							return new TransformInfo(memberInit.Update(newExpression, bindings), false);
 						}
 					default:
 						{
@@ -494,13 +497,14 @@ namespace LinqToDB.Linq.Generator
 							{
 								var sqlExpr = ConvertToSql(null, e);
 								e = registerExpression(e, sqlExpr);
+								return new TransformInfo(e, true);
 							}
 
 							break;
 						}
 				}
 
-				return e;
+				return new TransformInfo(e, false);
 			});
 
 			return result;
@@ -4369,11 +4373,21 @@ namespace LinqToDB.Linq.Generator
 			var transformed = GetMemberTransformation(ma);
 			if (transformed != null)
 			{
-				result = ConvertToSql(transformed.SelectQuery, transformed.Transformation);
+				// occurs with Set clauses
+				if (transformed.Transformation is QuerySourceReferenceExpression terminateReference)
+				{
+					var querySourceRegistry = GetTableSourceRegistry(terminateReference.QuerySource);
+					result = ConvertQuerySourceMemberToSql(querySourceRegistry, ma);
+				}
+				else
+				{
+					result = ConvertToSql(transformed.SelectQuery, transformed.Transformation);
+				}
 
 				if (!(result is SqlColumn column) || column.Parent != transformed.SelectQuery)
 				{
-					result = transformed.SelectQuery.Select.Columns[transformed.SelectQuery.Select.Add(result)];
+					var newColumn = transformed.SelectQuery.Select.Columns[transformed.SelectQuery.Select.Add(result)];
+					newColumn.RawAlias = ma.Member.Name;
 				}
 			}
 			else
@@ -4411,22 +4425,17 @@ namespace LinqToDB.Linq.Generator
 						result = field;
 						break;
 					}
-				case UnionClause uc:
+				case BaseSetClause setClause:
 					{
-						throw new NotImplementedException();
-						break;
-					}
-				case SetQuerySource setQuerySource:
-					{
-						if (!_setSelectors.TryGetValue(setQuerySource.QuerySource, out var setRegistration))
+						if (!_setSelectors.TryGetValue(setClause, out var setRegistration))
 							throw new LinqToDBException("Set source is not registered");
-						var setSource = GetTableSourceRegistry(setQuerySource.QuerySource);
+						var setSource = GetTableSourceRegistry(setClause);
 
 						ISqlExpression seq1Sql;
 						ISqlExpression seq2Sql;
 
-						var seq1Ts = GetTableSourceRegistry(setQuerySource.QuerySource.Sequence1.GetQuerySource());
-						var seq2Ts = GetTableSourceRegistry(setQuerySource.QuerySource.Sequence2.GetQuerySource());
+						var seq1Ts = GetTableSourceRegistry(setClause.Sequence1.GetQuerySource());
+						var seq2Ts = GetTableSourceRegistry(setClause.Sequence2.GetQuerySource());
 
 						if (!setRegistration.Sequence1Transformations.TryGetValue(memberExpression,
 							out var seq1Transformation))
@@ -4439,9 +4448,9 @@ namespace LinqToDB.Linq.Generator
 						}
 
 						seq1Sql = seq1Ts.SelectQuery.Select.Columns[seq1Ts.SelectQuery.Select.AddNew(seq1Sql)];
-						result = seq1Sql;
+						((SqlColumn)seq1Sql).RawAlias = memberExpression.Member.Name;
 
-//						result = setSource.SelectQuery.Select.Columns[setSource.SelectQuery.Select.AddNew(seq1Sql)];
+						result = setSource.SelectQuery.Select.Columns[setSource.SelectQuery.Select.AddNew(seq1Sql)];
 
 						if (!setRegistration.Sequence2Transformations.TryGetValue(memberExpression,
 							out var seq2Transformation))
@@ -4454,6 +4463,7 @@ namespace LinqToDB.Linq.Generator
 						}
 
 						seq2Sql = seq2Ts.SelectQuery.Select.Columns[seq2Ts.SelectQuery.Select.AddNew(seq2Sql)];
+						((SqlColumn)seq2Sql).RawAlias = memberExpression.Member.Name;
 					
 						break;
 					}
