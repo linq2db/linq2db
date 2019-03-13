@@ -17,6 +17,7 @@ namespace LinqToDB.Linq.Parser
 		public static readonly MethodInfo Union                = MemberHelper.MethodOf<IQueryable<object>>(q => q.Union(q)).GetGenericMethodDefinition();
 		public static readonly MethodInfo Concat               = MemberHelper.MethodOf<IQueryable<object>>(q => q.Concat(q)).GetGenericMethodDefinition();
 		public static readonly MethodInfo Join                 = MemberHelper.MethodOf<IQueryable<object>>(q => q.Join(q, _ => 1, _ => 2, (q1, q2) => 0)).GetGenericMethodDefinition();
+		public static readonly MethodInfo GroupBy              = MemberHelper.MethodOf<IQueryable<object>>(q => q.GroupBy(_ => 1, _ => 2, (q1, q2) => 0)).GetGenericMethodDefinition();
 
 		public static readonly MethodInfo GetTable             = MemberHelper.MethodOf<IDataContext>(dc => dc.GetTable<object>()).GetGenericMethodDefinition();
 	}

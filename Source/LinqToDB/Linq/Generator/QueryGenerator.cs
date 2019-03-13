@@ -216,13 +216,38 @@ namespace LinqToDB.Linq.Generator
 				foreach (var mapping in GeneratorHelper.GetMemberMapping(argument, MappingSchema))
 				{
 					var ma = Expression.MakeMemberAccess(objExpression, mapping.Item1);
+
 					memberTransformations.Add(ma, new MemberTransformationInfo(selectQuery, current, RemoveNullPropagation(mapping.Item2)));
+
 					RegisterLevel(ma, mapping.Item2);
 				}
 			}
 
 			var refExpression = Translator.GetSourceReference(querySource);
 			RegisterLevel(refExpression, selector);
+		}
+
+		private void RegisterSetTransformation(SelectQuery selectQuery, SqlTableSource current, IQuerySource querySource,
+			Expression selector, UnifiedNewExpression unifiedSelector, Dictionary<MemberExpression, MemberTransformationInfo> setTransformations)
+		{
+			var refExpression = Translator.GetSourceReference(querySource);
+
+			void RegisterLevel(Expression objExpression, Expression argument, UnifiedNewExpression unified)
+			{
+				foreach (var mapping in GeneratorHelper.GetMemberMapping(argument, MappingSchema))
+				{
+					var ma = Expression.MakeMemberAccess(objExpression, mapping.Item1);
+
+					setTransformations.Add(ma, new MemberTransformationInfo(selectQuery, current, RemoveNullPropagation(mapping.Item2)));
+
+					if (!_memberTransformations.ContainsKey(ma))
+						_memberTransformations.Add(ma, new MemberTransformationInfo(selectQuery, current, refExpression));
+
+					RegisterLevel(ma, mapping.Item2, null);
+				}
+			}
+
+			RegisterLevel(refExpression, selector, unifiedSelector);
 		}
 
 		private MemberTransformationInfo GetMemberTransformation(MemberExpression memberExpression)
@@ -245,7 +270,11 @@ namespace LinqToDB.Linq.Generator
 			GenerateQueryInternal(selectQuery, sequence, new List<IStreamedData>());
 			var projection = GenerateProjection(sequence, (e, sqlExpr) =>
 			{
-				var idx = selectQuery.Select.Add(sqlExpr);
+				int idx = -1;
+				if (sqlExpr is SqlColumn column)
+					idx = selectQuery.Select.Columns.IndexOf(column);
+				if (idx < 0)
+					idx = selectQuery.Select.Add(sqlExpr);
 				return new ConvertFromDataReaderExpression(e.Type, idx, null, null);
 			});
 			return Tuple.Create((SqlStatement)new SqlSelectStatement(selectQuery), projection);
@@ -410,8 +439,13 @@ namespace LinqToDB.Linq.Generator
 
 			var setRegistration = new SetRegistration();
 
-			RegisterSelectorTransformation(sequence1Registration.SelectQuery, sequence1Registration.TableSource, setClause, projection1, setRegistration.Sequence1Transformations);
-			RegisterSelectorTransformation(sequence2Registration.SelectQuery, sequence2Registration.TableSource, setClause, projection2, setRegistration.Sequence2Transformations);
+			RegisterSetTransformation(sequence1Registration.SelectQuery, sequence1Registration.TableSource, setClause,
+				projection1, (UnifiedNewExpression)s1,
+				setRegistration.Sequence1Transformations);
+
+			RegisterSetTransformation(sequence2Registration.SelectQuery, sequence2Registration.TableSource, setClause,
+				projection2, (UnifiedNewExpression)s2,
+				setRegistration.Sequence2Transformations);
 
 			var unifiedNewExpression = CombineSelector((UnifiedNewExpression)s1, (UnifiedNewExpression)s2);
 			setRegistration.Selector = unifiedNewExpression.Reduce();
@@ -489,6 +523,12 @@ namespace LinqToDB.Linq.Generator
 								.Select(b => Expression.Bind(b.Member, GenerateProjection(((MemberAssignment)b).Expression,
 									registerExpression))).ToArray();
 							return new TransformInfo(memberInit.Update(newExpression, bindings), false);
+						}
+					case ExpressionType.Extension:
+						{
+							if (e.CanReduce)
+								return new TransformInfo(GenerateProjection(e.Reduce(), registerExpression), false);
+							break;
 						}
 					default:
 						{
@@ -3899,70 +3939,6 @@ namespace LinqToDB.Linq.Generator
 
 		#region BuildExpression
 
-		SqlInfo[] ConvertExpressions(IBuildContext context, Expression expression, ConvertFlags queryConvertFlag)
-		{
-			expression = ConvertExpression(expression);
-
-			switch (expression.NodeType)
-			{
-				case ExpressionType.New :
-					{
-						var expr = (NewExpression)expression;
-
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
-// ReSharper disable HeuristicUnreachableCode
-						if (expr.Members == null)
-							return Array<SqlInfo>.Empty;
-// ReSharper restore HeuristicUnreachableCode
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
-
-						return expr.Arguments
-							.Select((arg,i) =>
-							{
-								var mi = expr.Members[i];
-								if (mi is MethodInfo)
-									mi = ((MethodInfo)mi).GetPropertyInfo();
-
-								return ConvertExpressions(context, arg, queryConvertFlag).Select(si => si.Clone(mi));
-							})
-							.SelectMany(si => si)
-							.ToArray();
-					}
-
-				case ExpressionType.MemberInit :
-					{
-						var expr = (MemberInitExpression)expression;
-						var dic  = TypeAccessor.GetAccessor(expr.Type).Members
-							.Select((m,i) => new { m, i })
-							.ToDictionary(_ => _.m.MemberInfo, _ => _.i);
-
-						return expr.Bindings
-							.Where  (b => b is MemberAssignment)
-							.Cast<MemberAssignment>()
-							.OrderBy(b => dic[b.Member])
-							.Select (a =>
-							{
-								var mi = a.Member;
-								if (mi is MethodInfo)
-									mi = ((MethodInfo)mi).GetPropertyInfo();
-
-								return ConvertExpressions(context, a.Expression, queryConvertFlag).Select(si => si.Clone(mi));
-							})
-							.SelectMany(si => si)
-							.ToArray();
-					}
-			}
-
-			throw new NotImplementedException();
-
-//			var ctx = GetContext(context, expression);
-//
-//			if (ctx != null && ctx.IsExpression(expression, 0, RequestFor.Object).Result)
-//				return ctx.ConvertToSql(expression, 0, queryConvertFlag);
-//
-//			return new[] { new SqlInfo { Sql = ConvertToSql(context, expression) } };
-		}
-
 		public ISqlExpression ConvertToSqlExpression(SelectQuery context, Expression expression)
 		{
 			var expr = ConvertExpression(expression);
@@ -4177,24 +4153,6 @@ namespace LinqToDB.Linq.Generator
 						}
 
 						return ConvertMemberAccessToSql(context, ma, null);
-
-						break;
-
-//						var ctx = GetContext(context, expression);
-//
-//						if (ctx != null)
-//						{
-//							var sql = ctx.ConvertToSql(expression, 0, ConvertFlags.Field);
-//
-//							switch (sql.Length)
-//							{
-//								case 0  : break;
-//								case 1  : return sql[0].Sql;
-//								default : throw new InvalidOperationException();
-//							}
-//						}
-//
-//						break;
 					}
 
 				case ExpressionType.Parameter   :
@@ -4376,18 +4334,20 @@ namespace LinqToDB.Linq.Generator
 				// occurs with Set clauses
 				if (transformed.Transformation is QuerySourceReferenceExpression terminateReference)
 				{
+
 					var querySourceRegistry = GetTableSourceRegistry(terminateReference.QuerySource);
 					result = ConvertQuerySourceMemberToSql(querySourceRegistry, ma);
 				}
 				else
 				{
 					result = ConvertToSql(transformed.SelectQuery, transformed.Transformation);
-				}
 
-				if (!(result is SqlColumn column) || column.Parent != transformed.SelectQuery)
-				{
-					var newColumn = transformed.SelectQuery.Select.Columns[transformed.SelectQuery.Select.Add(result)];
-					newColumn.RawAlias = ma.Member.Name;
+					if (!(result is SqlColumn column) || column.Parent != transformed.SelectQuery)
+					{
+						var newColumn =
+							transformed.SelectQuery.Select.Columns[transformed.SelectQuery.Select.Add(result)];
+						newColumn.RawAlias = ma.Member.Name;
+					}
 				}
 			}
 			else
@@ -4396,7 +4356,6 @@ namespace LinqToDB.Linq.Generator
 				{
 					var querySourceRegistry = GetTableSourceRegistry(reference.QuerySource);
 					result = ConvertQuerySourceMemberToSql(querySourceRegistry, ma);
-//					result = querySourceRegistry.SelectQuery.Select.Columns[querySourceRegistry.SelectQuery.Select.Add(result)];
 				}
 				else if (ma.Expression is MemberExpression subMemberExpression)
 				{
@@ -4429,7 +4388,6 @@ namespace LinqToDB.Linq.Generator
 					{
 						if (!_setSelectors.TryGetValue(setClause, out var setRegistration))
 							throw new LinqToDBException("Set source is not registered");
-						var setSource = GetTableSourceRegistry(setClause);
 
 						ISqlExpression seq1Sql;
 						ISqlExpression seq2Sql;
@@ -4450,7 +4408,7 @@ namespace LinqToDB.Linq.Generator
 						seq1Sql = seq1Ts.SelectQuery.Select.Columns[seq1Ts.SelectQuery.Select.AddNew(seq1Sql)];
 						((SqlColumn)seq1Sql).RawAlias = memberExpression.Member.Name;
 
-						result = setSource.SelectQuery.Select.Columns[setSource.SelectQuery.Select.AddNew(seq1Sql)];
+						result = querySourceRegistry.SelectQuery.Select.Columns[querySourceRegistry.SelectQuery.Select.AddNew(seq1Sql)];
 
 						if (!setRegistration.Sequence2Transformations.TryGetValue(memberExpression,
 							out var seq2Transformation))
@@ -4474,56 +4432,6 @@ namespace LinqToDB.Linq.Generator
 
 			return result;
 		}
-
-
-/*
-		private ISqlExpression ConvertMemberAccessToSql(SelectQuery context, MemberExpression ma, bool generateColumn)
-		{
-			if (_memberMappingHelper.TryGetValue(ma, out var result))
-				return result;
-
-			QuerySourceReferenceExpression realOwner = null;
-			Expression current = ma.Expression;
-			List<MemberTransformationInfo> sourcesStack = new List<MemberTransformationInfo>();
-
-			while (current != null)
-			{
-				if (current is QuerySourceReferenceExpression reference)
-				{
-					realOwner = reference;
-					break;
-				}
-				else if (current.NodeType == ExpressionType.MemberAccess)
-				{
-					var transformed = GetMemberTransformation(((MemberExpression)current).Member);
-					if (transformed == null)
-						break;
-					sourcesStack.Add(transformed);
-					current = transformed.Transformation;
-				}
-			}
-
-			if (realOwner == null)
-				throw new LinqToDBException($"Expression '{ma}' can not be converted to SQL");
-
-			var querySourceRegistry = GetTableSourceRegistry(realOwner.QuerySource);
-
-			result = realOwner.QuerySource.ConvertToSql(querySourceRegistry.TableSource.Source, ma);
-
-//			for (int i = sourcesStack.Count - 1; i >= 0; i--)
-//			{
-//				if (querySourceRegistry.TableSource != sourcesStack[i].TableSource)
-//				{
-//					var q = sourcesStack[i].SelectQuery;
-//					result = q.Select.Columns[q.Select.Add(result)];
-//				}
-//			}
-
-			_memberMappingHelper.Add(ma, result);
-
-			return result;
-		}
-*/
 
 		ISqlExpression ConvertToSqlConvertible(SelectQuery context, Expression expression)
 		{

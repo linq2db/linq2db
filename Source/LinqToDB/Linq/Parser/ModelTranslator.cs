@@ -27,6 +27,7 @@ namespace LinqToDB.Linq.Parser
 			new ConcatBuilder(),
 			new JoinBuilder(), 
 			new TakeBuilder(), 
+			new GroupByBuilder(),
 			new SkipBuilder(), 
 		};
 

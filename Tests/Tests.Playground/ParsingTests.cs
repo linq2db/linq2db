@@ -9,6 +9,7 @@ using LinqToDB.Linq.Parser;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Playground
 {
@@ -29,12 +30,35 @@ namespace Tests.Playground
 			[Column] public int? OtherValue { get; set; }
 		}
 
+		private static void ProvideParsing<T>(IQueryable<T> query, ITestDataContext db)
+		{
+			var parameter = Expression.Parameter(db.GetType());
+			var parser = new ModelTranslator(db.MappingSchema, parameter);
+			var expression = parser.PrepareExpressionForTranslation(query.Expression);
+			var model = parser.ParseModel(expression);
+
+			var generator = new QueryGenerator(parser, db);
+			var sql = generator.GenerateStatement(model);
+
+			var finalized = db.GetSqlOptimizer().Finalize(sql.Item1);
+
+			var sbRaw = new StringBuilder();
+			finalized.ToString(sbRaw, new Dictionary<IQueryElement, IQueryElement>());
+
+			var sqlStr = sbRaw.ToString();
+			Console.WriteLine(sqlStr);
+			Console.WriteLine("---------------------------------");
+
+			var sb = new StringBuilder();
+			db.CreateSqlProvider().BuildSql(0, finalized, sb, 0);
+
+			Console.WriteLine(sb.ToString());
+		}
+
 		[Test]
 		public void SampleSelectTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<SampleClass>())
-			using (db.CreateLocalTable<OtherClass>())
 			{
 				var limitedClass = db.GetTable<SampleClass>().Select(c => new SampleClass { Value = c.Value, Id = c.Id });
 
@@ -69,27 +93,7 @@ namespace Tests.Playground
 //					where q.Id > 0
 //					select q;
 
-				var parameter = Expression.Parameter(db.GetType());
-				var parser = new ModelTranslator(db.MappingSchema, parameter);
-				var expression = parser.PrepareExpressionForTranslation(query2.Expression);
-				var model = parser.ParseModel(expression);
-
-				var generator = new QueryGenerator(parser, db);
-				var sql = generator.GenerateStatement(model);
-
-				var finalized = db.GetSqlOptimizer().Finalize(sql.Item1);
-//				var finalized = sql.Item1;
-
-				var sbRaw = new StringBuilder();
-				finalized.ToString(sbRaw, new Dictionary<IQueryElement, IQueryElement>());
-
-				var sqlStr = sbRaw.ToString();
-				Console.WriteLine(sqlStr);
-
-				var sb = new StringBuilder();
-				db.CreateSqlProvider().BuildSql(0, finalized, sb, 0);
-
-				Console.WriteLine(sb.ToString());
+				ProvideParsing(query2, db);
 			}
 		}		
 
@@ -98,7 +102,7 @@ namespace Tests.Playground
 		{
 			using (var db = GetDataContext(context))
 			{
-				var limitedClass = db.GetTable<SampleClass>().Select(c => new SampleClass { Id = c.Value ?? 0, ReferenceId = -1});
+/*				var limitedClass = db.GetTable<SampleClass>().Select(c => new SampleClass { Id = c.Value ?? 0, ReferenceId = -1});
 
 				var subQuery =
 					db.GetTable<SampleClass>().Where(c => c.Id >= 0)
@@ -109,36 +113,31 @@ namespace Tests.Playground
 				var query1 = subQuery.Select(c => new { c.Value, c.ReferenceId });
 //				var query1 = subQuery;
 
-//				var limitedClass = db.GetTable<SampleClass>().Select(c => new { Id = new { c.Id, Value = (int?)null }});
-//
-//				var query1 =
-//					db.GetTable<SampleClass>().Where(c => c.Id >= 0).Select(c => new { Id = new { c.Id, c.Value }})
-//						.Union(limitedClass);
+				ProvideParsing(query1, db);
+				*/
 
-				var parameter = Expression.Parameter(db.GetType());
-				var parser = new ModelTranslator(db.MappingSchema, parameter);
-				var expression = parser.PrepareExpressionForTranslation(query1.Expression);
-				var model = parser.ParseModel(expression);
 
-				var generator = new QueryGenerator(parser, db);
-				var sql = generator.GenerateStatement(model);
+				var limitedClass2 = db.GetTable<SampleClass>().Select(c => new { CompId = new { c.Id, Value = (int?)null }});
 
-				var finalized = db.GetSqlOptimizer().Finalize(sql.Item1);
-//				var finalized = sql.Item1;
+				var query2 =
+					db.GetTable<SampleClass>().Where(c => c.Id >= 0).Select(c => new { CompId = new { c.Id, c.Value }})
+						.Union(limitedClass2);
 
-				var sbRaw = new StringBuilder();
-				finalized.ToString(sbRaw, new Dictionary<IQueryElement, IQueryElement>());
-
-				var sqlStr = sbRaw.ToString();
-				Console.WriteLine(sqlStr);
-				Console.WriteLine("---------------------------------");
-
-				var sb = new StringBuilder();
-				db.CreateSqlProvider().BuildSql(0, finalized, sb, 0);
-
-				Console.WriteLine(sb.ToString());
+				ProvideParsing(query2, db);
 			}
 		}		
+
+
+		[Test]
+		public void GroupByTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.GetTable<SampleClass>();
+
+				ProvideParsing(query, db);
+			}
+		}
 
 	}
 }

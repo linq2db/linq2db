@@ -101,8 +101,26 @@ namespace LinqToDB.Expressions
 
 			if (Constructor != null)
 			{
-				return Expression.MemberInit(Expression.New(Constructor),
-					_members.Select(m => Expression.Bind(m.Item1, m.Item2.Reduce())));
+				NewExpression newExpression;
+
+				var pms = Constructor.GetParameters();
+
+				Tuple<MemberInfo, Expression>[] toPass = _members
+					.Select(m =>
+						Tuple.Create(m.Item1, m.Item2.Transform(e => e is UnifiedNewExpression ne ? ne.Reduce() : e)))
+					.ToArray();
+
+				if (pms.Length == 0)
+					newExpression = Expression.New(Constructor);
+				else
+				{
+					var args = pms.Join(_members, p => p.Name, m => m.Item1.Name, (p, m) => m).ToArray();
+					newExpression = Expression.New(Constructor, args.Select(m => m.Item2));
+					toPass = toPass.Where(m => args.All(a => m.Item1 != a.Item1)).ToArray();
+				}
+
+				return Expression.MemberInit(newExpression,
+					toPass.Select(m => Expression.Bind(m.Item1, m.Item2.Reduce())));
 			}
 
 			throw new InvalidOperationException();
