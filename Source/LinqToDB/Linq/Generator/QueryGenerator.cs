@@ -228,11 +228,11 @@ namespace LinqToDB.Linq.Generator
 		}
 
 		private void RegisterSetTransformation(SelectQuery selectQuery, SqlTableSource current, IQuerySource querySource,
-			Expression selector, UnifiedNewExpression unifiedSelector, Dictionary<MemberExpression, MemberTransformationInfo> setTransformations)
+			Expression selector, Dictionary<MemberExpression, MemberTransformationInfo> setTransformations)
 		{
 			var refExpression = Translator.GetSourceReference(querySource);
 
-			void RegisterLevel(Expression objExpression, Expression argument, UnifiedNewExpression unified)
+			void RegisterLevel(Expression objExpression, Expression argument)
 			{
 				foreach (var mapping in GeneratorHelper.GetMemberMapping(argument, MappingSchema))
 				{
@@ -243,11 +243,11 @@ namespace LinqToDB.Linq.Generator
 					if (!_memberTransformations.ContainsKey(ma))
 						_memberTransformations.Add(ma, new MemberTransformationInfo(selectQuery, current, refExpression));
 
-					RegisterLevel(ma, mapping.Item2, null);
+					RegisterLevel(ma, mapping.Item2);
 				}
 			}
 
-			RegisterLevel(refExpression, selector, unifiedSelector);
+			RegisterLevel(refExpression, selector);
 		}
 
 		private MemberTransformationInfo GetMemberTransformation(MemberExpression memberExpression)
@@ -440,11 +440,11 @@ namespace LinqToDB.Linq.Generator
 			var setRegistration = new SetRegistration();
 
 			RegisterSetTransformation(sequence1Registration.SelectQuery, sequence1Registration.TableSource, setClause,
-				projection1, (UnifiedNewExpression)s1,
+				projection1,
 				setRegistration.Sequence1Transformations);
 
 			RegisterSetTransformation(sequence2Registration.SelectQuery, sequence2Registration.TableSource, setClause,
-				projection2, (UnifiedNewExpression)s2,
+				projection2,
 				setRegistration.Sequence2Transformations);
 
 			var unifiedNewExpression = CombineSelector((UnifiedNewExpression)s1, (UnifiedNewExpression)s2);
