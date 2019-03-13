@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
 
@@ -31,6 +32,23 @@ namespace LinqToDB.Linq.Parser.Clauses
 				var clause = Clauses[i];
 				if (clause is IQuerySource qs)
 					return qs;
+			}
+
+			return null;
+		}
+
+		public BaseClause GetFromClause()
+		{
+			return Clauses.FirstOrDefault();
+		}
+
+		public SelectClause GetSelectClause()
+		{
+			for (var i = Clauses.Count - 1; i >= 0; i--)
+			{
+				var clause = Clauses[i];
+				if (clause is SelectClause sc)
+					return sc;
 			}
 
 			return null;

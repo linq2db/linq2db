@@ -24,6 +24,7 @@ namespace LinqToDB.Linq.Parser
 			new ConstantQueryBuilder(),
 			new GetTableBuilder(),
 			new UnionBuilder(),
+			new ConcatBuilder(),
 			new JoinBuilder(), 
 			new TakeBuilder(), 
 			new SkipBuilder(), 

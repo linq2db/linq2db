@@ -19,6 +19,7 @@ namespace Tests.Playground
 		{
 			[Column, PrimaryKey] public int Id    { get; set; }
 			[Column] public int? Value { get; set; }
+			[Column] public int? ReferenceId { get; set; }
 		}
 
 		[Table]
@@ -97,11 +98,20 @@ namespace Tests.Playground
 		{
 			using (var db = GetDataContext(context))
 			{
-				var limitedClass = db.GetTable<SampleClass>().Select(c => new SampleClass { Value = c.Value });
+				var limitedClass = db.GetTable<SampleClass>().Select(c => new SampleClass { Id = c.Value ?? 0, ReferenceId = -1});
 
-				var query1 =
+				var subQuery =
 					db.GetTable<SampleClass>().Where(c => c.Id >= 0)
+						.Select(c => new SampleClass { Value = c.Value })
 						.Union(limitedClass);
+
+				var query1 = subQuery.Select(c => new { c.Id });
+
+//				var limitedClass = db.GetTable<SampleClass>().Select(c => new { Id = new { c.Id, Value = (int?)null }});
+//
+//				var query1 =
+//					db.GetTable<SampleClass>().Where(c => c.Id >= 0).Select(c => new { Id = new { c.Id, c.Value }})
+//						.Union(limitedClass);
 
 				var parameter = Expression.Parameter(db.GetType());
 				var parser = new ModelTranslator(db.MappingSchema, parameter);
@@ -119,6 +129,7 @@ namespace Tests.Playground
 
 				var sqlStr = sbRaw.ToString();
 				Console.WriteLine(sqlStr);
+				Console.WriteLine("---------------------------------");
 
 				var sb = new StringBuilder();
 				db.CreateSqlProvider().BuildSql(0, finalized, sb, 0);

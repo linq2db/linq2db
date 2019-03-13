@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
@@ -65,6 +66,11 @@ namespace LinqToDB.Linq.Generator
 							.Where(b => b.BindingType == MemberBindingType.Assignment)
 							.Select(b => Tuple.Create(((MemberAssignment)b).Member, ((MemberAssignment)b).Expression));
 					}
+			}
+
+			if (expression is UnifiedNewExpression newUnified)
+			{
+				return newUnified.Members;
 			}
 
 			if (expression.Type.IsClassEx())
