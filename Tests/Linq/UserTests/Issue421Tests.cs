@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace Tests.UserTests
 {
 	[TestFixture]
-	public class Issue421 : TestBase
+	public class Issue421Tests : TestBase
 	{
 		public class BlobClass
 		{

@@ -151,8 +151,8 @@ namespace LinqToDB.Mapping
 					TableName = TableName.Substring(1);
 			}
 
-			var attrs = new List<ColumnAttribute>();
-			var members = TypeAccessor.Members.Concat(
+			var dynamicColumns = new List<ColumnAttribute>();
+			var members        = TypeAccessor.Members.Concat(
 				mappingSchema.GetDynamicColumns(ObjectType).Select(dc => new MemberAccessor(TypeAccessor, dc)));
 
 			foreach (var member in members)
@@ -168,22 +168,36 @@ namespace LinqToDB.Mapping
 					continue;
 				}
 
-				var ca = mappingSchema.GetAttribute<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var cas = mappingSchema.GetAttributes<ColumnAttribute>(
+					TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration, includeDefaultConfiguration:false);
 
-				if (ca != null)
+				if (cas.Length != 0)
 				{
-					if (ca.IsColumn)
+					if (cas.Length == 1)
 					{
-						if (ca.MemberName != null)
+						if (cas[0].IsColumn)
 						{
-							attrs.Add(new ColumnAttribute(member.Name, ca));
+							if (cas[0].MemberName != null)
+							{
+								dynamicColumns.Add(new ColumnAttribute(member.Name, cas[0]));
+							}
+							else
+							{
+								var cd = new ColumnDescriptor(mappingSchema, cas[0], member);
+								AddColumn(cd);
+								_columnNames.Add(member.Name, cd);
+							}
 						}
-						else
-						{
-							var cd = new ColumnDescriptor(mappingSchema, ca, member);
-							AddColumn(cd);
-							_columnNames.Add(member.Name, cd);
-						}
+					}
+					else
+					{
+						foreach (var ca in cas)
+							if (ca.IsColumn)
+								if (ca.MemberName != null)
+									dynamicColumns.Add(new ColumnAttribute(member.Name, ca));
+								else
+									throw new LinqToDBException(
+										$"Invalid use of ColumnAttribute. Member '{member.Name}', Column '{ca.Name}'");
 					}
 				}
 				else if (
@@ -223,7 +237,7 @@ namespace LinqToDB.Mapping
 
 			var typeColumnAttrs = mappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, a => a.Configuration);
 
-			foreach (var attr in typeColumnAttrs.Concat(attrs))
+			foreach (var attr in typeColumnAttrs.Concat(dynamicColumns))
 				if (attr.IsColumn)
 					SetColumn(attr, mappingSchema);
 		}

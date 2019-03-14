@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -57,7 +58,12 @@ namespace LinqToDB.Linq.Builder
 			if (_skippedExpressions.Contains(expr))
 				return new TransformInfo(expr, true);
 
-			if (expr.Find(IsNoneSqlMember) != null)
+//			if (IsNoneSqlMember(context, expr))
+//				return new TransformInfo(expr);
+
+			var isNoneSqlMember = IsNoneSqlMember(context, expr);
+			Debug.WriteLine($"{expr} - {isNoneSqlMember}");
+			if (isNoneSqlMember)
 				return new TransformInfo(expr);
 
 			switch (expr.NodeType)
@@ -411,12 +417,25 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsNonSqlMember
 
-		bool IsNoneSqlMember(Expression expr)
+		bool IsNoneSqlMember(IBuildContext context, Expression expr)
 		{
 			switch (expr.NodeType)
 			{
 				case ExpressionType.MemberAccess:
 					{
+						var ctx = GetContext(context, expr);
+
+						if (ctx != null)
+						{
+							var isExpr = ctx.IsExpression(expr, 0, RequestFor.Field);
+							if (ctx.IsExpression(expr, 0, RequestFor.Field).      Result == false &&
+								ctx.IsExpression(expr, 0, RequestFor.Association).Result == false
+							    )// && !(isExpr.Context is TableBuilder.AssociatedTableContext))
+								return true;
+						}
+
+						break;
+
 						var me = (MemberExpression)expr;
 
 						var om = (

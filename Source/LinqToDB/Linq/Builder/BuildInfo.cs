@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 		private bool _isAssociationBuilt;
 		public  bool  IsAssociationBuilt
 		{
-			get { return _isAssociationBuilt; }
+			get => _isAssociationBuilt;
 			set
 			{
 				_isAssociationBuilt = value;

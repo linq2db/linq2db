@@ -810,14 +810,20 @@ namespace LinqToDB.Linq.Builder
 			{
 				switch (requestFor)
 				{
-					case RequestFor.Field      :
+					case RequestFor.Field            :
 						{
 							var table = FindTable(expression, level, false, false);
-							return new IsExpressionResult(table?.Field != null);
+							return new IsExpressionResult(table?.Field != null, table?.Table);
 						}
 
-					case RequestFor.Table       :
-					case RequestFor.Object      :
+					case RequestFor.AssociationField :
+						{
+							var table = FindTable(expression, level, false, false);
+							return new IsExpressionResult(table?.Table is AssociatedTableContext && table?.Field != null, table?.Table);
+						}
+
+					case RequestFor.Table            :
+					case RequestFor.Object           :
 						{
 							var table   = FindTable(expression, level, false, false);
 							var isTable =
@@ -828,7 +834,7 @@ namespace LinqToDB.Linq.Builder
 							return new IsExpressionResult(isTable, isTable ? table.Table : null);
 						}
 
-					case RequestFor.Expression :
+					case RequestFor.Expression       :
 						{
 							if (expression == null)
 								return IsExpressionResult.False;
@@ -1182,7 +1188,6 @@ namespace LinqToDB.Linq.Builder
 										var name = levelMember.Member.Name;
 										if (field.Name.IndexOf('.') >= 0)
 										{
-
 											for (var ex = (MemberExpression)expression; ex != levelMember; ex = (MemberExpression)ex.Expression)
 												name += "." + ex.Member.Name;
 

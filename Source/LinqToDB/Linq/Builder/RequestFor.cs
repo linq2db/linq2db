@@ -35,6 +35,11 @@ namespace LinqToDB.Linq.Builder
 		Field,
 
 		/// <summary>
+		/// Checks the sequence if the expression is a field of an association.
+		/// </summary>
+		AssociationField,
+
+		/// <summary>
 		/// Checks the sequence if the expression contains an SQL expression.
 		/// </summary>
 		Expression,

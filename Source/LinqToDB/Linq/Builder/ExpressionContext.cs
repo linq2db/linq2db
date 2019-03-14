@@ -84,17 +84,18 @@ namespace LinqToDB.Linq.Builder
 		{
 			switch (requestFlag)
 			{
-				case RequestFor.Root        :
+				case RequestFor.Root             :
 					return new IsExpressionResult(Lambda.Parameters.Count == 1 ?
 						ReferenceEquals(expression, Lambda.Parameters[0]) :
 						Lambda.Parameters.Any(p => ReferenceEquals(expression, p)));
 
-				case RequestFor.Table       :
-				case RequestFor.Association :
-				case RequestFor.Object      :
-				case RequestFor.GroupJoin   :
-				case RequestFor.Field       :
-				case RequestFor.Expression  :
+				case RequestFor.Table            :
+				case RequestFor.Association      :
+				case RequestFor.Object           :
+				case RequestFor.GroupJoin        :
+				case RequestFor.AssociationField :
+				case RequestFor.Field            :
+				case RequestFor.Expression       :
 					{
 						if (expression == null)
 							return IsExpressionResult.False;

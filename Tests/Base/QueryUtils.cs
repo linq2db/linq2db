@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+
 using JetBrains.Annotations;
-using LinqToDB;
-using LinqToDB.Data;
+
 using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 
@@ -49,6 +50,6 @@ namespace Tests
 		public static SqlTableSource GetTableSource<T>(this IQueryable<T> query)
 		{
 			return GetSelectQuery(query).From.Tables.Single();
-		}		
+		}
 	}
 }

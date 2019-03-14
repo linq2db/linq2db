@@ -575,7 +575,7 @@ namespace LinqToDB.Mapping
 			return expr;
 		}
 
-		static bool IsSimple (ref DbDataType type) 
+		static bool IsSimple (ref DbDataType type)
 			=> type.DataType == DataType.Undefined && string.IsNullOrEmpty(type.DbType);
 
 		static DbDataType Simplify(ref DbDataType type)
@@ -980,8 +980,10 @@ namespace LinqToDB.Mapping
 		/// <param name="memberInfo">Attributes owner member.</param>
 		/// <param name="configGetter">Attribute configuration name provider.</param>
 		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
+		/// <param name="includeDefaultConfiguration">If <c>false</c> and the member contains both configuration specific and default attributes,
+		/// does not include default configuration attributes.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true, bool includeDefaultConfiguration = true)
 			where T : Attribute
 		{
 			var list  = new List<T>();
@@ -991,6 +993,9 @@ namespace LinqToDB.Mapping
 				foreach (var a in attrs)
 					if (configGetter(a) == c)
 						list.Add(a);
+
+			if (!includeDefaultConfiguration && list.Count > 0)
+				return list.ToArray();
 
 			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
 		}
@@ -1024,7 +1029,7 @@ namespace LinqToDB.Mapping
 		public T GetAttribute<T>(Type type, MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = GetAttributes(type, memberInfo, configGetter, inherit);
+			var attrs = GetAttributes(type, memberInfo, configGetter, inherit, false);
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 

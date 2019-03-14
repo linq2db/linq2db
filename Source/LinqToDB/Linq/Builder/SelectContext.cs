@@ -659,12 +659,13 @@ namespace LinqToDB.Linq.Builder
 
 				switch (requestFlag)
 				{
-					case RequestFor.Table       :
-					case RequestFor.Association :
-					case RequestFor.Field       :
-					case RequestFor.Expression  :
-					case RequestFor.Object      :
-					case RequestFor.GroupJoin   :
+					case RequestFor.Table            :
+					case RequestFor.Association      :
+					case RequestFor.Field            :
+					case RequestFor.AssociationField :
+					case RequestFor.Expression       :
+					case RequestFor.Object           :
+					case RequestFor.GroupJoin        :
 						return ProcessScalar(
 							expression,
 							level,
@@ -677,12 +678,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				switch (requestFlag)
 				{
-					case RequestFor.Table       :
-					case RequestFor.Association :
-					case RequestFor.Field       :
-					case RequestFor.Expression  :
-					case RequestFor.Object      :
-					case RequestFor.GroupJoin   :
+					case RequestFor.Table            :
+					case RequestFor.Association      :
+					case RequestFor.Field            :
+					case RequestFor.AssociationField :
+					case RequestFor.Expression       :
+					case RequestFor.Object           :
+					case RequestFor.GroupJoin        :
 						{
 							if (expression == null)
 							{

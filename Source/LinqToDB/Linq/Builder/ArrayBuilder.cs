@@ -203,8 +203,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					switch (requestFlag)
 					{
-						case RequestFor.Expression :
-						case RequestFor.Field      : return IsExpressionResult.False;
+						case RequestFor.Expression       :
+						case RequestFor.AssociationField :
+						case RequestFor.Field            : return IsExpressionResult.False;
 					}
 				}
 
