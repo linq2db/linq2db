@@ -90,8 +90,15 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (value is bool)
 			{
-				value = (bool)value ? "1" : "0";
-				dataType = dataType.WithDataType(DataType.Char);
+				if (FirebirdConfiguration.SupportBooleanType)
+				{
+					dataType = dataType.WithDataType(DataType.Boolean);
+				}
+				else
+				{
+					value = (bool)value ? "1" : "0";
+					dataType = dataType.WithDataType(DataType.Char);
+				}
 			}
 
 			base.SetParameter(parameter, name, dataType, value);

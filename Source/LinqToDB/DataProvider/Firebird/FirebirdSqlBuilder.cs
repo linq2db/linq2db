@@ -19,6 +19,10 @@ namespace LinqToDB.DataProvider.Firebird
 		public FirebirdSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
+			if (FirebirdConfiguration.SupportBooleanType)
+			{
+				valueToSqlConverter.SetConverter(typeof(Boolean), (sb, dt, v) => sb.Append((bool)v ? "true" : "false"));
+			}
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -111,8 +115,14 @@ namespace LinqToDB.DataProvider.Firebird
 					break;
 				case DataType.VarBinary     : StringBuilder.Append("BLOB");            break;
 				// BOOLEAN type available since FB 3.0, but FirebirdDataProvider.SetParameter converts boolean to '1'/'0'
-				// so for now we will use type, compatible with SetParameter by default
-				case DataType.Boolean       : StringBuilder.Append("CHAR");            break;
+				// so for now we will use type, compatible with SetParameter by default.
+				// For Firebird 3.0 you can set the global config FirebirdConfiguration.SupportBooleanType
+				case DataType.Boolean:
+					if (!FirebirdConfiguration.SupportBooleanType)
+					{
+						StringBuilder.Append("CHAR");
+					}
+					break;
 				default: base.BuildDataType(type, createDbType); break;
 			}
 		}
