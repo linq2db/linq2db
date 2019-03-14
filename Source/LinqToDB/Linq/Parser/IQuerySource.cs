@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Parser
 		Type ItemType { get; }
 		string ItemName { get; }
 
-		bool DoesContainMember(MemberInfo memberInfo, MappingSchema mappingSchema);
-		ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression expression);
+//		bool DoesContainMember(MemberInfo memberInfo, MappingSchema mappingSchema);
+//		ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression expression);
 	}
 }

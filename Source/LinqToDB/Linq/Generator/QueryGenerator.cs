@@ -178,6 +178,24 @@ namespace LinqToDB.Linq.Generator
 
 							break;
 						}
+					case CountClause count:
+						{
+							var sqlFunction = SqlFunction.CreateCount(count.ResultType, current);
+							selectQuery.Select.Add(sqlFunction);
+							break;
+						}
+					case TakeClause take :
+						{
+							//TODO: hints
+							selectQuery.Select.Take(ConvertToSql(null, take.TakeExpression), null);
+							break;
+						}
+					case SkipClause skip :
+						{
+							//TODO: hints
+							selectQuery.Select.Skip(ConvertToSql(null, skip.SkipExpression));
+							break;
+						}
 				}
 			}
 
@@ -264,10 +282,16 @@ namespace LinqToDB.Linq.Generator
 			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 		}
 
-		public Tuple<SqlStatement, Expression> GenerateStatement(Sequence sequence)
+		private SelectQuery GenerateSelectQuery(Sequence sequence)
 		{
 			var selectQuery = new SelectQuery();
 			GenerateQueryInternal(selectQuery, sequence, new List<IStreamedData>());
+			return selectQuery;
+		}
+
+		public Tuple<SqlStatement, Expression> GenerateStatement(Sequence sequence)
+		{
+			var selectQuery = GenerateSelectQuery(sequence);
 			var projection = GenerateProjection(sequence, (e, sqlExpr) =>
 			{
 				int idx = -1;
@@ -336,7 +360,8 @@ namespace LinqToDB.Linq.Generator
 			return result;
 		}
 
-		private Expression GenerateProjection(Sequence sequence, Func<Expression, ISqlExpression, Expression> registerExpression)
+		private Expression GenerateProjection(Sequence sequence,
+			Func<Expression, ISqlExpression, Expression> registerExpression)
 		{
 			Expression result = null;
 
@@ -366,6 +391,19 @@ namespace LinqToDB.Linq.Generator
 					var memberInit = Expression.MemberInit(newExpression,
 						ed.Columns.Select(c => Expression.Bind(c.MemberInfo, Expression.MakeMemberAccess(reference, c.MemberInfo))));
 					result = GenerateProjection(memberInit, registerExpression);
+					break;
+				}
+				else if (clause is CountClause count)
+				{
+					var sqlFunction = SqlFunction.CreateCount(count.ResultType, null);
+					result = registerExpression(null, sqlFunction);
+					if (result == null)
+						throw new InvalidOperationException();
+					break;
+				}
+				else if (clause is Sequence seq)
+				{
+					result = GenerateProjection(seq, registerExpression);
 					break;
 				}
 			}
@@ -3749,6 +3787,7 @@ namespace LinqToDB.Linq.Generator
 							break;
 						}
 					case QuerySourceReferenceExpression.ExpressionType:
+					case SubQueryExpression.ExpressionType:
 						{
 							return true;
 						}
@@ -4307,6 +4346,12 @@ namespace LinqToDB.Linq.Generator
 							return ConvertToSql(context, expression.Reduce());
 
 						break;
+					}
+				case SubQueryExpression.ExpressionType:
+					{
+						var subquery = (SubQueryExpression)expression;
+						var sql = GenerateSelectQuery(subquery.Sequence);
+						return sql;
 					}
 			}
 

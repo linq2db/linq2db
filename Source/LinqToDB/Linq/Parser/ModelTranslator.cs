@@ -29,6 +29,7 @@ namespace LinqToDB.Linq.Parser
 			new TakeBuilder(), 
 			new GroupByBuilder(),
 			new SkipBuilder(), 
+			new CountBuilder(), 
 		};
 
 		private static readonly Dictionary<MethodInfo, MethodCallBuilder[]> _methodCallBuilders;
@@ -501,31 +502,16 @@ namespace LinqToDB.Linq.Parser
 			return referenceExpression;
 		}
 
-		public static Sequence CompactSequence(Sequence sequence)
-		{
-			for (var index = 0; index < sequence.Clauses.Count; index++)
-			{
-				var clause = sequence.Clauses[index];
-				if (clause is Sequence sq) 
-					sequence.Clauses[index] = CompactSequence(sq);
-			}
-
-			if (sequence.Clauses.Count == 1 && sequence.Clauses[0] is Sequence s)
-				return s;
-			return sequence;
-		}
-
 		public Sequence ParseModel(Expression expression)
 		{
 			var sequence = BuildSequence(new ParseBuildInfo(), expression);
-			sequence = CompactSequence(sequence);
 
 			return sequence;
 		}
 
 		public static bool IsSequence(Expression expression)
 		{
-			return FindBuilder(expression) != null;
+			return expression.NodeType == ExpressionType.Call && FindBuilder(expression) != null;
 		}
 
 	}

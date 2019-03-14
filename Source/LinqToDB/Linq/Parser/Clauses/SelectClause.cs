@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Expressions;
 using LinqToDB.Linq.Generator;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -52,6 +53,11 @@ namespace LinqToDB.Linq.Parser.Clauses
 		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression ma)
 		{
 			throw new NotImplementedException();
+		}
+
+		public override void TransformExpression(Func<Expression, Expression> func)
+		{
+			Selector = Selector.Transform(func);
 		}
 	}
 }

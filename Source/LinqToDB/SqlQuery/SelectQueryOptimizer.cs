@@ -797,7 +797,7 @@ namespace LinqToDB.SqlQuery
 			var isQueryOK = query.From.Tables.Count == 1;
 
 			isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
-			isQueryOK = isQueryOK && !query.HasUnion && query.GroupBy.IsEmpty && !query.Select.HasModifier;
+			isQueryOK = isQueryOK && !query.HasUnion && query.GroupBy.IsEmpty && !(query.Select.IsDistinct || query.Select.TakeValue != null);
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
 
 			if (!isQueryOK)
@@ -842,6 +842,15 @@ namespace LinqToDB.SqlQuery
 
 			if (!query.Where. IsEmpty) ConcatSearchCondition(_selectQuery.Where,  query.Where);
 			if (!query.Having.IsEmpty) ConcatSearchCondition(_selectQuery.Having, query.Having);
+
+			if (query.Select.SkipValue != null)
+			{
+				if (_selectQuery.Select.SkipValue == null)
+					_selectQuery.Select.SkipValue = query.Select.SkipValue;
+				else
+					_selectQuery.Select.SkipValue = new SqlBinaryExpression(_selectQuery.Select.SkipValue.SystemType,
+						_selectQuery.Select.SkipValue, "+", query.Select.SkipValue, Precedence.Additive);
+			}
 
 			((ISqlExpressionWalkable)top).Walk(new WalkOptions(), expr =>
 			{

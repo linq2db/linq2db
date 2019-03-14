@@ -37,6 +37,9 @@ namespace Tests.Playground
 			var expression = parser.PrepareExpressionForTranslation(query.Expression);
 			var model = parser.ParseModel(expression);
 
+			var optimizer = new ModelOptimizer(new OptimizationFlags { CountFilterSupported = false });
+			model = optimizer.OptimizeModel(model);
+
 			var generator = new QueryGenerator(parser, db);
 			var sql = generator.GenerateStatement(model);
 
@@ -134,6 +137,37 @@ namespace Tests.Playground
 			using (var db = GetDataContext(context))
 			{
 				var query = db.GetTable<SampleClass>();
+
+				ProvideParsing(query, db);
+			}
+		}
+
+		[Test]
+		public void CountInSelectTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.GetTable<SampleClass>()
+					.Select(c =>
+						new
+						{
+							Count = db.GetTable<SampleClass>()
+								.Where(t => t.Id > 0)
+								.Count(_ => _.ReferenceId != null)
+						}
+					);
+
+				ProvideParsing(query, db);
+			}
+		}
+
+		[Test]
+		public void TakeTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var take = 5;
+				var query = db.GetTable<SampleClass>().Skip(2).Take(take);
 
 				ProvideParsing(query, db);
 			}

@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			SearchExpression = searchExpression;
 		}
 
-		public Expression SearchExpression { get; private set; }
+		public Expression SearchExpression { get; internal set; }
 
 		public override BaseClause Visit(Func<BaseClause, BaseClause> func)
 		{

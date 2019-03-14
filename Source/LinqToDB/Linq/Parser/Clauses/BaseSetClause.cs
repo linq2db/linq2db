@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Linq.Expressions;
-using System.Reflection;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
@@ -41,16 +37,6 @@ namespace LinqToDB.Linq.Parser.Clauses
 		public override bool VisitParentFirst(Func<BaseClause, bool> func)
 		{
 			return func(this) && Sequence1.VisitParentFirst(func) && Sequence2.VisitParentFirst(func);
-		}
-
-		public bool DoesContainMember(MemberInfo memberInfo, MappingSchema mappingSchema)
-		{
-			throw new NotImplementedException();
-		}
-
-		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression ma)
-		{
-			throw new NotImplementedException();
 		}
 
 	}

@@ -20,5 +20,9 @@ namespace LinqToDB.Linq.Parser
 		public static readonly MethodInfo GroupBy              = MemberHelper.MethodOf<IQueryable<object>>(q => q.GroupBy(_ => 1, _ => 2, (q1, q2) => 0)).GetGenericMethodDefinition();
 
 		public static readonly MethodInfo GetTable             = MemberHelper.MethodOf<IDataContext>(dc => dc.GetTable<object>()).GetGenericMethodDefinition();
+
+		public static readonly MethodInfo Count                = MemberHelper.MethodOf<IQueryable<object>>(q => q.Count()).GetGenericMethodDefinition();
+		public static readonly MethodInfo CountPredicate       = MemberHelper.MethodOf<IQueryable<object>>(q => q.Count(_ => true)).GetGenericMethodDefinition();
+
 	}
 }

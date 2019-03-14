@@ -51,15 +51,5 @@ namespace LinqToDB.Linq.Parser.Clauses
 		public Type ItemType { get; }
 		public string ItemName { get; }
 
-		public bool DoesContainMember(MemberInfo memberInfo, MappingSchema mappingSchema)
-		{
-			throw new NotImplementedException();
-		}
-
-		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression ma)
-		{
-			return Inner.ConvertToSql(tableSource, ma);
-		}
-
 	}
 }

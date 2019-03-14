@@ -1,13 +1,14 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Expressions;
 using LinqToDB.Linq.Parser.Clauses;
 
 namespace LinqToDB.Linq.Parser.Builders
 {
-	public class SkipBuilder : MethodCallBuilder
+	public class CountBuilder : MethodCallBuilder
 	{
 		private static readonly MethodInfo[] _supported =
-			{ ParsingMethods.Skip };
+			{ ParsingMethods.Count, ParsingMethods.CountPredicate };
 
 		public override MethodInfo[] SupportedMethods()
 		{
@@ -18,7 +19,14 @@ namespace LinqToDB.Linq.Parser.Builders
 		{
 			var sequence = builder.BuildSequence(new ParseBuildInfo(), methodCallExpression.Arguments[0]);
 			parseBuildInfo.Sequence.AddClause(sequence);
-			parseBuildInfo.Sequence.AddClause(new SkipClause(builder.ConvertExpression(methodCallExpression.Arguments[1])));
+			Expression filterExpression = null;
+			if (methodCallExpression.Arguments.Count > 1)
+			{
+				var sourceReference = builder.GetSourceReference(sequence);
+				filterExpression = ((LambdaExpression)methodCallExpression.Arguments[1].Unwrap()).GetBody(sourceReference);
+				filterExpression = builder.ConvertExpression(filterExpression);
+			}
+			sequence.AddClause(new CountClause(filterExpression, methodCallExpression.Method.ReturnType));
 			return parseBuildInfo.Sequence;
 		}
 	}
