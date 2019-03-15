@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Parser.Builders
 			var sr = builder.GetSourceReference(sequence);
 
 			var lambda = (LambdaExpression)methodCallExpression.Arguments[1].Unwrap();
-			var projectionExpression = builder.ConvertExpression(lambda.GetBody(sr));
+			var projectionExpression = builder.ConvertExpression(sequence, lambda.GetBody(sr));
 
 			var selectClause = new SelectClause(projectionExpression.Type, "", projectionExpression);
 

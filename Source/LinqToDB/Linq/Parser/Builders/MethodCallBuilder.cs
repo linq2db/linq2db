@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Parser.Builders
 {
 	public abstract class MethodCallBuilder : BaseBuilder
 	{
-		public override bool CanBuild(Expression expression)
+		public override bool CanBuild(ModelTranslator builder, Expression expression)
 		{
 			if (expression.NodeType != ExpressionType.Call)
 				return false;

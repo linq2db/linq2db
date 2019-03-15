@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Parser.Builders
 		{
 			var sequence = builder.BuildSequence(new ParseBuildInfo(), methodCallExpression.Arguments[0]);
 			parseBuildInfo.Sequence.AddClause(sequence);
-			parseBuildInfo.Sequence.AddClause(new SkipClause(builder.ConvertExpression(methodCallExpression.Arguments[1])));
+			parseBuildInfo.Sequence.AddClause(new SkipClause(builder.ConvertExpression(sequence, methodCallExpression.Arguments[1])));
 			return parseBuildInfo.Sequence;
 		}
 	}

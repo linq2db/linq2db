@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -7,11 +8,68 @@ using LinqToDB.Common;
 using LinqToDB.Linq.Parser.Builders;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Linq.Generator;
 using LinqToDB.Linq.Parser.Clauses;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser
 {
+	public class TranslationContext
+	{
+		private readonly Dictionary<Expression,AssociationRegistry> _associationRegistry =
+			new Dictionary<Expression,AssociationRegistry>(new ExpressionEqualityComparer());
+
+		private readonly Dictionary<IQuerySource, QuerySourceReferenceExpression> _registeredSources =
+			new Dictionary<IQuerySource, QuerySourceReferenceExpression>();
+
+
+		public static ParameterExpression DataContextParam { get; } = Expression.Parameter(typeof(IDataContext), "dctx");
+
+		public class AssociationRegistry
+		{
+			public AssociationRegistry([JetBrains.Annotations.NotNull] QuerySourceReferenceExpression parentSource,
+				AssociationClause clause, QuerySourceReferenceExpression expression)
+			{
+				ParentSource = parentSource ?? throw new ArgumentNullException(nameof(parentSource));
+				Clause = clause;
+				Expression = expression;
+			}
+
+			public QuerySourceReferenceExpression ParentSource { get; }
+			public AssociationClause Clause { get; }
+			public QuerySourceReferenceExpression Expression { get; }
+		}
+
+		public QuerySourceReferenceExpression RegisterSource(IQuerySource querySource)
+		{
+			var referenceExpression = new QuerySourceReferenceExpression(querySource);
+			_registeredSources.Add(querySource, referenceExpression);
+			return referenceExpression;
+		}
+
+		public QuerySourceReferenceExpression GetSourceReference(IQuerySource querySource)
+		{
+			if (!_registeredSources.TryGetValue(querySource, out var value))
+				value = RegisterSource(querySource);
+			return value;
+		}
+
+		public AssociationRegistry RegisterAssociation(Expression forExpression, [JetBrains.Annotations.NotNull] QuerySourceReferenceExpression parentSource,
+			AssociationClause clause, QuerySourceReferenceExpression expression)
+		{
+			var association = new AssociationRegistry(parentSource, clause, expression);
+			_associationRegistry.Add(forExpression, association);
+			return association;
+		}
+
+		public AssociationRegistry GetAssociationRegistry(Expression forExpression)
+		{
+			_associationRegistry.TryGetValue(forExpression, out var value);
+			return value;
+		}
+	}
+
 	public class ModelTranslator
 	{
 		private static readonly BaseBuilder[] _builders = 
@@ -30,6 +88,8 @@ namespace LinqToDB.Linq.Parser
 			new GroupByBuilder(),
 			new SkipBuilder(), 
 			new CountBuilder(), 
+			new AssociationBuilder(), 
+			new ReferenceBuilder()
 		};
 
 		private static readonly Dictionary<MethodInfo, MethodCallBuilder[]> _methodCallBuilders;
@@ -50,6 +110,7 @@ namespace LinqToDB.Linq.Parser
 
 		public MappingSchema MappingSchema { get; }
 		public ParameterExpression DataContextParam { get; }
+		public TranslationContext TranslationContext { get; }
 
 		public ModelTranslator(
 			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema,
@@ -57,13 +118,11 @@ namespace LinqToDB.Linq.Parser
 		{
 			MappingSchema = mappingSchema ?? throw new ArgumentNullException(nameof(mappingSchema));
 			DataContextParam = dataContextParam ?? throw new ArgumentNullException(nameof(dataContextParam));
+
+			TranslationContext = new TranslationContext();
 		}
 
-		private Dictionary<ParameterExpression, QuerySourceReferenceExpression> _registeredSources = new Dictionary<ParameterExpression, QuerySourceReferenceExpression>();
-		private readonly Dictionary<IQuerySource, QuerySourceReferenceExpression> _registeredSources2 = new Dictionary<IQuerySource, QuerySourceReferenceExpression>();
-
-
-		private static BaseBuilder FindBuilder(Expression expression)
+		private BaseBuilder FindBuilder(Expression expression)
 		{
 			if (expression.NodeType == ExpressionType.Call)
 			{
@@ -73,7 +132,7 @@ namespace LinqToDB.Linq.Parser
 				{
 					foreach (var builder in builders)
 					{
-						if (builder.CanBuild(expression))
+						if (builder.CanBuild(this, expression))
 							return builder;
 					}
 
@@ -83,7 +142,7 @@ namespace LinqToDB.Linq.Parser
 			{
 				foreach (var builder in _otherBuilders)
 				{
-					if (builder.CanBuild(expression))
+					if (builder.CanBuild(this, expression))
 						return builder;
 				}
 			}
@@ -97,7 +156,7 @@ namespace LinqToDB.Linq.Parser
 			if (builder != null)
 				return builder.BuildSequence(this, parseBuildInfo, expression);
 
-			throw new NotImplementedException();
+			throw new LinqToDBException($"Can not build sequence for expression '{expression}'");
 		}
 
 		LambdaExpression ConvertMethodExpression(Type type, MemberInfo mi)
@@ -433,32 +492,135 @@ namespace LinqToDB.Linq.Parser
 
 		#endregion
 
-		public Expression ConvertExpression(Expression expression)
+		private BaseClause BuildAssociationClause(Sequence forSequence, QuerySourceReferenceExpression mainSourceReference, AssociationDescriptor descriptor, string itemName, out IQuerySource childSource)
 		{
+			var mainType = mainSourceReference.Type;
+			var childType = descriptor.MemberInfo.GetMemberType();
+			var queryExpression = descriptor.GetQueryMethod(mainType, childType);
+
+			Expression predicate = null;
+
+			if (queryExpression == null)
+			{
+				var tableClause = new TableSource(childType, itemName);
+				childSource = tableClause;
+
+				var childSourceReference = TranslationContext.RegisterSource(tableClause);
+
+				if (descriptor.ThisKey.Length > 0)
+				{
+					predicate = descriptor.ThisKey.Select(k => Expression.PropertyOrField(mainSourceReference, k))
+						.Zip(
+							descriptor.OtherKey.Select(k => Expression.PropertyOrField(childSourceReference, k)),
+							(m, c) => ExpressionGeneratorHelper.Equal(MappingSchema, m, c)
+						).Aggregate((l, r) => Expression.AndAlso(l, r));
+				}
+
+				var customPredicateLambda = descriptor.GetPredicate(mainType, childType);
+				if (customPredicateLambda != null)
+				{
+					var customPredicate = customPredicateLambda.GetBody(mainSourceReference, childSourceReference);
+					predicate = predicate == null ? customPredicate : Expression.AndAlso(predicate, customPredicate);
+				}
+
+				if (predicate == null)
+					throw new InvalidOperationException($"Association {mainType.Name}.{descriptor.MemberInfo.Name} improperly defined");
+
+				var joinClause = new JoinClause(itemName, childType, tableClause, predicate,
+					descriptor.CanBeNull ? JoinType.Left : JoinType.Inner);
+
+				return joinClause;
+			}
+
+			//TODO
+			throw new NotImplementedException();
+		}
+
+		public Sequence GenerateAssociation([JetBrains.Annotations.NotNull] Sequence forSequence,
+			[JetBrains.Annotations.NotNull] AssociationAttribute attr,
+			[JetBrains.Annotations.NotNull] Expression forExpression, [JetBrains.Annotations.NotNull] MemberInfo member)
+		{
+			if (forSequence == null) throw new ArgumentNullException(nameof(forSequence));
+			if (attr == null) throw new ArgumentNullException(nameof(attr));
+			if (forExpression == null) throw new ArgumentNullException(nameof(forExpression));
+			if (member == null) throw new ArgumentNullException(nameof(member));
+
+			var mainSourceReference = GetSourceReference(forSequence);
+			RegisterAssociation(forSequence, mainSourceReference, attr, forExpression, member);
+			return forSequence;
+		}
+
+		private Expression RegisterAssociation(Sequence forSequence, QuerySourceReferenceExpression mainSourceReference, AssociationAttribute attr, Expression forExpression, MemberInfo member)
+		{
+			var registry = TranslationContext.GetAssociationRegistry(forExpression);
+
+			if (registry != null)
+				return registry.Expression;
+
+			var ed = MappingSchema.GetEntityDescriptor(forExpression.Type);
+			var descriptor = ed.Associations.Find(ad => ad.MemberInfo == member);
+			if (descriptor == null)
+			{
+				descriptor = new AssociationDescriptor(
+					ed.ObjectType,
+					member,
+					attr.GetThisKeys(),
+					attr.GetOtherKeys(),
+					attr.ExpressionPredicate,
+					attr.Predicate,
+					attr.QueryExpressionMethod,
+					attr.QueryExpression,
+					attr.Storage,
+					attr.CanBeNull,
+					attr.AliasName);
+			}
+
+			var associationName = attr.AliasName ?? member.Name;
+
+			var innerClause = BuildAssociationClause(forSequence, mainSourceReference, descriptor, associationName, out var childSource);
+
+			var associationClause = new AssociationClause(forExpression.Type, associationName, mainSourceReference.QuerySource, childSource, descriptor, innerClause);
+			var sourceReference = TranslationContext.RegisterSource(associationClause);
+
+			registry = TranslationContext.RegisterAssociation(forExpression, mainSourceReference, associationClause, sourceReference);
+
+			return registry.Expression;
+		}
+
+		public Expression ConvertExpression(Sequence forSequence, Expression expression)
+		{
+			var mainReference = GetSourceReference(forSequence);
 			var result = expression.Transform(e =>
 			{
 				if (IsSequence(e))
 				{
-					var subquery = new SubQueryExpression(ParseModel(e), e.Type);
-					return subquery;
+					var subQueryExpression = new SubQueryExpression(ParseModel(e), e.Type);
+					return subQueryExpression;
 				}
 
-//				switch (e.NodeType)
-//				{
-//					case ExpressionType.Equal:
-//						{
-//							var binary = (BinaryExpression)e;
-//							if (binary.Left.)
-//						}
-//				}
-
-//				switch (e.NodeType)
-//				{
-//					case ExpressionType.New:
-//						return new UnifiedNewExpression((NewExpression)e);
-//					case ExpressionType.MemberInit:
-//						return new UnifiedNewExpression((MemberInitExpression)e);
-//				}
+				switch (e.NodeType)
+				{
+					case ExpressionType.MemberAccess:
+						{
+							var ma = (MemberExpression)e;
+							var attr = MappingSchema.GetAttribute<AssociationAttribute>(ma.Expression.Type, ma.Member);
+							if (attr != null)
+							{
+								e = RegisterAssociation(forSequence, mainReference, attr, ma, ma.Member);
+							}
+							break;
+						}
+					case ExpressionType.Call:
+						{
+							var mc = (MethodCallExpression)e;
+							var attr = MappingSchema.GetAttribute<AssociationAttribute>(null, mc.Method);
+							if (attr != null)
+							{
+								e = RegisterAssociation(forSequence, mainReference, attr, mc, mc.Method);
+							}
+							break;
+						}
+				}
 
 				return e;
 			});
@@ -477,29 +639,7 @@ namespace LinqToDB.Linq.Parser
 			var qs = current.GetQuerySource();
 			if (qs == null)
 				throw new Exception("Sequence does not contain source.");
-			return GetSourceReference(qs);
-		}
-
-		public QuerySourceReferenceExpression GetSourceReference(IQuerySource querySource)
-		{
-			if (!_registeredSources2.TryGetValue(querySource, out var value))
-				value = RegisterSource(querySource);
-			return value;
-		}
-
-		public QuerySourceReferenceExpression RegisterSource(IQuerySource source, ParameterExpression parameter)
-		{
-			var referenceExpression = new QuerySourceReferenceExpression(source);
-			_registeredSources.Add(parameter, referenceExpression);
-			_registeredSources2.Add(source, referenceExpression);
-			return referenceExpression;
-		}
-
-		public QuerySourceReferenceExpression RegisterSource(IQuerySource source)
-		{
-			var referenceExpression = new QuerySourceReferenceExpression(source);
-			_registeredSources2.Add(source, referenceExpression);
-			return referenceExpression;
+			return TranslationContext.GetSourceReference(qs);
 		}
 
 		public Sequence ParseModel(Expression expression)
@@ -509,9 +649,22 @@ namespace LinqToDB.Linq.Parser
 			return sequence;
 		}
 
-		public static bool IsSequence(Expression expression)
+		public bool IsSequence(Expression expression)
 		{
 			return expression.NodeType == ExpressionType.Call && FindBuilder(expression) != null;
+		}
+
+		public QuerySourceReferenceExpression RegisterSource(IQuerySource querySource)
+		{
+			return TranslationContext.RegisterSource(querySource);
+		}
+
+		public QuerySourceReferenceExpression RegisterSource(Sequence sequence)
+		{
+			var querySource = sequence.GetQuerySource();
+			if (querySource == null)
+				throw new InvalidOperationException("Can not retrieve QuerySource from sequence");
+			return TranslationContext.RegisterSource(querySource);
 		}
 
 	}

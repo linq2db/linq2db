@@ -3,19 +3,17 @@ using LinqToDB.Linq.Parser.Clauses;
 
 namespace LinqToDB.Linq.Parser.Builders
 {
-	public class ArrayBuilder : BaseBuilder
+	public class ReferenceBuilder : BaseBuilder
 	{
 		public override bool CanBuild(ModelTranslator builder, Expression expression)
 		{
-			return expression.NodeType == ExpressionType.NewArrayInit;
+			return expression.NodeType == QuerySourceReferenceExpression.ExpressionType;
 		}
 
 		public override Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, Expression expression)
 		{
-			var newArray = (NewArrayExpression)expression;
-			var sequence = new ArraySource(newArray.Type, "", expression);
-			builder.RegisterSource(sequence);
-			parseBuildInfo.Sequence.AddClause(sequence);
+			var reference = (QuerySourceReferenceExpression)expression;
+			parseBuildInfo.Sequence.AddClause((BaseClause)reference.QuerySource);
 			return parseBuildInfo.Sequence;
 		}
 	}

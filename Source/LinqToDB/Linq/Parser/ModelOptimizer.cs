@@ -50,7 +50,6 @@ namespace LinqToDB.Linq.Parser
 			return sequence;
 		}
 
-
 		private static Sequence CombineWhereClauses(Sequence sequence)
 		{
 			WhereClause currentWhere = null;

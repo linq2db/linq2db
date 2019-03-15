@@ -30,6 +30,36 @@ namespace Tests.Playground
 			[Column] public int? OtherValue { get; set; }
 		}
 
+		class ParentSource
+		{
+			public int PkParentId { get; set; }
+
+			[Association(ThisKey = nameof(PkParentId), OtherKey = nameof(ChildSource.ParentId))]
+			public IEnumerable<ChildSource> Children { get; set; }
+		}
+
+		class ChildSource
+		{
+			public int PkChildId { get; set; }
+			public int ParentId { get; set; }
+			public int? AddressId { get; set; }
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(ParentSource.PkParentId))]
+			public ParentSource Parent { get; set; }
+
+			[Association(ThisKey = nameof(AddressId), OtherKey = nameof(AddressSource.PkAddressId))]
+			public AddressSource Address { get; set; }
+
+			public bool IsDeleted { get; set; }
+		}
+
+		class AddressSource
+		{
+			public int PkAddressId { get; set; }
+
+			public string City { get; set; }
+		}
+
 		private static void ProvideParsing<T>(IQueryable<T> query, ITestDataContext db)
 		{
 			var parameter = Expression.Parameter(db.GetType());
@@ -40,7 +70,7 @@ namespace Tests.Playground
 			var optimizer = new ModelOptimizer(new OptimizationFlags { CountFilterSupported = false });
 			model = optimizer.OptimizeModel(model);
 
-			var generator = new QueryGenerator(parser, db);
+			var generator = new QueryGenerator(parser.TranslationContext, db);
 			var sql = generator.GenerateStatement(model);
 
 			var finalized = db.GetSqlOptimizer().Finalize(sql.Item1);
@@ -168,6 +198,56 @@ namespace Tests.Playground
 			{
 				var take = 5;
 				var query = db.GetTable<SampleClass>().Skip(2).Take(take);
+
+				ProvideParsing(query, db);
+			}
+		}
+
+		[Test]
+		public void AssociationOneToManyTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from p in db.GetTable<ParentSource>()
+					from c in p.Children
+					select new
+					{
+						p,
+						c
+					};
+
+				ProvideParsing(query, db);
+			}
+		}
+
+		[Test]
+		public void AssociationManyToOneTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from c in db.GetTable<ChildSource>()
+					select new
+					{
+						c,
+						c.Address.City
+					};
+
+				ProvideParsing(query, db);
+			}
+		}
+
+		[Test]
+		public void AssociationProjectionTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from p in db.GetTable<ParentSource>()
+					from c in p.Children 
+					select new
+					{
+						c,
+						c.Address.City
+					};
 
 				ProvideParsing(query, db);
 			}

@@ -2,6 +2,7 @@
 using System.Reflection;
 using LinqToDB.Expressions;
 using LinqToDB.Linq.Parser.Clauses;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Builders
 {
@@ -38,9 +39,9 @@ namespace LinqToDB.Linq.Parser.Builders
 					JoinClause(
 					selectorLambda.Parameters[1].Name,
 					joinedType,
-					innerSequence.GetQuerySource(), builder.ConvertExpression(outerKey), builder.ConvertExpression(innerKey)));
+					innerSequence.GetQuerySource(), builder.ConvertExpression(outerSequence, outerKey), builder.ConvertExpression(innerSequence, innerKey), JoinType.Inner));
 
-			var selectClause = new SelectClause(builder.ConvertExpression(selector));
+			var selectClause = new SelectClause(builder.ConvertExpression(parseBuildInfo.Sequence, selector));
 			parseBuildInfo.Sequence.AddClause(selectClause);
 			builder.RegisterSource(selectClause);
 

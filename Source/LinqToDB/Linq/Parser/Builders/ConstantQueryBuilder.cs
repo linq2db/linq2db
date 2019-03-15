@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Parser.Builders
 {
 	public class ConstantQueryBuilder : BaseBuilder
 	{
-		public override bool CanBuild(Expression expression)
+		public override bool CanBuild(ModelTranslator builder, Expression expression)
 		{
 			switch (expression.NodeType)
 			{

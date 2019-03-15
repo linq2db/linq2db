@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Parser.Builders
 				var lambda = (LambdaExpression)methodCallExpression.Arguments[1].Unwrap();
 				var where = lambda.GetBody(sr);
 
-				sequence.AddClause(new WhereClause(builder.ConvertExpression(where)));
+				sequence.AddClause(new WhereClause(builder.ConvertExpression(sequence, @where)));
 			}
 
 			sequence.AddClause(new AnyClause());

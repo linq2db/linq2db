@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Parser.Builders
 			{
 				var sourceReference = builder.GetSourceReference(sequence);
 				filterExpression = ((LambdaExpression)methodCallExpression.Arguments[1].Unwrap()).GetBody(sourceReference);
-				filterExpression = builder.ConvertExpression(filterExpression);
+				filterExpression = builder.ConvertExpression(sequence, filterExpression);
 			}
 			sequence.AddClause(new CountClause(filterExpression, methodCallExpression.Method.ReturnType));
 			return parseBuildInfo.Sequence;
