@@ -13,6 +13,17 @@ However, it's not as heavy as LINQ to SQL or Entity Framework. There is no chang
 
 In other words **LINQ to DB is type-safe SQL**.
 
+## Standout Features
+
+ - Rich Querying API:
+   - [Explicit Join Syntax](https://linq2db.github.io/articles/sql/Join-Operators.html) (In addition to standard LINQ join syntax.)
+   - [CTE Support](https://linq2db.github.io/articles/sql/CTE.html)
+   - [Bulk Copy/Insert](https://linq2db.github.io/articles/sql/Bulk-Copy.html)
+   - [Windowing/Analytic Functions](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html)
+   - [Merge API](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
+ - Extensibility:
+   - [Ability to Map Custom SQL to Static Functions](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB/Sql/)
+
 Visit our [blog](http://blog.linq2db.com/) and see [Github.io documentation](https://linq2db.github.io/index.html) for more details.
 
 Code examples and demos can be found [here](https://github.com/linq2db/examples) or in [tests](https://github.com/linq2db/linq2db/tree/master/Tests/Linq).
