@@ -17,6 +17,32 @@ namespace LinqToDB
 
 	public partial class Sql
 	{
+		private class FieldsExprBuilderDirect : Sql.IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var fieldsExpr = (LambdaExpression)builder.Arguments[1].Unwrap();
+				var qualified = builder.Arguments.Length <= 2 || builder.GetValue<bool>(2);
+
+				var columns = GetColumnsFromExpression(((MethodInfo)builder.Member).GetGenericArguments()[0], fieldsExpr, builder.Mapping);
+
+				var columnExpressions = new ISqlExpression[columns.Length];
+
+				for (var i = 0; i < columns.Length; i++)
+					columnExpressions[i] = qualified
+						? (ISqlExpression)new SqlField(columns[i])
+						: new SqlExpression(columns[i].ColumnName, Precedence.Primary);
+
+				if (columns.Length == 1)
+					builder.ResultExpression = columnExpressions[0];
+				else
+					builder.ResultExpression = new SqlExpression(
+						string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => $"{{{i}}}")),
+						Precedence.Primary,
+						columnExpressions);
+			}
+		}
+
 		private class FieldNameBuilderDirect : Sql.IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
@@ -143,6 +169,39 @@ namespace LinqToDB
 			return new SqlExpression(column.ColumnName, Precedence.Primary);
 		}
 
+		[Sql.Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
+		public static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldsExpr)
+		{
+			return FieldsExpr(table, fieldsExpr, true);
+		}
+
+		[Sql.Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
+		public static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldsExpr, bool qualified)
+		{
+			var mappingSchema = MappingSchema.Default;
+
+			var dataContext = GetDataContext(table);
+			if (dataContext != null)
+				mappingSchema = dataContext.MappingSchema;
+
+			var columns = GetColumnsFromExpression(typeof(T), fieldsExpr, mappingSchema);
+
+			var columnExpressions = new ISqlExpression[columns.Length];
+
+			for (var i = 0; i < columns.Length; i++)
+				columnExpressions[i] = qualified
+					? (ISqlExpression)new SqlField(columns[i])
+					: new SqlExpression(columns[i].ColumnName, Precedence.Primary);
+
+			if (columns.Length == 1)
+				return columnExpressions[0];
+
+			return new SqlExpression(
+				string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => $"{{{i}}}")),
+				Precedence.Primary,
+				columnExpressions);
+		}
+
 		private static IDataContext GetDataContext<T>(ITable<T> table)
 		{
 			if (table is ExpressionQuery<T> query)
@@ -152,6 +211,31 @@ namespace LinqToDB
 				return temp.DataContext;
 
 			return null;
+		}
+
+		private static ColumnDescriptor[] GetColumnsFromExpression(Type entityType, LambdaExpression fieldExpr, MappingSchema mappingSchema)
+		{
+			var init = fieldExpr.Body as NewExpression;
+			if (init == null)
+				return new[] { GetColumnFromExpression(entityType, fieldExpr, mappingSchema) };
+
+			if (init.Arguments == null || init.Arguments.Count == 0)
+				throw new LinqToDBException($"Can not extract columns info from expression {fieldExpr.Body}");
+
+			var ed = mappingSchema.GetEntityDescriptor(entityType);
+			var columns = new ColumnDescriptor[init.Arguments.Count];
+			for (var i = 0; i < init.Arguments.Count; i++)
+			{
+				var memberInfo = MemberHelper.GetMemberInfo(init.Arguments[i]);
+				if (memberInfo == null)
+					throw new LinqToDBException($"Can not extract member info from expression {init.Arguments[i]}");
+
+				var column = ed.Columns.FirstOrDefault(c => c.MemberInfo == memberInfo);
+
+				columns[i] = column ?? throw new LinqToDBException($"Can not find column for member {entityType.Name}.{memberInfo.Name}");
+			}
+
+			return columns;
 		}
 
 		private static ColumnDescriptor GetColumnFromExpression(Type entityType, LambdaExpression fieldExpr, MappingSchema mappingSchema)

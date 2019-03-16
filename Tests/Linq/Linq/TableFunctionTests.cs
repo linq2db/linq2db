@@ -311,6 +311,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category("FreeText")]
+		[ActiveIssue(386)]
 		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))

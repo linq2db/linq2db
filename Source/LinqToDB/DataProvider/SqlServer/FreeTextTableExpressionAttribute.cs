@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlQuery;
 	using Expressions;
 
+	[Obsolete("Use LinqToDB.DataProvider.SqlServer.SqlServerExtensions.FreeTextTable extension method")]
 	public class FreeTextTableExpressionAttribute : Sql.TableExpressionAttribute
 	{
 		public FreeTextTableExpressionAttribute()
