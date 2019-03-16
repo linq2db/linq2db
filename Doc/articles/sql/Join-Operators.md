@@ -1,6 +1,6 @@
 # Joins
 
-`LINQ To DB` supports all standard SQL join types: INNER, LEFT, FULL, RIGHT, CROSS JOIN. For types that are not part of the standard LINQ syntax, Methods are provided to make intent clear.
+`LINQ To DB` supports all standard SQL join types: INNER, LEFT, FULL, RIGHT, CROSS JOIN. For join types that do not have a direct LINQ equivalent, such as a left join, we have a few examples further down of methods that are provided to cleanly write such joins.
 
 ## INNER JOIN
 

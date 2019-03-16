@@ -97,12 +97,12 @@ FROM
 
 ## Defining recursive CTE
 
-> Recursive CTEs are special in the sense they are allowed to reference themselves! Because of this special ability, you can use recursive CTEs to solve problems other queries cannot. Recursive CTEs are really good at working with hierarchical data such as org charts for bill of materials. (Further reading: [Recursive CTEs Explained](https://www.essentialsql.com/recursive-ctes-explained/))
+> Recursive CTEs are special because they are allowed to reference themselves! Because of this special ability, you can use recursive CTEs to solve problems other queries cannot. As an example, recursive CTEs are really good at working with hierarchical data such as org charts for bill of materials. (Further reading: [Recursive CTEs Explained](https://www.essentialsql.com/recursive-ctes-explained/))
 
 CTEs have limitations that are not handled by `LINQ To DB`, so you have to be aware of them before start of usage - [Guidelines for Defining and Using Recursive Common Table Expressions](https://docs.microsoft.com/en-us/sql/t-sql/queries/with-common-table-expression-transact-sql?view=sql-server-2017#guidelines-for-defining-and-using-recursive-common-table-expressions)
 
-Since in C# language we can not use a variable's reference in it's own initialization expression, we have created a function that helps in defining such queries: `GetCte<TCteProjection>(cte => ...)`. `TCteProjection` is a required generic parameter that is needed for resolving the type of lambda parameter.
-The following example shows how to define CTE for calculation of an employee hierarchy level:
+Since in the C# language we can not use a variable's reference in its own initialization expression, we have created a function that helps in defining such queries: `GetCte<TCteProjection>(cte => ...)`. `TCteProjection` is a required generic parameter that is needed for resolving the type of the lambda parameter.
+The following example shows how to define a CTE to calculate the employee level in the hierarchy:
 
 ```cs
 // defining class for representing Recursive CTE
