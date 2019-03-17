@@ -1,3 +1,4 @@
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using System;
 using System.Linq;
@@ -265,7 +266,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		#endregion
 
 		#region ContainsTable
-
 		/// <summary>
 		/// Performs full-text search query using CONTAINSTABLE function against all full-text columns in table.
 		/// </summary>
@@ -513,6 +513,129 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return (table, columns, term, language) => table.DataContext.FromSql<FreeTextKey<TKey>>($"CONTAINSTABLE({Sql.TableExpr(table)}, ({Sql.FieldsExpr(table, columns)}), {term}, LANGUAGE {language})");
 		}
+		#endregion
+
+		#region FreeText
+		/// <summary>
+		/// Applies full-text search condition using FREETEXT predicate against table in single-table query.
+		/// </summary>
+		/// <param name="term">Full-text search term.</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Expression("FREETEXT(*, {0})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool FreeText(string term)
+		{
+			throw new LinqException($"'{nameof(FreeText)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using FREETEXT predicate against table in single-table query.
+		/// </summary>
+		/// <param name="term">Full-text search term.</param>
+		/// <param name="language">Language name (see syslanguages.alias).</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Expression("FREETEXT(*, {0}, LANGUAGE {1})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool FreeText(string term, string language)
+		{
+			throw new LinqException($"'{nameof(FreeText)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using FREETEXT predicate against table in single-table query.
+		/// </summary>
+		/// <param name="term">Full-text search term.</param>
+		/// <param name="language">Language LCID code (see syslanguages.lcid).</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Expression("FREETEXT(*, {0}, LANGUAGE {1})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool FreeText(string term, int language)
+		{
+			throw new LinqException($"'{nameof(FreeText)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using FREETEXT predicate against all full-text columns in specified table.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="term">Full-text search term.</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Expression("FREETEXT({0}, {1})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool FreeText<TEntity>(this TEntity entity, string term)
+		{
+			throw new LinqException($"'{nameof(FreeText)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using FREETEXT predicate against all full-text columns in specified table.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="term">Full-text search term.</param>
+		/// <param name="language">Language name (see syslanguages.alias).</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Expression("FREETEXT({0}, {1}, LANGUAGE {2})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool FreeTextWithLang<TEntity>(this TEntity entity, string term, string language)
+		{
+			throw new LinqException($"'{nameof(FreeTextWithLang)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using FREETEXT predicate against all full-text columns in specified table.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="term">Full-text search term.</param>
+		/// <param name="language">Language LCID code (see syslanguages.lcid).</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Expression("FREETEXT({0}, {1}, LANGUAGE {2})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool FreeTextWithLang<TEntity>(this TEntity entity, string term, int language)
+		{
+			throw new LinqException($"'{nameof(FreeTextWithLang)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using FREETEXT predicate against specified full-text columns.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="term">Full-text search term.</param>
+		/// <param name="columns">Full-text columns that should be queried.</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Extension("FREETEXT(({columns, ', '}), {term})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool FreeText<TEntity>(this TEntity entity, [ExprParameter("term")] string term, [ExprParameter("columns")] params object[] columns)
+		{
+			throw new LinqException($"'{nameof(FreeText)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using FREETEXT predicate against specified full-text columns.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="term">Full-text search term.</param>
+		/// <param name="language">Language name (see syslanguages.alias).</param>
+		/// <param name="columns">Full-text columns that should be queried.</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Extension("FREETEXT(({columns, ', '}), {term}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool FreeTextWithLang<TEntity>(this TEntity entity, [ExprParameter("term")] string term, [ExprParameter("language")] string language, [ExprParameter("columns")] params object[] columns)
+		{
+			throw new LinqException($"'{nameof(FreeTextWithLang)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using FREETEXT predicate against specified full-text columns.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="term">Full-text search term.</param>
+		/// <param name="language">Language LCID code (see syslanguages.lcid).</param>
+		/// <param name="columns">Full-text columns that should be queried.</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Extension("FREETEXT(({columns, ', '}), {term}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool FreeTextWithLang<TEntity>(this TEntity entity, [ExprParameter("term")] string term, [ExprParameter("language")] int language, [ExprParameter("columns")] params object[] columns)
+		{
+			throw new LinqException($"'{nameof(FreeTextWithLang)}' is server-side method.");
+		}
+
 		#endregion
 
 		#endregion
