@@ -759,6 +759,68 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new LinqException($"'{nameof(ContainsWithLang)}' is server-side method.");
 		}
 
+		/// <summary>
+		/// Applies full-text search condition using CONTAINS(PROPERTY(...)) predicate against specified full-text column property.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="column">Full-text column that should be queried.</param>
+		/// <param name="property">Name of document property to search in.</param>
+		/// <param name="search">Full-text search condition.</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[ExpressionMethod(nameof(ContainsPropertyImpl1))]
+		public static bool ContainsProperty<TEntity, TColumn>(this TEntity entity, TColumn column, string property, string search)
+		{
+			throw new LinqException($"'{nameof(ContainsProperty)}' is server-side method.");
+		}
+
+		static Expression<Func<TEntity, TColumn, string, string, bool>> ContainsPropertyImpl1<TEntity, TColumn>()
+		{
+			return (entity, column, property, search) => Sql.Expr<bool>($"CONTAINS(PROPERTY({column}, {Sql.ToSql(property)}), {search})");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using CONTAINS(PROPERTY(...)) predicate against specified full-text column property.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="column">Full-text column that should be queried.</param>
+		/// <param name="property">Name of document property to search in.</param>
+		/// <param name="search">Full-text search condition.</param>
+		/// <param name="language">Language name (see syslanguages.alias).</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[ExpressionMethod(nameof(ContainsPropertyImpl2))]
+		public static bool ContainsProperty<TEntity, TColumn>(this TEntity entity, TColumn column, string property, string search, string language)
+		{
+			throw new LinqException($"'{nameof(ContainsProperty)}' is server-side method.");
+		}
+
+		static Expression<Func<TEntity, TColumn, string, string, string, bool>> ContainsPropertyImpl2<TEntity, TColumn>()
+		{
+			return (entity, column, property, search, language) => Sql.Expr<bool>($"CONTAINS(PROPERTY({column}, {Sql.ToSql(property)}), {search}, LANGUAGE {language})");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using CONTAINS(PROPERTY(...)) predicate against specified full-text column property.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="column">Full-text column that should be queried.</param>
+		/// <param name="property">Name of document property to search in.</param>
+		/// <param name="search">Full-text search condition.</param>
+		/// <param name="language">Language LCID code (see syslanguages.lcid).</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[ExpressionMethod(nameof(ContainsPropertyImpl3))]
+		public static bool ContainsProperty<TEntity, TColumn>(this TEntity entity, TColumn column, string property, string search, int language)
+		{
+			throw new LinqException($"'{nameof(ContainsProperty)}' is server-side method.");
+		}
+
+		static Expression<Func<TEntity, TColumn, string, string, int, bool>> ContainsPropertyImpl3<TEntity, TColumn>()
+		{
+			return (entity, column, property, search, language) => Sql.Expr<bool>($"CONTAINS(PROPERTY({column}, {Sql.ToSql(property)}), {search}, LANGUAGE {language})");
+		}
+
 		#endregion
 
 		#endregion
