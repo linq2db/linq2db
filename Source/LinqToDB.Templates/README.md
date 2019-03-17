@@ -231,7 +231,10 @@ Func<string, bool, string> ConvertToCompilable = ConvertToCompilableDefault;
 
 ```cs
 // Enables generation of extensions for Free Text Search
-bool GenerateSqlServerFreeText = true;
+//
+// NOTE: this option is not needed anymore, as it generates old-style FTS support code and not recommeded for use
+// use new extesions from this PR: https://github.com/linq2db/linq2db/pull/1649
+bool GenerateSqlServerFreeText = false;
 ```
 
 ### PostgreSQL
