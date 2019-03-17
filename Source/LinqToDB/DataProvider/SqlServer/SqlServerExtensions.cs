@@ -763,6 +763,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// Applies full-text search condition using CONTAINS(PROPERTY(...)) predicate against specified full-text column property.
 		/// </summary>
 		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <typeparam name="TColumn">Type of queried full-text search column.</typeparam>
 		/// <param name="entity">Table to perform full-text search against.</param>
 		/// <param name="column">Full-text column that should be queried.</param>
 		/// <param name="property">Name of document property to search in.</param>
@@ -783,6 +784,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// Applies full-text search condition using CONTAINS(PROPERTY(...)) predicate against specified full-text column property.
 		/// </summary>
 		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <typeparam name="TColumn">Type of queried full-text search column.</typeparam>
 		/// <param name="entity">Table to perform full-text search against.</param>
 		/// <param name="column">Full-text column that should be queried.</param>
 		/// <param name="property">Name of document property to search in.</param>
@@ -804,6 +806,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// Applies full-text search condition using CONTAINS(PROPERTY(...)) predicate against specified full-text column property.
 		/// </summary>
 		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <typeparam name="TColumn">Type of queried full-text search column.</typeparam>
 		/// <param name="entity">Table to perform full-text search against.</param>
 		/// <param name="column">Full-text column that should be queried.</param>
 		/// <param name="property">Name of document property to search in.</param>

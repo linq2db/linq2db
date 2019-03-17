@@ -55,6 +55,12 @@ namespace LinqToDB
 			return obj;
 		}
 
+		[Sql.Extension("{array, ', '}", ServerSideOnly = true)]
+		internal static T[] Spread<T>(T[] array)
+		{
+			throw new InvalidOperationException();
+		}
+
 		[CLSCompliant(false)]
 		[Sql.Expression("{0}", 0, CanBeNull = true)]
 		public static T AsNullable<T>(T value)
