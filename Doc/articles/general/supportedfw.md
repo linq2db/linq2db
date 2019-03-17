@@ -1,4 +1,4 @@
-# Supported frameworks
+# Supported Frameworks
 
 -------------
 Framework | [linq2db](https://www.nuget.org/packages/linq2db/) | [linq2db.Core](https://www.nuget.org/packages/linq2db.Core/)

@@ -1,46 +1,47 @@
-# Managing data connection
+# Managing Data Connection
 
-.NET database providers use connection pooling to work with database connections, where they take connection from pool, use it, and then release connection back to connection pool so it could be reused. When connection is not released correctly after use, connection pool will consider it still used, which will lead to two consequences:
+Since connecting to a database is an expensive operation, .NET database providers use connection pools to minimize this cost. They take a connection from the pool, use it, and then release the connection back to the pool so it could be reused.
 
-* your application will create more and more connections to database, because there are no _free_ connections to reuse from connection pool manager point of view
-* at some point your application will fail to obtain connection from pool, because pool size limit reached
+If you don't release database connections back to the pool then:
 
-To avoid collection leaks you should care about how you are creating and disposing connections. There are to ways to query database with linq2db:
+* Your application would create more and more connections to the database. This is because from connection pool's point of view there are no _available_ connections to reuse.
+* When the pool size limit is reached then your application would fail to obtain a new connection.
 
-* using `DataConnection` class. Using `DataConnection` you can make several queries in one physical database connection, so you do not have overhead on opening and closing database connection. You should follow few simple rules:
-  * **always** dispose `DataConnection` instance (it is recommended to use `using` c# statement);
-  * query should be executed **before** `DataConnection` object is disposed. From version 1.8.0 we have introduced protection from wrong usage, and you will get `ObjectDisposedException` trying to perform query on disposed `DataConnection` instance.
-* using `DataContext` class. `DataContext` opens and closes physical connection for **each** query!
-* Be careful with `DataContext.KeepConnectionAlive` property, if you set it `true`, it would work the same way as `DataConnection`! So we do not recommend you to set this property to `true`.
+To avoid connection leaks you should pay attention to how you are creating and disposing connections. There are to ways to query a database with linq2db:
 
-## Done right
+1. Using the `DataConnection` class you can make several queries using a single database connection. This way you do not have the overhead of opening and closing database connections for each query. You should follow these simple rules:
+    * **Always** dispose the `DataConnection` instance. We recommend the C#'s `using` block.
+    * Your query should be executed **before** the `DataConnection` object is disposed. Starting with version 1.8.0 we have added checks to catch improper usages; you would get `ObjectDisposedException` when trying to perform a query on a disposed `DataConnection` instance.
+2. Using the `DataContext` class opens and closes an actual connection for **each** query!
+    * Be careful with the `DataContext.KeepConnectionAlive` property. If you set it to `true` it would work the same way as `DataConnection`! So we do not recommend that you to set this property to `true`.
+
+## Done Right
 
 ```cs
 using (var db = new DataConnection())
 {
-// your code here
+    // your code here
 }
 
 public IEnumerable<Person> GetPersons()
 {
     using (var db = new DataConnection())
     {
-        // ToList call sends query to database while we are still in using
+        // The ToList call sends the query to the database while we are still in the using block
         return db.GetTable<Person>().ToList();
     }
 }
 
 public IEnumerable<Person> GetPersons()
 {
-    // ToList call sends query to database and DataContext releases connection
+    // The ToList call sends the query to the database and then DataContext releases the connection
     return new DataContext().GetTable<Person>().ToList();
 }
 
 public IQuerable<Person> GetPersons()
 {
-    // query is not sent to database here
-    // it will be executed later when user will enumerate results of method
-    // but DataContext will handle it properly
+    // If this example the query is not sent to the database. It will be executed later
+    // when we enumerate IQuerable. DataContext will handle the connection release properly.
     return new DataContext().GetTable<Person>();
 }
 
@@ -48,29 +49,33 @@ public async Task<IEnumerable<Person>> GetPersons()
 {
     using (var db = new DataConnection())
     {
-        // await will suspend execution inside of using waiting for query results from ToListAsync()
-        // after that execution will continue and dispose `DataConnection` instance
+        // Here await would suspend the execution inside of the using block while waiting 
+        // for the query results from ToListAsync(). After that the execution would
+        // continue and `DataConnection` would be properly disposed.
         return await db.GetTable<Person>().ToListAsync(); 
     }
 }
 
 ```
 
-## Done wrong
+## Done Wrong
 
 ```cs
 public IEnumerable<Person> GetPersons()
 {
     using (var db = new DataConnection())
     {
-        // query will be executed only when user will enumerate method results
+        // The query would be executed only when we enumerate, meaning after this function
+        // exits. By that time DataConnection would have already been disposed and the 
+        // database connection returned to the pool.
         return db.GetTable<Person>();
     }
 }
 
-// DataConnection already disposed here
-// starting from linq2db 1.8.0 it will fail with ObjectDisposedException
-// versions prior to 1.8.0 will execute query (if there are free connectons left) and will create leaked connection
+// By the time we call .ToList() the DataConnection would be already disposed.
+// Starting with version 1.8.0 this would fail with ObjectDisposedException.
+// Versions prior to 1.8.0 would execute the query (if there are any free connections
+// left) and leak the connection.
 var persons = GetPersons().ToList();
 ```
 
@@ -79,12 +84,11 @@ public async Task<IEnumerable<Person>> GetPersons()
 {
     using (var db = new DataConnection())
     {
-        // no suspension point here, awaitable task will be returned immediately from method
-        // creating race conditions
+        // The awaitable task would be returned immediately creating a race condition.
         return db.GetTable<Person>().ToListAsync();
     }
 }
 
-// query execution will be called on disposed DataConnection
+// The query execution would be called on a disposed DataConnection
 var persons = await GetPersons();
 ```
