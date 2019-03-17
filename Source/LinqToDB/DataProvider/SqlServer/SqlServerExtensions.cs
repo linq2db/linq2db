@@ -638,6 +638,129 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#endregion
 
+		#region Contains
+		/// <summary>
+		/// Applies full-text search condition using CONTAINS predicate against table in single-table query.
+		/// </summary>
+		/// <param name="search">Full-text search condition.</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Expression("CONTAINS(*, {0})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool Contains(string search)
+		{
+			throw new LinqException($"'{nameof(Contains)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using CONTAINS predicate against table in single-table query.
+		/// </summary>
+		/// <param name="search">Full-text search condition.</param>
+		/// <param name="language">Language name (see syslanguages.alias).</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Expression("CONTAINS(*, {0}, LANGUAGE {1})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool Contains(string search, string language)
+		{
+			throw new LinqException($"'{nameof(Contains)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using CONTAINS predicate against table in single-table query.
+		/// </summary>
+		/// <param name="search">Full-text search condition.</param>
+		/// <param name="language">Language LCID code (see syslanguages.lcid).</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Expression("CONTAINS(*, {0}, LANGUAGE {1})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool Contains(string search, int language)
+		{
+			throw new LinqException($"'{nameof(Contains)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using CONTAINS predicate against all full-text columns in specified table.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="search">Full-text search term.</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Expression("CONTAINS({0}, {1})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool Contains<TEntity>(this TEntity entity, string search)
+		{
+			throw new LinqException($"'{nameof(Contains)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using CONTAINS predicate against all full-text columns in specified table.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="search">Full-text search condition.</param>
+		/// <param name="language">Language name (see syslanguages.alias).</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Expression("CONTAINS({0}, {1}, LANGUAGE {2})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool ContainsWithLang<TEntity>(this TEntity entity, string search, string language)
+		{
+			throw new LinqException($"'{nameof(ContainsWithLang)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using CONTAINS predicate against all full-text columns in specified table.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="search">Full-text search condition.</param>
+		/// <param name="language">Language LCID code (see syslanguages.lcid).</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Expression("CONTAINS({0}, {1}, LANGUAGE {2})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool ContainsWithLang<TEntity>(this TEntity entity, string search, int language)
+		{
+			throw new LinqException($"'{nameof(ContainsWithLang)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using CONTAINS predicate against specified full-text columns.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="search">Full-text search condition.</param>
+		/// <param name="columns">Full-text columns that should be queried.</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Extension("CONTAINS(({columns, ', '}), {search})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool Contains<TEntity>(this TEntity entity, [ExprParameter("search")] string search, [ExprParameter("columns")] params object[] columns)
+		{
+			throw new LinqException($"'{nameof(Contains)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using CONTAINS predicate against specified full-text columns.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="search">Full-text search condition.</param>
+		/// <param name="language">Language name (see syslanguages.alias).</param>
+		/// <param name="columns">Full-text columns that should be queried.</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Extension("CONTAINS(({columns, ', '}), {search}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool ContainsWithLang<TEntity>(this TEntity entity, [ExprParameter("search")] string search, [ExprParameter("language")] string language, [ExprParameter("columns")] params object[] columns)
+		{
+			throw new LinqException($"'{nameof(ContainsWithLang)}' is server-side method.");
+		}
+
+		/// <summary>
+		/// Applies full-text search condition using CONTAINS predicate against specified full-text columns.
+		/// </summary>
+		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="search">Full-text search condition.</param>
+		/// <param name="language">Language LCID code (see syslanguages.lcid).</param>
+		/// <param name="columns">Full-text columns that should be queried.</param>
+		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		[Sql.Extension("CONTAINS(({columns, ', '}), {search}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
+		public static bool ContainsWithLang<TEntity>(this TEntity entity, [ExprParameter("search")] string search, [ExprParameter("language")] int language, [ExprParameter("columns")] params object[] columns)
+		{
+			throw new LinqException($"'{nameof(ContainsWithLang)}' is server-side method.");
+		}
+
+		#endregion
+
 		#endregion
 	}
 }

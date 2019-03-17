@@ -1758,6 +1758,280 @@ namespace Tests.Linq
 
 		#endregion
 
+		#region Contains
+		[Test, Category("FreeText")]
+		public void ContainsByAll([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c in db.Category
+					where SqlServerExtensions.Contains("bread")
+					orderby c.CategoryID descending
+					select c;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(0, results.Count);
+
+				Assert.That(db.LastQuery.Contains("CONTAINS(*, N'bread')"));
+			}
+		}
+
+		[Test, Category("FreeText")]
+		public void ContainsByAllLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c in db.Category
+					where SqlServerExtensions.Contains("meat", "English")
+					orderby c.CategoryID descending
+					select c;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(1, results.Count);
+				Assert.AreEqual(6, results[0].CategoryID);
+
+
+				Assert.That(db.LastQuery.Contains("CONTAINS(*, N'meat', LANGUAGE N'English')"));
+			}
+		}
+
+		[Test, Category("FreeText")]
+		public void ContainsByAllLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c in db.Category
+					where SqlServerExtensions.Contains("bread AND meat", 1033)
+					orderby c.CategoryID descending
+					select c;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(0, results.Count);
+
+				Assert.That(db.LastQuery.Contains("CONTAINS(*, N'bread AND meat', LANGUAGE 1033)"));
+			}
+		}
+
+		[Test, Category("FreeText")]
+		public void ContainsByTableAll([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c in db.Category
+					where c.Contains("candy OR meat")
+					orderby c.CategoryID descending
+					select c;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(1, results.Count);
+				Assert.AreEqual(6, results[0].CategoryID);
+
+				Assert.That(db.LastQuery.Contains("CONTAINS([c_1].*, N'candy OR meat')"));
+			}
+		}
+
+		[Test, Category("FreeText")]
+		public void ContainsByTableAllLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c in db.Category
+					where c.ContainsWithLang("dry", "English")
+					orderby c.CategoryID descending
+					select c;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(0, results.Count);
+
+				Assert.That(db.LastQuery.Contains("CONTAINS([c_1].*, N'dry', LANGUAGE N'English')"));
+			}
+		}
+
+		[Test, Category("FreeText")]
+		public void ContainsByTableAllLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c in db.Category
+					where c.ContainsWithLang("sweetest", 1033)
+					orderby c.CategoryID descending
+					select c;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(0, results.Count);
+
+				Assert.That(db.LastQuery.Contains("CONTAINS([c_1].*, N'sweetest', LANGUAGE 1033)"));
+			}
+		}
+
+		[Test, Category("FreeText")]
+		public void ContainsByColumn([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c in db.Category
+					where c.Contains("bread", c.Description)
+					orderby c.CategoryID descending
+					select c;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(0, results.Count);
+
+				Assert.That(db.LastQuery.Contains("CONTAINS(([c_1].[Description]), N'bread')"));
+			}
+		}
+
+		[Test, Category("FreeText")]
+		public void ContainsByColumnLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c in db.Category
+					where c.ContainsWithLang("dry & bread", "English", c.Description)
+					orderby c.CategoryID descending
+					select c;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(0, results.Count);
+
+				Assert.That(db.LastQuery.Contains("CONTAINS(([c_1].[Description]), N'dry & bread', LANGUAGE N'English')"));
+			}
+		}
+
+		[Test, Category("FreeText")]
+		public void ContainsByColumnLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c in db.Category
+					where c.ContainsWithLang("candy | meat", 1033, c.CategoryName)
+					orderby c.CategoryID descending
+					select c;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(1, results.Count);
+				Assert.AreEqual(6, results[0].CategoryID);
+
+				Assert.That(db.LastQuery.Contains("CONTAINS(([c_1].[CategoryName]), N'candy | meat', LANGUAGE 1033)"));
+			}
+		}
+
+		[Test, Category("FreeText")]
+		public void ContainsByColumns([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c in db.Category
+					where c.Contains("aнанас", c.Description, c.Description)
+					orderby c.CategoryID descending
+					select c;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(0, results.Count);
+
+				Assert.That(db.LastQuery.Contains("CONTAINS(([c_1].[Description], [c_1].[Description]), N'aнанас')"));
+			}
+		}
+
+		[Test, Category("FreeText")]
+		public void ContainsByColumnsLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c in db.Category
+					where c.ContainsWithLang("salo & bread", "English", c.CategoryName, c.Description)
+					orderby c.CategoryID descending
+					select c;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(0, results.Count);
+
+				Assert.That(db.LastQuery.Contains("CONTAINS(([c_1].[CategoryName], [c_1].[Description]), N'salo & bread', LANGUAGE N'English')"));
+			}
+		}
+
+		[Test, Category("FreeText")]
+		public void ContainsByColumnsLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context, [Values(1033, 1036, 1033)] int code)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c in db.Category
+					where c.ContainsWithLang("meat", code, c.CategoryName, c.Description)
+					orderby c.CategoryID descending
+					select c;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(1, results.Count);
+				Assert.AreEqual(6, results[0].CategoryID);
+
+				Assert.That(db.LastQuery.Contains("CONTAINS(([c_1].[CategoryName], [c_1].[Description]), N'meat', LANGUAGE @code)"));
+			}
+		}
+
+
+		[Test, Category("FreeText")]
+		public void ContainsWithLinqService([IncludeDataSources(true, TestProvName.Northwind)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from c in db.GetTable<Northwind.Category>()
+					where c.ContainsWithLang("candy", "English", c.CategoryName, c.Description)
+					orderby c.CategoryID descending
+					select c;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(0, results.Count);
+			}
+		}
+
+		[Test, Category("FreeText")]
+		public void ContainsByTwoTables([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c1 in db.Category
+					from c2 in db.Category.Where(c => c.Contains("bread") && c1.Contains("meat"))
+					orderby c1.CategoryID descending
+					select c1;
+
+				var results = q.ToList();
+
+				Assert.AreEqual(0, results.Count);
+
+				Assert.That(db.LastQuery.Contains("CONTAINS([c_1].*, N'bread')"));
+				Assert.That(db.LastQuery.Contains("CONTAINS([c1].*, N'meat')"));
+			}
+		}
+
+		#endregion
+
 	}
 
 }
