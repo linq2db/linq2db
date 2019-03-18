@@ -247,11 +247,14 @@ namespace Tests.Playground
 			{
 				var query = from p in db.GetTable<ParentSource>()
 					from c in p.Children 
+					where c.Address.City == "NY"
 					select new
 					{
 						c.Parent.PkParentId,
 						c,
-						c.Address.City
+						c.Address.City,
+						c.Address,
+						p
 					}; 
 
 				ProvideParsing(query, db);

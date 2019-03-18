@@ -541,7 +541,7 @@ namespace LinqToDB.Linq.Parser
 				var joinClause = new JoinClause(itemName, childType, tableClause, predicate,
 					descriptor.CanBeNull ? JoinType.Left : JoinType.Inner);
 
-				if (isList)
+//				if (isList)
 				{
 
 					var sequence = new Sequence();
