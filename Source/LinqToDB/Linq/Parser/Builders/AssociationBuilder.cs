@@ -41,8 +41,11 @@ namespace LinqToDB.Linq.Parser.Builders
 			var attr = GetAssociationAttribute(builder, expression);
 			if (expression is MemberExpression me)
 			{
-				var sequence = builder.BuildSequence(new ParseBuildInfo(), me.Expression);
-				return builder.GenerateAssociation(sequence, attr, expression, me.Member);
+				var registry = builder.GenerateAssociation(parseBuildInfo.Sequence, attr, expression, me.Member);
+
+				parseBuildInfo.Sequence.AddClause(registry.Clause);
+
+				return parseBuildInfo.Sequence;
 			}
 
 			//TODO

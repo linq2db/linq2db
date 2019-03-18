@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Linq.Expressions;
-using System.Reflection;
-using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
-	public class JoinClause : BaseClause, IQuerySource
+	public class JoinClause : BaseClause
 	{
 		public IQuerySource Inner { get; }
 		[JetBrains.Annotations.NotNull]

@@ -32,6 +32,7 @@ namespace Tests.Playground
 
 		class ParentSource
 		{
+			[PrimaryKey]
 			public int PkParentId { get; set; }
 
 			[Association(ThisKey = nameof(PkParentId), OtherKey = nameof(ChildSource.ParentId))]
@@ -40,11 +41,13 @@ namespace Tests.Playground
 
 		class ChildSource
 		{
+			[PrimaryKey]
 			public int PkChildId { get; set; }
+
 			public int ParentId { get; set; }
 			public int? AddressId { get; set; }
 
-			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(ParentSource.PkParentId))]
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(ParentSource.PkParentId), CanBeNull = false)]
 			public ParentSource Parent { get; set; }
 
 			[Association(ThisKey = nameof(AddressId), OtherKey = nameof(AddressSource.PkAddressId))]
@@ -55,6 +58,7 @@ namespace Tests.Playground
 
 		class AddressSource
 		{
+			[PrimaryKey]
 			public int PkAddressId { get; set; }
 
 			public string City { get; set; }
@@ -245,9 +249,10 @@ namespace Tests.Playground
 					from c in p.Children 
 					select new
 					{
+						c.Parent.PkParentId,
 						c,
 						c.Address.City
-					};
+					}; 
 
 				ProvideParsing(query, db);
 			}

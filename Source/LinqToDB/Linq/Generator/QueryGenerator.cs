@@ -119,7 +119,7 @@ namespace LinqToDB.Linq.Generator
 			bool isGrouping = false;
 			foreach (var clause in sequence.Clauses)
 			{
-				if (clause is IQuerySource qs && !(clause is SelectClause))
+				if (clause is IQuerySource qs && !(clause is SelectClause) && !(clause is AssociationClause))
 				{
 					current = GenerateTableSource(selectQuery, current, qs, out var shouldAdd);
 					RegisterTableSource(selectQuery, qs, current);
@@ -146,10 +146,14 @@ namespace LinqToDB.Linq.Generator
 				case Sequence seq:
 					{
 						var select = new SelectQuery();
-						_ = GenerateSequenceQuery(@select, seq, current, dataStream);
+						var newCurrent = GenerateSequenceQuery(@select, seq, current, dataStream);
 
-						current = new SqlTableSource(@select, "");
-						selectQuery.From.Tables.Add(current);
+						if (newCurrent != current)
+						{
+							current = new SqlTableSource(@select, "");
+							selectQuery.From.Tables.Add(current);
+						}
+
 						break;
 					}
 				case WhereClause where:
@@ -401,6 +405,14 @@ namespace LinqToDB.Linq.Generator
 						result = registerExpression(null, sqlFunction);
 						if (result == null)
 							throw new InvalidOperationException();
+						break;
+					}
+				case AssociationClause association:
+					{
+						// ensure association registered and inlined
+						_ = GetTableSourceRegistry(association);
+						result = GenerateClauseProjection(association.InnerClause,
+							registerExpression);
 						break;
 					}
 				case Sequence seq:
@@ -4435,8 +4447,7 @@ namespace LinqToDB.Linq.Generator
 					}
 				case AssociationClause association:
 					{
-						IQuerySource querySource;
-						if (!_associationTransformation.TryGetValue(association, out querySource))
+						if (!_associationTransformation.TryGetValue(association, out var querySource))
 							throw new InvalidOperationException("Not registered association transformation");
 						result = ConvertQuerySourceMemberToSql(GetTableSourceRegistry(querySource), memberExpression);
 						break;

@@ -18,14 +18,15 @@ namespace LinqToDB.Linq.Parser.Builders
 
 		public override Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, MethodCallExpression methodCallExpression)
 		{
-			var sourceSequence = builder.BuildSequence(new ParseBuildInfo(), methodCallExpression.Arguments[0]);
+			var sourceBuildInfo = new ParseBuildInfo();
+			var sourceSequence = builder.BuildSequence(sourceBuildInfo, methodCallExpression.Arguments[0]);
 
 			var sourceReference = builder.GetSourceReference(sourceSequence);
 			var lambda = (LambdaExpression)methodCallExpression.Arguments[1].Unwrap();
 
 			var collectionExpression = lambda.GetBody(sourceReference);
 
-			var collection = builder.BuildSequence(new ParseBuildInfo(), collectionExpression);
+			var collection = builder.BuildSequence(sourceBuildInfo, collectionExpression);
 			var lastClause = collection.Clauses.Last();
 			if (lastClause is WhereClause where)
 			{
@@ -37,12 +38,11 @@ namespace LinqToDB.Linq.Parser.Builders
 			var joinType = SqlJoinType.Inner;
 
 			parseBuildInfo.Sequence.AddClause(sourceSequence);
-			parseBuildInfo.Sequence.AddClause(collection);
 
 			if (methodCallExpression.Arguments.Count > 2)
 			{
 				var selector = (LambdaExpression)methodCallExpression.Arguments[2].Unwrap();
-				var selectorExpression = selector.GetBody(sourceReference, collectionReference);
+				var selectorExpression = builder.ConvertExpression(sourceSequence, selector.GetBody(sourceReference, collectionReference));
 				var selectorClause = new SelectClause(selectorExpression);
 				builder.RegisterSource(selectorClause);
 
