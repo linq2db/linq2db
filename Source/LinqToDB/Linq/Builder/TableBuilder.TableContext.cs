@@ -806,7 +806,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region IsExpression
 
-			public IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFor)
+			public virtual IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFor)
 			{
 				switch (requestFor)
 				{
