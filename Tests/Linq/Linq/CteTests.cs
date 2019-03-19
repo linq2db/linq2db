@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using NUnit.Framework;
 
@@ -913,5 +914,55 @@ namespace Tests.Linq
 				var qCte = db.Child.Where(w => w.ChildID.NotIn(cte4)).ToList();
 			}
 		}
+
+		class OrgGroupDepthWrapper
+		{
+			public OrgGroup OrgGroup { get; set; }
+			public int Depth { get; set; }
+		}
+
+		class OrgGroup
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public int ParentId { get; set; }
+			public string GroupName { get; set; }
+		}
+
+		[ActiveIssue(1644)]
+		[Test]
+		public void TestRecursiveObjects([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<OrgGroup>())
+			{
+				var queryable = db.GetTable<OrgGroup>();
+				var cte = db.GetCte<OrgGroupDepthWrapper>(previous =>
+				    {
+				        var parentQuery = from parent in queryable
+				            select new OrgGroupDepthWrapper
+				            {
+				                OrgGroup = parent,
+				                Depth = 0
+				            };
+
+				        var childQuery = from child in queryable
+				            from parent in previous.InnerJoin(parent => parent.OrgGroup.Id == child.ParentId)
+				            orderby parent.Depth + 1, child.GroupName
+				            select new OrgGroupDepthWrapper
+				            {
+				                OrgGroup = child,
+				                Depth = parent.Depth + 1
+				            };
+
+				        return parentQuery.Union(childQuery);
+				    })
+				    .Select(wrapper => wrapper.OrgGroup);
+
+				var result = cte.ToList();
+
+			}
+		}
+
 	}
 }
