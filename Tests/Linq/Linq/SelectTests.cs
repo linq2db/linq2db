@@ -816,6 +816,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(1202)]
 		[Test, Parallelizable(ParallelScope.None)]
 		public void SelectReverseNullPropagationTest([DataSources] string context)
 		{
@@ -837,6 +838,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(1202)]
 		[Test, Parallelizable(ParallelScope.None)]
 		public void SelectReverseNullPropagationWhereTest([DataSources] string context)
 		{
@@ -869,6 +871,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(1202)]
 		[Test]
 		public void SelectReverseNullPropagationTest2([DataSources] string context)
 		{
