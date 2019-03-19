@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Expressions;
-
+using LinqToDB.Tools;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -897,6 +897,20 @@ namespace Tests.Linq
 
 				AreEqual(query1_, query1);
 				AreEqual(query2_, query2);
+			}
+		}
+
+		[Test]
+		public void TestEmbedded([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cte1 = db.GetTable<Child>().Select(c => c.ChildID).AsCte("CTE_1");
+				var cte2 = cte1.Distinct().AsCte("CTE_2");
+				var cte3 = cte2.Distinct().AsCte("CTE_3");
+				var cte4 = cte3.Distinct().AsCte("CTE_3");
+
+				var qCte = db.Child.Where(w => w.ChildID.NotIn(cte4)).ToList();
 			}
 		}
 	}
