@@ -8,7 +8,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Generator
 {
-	public class SetQuerySource : IQuerySource
+	public class SetQuerySource : BaseClause, IQuerySource
 	{
 		public BaseSetClause QuerySource { get; }
 		public int QuerySourceId { get; }
@@ -28,6 +28,16 @@ namespace LinqToDB.Linq.Generator
 		}
 
 		public ISqlExpression ConvertToSql(ISqlTableSource tableSource, Expression expression)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override BaseClause Visit(Func<BaseClause, BaseClause> func)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override bool VisitParentFirst(Func<BaseClause, bool> func)
 		{
 			throw new NotImplementedException();
 		}

@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			[JetBrains.Annotations.NotNull] IQuerySource parentSource,
 			[JetBrains.Annotations.NotNull] IQuerySource associatedSource,
 			[JetBrains.Annotations.NotNull] AssociationDescriptor descriptor,
-			[JetBrains.Annotations.NotNull] BaseClause innerClause)
+			[JetBrains.Annotations.NotNull] Sequence innerSequence)
 		{
 			if (parentSource == null) throw new ArgumentNullException(nameof(parentSource));
 			ItemType = itemType ?? throw new ArgumentNullException(nameof(itemType));
@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			ParentSource = parentSource ?? throw new ArgumentNullException(nameof(parentSource));
 			AssociatedSource = associatedSource ?? throw new ArgumentNullException(nameof(associatedSource));
 			Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
-			InnerClause = innerClause ?? throw new ArgumentNullException(nameof(innerClause));
+			InnerSequence = innerSequence ?? throw new ArgumentNullException(nameof(innerSequence));
 
 			QuerySourceId = QuerySourceHelper.GetNexSourceId();
 		}
@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 		public IQuerySource ParentSource { get; }
 		public IQuerySource AssociatedSource { get; }
 		public AssociationDescriptor Descriptor { get; }
-		public BaseClause InnerClause { get; }
+		public Sequence InnerSequence { get; }
 
 		public int QuerySourceId { get; }
 		public Type ItemType { get; }

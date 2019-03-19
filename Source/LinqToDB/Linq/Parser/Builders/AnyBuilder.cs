@@ -8,7 +8,10 @@ namespace LinqToDB.Linq.Parser.Builders
 	public class AnyBuilder : MethodCallBuilder
 	{
 		private static readonly MethodInfo[] _supported =
-			{ ParsingMethods.Any, ParsingMethods.AnyPredicate };
+		{
+			ParsingMethods.Any, ParsingMethods.AnyPredicate,
+			ParsingMethods.AnyE, ParsingMethods.AnyPredicateE
+		};
 
 		public override MethodInfo[] SupportedMethods()
 		{
@@ -17,8 +20,7 @@ namespace LinqToDB.Linq.Parser.Builders
 
 		public override Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, MethodCallExpression methodCallExpression)
 		{
-			var sequence = builder.BuildSequence(new ParseBuildInfo(), methodCallExpression.Arguments[0]);
-			parseBuildInfo.Sequence.AddClause(sequence);
+			var sequence = builder.BuildSequence(parseBuildInfo, methodCallExpression.Arguments[0]);
 
 			if (methodCallExpression.Arguments.Count > 1)
 			{

@@ -492,21 +492,16 @@ namespace LinqToDB.Linq.Parser
 
 		#endregion
 
-		private BaseClause BuildAssociationClause(Sequence forSequence,
-			QuerySourceReferenceExpression mainSourceReference, AssociationDescriptor descriptor, string itemName,
+		private Sequence BuildAssociationSequence(QuerySourceReferenceExpression mainSourceReference,
+			AssociationDescriptor descriptor, string itemName,
 			out IQuerySource childSource, out Type childType)
 		{
 			var mainType = mainSourceReference.Type;
 			
 			childType = descriptor.MemberInfo.GetMemberType();
 
-			var isList = false;
-
 			if (typeof(IEnumerable<>).IsSameOrParentOf(childType))
-			{
 				childType = childType.GetGenericArgumentsEx()[0];
-				isList = true;
-			}
 
 			var queryExpression = descriptor.GetQueryMethod(mainType, childType);
 
@@ -541,19 +536,13 @@ namespace LinqToDB.Linq.Parser
 				var joinClause = new JoinClause(itemName, childType, tableClause, predicate,
 					descriptor.CanBeNull ? JoinType.Left : JoinType.Inner);
 
-//				if (isList)
-				{
+				var sequence = new Sequence();
+				sequence.AddClause(joinClause);
+				var selectClause = new SelectClause(ConvertExpression(childSourceReference, sequence, childSourceReference));
 
-					var sequence = new Sequence();
-					sequence.AddClause(joinClause);
-					var selectClause = new SelectClause(ConvertExpression(childSourceReference, sequence, childSourceReference));
+				sequence.AddClause(selectClause);
 
-					sequence.AddClause(selectClause);
-
-					return sequence;
-				}
-
-				return joinClause;
+				return sequence;
 			}
 
 			//TODO
@@ -570,11 +559,13 @@ namespace LinqToDB.Linq.Parser
 			if (member == null) throw new ArgumentNullException(nameof(member));
 
 			var mainSourceReference = GetSourceReference(forSequence);
-			var registry = RegisterAssociation(forSequence, mainSourceReference, attr, forExpression, member);
+			var registry = RegisterAssociation(mainSourceReference, attr, forExpression, member);
 			return registry;
 		}
 
-		private TranslationContext.AssociationRegistry RegisterAssociation(Sequence forSequence, QuerySourceReferenceExpression mainSourceReference, AssociationAttribute attr, Expression forExpression, MemberInfo member)
+		public TranslationContext.AssociationRegistry RegisterAssociation(
+			QuerySourceReferenceExpression mainSourceReference, AssociationAttribute attr, Expression forExpression,
+			MemberInfo member)
 		{
 			var registry = TranslationContext.GetAssociationRegistry(forExpression);
 
@@ -601,9 +592,9 @@ namespace LinqToDB.Linq.Parser
 
 			var associationName = attr.AliasName ?? member.Name;
 
-			var innerClause = BuildAssociationClause(forSequence, mainSourceReference, descriptor, associationName, out var childSource, out var childType);
+			var innerSequqnce = BuildAssociationSequence(mainSourceReference, descriptor, associationName, out var childSource, out var childType);
 
-			var associationClause = new AssociationClause(childType, associationName, mainSourceReference.QuerySource, childSource, descriptor, innerClause);
+			var associationClause = new AssociationClause(childType, associationName, mainSourceReference.QuerySource, childSource, descriptor, innerSequqnce);
 			var sourceReference = TranslationContext.RegisterSource(associationClause);
 
 			registry = TranslationContext.RegisterAssociation(forExpression, mainSourceReference, associationClause, sourceReference);
@@ -629,26 +620,26 @@ namespace LinqToDB.Linq.Parser
 
 				switch (e.NodeType)
 				{
-					case ExpressionType.MemberAccess:
-						{
-							var ma = (MemberExpression)e;
-							var attr = MappingSchema.GetAttribute<AssociationAttribute>(ma.Expression.Type, ma.Member);
-							if (attr != null)
-							{
-								e = RegisterAssociation(forSequence, mainReference, attr, ma, ma.Member).Expression;
-							}
-							break;
-						}
-					case ExpressionType.Call:
-						{
-							var mc = (MethodCallExpression)e;
-							var attr = MappingSchema.GetAttribute<AssociationAttribute>(null, mc.Method);
-							if (attr != null)
-							{
-								e = RegisterAssociation(forSequence, mainReference, attr, mc, mc.Method).Expression;
-							}
-							break;
-						}
+//					case ExpressionType.MemberAccess:
+//						{
+//							var ma = (MemberExpression)e;
+//							var attr = MappingSchema.GetAttribute<AssociationAttribute>(ma.Expression.Type, ma.Member);
+//							if (attr != null)
+//							{
+//								e = RegisterAssociation(forSequence, mainReference, attr, ma, ma.Member).Expression;
+//							}
+//							break;
+//						}
+//					case ExpressionType.Call:
+//						{
+//							var mc = (MethodCallExpression)e;
+//							var attr = MappingSchema.GetAttribute<AssociationAttribute>(null, mc.Method);
+//							if (attr != null)
+//							{
+//								e = RegisterAssociation(forSequence, mainReference, attr, mc, mc.Method).Expression;
+//							}
+//							break;
+//						}
 				}
 
 				return e;

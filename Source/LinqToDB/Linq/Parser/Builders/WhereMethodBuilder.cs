@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Parser.Builders
 	public class WhereMethodBuilder : MethodCallBuilder
 	{
 		private static readonly MethodInfo[] _supported =
-			{ ParsingMethods.Where };
+			{ ParsingMethods.Where, ParsingMethods.WhereE };
 
 		public override MethodInfo[] SupportedMethods()
 		{

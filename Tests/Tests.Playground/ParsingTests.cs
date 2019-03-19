@@ -74,7 +74,7 @@ namespace Tests.Playground
 			var optimizer = new ModelOptimizer(new OptimizationFlags { CountFilterSupported = false });
 			model = optimizer.OptimizeModel(model);
 
-			var generator = new QueryGenerator(parser.TranslationContext, db);
+			var generator = new QueryGenerator(parser, db);
 			var sql = generator.GenerateStatement(model);
 
 			var finalized = db.GetSqlOptimizer().Finalize(sql.Item1);
@@ -90,6 +90,9 @@ namespace Tests.Playground
 			db.CreateSqlProvider().BuildSql(0, finalized, sb, 0);
 
 			Console.WriteLine(sb.ToString());
+
+			Console.WriteLine("---------Projection--------------");
+			Console.WriteLine(sql.Item2);
 		}
 
 		[Test]
@@ -248,11 +251,14 @@ namespace Tests.Playground
 				var query = from p in db.GetTable<ParentSource>()
 					from c in p.Children 
 					where c.Address.City == "NY"
+						  && p.Children.Where(c => c.IsDeleted).Any()
 					select new
 					{
 						c.Parent.PkParentId,
 						c,
 						c.Address.City,
+						ZCity = c.Address.City + "Z",
+						ZZCity = Sql.AsSql(c.Address.City + "ZZ"),
 						c.Address,
 						p
 					}; 

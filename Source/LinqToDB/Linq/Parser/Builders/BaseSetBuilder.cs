@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Linq.Generator;
 using LinqToDB.Linq.Parser.Clauses;
 
 namespace LinqToDB.Linq.Parser.Builders
@@ -17,7 +18,11 @@ namespace LinqToDB.Linq.Parser.Builders
 
 			var setClause = CreateSetClause(seq1Expr.Type.GetGenericArgumentsEx()[0], "", sequence1, sequence2);
 
+			// introduced to replace original set clause source
+			var setQuerySource = new SetQuerySource(setClause);
+
 			parseBuildInfo.Sequence.AddClause(setClause);
+			parseBuildInfo.Sequence.AddClause(setQuerySource);
 
 			return parseBuildInfo.Sequence;
 		}
