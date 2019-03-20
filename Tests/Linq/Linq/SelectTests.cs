@@ -816,6 +816,86 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(1202)]
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SelectReverseNullPropagationTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = from p in db.Parent
+							 select new
+							 {
+								 Info = null != p ? new { p.ParentID, p.Value1 } : null
+							 };
+
+				var query2 = from q in query1
+							 select new
+							 {
+								 q.Info.ParentID
+							 };
+
+				var _ = query2.ToArray();
+			}
+		}
+
+		[ActiveIssue(1202)]
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SelectReverseNullPropagationWhereTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = from p in db.Parent
+							 from c in db.Child.InnerJoin(c => c.ParentID == p.ParentID)
+							 select new
+							 {
+								 Info1 = null != p ? new { p.ParentID, p.Value1 } : null,
+								 Info2 = null != c ? (null != c.Parent ? new { c.Parent.Value1 } : null) : null
+							 };
+
+				var query2 = from q in query1
+							 select new
+							 {
+								 InfoAll = null == q
+									 ? null
+									 : new
+									 {
+										 ParentID = null != q.Info1 ? (int?)q.Info1.ParentID : (int?)null,
+										 q.Info1.Value1,
+										 Value2 = q.Info2.Value1
+									 }
+							 };
+
+				var query3 = query2.Where(p => p.InfoAll.ParentID.Value > 0 || p.InfoAll.Value1 > 0 || p.InfoAll.Value2 > 0);
+
+				var _ = query3.ToArray();
+			}
+		}
+
+		[ActiveIssue(1202)]
+		[Test]
+		public void SelectReverseNullPropagationTest2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in Parent
+					join c in Child on p.Value1 equals c.ParentID into gr
+					from c in gr.DefaultIfEmpty()
+					select new
+					{
+						Info2 = null != c ? (null != c.Parent ? new { c.Parent.Value1 } : null) : null
+					}
+					,
+					from p in db.Parent
+					join c in db.Child on p.Value1 equals c.ParentID into gr
+					from c in gr.DefaultIfEmpty()
+					select new
+					{
+						Info2 = null != c ? (null != c.Parent ? new { c.Parent.Value1 } : null) : null
+					});
+			}
+		}
+
 		class LocalClass
 		{
 		}
