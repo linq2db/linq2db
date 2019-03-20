@@ -101,15 +101,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var sql = (@"
 				SELECT
-					table_catalog || '.' || table_schema || '.' || table_name            as TableID,
-					table_catalog                                                        as CatalogName,
-					table_schema                                                         as SchemaName,
-					table_name                                                           as TableName,
-					table_schema = 'public'                                              as IsDefaultSchema,
-					table_type = 'VIEW'                                                  as IsView,
-					left(table_schema, 3) = 'pg_' OR table_schema = 'information_schema' as IsProviderSpecific
+					t.table_catalog || '.' || t.table_schema || '.' || t.table_name            as TableID,
+					t.table_catalog                                                            as CatalogName,
+					t.table_schema                                                             as SchemaName,
+					t.table_name                                                               as TableName,
+					t.table_schema = 'public'                                                  as IsDefaultSchema,
+					t.table_type = 'VIEW'                                                      as IsView,
+					d.description                                                              as Description,
+					left(t.table_schema, 3) = 'pg_' OR t.table_schema = 'information_schema'   as IsProviderSpecific
 				FROM
-					information_schema.tables");
+					information_schema.tables t
+					LEFT JOIN pg_catalog.pg_class cls 
+						on cls.relname = t.table_name
+					LEFT JOIN pg_catalog.pg_description d 
+						on d.objoid = cls.oid 
+						and d.objsubid = 0");
 
 			if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
 				sql += @"
@@ -142,22 +148,27 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var sql = @"
 					SELECT
-						table_catalog || '.' || table_schema || '.' || table_name           as TableID,
-						column_name                                                         as Name,
-						is_nullable = 'YES'                                                 as IsNullable,
-						ordinal_position                                                    as Ordinal,
-						data_type                                                           as DataType,
-						character_maximum_length                                            as Length,
+						c.table_catalog || '.' || c.table_schema || '.' || c.table_name           as TableID,
+						c.column_name                                                             as Name,
+						c.is_nullable = 'YES'                                                     as IsNullable,
+						c.ordinal_position                                                        as Ordinal,
+						c.data_type                                                               as DataType,
+						c.character_maximum_length                                                as Length,
 						COALESCE(
-							numeric_precision::integer,
-							datetime_precision::integer,
-							interval_precision::integer)                                    as Precision,
-						numeric_scale                                                       as Scale,
-						is_identity = 'YES' OR COALESCE(column_default ~* 'nextval', false) as IsIdentity,
-						is_generated <> 'NEVER'                                             as SkipOnInsert,
-						is_updatable = 'NO'                                                 as SkipOnUpdate
+							c.numeric_precision::integer,
+							c.datetime_precision::integer,
+							c.interval_precision::integer)                                        as Precision,
+						c.numeric_scale                                                           as Scale,
+						c.is_identity = 'YES' OR COALESCE(c.column_default ~* 'nextval', false)   as IsIdentity,
+						c.is_generated <> 'NEVER'                                                 as SkipOnInsert,
+						c.is_updatable = 'NO'                                                     as SkipOnUpdate,
+						d.description                                                             as Description
 					FROM
-						information_schema.columns";
+						information_schema.columns as c 
+						LEFT JOIN pg_catalog.pg_class cls 
+							on cls.relname = c.table_name
+						LEFT JOIN pg_catalog.pg_description d 
+							on d.objoid = cls.oid and d.objsubid = c.dtd_identifier::integer";
 
 			if (ExcludedSchemas.Count == 0 || IncludedSchemas.Count == 0)
 				sql += @"
