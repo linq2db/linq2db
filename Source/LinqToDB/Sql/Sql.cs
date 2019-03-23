@@ -56,7 +56,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("{array, ', '}", ServerSideOnly = true)]
-		internal static T[] Spread<T>(T[] array)
+		internal static T[] Spread<T>([ExprParameter] T[] array)
 		{
 			throw new InvalidOperationException();
 		}

@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Expression<Func<TEntity, string, bool>> MatchImpl1<TEntity>()
 		{
-			return (entity, match) => Sql.Expr<bool>($"{entity}.{Sql.TableName(entity, Sql.TableQualification.TableName)} MATCH {match}");
+			return (entity, match) => Sql.Expr<bool>($"{Sql.TableAsField(entity)} MATCH {match}");
 		}
 
 		/// <summary>
@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Expression<Func<TEntity, TColumn, string, bool>> MatchImpl2<TEntity, TColumn>()
 		{
-			return (entity, column, match) => Sql.Expr<bool>($"{entity}.{Sql.FieldName(column, false)} MATCH {match}");
+			return (entity, column, match) => Sql.Expr<bool>($"{column} MATCH {match}");
 		}
 
 		/// <summary>
@@ -74,10 +74,15 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <typeparam name="TEntity">Type of table mapping class.</typeparam>
 		/// <param name="entity">Table record instance.</param>
 		/// <returns>Returns rowid column value.</returns>
-		[Sql.Expression("rowid", ServerSideOnly = true)]
+		[ExpressionMethod(nameof(RowIdImpl))]
 		public static int RowId<TEntity>(this TEntity entity)
 		{
 			throw new LinqException($"'{nameof(RowId)}' is server-side method.");
+		}
+
+		static Expression<Func<TEntity, int>> RowIdImpl<TEntity>()
+		{
+			return entity => Sql.Expr<int>($"{Sql.TableField(entity, "rowid")}");
 		}
 
 		/// <summary>
@@ -87,10 +92,15 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="entity">Table record instance.</param>
 		/// <returns>Returns rank column value.</returns>
 		/// <remarks>FTS Support: FTS5.</remarks>
-		[Sql.Expression("rank", ServerSideOnly = true)]
-		public static int Rank<TEntity>(this TEntity entity)
+		[ExpressionMethod(nameof(RankImpl))]
+		public static double? Rank<TEntity>(this TEntity entity)
 		{
 			throw new LinqException($"'{nameof(Rank)}' is server-side method.");
+		}
+
+		static Expression<Func<TEntity, double?>> RankImpl<TEntity>()
+		{
+			return entity => Sql.Expr<double?>($"{Sql.TableField(entity, "rank")}");
 		}
 
 		/// <summary>
@@ -108,7 +118,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Expression<Func<TEntity, string>> Fts3OffsetsImpl<TEntity>()
 		{
-			return entity => Sql.Expr<string>($"offsets({entity}.{Sql.TableExpr(entity, Sql.TableQualification.TableName)})");
+			return entity => Sql.Expr<string>($"offsets({Sql.TableAsField(entity)})");
 		}
 
 		/// <summary>
@@ -126,7 +136,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Expression<Func<TEntity, byte[]>> Fts3MatchInfoImpl1<TEntity>()
 		{
-			return entity => Sql.Expr<byte[]>($"matchinfo({entity}.{Sql.TableExpr(entity, Sql.TableQualification.TableName)})");
+			return entity => Sql.Expr<byte[]>($"matchinfo({Sql.TableAsField(entity)})");
 		}
 
 		/// <summary>
@@ -145,7 +155,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Expression<Func<TEntity, string, byte[]>> Fts3MatchInfoImpl2<TEntity>()
 		{
-			return (entity, format) => Sql.Expr<byte[]>($"matchinfo({entity}.{Sql.TableExpr(entity, Sql.TableQualification.TableName)}, {format})");
+			return (entity, format) => Sql.Expr<byte[]>($"matchinfo({Sql.TableAsField(entity)}, {format})");
 		}
 
 		/// <summary>
@@ -163,7 +173,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Expression<Func<TEntity, string>> Fts3SnippetImpl1<TEntity>()
 		{
-			return entity => Sql.Expr<string>($"snippet({entity}.{Sql.TableExpr(entity, Sql.TableQualification.TableName)})");
+			return entity => Sql.Expr<string>($"snippet({Sql.TableAsField(entity)})");
 		}
 
 		/// <summary>
@@ -182,7 +192,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Expression<Func<TEntity, string, string>> Fts3SnippetImpl2<TEntity>()
 		{
-			return (entity, startMatch) => Sql.Expr<string>($"snippet({entity}.{Sql.TableExpr(entity, Sql.TableQualification.TableName)}, {startMatch})");
+			return (entity, startMatch) => Sql.Expr<string>($"snippet({Sql.TableAsField(entity)}, {startMatch})");
 		}
 
 		/// <summary>
@@ -202,7 +212,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Expression<Func<TEntity, string, string, string>> Fts3SnippetImpl3<TEntity>()
 		{
-			return (entity, startMatch, endMatch) => Sql.Expr<string>($"snippet({entity}.{Sql.TableExpr(entity, Sql.TableQualification.TableName)}, {startMatch}, {endMatch})");
+			return (entity, startMatch, endMatch) => Sql.Expr<string>($"snippet({Sql.TableAsField(entity)}, {startMatch}, {endMatch})");
 		}
 
 		/// <summary>
@@ -223,7 +233,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Expression<Func<TEntity, string, string, string, string>> Fts3SnippetImpl4<TEntity>()
 		{
-			return (entity, startMatch, endMatch, ellipses) => Sql.Expr<string>($"snippet({entity}.{Sql.TableExpr(entity, Sql.TableQualification.TableName)}, {startMatch}, {endMatch}, {ellipses})");
+			return (entity, startMatch, endMatch, ellipses) => Sql.Expr<string>($"snippet({Sql.TableAsField(entity)}, {startMatch}, {endMatch}, {ellipses})");
 		}
 
 		/// <summary>
@@ -234,7 +244,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="startMatch">Start match wrap text.</param>
 		/// <param name="endMatch">End match wrap text.</param>
 		/// <param name="ellipses">Ellipses text.</param>
-		/// <param name="columnIndex">Index of column to extract snipped from. <c>-1</c> matches all columns.</param>
+		/// <param name="columnIndex">Index of column to extract snippet from. <c>-1</c> matches all columns.</param>
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl5))]
@@ -245,7 +255,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Expression<Func<TEntity, string, string, string, int, string>> Fts3SnippetImpl5<TEntity>()
 		{
-			return (entity, startMatch, endMatch, ellipses, columnIndex) => Sql.Expr<string>($"snippet({entity}.{Sql.TableExpr(entity, Sql.TableQualification.TableName)}, {startMatch}, {endMatch}, {ellipses}, {columnIndex})");
+			return (entity, startMatch, endMatch, ellipses, columnIndex) => Sql.Expr<string>($"snippet({Sql.TableAsField(entity)}, {startMatch}, {endMatch}, {ellipses}, {columnIndex})");
 		}
 
 		/// <summary>
@@ -256,8 +266,8 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="startMatch">Start match wrap text.</param>
 		/// <param name="endMatch">End match wrap text.</param>
 		/// <param name="ellipses">Ellipses text.</param>
-		/// <param name="columnIndex">Index of column to extract snipped from. <c>-1</c> matches all columns.</param>
-		/// <param name="tokensNumber">Manages how many tokens should be returned (read function documentation).</param>
+		/// <param name="columnIndex">Index of column to extract snippet from. <c>-1</c> matches all columns.</param>
+		/// <param name="tokensNumber">Manages how many tokens should be returned (check function documentation).</param>
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl6))]
@@ -268,7 +278,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Expression<Func<TEntity, string, string, string, int, int, string>> Fts3SnippetImpl6<TEntity>()
 		{
-			return (entity, startMatch, endMatch, ellipses, columnIndex, tokensNumber) => Sql.Expr<string>($"snippet({entity}.{Sql.TableExpr(entity, Sql.TableQualification.TableName)}, {startMatch}, {endMatch}, {ellipses}, {columnIndex}, {tokensNumber})");
+			return (entity, startMatch, endMatch, ellipses, columnIndex, tokensNumber) => Sql.Expr<string>($"snippet({Sql.TableAsField(entity)}, {startMatch}, {endMatch}, {ellipses}, {columnIndex}, {tokensNumber})");
 		}
 
 
@@ -287,7 +297,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Expression<Func<TEntity, double>> Fts5bm25Impl1<TEntity>()
 		{
-			return entity => Sql.Expr<double>($"bm25({entity}.{Sql.TableExpr(entity, Sql.TableQualification.TableName)})");
+			return entity => Sql.Expr<double>($"bm25({Sql.TableAsField(entity)})");
 		}
 
 		/// <summary>
@@ -306,7 +316,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Expression<Func<TEntity, double[], double>> Fts5bm25Impl2<TEntity>()
 		{
-			return (entity, weights) => Sql.Expr<double>($"bm25({entity}.{Sql.TableExpr(entity, Sql.TableQualification.TableName)}, {Sql.Spread(weights)})");
+			return (entity, weights) => Sql.Expr<double>($"bm25({Sql.TableAsField(entity)}, {Sql.Spread(weights)})");
 		}
 
 
@@ -315,7 +325,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
 		/// <param name="entity">Full-text search table.</param>
-		/// <param name="columnIndex">Index of column to extract snipped from. <c>-1</c> matches all columns.</param>
+		/// <param name="columnIndex">Index of column to extract highlighted text from.</param>
 		/// <param name="startMatch">Start match wrap text.</param>
 		/// <param name="endMatch">End match wrap text.</param>
 		/// <returns>Check <a href="https://sqlite.org/fts5.html#the_highlight_function">documentation of SQLite site</a>.</returns>
@@ -326,15 +336,135 @@ namespace LinqToDB.DataProvider.SQLite
 			throw new LinqException($"'{nameof(Fts5bm25)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, int, string, string , string>> Fts5HighlightImpl<TEntity>()
+		static Expression<Func<TEntity, int, string, string, string>> Fts5HighlightImpl<TEntity>()
 		{
-			return (entity, columnIndex, startMatch, endMatch) => Sql.Expr<string>($"highlight({entity}.{Sql.TableExpr(entity, Sql.TableQualification.TableName)}, {columnIndex}, {startMatch}, {endMatch})");
+			return (entity, columnIndex, startMatch, endMatch) => Sql.Expr<string>($"highlight({Sql.TableAsField(entity)}, {columnIndex}, {startMatch}, {endMatch})");
 		}
 
+		/// <summary>
+		/// FTS5 snippet(fts_table, columnIndex, startMatch, endMatch, ellipses, tokensNumber) function.
+		/// </summary>
+		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="entity">Full-text search table.</param>
+		/// <param name="columnIndex">Index of column to extract snippet from.</param>
+		/// <param name="startMatch">Start match wrap text.</param>
+		/// <param name="endMatch">End match wrap text.</param>
+		/// <param name="ellipses">Ellipses text.</param>
+		/// <param name="tokensNumber">Manages how many tokens should be returned (check function documentation).</param>
+		/// <returns>Check <a href="https://sqlite.org/fts5.html#the_snippet_function">documentation of SQLite site</a>.</returns>
+		/// <remarks>FTS Support: FTS5.</remarks>
+		[ExpressionMethod(nameof(Fts5SnippetImpl))]
+		public static string Fts5Snippet<TEntity>(this TEntity entity, int columnIndex, string startMatch, string endMatch, string ellipses, int tokensNumber)
+		{
+			throw new LinqException($"'{nameof(Fts5Snippet)}' is server-side method.");
+		}
 
-		// TODO: FTS5 snippet()
-		// TODO: FTS3 options
-		// TODO: FTS5 options
+		static Expression<Func<TEntity, int, string, string, string, int, string>> Fts5SnippetImpl<TEntity>()
+		{
+			return (entity, columnIndex, startMatch, endMatch, ellipses, tokensNumber) => Sql.Expr<string>($"snippet({Sql.TableAsField(entity)}, {columnIndex}, {startMatch}, {endMatch}, {ellipses}, {tokensNumber})");
+		}
+
+		public static void Fts3CommandOptimize<TEntity>(this ITable<TEntity> table)
+		{
+			table.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "optimize").Insert();
+		}
+
+		public static void Fts3CommandRebuild<TEntity>(this ITable<TEntity> table)
+		{
+			table.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "rebuild").Insert();
+		}
+
+		public static void Fts3CommandIntegrityCheck<TEntity>(this ITable<TEntity> table)
+		{
+			table.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "integrity-check").Insert();
+		}
+
+		public static void Fts3CommandMerge<TEntity>(this ITable<TEntity> table, int blocks, int segments)
+		{
+			table.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => Sql.Expr<string>($"merge={blocks},{segments}")).Insert();
+		}
+
+		public static void Fts3CommandAutoMerge<TEntity>(this ITable<TEntity> table, int segments)
+		{
+			table.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => Sql.Expr<string>($"automerge={segments}")).Insert();
+		}
+
+		public static void Fts5CommandAutoMerge<TEntity>(this ITable<TEntity> table, int value)
+		{
+			table
+				.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "automerge")
+				.Value(_ => _.Rank(), () => value)
+				.Insert();
+		}
+
+		public static void Fts5CommandCrisisMerge<TEntity>(this ITable<TEntity> table, int value)
+		{
+			table
+				.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "crisismerge")
+				.Value(_ => _.Rank(), () => value)
+				.Insert();
+		}
+
+		public static void Fts5CommandDelete<TEntity>(this ITable<TEntity> table, int rowid)
+		{
+			// TODO: columns
+			table
+				.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "delete")
+				.Value(_ => _.RowId(), () => rowid)
+				.Insert();
+		}
+
+		public static void Fts5CommandDeleteAll<TEntity>(this ITable<TEntity> table)
+		{
+			table.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "delete-all").Insert();
+		}
+
+		public static void Fts5CommandIntegrityCheck<TEntity>(this ITable<TEntity> table)
+		{
+			table.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "integrity-check").Insert();
+		}
+
+		public static void Fts5CommandMerge<TEntity>(this ITable<TEntity> table, int value)
+		{
+			table
+				.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "merge")
+				.Value(_ => _.Rank(), () => value)
+				.Insert();
+		}
+
+		public static void Fts5CommandOptimize<TEntity>(this ITable<TEntity> table)
+		{
+			table.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "optimize").Insert();
+		}
+
+		public static void Fts5CommandPgsz<TEntity>(this ITable<TEntity> table, int value)
+		{
+			table
+				.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "pgsz")
+				.Value(_ => _.Rank(), () => value)
+				.Insert();
+		}
+
+		//public static void Fts5CommandRank<TEntity>(this ITable<TEntity> table, string value)
+		//{
+		//	table
+		//		.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "rank")
+		//		.Value(_ => _.Rank(), () => value)
+		//		.Insert();
+		//}
+
+		public static void Fts5CommandRebuild<TEntity>(this ITable<TEntity> table)
+		{
+			table.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "rebuild").Insert();
+		}
+
+		public static void Fts5CommandUserMerge<TEntity>(this ITable<TEntity> table, int value)
+		{
+			table
+				.Value(_ => Sql.Expr<string>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}"), () => "usermerge")
+				.Value(_ => _.Rank(), () => value)
+				.Insert();
+		}
 		#endregion
 	}
 }

@@ -388,6 +388,57 @@ namespace LinqToDB
 			}
 		}
 
+		private class TableAsFieldBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var tableExpr = builder.GetExpression(0);
+				var sqlField = tableExpr as SqlField;
+
+				if (sqlField == null)
+					throw new LinqToDBException("Can not find Table associated with expression");
+
+				var sqlTable = sqlField.Table as SqlTable;
+
+				builder.ResultExpression = new SqlField()
+				{
+					Table = sqlField.Table,
+					Name = sqlTable.Name
+				};
+			}
+		}
+
+		private class TableFieldBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var tableExpr = builder.GetExpression(0);
+				var fieldName = builder.GetValue<string>(1);
+				var sqlField = tableExpr as SqlField;
+
+				if (sqlField == null)
+					throw new LinqToDBException("Can not find Table associated with expression");
+
+				builder.ResultExpression = new SqlField()
+				{
+					Table = sqlField.Table,
+					Name = fieldName
+				};
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(TableFieldBuilder))]
+		internal static string TableField<T>([NoEnumeration] T entity, string fieldName)
+		{
+			throw new LinqToDBException("'Sql.TableField' is server side only method and used only for generating custom SQL parts");
+		}
+
+		[Sql.Extension("", BuilderType = typeof(TableAsFieldBuilder))]
+		internal static string TableAsField<T>([NoEnumeration] T entity)
+		{
+			throw new LinqToDBException("'Sql.TableAsField' is server side only method and used only for generating custom SQL parts");
+		}
+
 		[Sql.Extension("", BuilderType = typeof(TableNameBuilderDirect))]
 		public static string TableName<T>([NoEnumeration] ITable<T> table)
 		{
