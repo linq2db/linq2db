@@ -428,13 +428,13 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("", BuilderType = typeof(TableFieldBuilder))]
-		internal static string TableField<T>([NoEnumeration] T entity, string fieldName)
+		internal static TColumn TableField<TEntity, TColumn>([NoEnumeration] TEntity entity, string fieldName)
 		{
 			throw new LinqToDBException("'Sql.TableField' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Sql.Extension("", BuilderType = typeof(TableAsFieldBuilder))]
-		internal static string TableAsField<T>([NoEnumeration] T entity)
+		internal static TColumn TableAsField<TEntity, TColumn>([NoEnumeration] this TEntity entity)
 		{
 			throw new LinqToDBException("'Sql.TableAsField' is server side only method and used only for generating custom SQL parts");
 		}
