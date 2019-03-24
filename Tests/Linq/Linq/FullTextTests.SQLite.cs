@@ -66,6 +66,36 @@ namespace Tests.Linq
 		}
 
 		[Test, Category("FreeText")]
+		public void MatchByTableSubQueryOptimizationTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
+		{
+			using (var db = GetDataContext(context, SetupFtsMapping(type)))
+			{
+				var subquery = db.GetTable<FtsTable>().Where(r => Sql.Ext.SQLite().Match(r, "something"));
+				var query = db.GetTable<FtsTable>().Where(r => subquery.Select(_ => Sql.Ext.SQLite().RowId(_)).Contains(Sql.Ext.SQLite().RowId(r)));
+
+				var results = query.ToList();
+				Assert.AreEqual(1, results.Count);
+				Assert.AreEqual("looking for something?", results[0].text1);
+				Assert.AreEqual("found it!", results[0].text2);
+			}
+		}
+
+		[Test, Category("FreeText")]
+		public void MatchByColumnSubQueryOptimizationTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
+		{
+			using (var db = GetDataContext(context, SetupFtsMapping(type)))
+			{
+				var subquery = db.GetTable<FtsTable>().Where(r => Sql.Ext.SQLite().Match(r.text1, "found"));
+				var query = db.GetTable<FtsTable>().Where(r => subquery.Select(_ => Sql.Ext.SQLite().RowId(_)).Contains(Sql.Ext.SQLite().RowId(r)));
+
+				var results = query.ToList();
+				Assert.AreEqual(1, results.Count);
+				Assert.AreEqual("record not found", results[0].text1);
+				Assert.AreEqual("empty", results[0].text2);
+			}
+		}
+
+		[Test, Category("FreeText")]
 		public void MatchByColumn([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] SQLiteFTS type)
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
