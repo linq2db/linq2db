@@ -170,13 +170,13 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
-		public static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldsExpr)
+		internal static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldsExpr)
 		{
 			return FieldsExpr(table, fieldsExpr, true);
 		}
 
 		[Sql.Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
-		public static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldsExpr, bool qualified)
+		internal static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldsExpr, bool qualified)
 		{
 			var mappingSchema = MappingSchema.Default;
 
