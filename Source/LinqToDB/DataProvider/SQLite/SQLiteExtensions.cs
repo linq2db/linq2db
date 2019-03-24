@@ -10,219 +10,226 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	public interface ISQLiteExtensions
+	{
+	}
+
 	public static class SQLiteExtensions
 	{
+		public static ISQLiteExtensions SQLite(this Sql.ISqlExtension ext) => null;
+
 		#region FTS
 		/// <summary>
-		/// Applies full-text search condition using MATCH predicate against whole FTS table.
+		/// Applies full-text search condition using MATCH predicate against whole FTS table or specific column.
+		/// Examples: "table MATCH 'search query'"/"table.column MATCH 'search query'".
 		/// </summary>
-		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
-		/// <param name="entity">Table to perform full-text search against.</param>
+		/// <param name="ext">Extension point.</param>
+		/// <param name="entityOrColumn">Table or column to perform full-text search against.</param>
 		/// <param name="match">Full-text search condition.</param>
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		/// <remarks>FTS Support: FTS3/4, FTS5.</remarks>
 		[ExpressionMethod(nameof(MatchImpl1))]
-		public static bool Match<TEntity>(this TEntity entity, string match)
+		public static bool Match(this ISQLiteExtensions ext, object entityOrColumn, string match)
 		{
 			throw new LinqException($"'{nameof(Match)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, string, bool>> MatchImpl1<TEntity>()
+		static Expression<Func<ISQLiteExtensions, object, string, bool>> MatchImpl1()
 		{
-			return (entity, match) => Sql.Expr<bool>($"{Sql.TableAsField<TEntity, string>(entity)} MATCH {match}");
-		}
-
-		/// <summary>
-		/// Applies full-text search condition using MATCH predicate against specific FTS table column.
-		/// </summary>
-		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
-		/// <typeparam name="TColumn">Type of queried full-text search column.</typeparam>
-		/// <param name="entity">Table to perform full-text search against.</param>
-		/// <param name="column">Full-text column that should be queried.</param>
-		/// <param name="match">Full-text search condition.</param>
-		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
-		/// <remarks>FTS Support: FTS3/4, FTS5.</remarks>
-		[ExpressionMethod(nameof(MatchImpl2))]
-		public static bool Match<TEntity, TColumn>(this TEntity entity, TColumn column, string match)
-		{
-			throw new LinqException($"'{nameof(Match)}' is server-side method.");
-		}
-
-		static Expression<Func<TEntity, TColumn, string, bool>> MatchImpl2<TEntity, TColumn>()
-		{
-			return (entity, column, match) => Sql.Expr<bool>($"{column} MATCH {match}");
+			return (ext, entityOrColumn, match) => Sql.Expr<bool>($"{Sql.TableOrColumnAsField<string>(entityOrColumn)} MATCH {match}");
 		}
 
 		/// <summary>
 		/// Performs full-text search query against against speficied table and returns search results.
+		/// Example: "table('search query')".
 		/// </summary>
 		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="table">Table to perform full-text search against.</param>
 		/// <param name="match">Full-text search condition.</param>
 		/// <returns>Returns table, filtered using specified search condition, applied to whole table.</returns>
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(MatchTableImpl1))]
-		public static IQueryable<TEntity> MatchTable<TEntity>(this ITable<TEntity> table, string match)
+		public static IQueryable<TEntity> MatchTable<TEntity>(this ISQLiteExtensions ext, ITable<TEntity> table, string match)
 		{
 			return table.DataContext.FromSql<TEntity>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}({match})");
 		}
 
-		static Expression<Func<ITable<TEntity>, string, IQueryable<TEntity>>> MatchTableImpl1<TEntity>()
+		static Expression<Func<ISQLiteExtensions, ITable<TEntity>, string, IQueryable<TEntity>>> MatchTableImpl1<TEntity>()
 		{
-			return (table, match) => table.DataContext.FromSql<TEntity>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}({match})");
+			return (ext, table, match) => table.DataContext.FromSql<TEntity>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}({match})");
 		}
 
 		/// <summary>
 		/// Provides access to rowid hidden column.
+		/// Example: "table.rowid".
 		/// </summary>
 		/// <typeparam name="TEntity">Type of table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Table record instance.</param>
 		/// <returns>Returns rowid column value.</returns>
 		[ExpressionMethod(nameof(RowIdImpl))]
-		public static int RowId<TEntity>(this TEntity entity)
+		public static int RowId<TEntity>(this ISQLiteExtensions ext, TEntity entity)
 		{
 			throw new LinqException($"'{nameof(RowId)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, int>> RowIdImpl<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, int>> RowIdImpl<TEntity>()
 		{
-			return entity => Sql.Expr<int>($"{Sql.TableField<TEntity, int>(entity, "rowid")}");
+			return (ext, entity) => Sql.Expr<int>($"{Sql.TableField<TEntity, int>(entity, "rowid")}");
 		}
 
 		/// <summary>
 		/// Provides access to FTS5 rank hidden column.
+		/// Example: "table.rank".
 		/// </summary>
 		/// <typeparam name="TEntity">Type of table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Table record instance.</param>
 		/// <returns>Returns rank column value.</returns>
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(RankImpl))]
-		public static double? Rank<TEntity>(this TEntity entity)
+		public static double? Rank<TEntity>(this ISQLiteExtensions ext, TEntity entity)
 		{
 			throw new LinqException($"'{nameof(Rank)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, double?>> RankImpl<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, double?>> RankImpl<TEntity>()
 		{
-			return entity => Sql.Expr<double?>($"{Sql.TableField<TEntity, double?>(entity, "rank")}");
+			return (ext, entity) => Sql.Expr<double?>($"{Sql.TableField<TEntity, double?>(entity, "rank")}");
 		}
 
+		#region FTS3 functions
 		/// <summary>
 		/// FTS3/4 offsets(fts_table) function.
+		/// Example: "offsets(table)".
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Full-text search table.</param>
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#offsets">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3OffsetsImpl))]
-		public static string Fts3Offsets<TEntity>(this TEntity entity)
+		public static string FTS3Offsets<TEntity>(this ISQLiteExtensions ext, TEntity entity)
 		{
-			throw new LinqException($"'{nameof(Fts3Offsets)}' is server-side method.");
+			throw new LinqException($"'{nameof(FTS3Offsets)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, string>> Fts3OffsetsImpl<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, string>> Fts3OffsetsImpl<TEntity>()
 		{
-			return entity => Sql.Expr<string>($"offsets({Sql.TableAsField<TEntity, string>(entity)})");
+			return (ext, entity) => Sql.Expr<string>($"offsets({Sql.TableAsField<TEntity, string>(entity)})");
 		}
 
 		/// <summary>
 		/// FTS3/4 matchinfo(fts_table) function.
+		/// Example: "matchinfo(table)".
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Full-text search table.</param>
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#matchinfo">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3MatchInfoImpl1))]
-		public static byte[] Fts3MatchInfo<TEntity>(this TEntity entity)
+		public static byte[] FTS3MatchInfo<TEntity>(this ISQLiteExtensions ext, TEntity entity)
 		{
-			throw new LinqException($"'{nameof(Fts3MatchInfo)}' is server-side method.");
+			throw new LinqException($"'{nameof(FTS3MatchInfo)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, byte[]>> Fts3MatchInfoImpl1<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, byte[]>> Fts3MatchInfoImpl1<TEntity>()
 		{
-			return entity => Sql.Expr<byte[]>($"matchinfo({Sql.TableAsField<TEntity, string>(entity)})");
+			return (ext, entity) => Sql.Expr<byte[]>($"matchinfo({Sql.TableAsField<TEntity, string>(entity)})");
 		}
 
 		/// <summary>
 		/// FTS3/4 matchinfo(fts_table, format) function.
+		/// Example: "matchinfo(table, 'format')".
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Full-text search table.</param>
 		/// <param name="format">Format string function parameter.</param>
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#matchinfo">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3MatchInfoImpl2))]
-		public static byte[] Fts3MatchInfo<TEntity>(this TEntity entity, string format)
+		public static byte[] FTS3MatchInfo<TEntity>(this ISQLiteExtensions ext, TEntity entity, string format)
 		{
-			throw new LinqException($"'{nameof(Fts3MatchInfo)}' is server-side method.");
+			throw new LinqException($"'{nameof(FTS3MatchInfo)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, string, byte[]>> Fts3MatchInfoImpl2<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, string, byte[]>> Fts3MatchInfoImpl2<TEntity>()
 		{
-			return (entity, format) => Sql.Expr<byte[]>($"matchinfo({Sql.TableAsField<TEntity, string>(entity)}, {format})");
+			return (ext, entity, format) => Sql.Expr<byte[]>($"matchinfo({Sql.TableAsField<TEntity, string>(entity)}, {format})");
 		}
 
 		/// <summary>
 		/// FTS3/4 snippet(fts_table) function.
+		/// Example: "snippet(table)".
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Full-text search table.</param>
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl1))]
-		public static string Fts3Snippet<TEntity>(this TEntity entity)
+		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity)
 		{
-			throw new LinqException($"'{nameof(Fts3Snippet)}' is server-side method.");
+			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, string>> Fts3SnippetImpl1<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, string>> Fts3SnippetImpl1<TEntity>()
 		{
-			return entity => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)})");
+			return (ext, entity) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)})");
 		}
 
 		/// <summary>
 		/// FTS3/4 snippet(fts_table, startMatch) function.
+		/// Example: "snippet(table, 'startMatch')".
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Full-text search table.</param>
 		/// <param name="startMatch">Start match wrap text.</param>
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl2))]
-		public static string Fts3Snippet<TEntity>(this TEntity entity, string startMatch)
+		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch)
 		{
-			throw new LinqException($"'{nameof(Fts3Snippet)}' is server-side method.");
+			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, string, string>> Fts3SnippetImpl2<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, string, string>> Fts3SnippetImpl2<TEntity>()
 		{
-			return (entity, startMatch) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch})");
+			return (ext, entity, startMatch) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch})");
 		}
 
 		/// <summary>
 		/// FTS3/4 snippet(fts_table, startMatch, endMatch) function.
+		/// Example: "snippet(table, 'startMatch', 'endMatch')".
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Full-text search table.</param>
 		/// <param name="startMatch">Start match wrap text.</param>
 		/// <param name="endMatch">End match wrap text.</param>
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl3))]
-		public static string Fts3Snippet<TEntity>(this TEntity entity, string startMatch, string endMatch)
+		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch, string endMatch)
 		{
-			throw new LinqException($"'{nameof(Fts3Snippet)}' is server-side method.");
+			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, string, string, string>> Fts3SnippetImpl3<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, string, string, string>> Fts3SnippetImpl3<TEntity>()
 		{
-			return (entity, startMatch, endMatch) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch}, {endMatch})");
+			return (ext, entity, startMatch, endMatch) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch}, {endMatch})");
 		}
 
 		/// <summary>
 		/// FTS3/4 snippet(fts_table, startMatch, endMatch, ellipses) function.
+		/// Example: "snippet(table, 'startMatch', 'endMatch', 'ellipses')".
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Full-text search table.</param>
 		/// <param name="startMatch">Start match wrap text.</param>
 		/// <param name="endMatch">End match wrap text.</param>
@@ -230,20 +237,22 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl4))]
-		public static string Fts3Snippet<TEntity>(this TEntity entity, string startMatch, string endMatch, string ellipses)
+		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch, string endMatch, string ellipses)
 		{
-			throw new LinqException($"'{nameof(Fts3Snippet)}' is server-side method.");
+			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, string, string, string, string>> Fts3SnippetImpl4<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, string, string, string, string>> Fts3SnippetImpl4<TEntity>()
 		{
-			return (entity, startMatch, endMatch, ellipses) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch}, {endMatch}, {ellipses})");
+			return (ext, entity, startMatch, endMatch, ellipses) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch}, {endMatch}, {ellipses})");
 		}
 
 		/// <summary>
 		/// FTS3/4 snippet(fts_table, startMatch, endMatch, ellipses, columnIndex) function.
+		/// Example: "snippet(table, 'startMatch', 'endMatch', 'ellipses', columnIndex)".
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Full-text search table.</param>
 		/// <param name="startMatch">Start match wrap text.</param>
 		/// <param name="endMatch">End match wrap text.</param>
@@ -252,20 +261,22 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl5))]
-		public static string Fts3Snippet<TEntity>(this TEntity entity, string startMatch, string endMatch, string ellipses, int columnIndex)
+		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch, string endMatch, string ellipses, int columnIndex)
 		{
-			throw new LinqException($"'{nameof(Fts3Snippet)}' is server-side method.");
+			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, string, string, string, int, string>> Fts3SnippetImpl5<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, string, string, string, int, string>> Fts3SnippetImpl5<TEntity>()
 		{
-			return (entity, startMatch, endMatch, ellipses, columnIndex) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch}, {endMatch}, {ellipses}, {columnIndex})");
+			return (ext, entity, startMatch, endMatch, ellipses, columnIndex) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch}, {endMatch}, {ellipses}, {columnIndex})");
 		}
 
 		/// <summary>
 		/// FTS3/4 snippet(fts_table, startMatch, endMatch, ellipses, columnIndex, tokensNumber) function.
+		/// Example: "snippet(table, 'startMatch', 'endMatch', 'ellipses', columnIndex, tokensNumber)".
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Full-text search table.</param>
 		/// <param name="startMatch">Start match wrap text.</param>
 		/// <param name="endMatch">End match wrap text.</param>
@@ -275,59 +286,66 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl6))]
-		public static string Fts3Snippet<TEntity>(this TEntity entity, string startMatch, string endMatch, string ellipses, int columnIndex, int tokensNumber)
+		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch, string endMatch, string ellipses, int columnIndex, int tokensNumber)
 		{
-			throw new LinqException($"'{nameof(Fts3Snippet)}' is server-side method.");
+			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, string, string, string, int, int, string>> Fts3SnippetImpl6<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, string, string, string, int, int, string>> Fts3SnippetImpl6<TEntity>()
 		{
-			return (entity, startMatch, endMatch, ellipses, columnIndex, tokensNumber) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch}, {endMatch}, {ellipses}, {columnIndex}, {tokensNumber})");
+			return (ext, entity, startMatch, endMatch, ellipses, columnIndex, tokensNumber) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch}, {endMatch}, {ellipses}, {columnIndex}, {tokensNumber})");
 		}
+		#endregion
 
-
+		#region FTS5 functions
 		/// <summary>
 		/// FTS5 bm25(fts_table) function.
+		/// Example: "bm25(table)".
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Full-text search table.</param>
 		/// <returns>Check <a href="https://sqlite.org/fts5.html#the_bm25_function">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(Fts5bm25Impl1))]
-		public static double Fts5bm25<TEntity>(this TEntity entity)
+		public static double FTS5bm25<TEntity>(this ISQLiteExtensions ext, TEntity entity)
 		{
-			throw new LinqException($"'{nameof(Fts5bm25)}' is server-side method.");
+			throw new LinqException($"'{nameof(FTS5bm25)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, double>> Fts5bm25Impl1<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, double>> Fts5bm25Impl1<TEntity>()
 		{
-			return entity => Sql.Expr<double>($"bm25({Sql.TableAsField<TEntity, string>(entity)})");
+			return (ext, entity) => Sql.Expr<double>($"bm25({Sql.TableAsField<TEntity, string>(entity)})");
 		}
 
 		/// <summary>
 		/// FTS5 bm25(fts_table, ...weights) function.
+		/// Example: "bm25(table, col1_weight, col2_weight)".
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Full-text search table.</param>
 		/// <param name="weights">Weights for columns (each value appied to corresponding column).</param>
 		/// <returns>Check <a href="https://sqlite.org/fts5.html#the_bm25_function">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(Fts5bm25Impl2))]
-		public static double Fts5bm25<TEntity>(this TEntity entity, params double[] weights)
+		public static double FTS5bm25<TEntity>(this ISQLiteExtensions ext, TEntity entity, params double[] weights)
 		{
-			throw new LinqException($"'{nameof(Fts5bm25)}' is server-side method.");
+			throw new LinqException($"'{nameof(FTS5bm25)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, double[], double>> Fts5bm25Impl2<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, double[], double>> Fts5bm25Impl2<TEntity>()
 		{
-			return (entity, weights) => Sql.Expr<double>($"bm25({Sql.TableAsField<TEntity, string>(entity)}, {Sql.Spread(weights)})");
+			return (ext, entity, weights) => Sql.Expr<double>($"bm25({Sql.TableAsField<TEntity, string>(entity)}, {Sql.Spread(weights)})");
 		}
 
 
 		/// <summary>
 		/// FTS5 highlight(fts_table, columnIndex, startMatch, endMatch) function.
+		/// Example: "highlight(table, columnIndex, 'startMatch', 'endMatch')".
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Full-text search table.</param>
 		/// <param name="columnIndex">Index of column to extract highlighted text from.</param>
 		/// <param name="startMatch">Start match wrap text.</param>
@@ -335,20 +353,22 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://sqlite.org/fts5.html#the_highlight_function">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(Fts5HighlightImpl))]
-		public static string Fts5Highlight<TEntity>(this TEntity entity, int columnIndex, string startMatch, string endMatch)
+		public static string FTS5Highlight<TEntity>(this ISQLiteExtensions ext, TEntity entity, int columnIndex, string startMatch, string endMatch)
 		{
-			throw new LinqException($"'{nameof(Fts5bm25)}' is server-side method.");
+			throw new LinqException($"'{nameof(FTS5Highlight)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, int, string, string, string>> Fts5HighlightImpl<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, int, string, string, string>> Fts5HighlightImpl<TEntity>()
 		{
-			return (entity, columnIndex, startMatch, endMatch) => Sql.Expr<string>($"highlight({Sql.TableAsField<TEntity, string>(entity)}, {columnIndex}, {startMatch}, {endMatch})");
+			return (ext, entity, columnIndex, startMatch, endMatch) => Sql.Expr<string>($"highlight({Sql.TableAsField<TEntity, string>(entity)}, {columnIndex}, {startMatch}, {endMatch})");
 		}
 
 		/// <summary>
 		/// FTS5 snippet(fts_table, columnIndex, startMatch, endMatch, ellipses, tokensNumber) function.
+		/// Example: "snippet(table, columnIndex, 'startMatch', 'endMatch', 'ellipses', tokensNumber)".
 		/// </summary>
 		/// <typeparam name="TEntity">Full-text search table mapping class.</typeparam>
+		/// <param name="ext">Extension point.</param>
 		/// <param name="entity">Full-text search table.</param>
 		/// <param name="columnIndex">Index of column to extract snippet from.</param>
 		/// <param name="startMatch">Start match wrap text.</param>
@@ -358,111 +378,119 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://sqlite.org/fts5.html#the_snippet_function">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(Fts5SnippetImpl))]
-		public static string Fts5Snippet<TEntity>(this TEntity entity, int columnIndex, string startMatch, string endMatch, string ellipses, int tokensNumber)
+		public static string FTS5Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, int columnIndex, string startMatch, string endMatch, string ellipses, int tokensNumber)
 		{
-			throw new LinqException($"'{nameof(Fts5Snippet)}' is server-side method.");
+			throw new LinqException($"'{nameof(FTS5Snippet)}' is server-side method.");
 		}
 
-		static Expression<Func<TEntity, int, string, string, string, int, string>> Fts5SnippetImpl<TEntity>()
+		static Expression<Func<ISQLiteExtensions, TEntity, int, string, string, string, int, string>> Fts5SnippetImpl<TEntity>()
 		{
-			return (entity, columnIndex, startMatch, endMatch, ellipses, tokensNumber) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {columnIndex}, {startMatch}, {endMatch}, {ellipses}, {tokensNumber})");
+			return (ext, entity, columnIndex, startMatch, endMatch, ellipses, tokensNumber) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {columnIndex}, {startMatch}, {endMatch}, {ellipses}, {tokensNumber})");
 		}
+		#endregion
 
-		class Empty
-		{
-		}
-
+		#region FTS3 commands
 		/// <summary>
 		/// Executes FTS3/FTS4 'optimize' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('optimize')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void Fts3Optimize<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS3Optimize<TEntity>(this DataConnection dc, ITable<TEntity> table)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')");
 		}
 
 		/// <summary>
 		/// Executes FTS3/FTS4 'rebuild' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('rebuild')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void Fts3Rebuild<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS3Rebuild<TEntity>(this DataConnection dc, ITable<TEntity> table)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')");
 		}
 
 		/// <summary>
 		/// Executes FTS3/FTS4 'integrity-check' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('integrity-check')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void Fts3IntegrityCheck<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS3IntegrityCheck<TEntity>(this DataConnection dc, ITable<TEntity> table)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')");
 		}
 
 		/// <summary>
 		/// Executes FTS3/FTS4 'merge' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('merge=blocks,segments')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="blocks">Blocks command parameter.</param>
 		/// <param name="segments">Segments command parameter.</param>
-		public static void Fts3Merge<TEntity>(this DataConnection dc, ITable<TEntity> table, int blocks, int segments)
+		public static void FTS3Merge<TEntity>(this DataConnection dc, ITable<TEntity> table, int blocks, int segments)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('merge={blocks.ToString(NumberFormatInfo.InvariantInfo)},{segments.ToString(NumberFormatInfo.InvariantInfo)}')");
 		}
 
 		/// <summary>
 		/// Executes FTS3/FTS4 'automerge' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('automerge=segments')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="segments">Segments command parameter.</param>
-		public static void Fts3AutoMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int segments)
+		public static void FTS3AutoMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int segments)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('automerge={segments.ToString(NumberFormatInfo.InvariantInfo)}')");
 		}
+		#endregion
 
+		#region FTS5 commands
 		/// <summary>
 		/// Executes FTS5 'automerge' command for specific table.
+		/// Example: "INSERT INTO table(table, rank) VALUES('automerge', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void Fts5AutoMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5AutoMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('automerge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
 		}
 
 		/// <summary>
 		/// Executes FTS5 'crisismerge' command for specific table.
+		/// Example: "INSERT INTO table(table, rank) VALUES('crisismerge', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void Fts5CrisisMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5CrisisMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('crisismerge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
 		}
 
 		/// <summary>
 		/// Executes FTS5 'delete' command for specific table.
+		/// Example: "INSERT INTO table(table, rowid, col1, col2) VALUES('delete', rowid, 'col1_value', 'col2_value')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="rowid">Record rowid value.</param>
 		/// <param name="record">Current record entity.</param>
-		public static void Fts5Delete<TEntity>(this DataConnection dc, ITable<TEntity> table, int rowid, TEntity record)
+		public static void FTS5Delete<TEntity>(this DataConnection dc, ITable<TEntity> table, int rowid, TEntity record)
 		{
 			var ed = dc.MappingSchema.GetEntityDescriptor(typeof(TEntity));
 
@@ -484,22 +512,24 @@ namespace LinqToDB.DataProvider.SQLite
 
 		/// <summary>
 		/// Executes FTS5 'delete-all' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('delete-all')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void Fts5DeleteAll<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS5DeleteAll<TEntity>(this DataConnection dc, ITable<TEntity> table)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('delete-all')");
 		}
 
 		/// <summary>
 		/// Executes FTS5 'integrity-check' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('integrity-check')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void Fts5IntegrityCheck<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS5IntegrityCheck<TEntity>(this DataConnection dc, ITable<TEntity> table)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')");
 		}
@@ -507,73 +537,80 @@ namespace LinqToDB.DataProvider.SQLite
 
 		/// <summary>
 		/// Executes FTS5 'merge' command for specific table.
+		/// Example: "INSERT INTO table(table, rank) VALUES('merge', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void Fts5Merge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5Merge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('merge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
 		}
 
 		/// <summary>
 		/// Executes FTS5 'optimize' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('optimize')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void Fts5Optimize<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS5Optimize<TEntity>(this DataConnection dc, ITable<TEntity> table)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')");
 		}
 
 		/// <summary>
 		/// Executes FTS5 'pgsz' command for specific table.
+		/// Example: "INSERT INTO table(table, rank) VALUES('pgsz', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void Fts5Pgsz<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5Pgsz<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('pgsz', {value.ToString(NumberFormatInfo.InvariantInfo)})");
 		}
 
 		/// <summary>
 		/// Executes FTS5 'rank' command for specific table.
+		/// Example: "INSERT INTO table(table, rank) VALUES('rank', 'function')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		/// <param name="value">Rank function.</param>
-		public static void Fts5Rank<TEntity>(this DataConnection dc, ITable<TEntity> table, string value)
+		/// <param name="function">Rank function.</param>
+		public static void FTS5Rank<TEntity>(this DataConnection dc, ITable<TEntity> table, string function)
 		{
-			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("rank", value));
+			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("rank", function));
 		}
 
 		/// <summary>
 		/// Executes FTS5 'rebuild' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('rebuild')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void Fts5Rebuild<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS5Rebuild<TEntity>(this DataConnection dc, ITable<TEntity> table)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')");
 		}
 
 		/// <summary>
 		/// Executes FTS5 'usermerge' command for specific table.
+		/// Example: "INSERT INTO table(table, rank) VALUES('usermerge', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void Fts5UserMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5UserMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('usermerge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
 		}
+		#endregion
 		#endregion
 	}
 }

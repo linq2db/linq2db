@@ -388,6 +388,32 @@ namespace LinqToDB
 			}
 		}
 
+		private class TableOrColumnAsFieldBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var tableOrColumnExpr = builder.GetExpression(0);
+				var sqlField = tableOrColumnExpr as SqlField;
+
+				if (sqlField == null)
+					throw new LinqToDBException("Can not find Table or Column associated with expression");
+
+				if (sqlField.Name != "*")
+				{
+					builder.ResultExpression = sqlField;
+					return;
+				}
+
+				var sqlTable = sqlField.Table as SqlTable;
+
+				builder.ResultExpression = new SqlField()
+				{
+					Table = sqlField.Table,
+					Name = sqlTable.Name
+				};
+			}
+		}
+
 		private class TableAsFieldBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
@@ -431,6 +457,12 @@ namespace LinqToDB
 		internal static TColumn TableField<TEntity, TColumn>([NoEnumeration] TEntity entity, string fieldName)
 		{
 			throw new LinqToDBException("'Sql.TableField' is server side only method and used only for generating custom SQL parts");
+		}
+
+		[Sql.Extension("", BuilderType = typeof(TableOrColumnAsFieldBuilder))]
+		internal static TColumn TableOrColumnAsField<TColumn>([NoEnumeration] this object entityOrColumn)
+		{
+			throw new LinqToDBException("'Sql.TableOrColumnAsField' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Sql.Extension("", BuilderType = typeof(TableAsFieldBuilder))]

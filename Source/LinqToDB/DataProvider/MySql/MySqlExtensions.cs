@@ -58,6 +58,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Applies full-text search condition using MATCH AGAINST predicate against specified full-text columns using default mode (IN NATURAL LANGUAGE MODE).
+		/// Example: MATCH(col1, col2) AGAINST('search query').
 		/// </summary>
 		/// <param name="ext">Extension point.</param>
 		/// <param name="search">Full-text search condition.</param>
@@ -71,6 +72,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Calculates relevance of full-text search for current record using MATCH AGAINST predicate against specified full-text columns using default mode (IN NATURAL LANGUAGE MODE).
+		/// Example: MATCH(col1, col2) AGAINST('search query').
 		/// </summary>
 		/// <param name="ext">Extension point.</param>
 		/// <param name="search">Full-text search condition.</param>
@@ -84,6 +86,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Applies full-text search condition using MATCH AGAINST predicate against specified full-text columns using specified search modifier.
+		/// Example: MATCH(col1, col2) AGAINST('search query' MODIFIER).
 		/// </summary>
 		/// <param name="ext">Extension point.</param>
 		/// <param name="modifier">Search modifier.</param>
@@ -98,6 +101,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Calculates relevance of full-text search for current record using MATCH AGAINST predicate against specified full-text columns using specified search modifier.
+		/// Example: MATCH(col1, col2) AGAINST('search query' MODIFIER).
 		/// </summary>
 		/// <param name="ext">Extension point.</param>
 		/// <param name="modifier">Search modifier.</param>

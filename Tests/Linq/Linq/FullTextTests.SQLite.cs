@@ -49,7 +49,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
-				var query = db.GetTable<FtsTable>().Where(r => r.Match("something"));
+				var query = db.GetTable<FtsTable>().Where(r => Sql.Ext.SQLite().Match(r, "something"));
 
 				if (type != SQLiteFTS.FTS5)
 				{
@@ -71,7 +71,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
-				var query = db.GetTable<FtsTable>().Where(r => r.Match(r.text1, "found"));
+				var query = db.GetTable<FtsTable>().Where(r => Sql.Ext.SQLite().Match(r.text1, "found"));
 
 				if (type != SQLiteFTS.FTS5)
 				{
@@ -93,7 +93,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(SQLiteFTS.FTS5)))
 			{
-				var query = db.GetTable<FtsTable>().MatchTable("found");
+				var query = Sql.Ext.SQLite().MatchTable(db.GetTable<FtsTable>(), "found");
 
 				var sql = query.ToString();
 				Assert.That(sql.Contains("[FTS5_TABLE]('found')"));
@@ -105,7 +105,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
-				var query = db.GetTable<FtsTable>().Where(r => r.RowId() == 3);
+				var query = db.GetTable<FtsTable>().Where(r => Sql.Ext.SQLite().RowId(r) == 3);
 
 				if (type != SQLiteFTS.FTS5)
 				{
@@ -127,7 +127,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(SQLiteFTS.FTS5)))
 			{
-				var query = db.GetTable<FtsTable>().OrderBy(r => r.Rank());
+				var query = db.GetTable<FtsTable>().OrderBy(r => Sql.Ext.SQLite().Rank(r));
 
 				var sql = query.ToString();
 				Assert.That(sql.Contains("ORDER BY"));
@@ -141,9 +141,9 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
 				var query = db.GetTable<FtsTable>()
-					.Where(r => r.Match("found"))
-					.OrderBy(r => r.RowId())
-					.Select(r => new { r.text1, offsets = r.Fts3Offsets() });
+					.Where(r => Sql.Ext.SQLite().Match(r, "found"))
+					.OrderBy(r => Sql.Ext.SQLite().RowId(r))
+					.Select(r => new { r.text1, offsets = Sql.Ext.SQLite().FTS3Offsets(r) });
 
 				var results = query.ToList();
 				Assert.AreEqual(2, results.Count);
@@ -160,9 +160,9 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
 				var query = db.GetTable<FtsTable>()
-					.Where(r => r.Match("found"))
-					.OrderBy(r => r.RowId())
-					.Select(r => new { r.text1, matchInfo = r.Fts3MatchInfo() });
+					.Where(r => Sql.Ext.SQLite().Match(r, "found"))
+					.OrderBy(r => Sql.Ext.SQLite().RowId(r))
+					.Select(r => new { r.text1, matchInfo = Sql.Ext.SQLite().FTS3MatchInfo(r) });
 
 				var results = query.ToList();
 				Assert.AreEqual(2, results.Count);
@@ -179,9 +179,9 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
 				var query = db.GetTable<FtsTable>()
-					.Where(r => r.Match("found"))
-					.OrderBy(r => r.RowId())
-					.Select(r => new { r.text1, matchInfo = r.Fts3MatchInfo("pc") });
+					.Where(r => Sql.Ext.SQLite().Match(r, "found"))
+					.OrderBy(r => Sql.Ext.SQLite().RowId(r))
+					.Select(r => new { r.text1, matchInfo = Sql.Ext.SQLite().FTS3MatchInfo(r, "pc") });
 
 				var results = query.ToList();
 				Assert.AreEqual(2, results.Count);
@@ -198,8 +198,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
 				var result = db.GetTable<FtsTable>()
-					.Where(r => r.Match("something"))
-					.Select(r => r.Fts3Snippet())
+					.Where(r => Sql.Ext.SQLite().Match(r, "something"))
+					.Select(r => Sql.Ext.SQLite().FTS3Snippet(r))
 					.Single();
 
 				Assert.AreEqual("looking for <b>something</b>?", result);
@@ -212,8 +212,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
 				var result = db.GetTable<FtsTable>()
-					.Where(r => r.Match("looking"))
-					.Select(r => r.Fts3Snippet("_"))
+					.Where(r => Sql.Ext.SQLite().Match(r, "looking"))
+					.Select(r => Sql.Ext.SQLite().FTS3Snippet(r, "_"))
 					.Single();
 
 				Assert.AreEqual("_looking</b> for something?", result);
@@ -226,8 +226,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
 				var result = db.GetTable<FtsTable>()
-					.Where(r => r.Match("looking"))
-					.Select(r => r.Fts3Snippet("->", "<-"))
+					.Where(r => Sql.Ext.SQLite().Match(r, "looking"))
+					.Select(r => Sql.Ext.SQLite().FTS3Snippet(r, "->", "<-"))
 					.Single();
 
 				Assert.AreEqual("->looking<- for something?", result);
@@ -240,8 +240,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
 				var result = db.GetTable<FtsTable>()
-					.Where(r => r.Match("cool"))
-					.Select(r => r.Fts3Snippet(">", "<", "[zzz]"))
+					.Where(r => Sql.Ext.SQLite().Match(r, "cool"))
+					.Select(r => Sql.Ext.SQLite().FTS3Snippet(r, ">", "<", "[zzz]"))
 					.Single();
 
 				Assert.AreEqual("[zzz]3oC drops. >Cool< in the upper portion, minimum temperature 14-16oC and >cool< elsewhere, minimum[zzz]", result);
@@ -254,8 +254,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
 				var result = db.GetTable<FtsTable>()
-					.Where(r => r.Match("cool"))
-					.Select(r => r.Fts3Snippet(">", "<", "[zzz]", 0))
+					.Where(r => Sql.Ext.SQLite().Match(r, "cool"))
+					.Select(r => Sql.Ext.SQLite().FTS3Snippet(r, ">", "<", "[zzz]", 0))
 					.Single();
 
 				Assert.AreEqual("for snippet testing", result);
@@ -268,8 +268,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
 				var result = db.GetTable<FtsTable>()
-					.Where(r => r.Match("cool"))
-					.Select(r => r.Fts3Snippet(">", "<", "[zzz]", 1, 1))
+					.Where(r => Sql.Ext.SQLite().Match(r, "cool"))
+					.Select(r => Sql.Ext.SQLite().FTS3Snippet(r, ">", "<", "[zzz]", 1, 1))
 					.Single();
 
 				Assert.AreEqual("[zzz]>Cool<[zzz]", result);
@@ -281,7 +281,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(SQLiteFTS.FTS5)))
 			{
-				var query = db.GetTable<FtsTable>().Select(r => r.Fts5bm25());
+				var query = db.GetTable<FtsTable>().Select(r => Sql.Ext.SQLite().FTS5bm25(r));
 
 				var sql = query.ToString();
 				Assert.That(sql.Contains("bm25([r].[FTS5_TABLE])"));
@@ -293,7 +293,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(SQLiteFTS.FTS5)))
 			{
-				var query = db.GetTable<FtsTable>().Select(r => r.Fts5bm25(1.4, 5.6));
+				var query = db.GetTable<FtsTable>().Select(r => Sql.Ext.SQLite().FTS5bm25(r, 1.4, 5.6));
 
 				var sql = query.ToString();
 				Assert.That(sql.Contains("bm25([r].[FTS5_TABLE], 1.3999999999999999, 5.5999999999999996)"));
@@ -305,7 +305,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(SQLiteFTS.FTS5)))
 			{
-				var query = db.GetTable<FtsTable>().Select(r => r.Fts5Highlight(2, "start", "end"));
+				var query = db.GetTable<FtsTable>().Select(r => Sql.Ext.SQLite().FTS5Highlight(r, 2, "start", "end"));
 
 				var sql = query.ToString();
 				Assert.That(sql.Contains("highlight([r].[FTS5_TABLE], 2, 'start', 'end')"));
@@ -317,7 +317,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(SQLiteFTS.FTS5)))
 			{
-				var query = db.GetTable<FtsTable>().Select(r => r.Fts5Snippet(1, "->", "<-", "zzz", 4));
+				var query = db.GetTable<FtsTable>().Select(r => Sql.Ext.SQLite().FTS5Snippet(r, 1, "->", "<-", "zzz", 4));
 
 				var sql = query.ToString();
 				Assert.That(sql.Contains("snippet([r].[FTS5_TABLE], 1, '->', '<-', 'zzz', 4)"));
@@ -331,7 +331,7 @@ namespace Tests.Linq
 			{
 				db.AddMappingSchema(SetupFtsMapping(type));
 
-				db.Fts3Optimize(db.GetTable<FtsTable>());
+				db.FTS3Optimize(db.GetTable<FtsTable>());
 
 				var tableName = type.ToString() + "_TABLE";
 
@@ -346,7 +346,7 @@ namespace Tests.Linq
 			{
 				db.AddMappingSchema(SetupFtsMapping(type));
 
-				db.Fts3Rebuild(db.GetTable<FtsTable>());
+				db.FTS3Rebuild(db.GetTable<FtsTable>());
 
 				var tableName = type.ToString() + "_TABLE";
 
@@ -361,7 +361,7 @@ namespace Tests.Linq
 			{
 				db.AddMappingSchema(SetupFtsMapping(type));
 
-				db.Fts3IntegrityCheck(db.GetTable<FtsTable>());
+				db.FTS3IntegrityCheck(db.GetTable<FtsTable>());
 
 				var tableName = type.ToString() + "_TABLE";
 
@@ -376,7 +376,7 @@ namespace Tests.Linq
 			{
 				db.AddMappingSchema(SetupFtsMapping(type));
 
-				db.Fts3Merge(db.GetTable<FtsTable>(), 4, 3);
+				db.FTS3Merge(db.GetTable<FtsTable>(), 4, 3);
 
 				var tableName = type.ToString() + "_TABLE";
 
@@ -391,7 +391,7 @@ namespace Tests.Linq
 			{
 				db.AddMappingSchema(SetupFtsMapping(type));
 
-				db.Fts3AutoMerge(db.GetTable<FtsTable>(), 5);
+				db.FTS3AutoMerge(db.GetTable<FtsTable>(), 5);
 
 				var tableName = type.ToString() + "_TABLE";
 
@@ -408,7 +408,7 @@ namespace Tests.Linq
 
 				try
 				{
-					db.Fts5AutoMerge(db.GetTable<FtsTable>(), 5);
+					db.FTS5AutoMerge(db.GetTable<FtsTable>(), 5);
 				}
 				catch
 				{
@@ -430,7 +430,7 @@ namespace Tests.Linq
 
 				try
 				{
-					db.Fts5CrisisMerge(db.GetTable<FtsTable>(), 2);
+					db.FTS5CrisisMerge(db.GetTable<FtsTable>(), 2);
 				}
 				catch
 				{
@@ -458,7 +458,7 @@ namespace Tests.Linq
 						text2 = "two"
 					};
 
-					db.Fts5Delete(db.GetTable<FtsTable>(), 2, record);
+					db.FTS5Delete(db.GetTable<FtsTable>(), 2, record);
 				}
 				catch
 				{
@@ -483,7 +483,7 @@ namespace Tests.Linq
 
 				try
 				{
-					db.Fts5DeleteAll(db.GetTable<FtsTable>());
+					db.FTS5DeleteAll(db.GetTable<FtsTable>());
 				}
 				catch
 				{
@@ -505,7 +505,7 @@ namespace Tests.Linq
 
 				try
 				{
-					db.Fts5IntegrityCheck(db.GetTable<FtsTable>());
+					db.FTS5IntegrityCheck(db.GetTable<FtsTable>());
 				}
 				catch
 				{
@@ -527,7 +527,7 @@ namespace Tests.Linq
 
 				try
 				{
-					db.Fts5Merge(db.GetTable<FtsTable>(), 234);
+					db.FTS5Merge(db.GetTable<FtsTable>(), 234);
 				}
 				catch
 				{
@@ -549,7 +549,7 @@ namespace Tests.Linq
 
 				try
 				{
-					db.Fts5Optimize(db.GetTable<FtsTable>());
+					db.FTS5Optimize(db.GetTable<FtsTable>());
 				}
 				catch
 				{
@@ -571,7 +571,7 @@ namespace Tests.Linq
 
 				try
 				{
-					db.Fts5Pgsz(db.GetTable<FtsTable>(), 3333);
+					db.FTS5Pgsz(db.GetTable<FtsTable>(), 3333);
 				}
 				catch
 				{
@@ -593,7 +593,7 @@ namespace Tests.Linq
 
 				try
 				{
-					db.Fts5Rank(db.GetTable<FtsTable>(), "strange('function\")");
+					db.FTS5Rank(db.GetTable<FtsTable>(), "strange('function\")");
 				}
 				catch
 				{
@@ -617,7 +617,7 @@ namespace Tests.Linq
 
 				try
 				{
-					db.Fts5Rebuild(db.GetTable<FtsTable>());
+					db.FTS5Rebuild(db.GetTable<FtsTable>());
 				}
 				catch
 				{
@@ -639,7 +639,7 @@ namespace Tests.Linq
 
 				try
 				{
-					db.Fts5UserMerge(db.GetTable<FtsTable>(), 7);
+					db.FTS5UserMerge(db.GetTable<FtsTable>(), 7);
 				}
 				catch
 				{

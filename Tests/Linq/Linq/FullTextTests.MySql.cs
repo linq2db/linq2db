@@ -1,11 +1,8 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
+using LinqToDB.DataProvider.MySql;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using LinqToDB.DataProvider.MySql;
-using System;
-using Tests.Model;
-using System.Data.Common;
+using System.Linq;
 
 namespace Tests.Linq
 {
