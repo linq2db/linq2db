@@ -1,12 +1,10 @@
 using LinqToDB.Data;
 using LinqToDB.Linq;
-using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -51,11 +49,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(MatchTableImpl1))]
 		public static IQueryable<TEntity> MatchTable<TEntity>(this ISQLiteExtensions ext, ITable<TEntity> table, string match)
+			where TEntity : class
 		{
 			return table.DataContext.FromSql<TEntity>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}({match})");
 		}
 
 		static Expression<Func<ISQLiteExtensions, ITable<TEntity>, string, IQueryable<TEntity>>> MatchTableImpl1<TEntity>()
+			where TEntity : class
 		{
 			return (ext, table, match) => table.DataContext.FromSql<TEntity>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}({match})");
 		}
@@ -70,11 +70,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Returns rowid column value.</returns>
 		[ExpressionMethod(nameof(RowIdImpl))]
 		public static int RowId<TEntity>(this ISQLiteExtensions ext, TEntity entity)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(RowId)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, int>> RowIdImpl<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity) => Sql.Expr<int>($"{Sql.TableField<TEntity, int>(entity, "rowid")}");
 		}
@@ -90,11 +92,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(RankImpl))]
 		public static double? Rank<TEntity>(this ISQLiteExtensions ext, TEntity entity)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(Rank)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, double?>> RankImpl<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity) => Sql.Expr<double?>($"{Sql.TableField<TEntity, double?>(entity, "rank")}");
 		}
@@ -111,11 +115,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3OffsetsImpl))]
 		public static string FTS3Offsets<TEntity>(this ISQLiteExtensions ext, TEntity entity)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Offsets)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string>> Fts3OffsetsImpl<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity) => Sql.Expr<string>($"offsets({Sql.TableAsField<TEntity, string>(entity)})");
 		}
@@ -131,11 +137,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3MatchInfoImpl1))]
 		public static byte[] FTS3MatchInfo<TEntity>(this ISQLiteExtensions ext, TEntity entity)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3MatchInfo)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, byte[]>> Fts3MatchInfoImpl1<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity) => Sql.Expr<byte[]>($"matchinfo({Sql.TableAsField<TEntity, string>(entity)})");
 		}
@@ -152,11 +160,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3MatchInfoImpl2))]
 		public static byte[] FTS3MatchInfo<TEntity>(this ISQLiteExtensions ext, TEntity entity, string format)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3MatchInfo)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string, byte[]>> Fts3MatchInfoImpl2<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity, format) => Sql.Expr<byte[]>($"matchinfo({Sql.TableAsField<TEntity, string>(entity)}, {format})");
 		}
@@ -172,11 +182,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl1))]
 		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string>> Fts3SnippetImpl1<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)})");
 		}
@@ -193,11 +205,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl2))]
 		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string, string>> Fts3SnippetImpl2<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity, startMatch) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch})");
 		}
@@ -215,11 +229,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl3))]
 		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch, string endMatch)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string, string, string>> Fts3SnippetImpl3<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity, startMatch, endMatch) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch}, {endMatch})");
 		}
@@ -238,11 +254,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl4))]
 		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch, string endMatch, string ellipses)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string, string, string, string>> Fts3SnippetImpl4<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity, startMatch, endMatch, ellipses) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch}, {endMatch}, {ellipses})");
 		}
@@ -262,11 +280,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl5))]
 		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch, string endMatch, string ellipses, int columnIndex)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string, string, string, int, string>> Fts3SnippetImpl5<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity, startMatch, endMatch, ellipses, columnIndex) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch}, {endMatch}, {ellipses}, {columnIndex})");
 		}
@@ -287,11 +307,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl6))]
 		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch, string endMatch, string ellipses, int columnIndex, int tokensNumber)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string, string, string, int, int, string>> Fts3SnippetImpl6<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity, startMatch, endMatch, ellipses, columnIndex, tokensNumber) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {startMatch}, {endMatch}, {ellipses}, {columnIndex}, {tokensNumber})");
 		}
@@ -309,11 +331,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(Fts5bm25Impl1))]
 		public static double FTS5bm25<TEntity>(this ISQLiteExtensions ext, TEntity entity)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS5bm25)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, double>> Fts5bm25Impl1<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity) => Sql.Expr<double>($"bm25({Sql.TableAsField<TEntity, string>(entity)})");
 		}
@@ -330,11 +354,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(Fts5bm25Impl2))]
 		public static double FTS5bm25<TEntity>(this ISQLiteExtensions ext, TEntity entity, params double[] weights)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS5bm25)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, double[], double>> Fts5bm25Impl2<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity, weights) => Sql.Expr<double>($"bm25({Sql.TableAsField<TEntity, string>(entity)}, {Sql.Spread(weights)})");
 		}
@@ -354,11 +380,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(Fts5HighlightImpl))]
 		public static string FTS5Highlight<TEntity>(this ISQLiteExtensions ext, TEntity entity, int columnIndex, string startMatch, string endMatch)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS5Highlight)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, int, string, string, string>> Fts5HighlightImpl<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity, columnIndex, startMatch, endMatch) => Sql.Expr<string>($"highlight({Sql.TableAsField<TEntity, string>(entity)}, {columnIndex}, {startMatch}, {endMatch})");
 		}
@@ -379,11 +407,13 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(Fts5SnippetImpl))]
 		public static string FTS5Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, int columnIndex, string startMatch, string endMatch, string ellipses, int tokensNumber)
+			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS5Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, int, string, string, string, int, string>> Fts5SnippetImpl<TEntity>()
+			where TEntity : class
 		{
 			return (ext, entity, columnIndex, startMatch, endMatch, ellipses, tokensNumber) => Sql.Expr<string>($"snippet({Sql.TableAsField<TEntity, string>(entity)}, {columnIndex}, {startMatch}, {endMatch}, {ellipses}, {tokensNumber})");
 		}
@@ -398,6 +428,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		public static void FTS3Optimize<TEntity>(this DataConnection dc, ITable<TEntity> table)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')");
 		}
@@ -410,6 +441,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		public static void FTS3Rebuild<TEntity>(this DataConnection dc, ITable<TEntity> table)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')");
 		}
@@ -422,6 +454,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		public static void FTS3IntegrityCheck<TEntity>(this DataConnection dc, ITable<TEntity> table)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')");
 		}
@@ -436,6 +469,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="blocks">Blocks command parameter.</param>
 		/// <param name="segments">Segments command parameter.</param>
 		public static void FTS3Merge<TEntity>(this DataConnection dc, ITable<TEntity> table, int blocks, int segments)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('merge={blocks.ToString(NumberFormatInfo.InvariantInfo)},{segments.ToString(NumberFormatInfo.InvariantInfo)}')");
 		}
@@ -449,6 +483,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="segments">Segments command parameter.</param>
 		public static void FTS3AutoMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int segments)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('automerge={segments.ToString(NumberFormatInfo.InvariantInfo)}')");
 		}
@@ -464,6 +499,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
 		public static void FTS5AutoMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('automerge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
 		}
@@ -477,6 +513,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
 		public static void FTS5CrisisMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('crisismerge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
 		}
@@ -491,6 +528,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="rowid">Record rowid value.</param>
 		/// <param name="record">Current record entity.</param>
 		public static void FTS5Delete<TEntity>(this DataConnection dc, ITable<TEntity> table, int rowid, TEntity record)
+			where TEntity : class
 		{
 			var ed = dc.MappingSchema.GetEntityDescriptor(typeof(TEntity));
 
@@ -518,6 +556,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		public static void FTS5DeleteAll<TEntity>(this DataConnection dc, ITable<TEntity> table)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('delete-all')");
 		}
@@ -530,6 +569,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		public static void FTS5IntegrityCheck<TEntity>(this DataConnection dc, ITable<TEntity> table)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')");
 		}
@@ -544,6 +584,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
 		public static void FTS5Merge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('merge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
 		}
@@ -556,6 +597,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		public static void FTS5Optimize<TEntity>(this DataConnection dc, ITable<TEntity> table)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')");
 		}
@@ -569,6 +611,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
 		public static void FTS5Pgsz<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('pgsz', {value.ToString(NumberFormatInfo.InvariantInfo)})");
 		}
@@ -582,6 +625,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="function">Rank function.</param>
 		public static void FTS5Rank<TEntity>(this DataConnection dc, ITable<TEntity> table, string function)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("rank", function));
 		}
@@ -594,6 +638,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		public static void FTS5Rebuild<TEntity>(this DataConnection dc, ITable<TEntity> table)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')");
 		}
@@ -607,6 +652,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
 		public static void FTS5UserMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('usermerge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
 		}

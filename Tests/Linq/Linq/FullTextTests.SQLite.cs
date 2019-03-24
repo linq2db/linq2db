@@ -1,11 +1,10 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using LinqToDB.DataProvider.SQLite;
-using System;
-using Tests.Model;
 using System.Data.Common;
+using System.Linq;
+using Tests.Model;
 
 namespace Tests.Linq
 {

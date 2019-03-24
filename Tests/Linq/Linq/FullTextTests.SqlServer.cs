@@ -1,8 +1,8 @@
-﻿using NUnit.Framework;
+﻿using LinqToDB;
 using LinqToDB.DataProvider.SqlServer;
-using Tests.Model;
+using NUnit.Framework;
 using System.Linq;
-using LinqToDB;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -17,7 +17,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from t in db.Product
-					join c in db.Category.FreeTextTable<Northwind.Category, int>(c => c.Description, "sweetest candy bread and dry meat") on t.CategoryID equals c.Key
+					join c in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat") on t.CategoryID equals c.Key
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
@@ -34,7 +34,7 @@ namespace Tests.Linq
 			{
 				var q
 					= from t in db.Product
-					  from c in db.Category.FreeTextTable<Northwind.Category, int>(c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
+					  from c in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
 					  orderby t.ProductName descending
 					  select t;
 				var list = q.ToList();
@@ -53,7 +53,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>(t => t.Description, "sweetest candy bread and dry meat")
+					join t in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, t => t.Description, "sweetest candy bread and dry meat")
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -77,7 +77,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>(t => t.CategoryName, "meat", "Turkish")
+					join t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => t.CategoryName, "meat", "Turkish")
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -95,7 +95,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>(t => t.Description, "food", 2, "Thai")
+					join t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => t.Description, "food", "Thai", 2)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -113,7 +113,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTableWithLangCode<Northwind.Category, int>(t => t.CategoryName, "sweetest candy bread and dry meat", 2057)
+					join t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => t.CategoryName, "sweetest candy bread and dry meat", 2057)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -131,7 +131,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>(t => t.Description, "sweetest candy bread and dry meat", 2, 1045)
+					join t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => t.Description, "sweetest candy bread and dry meat", 1045, 2)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -149,7 +149,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>(t => t.Description, "sweetest candy bread and dry meat", 4)
+					join t in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, t => t.Description, "sweetest candy bread and dry meat", 4)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -167,7 +167,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>("seafood bread")
+					join t in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, "seafood bread")
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -190,7 +190,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>("seafood bread", "Russian")
+					join t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, "seafood bread", "Russian")
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -211,7 +211,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>("seafood bread", 2, "English")
+					join t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, "seafood bread", "English", 2)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -233,7 +233,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTableWithLangCode<Northwind.Category, int>("seafood bread", 1062)
+					join t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, "seafood bread", 1062)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -254,7 +254,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>("seafood bread", 2, 1053)
+					join t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, "seafood bread", 1053, 2)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -275,7 +275,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>("seafood bread", 2)
+					join t in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, "seafood bread", 2)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -297,7 +297,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, "meat bread")
+					join t in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, "meat bread")
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -320,7 +320,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>(t => new { t.Description }, "meat bread", "Czech")
+					join t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.Description }, "meat bread", "Czech")
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -338,7 +338,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>(t => new { t.Description, duplicate = t.Description }, "meat bread", 7, "Bulgarian")
+					join t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.Description, duplicate = t.Description }, "meat bread", "Bulgarian", 7)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -356,7 +356,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTableWithLangCode<Northwind.Category, int>(t => new { t.CategoryName }, "meat bread", 2068)
+					join t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.CategoryName }, "meat bread", 2068)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -374,7 +374,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, "meat bread", 2, 2070)
+					join t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, "meat bread", 2070, 2)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -392,7 +392,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, "meat bread", 3)
+					join t in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, "meat bread", 3)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -414,7 +414,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.FreeTextTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, search, top, lang)
+					join t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, search, lang, top)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -432,7 +432,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>(t => t.Description, "sweetest candy bread and dry meat").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, t => t.Description, "sweetest candy bread and dry meat").Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -455,7 +455,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>(t => t.CategoryName, "meat", "Turkish").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => t.CategoryName, "meat", "Turkish").Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -472,7 +472,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>(t => t.Description, "food", 2, "Thai").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => t.Description, "food", "Thai", 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -489,7 +489,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTableWithLangCode<Northwind.Category, int>(t => t.CategoryName, "sweetest candy bread and dry meat", 2057).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => t.CategoryName, "sweetest candy bread and dry meat", 2057).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -506,7 +506,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>(t => t.Description, "sweetest candy bread and dry meat", 2, 1045).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => t.Description, "sweetest candy bread and dry meat", 1045, 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -523,7 +523,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>(t => t.Description, "sweetest candy bread and dry meat", 4).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, t => t.Description, "sweetest candy bread and dry meat", 4).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -540,7 +540,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>("seafood bread").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, "seafood bread").Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -562,7 +562,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>("seafood bread", "Russian").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, "seafood bread", "Russian").Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -582,7 +582,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>("seafood bread", 2, "English").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, "seafood bread", "English", 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -603,7 +603,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTableWithLangCode<Northwind.Category, int>("seafood bread", 1062).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, "seafood bread", 1062).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -623,7 +623,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>("seafood bread", 2, 1053).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, "seafood bread", 1053, 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -643,7 +643,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>("seafood bread", 2).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, "seafood bread", 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -664,7 +664,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, "meat bread").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, "meat bread").Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -686,7 +686,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>(t => new { t.Description }, "meat bread", "Czech").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.Description }, "meat bread", "Czech").Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -703,7 +703,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>(t => new { t.Description, duplicate = t.Description }, "meat bread", 7, "Bulgarian").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.Description, duplicate = t.Description }, "meat bread", "Bulgarian", 7).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -720,7 +720,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTableWithLangCode<Northwind.Category, int>(t => new { t.CategoryName }, "meat bread", 2068).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.CategoryName }, "meat bread", 2068).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -737,7 +737,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, "meat bread", 2, 2070).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, "meat bread", 2070, 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -754,7 +754,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, "meat bread", top).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTable<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, "meat bread", top).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -775,7 +775,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.FreeTextTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, search, top, lang).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, search, lang, top).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -792,7 +792,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.GetTable<Northwind.Category>()
-					from t in db.GetTable<Northwind.Category>().FreeTextTable<Northwind.Category, int>("seafood bread", 2, 1053).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().FreeTextTableWithLanguage<Northwind.Category, int>(db.GetTable<Northwind.Category>(), "seafood bread", 1053, 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -813,7 +813,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>(t => t.Description, "sweetest &! meat")
+					join t in Sql.Ext.SqlServer().ContainsTable<Northwind.Category, int>(db.Category, t => t.Description, "sweetest &! meat")
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -831,7 +831,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>(t => t.CategoryName, "meat", "Turkish")
+					join t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => t.CategoryName, "meat", "Turkish")
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -849,7 +849,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>(t => t.Description, "food", 2, "Thai")
+					join t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => t.Description, "food", "Thai", 2)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -867,7 +867,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTableWithLangCode<Northwind.Category, int>(t => t.CategoryName, "sweetest NEAR candy", 2057)
+					join t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => t.CategoryName, "sweetest NEAR candy", 2057)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -885,7 +885,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>(t => t.Description, "bread", 2, 1045)
+					join t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => t.Description, "bread", 1045, 2)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -903,7 +903,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>(t => t.Description, "bread AND NOT meat", 4)
+					join t in Sql.Ext.SqlServer().ContainsTable<Northwind.Category, int>(db.Category, t => t.Description, "bread AND NOT meat", 4)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -921,7 +921,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>("seafood OR bread")
+					join t in Sql.Ext.SqlServer().ContainsTable<Northwind.Category, int>(db.Category, "seafood OR bread")
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -942,7 +942,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>("seafood OR bread", "Russian")
+					join t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, "seafood OR bread", "Russian")
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -963,7 +963,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>("seafood | bread", 2, "English")
+					join t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, "seafood | bread", "English", 2)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -984,7 +984,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTableWithLangCode<Northwind.Category, int>("seafood AND bread", 1062)
+					join t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, "seafood AND bread", 1062)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -1002,7 +1002,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>("NEAR(seafood, \"bread\")", 2, 1053)
+					join t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, "NEAR(seafood, \"bread\")", 1053, 2)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -1020,7 +1020,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>("seafood & bread", 2)
+					join t in Sql.Ext.SqlServer().ContainsTable<Northwind.Category, int>(db.Category, "seafood & bread", 2)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -1038,7 +1038,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, "meat NEAR bread")
+					join t in Sql.Ext.SqlServer().ContainsTable<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, "meat NEAR bread")
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -1056,7 +1056,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>(t => new { t.Description }, "meat OR bread", "Czech")
+					join t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.Description }, "meat OR bread", "Czech")
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -1074,7 +1074,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>(t => new { t.Description, duplicate = t.Description }, "bread", 7, "Bulgarian")
+					join t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.Description, duplicate = t.Description }, "bread", "Bulgarian", 7)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -1092,7 +1092,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTableWithLangCode<Northwind.Category, int>(t => new { t.CategoryName }, "meat OR bread", 2068)
+					join t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.CategoryName }, "meat OR bread", 2068)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -1110,7 +1110,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, "meat AND bread", 2, 2070)
+					join t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, "meat AND bread", 2070, 2)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -1128,7 +1128,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.Category.ContainsTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, "meat", top)
+					join t in Sql.Ext.SqlServer().ContainsTable<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, "meat", top)
 					on c.CategoryID equals t.Key
 					orderby t.Rank descending
 					select c;
@@ -1146,7 +1146,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>(t => t.Description, "sweetest &! meat").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTable<Northwind.Category, int>(db.Category, t => t.Description, "sweetest &! meat").Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1163,7 +1163,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>(t => t.CategoryName, "meat", "Turkish").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => t.CategoryName, "meat", "Turkish").Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1180,7 +1180,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>(t => t.Description, "food", 2, "Thai").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => t.Description, "food", "Thai", 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1197,7 +1197,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTableWithLangCode<Northwind.Category, int>(t => t.CategoryName, "sweetest NEAR candy", 2057).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => t.CategoryName, "sweetest NEAR candy", 2057).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1214,7 +1214,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>(t => t.Description, "bread", 2, 1045).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => t.Description, "bread", 1045, 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1231,7 +1231,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>(t => t.Description, "bread AND NOT meat", 4).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTable<Northwind.Category, int>(db.Category, t => t.Description, "bread AND NOT meat", 4).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1248,7 +1248,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>("seafood OR bread").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTable<Northwind.Category, int>(db.Category, "seafood OR bread").Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1268,7 +1268,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>("seafood OR bread", "Russian").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, "seafood OR bread", "Russian").Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1288,7 +1288,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>("seafood | bread", 2, "English").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, "seafood | bread", "English", 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1308,7 +1308,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTableWithLangCode<Northwind.Category, int>("seafood AND bread", 1062).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, "seafood AND bread", 1062).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1325,7 +1325,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>("NEAR(seafood, \"bread\")", 2, 1053).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, "NEAR(seafood, \"bread\")", 1053, 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1342,7 +1342,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>("seafood & bread", 2).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTable<Northwind.Category, int>(db.Category, "seafood & bread", 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1359,7 +1359,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, "meat NEAR bread").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTable<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, "meat NEAR bread").Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1376,7 +1376,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>(t => new { t.Description }, "meat OR bread", "Czech").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.Description }, "meat OR bread", "Czech").Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1393,7 +1393,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>(t => new { t.Description, duplicate = t.Description }, "bread", 7, "Bulgarian").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.Description, duplicate = t.Description }, "bread", "Bulgarian", 7).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1410,7 +1410,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTableWithLangCode<Northwind.Category, int>(t => new { t.CategoryName }, "meat OR bread", 2068).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.CategoryName }, "meat OR bread", 2068).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1427,7 +1427,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, "meat AND bread", 2, 2070).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, "meat AND bread", 2070, 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1444,7 +1444,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, "meat", 2).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTable<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, "meat", 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1465,7 +1465,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					from t in db.Category.ContainsTable<Northwind.Category, int>(t => new { t.CategoryName, t.Description }, search, top, lang).Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.Category, t => new { t.CategoryName, t.Description }, search, lang, top).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1482,7 +1482,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.GetTable<Northwind.Category>()
-					from t in db.GetTable<Northwind.Category>().ContainsTable<Northwind.Category, int>("seafood | bread", 2, "English").Where(t => c.CategoryID == t.Key)
+					from t in Sql.Ext.SqlServer().ContainsTableWithLanguage<Northwind.Category, int>(db.GetTable<Northwind.Category>(), "seafood | bread", "English", 2).Where(t => c.CategoryID == t.Key)
 					orderby t.Rank descending
 					select c;
 
@@ -1496,82 +1496,13 @@ namespace Tests.Linq
 
 		#region FreeText
 		[Test, Category("FreeText")]
-		public void FreeTextByAll([IncludeDataSources(TestProvName.Northwind)] string context)
-		{
-			using (var db = new NorthwindDB(context))
-			{
-				var q =
-					from c in db.Category
-					where SqlServerExtensions.FreeText("sweetest candy bread and dry meat")
-					orderby c.CategoryID descending
-					select c;
-
-				var results = q.ToList();
-
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(7, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
-				Assert.AreEqual(3, results[3].CategoryID);
-
-				Assert.That(db.LastQuery.Contains("FREETEXT(*, N'sweetest candy bread and dry meat')"));
-			}
-		}
-
-		[Test, Category("FreeText")]
-		public void FreeTextByAllLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
-		{
-			using (var db = new NorthwindDB(context))
-			{
-				var q =
-					from c in db.Category
-					where SqlServerExtensions.FreeText("sweetest candy bread and dry meat", "English")
-					orderby c.CategoryID descending
-					select c;
-
-				var results = q.ToList();
-
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(7, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
-				Assert.AreEqual(3, results[3].CategoryID);
-
-				Assert.That(db.LastQuery.Contains("FREETEXT(*, N'sweetest candy bread and dry meat', LANGUAGE N'English')"));
-			}
-		}
-
-		[Test, Category("FreeText")]
-		public void FreeTextByAllLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
-		{
-			using (var db = new NorthwindDB(context))
-			{
-				var q =
-					from c in db.Category
-					where SqlServerExtensions.FreeText("sweetest candy bread and dry meat", 1033)
-					orderby c.CategoryID descending
-					select c;
-
-				var results = q.ToList();
-
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(7, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
-				Assert.AreEqual(3, results[3].CategoryID);
-
-				Assert.That(db.LastQuery.Contains("FREETEXT(*, N'sweetest candy bread and dry meat', LANGUAGE 1033)"));
-			}
-		}
-
-		[Test, Category("FreeText")]
 		public void FreeTextByTableAll([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from c in db.Category
-					where c.FreeText("sweetest candy bread and dry meat")
+					where Sql.Ext.SqlServer().FreeText(c, "sweetest candy bread and dry meat")
 					orderby c.CategoryID descending
 					select c;
 
@@ -1594,7 +1525,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.FreeTextWithLang("sweetest candy bread and dry meat", "English")
+					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", "English")
 					orderby c.CategoryID descending
 					select c;
 
@@ -1617,7 +1548,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.FreeTextWithLang("sweetest candy bread and dry meat", 1033)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", 1033)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1640,7 +1571,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.FreeText("sweetest candy bread and dry meat", c.Description)
+					where Sql.Ext.SqlServer().FreeText(c, "sweetest candy bread and dry meat", c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1663,7 +1594,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.FreeTextWithLang("sweetest candy bread and dry meat", "English", c.Description)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", "English", c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1686,7 +1617,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.FreeTextWithLang("sweetest candy bread and dry meat", 1033, c.CategoryName)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", 1033, c.CategoryName)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1706,7 +1637,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.FreeText("sweetest candy bread and dry meat", c.Description, c.Description)
+					where Sql.Ext.SqlServer().FreeText(c, "sweetest candy bread and dry meat", c.Description, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1729,7 +1660,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.FreeTextWithLang("sweetest candy bread and dry meat", "English", c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", "English", c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1752,7 +1683,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.FreeTextWithLang("sweetest candy bread and dry meat", 1033, c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", 1033, c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1778,7 +1709,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.FreeTextWithLang(search, lang, c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, search, lang, c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1809,7 +1740,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.GetTable<Northwind.Category>()
-					where c.FreeTextWithLang("sweetest candy bread and dry meat", "English", c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().FreeTextWithLanguage(c, "sweetest candy bread and dry meat", "English", c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1830,7 +1761,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c1 in db.Category
-					from c2 in db.Category.Where(c => c.FreeText("bread") && c1.FreeText("meat"))
+					from c2 in db.Category.Where(c => Sql.Ext.SqlServer().FreeText(c, "bread") && Sql.Ext.SqlServer().FreeText(c1, "meat"))
 					orderby c1.CategoryID descending
 					select c1;
 
@@ -1849,72 +1780,13 @@ namespace Tests.Linq
 
 		#region Contains
 		[Test, Category("FreeText")]
-		public void ContainsByAll([IncludeDataSources(TestProvName.Northwind)] string context)
-		{
-			using (var db = new NorthwindDB(context))
-			{
-				var q =
-					from c in db.Category
-					where SqlServerExtensions.Contains("bread")
-					orderby c.CategoryID descending
-					select c;
-
-				var results = q.ToList();
-
-				Assert.AreEqual(0, results.Count);
-
-				Assert.That(db.LastQuery.Contains("CONTAINS(*, N'bread')"));
-			}
-		}
-
-		[Test, Category("FreeText")]
-		public void ContainsByAllLanguageName([IncludeDataSources(TestProvName.Northwind)] string context)
-		{
-			using (var db = new NorthwindDB(context))
-			{
-				var q =
-					from c in db.Category
-					where SqlServerExtensions.Contains("meat", "English")
-					orderby c.CategoryID descending
-					select c;
-
-				var results = q.ToList();
-
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(6, results[0].CategoryID);
-
-
-				Assert.That(db.LastQuery.Contains("CONTAINS(*, N'meat', LANGUAGE N'English')"));
-			}
-		}
-
-		[Test, Category("FreeText")]
-		public void ContainsByAllLanguageCode([IncludeDataSources(TestProvName.Northwind)] string context)
-		{
-			using (var db = new NorthwindDB(context))
-			{
-				var q =
-					from c in db.Category
-					where SqlServerExtensions.Contains("bread AND meat", 1033)
-					orderby c.CategoryID descending
-					select c;
-
-				var results = q.ToList();
-
-				Assert.AreEqual(0, results.Count);
-
-				Assert.That(db.LastQuery.Contains("CONTAINS(*, N'bread AND meat', LANGUAGE 1033)"));
-			}
-		}
-
-		[Test, Category("FreeText")]
 		public void ContainsByTableAll([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from c in db.Category
-					where c.Contains("candy OR meat")
+					where Sql.Ext.SqlServer().Contains(c, "candy OR meat")
 					orderby c.CategoryID descending
 					select c;
 
@@ -1934,7 +1806,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.ContainsWithLang("dry", "English")
+					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "dry", "English")
 					orderby c.CategoryID descending
 					select c;
 
@@ -1953,7 +1825,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.ContainsWithLang("sweetest", 1033)
+					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "sweetest", 1033)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1972,7 +1844,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.Contains("bread", c.Description)
+					where Sql.Ext.SqlServer().Contains(c, "bread", c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1991,7 +1863,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.ContainsWithLang("dry & bread", "English", c.Description)
+					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "dry & bread", "English", c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -2010,7 +1882,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.ContainsWithLang("candy | meat", 1033, c.CategoryName)
+					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "candy | meat", 1033, c.CategoryName)
 					orderby c.CategoryID descending
 					select c;
 
@@ -2030,7 +1902,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.Contains("aнанас", c.Description, c.Description)
+					where Sql.Ext.SqlServer().Contains(c, "aнанас", c.Description, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -2049,7 +1921,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.ContainsWithLang("salo & bread", "English", c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "salo & bread", "English", c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -2068,7 +1940,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.ContainsWithLang("meat", 1033, c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "meat", 1033, c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -2091,7 +1963,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.ContainsWithLang(search, code, c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().ContainsWithLanguage(c, search, code, c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -2108,7 +1980,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.GetTable<Northwind.Category>()
-					where c.ContainsWithLang("candy", "English", c.CategoryName, c.Description)
+					where Sql.Ext.SqlServer().ContainsWithLanguage(c, "candy", "English", c.CategoryName, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -2125,7 +1997,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c1 in db.Category
-					from c2 in db.Category.Where(c => c.Contains("bread") && c1.Contains("meat"))
+					from c2 in db.Category.Where(c => Sql.Ext.SqlServer().Contains(c, "bread") && Sql.Ext.SqlServer().Contains(c1, "meat"))
 					orderby c1.CategoryID descending
 					select c1;
 
@@ -2150,7 +2022,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.ContainsProperty(c.Description, "title", "bread")
+					where Sql.Ext.SqlServer().ContainsProperty(c.Description, "title", "bread")
 					orderby c.CategoryID descending
 					select c;
 
@@ -2165,7 +2037,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.ContainsProperty(c.Description, "Title", "dry & bread", "English")
+					where Sql.Ext.SqlServer().ContainsPropertyWithLanguage(c.Description, "Title", "dry & bread", "English")
 					orderby c.CategoryID descending
 					select c;
 
@@ -2180,7 +2052,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.ContainsProperty(c.CategoryName, "Title", "candy | meat", 1033)
+					where Sql.Ext.SqlServer().ContainsPropertyWithLanguage(c.CategoryName, "Title", "candy | meat", 1033)
 					orderby c.CategoryID descending
 					select c;
 
@@ -2198,7 +2070,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.ContainsProperty(c.Description, property, search)
+					where Sql.Ext.SqlServer().ContainsProperty(c.Description, property, search)
 					orderby c.CategoryID descending
 					select c;
 
@@ -2217,7 +2089,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.ContainsProperty(c.Description, property, search, lang)
+					where Sql.Ext.SqlServer().ContainsPropertyWithLanguage(c.Description, property, search, lang)
 					orderby c.CategoryID descending
 					select c;
 
@@ -2236,7 +2108,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where c.ContainsProperty(c.CategoryName, property, search, lang)
+					where Sql.Ext.SqlServer().ContainsPropertyWithLanguage(c.CategoryName, property, search, lang)
 					orderby c.CategoryID descending
 					select c;
 
