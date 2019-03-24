@@ -67,7 +67,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableNameTests1([IncludeDataSources(ProviderName.SqlServer2012)] string context)
+		public void TableNameTests1([IncludeDataSources(true, ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>("sample_table_temp", new[]{new SampleClass{Id = 1, Value = 2} }))
@@ -97,7 +97,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableNameTests2([IncludeDataSources(ProviderName.SqlServer2012)] string context)
+		public void TableNameTests2([IncludeDataSources(true, ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -132,7 +132,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableExprTests1([IncludeDataSources(ProviderName.SqlServer2012)] string context)
+		public void TableExprTests1([IncludeDataSources(true, ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>("sample_table_temp", new[]{new SampleClass{Id = 1, Value = 2} }))
@@ -162,7 +162,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableExprTests2([IncludeDataSources(ProviderName.SqlServer2012)] string context)
+		public void TableExprTests2([IncludeDataSources(true, ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -225,7 +225,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FreeTextTableTest([IncludeDataSources(ProviderName.SqlServer2012)] string context)
+		public void FreeTextTableTest([IncludeDataSources(true, ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
