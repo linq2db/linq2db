@@ -32,7 +32,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var query = db.GetTable<FullTextIndexTest>()
-					.Where(r => r.Match("found", r.TestField1, r.TestField2))
+					.Where(r => Sql.Ext.MySql().Match("found", r.TestField1, r.TestField2))
 					.OrderBy(r => r.Id);
 
 				var results = query.ToList();
@@ -50,7 +50,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var query = db.GetTable<FullTextIndexTest>()
-					.Where(r => r.Match("found", r.TestField1))
+					.Where(r => Sql.Ext.MySql().Match("found", r.TestField1))
 					.OrderBy(r => r.Id);
 
 				var results = query.ToList();
@@ -66,7 +66,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var query = db.GetTable<FullTextIndexTest>()
-					.Where(r => r.Match(modifier, "found", r.TestField1, r.TestField2))
+					.Where(r => Sql.Ext.MySql().Match(modifier, "found", r.TestField1, r.TestField2))
 					.OrderBy(r => r.Id);
 
 				var results = query.ToList();
@@ -86,8 +86,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var query = db.GetTable<FullTextIndexTest>()
-					.OrderByDescending(r => r.MatchRelevance("found", r.TestField1, r.TestField2))
-					.Select(r => r.MatchRelevance("found", r.TestField1, r.TestField2));
+					.OrderByDescending(r => Sql.Ext.MySql().MatchRelevance("found", r.TestField1, r.TestField2))
+					.Select(r => Sql.Ext.MySql().MatchRelevance("found", r.TestField1, r.TestField2));
 
 				var results = query.ToList();
 				Assert.AreEqual(3, results.Count);
@@ -103,8 +103,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var query = db.GetTable<FullTextIndexTest>()
-					.OrderByDescending(r => r.MatchRelevance("found", r.TestField2))
-					.Select(r => r.MatchRelevance("found", r.TestField2));
+					.OrderByDescending(r => Sql.Ext.MySql().MatchRelevance("found", r.TestField2))
+					.Select(r => Sql.Ext.MySql().MatchRelevance("found", r.TestField2));
 
 				var results = query.ToList();
 				Assert.AreEqual(3, results.Count);
@@ -120,8 +120,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var query = db.GetTable<FullTextIndexTest>()
-					.OrderByDescending(r => r.MatchRelevance(modifier, "found", r.TestField1, r.TestField2))
-					.Select(r => r.MatchRelevance(modifier, "found", r.TestField1, r.TestField2));
+					.OrderByDescending(r => Sql.Ext.MySql().MatchRelevance(modifier, "found", r.TestField1, r.TestField2))
+					.Select(r => Sql.Ext.MySql().MatchRelevance(modifier, "found", r.TestField1, r.TestField2));
 
 				var results = query.ToList();
 				Assert.AreEqual(3, results.Count);
