@@ -1118,7 +1118,7 @@ namespace LinqToDB
 
 		#region Text Functions
 
-		[Obsolete("Use LinqToDB.DataProvider.SqlServer.SqlServerExtensions.FreeText extensions")]
+		[Obsolete("Use Sql.Ext.SqlServer().FreeText methods")]
 		[Sql.Expression("FREETEXT({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
 		public static bool FreeText(object table, string text)
 		{
