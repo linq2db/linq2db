@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
+using Remotion.Linq.Clauses.Expressions;
 
 namespace LinqToDB.Expressions
 {
@@ -1169,6 +1170,8 @@ namespace LinqToDB.Expressions
 					{
 						if (expr is ICustomExpression custom)
 							return custom.CustomTransform(func);
+						if (expr is SubQueryExpression subQuery) 
+							subQuery.QueryModel.TransformExpressions(func);
 
 						break;
 					}

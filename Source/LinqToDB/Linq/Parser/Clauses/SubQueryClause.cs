@@ -6,9 +6,9 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
-	public class SelectManyClause : BaseClause, IQuerySource
+	public class SelectManyClause : BaseClause, IQuerySource2
 	{
-		private readonly IQuerySource _querySource;
+		private readonly IQuerySource2 _querySource;
 		public Sequence Sequence { get; }
 
 		public SelectManyClause([JetBrains.Annotations.NotNull] Sequence sequence)

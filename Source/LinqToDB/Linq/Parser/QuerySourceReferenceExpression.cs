@@ -6,13 +6,13 @@ using LinqToDB.Linq.Parser.Clauses;
 
 namespace LinqToDB.Linq.Parser
 {
-	public class QuerySourceReferenceExpression : BaseCustomExpression
+	public class QuerySourceReferenceExpression2 : BaseCustomExpression
 	{
 		public const ExpressionType ExpressionType = (ExpressionType) 200001;
 
-		public IQuerySource QuerySource { get; }
+		public IQuerySource2 QuerySource { get; }
 
-		public QuerySourceReferenceExpression(IQuerySource querySource)
+		public QuerySourceReferenceExpression2(IQuerySource2 querySource)
 		{
 			QuerySource = querySource;
 		}
@@ -55,7 +55,7 @@ namespace LinqToDB.Linq.Parser
 			if (other.GetType() != GetType())
 				return false;
 
-			var otherExpr = (QuerySourceReferenceExpression)other;
+			var otherExpr = (QuerySourceReferenceExpression2)other;
 			return (otherExpr.QuerySource == QuerySource);
 		}
 

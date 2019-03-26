@@ -91,11 +91,11 @@ namespace LinqToDB.Linq.Parser
 				else
 					sequence.Clauses[i].TransformExpression(e =>
 					{
-						if (e is SubQueryExpression subQuery)
+						if (e is SubQueryExpression2 subQuery)
 						{
 							var newSequence = subQuery.Sequence.TransformSequence(func);
 							if (newSequence != subQuery.Sequence)
-								return new SubQueryExpression(sequence, subQuery.ItemType);
+								return new SubQueryExpression2(sequence, subQuery.ItemType);
 						}
 
 						return e;

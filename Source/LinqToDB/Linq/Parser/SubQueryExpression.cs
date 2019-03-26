@@ -5,13 +5,13 @@ using LinqToDB.Linq.Parser.Clauses;
 
 namespace LinqToDB.Linq.Parser
 {
-	public class SubQueryExpression : BaseCustomExpression
+	public class SubQueryExpression2 : BaseCustomExpression
 	{
 		public Sequence Sequence { get; }
 		public Type ItemType { get; }
 		public const ExpressionType ExpressionType = (ExpressionType) 200002;
 
-		public SubQueryExpression(Sequence sequence, Type itemType)
+		public SubQueryExpression2(Sequence sequence, Type itemType)
 		{
 			Sequence = sequence;
 			ItemType = itemType;
@@ -52,7 +52,7 @@ namespace LinqToDB.Linq.Parser
 			if (other.GetType() != GetType())
 				return false;
 
-			var otherExpr = (SubQueryExpression)other;
+			var otherExpr = (SubQueryExpression2)other;
 			return (otherExpr.Sequence == Sequence) && (otherExpr.ItemType == ItemType);
 		}
 	}

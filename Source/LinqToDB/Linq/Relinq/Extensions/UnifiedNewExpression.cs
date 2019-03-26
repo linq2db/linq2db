@@ -3,22 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Linq.Relinq.Extensions
 {
-	public class UnifiedNewExpression2 : BaseCustomExpression
+	public class UnifiedNewExpression : Expression
 	{
 		public ConstructorInfo Constructor { get; }
 
-		private List<Tuple<MemberInfo, Expression>> _members;
+		private List<MemberMappingInfo> _members;
 		private bool _modified;
 		private Type _type;
 
 		public Expression ObjectExpression { get; set; }
 
-		public UnifiedNewExpression2([JetBrains.Annotations.NotNull] NewExpression newExpression)
+		public UnifiedNewExpression([JetBrains.Annotations.NotNull] NewExpression newExpression)
 		{
 			Init(newExpression);
 		}
@@ -29,11 +30,11 @@ namespace LinqToDB.Expressions
 			_type = newExpression.Type;
 
 			_members = NewExpression.Members
-				.Select((m, i) => Tuple.Create(m, NewExpression.Arguments[i]))
+				.Select((m, i) => new MemberMappingInfo(m, NewExpression.Arguments[i]))
 				.ToList();
 		}
 
-		public UnifiedNewExpression2([JetBrains.Annotations.NotNull] MemberInitExpression memberInitExpression)
+		public UnifiedNewExpression([JetBrains.Annotations.NotNull] MemberInitExpression memberInitExpression)
 		{
 			Init(memberInitExpression);
 		}
@@ -44,11 +45,11 @@ namespace LinqToDB.Expressions
 			_type = MemberInitExpression.Type;
 
 			_members = MemberInitExpression.NewExpression.Members
-				.Select((m, i) => Tuple.Create(m, NewExpression.Arguments[i]))
+				.Select((m, i) => new MemberMappingInfo(m, NewExpression.Arguments[i]))
 				.ToList();
 		}
 
-		public UnifiedNewExpression2([JetBrains.Annotations.NotNull] Expression objectExpression, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+		public UnifiedNewExpression([JetBrains.Annotations.NotNull] Expression objectExpression, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
 		{
 			if (objectExpression == null) throw new ArgumentNullException(nameof(objectExpression));
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
@@ -67,15 +68,15 @@ namespace LinqToDB.Expressions
 
 			if (entityDescriptor.Columns.Count > 0)
 				_members = entityDescriptor.Columns
-					.Select(c => Tuple.Create(c.MemberInfo, (Expression)MakeMemberAccess(objectExpression, c.MemberInfo)))
+					.Select(c => new MemberMappingInfo(c.MemberInfo, MakeMemberAccess(objectExpression, c.MemberInfo)))
 					.ToList();
 			else
 				_members = _type.GetProperties()
-					.Select(p => Tuple.Create<MemberInfo, Expression>(p, MakeMemberAccess(objectExpression, p)))
+					.Select(p => new MemberMappingInfo(p, MakeMemberAccess(objectExpression, p)))
 					.ToList();
 		}
 
-		public UnifiedNewExpression2([JetBrains.Annotations.NotNull] ConstructorInfo constructor, IEnumerable<Tuple<MemberInfo, Expression>> members)
+		public UnifiedNewExpression([JetBrains.Annotations.NotNull] ConstructorInfo constructor, IEnumerable<MemberMappingInfo> members)
 		{
 			Constructor = constructor ?? throw new ArgumentNullException(nameof(constructor));
 
@@ -95,8 +96,12 @@ namespace LinqToDB.Expressions
 				//TODO: complex!
 
 				var ctor = ObjectExpression.Type.GetConstructors().Single();
-				var newExpr = Expression.New(ctor, _members.Select(t => t.Item2), _members.Select(t => t.Item1));
-				return newExpr;
+				var newExpr = Expression.New(ctor);
+
+				var memberInit = Expression.MemberInit(newExpr,
+					Members.Select(m => Expression.Bind(m.MemberInfo, m.Expression)));
+
+				return memberInit;
 			}
 
 			if (Constructor != null)
@@ -107,16 +112,16 @@ namespace LinqToDB.Expressions
 
 				Tuple<MemberInfo, Expression>[] toPass = _members
 					.Select(m =>
-						Tuple.Create(m.Item1, m.Item2.Transform(e => e is UnifiedNewExpression2 ne ? ne.Reduce() : e)))
+						Tuple.Create(m.MemberInfo, m.Expression.Transform(e => e is UnifiedNewExpression ne ? ne.Reduce() : e)))
 					.ToArray();
 
 				if (pms.Length == 0)
 					newExpression = Expression.New(Constructor);
 				else
 				{
-					var args = pms.Join(_members, p => p.Name, m => m.Item1.Name, (p, m) => m).ToArray();
-					newExpression = Expression.New(Constructor, args.Select(m => m.Item2));
-					toPass = toPass.Where(m => args.All(a => m.Item1 != a.Item1)).ToArray();
+					var args = pms.Join(_members, p => p.Name, m => m.MemberInfo.Name, (p, m) => m).ToArray();
+					newExpression = Expression.New(Constructor, args.Select(m => m.Expression));
+					toPass = toPass.Where(m => args.All(a => m.Item1 != a.MemberInfo)).ToArray();
 				}
 
 				return Expression.MemberInit(newExpression,
@@ -136,35 +141,9 @@ namespace LinqToDB.Expressions
 		public void AddMember(MemberInfo memberInfo, Expression expression)
 		{
 			_modified = true;
-			_members.Add(Tuple.Create(memberInfo, expression));
+			_members.Add(new MemberMappingInfo(memberInfo, expression));
 		}
 
-		public override void CustomVisit(Action<Expression> func)
-		{
-			foreach (var member in _members)
-				func(member.Item2);
-		}
-
-		public override bool CustomVisit(Func<Expression, bool> func)
-		{
-			throw new NotImplementedException();
-		}
-
-		public override Expression CustomFind(Func<Expression, bool> func)
-		{
-			throw new NotImplementedException();
-		}
-
-		public override Expression CustomTransform(Func<Expression, Expression> func)
-		{
-			throw new NotImplementedException();
-		}
-
-		public override bool CustomEquals(Expression other)
-		{
-			throw new NotImplementedException();
-		}
-
-		public IReadOnlyList<Tuple<MemberInfo, Expression>> Members => _members;
+		public IReadOnlyList<MemberMappingInfo> Members => _members;
 	}
 }

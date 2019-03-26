@@ -6,7 +6,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
-	public class ArraySource : BaseClause, IQuerySource
+	public class ArraySource : BaseClause, IQuerySource2
 	{
 		public ArraySource([JetBrains.Annotations.NotNull] Type itemType, string itemName, [JetBrains.Annotations.NotNull] Expression arrayExpression)
 		{

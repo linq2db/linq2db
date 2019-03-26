@@ -6,9 +6,11 @@ using System.Text;
 using LinqToDB;
 using LinqToDB.Linq.Generator;
 using LinqToDB.Linq.Parser;
+using LinqToDB.Linq.Relinq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
+using Remotion.Linq.Parsing.Structure;
 using Tests.Model;
 
 namespace Tests.Playground
@@ -34,6 +36,8 @@ namespace Tests.Playground
 		{
 			[PrimaryKey]
 			public int PkParentId { get; set; }
+
+			public string ParentName { get; set; }
 
 			[Association(ThisKey = nameof(PkParentId), OtherKey = nameof(ChildSource.ParentId))]
 			public IEnumerable<ChildSource> Children { get; set; }
@@ -66,7 +70,27 @@ namespace Tests.Playground
 
 		private static void ProvideParsing<T>(IQueryable<T> query, ITestDataContext db)
 		{
-			var parameter = Expression.Parameter(db.GetType());
+			var relinqGenerator = new RelinqQueryGenerator(db);
+			var relinqResult = relinqGenerator.GenerateQuery(query.Expression);
+
+			Console.WriteLine(relinqResult.QueryModel.ToString());
+			Console.WriteLine("---------------------------------");
+
+			var finalizedRelinq = db.GetSqlOptimizer().Finalize(new SqlSelectStatement(relinqResult.Statement.SelectQuery));
+
+			Console.WriteLine("---------------------------------");
+
+			var sb = new StringBuilder();
+			db.CreateSqlProvider().BuildSql(0, finalizedRelinq, sb, 0);
+
+			Console.WriteLine(sb.ToString());
+
+			Console.WriteLine("--------------OLD----------------");
+
+			Console.WriteLine(query.ToString());
+
+
+/*			var parameter = Expression.Parameter(db.GetType());
 			var parser = new ModelTranslator(db.MappingSchema, parameter);
 			var expression = parser.PrepareExpressionForTranslation(query.Expression);
 			var model = parser.ParseModel(expression);
@@ -92,7 +116,7 @@ namespace Tests.Playground
 			Console.WriteLine(sb.ToString());
 
 			Console.WriteLine("---------Projection--------------");
-			Console.WriteLine(sql.Item2);
+			Console.WriteLine(sql.Item2);*/
 		}
 
 		[Test]
@@ -167,18 +191,6 @@ namespace Tests.Playground
 			}
 		}		
 
-
-		[Test]
-		public void GroupByTest([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.GetTable<SampleClass>();
-
-				ProvideParsing(query, db);
-			}
-		}
-
 		[Test]
 		public void CountInSelectTest([DataSources] string context)
 		{
@@ -228,6 +240,25 @@ namespace Tests.Playground
 		}
 
 		[Test]
+		public void SelectFromAssociation([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from p in db.GetTable<ParentSource>()
+					from c in p.Children
+					from c2 in c.Parent.Children
+					select new
+					{
+						p,
+						c,
+						c2
+					};
+
+				ProvideParsing(query, db);
+			}
+		}
+
+		[Test]
 		public void AssociationManyToOneTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -244,24 +275,122 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void AssociationProjectionTest([DataSources] string context)
+		public void SimpleJoinTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var query = from p in db.GetTable<ParentSource>()
+					join c in db.GetTable<ChildSource>() on p.PkParentId equals c.ParentId
+					select new
+					{
+						p,
+						c
+					};
+
+				ProvideParsing(query, db);
+			}
+		}
+
+		[Test]
+		public void GroupByTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = from p in db.GetTable<ParentSource>()
+					group p by new { p.PkParentId }
+					into g
+					where g.Count() > 1
+					select new
+					{
+						g.Key.PkParentId,
+						Count = g.Count(),
+						Sum = g.Sum(_ => _.PkParentId)
+					};
+
+//				var query2 = query1.Where(g => g.Count > 0)
+
+				ProvideParsing(query1, db);
+			}
+		}
+
+		[Test]
+		public void AssociationProjectionTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var parent = db.GetTable<ParentSource>().Distinct();
+
+				var paramValue = "ParamValue";
+
+				var query = from p in parent
 					from c in p.Children 
-					where c.Address.City == "NY"
+					where c.Address.City == "NY" || c.Address.City == paramValue
 						  && p.Children.Where(c => c.IsDeleted).Any()
 					select new
 					{
 						c.Parent.PkParentId,
 						c,
 						c.Address.City,
+						Exists = p.Children.Any(),
+						All = p.Children.All(_ => !_.IsDeleted),
 						ZCity = c.Address.City + "Z",
 						ZZCity = Sql.AsSql(c.Address.City + "ZZ"),
 						c.Address,
 						p
 					}; 
+
+				ProvideParsing(query, db);
+
+				var query2 = from q in query
+					select new
+					{
+						q.Exists,
+						q.All
+					};
+
+				ProvideParsing(query2, db);
+			}
+		}
+
+		[Test]
+		public void SubqueryProjectionTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var parent = (from p in db.GetTable<ParentSource>()
+					join c in db.GetTable<ChildSource>() on new
+						{ p.PkParentId, ChildId = 1, SubExpr = new { p.PkParentId } } equals new
+						{ PkParentId = c.ParentId, ChildId = c.PkChildId, SubExpr = new { PkParentId = c.ParentId } }
+					select
+						new { p, c, Calc = p.PkParentId % 2 }).Distinct();
+
+				var query = from p2 in parent
+					where p2.p.PkParentId > 0
+					select new
+					{
+						p2
+					};
+
+				ProvideParsing(query, db);
+			}
+		}
+
+		[Test]
+		public void ColumnsAvailabilityTestProjectionTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var parent = (from p in db.GetTable<ParentSource>()
+					where p.ParentName == "a"
+					select p).Distinct();
+
+				var query = from p2 in parent
+					from c in p2.Children
+					select new
+					{
+						p2,
+						c
+					};
 
 				ProvideParsing(query, db);
 			}

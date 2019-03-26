@@ -7,12 +7,12 @@ namespace LinqToDB.Linq.Parser.Builders
 	{
 		public override bool CanBuild(ModelTranslator builder, Expression expression)
 		{
-			return expression.NodeType == QuerySourceReferenceExpression.ExpressionType;
+			return expression.NodeType == QuerySourceReferenceExpression2.ExpressionType;
 		}
 
 		public override Sequence BuildSequence(ModelTranslator builder, ParseBuildInfo parseBuildInfo, Expression expression)
 		{
-			var reference = (QuerySourceReferenceExpression)expression;
+			var reference = (QuerySourceReferenceExpression2)expression;
 			parseBuildInfo.Sequence.AddClause((BaseClause)reference.QuerySource);
 			return parseBuildInfo.Sequence;
 		}

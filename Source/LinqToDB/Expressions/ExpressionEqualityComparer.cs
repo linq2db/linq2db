@@ -10,6 +10,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
+using LinqToDB.Linq.Parser;
+using Remotion.Linq.Clauses.Expressions;
 
 // ReSharper disable SwitchStatementMissingSomeCases
 // ReSharper disable ForCanBeConvertedToForeach
@@ -274,13 +276,8 @@ namespace LinqToDB.Expressions
 //                        break;
 //                    }
                     default:
-	                    if (obj is ICustomExpression custom)
-	                    {
-		                    hashCode += (hashCode * 397) ^ custom.GetHashCode();
-							break;
-	                    }
-						else
-							throw new NotImplementedException();
+	                    hashCode += (hashCode * 397) ^ obj.GetHashCode();
+						break;
                 }
 
                 return hashCode;
@@ -395,11 +392,19 @@ namespace LinqToDB.Expressions
                         return CompareMemberInit((MemberInitExpression)a, (MemberInitExpression)b);
                     case ExpressionType.ListInit:
                         return CompareListInit((ListInitExpression)a, (ListInitExpression)b);
-//                    case ExpressionType.Extension:
-//                        return CompareExtension(a, b);
+                    case ExpressionType.Extension:
+                        return CompareExtension(a, b);
+					case QuerySourceReferenceExpression2.ExpressionType:
+						return ((QuerySourceReferenceExpression2)a).QuerySource ==
+						       ((QuerySourceReferenceExpression2)b).QuerySource;
                     default:
                         throw new NotImplementedException();
                 }
+            }
+
+            private bool CompareExtension(Expression a, Expression b)
+            {
+                return object.Equals(a, b);
             }
 
             private bool CompareUnary(UnaryExpression a, UnaryExpression b)

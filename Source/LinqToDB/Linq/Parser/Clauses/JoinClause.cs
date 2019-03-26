@@ -6,14 +6,14 @@ namespace LinqToDB.Linq.Parser.Clauses
 {
 	public class JoinClause : BaseClause
 	{
-		public IQuerySource Inner { get; }
+		public IQuerySource2 Inner { get; }
 		[JetBrains.Annotations.NotNull]
 		public Expression Condition { get; }
 		public Expression OuterKeySelector { get; }
 		public Expression InnerKeySelector { get; }
 		public JoinType JoinType { get; }
 
-		public JoinClause([JetBrains.Annotations.NotNull] string itemName, [JetBrains.Annotations.NotNull] Type itemType, [JetBrains.Annotations.NotNull] IQuerySource inner,
+		public JoinClause([JetBrains.Annotations.NotNull] string itemName, [JetBrains.Annotations.NotNull] Type itemType, [JetBrains.Annotations.NotNull] IQuerySource2 inner,
 			[JetBrains.Annotations.NotNull] Expression outerKeySelector,
 			[JetBrains.Annotations.NotNull] Expression innerKeySelector,
 			JoinType joinType)
@@ -29,7 +29,7 @@ namespace LinqToDB.Linq.Parser.Clauses
 			QuerySourceId = QuerySourceHelper.GetNexSourceId();
 		}
 
-		public JoinClause([JetBrains.Annotations.NotNull] string itemName, [JetBrains.Annotations.NotNull] Type itemType, [JetBrains.Annotations.NotNull] IQuerySource inner,
+		public JoinClause([JetBrains.Annotations.NotNull] string itemName, [JetBrains.Annotations.NotNull] Type itemType, [JetBrains.Annotations.NotNull] IQuerySource2 inner,
 			[JetBrains.Annotations.NotNull] Expression condition, JoinType joinType)
 		{
 			ItemName = itemName ?? throw new ArgumentNullException(nameof(itemName));

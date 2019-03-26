@@ -41,10 +41,11 @@ namespace LinqToDB.SqlQuery
 
 		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count", true, new SqlExpression("*")); }
 
-		public static SqlFunction CreateAll   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ALL",    false, SqlQuery.Precedence.Comparison, subQuery); }
-		public static SqlFunction CreateSome  (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "SOME",   false, SqlQuery.Precedence.Comparison, subQuery); }
-		public static SqlFunction CreateAny   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ANY",    false, SqlQuery.Precedence.Comparison, subQuery); }
-		public static SqlFunction CreateExists(SelectQuery subQuery) { return new SqlFunction(typeof(bool), "EXISTS", false, SqlQuery.Precedence.Comparison, subQuery); }
+		public static SqlFunction CreateAll      (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ALL",        false, SqlQuery.Precedence.Comparison, subQuery); }
+		public static SqlFunction CreateSome     (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "SOME",       false, SqlQuery.Precedence.Comparison, subQuery); }
+		public static SqlFunction CreateAny      (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ANY",        false, SqlQuery.Precedence.Comparison, subQuery); }
+		public static SqlFunction CreateExists   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "EXISTS",     false, SqlQuery.Precedence.Comparison, subQuery); }
+		public static SqlFunction CreateNotExists(SelectQuery subQuery) { return new SqlFunction(typeof(bool), "NOT EXISTS", false, SqlQuery.Precedence.Comparison, subQuery); }
 
 		#region Overrides
 

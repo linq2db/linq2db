@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
-	public abstract class BaseSetClause : BaseClause, IQuerySource
+	public abstract class BaseSetClause : BaseClause, IQuerySource2
 	{
 		public BaseSetClause([JetBrains.Annotations.NotNull] Type itemType, string itemName, [JetBrains.Annotations.NotNull] Sequence sequence1, [JetBrains.Annotations.NotNull] Sequence sequence2)
 		{

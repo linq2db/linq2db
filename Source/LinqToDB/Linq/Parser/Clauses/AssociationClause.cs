@@ -3,12 +3,12 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
-	public class AssociationClause : BaseClause, IQuerySource
+	public class AssociationClause : BaseClause, IQuerySource2
 	{
 		public AssociationClause([JetBrains.Annotations.NotNull] Type itemType,
 			[JetBrains.Annotations.NotNull] string itemName,
-			[JetBrains.Annotations.NotNull] IQuerySource parentSource,
-			[JetBrains.Annotations.NotNull] IQuerySource associatedSource,
+			[JetBrains.Annotations.NotNull] IQuerySource2 parentSource,
+			[JetBrains.Annotations.NotNull] IQuerySource2 associatedSource,
 			[JetBrains.Annotations.NotNull] AssociationDescriptor descriptor,
 			[JetBrains.Annotations.NotNull] Sequence innerSequence)
 		{
@@ -23,8 +23,8 @@ namespace LinqToDB.Linq.Parser.Clauses
 			QuerySourceId = QuerySourceHelper.GetNexSourceId();
 		}
 
-		public IQuerySource ParentSource { get; }
-		public IQuerySource AssociatedSource { get; }
+		public IQuerySource2 ParentSource { get; }
+		public IQuerySource2 AssociatedSource { get; }
 		public AssociationDescriptor Descriptor { get; }
 		public Sequence InnerSequence { get; }
 

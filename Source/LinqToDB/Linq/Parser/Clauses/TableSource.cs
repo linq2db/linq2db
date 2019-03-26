@@ -7,7 +7,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
-	public class TableSource : BaseClause, IQuerySource
+	public class TableSource : BaseClause, IQuerySource2
 	{
 		public TableSource([JetBrains.Annotations.NotNull] Type itemType, string itemName)
 		{

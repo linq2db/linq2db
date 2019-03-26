@@ -6,7 +6,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser
 {
-	public interface IQuerySource
+	public interface IQuerySource2
 	{
 		int QuerySourceId { get; }
 		Type ItemType { get; }

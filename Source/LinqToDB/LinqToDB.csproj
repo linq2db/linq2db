@@ -43,6 +43,7 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
 		</None>
+		<PackageReference Include="Remotion.Linq" Version="2.2.0" />		
 	</ItemGroup>
 
 

@@ -45,6 +45,7 @@ namespace LinqToDB.Linq.Parser.Builders
 				var selectorExpression = builder.ConvertExpression(sourceSequence, selector.GetBody(sourceReference, collectionReference));
 				var selectorClause = new SelectClause(selectorExpression);
 				builder.RegisterSource(selectorClause);
+				builder.TranslationContext.RegisterSelectorTransformation(selectorClause, selectorClause.Selector, builder.MappingSchema);
 
 				parseBuildInfo.Sequence.AddClause(selectorClause);
 			}

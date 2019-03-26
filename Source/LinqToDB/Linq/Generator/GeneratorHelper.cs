@@ -69,7 +69,7 @@ namespace LinqToDB.Linq.Generator
 					}
 			}
 
-			if (expression is UnifiedNewExpression newUnified)
+			if (expression is UnifiedNewExpression2 newUnified)
 			{
 				return newUnified.Members;
 			}

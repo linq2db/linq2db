@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 using LinqToDB.Linq.Parser.Clauses;
 using LinqToDB.Mapping;
 
@@ -45,9 +44,7 @@ namespace LinqToDB.Linq.Parser.Builders
 				if (parseBuildInfo.Sequence.Clauses.Count == 0)
 				{
 					// we have to calculate parent
-					var root = (QuerySourceReferenceExpression)me.Expression.GetRootObject(builder.MappingSchema);
-					var clause = (BaseClause)root.QuerySource;
-					parseBuildInfo.Sequence.AddClause(clause);
+					builder.BuildSequence(parseBuildInfo, me.Expression);
 				}
 
 				var registry = builder.GenerateAssociation(parseBuildInfo.Sequence, attr, expression, me.Member);

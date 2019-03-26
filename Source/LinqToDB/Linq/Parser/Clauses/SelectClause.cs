@@ -9,7 +9,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
-	public class SelectClause : BaseClause, IQuerySource
+	public class SelectClause : BaseClause, IQuerySource2
 	{
 		public Expression Selector { get; set; }
 

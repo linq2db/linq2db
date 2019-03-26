@@ -8,7 +8,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Generator
 {
-	public class SetQuerySource : BaseClause, IQuerySource
+	public class SetQuerySource : BaseClause, IQuerySource2
 	{
 		public BaseSetClause QuerySource { get; }
 		public int QuerySourceId { get; }

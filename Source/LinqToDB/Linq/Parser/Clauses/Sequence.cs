@@ -25,12 +25,12 @@ namespace LinqToDB.Linq.Parser.Clauses
 			Clauses.Add(clause);
 		}
 
-		public IQuerySource GetQuerySource()
+		public IQuerySource2 GetQuerySource()
 		{
 			for (var i = Clauses.Count - 1; i >= 0; i--)
 			{
 				var clause = Clauses[i];
-				if (clause is IQuerySource qs)
+				if (clause is IQuerySource2 qs)
 					return qs;
 			}
 

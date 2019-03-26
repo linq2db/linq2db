@@ -6,7 +6,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Parser.Clauses
 {
-	public class ProjectionClause : BaseClause, IQuerySource
+	public class ProjectionClause : BaseClause, IQuerySource2
 	{
 		public Expression ProjectionExpression { get; }
 

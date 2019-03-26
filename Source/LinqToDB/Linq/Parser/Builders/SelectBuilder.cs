@@ -32,6 +32,8 @@ namespace LinqToDB.Linq.Parser.Builders
 			parseBuildInfo.Sequence.AddClause(sequence);
 			parseBuildInfo.Sequence.AddClause(selectClause);
 
+			builder.TranslationContext.RegisterSelectorTransformation(selectClause, selectClause.Selector, builder.MappingSchema);
+
 			return parseBuildInfo.Sequence;
 		}
 	}
