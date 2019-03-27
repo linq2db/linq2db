@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "money",                       DataType = typeof(decimal).       AssemblyQualifiedName },
 				new DataTypeInfo { TypeName = "text",                        DataType = typeof(string).        AssemblyQualifiedName },
 				new DataTypeInfo { TypeName = "xml",                         DataType = typeof(string).        AssemblyQualifiedName },
-				
+
 				new DataTypeInfo { TypeName = "bytea",                       DataType = typeof(byte[]).        AssemblyQualifiedName },
 				new DataTypeInfo { TypeName = "uuid",                        DataType = typeof(Guid).          AssemblyQualifiedName },
 
@@ -57,10 +57,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character({0})",                    CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "bpchar",                      DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character({0})",                    CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).       AssemblyQualifiedName, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
-				
+
 				new DataTypeInfo { TypeName = "timestamptz",                 DataType = typeof(DateTimeOffset).AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
 				new DataTypeInfo { TypeName = "timestamp with time zone",    DataType = typeof(DateTimeOffset).AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
-				
+
 				new DataTypeInfo { TypeName = "timestamp",                   DataType = typeof(DateTime).      AssemblyQualifiedName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
 				new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).      AssemblyQualifiedName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
 			}.ToList();
@@ -111,10 +111,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					left(t.table_schema, 3) = 'pg_' OR t.table_schema = 'information_schema'   as IsProviderSpecific
 				FROM
 					information_schema.tables t
-					LEFT JOIN pg_catalog.pg_class cls 
+					LEFT JOIN pg_catalog.pg_class cls
 						on cls.relname = t.table_name
-					LEFT JOIN pg_catalog.pg_description d 
-						on d.objoid = cls.oid 
+					LEFT JOIN pg_catalog.pg_description d
+						on d.objoid = cls.oid
 						and d.objsubid = 0");
 
 			if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
@@ -164,10 +164,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						c.is_updatable = 'NO'                                                     as SkipOnUpdate,
 						d.description                                                             as Description
 					FROM
-						information_schema.columns as c 
-						LEFT JOIN pg_catalog.pg_class cls 
+						information_schema.columns as c
+						LEFT JOIN pg_catalog.pg_class cls
 							on cls.relname = c.table_name
-						LEFT JOIN pg_catalog.pg_description d 
+						LEFT JOIN pg_catalog.pg_description d
 							on d.objoid = cls.oid and d.objsubid = c.dtd_identifier::integer";
 
 			if (ExcludedSchemas.Count == 0 || IncludedSchemas.Count == 0)

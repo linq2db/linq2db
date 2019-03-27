@@ -44,6 +44,10 @@ CREATE TABLE "Person"
 )
 GO
 
+COMMENT ON TABLE  "Person"            IS 'This is the Person table';
+COMMENT ON COLUMN "Person"."PersonID" IS 'This is the Person.PersonID column';
+GO
+
 INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('John',   'Pupkin',    'M')
 GO
 INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Tester', 'Testerson', 'M')
