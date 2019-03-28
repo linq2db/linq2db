@@ -107,15 +107,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					t.table_name                                                               as TableName,
 					t.table_schema = 'public'                                                  as IsDefaultSchema,
 					t.table_type = 'VIEW'                                                      as IsView,
-					d.description                                                              as Description,
+					(
+						SELECT pgd.description
+						FROM
+							pg_catalog.pg_statio_all_tables as st
+							JOIN pg_catalog.pg_description pgd ON pgd.objoid = st.relid
+						WHERE t.table_schema = st.schemaname AND t.table_name=st.relname
+						LIMIT 1
+					)                                                                          as Description,
 					left(t.table_schema, 3) = 'pg_' OR t.table_schema = 'information_schema'   as IsProviderSpecific
 				FROM
-					information_schema.tables t
-					LEFT JOIN pg_catalog.pg_class cls
-						on cls.relname = t.table_name
-					LEFT JOIN pg_catalog.pg_description d
-						on d.objoid = cls.oid
-						and d.objsubid = 0");
+					information_schema.tables t");
 
 			if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
 				sql += @"
@@ -162,13 +164,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						c.is_identity = 'YES' OR COALESCE(c.column_default ~* 'nextval', false)   as IsIdentity,
 						c.is_generated <> 'NEVER'                                                 as SkipOnInsert,
 						c.is_updatable = 'NO'                                                     as SkipOnUpdate,
-						d.description                                                             as Description
+						(
+							SELECT pgd.description
+							FROM
+								pg_catalog.pg_statio_all_tables as st
+								JOIN pg_catalog.pg_description pgd ON pgd.objsubid = c.ordinal_position AND pgd.objoid = st.relid
+							WHERE c.table_schema = st.schemaname AND c.table_name=st.relname
+							LIMIT 1
+						)                                                                         as Description
 					FROM
-						information_schema.columns as c
-						LEFT JOIN pg_catalog.pg_class cls
-							on cls.relname = c.table_name
-						LEFT JOIN pg_catalog.pg_description d
-							on d.objoid = cls.oid and d.objsubid = c.dtd_identifier::integer";
+						information_schema.columns as c";
 
 			if (ExcludedSchemas.Count == 0 || IncludedSchemas.Count == 0)
 				sql += @"
