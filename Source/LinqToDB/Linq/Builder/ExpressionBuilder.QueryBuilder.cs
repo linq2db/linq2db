@@ -49,8 +49,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide)
 		{
-			var newExpr = CorrectEquality(context, expression);
-				newExpr = newExpr.Transform(expr => TransformExpression(context, expr, enforceServerSide, null));
+			var newExpr = expression.Transform(expr => TransformExpression(context, expr, enforceServerSide, null));
 			return newExpr;
 		}
 
@@ -227,6 +226,13 @@ namespace LinqToDB.Linq.Builder
 					break;
 
 				case ExpressionType.Conditional:
+					var cond    = (ConditionalExpression)expr;
+					var newTest = CorrectEquality(context, cond.Test);
+					if (newTest != cond.Test)
+					{
+						cond = cond.Update(newTest, cond.IfTrue, cond.IfFalse);
+						return new TransformInfo(BuildExpression(context, cond, enforceServerSide));
+					}
 
 					if (CanBeTranslatedToSql(context, ConvertExpression(expr), true))
 						return new TransformInfo(BuildSql(context, expr, alias));
@@ -368,58 +374,60 @@ namespace LinqToDB.Linq.Builder
 		Expression CorrectEquality(IBuildContext context, Expression expr)
 		{
 			var result = expr.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Equal || e.NodeType == ExpressionType.NotEqual)
+				{
+					var b = (BinaryExpression)e;
+
+					Expression cnt = null;
+					Expression obj = null;
+
+					if      (IsNullConstant(b.Left))  { cnt = b.Left;  obj = b.Right; }
+					else if (IsNullConstant(b.Right)) { cnt = b.Right; obj = b.Left;  }
+
+					if (cnt != null)
 					{
-						if (e.NodeType == ExpressionType.Equal || e.NodeType == ExpressionType.NotEqual)
+						var objContext = GetContext(context, obj);
+						if (objContext != null && objContext.IsExpression(obj, 0, RequestFor.Object).Result)
 						{
-							var b = (BinaryExpression)e;
+							var sql = objContext.ConvertToSql(obj, 0, ConvertFlags.Key);
+							if (sql.Length == 0)
+								sql = objContext.ConvertToSql(obj, 0, ConvertFlags.All);
 
-							Expression cnt = null;
-							Expression obj = null;
-
-							if      (IsNullConstant(b.Left))  { cnt = b.Left;  obj = b.Right; }
-							else if (IsNullConstant(b.Right)) { cnt = b.Right; obj = b.Left;  }
-
-							if (cnt != null)
+							if (sql.Length > 0)
 							{
-								var objContext = GetContext(context, obj);
-								if (objContext != null)
+								Expression predicate = null;
+								foreach (var f in sql)
 								{
-									obj = CorrectEquality(context, obj);
-									var sql = objContext.ConvertToSql(obj, 0, ConvertFlags.Key);
-									if (sql.Length == 0)
-										sql = objContext.ConvertToSql(obj, 0, ConvertFlags.All);
+									if (f.Sql is SqlField field && field.Table.All == field)
+										continue;
 
-									if (sql.Length > 0)
-									{
-										Expression predicate = null;
-										foreach (var f in sql)
-										{
-											var valueType = f.Sql.SystemType;
+									var valueType = f.Sql.SystemType;
 
-											if (!valueType.IsNullable() && valueType.IsValueTypeEx())
-												valueType = typeof(Nullable<>).MakeGenericType(valueType);
+									if (!valueType.IsNullable() && valueType.IsValueTypeEx())
+										valueType = typeof(Nullable<>).MakeGenericType(valueType);
 
-											var reader     = BuildSql(context, f.Sql, valueType, null);
-											var comparison = Expression.MakeBinary(e.NodeType,
-												Expression.Default(valueType), reader);
+									var reader     = BuildSql(context, f.Sql, valueType, null);
+									var comparison = Expression.MakeBinary(e.NodeType,
+										Expression.Default(valueType), reader);
 
-											predicate = predicate == null
-												? comparison
-												: Expression.MakeBinary(
-													e.NodeType == ExpressionType.Equal
-														? ExpressionType.AndAlso
-														: ExpressionType.OrElse, predicate, comparison);
-										}
-
-										if (predicate != null)
-											return predicate;
-									}
+									predicate = predicate == null
+										? comparison
+										: Expression.MakeBinary(
+											e.NodeType == ExpressionType.Equal
+												? ExpressionType.AndAlso
+												: ExpressionType.OrElse, predicate, comparison);
 								}
+
+								if (predicate != null)
+									return predicate;
 							}
 						}
+					}
+				}
 
-						return e;
-					});
+				return e;
+			});
 			return result;
 		}
 
