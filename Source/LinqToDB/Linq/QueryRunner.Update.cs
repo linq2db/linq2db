@@ -34,7 +34,7 @@ namespace LinqToDB.Linq
 				};
 
 				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
-				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys).ToList();
+				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj, descriptor, SkipModification.Update)).Except(keys).ToList();
 
 				if (fields.Count == 0)
 				{
