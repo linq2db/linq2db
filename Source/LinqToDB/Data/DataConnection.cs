@@ -1079,7 +1079,7 @@ namespace LinqToDB.Data
 				{
 					_commandTimeout = null;
 					if (_command != null)
-						_command.Dispose();
+						DisposeCommand();
 				}
 				else
 				{
