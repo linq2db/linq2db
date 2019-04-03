@@ -31,7 +31,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestEntityDescriptor([SQLiteDataSources] string context)
+		public void TestEntityDescriptor([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var ms = SetFluentMappings();
 
@@ -44,7 +44,7 @@ namespace Tests.UserTests
 				{
 					db.DropTable<Test1585>();
 				}
-				catch (Exception ex)
+				catch
 				{ }
 
 				db.CreateTable<Test1585>();

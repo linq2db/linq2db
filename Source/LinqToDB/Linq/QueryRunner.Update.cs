@@ -8,13 +8,14 @@ namespace LinqToDB.Linq
 {
 	using Common;
 	using SqlQuery;
+	using Mapping;
 	using Common.Internal.Cache;
 
 	static partial class QueryRunner
 	{
 		public static class Update<T>
 		{
-			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
+			static Query<int> CreateQuery(IDataContext dataContext, EntityDescriptor descriptor, T obj, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 
@@ -77,15 +78,16 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
-				var key  = new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
-				var ei   = Configuration.Linq.DisableQueryCache
-					? CreateQuery(dataContext, tableName, databaseName, schemaName, type)
-					: Cache<T>.QueryCache.GetOrCreate(key,
+				var type             = GetType<T>(obj, dataContext);
+				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
+				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
+					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type)
+					: Cache<T>.QueryCache.GetOrCreate(
+						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type },
 						o =>
 						{
 							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, tableName, databaseName, schemaName, type);
+							return CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type);
 						});
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
@@ -97,15 +99,16 @@ namespace LinqToDB.Linq
 				if (Equals(default, obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
-				var key  = new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
-				var ei   = Configuration.Linq.DisableQueryCache
-					? CreateQuery(dataContext, tableName, databaseName, schemaName, type)
-					: Cache<T>.QueryCache.GetOrCreate(key,
+				var type             = GetType<T>(obj, dataContext);
+				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
+				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
+					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type)
+					: Cache<T>.QueryCache.GetOrCreate(
+						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type },
 						o =>
 						{
 							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, tableName, databaseName, schemaName, type);
+							return CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type);
 						});
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);

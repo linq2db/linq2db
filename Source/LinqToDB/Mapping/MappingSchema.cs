@@ -69,7 +69,7 @@ namespace LinqToDB.Mapping
 		/// Creates mapping schema with specified configuration name and base mapping schemas.
 		/// </summary>
 		/// <param name="configuration">Mapping schema configuration name.
-		/// <see cref="ProviderName"/> for standard names.
+		/// <see cref="ProviderName"/> for standard names.</param>
 		/// <param name="schemas">Base mapping schemas.</param>
 		/// <remarks>Schema name should be unique for mapping schemas with different mappings.
 		/// Using same name could lead to incorrect mapping used when mapping schemas with same name define different
