@@ -13,18 +13,14 @@ namespace Tests.UserTests
 	public class GenericsFilterTests
 	{
 		[Test]
-		public void WhenPredicateFactoryIsGeneric([IncludeDataSources(
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void WhenPredicateFactoryIsGeneric([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var predicate = ById<Firm>(0);
 			Assert.DoesNotThrow(() => CheckPredicate(predicate, context));
 		}
 
 		[Test]
-		public void WhenPredicateFactoryIsNotGeneric([IncludeDataSources(
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void WhenPredicateFactoryIsNotGeneric([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var predicate = ById(0);
 			Assert.DoesNotThrow(() => CheckPredicate(predicate, context));

@@ -1,6 +1,7 @@
 # LINQ to DB
 
 [![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db)](https://www.nuget.org/profiles/LinqToDB)
+[![Stack Exchange questions](https://img.shields.io/stackexchange/stackoverflow/t/linq2db.svg?label=stackoverflow)](https://stackoverflow.com/questions/tagged/linq2db) 
 
 [![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg?style=social)](https://twitter.com/linq2db)
 
@@ -11,6 +12,17 @@ Architecturally it is one step above micro-ORMs like Dapper, Massive, or PetaPoc
 However, it's not as heavy as LINQ to SQL or Entity Framework. There is no change-tracking, so you have to manage that yourself, but on the positive side you get more control and faster access to your data.
 
 In other words **LINQ to DB is type-safe SQL**.
+
+## Standout Features
+
+ - Rich Querying API:
+   - [Explicit Join Syntax](https://linq2db.github.io/articles/sql/Join-Operators.html) (In addition to standard LINQ join syntax.)
+   - [CTE Support](https://linq2db.github.io/articles/sql/CTE.html)
+   - [Bulk Copy/Insert](https://linq2db.github.io/articles/sql/Bulk-Copy.html)
+   - [Windowing/Analytic Functions](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html)
+   - [Merge API](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
+ - Extensibility:
+   - [Ability to Map Custom SQL to Static Functions](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB/Sql/)
 
 Visit our [blog](http://blog.linq2db.com/) and see [Github.io documentation](https://linq2db.github.io/index.html) for more details.
 

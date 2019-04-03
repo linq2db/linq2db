@@ -364,7 +364,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestTernary1([DataSources(ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)] string context)
+		public void TestTernary1([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -384,7 +384,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestTernary2([DataSources(ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)] string context)
+		public void TestTernary2([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -488,12 +488,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MultipleUse(
-			[IncludeDataSources(
-				false,
-				ProviderName.SqlServer2012,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
-			string context)
+		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllPostgreSQL93Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -634,9 +629,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociation1([DataSources(
-			ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)]
-			string context)
+		public void TestGenericAssociation1([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -656,8 +649,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociationRuntime([DataSources(
-			ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)]
+		public void TestGenericAssociationRuntime([DataSources(ProviderName.Access, TestProvName.AllSQLite)]
 			string context)
 		{
 			var ids = new[] { 1, 5 };
@@ -684,9 +676,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociationRuntimeMany([DataSources(
-			ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)]
-			string context)
+		public void TestGenericAssociationRuntimeMany([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 

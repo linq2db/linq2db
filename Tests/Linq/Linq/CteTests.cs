@@ -5,7 +5,8 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Expressions;
-
+using LinqToDB.Mapping;
+using LinqToDB.Tools;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -899,5 +900,69 @@ namespace Tests.Linq
 				AreEqual(query2_, query2);
 			}
 		}
+
+		[Test]
+		public void TestEmbedded([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cte1 = db.GetTable<Child>().Select(c => c.ChildID).AsCte("CTE_1");
+				var cte2 = cte1.Distinct().AsCte("CTE_2");
+				var cte3 = cte2.Distinct().AsCte("CTE_3");
+				var cte4 = cte3.Distinct().AsCte("CTE_3");
+
+				var qCte = db.Child.Where(w => w.ChildID.NotIn(cte4)).ToList();
+			}
+		}
+
+		class OrgGroupDepthWrapper
+		{
+			public OrgGroup OrgGroup { get; set; }
+			public int Depth { get; set; }
+		}
+
+		class OrgGroup
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public int ParentId { get; set; }
+			public string GroupName { get; set; }
+		}
+
+		[ActiveIssue(1644)]
+		[Test]
+		public void TestRecursiveObjects([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<OrgGroup>())
+			{
+				var queryable = db.GetTable<OrgGroup>();
+				var cte = db.GetCte<OrgGroupDepthWrapper>(previous =>
+				    {
+				        var parentQuery = from parent in queryable
+				            select new OrgGroupDepthWrapper
+				            {
+				                OrgGroup = parent,
+				                Depth = 0
+				            };
+
+				        var childQuery = from child in queryable
+				            from parent in previous.InnerJoin(parent => parent.OrgGroup.Id == child.ParentId)
+				            orderby parent.Depth + 1, child.GroupName
+				            select new OrgGroupDepthWrapper
+				            {
+				                OrgGroup = child,
+				                Depth = parent.Depth + 1
+				            };
+
+				        return parentQuery.Union(childQuery);
+				    })
+				    .Select(wrapper => wrapper.OrgGroup);
+
+				var result = cte.ToList();
+
+			}
+		}
+
 	}
 }

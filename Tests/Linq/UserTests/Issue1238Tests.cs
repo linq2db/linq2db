@@ -24,13 +24,9 @@ namespace Tests.UserTests
 
 		// PostgreSQL disabled because it needs real primary key on database side
 		// DB2 needs merge api + arraycontext features from 3.0
-		[ActiveIssue(1239, Configurations = new[] { ProviderName.DB2 })]
+		[ActiveIssue(1239, Configuration = ProviderName.DB2)]
 		[Test]
-		public void TestInsertOrUpdate(
-			[DataSources(
-				false,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
-			string context)
+		public void TestInsertOrUpdate([DataSources(false, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -71,14 +67,10 @@ namespace Tests.UserTests
 
 		// PostgreSQL disabled because it needs real primary key on database side
 		[ActiveIssue(
-			Configurations = new [] { ProviderName.DB2 },
-			Details = "ERROR [42610] [IBM][DB2/NT64] SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+			Configuration = ProviderName.DB2,
+			Details       = "ERROR [42610] [IBM][DB2/NT64] SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
 		[Test]
-		public void InsertOrReplaceTest(
-			[DataSources(
-				false,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
-			string context)
+		public void InsertOrReplaceTest([DataSources(false, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())

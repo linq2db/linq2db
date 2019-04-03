@@ -128,7 +128,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void TableValuedParameterProcedureTest(
-			[IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context,
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(DataParameterFactories))] Func<DataConnection, DataParameter> parameterGetter)
 		{
 			using (var external = new DataConnection(context))
@@ -142,7 +142,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void TableValuedParameterInQueryUsingFromSqlTest(
-			[IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context,
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(QueryDataParameterFactories))] Func<DataConnection, DataParameter> parameterGetter)
 		{
 			using (var external = new DataConnection(context))
@@ -158,7 +158,7 @@ namespace Tests.DataProvider
 		[ActiveIssue("DataParameter not supported by TableExpressionAttribute")]
 		[Test]
 		public void TableValuedParameterInQueryUsingTableMethodTest(
-			[IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context,
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(QueryDataParameterFactories))] Func<DataConnection, DataParameter> parameterGetter)
 		{
 			using (var external = new DataConnection(context))
@@ -174,7 +174,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void TableValuedParameterProcedureAsNullTest(
-			[IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var external = new DataConnection(context))
 			using (var db = new DataConnection(context))
@@ -186,8 +186,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TableValuedParameterAsNullInQueryUsingFromSqlTest(
-			[IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void TableValuedParameterAsNullInQueryUsingFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var external = new DataConnection(context))
 			using (var db = new DataConnection(context))
@@ -200,8 +199,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TableValuedParameterProcedureT4Test(
-			[IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void TableValuedParameterProcedureT4Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var external = new DataConnection(context))
 			using (var db = new DataConnection(context))

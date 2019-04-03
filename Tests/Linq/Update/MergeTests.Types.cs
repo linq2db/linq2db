@@ -352,7 +352,7 @@ namespace Tests.xUpdate
 		// Expected: '*'
 		// But was:  '4'
 		// at Tests.Merge.MergeTests.AssertChar
-		[ActiveIssue("ORA-22053: overflow error", Configurations = new[] { ProviderName.OracleNative })]
+		[ActiveIssue("ORA-22053: overflow error", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void TestMergeTypes([DataSources(false, ProviderName.SQLiteMS)] string context)
 		{

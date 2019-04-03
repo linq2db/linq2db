@@ -85,14 +85,14 @@ before_build:
     iex "& $cmd"
 
     # Access ACE provider
-    (New-Object Net.WebClient).DownloadFile("https://download.microsoft.com/download/2/4/3/24375141-E08D-4803-AB0E-10F2E3A07AAA/AccessDatabaseEngine.exe", "$env:appveyor_build_folder\AccessDatabaseEngine.exe")
-    .\AccessDatabaseEngine.exe /quiet
+    #(New-Object Net.WebClient).DownloadFile("https://download.microsoft.com/download/2/4/3/24375141-E08D-4803-AB0E-10F2E3A07AAA/AccessDatabaseEngine.exe", "$env:appveyor_build_folder\AccessDatabaseEngine.exe")
+    #.\AccessDatabaseEngine.exe /quiet
 
     # docfx build & deploy
     if ($env:docfxsecret)
     {
       $gitDeploy = $env:APPVEYOR_REPO_BRANCH -eq "master"
-      #.\Build\AppVeyor.DocFx.ps1 $env:docfxuser $env:docfxsecret $env:docfxmail $gitDeploy
+      .\Build\AppVeyor.DocFx.ps1 $env:docfxuser $env:docfxsecret $env:docfxmail $gitDeploy
     }
     else
     {

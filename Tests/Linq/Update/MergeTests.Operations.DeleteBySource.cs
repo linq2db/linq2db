@@ -12,7 +12,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test, Parallelizable(ParallelScope.None)]
-		public void SameSourceDeleteBySource([MergeBySourceDataContextSource] string context)
+		public void SameSourceDeleteBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -39,7 +39,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void SameSourceDeleteBySourceWithPredicate([MergeBySourceDataContextSource] string context)
+		public void SameSourceDeleteBySourceWithPredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -67,7 +67,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void OtherSourceDeleteBySource([MergeBySourceDataContextSource] string context)
+		public void OtherSourceDeleteBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -93,7 +93,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void OtherSourceDeleteBySourceWithPredicate([MergeBySourceDataContextSource] string context)
+		public void OtherSourceDeleteBySourceWithPredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -122,7 +122,7 @@ namespace Tests.xUpdate
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void AnonymousSourceDeleteBySourceWithPredicate(
-			[MergeBySourceDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -154,7 +154,7 @@ namespace Tests.xUpdate
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void AnonymousListSourceDeleteBySourceWithPredicate(
-			[MergeBySourceDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -185,7 +185,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void DeleteBySourceReservedAndCaseNames([MergeBySourceDataContextSource] string context)
+		public void DeleteBySourceReservedAndCaseNames([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -218,7 +218,7 @@ namespace Tests.xUpdate
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void DeleteBySourceReservedAndCaseNamesFromList(
-			[MergeBySourceDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -251,7 +251,7 @@ namespace Tests.xUpdate
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void DeleteBySourceFromPartialSourceProjection(
-			[MergeBySourceDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

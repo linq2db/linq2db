@@ -79,8 +79,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
+		[ActiveIssue("HanaException : Data is Null. This method or property cannot be called on Null values.", Configuration = ProviderName.SapHana)]
 		public void SqlPropertyWithNonDynamicAssociationViaObject2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -172,8 +172,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
+		[ActiveIssue("HanaException : Data is Null. This method or property cannot be called on Null values.", Configuration = ProviderName.SapHana)]
 		public void SqlPropertySelectAssociated([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
@@ -263,8 +263,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
+		[ActiveIssue("HanaException : Data is Null. This method or property cannot be called on Null values.", Configuration = ProviderName.SapHana)]
 		public void SqlPropertyGroupByAssociated([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
@@ -376,7 +376,7 @@ namespace Tests.Linq
 			db.CreateTable<T>(tableName);
 		}
 
-		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void SqlPropertyNoStoreNonIdentifier([DataSources] string context)
 		{
@@ -406,7 +406,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void SqlPropertyNoStoreNonIdentifierGrouping([DataSources] string context)
 		{

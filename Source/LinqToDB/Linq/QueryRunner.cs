@@ -13,6 +13,7 @@ namespace LinqToDB.Linq
 	using Async;
 	using Builder;
 	using Common;
+	using Common.Internal.Cache;
 	using Data;
 	using Extensions;
 	using LinqToDB.Expressions;
@@ -20,6 +21,21 @@ namespace LinqToDB.Linq
 
 	static partial class QueryRunner
 	{
+		public static class Cache<T>
+		{
+			static Cache()
+			{
+				Query.CacheCleaners.Add(ClearCache);
+			}
+
+			public static void ClearCache()
+			{
+				QueryCache.Compact(1);
+			}
+
+			internal static MemoryCache QueryCache { get; } = new MemoryCache(new MemoryCacheOptions());
+		}
+
 		#region Mapper
 
 		class Mapper<T>
@@ -104,8 +120,9 @@ namespace LinqToDB.Linq
 						(e, o) => p.DataType != DataType.Undefined || p.Value == null
 							? p.DataType
 							: query.MappingSchema.GetDataType(p.Value.GetType()).DataType,
-						(e, o) => p.DbType
-						, p))
+						(e, o) => p.DbType,
+						(e, o) => p.DbSize,
+						p))
 				);
 
 				sql.Parameters = parameters.ToList();
@@ -195,6 +212,11 @@ namespace LinqToDB.Linq
 				if (!string.IsNullOrEmpty(dbType))
 					p.SqlParameter.DbType = dbType;
 
+				var size = p.SizeAccessor(expression, parameters);
+
+				if (size != null)
+					p.SqlParameter.DbSize = size;
+
 			}
 		}
 
@@ -212,9 +234,10 @@ namespace LinqToDB.Linq
 
 			Expression dataTypeExpression = Expression.Constant(DataType.Undefined);
 			Expression dbTypeExpression   = Expression.Constant(null, typeof(string));
+			Expression dbSizeExpression   = Expression.Constant(field.Length, typeof(int?));
 
-			var convertExpression = dataContext.MappingSchema.GetConvertExpression(new DbDataType(field.SystemType, field.DataType, field.DbType),
-				new DbDataType(typeof(DataParameter), field.DataType, field.DbType), createDefault: false);
+			var convertExpression = dataContext.MappingSchema.GetConvertExpression(new DbDataType(field.SystemType, field.DataType, field.DbType, field.Length),
+				new DbDataType(typeof(DataParameter), field.DataType, field.DbType, field.Length), createDefault: false);
 
 			if (convertExpression != null)
 			{
@@ -222,10 +245,11 @@ namespace LinqToDB.Linq
 				getter             = Expression.PropertyOrField(body, "Value");
 				dataTypeExpression = Expression.PropertyOrField(body, "DataType");
 				dbTypeExpression   = Expression.PropertyOrField(body, "DbType");
+				dbSizeExpression   = Expression.PropertyOrField(body, "Size");
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, getter, dataTypeExpression, dbTypeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'), expr: convertExpression);
+				dataContext, getter, dataTypeExpression, dbTypeExpression, dbSizeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'), expr: convertExpression);
 
 			return param;
 		}

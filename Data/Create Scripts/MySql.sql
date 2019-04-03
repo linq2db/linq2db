@@ -452,3 +452,21 @@ BEGIN
 	SELECT 123 INTO aOutParam;
 END
 GO
+
+DROP TABLE IF EXISTS FullTextIndexTest
+GO
+
+CREATE TABLE FullTextIndexTest (
+	id int UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
+	TestField TEXT(100),
+	FULLTEXT idx (TestField)
+)
+-- SKIP MySql57 BEGIN
+-- SKIP MariaDB BEGIN
+-- SKIP MySqlConnector BEGIN
+	ENGINE=MyISAM
+-- SKIP MySql57 END
+-- SKIP MariaDB END
+-- SKIP MySqlConnector END
+;
+GO

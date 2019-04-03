@@ -3,7 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !TRAVIS
@@ -15,7 +15,7 @@ using Tests.Model;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class ParameterTests : TestBase
+	public partial class ParameterTests : TestBase
 	{
 		[Test]
 		public void InlineParameter([DataSources] string context)
@@ -61,8 +61,8 @@ namespace Tests.Linq
 		public void CharAsSqlParameter1(
 			[DataSources(
 				ProviderName.SqlCe,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest, TestProvName.PostgreSQLLatest,
+				TestProvName.AllSQLite,
+				TestProvName.AllPostgreSQL,
 				ProviderName.Informix,
 				ProviderName.DB2,
 				ProviderName.SapHana)]
@@ -81,8 +81,8 @@ namespace Tests.Linq
 		public void CharAsSqlParameter2(
 			[DataSources(
 				ProviderName.SqlCe,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				TestProvName.AllSQLite,
+				TestProvName.AllPostgreSQL,
 				ProviderName.Informix,
 				ProviderName.DB2,
 				ProviderName.SapHana)]
@@ -101,7 +101,7 @@ namespace Tests.Linq
 		public void CharAsSqlParameter3(
 			[DataSources(
 				ProviderName.SqlCe,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				TestProvName.AllPostgreSQL,
 				ProviderName.Informix,
 				ProviderName.DB2,
 				ProviderName.SQLiteMS,
@@ -132,7 +132,7 @@ namespace Tests.Linq
 		[Test]
 		public void CharAsSqlParameter5(
 			[DataSources(
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+				TestProvName.AllPostgreSQL,
 				ProviderName.Informix,
 				ProviderName.DB2)]
 			string context)
@@ -164,8 +164,7 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter
 		[Test]
-		public void ExposeSqlStringParameter([DataSources(
-			false, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.Informix)]
+		public void ExposeSqlStringParameter([DataSources(false, ProviderName.DB2, ProviderName.Informix)]
 			string context)
 		{
 			using (var db = new DataConnection(context))
@@ -183,13 +182,14 @@ namespace Tests.Linq
 		{
 			public decimal DecimalDataType;
 			public byte[]  BinaryDataType;
+			public byte[]  VarBinaryDataType;
+			[Column(DataType = DataType.VarChar)]
+			public string  VarcharDataType;
 		}
 
 		// Excluded providers inline such parameter
 		[Test]
-		public void ExposeSqlDecimalParameter([DataSources(
-			false, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.Informix)]
-			string context)
+		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.DB2, ProviderName.Informix)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -213,7 +213,7 @@ namespace Tests.Linq
 
 				Console.WriteLine(sql);
 
-				Assert.That(sql, Contains.Substring("(3)").Or.Contains("Blob"));
+				Assert.That(sql, Contains.Substring("(3)").Or.Contains("Blob").Or.Contains("(8000)"));
 			}
 		}
 
@@ -231,7 +231,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void Test2([DataSources] string context)
 		{
