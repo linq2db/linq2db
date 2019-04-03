@@ -2942,6 +2942,14 @@ namespace LinqToDB.Linq.Builder
 
 							break;
 						}
+
+					case ExpressionType.Conditional:
+						{
+							var cond = (ConditionalExpression)pi;
+							if (!cond.Type.IsScalar())
+								return true;
+							break;
+						}
 				}
 
 				return false;

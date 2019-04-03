@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,18 +7,12 @@ namespace LinqToDB.Linq
 {
 	using SqlQuery;
 	using Mapping;
+	using Common.Internal.Cache;
 
 	static partial class QueryRunner
 	{
 		public static class InsertWithIdentity<T>
 		{
-			static readonly ConcurrentDictionary<object,Query<object>> _queryCache = new ConcurrentDictionary<object,Query<object>>();
-
-			static InsertWithIdentity()
-			{
-				Linq.Query.CacheCleaners.Add(() => _queryCache.Clear());
-			}
-
 			static Query<object> CreateQuery(IDataContext dataContext, EntityDescriptor descriptor, T obj, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
@@ -72,8 +65,13 @@ namespace LinqToDB.Linq
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type)
-					: _queryCache.GetOrAdd(new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type },
-						o            => CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type));
+					: Cache<T>.QueryCache.GetOrCreate(
+						new { Operation = "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type },
+						o =>
+						{
+							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+							return CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type);
+						});
 
 				return ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -88,8 +86,13 @@ namespace LinqToDB.Linq
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type)
-					: _queryCache.GetOrAdd(new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type },
-						o            => CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type));
+					: Cache<T>.QueryCache.GetOrCreate(
+						new { Operation = "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type },
+						o =>
+						{
+							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+							return CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type);
+						});
 
 				return await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 			}

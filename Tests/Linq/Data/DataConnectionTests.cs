@@ -280,6 +280,48 @@ namespace Tests.Data
 		}
 
 		[Test]
+		public async Task DataConnectionCloseAsync([DataSources(false)] string context)
+		{
+			var db = new DataConnection(context);
+
+			try
+			{
+				await db.GetTable<Parent>().ToListAsync();
+			}
+			finally
+			{
+				var tid = Thread.CurrentThread.ManagedThreadId;
+
+				await db.CloseAsync();
+
+				db.Dispose();
+
+				if (tid == Thread.CurrentThread.ManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
+
+		[Test]
+		public async Task DataConnectionDisposeAsync([DataSources(false)] string context)
+		{
+			var db = new DataConnection(context);
+
+			try
+			{
+				await db.GetTable<Parent>().ToListAsync();
+			}
+			finally
+			{
+				var tid = Thread.CurrentThread.ManagedThreadId;
+
+				await db.DisposeAsync();
+
+				if (tid == Thread.CurrentThread.ManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
+
+		[Test]
 		public void TestOnBeforeConnectionOpenEvent()
 		{
 			var open = false;
@@ -328,6 +370,5 @@ namespace Tests.Data
 				Assert.True(openAsync);
 			}
 		}
-
 	}
 }

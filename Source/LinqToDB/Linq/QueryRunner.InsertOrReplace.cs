@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -10,18 +9,12 @@ namespace LinqToDB.Linq
 {
 	using SqlQuery;
 	using Mapping;
+	using Common.Internal.Cache;
 
 	static partial class QueryRunner
 	{
 		public static class InsertOrReplace<T>
 		{
-			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
-
-			static InsertOrReplace()
-			{
-				Linq.Query.CacheCleaners.Add(() => _queryCache.Clear());
-			}
-
 			static Query<int> CreateQuery(IDataContext dataContext, EntityDescriptor descriptor, T obj, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
@@ -134,9 +127,13 @@ namespace LinqToDB.Linq
 						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
 						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schema, type)
-					: _queryCache.GetOrAdd(
-						new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type },
-						o => CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schema, type));
+					: Cache<T>.QueryCache.GetOrCreate(
+					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type },
+					o =>
+					{
+						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schema, type);
+					});
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -152,9 +149,13 @@ namespace LinqToDB.Linq
 						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
 						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
 					? CreateQuery(dataContext, entityDescriptor, obj, tableName, schema, databaseName, type)
-					: _queryCache.GetOrAdd(
-						new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type },
-						o => CreateQuery(dataContext, entityDescriptor, obj, tableName, schema, databaseName, type));
+					: Cache<T>.QueryCache.GetOrCreate(
+					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type },
+					o =>
+					{
+						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return CreateQuery(dataContext, entityDescriptor, obj, tableName, schema, databaseName, type);
+					});
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 
