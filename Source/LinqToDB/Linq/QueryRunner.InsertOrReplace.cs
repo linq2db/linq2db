@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -9,18 +8,12 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using SqlQuery;
+	using Common.Internal.Cache;
 
 	static partial class QueryRunner
 	{
 		public static class InsertOrReplace<T>
 		{
-			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
-
-			static InsertOrReplace()
-			{
-				Linq.Query.CacheCleaners.Add(() => _queryCache.Clear());
-			}
-
 			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
@@ -127,10 +120,14 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
-				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type };
+				var key  = new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
 					? CreateQuery(dataContext, tableName, databaseName, schema, type)
-					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schema, type));
+					: Cache<T>.QueryCache.GetOrCreate(key, o =>
+					{
+						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return CreateQuery(dataContext, tableName, databaseName, schema, type);
+					});
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -141,10 +138,14 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var type = GetType<T>(obj, dataContext);
-				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type };
+				var key  = new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
 					? CreateQuery(dataContext, tableName, schema, databaseName, type)
-					: _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName, type));
+					: Cache<T>.QueryCache.GetOrCreate(key, o =>
+					{
+						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return CreateQuery(dataContext, tableName, schema, databaseName, type);
+					});
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 

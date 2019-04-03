@@ -13,6 +13,7 @@ namespace LinqToDB.Linq
 	using Async;
 	using Builder;
 	using Common;
+	using Common.Internal.Cache;
 	using Data;
 	using Extensions;
 	using LinqToDB.Expressions;
@@ -20,6 +21,21 @@ namespace LinqToDB.Linq
 
 	static partial class QueryRunner
 	{
+		public static class Cache<T>
+		{
+			static Cache()
+			{
+				Query.CacheCleaners.Add(ClearCache);
+			}
+
+			public static void ClearCache()
+			{
+				QueryCache.Compact(1);
+			}
+
+			internal static MemoryCache QueryCache { get; } = new MemoryCache(new MemoryCacheOptions());
+		}
+
 		#region Mapper
 
 		class Mapper<T>
