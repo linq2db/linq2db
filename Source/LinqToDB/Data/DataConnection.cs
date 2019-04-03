@@ -1078,8 +1078,7 @@ namespace LinqToDB.Data
 				if (value < 0)
 				{
 					_commandTimeout = null;
-					if (_command != null)
-						DisposeCommand();
+					DisposeCommand();
 				}
 				else
 				{
