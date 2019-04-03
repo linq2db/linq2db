@@ -71,11 +71,11 @@ namespace LinqToDB.ServiceModel
 					case TypeCode.Decimal  : return ((decimal) value).ToString(CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return ((double)  value).ToString(CultureInfo.InvariantCulture);
 					case TypeCode.Single   : return ((float)   value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.DateTime : return ((DateTime)value).ToString("o");
+					case TypeCode.DateTime : return ((DateTime)value).ToBinary().ToString(CultureInfo.InvariantCulture);
 				}
 
 				if (type == typeof(DateTimeOffset))
-					return ((DateTimeOffset)value).ToString("o");
+					return  ((DateTimeOffset)value).UtcTicks.ToString(CultureInfo.InvariantCulture);
 
 				return Converter.ChangeTypeTo<string>(value);
 			}
@@ -500,11 +500,11 @@ namespace LinqToDB.ServiceModel
 					case TypeCode.Decimal  : return decimal. Parse(str, CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return double.  Parse(str, CultureInfo.InvariantCulture);
 					case TypeCode.Single   : return float.   Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.DateTime : return DateTime.ParseExact(str, "o", CultureInfo.InvariantCulture);
+					case TypeCode.DateTime : return DateTime.FromBinary(long.Parse(str, CultureInfo.InvariantCulture));
 				}
 
 				if (type == typeof(DateTimeOffset))
-					return DateTimeOffset.ParseExact(str, "o", CultureInfo.InvariantCulture);
+					return new DateTimeOffset(long.Parse(str, CultureInfo.InvariantCulture), TimeSpan.Zero);
 
 				return Converter.ChangeType(str, type);
 			}
