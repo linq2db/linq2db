@@ -925,7 +925,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1666Test([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		[ActiveIssue(1666)]
+		public void GroupByDateTimeOffsetDateTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
