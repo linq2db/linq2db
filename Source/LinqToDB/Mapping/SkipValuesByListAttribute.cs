@@ -9,6 +9,7 @@ namespace LinqToDB.Mapping
 	/// <see cref="SkipValuesOnUpdateAttribute"/> based on <see cref="SkipModification.Update"/>/> or a
 	/// custom Attribute derived from this to override <see cref="SkipBaseAttribute.ShouldSkip"/>
 	/// </summary>
+	[CLSCompliant(false)]
 	public abstract class SkipValuesByListAttribute: SkipBaseAttribute
 	{
 		/// <summary>

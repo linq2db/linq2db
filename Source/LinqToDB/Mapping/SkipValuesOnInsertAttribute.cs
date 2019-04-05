@@ -1,8 +1,11 @@
-﻿namespace LinqToDB.Mapping
+﻿using System;
+
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Attribute for skipping specific values on insert.
 	/// </summary>
+	[CLSCompliant(false)]
 	public class SkipValuesOnInsertAttribute : SkipValuesByListAttribute
 	{
 		/// <summary>
