@@ -252,18 +252,6 @@ namespace LinqToDB.Mapping
 		/// <returns>
 		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
-		[Obsolete("Use 'GetRegisteredTypes()' method instead.")]
-		public Type[] GetEntites()
-		{
-			return GetRegisteredTypes();
-		}
-
-		/// <summary>
-		/// Enumerates types, registered by FluentMetadataBuilder.
-		/// </summary>
-		/// <returns>
-		/// Returns array with all types, mapped by fluent mappings.
-		/// </returns>
 		public Type[] GetRegisteredTypes()
 		{
 			if (MetadataReader is FluentMetadataReader fluent)
