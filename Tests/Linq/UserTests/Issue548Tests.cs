@@ -53,6 +53,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[Category("SkipCI")]
 		[Test, Category("WindowsOnly")]
 		public void Test2()
 		{
@@ -136,7 +137,6 @@ namespace Tests.UserTests
 		/// <param name="ms"></param>
 		/// <param name="semaphore1"></param>
 		/// <param name="semaphore2"></param>
-		[Category("SkipCI")]
 		private void Test2Internal1(MappingSchema ms, Semaphore semaphore1, Semaphore semaphore2)
 		{
 			try
