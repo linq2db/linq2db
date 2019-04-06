@@ -7,6 +7,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]
@@ -912,6 +913,39 @@ namespace Tests.Linq
 				AreEqual(
 					from t in    Types select           Sql.DateAdd(datePart, 5, t.DateTimeValue). Value.Date,
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(datePart, 5, t.DateTimeValue)).Value.Date);
+			}
+		}
+
+		[Table("Transactions")]
+		private class Transaction
+		{
+			[PrimaryKey] public int TransactionId { get; set; }
+			[Column]public DateTimeOffset TransactionDate { get; set; }
+		}
+
+		[Test]
+		[ActiveIssue(1666)]
+		public void GroupByDateTimeOffsetDateTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (db.CreateLocalTable<Transaction>())
+				{
+					db.Insert(new Transaction() { TransactionId = 1, TransactionDate = DateTime.Now });
+					db.Insert(new Transaction() { TransactionId = 2, TransactionDate = DateTime.Now.AddMinutes(-1) });
+					db.Insert(new Transaction() { TransactionId = 3, TransactionDate = DateTime.Now.AddMinutes(-2) });
+					db.Insert(new Transaction() { TransactionId = 4, TransactionDate = DateTime.Now.AddDays(-1) });
+					db.Insert(new Transaction() { TransactionId = 5, TransactionDate = DateTime.Now.AddDays(-2) });
+
+					var expected = db.GetTable<Transaction>().ToList()
+																.GroupBy(d => d.TransactionDate.Date)
+																.Select(x => new { x.Key, Count = x.Count() })
+																.OrderBy(x => x.Key);
+					var actual   = db.GetTable<Transaction>().GroupBy(d => d.TransactionDate.Date)
+																.Select(x => new { x.Key, Count = x.Count() })
+																.OrderBy(x => x.Key);
+					Assert.That(actual, Is.EqualTo(expected));
+				}
 			}
 		}
 	}
