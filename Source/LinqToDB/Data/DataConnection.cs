@@ -185,9 +185,11 @@ namespace LinqToDB.Data
 			{
 				var connection = connectionFactory();
 
-				if (!Configuration.AvoidSpecificDataProviderAPI && !DataProvider.IsCompatibleConnection(connection))
+				var baseConnection = connection is IAsyncDbConnection asyncConnection ? asyncConnection.Connection : connection;
+
+				if (!Configuration.AvoidSpecificDataProviderAPI && !DataProvider.IsCompatibleConnection(baseConnection))
 					throw new LinqToDBException(
-						$"DataProvider '{DataProvider}' and connection '{connection}' are not compatible.");
+						$"DataProvider '{DataProvider}' and connection '{baseConnection}' are not compatible.");
 
 				return connection;
 			};
@@ -240,13 +242,14 @@ namespace LinqToDB.Data
 
 			InitConfig();
 
-			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(connection))
+			_connection = AsyncFactory.Create(connection);
+
+			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(_connection.Connection))
 				throw new LinqToDBException(
-					$"DataProvider '{dataProvider}' and connection '{connection}' are not compatible.");
+					$"DataProvider '{dataProvider}' and connection '{_connection.Connection}' are not compatible.");
 
 			DataProvider       = dataProvider;
 			MappingSchema      = DataProvider.MappingSchema;
-			_connection        = AsyncFactory.Create(connection);
 			_disposeConnection = disposeConnection;
 		}
 
