@@ -1347,7 +1347,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue1613Test1([AllSqlServerDataContext] string context)
+		public void Issue1613Test1([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateData()))
@@ -1363,7 +1363,7 @@ namespace Tests.DataProvider
 		}
 		
 		[Test, ActiveIssue(1666)]
-		public void Issue1613Test2([AllSqlServerDataContext] string context)
+		public void Issue1613Test2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateData()))
@@ -1379,7 +1379,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test, ActiveIssue(1666)]
-		public void Issue1613Test3([AllSqlServerDataContext] string context)
+		public void Issue1613Test3([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateData()))
