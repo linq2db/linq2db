@@ -52,7 +52,9 @@ namespace LinqToDB.DataProvider.MySql
 				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
 				select new TableInfo
 				{
-					TableID            = catalog + ".." + name,
+					// The latest MySql returns FK information with lowered schema names.
+					//
+					TableID            = catalog?.ToLower() + ".." + name,
 					CatalogName        = catalog,
 					SchemaName         = "",
 					TableName          = name,
@@ -66,7 +68,7 @@ namespace LinqToDB.DataProvider.MySql
 				let name    = t.Field<string>("TABLE_NAME")
 				select new TableInfo
 				{
-					TableID         = catalog + ".." + name,
+					TableID         = catalog?.ToLower() + ".." + name,
 					CatalogName     = catalog,
 					SchemaName      = "",
 					TableName       = name,
@@ -81,10 +83,10 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(@"
 			SELECT
-					CONCAT(k.CONSTRAINT_SCHEMA,'..',k.TABLE_NAME)  as TableID,
-					k.CONSTRAINT_NAME                              as PrimaryKeyName,
-					k.COLUMN_NAME                                  as ColumnName,
-					k.ORDINAL_POSITION                             as Ordinal
+					CONCAT(lower(k.CONSTRAINT_SCHEMA),'..',k.TABLE_NAME) as TableID,
+					k.CONSTRAINT_NAME                                    as PrimaryKeyName,
+					k.COLUMN_NAME                                        as ColumnName,
+					k.ORDINAL_POSITION                                   as Ordinal
 				FROM
 					INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
 					JOIN
@@ -111,7 +113,7 @@ namespace LinqToDB.DataProvider.MySql
 				let dataType = c.Field<string>("DATA_TYPE")
 				select new ColumnInfo
 				{
-					TableID      = c.Field<string>("TABLE_SCHEMA") + ".." + c.Field<string>("TABLE_NAME"),
+					TableID      = c.Field<string>("TABLE_SCHEMA")?.ToLower() + ".." + c.Field<string>("TABLE_NAME"),
 					Name         = c.Field<string>("COLUMN_NAME"),
 					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
@@ -128,7 +130,7 @@ namespace LinqToDB.DataProvider.MySql
 //				let dataType = c.Field<string>("DATA_TYPE")
 //				select new ColumnInfo
 //				{
-//					TableID      = c.Field<string>("VIEW_SCHEMA") + ".." + c.Field<string>("VIEW_NAME"),
+//					TableID      = c.Field<string>("VIEW_SCHEMA")?.ToLower() + ".." + c.Field<string>("VIEW_NAME"),
 //					Name         = c.Field<string>("COLUMN_NAME"),
 //					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
 //					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
@@ -172,15 +174,17 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var fks = ((DbConnection)dataConnection.Connection).GetSchema("Foreign Key Columns");
 
+			//DataTable fks = ((dynamic)dataConnection.Connection).GetSchemaCollection("Foreign Key Columns", null);
+
 			return
 			(
 				from fk in fks.AsEnumerable()
 				select new ForeignKeyInfo
 				{
 					Name         = fk.Field<string>("CONSTRAINT_NAME"),
-					ThisTableID  = fk.Field<string>("TABLE_SCHEMA")   + ".." + fk.Field<string>("TABLE_NAME"),
+					ThisTableID  = fk.Field<string>("TABLE_SCHEMA")?.ToLower() + ".." + fk.Field<string>("TABLE_NAME"),
 					ThisColumn   = fk.Field<string>("COLUMN_NAME"),
-					OtherTableID = fk.Field<string>("REFERENCED_TABLE_SCHEMA") + ".." + fk.Field<string>("REFERENCED_TABLE_NAME"),
+					OtherTableID = fk.Field<string>("REFERENCED_TABLE_SCHEMA")?.ToLower() + ".." + fk.Field<string>("REFERENCED_TABLE_NAME"),
 					OtherColumn  = fk.Field<string>("REFERENCED_COLUMN_NAME"),
 					Ordinal      = Converter.ChangeTypeTo<int>(fk["ORDINAL_POSITION"]),
 				}
@@ -372,6 +376,13 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
+		}
+
+		protected override StringComparison ForeignKeyColumnComparison(string column)
+		{
+			// The latest MySql returns FK information with lowered schema names.
+			//
+			return column.All(char.IsLower) ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 		}
 	}
 }
