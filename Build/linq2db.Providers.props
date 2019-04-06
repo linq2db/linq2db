@@ -5,7 +5,7 @@
 		<PackageReference Include="Npgsql" Version="3.2.7" />
 		<PackageReference Include="Mono.Cecil" Version="0.10.0" />
 		<PackageReference Include="MySql.Data" Version="8.0.15" Alias="MySqlData" />
-		<PackageReference Include="MySqlConnector" Version="0.49.0" Alias="MySqlConnector" />
+		<PackageReference Include="MySqlConnector" Version="0.51.1" Alias="MySqlConnector" />
 
 		<Folder Include="npgsql4\net451\" />
 		<Folder Include="npgsql4\netstandard2.0\" />
