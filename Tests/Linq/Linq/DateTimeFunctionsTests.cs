@@ -49,8 +49,11 @@ namespace Tests.Linq
 			{
 				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
 
-				var delta = dbUtcNow - DateTime.UtcNow;
-				Assert.IsTrue(delta.Between(TimeSpan.FromSeconds(-5), TimeSpan.FromSeconds(5)));
+				var now   = DateTime.UtcNow;
+				var delta = now - dbUtcNow;
+				Assert.IsTrue(
+					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)),
+					$"{now}, {dbUtcNow}, {delta}");
 
 				// we don't set kind
 				Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
@@ -58,7 +61,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue("DateTime value deserialized incorrectly over linqservice", SkipForNonLinqService = true)]
 		public void CurrentTimestampUtcClientSideParameter(
 			[IncludeDataSources(true, ProviderName.Access, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]
 			string context)
@@ -429,7 +431,7 @@ namespace Tests.Linq
 					from t in    Types select           Sql.DateAdd(Sql.DateParts.Second, 41, t.DateTimeValue). Value.Second,
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, 41, t.DateTimeValue)).Value.Second);
 		}
-		
+
 		[Test]
 		public void DateAddMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
 		{

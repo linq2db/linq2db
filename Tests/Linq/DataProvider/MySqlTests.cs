@@ -764,8 +764,7 @@ namespace Tests.DataProvider
 					foreach (var table in procedure.SimilarTables)
 					{
 						var tbl = expectedProc.SimilarTables
-							.Where(_ => _.TableName.ToLower() == table.TableName.ToLower())
-							.SingleOrDefault();
+							.SingleOrDefault(_ => _.TableName.ToLower() == table.TableName.ToLower());
 
 						Assert.IsNotNull(tbl);
 					}
@@ -779,7 +778,7 @@ namespace Tests.DataProvider
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-				var res = schema.Tables.Where(c => c.ID.Contains("fulltextindex")).FirstOrDefault();
+				var res = schema.Tables.FirstOrDefault(c => c.ID.ToLower().Contains("fulltextindex"));
 				Assert.AreNotEqual(null, res);
 			}
 		}

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
@@ -93,10 +94,12 @@ namespace Tests.Linq
 			void TestMethod(string columnName, string schemaName = null)
 			{
 				var ms = CreateMappingSchema(columnName, schemaName);
-				using (var db = GetDataContext(context, ms))
+				using (var db = (DataConnection)GetDataContext(context, ms))
 				using (db.CreateLocalTable<SampleClass>())
 				{
 					db.Insert(new SampleClass() { Id = 1, StrKey = "K1", Value = "V1" });
+					if (!db.LastQuery.Contains(columnName))
+						throw new Exception("Invalid schema");
 				}
 			}
 

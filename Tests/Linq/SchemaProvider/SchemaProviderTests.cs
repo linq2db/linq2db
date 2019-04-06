@@ -2,16 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+
 using NUnit.Framework;
 
 namespace Tests.SchemaProvider
 {
-	using LinqToDB;
-	using LinqToDB.Data;
-	using LinqToDB.DataProvider.SqlServer;
-	using LinqToDB.Mapping;
-	using LinqToDB.SchemaProvider;
-
 	[TestFixture]
 	public class SchemaProviderTests : TestBase
 	{
