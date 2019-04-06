@@ -1384,7 +1384,7 @@ namespace Tests.DataProvider
 			}
 		}
 		
-		[Test, ActiveIssue(1613)]
+		[Test, ActiveIssue(1666)]
 		public void Issue1613Test2([AllSqlServerDataContext] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1400,7 +1400,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, ActiveIssue(1613)]
+		[Test, ActiveIssue(1666)]
 		public void Issue1613Test3([AllSqlServerDataContext] string context)
 		{
 			using (var db = GetDataContext(context))
