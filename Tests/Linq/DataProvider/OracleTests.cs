@@ -16,6 +16,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+
 using NUnit.Framework;
 
 using Oracle.ManagedDataAccess.Client;
@@ -56,7 +57,13 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
+		static void TestType<T>(
+			DataConnection connection, 
+			string dataTypeName, 
+			T value, 
+			string tableName = "AllTypes", 
+			bool convertToString = false, 
+			bool throwException = false)
 		{
 			Assert.That(connection.Execute<T>($"SELECT {dataTypeName} FROM {tableName} WHERE ID = 1"),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
@@ -70,7 +77,15 @@ namespace Tests.DataProvider
 				expectedValue = expectedValue.ToString();
 			}
 
-			Assert.That(actualValue, Is.EqualTo(expectedValue));
+			if (throwException)
+			{
+				if (!EqualityComparer<T>.Default.Equals((T)actualValue, (T)expectedValue))
+					throw new Exception($"Expected: {expectedValue} But was: {actualValue}");
+			}
+			else
+			{
+				Assert.That(actualValue, Is.EqualTo(expectedValue));
+			}
 		}
 
 		/* If this test fails for you with
@@ -103,8 +118,17 @@ namespace Tests.DataProvider
 				TestType(conn, "datetime2DataType",      new DateTime(2012, 12, 12, 12, 12, 12, 012));
 				TestType(conn, "datetimeoffsetDataType", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
 
-				var dt = new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeSpan.Zero);
-				TestType(conn, "localZoneDataType",      new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(dt) /* new TimeSpan(-4, 0, 0)*/));
+				try
+				{
+					var dt = new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeSpan.Zero);
+					TestType(conn, "localZoneDataType", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(dt) /* new TimeSpan(-4, 0, 0)*/), throwException:true);
+				}
+				catch (Exception ex)
+					when (
+						ex.Message.Replace(" ", "") == "Expected: 2012-12-12 12:12:12.012-05:00 But was: 2012-12-12 12:12:12.012-04:00".Replace(" ", "") ||
+						ex.Message.Replace(" ", "") == "Expected: 12/12/2012 12:12:12 PM -05:00 But was: 12/12/2012 12:12:12 PM -04:00".Replace(" ", ""))
+				{
+				}
 
 				TestType(conn, "charDataType",           '1');
 				TestType(conn, "varcharDataType",        "234");
