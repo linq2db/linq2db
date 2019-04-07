@@ -299,7 +299,7 @@ namespace Tests
 			}
 		}
 
-		protected override Type GetConnectionType()
+		protected internal override Type GetConnectionType()
 		{
 			if (_connectionType == null)
 				lock (SyncRoot)
