@@ -400,8 +400,6 @@ namespace Tests.Mapping
 
 			using (var db = GetDataContext(context, ms))
 			using (var table = db.CreateLocalTable(
-				context,
-				"25",
 				new[] { new DescendantEntity{Id = 1, Value = 0}, new DescendantEntity{Id = 2, Value = 0} })
 			)
 			{

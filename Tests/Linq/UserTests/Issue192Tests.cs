@@ -75,8 +75,8 @@ namespace Tests.UserTests
 			ms.SetConvertExpression<Guid?,  DataParameter>(_ => DataParameter.VarChar(null, _.ToString()));
 			ms.SetConvertExpression<string, Guid?>(_ => Guid.Parse(_));
 
-			using (var db = GetDataContext(context, ms))
-			using (var tbl = db.CreateLocalTable<TypeConvertTable>(context, nameof(Test)))
+			using (var db  = GetDataContext(context, ms))
+			using (var tbl = db.CreateLocalTable<TypeConvertTable>())
 			{
 				var notVerified = new TypeConvertTable
 				{

@@ -151,8 +151,8 @@ namespace Tests.xUpdate
 				});
 			MappingSchema.Default.SetConverter<string, List<(uint, string)>>(JsonConvert.DeserializeObject<List<(uint, string)>>);
 
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable<CreateTableTypes>(context, "1"))
+			using (var db    = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable<CreateTableTypes>())
 			{
 				var defaultValue = new CreateTableTypes { Id = 1 };
 				var testValue    = new CreateTableTypes { Id = 2 };
