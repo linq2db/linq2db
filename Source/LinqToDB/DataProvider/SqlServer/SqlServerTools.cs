@@ -54,11 +54,26 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		}
 
-#if !NETSTANDARD1_6
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		private static Func<string, string> TryToUseCommandBuilder()
 		{
-			var commandBuilder = new SqlCommandBuilder();
-			return commandBuilder.QuoteIdentifier;
+			return new SqlCommandBuilder().QuoteIdentifier;
+		}
+#endif
+
+#if NETSTANDARD2_0
+		// this sad code needed for mono linker https://github.com/linq2db/linq2db/issues/1487
+		private static Func<string, string> TryToUseCommandBuilder()
+		{
+			var type = Type.GetType("System.Data.SqlClient.SqlCommandBuilder, System.Data.SqlClient", false);
+			if (type != null)
+			{
+				var mi = type.GetMethod("QuoteIdentifier", BindingFlags.Public | BindingFlags.Instance);
+				if (mi != null)
+					return (Func<string, string>)Delegate.CreateDelegate(typeof(Func<string, string>), Activator.CreateInstance(type), mi);
+			}
+
+			return null;
 		}
 #endif
 
