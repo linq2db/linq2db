@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		protected virtual Type GetConnectionType()
+		protected internal virtual Type GetConnectionType()
 		{
 			if (_connectionType == null)
 				lock (SyncRoot)
