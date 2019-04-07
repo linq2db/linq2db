@@ -42,7 +42,7 @@ namespace LinqToDB.DataProvider
 #if NETSTANDARD1_6 || NETSTANDARD2_0
 		public override Type DataReaderType => _dataReaderType ?? (_dataReaderType = Type.GetType(DataReaderTypeName, true));
 
-		protected virtual Type GetConnectionType()
+		protected internal virtual Type GetConnectionType()
 		{
 			if (_connectionType == null)
 				lock (SyncRoot)
