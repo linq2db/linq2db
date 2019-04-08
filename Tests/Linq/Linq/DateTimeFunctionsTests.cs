@@ -43,7 +43,8 @@ namespace Tests.Linq
 
 		[Test]
 		public void CurrentTimestampUtc(
-			[DataSources(ProviderName.Access, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]
+			[DataSources(ProviderName.Access, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe,
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
