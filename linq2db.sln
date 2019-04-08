@@ -97,6 +97,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.Sybase.DataAction.nuspec = NuGet\linq2db.Sybase.DataAction.nuspec
 		NuGet\linq2db.Sybase.nuspec = NuGet\linq2db.Sybase.nuspec
 		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
+		NuGet\linq2db.Tools.nuspec = NuGet\linq2db.Tools.nuspec
 		NuGet\Pack.bat = NuGet\Pack.bat
 		NuGet\PackAV.bat = NuGet\PackAV.bat
 		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
@@ -244,7 +245,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySqlConnector", "MySqlConn
 		NuGet\MySqlConnector\LinqToDB.MySqlConnector.Tools.ttinclude = NuGet\MySqlConnector\LinqToDB.MySqlConnector.Tools.ttinclude
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Tools", "Source\LinqToDB.Tools\LinqToDB.Tools.csproj", "{B6D0309F-61AA-4F2B-B918-5446609CBECD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Tools", "Source\LinqToDB.Tools\LinqToDB.Tools.csproj", "{B6D0309F-61AA-4F2B-B918-5446609CBECD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
