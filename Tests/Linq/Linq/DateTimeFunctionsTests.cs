@@ -968,7 +968,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[Category("SkipCI")]
 		[ActiveIssue(1675)]
 		public void Issue1675Test([DataSources] string context)
 		{
@@ -988,10 +987,10 @@ namespace Tests.Linq
 					var query = db.GetTable<Batch>()
 							.OrderByDescending(x => x.Id)
 							.Select(x => new
-								{
-									BatchId = x.Id,
-									CreationDate = x.Confirmations.Single().Date
-								})
+							{
+								BatchId = x.Id,
+								CreationDate = x.Confirmations.Single().Date
+							})
 							.Take(15)
 							.OrderBy(x => x.BatchId);
 
