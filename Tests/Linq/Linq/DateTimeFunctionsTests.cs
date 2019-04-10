@@ -979,10 +979,10 @@ namespace Tests.Linq
 					db.Insert(new Batch() { Id = 1 });
 					db.Insert(new Batch() { Id = 2 });
 					db.Insert(new Batch() { Id = 3 });
-					db.Insert(new Confirmation { BatchId = 1, Date = DateTime.Now });
-					db.Insert(new Confirmation { BatchId = 2, Date = DateTime.Now.AddSeconds(5) });
-					db.Insert(new Confirmation { BatchId = 2, Date = DateTime.Now.AddSeconds(15) });
-					db.Insert(new Confirmation { BatchId = 3, Date = DateTime.Now });
+					db.Insert(new Confirmation { BatchId = 1, Date = DateTime.Parse("09 Apr 2019 14:30:00 GMT") });
+					db.Insert(new Confirmation { BatchId = 2, Date = DateTime.Parse("09 Apr 2019 14:30:20 GMT") });
+					db.Insert(new Confirmation { BatchId = 2, Date = DateTime.Parse("09 Apr 2019 14:30:25 GMT") });
+					db.Insert(new Confirmation { BatchId = 3, Date = DateTime.Parse("09 Apr 2019 14:30:35 GMT") });
 					
 					var query = db.GetTable<Batch>()
 							.OrderByDescending(x => x.Id)
@@ -999,6 +999,9 @@ namespace Tests.Linq
 					Assert.That(res.Count,      Is.EqualTo(2));
 					Assert.That(res[0].BatchId, Is.EqualTo(2));
 					Assert.That(res[1].BatchId, Is.EqualTo(3));
+					Assert.That(res[0].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:20 GMT")));
+					Assert.That(res[1].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:35 GMT")));
+
 				}
 			}
 		}
