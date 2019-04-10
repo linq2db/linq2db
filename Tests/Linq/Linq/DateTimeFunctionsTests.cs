@@ -989,7 +989,7 @@ namespace Tests.Linq
 							.Select(x => new
 							{
 								BatchId = x.Id,
-								CreationDate = x.Confirmations.Single().Date
+								CreationDate = x.Confirmations.FirstOrDefault().Date
 							})
 							.Take(2)
 							.OrderBy(x => x.BatchId);
