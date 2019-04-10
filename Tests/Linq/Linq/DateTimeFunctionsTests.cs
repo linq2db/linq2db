@@ -996,9 +996,9 @@ namespace Tests.Linq
 
 					var res = query.ToList();
 
-					Assert.That(res.Count,      Is.EqualTo(2));
-					Assert.That(res[0].BatchId, Is.EqualTo(2));
-					Assert.That(res[1].BatchId, Is.EqualTo(3));
+					Assert.That(res.Count,           Is.EqualTo(2));
+					Assert.That(res[0].BatchId,      Is.EqualTo(2));
+					Assert.That(res[1].BatchId,      Is.EqualTo(3));
 					Assert.That(res[0].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:20 GMT")));
 					Assert.That(res[1].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:35 GMT")));
 
