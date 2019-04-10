@@ -953,7 +953,7 @@ namespace Tests.Linq
 
 		public class Batch
 		{
-			[Column][PrimaryKey][Identity]
+			[PrimaryKey]
 			public int Id { get; set; }
 			[Association(ThisKey = "Id", OtherKey = "BatchId", CanBeNull = false)]
 			public List<Confirmation> Confirmations { get; set; }
@@ -963,7 +963,7 @@ namespace Tests.Linq
 		{
 			[Column]
 			public int BatchId { get; set; }
-			[Column][NotNull]
+			[Column]
 			public DateTime Date { get; set; }
 		}
 
@@ -980,10 +980,10 @@ namespace Tests.Linq
 					db.Insert(new Batch() { Id = 2 });
 					db.Insert(new Batch() { Id = 3 });
 					db.Insert(new Confirmation { BatchId = 1, Date = DateTime.Now });
-					db.Insert(new Confirmation { BatchId = 1, Date = DateTime.Now.AddSeconds(-5) });
 					db.Insert(new Confirmation { BatchId = 2, Date = DateTime.Now.AddSeconds(5) });
 					db.Insert(new Confirmation { BatchId = 2, Date = DateTime.Now.AddSeconds(15) });
-
+					db.Insert(new Confirmation { BatchId = 3, Date = DateTime.Now });
+					
 					var query = db.GetTable<Batch>()
 							.OrderByDescending(x => x.Id)
 							.Select(x => new
@@ -991,10 +991,14 @@ namespace Tests.Linq
 								BatchId = x.Id,
 								CreationDate = x.Confirmations.Single().Date
 							})
-							.Take(15)
+							.Take(2)
 							.OrderBy(x => x.BatchId);
 
 					var res = query.ToList();
+
+					Assert.That(res.Count,      Is.EqualTo(2));
+					Assert.That(res[0].BatchId, Is.EqualTo(2));
+					Assert.That(res[1].BatchId, Is.EqualTo(3));
 				}
 			}
 		}
