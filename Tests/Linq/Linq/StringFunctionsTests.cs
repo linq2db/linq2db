@@ -14,15 +14,18 @@ namespace Tests.Linq
 		class SampleClass
 		{
 			[Column] public int Id    { get; set; }
-			[Column(Length = 50)] public string Value1 { get; set; }
-			[Column(Length = 50)] public string Value2 { get; set; }
+			[Column(Length = 50, CanBeNull = true)] public string Value1 { get; set; }
+			[Column(Length = 50, CanBeNull = true)] public string Value2 { get; set; }
+			[Column(Length = 50, CanBeNull = true)] public string Value3 { get; set; }
 		}
 
 		public class StringTestSourcesAttribute : IncludeDataSourcesAttribute
 		{
 			public StringTestSourcesAttribute(bool includeLinqService = true) : base(includeLinqService, 
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95,
-				ProviderName.MySql
+				TestProvName.AllSqlServer2016Plus,
+				TestProvName.AllSQLite,
+				TestProvName.AllPostgreSQL,
+				ProviderName.SapHana
 				)
 			{
 			}
@@ -34,7 +37,7 @@ namespace Tests.Linq
 			var data = GenerateData();
 
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, "AggregationTest", data))
+			using (var table = db.CreateLocalTable(data))
 			{
 				var actual = from t in table
 					group t.Value1 by new {t.Id, Value = t.Value1}
@@ -64,7 +67,7 @@ namespace Tests.Linq
 			var data = GenerateData();
 
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, "AggregationSelectorTest", data))
+			using (var table = db.CreateLocalTable(data))
 			{
 				var actual = from t in table
 					group t by new {t.Id, Value = t.Value1}
@@ -92,7 +95,7 @@ namespace Tests.Linq
 			var data = GenerateData();
 
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, "FinalAggregationTest", data))
+			using (var table = db.CreateLocalTable(data))
 			{
 				var actual   = table.Select(t => t.Value1).StringAggregate(" -> ");
 				var expected = data .Select(t => t.Value1).StringAggregate(" -> ");
@@ -106,7 +109,7 @@ namespace Tests.Linq
 			var data = GenerateData();
 
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, "FinalAggregationSelectorTest", data))
+			using (var table = db.CreateLocalTable(data))
 			{
 				var actual   = table.AsQueryable().StringAggregate(" -> ", t => t.Value1);
 				var expected = data .StringAggregate(" -> ", t => t.Value1);
@@ -120,19 +123,37 @@ namespace Tests.Linq
 			var data = GenerateData();
 
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, "ConcatWSTest", data))
+			using (var table = db.CreateLocalTable(data))
 			{
-				var actual   = table.Select(t => Sql.ConcatWS(" -> ", t.Value1, t.Value2));
-				var expected = data .Select(t => Sql.ConcatWS(" -> ", t.Value1, t.Value2));
+				var actualOne   = table.Select(t => Sql.ConcatWS(" -> ", t.Value2));
+				var expectedOne = data .Select(t => Sql.ConcatWS(" -> ", t.Value2));
+
+				Assert.AreEqual(expectedOne, actualOne);
+
+				var actualOneNull   = table.Select(t => Sql.ConcatWS(" -> ", t.Value3));
+				var expectedOneNull = data .Select(t => Sql.ConcatWS(" -> ", t.Value3));
+
+				Assert.AreEqual(expectedOneNull, actualOneNull);
+
+				var actual   = table.Select(t => Sql.ConcatWS(" -> ", t.Value3, t.Value1, t.Value2));
+				var expected = data .Select(t => Sql.ConcatWS(" -> ", t.Value3, t.Value1, t.Value2));
+
 				Assert.AreEqual(expected, actual);
+
+				var actualAllEmpty   = table.Select(t => Sql.ConcatWS(" -> ", t.Value3, t.Value3));
+				var expectedAllEmpty = data .Select(t => Sql.ConcatWS(" -> ", t.Value3, t.Value3));
+
+				Assert.AreEqual(expectedAllEmpty, actualAllEmpty);
 			}
 		}
+
 		private static SampleClass[] GenerateData()
 		{
 			var data = new[]
 			{
 				new SampleClass { Id = 1, Value1 = "V1", Value2 = "V2"},
-				new SampleClass { Id = 2, Value1 = "Z1", Value2 = "Z2"}
+				new SampleClass { Id = 2, Value1 = null, Value2 = "Z2"},
+				new SampleClass { Id = 3, Value1 = "Z1", Value2 = null}
 			};
 			return data;
 		}
