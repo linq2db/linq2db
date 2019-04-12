@@ -539,29 +539,34 @@ namespace LinqToDB.ServiceModel
 
 					if (type == null)
 					{
-					type = LinqService.TypeResolver(str);
-					if (type == null)
-					{
-						if (Configuration.LinqService.ThrowUnresolvedTypeException)
-							throw new LinqToDBException(
-								$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
+#if !NETSTANDARD2_0
+						type = LinqService.TypeResolver(str);
 
-						UnresolvedTypes.Add(str);
+						if (type == null)
+						{
+	#endif
+							if (Configuration.LinqService.ThrowUnresolvedTypeException)
+								throw new LinqToDBException(
+									$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
 
-						Debug.WriteLine(
-							$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.",
-							"LinqServiceSerializer");
+							UnresolvedTypes.Add(str);
+
+							Debug.WriteLine(
+								$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.",
+								"LinqServiceSerializer");
+#if !NETSTANDARD2_0
+						}
+#endif
 					}
-				}
 				}
 
 				return type;
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region QuerySerializer
+#region QuerySerializer
 
 		class QuerySerializer : SerializerBase
 		{
@@ -1256,9 +1261,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region QueryDeserializer
+#region QueryDeserializer
 
 		public class QueryDeserializer : DeserializerBase
 		{
@@ -1967,9 +1972,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region ResultSerializer
+#region ResultSerializer
 
 		class ResultSerializer : SerializerBase
 		{
@@ -2021,9 +2026,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region ResultDeserializer
+#region ResultDeserializer
 
 		class ResultDeserializer : DeserializerBase
 		{
@@ -2082,9 +2087,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region StringArraySerializer
+#region StringArraySerializer
 
 		class StringArraySerializer : SerializerBase
 		{
@@ -2101,9 +2106,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region StringArrayDeserializer
+#region StringArrayDeserializer
 
 		class StringArrayDeserializer : DeserializerBase
 		{
@@ -2120,9 +2125,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Helpers
+#region Helpers
 
 		interface IArrayHelper
 		{
@@ -2178,6 +2183,6 @@ namespace LinqToDB.ServiceModel
 			return converter(list);
 		}
 
-		#endregion
+#endregion
 	}
 }

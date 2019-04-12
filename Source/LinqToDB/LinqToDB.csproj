@@ -75,8 +75,11 @@
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
 		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
 		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
-		<Compile Remove="ServiceModel\**\*.cs;" />
+		<Compile Remove="ServiceModel\DataService.cs"></Compile>
+		<Compile Remove="ServiceModel\LinqService.cs"></Compile>
 		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
 		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
+		
+		<PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
 	</ItemGroup>
 </Project>
