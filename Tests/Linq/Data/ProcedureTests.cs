@@ -28,9 +28,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -74,8 +72,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void VariableResultsTest([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void VariableResultsTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{

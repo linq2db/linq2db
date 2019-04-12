@@ -102,10 +102,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void GetDataProviderTest([IncludeDataSources(false,
-			ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void GetDataProviderTest([IncludeDataSources(ProviderName.DB2, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 
@@ -252,8 +249,10 @@ namespace Tests.Data
 			}
 		}
 
+		// informix connection limits interfere with test
 		[Test]
-		public void MultipleConnectionsTest([DataSources] string context)
+		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
+		public void MultipleConnectionsTest([DataSources(ProviderName.Informix)] string context)
 		{
 			var exceptions = new ConcurrentBag<Exception>();
 
@@ -278,6 +277,98 @@ namespace Tests.Data
 
 			if (exceptions.Count > 0)
 				throw new AggregateException(exceptions);
+		}
+
+		[Test]
+		public async Task DataConnectionCloseAsync([DataSources(false)] string context)
+		{
+			var db = new DataConnection(context);
+
+			try
+			{
+				await db.GetTable<Parent>().ToListAsync();
+			}
+			finally
+			{
+				var tid = Thread.CurrentThread.ManagedThreadId;
+
+				await db.CloseAsync();
+
+				db.Dispose();
+
+				if (tid == Thread.CurrentThread.ManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
+
+		[Test]
+		public async Task DataConnectionDisposeAsync([DataSources(false)] string context)
+		{
+			var db = new DataConnection(context);
+
+			try
+			{
+				await db.GetTable<Parent>().ToListAsync();
+			}
+			finally
+			{
+				var tid = Thread.CurrentThread.ManagedThreadId;
+
+				await db.DisposeAsync();
+
+				if (tid == Thread.CurrentThread.ManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
+
+		[Test]
+		public void TestOnBeforeConnectionOpenEvent()
+		{
+			var open = false;
+			var openAsync = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnBeforeConnectionOpen += (dc, cn) =>
+				{
+					if (cn.State == ConnectionState.Closed)
+						open = true;
+				};
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() =>
+				{
+					if (cn.State == ConnectionState.Closed)
+						openAsync = true;
+				});
+				Assert.False(open);
+				Assert.False(openAsync);
+				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.True(open);
+				Assert.False(openAsync);
+			}
+		}
+
+		[Test]
+		public async Task TestAsyncOnBeforeConnectionOpenEvent()
+		{
+			var open = false;
+			var openAsync = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnBeforeConnectionOpen += (dc, cn) =>
+					{
+						if (cn.State == ConnectionState.Closed)
+							open = true;
+					};
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => 
+						{
+							if (cn.State == ConnectionState.Closed)
+								openAsync = true;
+						});
+				Assert.False(open);
+				Assert.False(openAsync);
+				await conn.SelectAsync(() => 1);
+				Assert.False(open);
+				Assert.True(openAsync);
+			}
 		}
 	}
 }

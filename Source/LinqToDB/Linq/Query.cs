@@ -351,12 +351,14 @@ namespace LinqToDB.Linq
 			Func<Expression,object[],object>   accessor,
 			Func<Expression,object[],DataType> dataTypeAccessor,
 			Func<Expression,object[],string>   dbTypeAccessor,
+			Func<Expression,object[],int?>     sizeAccessor,
 			SqlParameter                       sqlParameter)
 		{
 			Expression       = expression;
 			Accessor         = accessor;
 			DataTypeAccessor = dataTypeAccessor;
 			DbTypeAccessor   = dbTypeAccessor;
+			SizeAccessor     = sizeAccessor;
 			SqlParameter     = sqlParameter;
 		}
 
@@ -364,6 +366,7 @@ namespace LinqToDB.Linq
 		public readonly Func<Expression,object[],object>   Accessor;
 		public readonly Func<Expression,object[],DataType> DataTypeAccessor;
 		public readonly Func<Expression,object[],string>   DbTypeAccessor;
+		public readonly Func<Expression,object[],int?>     SizeAccessor;
 		public readonly SqlParameter                       SqlParameter;
 	}
 }

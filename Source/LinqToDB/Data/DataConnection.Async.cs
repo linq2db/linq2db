@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
+	using LinqToDB.Async;
 	using RetryPolicy;
 
 	public partial class DataConnection
@@ -20,7 +21,22 @@ namespace LinqToDB.Data
 		{
 			await EnsureConnectionAsync(cancellationToken);
 
-			return BeginTransaction();
+			// If transaction is open, we dispose it, it will rollback all changes.
+			//
+			TransactionAsync?.Dispose();
+
+			// Create new transaction object.
+			//
+			TransactionAsync = await _connection.BeginTransactionAsync(cancellationToken);
+
+			_closeTransaction = true;
+
+			// If the active command exists.
+			//
+			if (_command != null)
+				_command.Transaction = Transaction;
+
+			return new DataConnectionTransaction(this);
 		}
 
 		/// <summary>
@@ -33,7 +49,22 @@ namespace LinqToDB.Data
 		{
 			await EnsureConnectionAsync(cancellationToken);
 
-			return BeginTransaction(isolationLevel);
+			// If transaction is open, we dispose it, it will rollback all changes.
+			//
+			TransactionAsync?.Dispose();
+
+			// Create new transaction object.
+			//
+			TransactionAsync = await _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
+
+			_closeTransaction = true;
+
+			// If the active command exists.
+			//
+			if (_command != null)
+				_command.Transaction = Transaction;
+
+			return new DataConnectionTransaction(this);
 		}
 
 		/// <summary>
@@ -45,27 +76,31 @@ namespace LinqToDB.Data
 		{
 			if (_connection == null)
 			{
+				IDbConnection connection;
 				if (_connectionFactory != null)
-					_connection = _connectionFactory();
+					connection = _connectionFactory();
 				else
-					_connection = DataProvider.CreateConnection(ConnectionString);
+					connection = DataProvider.CreateConnection(ConnectionString);
+
+				_connection = AsyncFactory.Create(connection);
 
 				if (RetryPolicy != null)
-					_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);
+					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 			}
 
 			if (_connection.State == ConnectionState.Closed)
 			{
 				try
 				{
-					if (_connection is RetryingDbConnection retrying)
-						await retrying.OpenAsync(cancellationToken);
-					else
-						await ((DbConnection)_connection).OpenAsync(cancellationToken);
+					var task = OnBeforeConnectionOpenAsync?.Invoke(this, _connection.Connection, cancellationToken);
+					if (task != null)
+						await task;
+
+					await _connection.OpenAsync(cancellationToken);
 
 					_closeConnection = true;
 
-					var task = OnConnectionOpenedAsync?.Invoke(this, _connection, cancellationToken);
+					task = OnConnectionOpenedAsync?.Invoke(this, _connection.Connection, cancellationToken);
 					if (task != null)
 						await task;
 				}
@@ -86,6 +121,93 @@ namespace LinqToDB.Data
 					throw;
 				}
 			}
+		}
+
+		/// <summary>
+		/// Commits started (if any) transaction, associated with connection.
+		/// If underlying provider doesn't support asynchonous commit, it will be performed synchonously.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Asynchronous operation completion task.</returns>
+		public virtual async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+		{
+			if (TransactionAsync != null)
+			{
+				await TransactionAsync.CommitAsync(cancellationToken);
+
+				if (_closeTransaction)
+				{
+					TransactionAsync.Dispose();
+					TransactionAsync = null;
+
+					if (_command != null)
+						_command.Transaction = null;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Rollbacks started (if any) transaction, associated with connection.
+		/// If underlying provider doesn't support asynchonous commit, it will be performed synchonously.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Asynchronous operation completion task.</returns>
+		public virtual async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+		{
+			if (TransactionAsync != null)
+			{
+				await TransactionAsync.RollbackAsync(cancellationToken);
+
+				if (_closeTransaction)
+				{
+					TransactionAsync.Dispose();
+					TransactionAsync = null;
+
+					if (_command != null)
+						_command.Transaction = null;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Closes and dispose associated underlying database transaction/connection asynchronously.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Asynchronous operation completion task.</returns>
+		public virtual async Task CloseAsync(CancellationToken cancellationToken = default)
+		{
+			OnClosing?.Invoke(this, EventArgs.Empty);
+
+			DisposeCommand();
+
+			if (TransactionAsync != null && _closeTransaction)
+			{
+				TransactionAsync.Dispose();
+				TransactionAsync = null;
+			}
+
+			if (_connection != null)
+			{
+				if (_disposeConnection)
+				{
+					_connection.Dispose();
+					_connection = null;
+				}
+				else if (_closeConnection)
+					await _connection.CloseAsync();
+			}
+
+			OnClosed?.Invoke(this, EventArgs.Empty);
+		}
+
+		/// <summary>
+		/// Disposes connection asynchronously.
+		/// </summary>
+		/// <returns>Asynchronous operation completion task.</returns>
+		public async Task DisposeAsync(CancellationToken cancellationToken = default)
+		{
+			Disposed = true;
+			await CloseAsync(cancellationToken);
 		}
 
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)

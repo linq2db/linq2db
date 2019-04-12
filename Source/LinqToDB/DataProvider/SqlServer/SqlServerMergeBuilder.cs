@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (dataType == DataType.Binary || dataType == DataType.VarBinary)
 				{
 					// don't generate binary literal in source, as it could lead to huge SQL
-					AddSourceValueAsParameter(dataType, column.DbType, value);
+					AddSourceValueAsParameter(dataType, column.DbType, column.Length, value);
 					return;
 				}
 			}

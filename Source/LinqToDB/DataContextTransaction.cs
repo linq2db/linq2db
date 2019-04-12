@@ -139,6 +139,54 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Commits started transaction.
+		/// If underlying provider doesn't support asynchonous commit, it will be performed synchonously.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Asynchronous operation completion task.</returns>
+		public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+		{
+			if (_transactionCounter > 0)
+			{
+				var db = DataContext.GetDataConnection();
+
+				await db.CommitTransactionAsync(cancellationToken);
+
+				_transactionCounter--;
+
+				if (_transactionCounter == 0)
+				{
+					DataContext.LockDbManagerCounter--;
+					DataContext.ReleaseQuery();
+				}
+			}
+		}
+
+		/// <summary>
+		/// Rollbacks started transaction asynchonously.
+		/// If underlying provider doesn't support asynchonous rollback, it will be performed synchonously.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Asynchronous operation completion task.</returns>
+		public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+		{
+			if (_transactionCounter > 0)
+			{
+				var db = DataContext.GetDataConnection();
+
+				await db.RollbackTransactionAsync(cancellationToken);
+
+				_transactionCounter--;
+
+				if (_transactionCounter == 0)
+				{
+					DataContext.LockDbManagerCounter--;
+					DataContext.ReleaseQuery();
+				}
+			}
+		}
+
+		/// <summary>
 		/// Rollbacks started transaction (if any).
 		/// </summary>
 		public void Dispose()

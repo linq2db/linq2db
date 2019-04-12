@@ -45,8 +45,8 @@ namespace Tests.UserTests
 		[Test]
 		public void Test_ComplexNavigation([DataSources] string context)
 		{
-			using (var db  = GetDataContext(context))
-			using (var __ = db.CreateLocalTable<Table>(context, "7"))
+			using (var db = GetDataContext(context))
+			using (var __ = db.CreateLocalTable<Table>())
 			{
 				db.Insert(new Table { ID = 5 }, __.TableName);
 
@@ -73,7 +73,7 @@ namespace Tests.UserTests
 		public void Test_ObjectNavigation([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var __ = db.CreateLocalTable<Table>(context, "2"))
+			using (var __ = db.CreateLocalTable<Table>())
 			{
 				db.Insert(new Table { ID = 5 }, __.TableName);
 
@@ -96,7 +96,7 @@ namespace Tests.UserTests
 		public void Test_MethodWithProperty([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var __ = db.CreateLocalTable<Table>(context, "3"))
+			using (var __ = db.CreateLocalTable<Table>())
 			{
 				db.Insert(new Table { ID = 5 }, __.TableName);
 
@@ -111,7 +111,7 @@ namespace Tests.UserTests
 		public void Test_Method([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var __ = db.CreateLocalTable<Table>(context, "4"))
+			using (var __ = db.CreateLocalTable<Table>())
 			{
 				db.Insert(new Table { ID = 5 }, __.TableName);
 
@@ -126,7 +126,7 @@ namespace Tests.UserTests
 		public void Test_Linq([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var __ = db.CreateLocalTable<Table>(context, "5"))
+			using (var __ = db.CreateLocalTable<Table>())
 			{
 				db.Insert(new Table { ID = 5 }, __.TableName);
 

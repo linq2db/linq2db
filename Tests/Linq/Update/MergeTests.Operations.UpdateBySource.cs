@@ -12,7 +12,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test, Parallelizable(ParallelScope.None)]
-		public void SameSourceUpdateBySource([MergeBySourceDataContextSource] string context)
+		public void SameSourceUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -61,7 +61,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void SameSourceUpdateBySourceWithPredicate([MergeBySourceDataContextSource] string context)
+		public void SameSourceUpdateBySourceWithPredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -107,7 +107,7 @@ namespace Tests.xUpdate
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void OnConditionPartialSourceProjection_KnownFieldInCondition(
-			[MergeBySourceDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -156,7 +156,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void OtherSourceUpdateBySourceWithPredicate([MergeBySourceDataContextSource] string context)
+		public void OtherSourceUpdateBySourceWithPredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -209,7 +209,7 @@ namespace Tests.xUpdate
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void AnonymousSourceUpdateBySourceWithPredicate(
-			[MergeBySourceDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -270,7 +270,7 @@ namespace Tests.xUpdate
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void AnonymousListSourceUpdateBySourceWithPredicate(
-			[MergeBySourceDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -330,7 +330,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void UpdateBySourceReservedAndCaseNames([MergeBySourceDataContextSource] string context)
+		public void UpdateBySourceReservedAndCaseNames([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -391,7 +391,7 @@ namespace Tests.xUpdate
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void UpdateBySourceReservedAndCaseNamesFromList(
-			[MergeBySourceDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

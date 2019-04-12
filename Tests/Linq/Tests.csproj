@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\..\Build\linq2db.Default.props" />
 	<Import Project="..\..\Build\linq2db.Tests.props" />
+	<Import Project="..\..\Build\linq2db.Providers.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests</AssemblyName>
@@ -13,6 +14,10 @@
 
 	<ItemGroup>
 		<Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+
+		<Compile Remove="DataProvider\DB2Tests.cs" Condition="'$(Configuration)' == 'AppVeyor' OR '$(Configuration)' == 'Travis'" />
+		<Compile Remove="DataProvider\InformixTests.cs" Condition="'$(Configuration)' == 'AppVeyor' OR '$(Configuration)' == 'Travis'" />
+		<Compile Remove="DataProvider\OracleTests.cs" Condition="'$(Configuration)' == 'AppVeyor' OR '$(Configuration)' == 'Travis'" />
 
 		<None Include="..\..\Data\*">
 			<Link>Database/%(FileName)%(Extension)</Link>
@@ -27,13 +32,7 @@
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 
-		<PackageReference Include="AdoNetCore.AseClient" Version="0.13.1" />
 		<PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.12.1" />
-		<PackageReference Include="Npgsql" Version="3.2.7" />
-		<PackageReference Include="Mono.Cecil" Version="0.10.0" />
-		<PackageReference Include="MySql.Data" Version="8.0.13" Alias="MySqlData" />
-		<PackageReference Include="MySqlConnector" Version="0.49.0" Alias="MySqlConnector" />
 		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" />
 	</ItemGroup>
@@ -60,51 +59,6 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net46' ">
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
-
-		<None Update="SqlServerTypes\x64\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-
-		<None Update="x64\**\*">
-			<Link>x64/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="x86\**\*">
-			<Link>x86/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="x86\sqlite3.dll">
-			<Link>sqlite3.dll</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-
-		<Reference Include="IBM.Data.DB2">
-			<HintPath>..\..\Redist\IBM\IBM.Data.DB2.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="IBM.Data.Informix">
-			<HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-
-		<Reference Include="Oracle.DataAccess">
-			<HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
-		</Reference>
-
-		<PackageReference Include="Oracle.ManagedDataAccess" Version="12.2.1100" />
-		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
-		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
-		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.108" />
 	</ItemGroup>
 
 
@@ -117,26 +71,6 @@
 		<Compile Remove="Mapping\FluentDynamicMappingTests.cs" />
 		<Compile Remove="Update\DynamicColumnsTests.cs" />
 		<Compile Remove="UserTests\Issue1268Tests.cs" />
-		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
-		<None Update="x64\**\*">
-			<Link>x64/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="x86\**\*">
-			<Link>x86/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="x86\sqlite3.dll">
-			<Link>sqlite3.dll</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="Microsoft.Data.SQLite" Version="2.1.0" />
-		<Reference Include="Microsoft.SqlServer.Types">
-			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
-		</Reference>
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
@@ -153,25 +87,5 @@
 		<Compile Remove="Metadata\XmlReaderTests.cs" />
 		<Compile Remove="**\PartialTrust*.cs" />
 		<Compile Remove="Linq\FSharpTests.cs" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
-		<PackageReference Include="Oracle.ManagedDataAccess.Core">
-			<Version>2.18.3</Version>
-		</PackageReference>
-	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="npgsql4\net451\" />
-		<Folder Include="npgsql4\netstandard2.0\" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="..\..\Redist\npgsql4\net451\Npgsql.dll" Link="npgsql4\net451\Npgsql.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\..\Redist\npgsql4\netstandard2.0\Npgsql.dll" Link="npgsql4\netstandard2.0\Npgsql.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 	</ItemGroup>
 </Project>

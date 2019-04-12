@@ -965,6 +965,13 @@ namespace LinqToDB.Expressions
 			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions);
 		}
 
+		public static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)
+		{
+			var type = method.Method.DeclaringType;
+
+			return type == typeof(AsyncExtensions);
+		}
+
 		public static bool IsAggregate(this MethodCallExpression methodCall, MappingSchema mapping)
 		{
 			if (methodCall.IsQueryable(AggregationBuilder.MethodNames))
@@ -989,6 +996,16 @@ namespace LinqToDB.Expressions
 			if (method.IsQueryable())
 				foreach (var name in names)
 					if (method.Method.Name == name)
+						return true;
+
+			return false;
+		}
+
+		public static bool IsAsyncExtension(this MethodCallExpression method, params string[] names)
+		{
+			if (method.IsAsyncExtension())
+				foreach (var name in names)
+					if (method.Method.Name == name + "Async")
 						return true;
 
 			return false;

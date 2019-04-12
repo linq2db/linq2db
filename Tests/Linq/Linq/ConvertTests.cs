@@ -12,7 +12,7 @@ namespace Tests.Linq
 	public class ConvertTests : TestBase
 	{
 		[Test]
-		public void Test1([DataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] string context)
+		public void Test1([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(1, (from t in db.Types where t.MoneyValue * t.ID == 1.11m  select t).Single().ID);
@@ -39,7 +39,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToBigInt([DataSources(ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57)] string context)
+		public void ToBigInt([DataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -48,7 +48,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToInt64([DataSources(ProviderName.MySql, ProviderName.MySqlConnector)] string context)
+		public void ToInt64([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -57,7 +57,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConvertToInt64([DataSources(ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.SQLiteMS)] string context)
+		public void ConvertToInt64([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -151,7 +151,7 @@ namespace Tests.Linq
 		#region UInts
 
 		[Test]
-		public void ToUInt1([DataSources(ProviderName.MySql, ProviderName.MySqlConnector)] string context)
+		public void ToUInt1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -160,7 +160,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToUInt2([DataSources(ProviderName.MySql, ProviderName.MySqlConnector)] string context)
+		public void ToUInt2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -169,7 +169,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToUInt64([DataSources(ProviderName.MySql, ProviderName.MySqlConnector)] string context)
+		public void ToUInt64([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -178,7 +178,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConvertToUInt64([DataSources(ProviderName.MySql, ProviderName.SQLiteMS)] string context)
+		public void ConvertToUInt64([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -187,7 +187,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToUInt32([DataSources(ProviderName.MySql, ProviderName.MySqlConnector)] string context)
+		public void ToUInt32([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -196,7 +196,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConvertToUInt32([DataSources(ProviderName.MySql, ProviderName.SQLiteMS)] string context)
+		public void ConvertToUInt32([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -403,11 +403,9 @@ namespace Tests.Linq
 		}
 
 		// needs debugging, but suspect it fails due to issue 730
-		[ActiveIssue(730, Configurations = new[] { ProviderName.Sybase, ProviderName.SybaseManaged }, SkipForNonLinqService = true)]
+		[ActiveIssue(730, Configuration = TestProvName.AllSybase, SkipForNonLinqService = true)]
 		[Test]
-		public void ToSqlTime([DataSources(
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-			string context)
+		public void ToSqlTime([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -461,12 +459,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToDefaultChar(
-			[DataSources(
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.Firebird, TestProvName.Firebird3,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
-			string context)
+		public void ToDefaultChar([DataSources(TestProvName.AllOracle, TestProvName.AllFirebird, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -484,9 +477,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToDefaultVarChar([DataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird,
-			TestProvName.Firebird3, ProviderName.PostgreSQL)]
+		public void ToDefaultVarChar([DataSources(TestProvName.AllOracle, TestProvName.AllFirebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -505,12 +496,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToDefaultNChar(
-			[DataSources(
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.Firebird, TestProvName.Firebird3,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
-		string context)
+		public void ToDefaultNChar([DataSources(TestProvName.AllOracle, TestProvName.AllFirebird, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -528,10 +514,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToDefaultNVarChar([DataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird,
-			TestProvName.Firebird3, ProviderName.PostgreSQL)]
-			string context)
+		public void ToDefaultNVarChar([DataSources(TestProvName.AllOracle, TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

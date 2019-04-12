@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -9,6 +10,7 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	using Data;
 
+	[PublicAPI]
 	public static class FirebirdTools
 	{
 		static readonly FirebirdDataProvider _firebirdDataProvider = new FirebirdDataProvider();
@@ -72,6 +74,25 @@ namespace LinqToDB.DataProvider.Firebird
 					MaxBatchSize       = maxBatchSize,
 					RowsCopiedCallback = rowsCopiedCallback,
 				}, source);
+		}
+
+		#endregion
+
+		#region ClearAllPools
+
+		static Action _clearAllPools;
+
+		public static void ClearAllPools()
+		{
+			if (_clearAllPools == null)
+				_clearAllPools =
+					Expression.Lambda<Action>(
+						Expression.Call(
+							_firebirdDataProvider.GetConnectionType(),
+							"ClearAllPools",
+							new Type[0]))
+						.Compile();
+			_clearAllPools();
 		}
 
 		#endregion

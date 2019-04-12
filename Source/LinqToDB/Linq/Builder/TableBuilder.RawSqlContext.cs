@@ -54,8 +54,14 @@ namespace LinqToDB.Linq.Builder
 
 					format        = rawSqlString.Format;
 					var arrayExpr = methodCall.Arguments[2];
-					var array     = (object[])arrayExpr.EvaluateExpression();
-					arguments     = array.Select(Expression.Constant);
+
+					if (arrayExpr.NodeType == ExpressionType.NewArrayInit)
+						arguments = ((NewArrayExpression)arrayExpr).Expressions;
+					else
+					{
+						var array = (object[])arrayExpr.EvaluateExpression();
+						arguments = array.Select(Expression.Constant);
+					}
 				}
 			}
 

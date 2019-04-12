@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Linq.Expressions;
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.Windows.Forms;
 #endif
@@ -816,6 +816,86 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(1202)]
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SelectReverseNullPropagationTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = from p in db.Parent
+							 select new
+							 {
+								 Info = null != p ? new { p.ParentID, p.Value1 } : null
+							 };
+
+				var query2 = from q in query1
+							 select new
+							 {
+								 q.Info.ParentID
+							 };
+
+				var _ = query2.ToArray();
+			}
+		}
+
+		[ActiveIssue(1202)]
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SelectReverseNullPropagationWhereTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = from p in db.Parent
+							 from c in db.Child.InnerJoin(c => c.ParentID == p.ParentID)
+							 select new
+							 {
+								 Info1 = null != p ? new { p.ParentID, p.Value1 } : null,
+								 Info2 = null != c ? (null != c.Parent ? new { c.Parent.Value1 } : null) : null
+							 };
+
+				var query2 = from q in query1
+							 select new
+							 {
+								 InfoAll = null == q
+									 ? null
+									 : new
+									 {
+										 ParentID = null != q.Info1 ? (int?)q.Info1.ParentID : (int?)null,
+										 q.Info1.Value1,
+										 Value2 = q.Info2.Value1
+									 }
+							 };
+
+				var query3 = query2.Where(p => p.InfoAll.ParentID.Value > 0 || p.InfoAll.Value1 > 0 || p.InfoAll.Value2 > 0);
+
+				var _ = query3.ToArray();
+			}
+		}
+
+		[ActiveIssue(1202)]
+		[Test]
+		public void SelectReverseNullPropagationTest2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in Parent
+					join c in Child on p.Value1 equals c.ParentID into gr
+					from c in gr.DefaultIfEmpty()
+					select new
+					{
+						Info2 = null != c ? (null != c.Parent ? new { c.Parent.Value1 } : null) : null
+					}
+					,
+					from p in db.Parent
+					join c in db.Child on p.Value1 equals c.ParentID into gr
+					from c in gr.DefaultIfEmpty()
+					select new
+					{
+						Info2 = null != c ? (null != c.Parent ? new { c.Parent.Value1 } : null) : null
+					});
+			}
+		}
+
 		class LocalClass
 		{
 		}
@@ -836,7 +916,7 @@ namespace Tests.Linq
 			[DataSources(
 					false,
 					ProviderName.DB2,
-					ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+					TestProvName.AllPostgreSQL,
 					ProviderName.SapHana)]
 				string context)
 		{
@@ -853,5 +933,134 @@ namespace Tests.Linq
 				Assert.AreEqual("Doe", person.Name.LastName);
 			}
 		}
+
+		class MainEntityObject
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(Length = 50)]
+			public string MainValue { get; set; }
+		}
+
+		public class ChildEntityObject
+		{
+			public int Id { get; set; }
+
+			[Column(Length = 50)]
+			public string Value { get; set; }
+		}
+
+		public class DtoChildEntityObject
+		{
+			public int Id { get; set; }
+
+			public string Value { get; set; }
+
+			static Expression<Func<ChildEntityObject, DtoChildEntityObject>> OwnerImpl()
+			{
+				return a => a == null
+					? null
+					: new DtoChildEntityObject
+					{
+						Id = a.Id,
+						Value = a.Value
+					};
+			}        
+
+			[ExpressionMethod("OwnerImpl")]
+			public static implicit operator DtoChildEntityObject(ChildEntityObject a)
+			{
+				if (a == null) return null;
+				return OwnerImpl().Compile()(a);
+			}
+
+		}
+
+		public class DtoResult
+		{
+			public DtoChildEntityObject Child { get; set; }
+			public string Value { get; set; }
+		}
+
+		[Test]
+		public void TestExpressionMethodInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new []
+			{
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+			}))
+			using (db.CreateLocalTable(new []
+			{
+				new ChildEntityObject{Id = 1, Value = "Value 1"}
+			}))
+			{
+				var query = 
+					from m in db.GetTable<MainEntityObject>()
+					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
+					select new DtoResult
+					{
+						Child = c,
+						Value = c.Value
+					};
+
+				query = query.OrderByDescending(c => c.Child.Id);
+				var result = query.ToArray();
+
+				Assert.NotNull(result[0].Child);
+				Assert.Null(result[1].Child);
+			}
+		}
+
+
+		[Test]
+		public void TestCoalesceInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new []
+			{
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+			}))
+			using (db.CreateLocalTable(new []
+			{
+				new ChildEntityObject{Id = 1, Value = "Value 1"}
+			}))
+			{
+				var query = 
+					from m in db.GetTable<MainEntityObject>()
+					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
+					select new 
+					{
+						Child1 = c,
+						Child2 = c == null ? null : new ChildEntityObject{Id = c.Id, Value = c.Value},
+						Child3 = c != null ? c    : new ChildEntityObject{Id = 4, Value = "Generated"},
+						Child4 = c.Value != "Value 1" ? c : null,
+					};
+
+				var result = query.ToArray();
+
+				Assert.NotNull(result[0].Child1);
+				Assert.NotNull(result[1].Child1);
+
+				Assert.NotNull(result[0].Child2);
+				Assert.AreEqual(1,         result[0].Child2.Id);
+				Assert.AreEqual("Value 1", result[0].Child2.Value);
+				Assert.Null(result[1].Child2);
+
+				Assert.NotNull(result[0].Child3);
+				Assert.NotNull(result[1].Child3);
+				Assert.AreEqual(4,           result[1].Child3.Id);
+				Assert.AreEqual("Generated", result[1].Child3.Value);
+
+				Assert.Null(result[0].Child4);
+				Assert.NotNull(result[1].Child4);
+				Assert.AreEqual(0,    result[1].Child4.Id);
+				Assert.AreEqual(null, result[1].Child4.Value);
+			}
+		}
+
 	}
 }
