@@ -951,59 +951,5 @@ namespace Tests.Linq
 			}
 		}
 
-		public class Batch
-		{
-			[PrimaryKey]
-			public int Id { get; set; }
-			[Association(ThisKey = "Id", OtherKey = "BatchId", CanBeNull = false)]
-			public List<Confirmation> Confirmations { get; set; }
-		}
-
-		public class Confirmation
-		{
-			[Column]
-			public int BatchId { get; set; }
-			[Column]
-			public DateTime Date { get; set; }
-		}
-
-		[Test]
-		[ActiveIssue(1675)]
-		public void Issue1675Test([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				using (var bTable = db.CreateLocalTable<Batch>())
-				using (var cTable = db.CreateLocalTable<Confirmation>())
-				{
-					db.Insert(new Batch() { Id = 1 });
-					db.Insert(new Batch() { Id = 2 });
-					db.Insert(new Batch() { Id = 3 });
-					db.Insert(new Confirmation { BatchId = 1, Date = DateTime.Parse("09 Apr 2019 14:30:00 GMT") });
-					db.Insert(new Confirmation { BatchId = 2, Date = DateTime.Parse("09 Apr 2019 14:30:20 GMT") });
-					db.Insert(new Confirmation { BatchId = 2, Date = DateTime.Parse("09 Apr 2019 14:30:25 GMT") });
-					db.Insert(new Confirmation { BatchId = 3, Date = DateTime.Parse("09 Apr 2019 14:30:35 GMT") });
-					
-					var query = db.GetTable<Batch>()
-							.OrderByDescending(x => x.Id)
-							.Select(x => new
-							{
-								BatchId = x.Id,
-								CreationDate = x.Confirmations.FirstOrDefault().Date
-							})
-							.Take(2)
-							.OrderBy(x => x.BatchId);
-
-					var res = query.ToList();
-
-					Assert.That(res.Count,           Is.EqualTo(2));
-					Assert.That(res[0].BatchId,      Is.EqualTo(2));
-					Assert.That(res[1].BatchId,      Is.EqualTo(3));
-					Assert.That(res[0].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:20 GMT")));
-					Assert.That(res[1].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:35 GMT")));
-
-				}
-			}
-		}
 	}
 }
