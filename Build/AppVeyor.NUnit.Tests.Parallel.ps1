@@ -1,50 +1,51 @@
 $net46Tests = {
-try {
 	param($url)
-	#$wc = New-Object System.Net.WebClient
-	$logFileName = "$env:APPVEYOR_BUILD_FOLDER\nunit_net46_results.xml"
-	$null = nunit3-console Tests\Linq\bin\AppVeyor\net46\linq2db.Tests.dll --result=$logFileName --where "cat != Ignored & cat != SkipCI"
-	if ($LastExitCode -ne 0) { $exit = $LastExitCode }
-	#$null = $wc.UploadFile("$url", "$logFileName")
-	return $exit
-	}
-	catch 
+	try
 	{
-	return $_.Exception.Message
+		#$wc = New-Object System.Net.WebClient
+		$logFileName = "$env:APPVEYOR_BUILD_FOLDER\nunit_net46_results.xml"
+		$null = nunit3-console Tests\Linq\bin\AppVeyor\net46\linq2db.Tests.dll --result=$logFileName --where "cat != Ignored & cat != SkipCI"
+		if ($LastExitCode -ne 0) { $exit = $LastExitCode }
+		#$null = $wc.UploadFile("$url", "$logFileName")
+		return $exit
+	}
+	catch
+	{
+		return $_.Exception.Message
 	}
 }
 
 $netcore2Tests = {
-try
-{
 	param($url)
-	$wc = New-Object System.Net.WebClient
-	$logFileName = "$env:APPVEYOR_BUILD_FOLDER\nunit_core2_results.xml"
-	$null = dotnet test Tests\Linq\ -f netcoreapp2.0 --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor
-	if ($LastExitCode -ne 0) { $exit = $LastExitCode }
-	$null = $wc.UploadFile("$url", "$logFileName")
-	return $exit
-	}
-	catch 
+	try
 	{
-	return $_.Exception.Message
+		$wc = New-Object System.Net.WebClient
+		$logFileName = "$env:APPVEYOR_BUILD_FOLDER\nunit_core2_results.xml"
+		$null = dotnet test Tests\Linq\ -f netcoreapp2.0 --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor
+		if ($LastExitCode -ne 0) { $exit = $LastExitCode }
+		$null = $wc.UploadFile("$url", "$logFileName")
+		return $exit
+	}
+	catch
+	{
+		return $_.Exception.Message
 	}
 }
 
 $netcore1Tests = {
-try
-{
 	param($url)
-	$wc = New-Object System.Net.WebClient
-	$logFileName = "$env:APPVEYOR_BUILD_FOLDER\nunit_core1_results.xml"
-	$null = dotnet test Tests\Linq\ -f netcoreapp1.0 --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor
-	if ($LastExitCode -ne 0) { $exit = $LastExitCode }
-	$null = $wc.UploadFile("$url", "$logFileName")
-	return $exit
+	try
+	{
+		$wc = New-Object System.Net.WebClient
+		$logFileName = "$env:APPVEYOR_BUILD_FOLDER\nunit_core1_results.xml"
+		$null = dotnet test Tests\Linq\ -f netcoreapp1.0 --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor
+		if ($LastExitCode -ne 0) { $exit = $LastExitCode }
+		$null = $wc.UploadFile("$url", "$logFileName")
+		return $exit
 	}
 	catch 
 	{
-	return $_.Exception.Message
+		return $_.Exception.Message
 	}
 }
 
