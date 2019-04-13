@@ -847,7 +847,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (attr != null)
 						{
-							var converted = attr.GetExpression(MappingSchema, context.SelectQuery, ma,
+							var converted = attr.GetExpression(DataContext, context.SelectQuery, ma,
 								e => ConvertToSql(context, e));
 
 							if (converted == null)
@@ -945,7 +945,7 @@ namespace LinqToDB.Linq.Builder
 							if (attr.InlineParameters)
 								DataContext.InlineParameters = true;
 
-							var sqlExpression = attr.GetExpression(MappingSchema, context.SelectQuery, e, _ => ConvertToSql(context, _));
+							var sqlExpression = attr.GetExpression(DataContext, context.SelectQuery, e, _ => ConvertToSql(context, _));
 							if (sqlExpression != null)
 								return Convert(context, sqlExpression);
 
@@ -1031,6 +1031,13 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (expression.CanReduce)
 							return ConvertToSql(context, expression.Reduce());
+						break;
+					}
+				case ExpressionType.Constant:
+					{
+						var cnt = (ConstantExpression)expression;
+						if (cnt.Value is ISqlExpression sql)
+							return sql;
 						break;
 					}
 			}
@@ -1251,10 +1258,10 @@ namespace LinqToDB.Linq.Builder
 
 				switch (ex.NodeType)
 				{
-					case ExpressionType.Parameter    :
+					case ExpressionType.Parameter:
 						return !allowedParams.Contains(ex);
 
-					case ExpressionType.Call:
+					case ExpressionType.Call     :
 						{
 							var mc = (MethodCallExpression)ex;
 							foreach (var arg in mc.Arguments)
@@ -1266,6 +1273,13 @@ namespace LinqToDB.Linq.Builder
 										allowedParams.Add(prm);
 								}
 							}
+							break;
+						}
+					case ExpressionType.Constant :
+						{
+							var cnt = (ConstantExpression)ex;
+							if (cnt.Value is ISqlExpression)
+								return true;
 							break;
 						}
 				}
@@ -1526,7 +1540,7 @@ namespace LinqToDB.Linq.Builder
 
 						var attr = GetExpressionAttribute(e.Method);
 
-						if (attr != null && attr.IsPredicate)
+						if (attr != null && attr.GetIsPredicate(expression))
 							break;
 
 						return ConvertPredicate(context, AddEqualTrue(expression));
@@ -1553,7 +1567,7 @@ namespace LinqToDB.Linq.Builder
 
 						var attr = GetExpressionAttribute(e.Member);
 
-						if (attr != null && attr.IsPredicate)
+						if (attr != null && attr.GetIsPredicate(expression))
 							break;
 
 						return ConvertPredicate(context, AddEqualTrue(expression));

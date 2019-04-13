@@ -2149,7 +2149,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var field = (SqlField)expr;
 
-						if (buildTableName)
+						if (buildTableName && field.Table != null)
 						{
 							//TODO: looks like SqlBuilder is trying to fix issue with bad table mapping from Builder. Merge Tests fails.
 							var ts = Statement.SelectQuery?.GetTableSource(field.Table);
@@ -2187,7 +2187,7 @@ namespace LinqToDB.SqlProvider
 							}
 						}
 
-						if (field == field.Table.All)
+						if (field == field.Table?.All)
 						{
 							StringBuilder.Append("*");
 						}

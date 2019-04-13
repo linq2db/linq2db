@@ -683,6 +683,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Scale);
 							Append(elem.CreateFormat);
 							Append(elem.CreateOrder);
+							AppendDelayed(elem.Table);
 
 							break;
 						}
@@ -1339,7 +1340,8 @@ namespace LinqToDB.ServiceModel
 							var createFormat     = ReadString();
 							var createOrder      = ReadNullableInt();
 
-							obj = new SqlField
+							SqlField field;
+							obj = field = new SqlField
 							{
 								SystemType      = systemType,
 								Name            = name,
@@ -1356,8 +1358,13 @@ namespace LinqToDB.ServiceModel
 								Precision       = precision,
 								Scale           = scale,
 								CreateFormat    = createFormat,
-								CreateOrder     = createOrder,
+								CreateOrder     = createOrder
 							};
+
+							ReadDelayedObject(table =>
+							{
+								field.Table = table as ISqlTableSource;
+							});
 
 							break;
 						}
