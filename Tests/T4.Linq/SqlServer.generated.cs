@@ -25,7 +25,7 @@ namespace DataModel
 	/// <summary>
 	/// Database       : Northwind
 	/// Data Source    : .
-	/// Server Version : 13.00.5233
+	/// Server Version : 13.00.5292
 	/// </summary>
 	public partial class NorthwindDB : LinqToDB.Data.DataConnection
 	{
@@ -83,7 +83,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="Northwind", Name="Alphabetical list of products", IsView=true)]
+	[Table("Alphabetical list of products", IsView=true)]
 	public partial class AlphabeticalListOfProduct
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int      ProductID       { get; set; } // int
@@ -99,7 +99,7 @@ namespace DataModel
 		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName    { get; set; } // nvarchar(15)
 	}
 
-	[Table(Database="Northwind", Name="Categories")]
+	[Table("Categories")]
 	public partial class Category
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey,  Identity] public int    CategoryID   { get; set; } // int
@@ -123,21 +123,21 @@ namespace DataModel
 	{
 	}
 
-	[Table(Database="Northwind", Name="Category Sales for 1997", IsView=true)]
+	[Table("Category Sales for 1997", IsView=true)]
 	public partial class CategorySalesFor1997
 	{
 		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName  { get; set; } // nvarchar(15)
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? CategorySales { get; set; } // money
 	}
 
-	[Table(Database="Northwind", Name="Current Product List", IsView=true)]
+	[Table("Current Product List", IsView=true)]
 	public partial class CurrentProductList
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               Identity] public int    ProductID   { get; set; } // int
 		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull ] public string ProductName { get; set; } // nvarchar(40)
 	}
 
-	[Table(Database="Northwind", Name="Customers")]
+	[Table("Customers")]
 	public partial class Customer
 	{
 		[Column(DbType="nchar(5)",     DataType=DataType.NChar,    Length=5),  PrimaryKey,  NotNull] public string CustomerID   { get; set; } // nchar(5)
@@ -169,7 +169,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="Northwind", Name="Customer and Suppliers by City", IsView=true)]
+	[Table("Customer and Suppliers by City", IsView=true)]
 	public partial class CustomerAndSuppliersByCity
 	{
 		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string City         { get; set; } // nvarchar(15)
@@ -178,7 +178,7 @@ namespace DataModel
 		[Column(DbType="varchar(9)",   DataType=DataType.VarChar,  Length=9),  NotNull    ] public string Relationship { get; set; } // varchar(9)
 	}
 
-	[Table(Database="Northwind", Name="CustomerCustomerDemo")]
+	[Table("CustomerCustomerDemo")]
 	public partial class CustomerCustomerDemo
 	{
 		[Column(DbType="nchar(5)",  DataType=DataType.NChar, Length=5),  PrimaryKey(1), NotNull] public string CustomerID     { get; set; } // nchar(5)
@@ -201,7 +201,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="Northwind", Name="CustomerDemographics")]
+	[Table("CustomerDemographics")]
 	public partial class CustomerDemographic
 	{
 		[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10), PrimaryKey,  NotNull] public string CustomerTypeID { get; set; } // nchar(10)
@@ -218,7 +218,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="Northwind", Name="Employees")]
+	[Table("Employees")]
 	public partial class Employee
 	{
 		[Column(DbType="int",           DataType=DataType.Int32),                PrimaryKey,  Identity] public int       EmployeeID      { get; set; } // int
@@ -269,7 +269,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="Northwind", Name="EmployeeTerritories")]
+	[Table("EmployeeTerritories")]
 	public partial class EmployeeTerritory
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey(1), NotNull] public int    EmployeeID  { get; set; } // int
@@ -292,7 +292,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="Northwind", Name="Invoices", IsView=true)]
+	[Table("Invoices", IsView=true)]
 	public partial class Invoice
 	{
 		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40),    Nullable] public string    ShipName       { get; set; } // nvarchar(40)
@@ -323,7 +323,7 @@ namespace DataModel
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal?  Freight        { get; set; } // money
 	}
 
-	[Table(Database="Northwind", Name="Orders")]
+	[Table("Orders")]
 	public partial class Order
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey, Identity] public int       OrderID        { get; set; } // int
@@ -370,7 +370,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="Northwind", Name="Order Details")]
+	[Table("Order Details")]
 	public partial class OrderDetail
 	{
 		[Column("OrderID", DbType="int",      DataType=DataType.Int32),  PrimaryKey(1), NotNull] public int     ID        { get; set; } // int
@@ -401,7 +401,7 @@ namespace DataModel
 	{
 	}
 
-	[Table(Database="Northwind", Name="Order Details Extended", IsView=true)]
+	[Table("Order Details Extended", IsView=true)]
 	public partial class OrderDetailsExtended
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int      OrderID       { get; set; } // int
@@ -413,7 +413,7 @@ namespace DataModel
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? ExtendedPrice { get; set; } // money
 	}
 
-	[Table(Database="Northwind", Name="Orders Qry", IsView=true)]
+	[Table("Orders Qry", IsView=true)]
 	public partial class OrdersQry
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int       OrderID        { get; set; } // int
@@ -438,14 +438,14 @@ namespace DataModel
 		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    Country        { get; set; } // nvarchar(15)
 	}
 
-	[Table(Database="Northwind", Name="Order Subtotals", IsView=true)]
+	[Table("Order Subtotals", IsView=true)]
 	public partial class OrderSubtotal
 	{
 		[Column(DbType="int",   DataType=DataType.Int32), NotNull    ] public int      OrderID  { get; set; } // int
 		[Column(DbType="money", DataType=DataType.Money),    Nullable] public decimal? Subtotal { get; set; } // money
 	}
 
-	[Table(Database="Northwind", Name="Products")]
+	[Table("Products")]
 	public partial class Product
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey,  Identity] public int      ProductID       { get; set; } // int
@@ -482,14 +482,14 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="Northwind", Name="Products Above Average Price", IsView=true)]
+	[Table("Products Above Average Price", IsView=true)]
 	public partial class ProductsAboveAveragePrice
 	{
 		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string   ProductName { get; set; } // nvarchar(40)
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? UnitPrice   { get; set; } // money
 	}
 
-	[Table(Database="Northwind", Name="Product Sales for 1997", IsView=true)]
+	[Table("Product Sales for 1997", IsView=true)]
 	public partial class ProductSalesFor1997
 	{
 		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName { get; set; } // nvarchar(15)
@@ -497,7 +497,7 @@ namespace DataModel
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? ProductSales { get; set; } // money
 	}
 
-	[Table(Database="Northwind", Name="Products by Category", IsView=true)]
+	[Table("Products by Category", IsView=true)]
 	public partial class ProductsByCategory
 	{
 		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull    ] public string CategoryName    { get; set; } // nvarchar(15)
@@ -507,7 +507,7 @@ namespace DataModel
 		[Column(DbType="bit",          DataType=DataType.Boolean),             NotNull    ] public bool   Discontinued    { get; set; } // bit
 	}
 
-	[Table(Database="Northwind", Name="Quarterly Orders", IsView=true)]
+	[Table("Quarterly Orders", IsView=true)]
 	public partial class QuarterlyOrder
 	{
 		[Column(DbType="nchar(5)",     DataType=DataType.NChar,    Length=5),  Nullable] public string CustomerID  { get; set; } // nchar(5)
@@ -516,7 +516,7 @@ namespace DataModel
 		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), Nullable] public string Country     { get; set; } // nvarchar(15)
 	}
 
-	[Table(Database="Northwind", Name="Region")]
+	[Table("Region")]
 	public partial class Region
 	{
 		[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey, NotNull] public int    RegionID          { get; set; } // int
@@ -533,7 +533,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="Northwind", Name="Sales by Category", IsView=true)]
+	[Table("Sales by Category", IsView=true)]
 	public partial class SalesByCategory
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int      CategoryID   { get; set; } // int
@@ -542,7 +542,7 @@ namespace DataModel
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? ProductSales { get; set; } // money
 	}
 
-	[Table(Database="Northwind", Name="Sales Totals by Amount", IsView=true)]
+	[Table("Sales Totals by Amount", IsView=true)]
 	public partial class SalesTotalsByAmount
 	{
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal?  SaleAmount  { get; set; } // money
@@ -551,7 +551,7 @@ namespace DataModel
 		[Column(DbType="datetime",     DataType=DataType.DateTime),               Nullable] public DateTime? ShippedDate { get; set; } // datetime
 	}
 
-	[Table(Database="Northwind", Name="Shippers")]
+	[Table("Shippers")]
 	public partial class Shipper
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey,  Identity] public int    ShipperID   { get; set; } // int
@@ -569,7 +569,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="Northwind", Name="Summary of Sales by Quarter", IsView=true)]
+	[Table("Summary of Sales by Quarter", IsView=true)]
 	public partial class SummaryOfSalesByQuarter
 	{
 		[Column(DbType="datetime", DataType=DataType.DateTime),    Nullable] public DateTime? ShippedDate { get; set; } // datetime
@@ -577,7 +577,7 @@ namespace DataModel
 		[Column(DbType="money",    DataType=DataType.Money),       Nullable] public decimal?  Subtotal    { get; set; } // money
 	}
 
-	[Table(Database="Northwind", Name="Summary of Sales by Year", IsView=true)]
+	[Table("Summary of Sales by Year", IsView=true)]
 	public partial class SummaryOfSalesByYear
 	{
 		[Column(DbType="datetime", DataType=DataType.DateTime),    Nullable] public DateTime? ShippedDate { get; set; } // datetime
@@ -585,7 +585,7 @@ namespace DataModel
 		[Column(DbType="money",    DataType=DataType.Money),       Nullable] public decimal?  Subtotal    { get; set; } // money
 	}
 
-	[Table(Database="Northwind", Name="Suppliers")]
+	[Table("Suppliers")]
 	public partial class Supplier
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey,  Identity] public int    SupplierID   { get; set; } // int
@@ -612,7 +612,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="Northwind", Name="Territories")]
+	[Table("Territories")]
 	public partial class Territory
 	{
 		[Column(DbType="nvarchar(20)", DataType=DataType.NVarChar, Length=20), PrimaryKey, NotNull] public string TerritoryID          { get; set; } // nvarchar(20)
@@ -642,7 +642,7 @@ namespace DataModel
 
 		public static List<CustOrderHistResult> CustOrderHist(this DataConnection dataConnection, string @CustomerID)
 		{
-			return dataConnection.QueryProc<CustOrderHistResult>("[Northwind]..[CustOrderHist]",
+			return dataConnection.QueryProc<CustOrderHistResult>("[CustOrderHist]",
 				new DataParameter("@CustomerID", @CustomerID, DataType.NChar)).ToList();
 		}
 
@@ -658,7 +658,7 @@ namespace DataModel
 
 		public static List<CustOrdersDetailResult> CustOrdersDetail(this DataConnection dataConnection, int? @OrderID)
 		{
-			return dataConnection.QueryProc<CustOrdersDetailResult>("[Northwind]..[CustOrdersDetail]",
+			return dataConnection.QueryProc<CustOrdersDetailResult>("[CustOrdersDetail]",
 				new DataParameter("@OrderID", @OrderID, DataType.Int32)).ToList();
 		}
 
@@ -677,7 +677,7 @@ namespace DataModel
 
 		public static List<CustOrdersOrdersResult> CustOrdersOrders(this DataConnection dataConnection, string @CustomerID)
 		{
-			return dataConnection.QueryProc<CustOrdersOrdersResult>("[Northwind]..[CustOrdersOrders]",
+			return dataConnection.QueryProc<CustOrdersOrdersResult>("[CustOrdersOrders]",
 				new DataParameter("@CustomerID", @CustomerID, DataType.NChar)).ToList();
 		}
 
@@ -695,7 +695,7 @@ namespace DataModel
 
 		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
-			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Northwind]..[Employee Sales by Country]",
+			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Employee Sales by Country]",
 				new DataParameter("@Beginning_Date", @Beginning_Date, DataType.DateTime),
 				new DataParameter("@Ending_Date",    @Ending_Date,    DataType.DateTime)).ToList();
 		}
@@ -716,7 +716,7 @@ namespace DataModel
 
 		public static List<SalesByYearResult> SalesByYear(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
-			return dataConnection.QueryProc<SalesByYearResult>("[Northwind]..[Sales by Year]",
+			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]",
 				new DataParameter("@Beginning_Date", @Beginning_Date, DataType.DateTime),
 				new DataParameter("@Ending_Date",    @Ending_Date,    DataType.DateTime)).ToList();
 		}
@@ -735,7 +735,7 @@ namespace DataModel
 
 		public static List<SalesByCategoryResult> SalesByCategory(this DataConnection dataConnection, string @CategoryName, string @OrdYear)
 		{
-			return dataConnection.QueryProc<SalesByCategoryResult>("[Northwind]..[SalesByCategory]",
+			return dataConnection.QueryProc<SalesByCategoryResult>("[SalesByCategory]",
 				new DataParameter("@CategoryName", @CategoryName, DataType.NVarChar),
 				new DataParameter("@OrdYear",      @OrdYear,      DataType.NVarChar)).ToList();
 		}
@@ -752,7 +752,7 @@ namespace DataModel
 
 		public static List<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this DataConnection dataConnection)
 		{
-			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Northwind]..[Ten Most Expensive Products]").ToList();
+			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Ten Most Expensive Products]").ToList();
 		}
 
 		public partial class TenMostExpensiveProductsResult
@@ -1258,7 +1258,7 @@ namespace DataModel
 	/// <summary>
 	/// Database       : TestData2014
 	/// Data Source    : .
-	/// Server Version : 13.00.5233
+	/// Server Version : 13.00.5292
 	/// </summary>
 	public partial class TestData2014DB : LinqToDB.Data.DataConnection
 	{
@@ -1330,7 +1330,7 @@ namespace DataModel
 
 		#region GetParentByID
 
-		[Sql.TableFunction(Database="TestData2014", Name="GetParentByID")]
+		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? @id)
 		{
 			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
@@ -1342,7 +1342,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="TestData2014", Name="AllTypes")]
+	[Table("AllTypes")]
 	public partial class AllType
 	{
 		[Column(                            DbType="int",               DataType=DataType.Int32),                                                PrimaryKey, Identity] public int             ID                       { get; set; } // int
@@ -1390,7 +1390,7 @@ namespace DataModel
 		[Column("timeDataType",             DbType="time(7)",           DataType=DataType.Time,           Precision=7),                          Nullable            ] public TimeSpan?       TimeDataType             { get; set; } // time(7)
 	}
 
-	[Table(Database="TestData2014", Name="AllTypes2")]
+	[Table("AllTypes2")]
 	public partial class AllTypes2
 	{
 		[Column(                          DbType="int",               DataType=DataType.Int32),                       PrimaryKey, Identity] public int             ID                     { get; set; } // int
@@ -1403,7 +1403,7 @@ namespace DataModel
 		[Column("geometryDataType",       DbType="geometry",          DataType=DataType.Udt),                         Nullable            ] public SqlGeometry     GeometryDataType       { get; set; } // geometry
 	}
 
-	[Table(Database="TestData2014", Name="Child")]
+	[Table("Child")]
 	public partial class Child
 	{
 		[Column(       DbType="int", DataType=DataType.Int32), Nullable            ] public int? ParentID { get; set; } // int
@@ -1414,7 +1414,7 @@ namespace DataModel
 		[Column("_ID", DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  Id       { get; set; } // int
 	}
 
-	[Table(Database="TestData2014", Name="DecimalOverflow")]
+	[Table("DecimalOverflow")]
 	public partial class DecimalOverflow
 	{
 		[Column(DbType="decimal(38, 20)", DataType=DataType.Decimal, Precision=38, Scale=20), PrimaryKey,  NotNull] public decimal  Decimal1 { get; set; } // decimal(38, 20)
@@ -1424,7 +1424,7 @@ namespace DataModel
 		[Column(DbType="decimal(38, 38)", DataType=DataType.Decimal, Precision=38, Scale=38),    Nullable         ] public decimal? Decimal5 { get; set; } // decimal(38, 38)
 	}
 
-	[Table(Database="TestData2014", Name="Doctor")]
+	[Table("Doctor")]
 	public partial class Doctor
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey, NotNull] public int    PersonID { get; set; } // int
@@ -1441,7 +1441,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="TestData2014", Name="GrandChild")]
+	[Table("GrandChild")]
 	public partial class GrandChild
 	{
 		[Column(       DbType="int", DataType=DataType.Int32), Nullable            ] public int? ParentID     { get; set; } // int
@@ -1450,20 +1450,20 @@ namespace DataModel
 		[Column("_ID", DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  Id           { get; set; } // int
 	}
 
-	[Table(Database="TestData2014", Name="GuidID")]
+	[Table("GuidID")]
 	public partial class GuidID
 	{
 		[Column(DbType="uniqueidentifier", DataType=DataType.Guid),  PrimaryKey,  NotNull] public Guid ID     { get; set; } // uniqueidentifier
 		[Column(DbType="int",              DataType=DataType.Int32),    Nullable         ] public int? Field1 { get; set; } // int
 	}
 
-	[Table(Database="TestData2014", Name="GuidID2")]
+	[Table("GuidID2")]
 	public partial class GuidID2
 	{
 		[Column(DbType="uniqueidentifier", DataType=DataType.Guid), PrimaryKey, NotNull] public Guid ID { get; set; } // uniqueidentifier
 	}
 
-	[Table(Database="TestData2014", Name="IndexTable")]
+	[Table("IndexTable")]
 	public partial class IndexTable
 	{
 		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey(2), NotNull] public int PKField1    { get; set; } // int
@@ -1482,7 +1482,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="TestData2014", Name="IndexTable2")]
+	[Table("IndexTable2")]
 	public partial class IndexTable2
 	{
 		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey(2), NotNull] public int PKField1 { get; set; } // int
@@ -1499,7 +1499,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="TestData2014", Name="InheritanceChild")]
+	[Table("InheritanceChild")]
 	public partial class InheritanceChild
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey,  NotNull] public int    InheritanceChildId  { get; set; } // int
@@ -1508,7 +1508,7 @@ namespace DataModel
 		[Column(DbType="nvarchar(50)", DataType=DataType.NVarChar, Length=50),    Nullable         ] public string Name                { get; set; } // nvarchar(50)
 	}
 
-	[Table(Database="TestData2014", Name="InheritanceParent")]
+	[Table("InheritanceParent")]
 	public partial class InheritanceParent
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey,  NotNull] public int    InheritanceParentId { get; set; } // int
@@ -1516,13 +1516,13 @@ namespace DataModel
 		[Column(DbType="nvarchar(50)", DataType=DataType.NVarChar, Length=50),    Nullable         ] public string Name                { get; set; } // nvarchar(50)
 	}
 
-	[Table(Database="TestData2014", Name="Issue1115")]
+	[Table("Issue1115")]
 	public partial class Issue1115
 	{
 		[Column("id", DbType="hierarchyid", DataType=DataType.Udt), PrimaryKey, NotNull] public SqlHierarchyId Id { get; set; } // hierarchyid
 	}
 
-	[Table(Database="TestData2014", Name="Issue1144")]
+	[Table("Issue1144")]
 	public partial class Issue1144
 	{
 		/// <summary>
@@ -1531,7 +1531,7 @@ namespace DataModel
 		[Column("id", DbType="int", DataType=DataType.Int32), PrimaryKey, NotNull] public int Id { get; set; } // int
 	}
 
-	[Table(Database="TestData2014", Name="LinqDataTypes")]
+	[Table("LinqDataTypes")]
 	public partial class LinqDataType
 	{
 		[Column("_ID", DbType="int",              DataType=DataType.Int32),                            PrimaryKey, Identity] public int       Id             { get; set; } // int
@@ -1548,7 +1548,7 @@ namespace DataModel
 		[Column(       DbType="nvarchar(50)",     DataType=DataType.NVarChar,  Length=50),             Nullable            ] public string    StringValue    { get; set; } // nvarchar(50)
 	}
 
-	[Table(Database="TestData2014", Name="Name.Test")]
+	[Table("Name.Test")]
 	public partial class NameTest
 	{
 		[Column("Name.Test", DbType="int", DataType=DataType.Int32), Nullable] public int? NameTest_Column { get; set; } // int
@@ -1557,7 +1557,7 @@ namespace DataModel
 	/// <summary>
 	/// This is Parent table
 	/// </summary>
-	[Table(Database="TestData2014", Name="Parent")]
+	[Table("Parent")]
 	public partial class Parent
 	{
 		[Column(       DbType="int", DataType=DataType.Int32), Nullable            ] public int? ParentID { get; set; } // int
@@ -1565,7 +1565,7 @@ namespace DataModel
 		[Column("_ID", DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  Id       { get; set; } // int
 	}
 
-	[Table(Database="TestData2014", Name="ParentChildView", IsView=true)]
+	[Table("ParentChildView", IsView=true)]
 	public partial class ParentChildView
 	{
 		[Column(DbType="int", DataType=DataType.Int32), Nullable] public int? ParentID { get; set; } // int
@@ -1573,7 +1573,7 @@ namespace DataModel
 		[Column(DbType="int", DataType=DataType.Int32), Nullable] public int? ChildID  { get; set; } // int
 	}
 
-	[Table(Database="TestData2014", Name="ParentView", IsView=true)]
+	[Table("ParentView", IsView=true)]
 	public partial class ParentView
 	{
 		[Column(       DbType="int", DataType=DataType.Int32), Nullable] public int? ParentID { get; set; } // int
@@ -1581,7 +1581,7 @@ namespace DataModel
 		[Column("_ID", DbType="int", DataType=DataType.Int32), Identity] public int  Id       { get; set; } // int
 	}
 
-	[Table(Database="TestData2014", Name="Patient")]
+	[Table("Patient")]
 	public partial class Patient
 	{
 		[Column(DbType="int",           DataType=DataType.Int32),                PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
@@ -1598,7 +1598,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="TestData2014", Name="Person")]
+	[Table("Person")]
 	public partial class Person
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey,  Identity] public int    PersonID   { get; set; } // int
@@ -1624,20 +1624,20 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="TestData2014", Name="SameTableName")]
+	[Table("SameTableName")]
 	public partial class SameTableName
 	{
 		[Column("id", DbType="int", DataType=DataType.Int32), Nullable] public int? Id { get; set; } // int
 	}
 
-	[Table(Database="TestData2014", Name="SqlTypes")]
+	[Table("SqlTypes")]
 	public partial class SqlType
 	{
 		[Column(DbType="int",         DataType=DataType.Int32), PrimaryKey,  NotNull] public int             ID  { get; set; } // int
 		[Column(DbType="hierarchyid", DataType=DataType.Udt),      Nullable         ] public SqlHierarchyId? HID { get; set; } // hierarchyid
 	}
 
-	[Table(Database="TestData2014", Name="TestDecimal")]
+	[Table("TestDecimal")]
 	public partial class TestDecimal
 	{
 		[Column("asint",   DbType="decimal(5, 0)", DataType=DataType.Decimal, Precision=5, Scale=0), NotNull    ] public decimal  Asint   { get; set; } // decimal(5, 0)
@@ -1646,13 +1646,13 @@ namespace DataModel
 		[Column("aslongn", DbType="decimal(9, 0)", DataType=DataType.Decimal, Precision=9, Scale=0),    Nullable] public decimal? Aslongn { get; set; } // decimal(9, 0)
 	}
 
-	[Table(Database="TestData2014", Name="TestIdentity")]
+	[Table("TestIdentity")]
 	public partial class TestIdentity
 	{
 		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int ID { get; set; } // int
 	}
 
-	[Table(Database="TestData2014", Name="TestMerge1")]
+	[Table("TestMerge1")]
 	public partial class TestMerge1
 	{
 		[Column(DbType="int",               DataType=DataType.Int32),                                  PrimaryKey,  NotNull] public int             Id              { get; set; } // int
@@ -1680,7 +1680,7 @@ namespace DataModel
 		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            FieldEnumNumber { get; set; } // int
 	}
 
-	[Table(Database="TestData2014", Name="TestMerge2")]
+	[Table("TestMerge2")]
 	public partial class TestMerge2
 	{
 		[Column(DbType="int",               DataType=DataType.Int32),                                  PrimaryKey,  NotNull] public int             Id              { get; set; } // int
@@ -1708,20 +1708,20 @@ namespace DataModel
 		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            FieldEnumNumber { get; set; } // int
 	}
 
-	[Table(Database="TestData2014", Name="TestMergeIdentity")]
+	[Table("TestMergeIdentity")]
 	public partial class TestMergeIdentity
 	{
 		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  Id    { get; set; } // int
 		[Column(DbType="int", DataType=DataType.Int32), Nullable            ] public int? Field { get; set; } // int
 	}
 
-	[Table(Database="TestData2014", Name="TestSchema_SameTableName")]
+	[Table("TestSchema_SameTableName")]
 	public partial class TestSchemaSameTableName
 	{
 		[Column("id", DbType="int", DataType=DataType.Int32), Nullable] public int? Id { get; set; } // int
 	}
 
-	[Table(Database="TestData2014", Name="TestSchemaX")]
+	[Table("TestSchemaX")]
 	public partial class TestSchemaX
 	{
 		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, NotNull] public int TestSchemaXID { get; set; } // int
@@ -1750,7 +1750,7 @@ namespace DataModel
 		#endregion
 	}
 
-	[Table(Database="TestData2014", Name="TestSchemaY")]
+	[Table("TestSchemaY")]
 	public partial class TestSchemaY
 	{
 		[Column(DbType="int", DataType=DataType.Int32), NotNull] public int TestSchemaXID       { get; set; } // int
@@ -1786,7 +1786,7 @@ namespace DataModel
 
 		public static int AddIssue792Record(this DataConnection dataConnection)
 		{
-			return dataConnection.ExecuteProc("[TestData2014]..[AddIssue792Record]");
+			return dataConnection.ExecuteProc("[AddIssue792Record]");
 		}
 
 		#endregion
@@ -1803,7 +1803,7 @@ namespace DataModel
 					id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
 					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
 				},
-				"[TestData2014]..[DuplicateColumnNames]").ToList();
+				"[DuplicateColumnNames]").ToList();
 		}
 
 		public partial class DuplicateColumnNamesResult
@@ -1818,7 +1818,7 @@ namespace DataModel
 
 		public static int OutRefEnumTest(this DataConnection dataConnection, string @str, ref string @outputStr, ref string @inputOutputStr)
 		{
-			var ret = dataConnection.ExecuteProc("[TestData2014]..[OutRefEnumTest]",
+			var ret = dataConnection.ExecuteProc("[OutRefEnumTest]",
 				new DataParameter("@str",            @str,            DataType.VarChar),
 				new DataParameter("@outputStr",      @outputStr,      DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
 				new DataParameter("@inputOutputStr", @inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
@@ -1835,7 +1835,7 @@ namespace DataModel
 
 		public static int OutRefTest(this DataConnection dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string @str, ref string @outputStr, ref string @inputOutputStr)
 		{
-			var ret = dataConnection.ExecuteProc("[TestData2014]..[OutRefTest]",
+			var ret = dataConnection.ExecuteProc("[OutRefTest]",
 				new DataParameter("@ID",             @ID,             DataType.Int32),
 				new DataParameter("@outputID",       @outputID,       DataType.Int32) { Direction = ParameterDirection.InputOutput },
 				new DataParameter("@inputOutputID",  @inputOutputID,  DataType.Int32) { Direction = ParameterDirection.InputOutput },
@@ -1857,7 +1857,7 @@ namespace DataModel
 
 		public static List<PatientSelectAllResult> PatientSelectAll(this DataConnection dataConnection)
 		{
-			return dataConnection.QueryProc<PatientSelectAllResult>("[TestData2014]..[Patient_SelectAll]").ToList();
+			return dataConnection.QueryProc<PatientSelectAllResult>("[Patient_SelectAll]").ToList();
 		}
 
 		public partial class PatientSelectAllResult
@@ -1876,7 +1876,7 @@ namespace DataModel
 
 		public static List<PatientSelectByNameResult> PatientSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
 		{
-			return dataConnection.QueryProc<PatientSelectByNameResult>("[TestData2014]..[Patient_SelectByName]",
+			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
 				new DataParameter("@lastName",  @lastName,  DataType.NVarChar)).ToList();
 		}
@@ -1897,7 +1897,7 @@ namespace DataModel
 
 		public static int PersonDelete(this DataConnection dataConnection, int? @PersonID)
 		{
-			return dataConnection.ExecuteProc("[TestData2014]..[Person_Delete]",
+			return dataConnection.ExecuteProc("[Person_Delete]",
 				new DataParameter("@PersonID", @PersonID, DataType.Int32));
 		}
 
@@ -1907,7 +1907,7 @@ namespace DataModel
 
 		public static List<PersonInsertResult> PersonInsert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
 		{
-			return dataConnection.QueryProc<PersonInsertResult>("[TestData2014]..[Person_Insert]",
+			return dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]",
 				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
 				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
 				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
@@ -1925,7 +1925,7 @@ namespace DataModel
 
 		public static int PersonInsertOutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
 		{
-			var ret = dataConnection.ExecuteProc("[TestData2014]..[Person_Insert_OutputParameter]",
+			var ret = dataConnection.ExecuteProc("[Person_Insert_OutputParameter]",
 				new DataParameter("@FirstName", @FirstName, DataType.NVarChar),
 				new DataParameter("@LastName", @LastName, DataType.NVarChar),
 				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
@@ -1943,7 +1943,7 @@ namespace DataModel
 
 		public static List<Person> PersonSelectAll(this DataConnection dataConnection)
 		{
-			return dataConnection.QueryProc<Person>("[TestData2014]..[Person_SelectAll]").ToList();
+			return dataConnection.QueryProc<Person>("[Person_SelectAll]").ToList();
 		}
 
 		#endregion
@@ -1952,7 +1952,7 @@ namespace DataModel
 
 		public static List<Person> PersonSelectByKey(this DataConnection dataConnection, int? @id)
 		{
-			return dataConnection.QueryProc<Person>("[TestData2014]..[Person_SelectByKey]",
+			return dataConnection.QueryProc<Person>("[Person_SelectByKey]",
 				new DataParameter("@id", @id, DataType.Int32)).ToList();
 		}
 
@@ -1962,7 +1962,7 @@ namespace DataModel
 
 		public static List<Person> PersonSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
 		{
-			return dataConnection.QueryProc<Person>("[TestData2014]..[Person_SelectByName]",
+			return dataConnection.QueryProc<Person>("[Person_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
 				new DataParameter("@lastName",  @lastName,  DataType.NVarChar)).ToList();
 		}
@@ -1973,7 +1973,7 @@ namespace DataModel
 
 		public static List<Person> PersonSelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
 		{
-			return dataConnection.QueryProc<Person>("[TestData2014]..[Person_SelectListByName]",
+			return dataConnection.QueryProc<Person>("[Person_SelectListByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
 				new DataParameter("@lastName",  @lastName,  DataType.NVarChar)).ToList();
 		}
@@ -1984,7 +1984,7 @@ namespace DataModel
 
 		public static int PersonUpdate(this DataConnection dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
 		{
-			return dataConnection.ExecuteProc("[TestData2014]..[Person_Update]",
+			return dataConnection.ExecuteProc("[Person_Update]",
 				new DataParameter("@PersonID",   @PersonID,   DataType.Int32),
 				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
 				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
@@ -2005,7 +2005,7 @@ namespace DataModel
 				{
 					Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
 				},
-				"[TestData2014]..[SelectImplicitColumn]").ToList();
+				"[SelectImplicitColumn]").ToList();
 		}
 
 		public partial class SelectImplicitColumnResult
@@ -2019,7 +2019,7 @@ namespace DataModel
 
 		public static List<TableTypeTestProcResult> TableTypeTestProc(this DataConnection dataConnection, DataTable @table)
 		{
-			return dataConnection.QueryProc<TableTypeTestProcResult>("[TestData2014]..[TableTypeTestProc]",
+			return dataConnection.QueryProc<TableTypeTestProcResult>("[TableTypeTestProc]",
 				new DataParameter("@table", @table, DataType.Structured){ DbType = "[dbo].[TestTableType]" }).ToList();
 		}
 
@@ -2035,7 +2035,7 @@ namespace DataModel
 
 		public static List<VariableResultsResult> VariableResults(this DataConnection dataConnection, bool? @ReturnFullRow)
 		{
-			return dataConnection.QueryProc<VariableResultsResult>("[TestData2014]..[VariableResults]",
+			return dataConnection.QueryProc<VariableResultsResult>("[VariableResults]",
 				new DataParameter("@ReturnFullRow", @ReturnFullRow, DataType.Boolean)).ToList();
 		}
 
@@ -2524,13 +2524,13 @@ namespace DataModel
 			}
 		}
 
-		[Table(Database="TestData2014", Schema="TestSchema", Name="SameTableName")]
+		[Table(Schema="TestSchema", Name="SameTableName")]
 		public partial class SameTableName
 		{
 			[Column("id", DbType="int", DataType=DataType.Int32), Nullable] public int? Id { get; set; } // int
 		}
 
-		[Table(Database="TestData2014", Schema="TestSchema", Name="TestSchemaA")]
+		[Table(Schema="TestSchema", Name="TestSchemaA")]
 		public partial class TestSchemaA
 		{
 			[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, NotNull] public int TestSchemaAID { get; set; } // int
@@ -2559,7 +2559,7 @@ namespace DataModel
 			#endregion
 		}
 
-		[Table(Database="TestData2014", Schema="TestSchema", Name="TestSchemaB")]
+		[Table(Schema="TestSchema", Name="TestSchemaB")]
 		public partial class TestSchemaB
 		{
 			[Column(                           DbType="int", DataType=DataType.Int32), PrimaryKey, NotNull] public int TestSchemaBID       { get; set; } // int
@@ -2603,7 +2603,7 @@ namespace DataModel
 					{
 						Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
 					},
-					"[TestData2014].[TestSchema].[TestProcedure]").ToList();
+					"[TestSchema].[TestProcedure]").ToList();
 			}
 
 			public partial class TestProcedureResult
