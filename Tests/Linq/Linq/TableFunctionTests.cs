@@ -203,6 +203,7 @@ namespace Tests.Linq
 			}
 		}
 
+#pragma warning disable CS0618
 		[Test, Category("FreeText")]
 		public void FreeText1([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
@@ -266,6 +267,7 @@ namespace Tests.Linq
 				Assert.That(list.Count, Is.GreaterThan(0));
 			}
 		}
+#pragma warning restore CS0618
 
 		[Test]
 		public void WithUpdateLock([IncludeDataSources(TestProvName.Northwind)] string context)

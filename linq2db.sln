@@ -247,6 +247,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySqlConnector", "MySqlConn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Tools", "Source\LinqToDB.Tools\LinqToDB.Tools.csproj", "{B6D0309F-61AA-4F2B-B918-5446609CBECD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.Android", "Tests\Tests.Android\Tests.Android.csproj", "{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		AppVeyor|Any CPU = AppVeyor|Any CPU
@@ -351,6 +353,16 @@ Global
 		{B6D0309F-61AA-4F2B-B918-5446609CBECD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B6D0309F-61AA-4F2B-B918-5446609CBECD}.Travis|Any CPU.ActiveCfg = Release|Any CPU
 		{B6D0309F-61AA-4F2B-B918-5446609CBECD}.Travis|Any CPU.Build.0 = Release|Any CPU
+		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}.AppVeyor|Any CPU.ActiveCfg = Release|Any CPU
+		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}.Travis|Any CPU.ActiveCfg = Release|Any CPU
+		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}.Travis|Any CPU.Build.0 = Release|Any CPU
+		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA}.Travis|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -384,6 +396,7 @@ Global
 		{4E3D4705-F037-4536-A45D-7AF52BB017DC} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{B4080869-A89C-4996-938C-D7F42E9AA3CB} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{B6D0309F-61AA-4F2B-B918-5446609CBECD} = {AF93451E-198C-4A94-8EB4-C330D886E102}
+		{AD7B78B0-AE51-4FB7-9B11-4E22A2B538CA} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}
