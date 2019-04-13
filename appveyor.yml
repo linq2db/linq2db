@@ -111,7 +111,7 @@ test_script:
 - ps: |
     if ($env:APPVEYOR_REPO_BRANCH -ne "release")
     {
-        .\Build\AppVeyor.NUnit.Tests.ps1
+        .\Build\AppVeyor.NUnit.Tests.Parallel.ps1
     }
 
 artifacts:
