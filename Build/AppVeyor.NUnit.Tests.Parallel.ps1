@@ -4,7 +4,7 @@ $net46Tests = {
 	$logFileName = "$env:APPVEYOR_BUILD_FOLDER\nunit_net46_results.xml"
 	$null = nunit3-console Tests\Linq\bin\AppVeyor\net46\linq2db.Tests.dll --result=$logFileName --where "cat != Ignored & cat != SkipCI"
 	if ($LastExitCode -ne 0) { $exit = $LastExitCode }
-	$null = #$wc.UploadFile($url, "$logFileName")
+	#$null = $wc.UploadFile($url, "$logFileName")
 	return $exit
 }
 
