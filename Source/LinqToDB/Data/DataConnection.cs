@@ -1068,16 +1068,27 @@ namespace LinqToDB.Data
 
 		private int? _commandTimeout;
 		/// <summary>
-		/// Gets or sets command execution timeout. By default timeout is 0 (infinity).
+		/// Gets or sets command execution timeout in seconds. 
+		/// Negative timeout value means that default timeout will be used.
+		/// 0 timeout value corresponds to infinite timeout.
+		/// By default timeout is not set and default value for current provider used.
 		/// </summary>
 		public  int   CommandTimeout
 		{
-			get => _commandTimeout ?? 0;
+			get => _commandTimeout ?? -1;
 			set
 			{
-				_commandTimeout = value;
-				if (_command != null)
-					_command.CommandTimeout = value;
+				if (value < 0)
+				{
+					_commandTimeout = null;
+					DisposeCommand();
+				}
+				else
+				{
+					_commandTimeout = value;
+					if (_command != null)
+						_command.CommandTimeout = value;
+				}
 			}
 		}
 
