@@ -21,12 +21,15 @@ namespace Tests.Linq
 
 		public class StringTestSourcesAttribute : IncludeDataSourcesAttribute
 		{
-			public StringTestSourcesAttribute(bool includeLinqService = true) : base(includeLinqService, 
+			public StringTestSourcesAttribute(bool includeLinqService = true) : base(includeLinqService,
 				TestProvName.AllSqlServer2016Plus,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
-				ProviderName.SapHana
-				)
+				ProviderName.SapHana,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				ProviderName.DB2,
+				TestProvName.AllFirebird)
 			{
 			}
 		}

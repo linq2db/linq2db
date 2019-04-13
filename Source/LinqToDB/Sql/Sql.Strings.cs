@@ -26,17 +26,17 @@ namespace LinqToDB
 			return result;
 		}
 
-		[Sql.Extension(PN.SqlServer,    "STRING_AGG({source}, {separator})",   IsAggregate = true)]
-		[Sql.Extension(PN.PostgreSQL,   "STRING_AGG({source}, {separator})",   IsAggregate = true)]
-		[Sql.Extension(PN.SapHana,      "STRING_AGG({source}, {separator})",   IsAggregate = true)]
-		[Sql.Extension(PN.SQLite,       "GROUP_CONCAT({source}, {separator})", IsAggregate = true)]
-		[Sql.Extension(PN.MySql,        "GROUP_CONCAT({source}, {separator})", IsAggregate = true)]
-		[Sql.Extension(PN.Oracle,       "LISTAGG({source}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.OracleNative, "LISTAGG({source}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.DB2,          "LISTAGG({source}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.DB2LUW,       "LISTAGG({source}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.DB2zOS,       "LISTAGG({source}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.Firebird,     "LIST({source}, {separator})",         IsAggregate = true)]
+		[Sql.Extension(PN.SqlServer,    "STRING_AGG({source}, {separator})",                            IsAggregate = true)]
+		[Sql.Extension(PN.PostgreSQL,   "STRING_AGG({source}, {separator})",                            IsAggregate = true)]
+		[Sql.Extension(PN.SapHana,      "STRING_AGG({source}, {separator})",                            IsAggregate = true)]
+		[Sql.Extension(PN.SQLite,       "GROUP_CONCAT({source}, {separator})",                          IsAggregate = true)]
+		[Sql.Extension(PN.MySql,        "GROUP_CONCAT({source} SEPARATOR {separator})",                 IsAggregate = true)]
+		[Sql.Extension(PN.Oracle,       "LISTAGG({source}, {separator}) WITHIN GROUP(ORDER BY ROWNUM)", IsAggregate = true)]
+		[Sql.Extension(PN.OracleNative, "LISTAGG({source}, {separator}) WITHIN GROUP(ORDER BY ROWNUM)", IsAggregate = true)]
+		[Sql.Extension(PN.DB2,          "LISTAGG({source}, {separator})",                               IsAggregate = true)]
+		[Sql.Extension(PN.DB2LUW,       "LISTAGG({source}, {separator})",                               IsAggregate = true)]
+		[Sql.Extension(PN.DB2zOS,       "LISTAGG({source}, {separator})",                               IsAggregate = true)]
+		[Sql.Extension(PN.Firebird,     "LIST({source}, {separator})",                                  IsAggregate = true)]
 		public static string StringAggregate(
 			[ExprParameter] [NotNull] this IQueryable<string> source,
 			[ExprParameter] [NotNull] string separator)
@@ -52,17 +52,17 @@ namespace LinqToDB
 				));
 		}
 
-		[Sql.Extension(PN.SqlServer,    "STRING_AGG({selector}, {separator})",   IsAggregate = true)]
-		[Sql.Extension(PN.PostgreSQL,   "STRING_AGG({selector}, {separator})",   IsAggregate = true)]
-		[Sql.Extension(PN.SapHana,      "STRING_AGG({selector}, {separator})",   IsAggregate = true)]
-		[Sql.Extension(PN.SQLite,       "GROUP_CONCAT({selector}, {separator})", IsAggregate = true)]
-		[Sql.Extension(PN.MySql,        "GROUP_CONCAT({selector}, {separator})", IsAggregate = true)]
-		[Sql.Extension(PN.Oracle,       "LISTAGG({selector}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.OracleNative, "LISTAGG({selector}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.DB2,          "LISTAGG({selector}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.DB2LUW,       "LISTAGG({selector}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.DB2zOS,       "LISTAGG({selector}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.Firebird,     "LIST({selector}, {separator})",         IsAggregate = true)]
+		[Sql.Extension(PN.SqlServer,    "STRING_AGG({selector}, {separator})",                            IsAggregate = true)]
+		[Sql.Extension(PN.PostgreSQL,   "STRING_AGG({selector}, {separator})",                            IsAggregate = true)]
+		[Sql.Extension(PN.SapHana,      "STRING_AGG({selector}, {separator})",                            IsAggregate = true)]
+		[Sql.Extension(PN.SQLite,       "GROUP_CONCAT({selector}, {separator})",                          IsAggregate = true)]
+		[Sql.Extension(PN.MySql,        "GROUP_CONCAT({selector} SEPARATOR {separator})",                 IsAggregate = true)]
+		[Sql.Extension(PN.Oracle,       "LISTAGG({selector}, {separator}) WITHIN GROUP(ORDER BY ROWNUM)", IsAggregate = true)]
+		[Sql.Extension(PN.OracleNative, "LISTAGG({selector}, {separator}) WITHIN GROUP(ORDER BY ROWNUM)", IsAggregate = true)]
+		[Sql.Extension(PN.DB2,          "LISTAGG({selector}, {separator})",                               IsAggregate = true)]
+		[Sql.Extension(PN.DB2LUW,       "LISTAGG({selector}, {separator})",                               IsAggregate = true)]
+		[Sql.Extension(PN.DB2zOS,       "LISTAGG({selector}, {separator})",                               IsAggregate = true)]
+		[Sql.Extension(PN.Firebird,     "LIST({selector}, {separator})",                                  IsAggregate = true)]
 		public static string StringAggregate<T>(
 			                [NotNull] this IEnumerable<T> source,
 			[ExprParameter] [NotNull] string separator,
@@ -75,17 +75,17 @@ namespace LinqToDB
 			return AggregateStrings(separator, source.Select(selector));
 		}
 
-		[Sql.Extension(PN.SqlServer,    "STRING_AGG({selector}, {separator})",   IsAggregate = true)]
-		[Sql.Extension(PN.PostgreSQL,   "STRING_AGG({selector}, {separator})",   IsAggregate = true)]
-		[Sql.Extension(PN.SapHana,      "STRING_AGG({selector}, {separator})",   IsAggregate = true)]
-		[Sql.Extension(PN.SQLite,       "GROUP_CONCAT({selector}, {separator})", IsAggregate = true)]
-		[Sql.Extension(PN.MySql,        "GROUP_CONCAT({selector}, {separator})", IsAggregate = true)]
-		[Sql.Extension(PN.Oracle,       "LISTAGG({selector}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.OracleNative, "LISTAGG({selector}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.DB2,          "LISTAGG({selector}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.DB2LUW,       "LISTAGG({selector}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.DB2zOS,       "LISTAGG({selector}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.Firebird,     "LIST({selector}, {separator})",         IsAggregate = true)]
+		[Sql.Extension(PN.SqlServer,    "STRING_AGG({selector}, {separator})",                            IsAggregate = true)]
+		[Sql.Extension(PN.PostgreSQL,   "STRING_AGG({selector}, {separator})",                            IsAggregate = true)]
+		[Sql.Extension(PN.SapHana,      "STRING_AGG({selector}, {separator})",                            IsAggregate = true)]
+		[Sql.Extension(PN.SQLite,       "GROUP_CONCAT({selector}, {separator})",                          IsAggregate = true)]
+		[Sql.Extension(PN.MySql,        "GROUP_CONCAT({selector} SEPARATOR {separator})",                 IsAggregate = true)]
+		[Sql.Extension(PN.Oracle,       "LISTAGG({selector}, {separator}) WITHIN GROUP(ORDER BY ROWNUM)", IsAggregate = true)]
+		[Sql.Extension(PN.OracleNative, "LISTAGG({selector}, {separator}) WITHIN GROUP(ORDER BY ROWNUM)", IsAggregate = true)]
+		[Sql.Extension(PN.DB2,          "LISTAGG({selector}, {separator})",                               IsAggregate = true)]
+		[Sql.Extension(PN.DB2LUW,       "LISTAGG({selector}, {separator})",                               IsAggregate = true)]
+		[Sql.Extension(PN.DB2zOS,       "LISTAGG({selector}, {separator})",                               IsAggregate = true)]
+		[Sql.Extension(PN.Firebird,     "LIST({selector}, {separator})",                                  IsAggregate = true)]
 		public static string StringAggregate<T>(
 			                [NotNull] this IQueryable<T> source,
 			[ExprParameter] [NotNull] string separator,
@@ -103,17 +103,17 @@ namespace LinqToDB
 				));
 		}
 
-		[Sql.Extension(PN.SqlServer,    "STRING_AGG({source}, {separator})",   IsAggregate = true)]
-		[Sql.Extension(PN.PostgreSQL,   "STRING_AGG({source}, {separator})",   IsAggregate = true)]
-		[Sql.Extension(PN.SapHana,      "STRING_AGG({source}, {separator})",   IsAggregate = true)]
-		[Sql.Extension(PN.SQLite,       "GROUP_CONCAT({source}, {separator})", IsAggregate = true)]
-		[Sql.Extension(PN.MySql,        "GROUP_CONCAT({source}, {separator})", IsAggregate = true)]
-		[Sql.Extension(PN.Oracle,       "LISTAGG({source}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.OracleNative, "LISTAGG({source}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.DB2,          "LISTAGG({source}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.DB2LUW,       "LISTAGG({source}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.DB2zOS,       "LISTAGG({source}, {separator})",      IsAggregate = true)]
-		[Sql.Extension(PN.Firebird,     "LIST({source}, {separator})",         IsAggregate = true)]
+		[Sql.Extension(PN.SqlServer,    "STRING_AGG({source}, {separator})",                            IsAggregate = true)]
+		[Sql.Extension(PN.PostgreSQL,   "STRING_AGG({source}, {separator})",                            IsAggregate = true)]
+		[Sql.Extension(PN.SapHana,      "STRING_AGG({source}, {separator})",                            IsAggregate = true)]
+		[Sql.Extension(PN.SQLite,       "GROUP_CONCAT({source}, {separator})",                          IsAggregate = true)]
+		[Sql.Extension(PN.MySql,        "GROUP_CONCAT({source} SEPARATOR {separator})",                 IsAggregate = true)]
+		[Sql.Extension(PN.Oracle,       "LISTAGG({source}, {separator}) WITHIN GROUP(ORDER BY ROWNUM)", IsAggregate = true)]
+		[Sql.Extension(PN.OracleNative, "LISTAGG({source}, {separator}) WITHIN GROUP(ORDER BY ROWNUM)", IsAggregate = true)]
+		[Sql.Extension(PN.DB2,          "LISTAGG({source}, {separator})",                               IsAggregate = true)]
+		[Sql.Extension(PN.DB2LUW,       "LISTAGG({source}, {separator})",                               IsAggregate = true)]
+		[Sql.Extension(PN.DB2zOS,       "LISTAGG({source}, {separator})",                               IsAggregate = true)]
+		[Sql.Extension(PN.Firebird,     "LIST({source}, {separator})",                                  IsAggregate = true)]
 		public static string StringAggregate(
 			[ExprParameter] [NotNull] this IEnumerable<string> source,
 			[ExprParameter] [NotNull] string separator)
@@ -152,10 +152,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension(PN.SqlServer,    "CONCAT_WS({separator}, {argument, ', '})")]
-		[Sql.Extension(PN.Oracle,       "CONCAT_WS({separator}, {argument, ', '})")]
-		[Sql.Extension(PN.OracleNative, "CONCAT_WS({separator}, {argument, ', '})")]
 		[Sql.Extension(PN.PostgreSQL,   "CONCAT_WS({separator}, {argument, ', '})")]
-		[Sql.Extension(PN.SapHana,      "CONCAT_WS({separator}, {argument, ', '})")]
 		[Sql.Extension(PN.MySql,        "CONCAT_WS({separator}, {argument, ', '})")]
 		[Sql.Extension(PN.SQLite,       "", BuilderType = typeof(SqliteConcatWsBuilder))]
 		public static string ConcatWS(
