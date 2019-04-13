@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -44,7 +46,6 @@ namespace Tests.Linq
 				}
 			}
 		}
-
 
 		static IEnumerable<AsyncDataTable> GenerateData()
 		{
@@ -160,7 +161,7 @@ namespace Tests.Linq
 		public async Task SinglePredicateAsync([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var lt = db.CreateLocalTable(context, "SPA", GenerateData()))
+			using (var lt = db.CreateLocalTable(GenerateData()))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<AsyncDataTable>()
@@ -209,7 +210,7 @@ namespace Tests.Linq
 		public async Task SingleOrDefaultPredicateAsync([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var lt = db.CreateLocalTable(context, "SODPA", GenerateData()))
+			using (var lt = db.CreateLocalTable(GenerateData()))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<AsyncDataTable>()
@@ -322,7 +323,7 @@ namespace Tests.Linq
 		public async Task MinAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var lt = db.CreateLocalTable(context, "MA1", GenerateData()))
+			using (var lt = db.CreateLocalTable(GenerateData()))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<AsyncDataTable>()
@@ -341,7 +342,7 @@ namespace Tests.Linq
 		public async Task MinSelectorAsync([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var lt = db.CreateLocalTable(context, "MSA1", GenerateData()))
+			using (var lt = db.CreateLocalTable(GenerateData()))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<AsyncDataTable>()

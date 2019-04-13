@@ -260,7 +260,7 @@ namespace Tests
 #if NETSTANDARD1_6 || NETSTANDARD2_0
 		public override Type DataReaderType => _dataReaderType ?? (_dataReaderType = _assembly.GetType(DataReaderTypeName, true));
 
-		protected override Type GetConnectionType()
+		protected internal override Type GetConnectionType()
 		{
 			if (_connectionType == null)
 				lock (SyncRoot)
@@ -299,7 +299,7 @@ namespace Tests
 			}
 		}
 
-		protected override Type GetConnectionType()
+		protected internal override Type GetConnectionType()
 		{
 			if (_connectionType == null)
 				lock (SyncRoot)

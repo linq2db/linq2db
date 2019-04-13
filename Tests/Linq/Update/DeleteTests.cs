@@ -400,15 +400,14 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteByTableName([DataSources] string context)
 		{
-			const string schemaName = null;
 			var tableName  = InsertTests.GetTableName(context, "1a");
 
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateTempTable<Person>(tableName, schemaName: schemaName))
+			using (var table = db.CreateLocalTable<Person>(tableName))
 			{
 				var iTable = (ITable<Person>)table;
-				Assert.AreEqual(tableName,  iTable.TableName);
-				Assert.AreEqual(schemaName, iTable.SchemaName);
+				Assert.AreEqual(tableName, iTable.TableName);
+				Assert.AreEqual(null,      iTable.SchemaName);
 
 				var person = new Person()
 				{
@@ -418,13 +417,13 @@ namespace Tests.xUpdate
 				};
 
 				// insert a row into the table
-				db.Insert(person, tableName: tableName, schemaName: schemaName);
+				db.Insert(person, tableName);
 				var newCount = table.Count();
 				Assert.AreEqual(1, newCount);
 
 				var personForDelete = table.Single();
 
-				db.Delete(personForDelete, tableName: tableName, schemaName: schemaName);
+				db.Delete(personForDelete, tableName);
 
 				Assert.AreEqual(0, table.Count());
 			}

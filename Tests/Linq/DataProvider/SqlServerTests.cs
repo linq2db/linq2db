@@ -1347,7 +1347,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue1613Test1([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void Issue1613Test1([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateData()))

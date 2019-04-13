@@ -263,7 +263,7 @@ namespace Tests.Linq
 			var testData = GetTestData();
 
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, "O1", testData))
+			using (var table = db.CreateLocalTable(testData))
 			{
 				var actual = table
 					.OrderBy(x => x.OrderData1 % 3)
@@ -364,7 +364,7 @@ namespace Tests.Linq
 			var testData = GetTestData();
 
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, "OBO", testData))
+			using (var table = db.CreateLocalTable(testData))
 			{
 				var actualQuery = table
 					.Where(x => x.Id.Between(1, 9))
@@ -413,7 +413,7 @@ namespace Tests.Linq
 			var testData = GetTestData();
 
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, "O2", testData))
+			using (var table = db.CreateLocalTable(testData))
 			{
 				var subQuery1 =
 					table.OrderBy(t => t.OrderData1)

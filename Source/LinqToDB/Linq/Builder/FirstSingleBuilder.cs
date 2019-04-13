@@ -257,7 +257,9 @@ namespace LinqToDB.Linq.Builder
 						if (Sequence.IsExpression(null, level, RequestFor.Object).Result)
 							return Builder.BuildMultipleQuery(Parent, _methodCall, enforceServerSide);
 
-						return Builder.BuildSql(_methodCall.Type, Parent.SelectQuery.Select.Add(SelectQuery));
+						var idx = Parent.SelectQuery.Select.Add(SelectQuery);
+						    idx = Parent.ConvertToParentIndex(idx, Parent);
+						return Builder.BuildSql(_methodCall.Type, idx);
 					}
 
 					return null;

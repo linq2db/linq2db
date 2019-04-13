@@ -151,7 +151,6 @@ namespace Tests.Linq
 			for (var i = 0; i < count; i++)
 				Assert.AreEqual(results[i,0], results[i,1]);
 		}
-#endif
 
 		[Test]
 		public void ConcurrentTest2([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -183,6 +182,7 @@ namespace Tests.Linq
 			for (var i = 0; i < 100; i++)
 				Assert.AreEqual(results[i,0], results[i,1]);
 		}
+#endif
 
 		[Test]
 		public void ParamTest1([DataSources] string context)

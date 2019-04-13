@@ -25,6 +25,8 @@ namespace Tests
 		public const string NoopProvider  = "TestNoopProvider";
 
 		public const string AllMySql             = "MySql,MySqlConnector,MySql57,MariaDB";
+		// MySql excluded because v5.5 has inadequate FTS behavior
+		public const string AllMySqlFullText     = "MySqlConnector,MySql57,MariaDB";
 		public const string AllMySqlData         = "MySql,MySql57,MariaDB";
 		public const string AllPostgreSQL        = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.EDGE";
 		public const string AllPostgreSQLv3      = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";

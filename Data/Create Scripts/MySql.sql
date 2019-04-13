@@ -458,8 +458,11 @@ GO
 
 CREATE TABLE FullTextIndexTest (
 	id int UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
-	TestField TEXT(100),
-	FULLTEXT idx (TestField)
+	TestField1 TEXT(100),
+	TestField2 TEXT(200),
+	FULLTEXT idx_all (TestField1, TestField2),
+	FULLTEXT idx_field1 (TestField1),
+	FULLTEXT idx_field2 (TestField2)
 )
 -- SKIP MySql57 BEGIN
 -- SKIP MariaDB BEGIN
@@ -469,4 +472,8 @@ CREATE TABLE FullTextIndexTest (
 -- SKIP MariaDB END
 -- SKIP MySqlConnector END
 ;
+GO
+INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('this is text1', 'this is text2');
+INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('looking for something?', 'found it!');
+INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('record not found', 'empty');
 GO

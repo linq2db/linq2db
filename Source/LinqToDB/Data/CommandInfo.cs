@@ -918,11 +918,11 @@ namespace LinqToDB.Data
 			if (parameters == null)
 				return null;
 
-			if (parameters is DataParameter[])
-				return (DataParameter[])parameters;
-
-			if (parameters is DataParameter)
-				return new[] { (DataParameter)parameters };
+			switch (parameters)
+			{
+				case DataParameter[] dataParameters : return dataParameters;
+				case DataParameter   dataParameter  : return new[] { dataParameter };
+			}
 
 			var type = parameters.GetType();
 			var key  = new ParamKey(type, dataConnection.ID);

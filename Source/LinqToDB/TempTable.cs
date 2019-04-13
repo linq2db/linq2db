@@ -325,7 +325,7 @@ namespace LinqToDB
 
 		#endregion
 
-		void IDisposable.Dispose()
+		public virtual void Dispose()
 		{
 			_table.DropTable();
 		}

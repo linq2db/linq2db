@@ -133,6 +133,7 @@ namespace LinqToDB
 		{
 			string         Configuration    { get; }
 			MappingSchema  Mapping          { get; }
+			IDataContext   DataContext      { get; }
 			SelectQuery    Query            { get; }
 			MemberInfo     Member           { get; }
 			SqlExtension   Extension        { get; }
@@ -251,14 +252,14 @@ namespace LinqToDB
 
 				public ExtensionBuilder(
 					string                     configuration,
-					[NotNull]   MappingSchema  mapping,
+					[NotNull]   IDataContext   dataContext,
 					[NotNull]	SelectQuery    query,
 					[NotNull]   SqlExtension   extension,
 					[NotNull]   ConvertHelper  convertHeper,
 					[NotNull]   MemberInfo     member,
 					[NotNull]   Expression[]   arguments)
 				{
-					Mapping       = mapping      ?? throw new ArgumentNullException(nameof(mapping));
+					DataContext   = dataContext  ?? throw new ArgumentNullException(nameof(dataContext));
 					Query         = query        ?? throw new ArgumentNullException(nameof(query));
 					Configuration = configuration;
 					Extension     = extension    ?? throw new ArgumentNullException(nameof(extension));
@@ -278,7 +279,8 @@ namespace LinqToDB
 				#region ISqExtensionBuilder Members
 
 				public string         Configuration    { get; }
-				public MappingSchema  Mapping          { get; }
+				public MappingSchema  Mapping          => DataContext.MappingSchema;
+				public IDataContext   DataContext      { get; }
 				public SelectQuery    Query            { get; }
 				public MemberInfo     Member           { get; }
 				public SqlExtension   Extension        { get; }
@@ -385,7 +387,7 @@ namespace LinqToDB
 				return lambda.Compile()();
 			}
 
-			protected List<SqlExtensionParam> BuildFunctionsChain(MappingSchema mapping, SelectQuery query, Expression expr, ConvertHelper convertHelper)
+			protected List<SqlExtensionParam> BuildFunctionsChain(IDataContext dataContext, SelectQuery query, Expression expr, ConvertHelper convertHelper)
 			{
 				var chains   = new List<SqlExtensionParam>();
 				var current  = expr;
@@ -428,15 +430,15 @@ namespace LinqToDB
 						}
 					}
 
-					var attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedTypeEx(), memberInfo,
+					var attributes = dataContext.MappingSchema.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedTypeEx(), memberInfo,
 						a => string.IsNullOrEmpty(a.Configuration) ? "___" : a.Configuration);
 					if (attributes.Length == 0)
 						attributes =
-							mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedTypeEx(), memberInfo, a => a.Configuration);
+							dataContext.MappingSchema.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedTypeEx(), memberInfo, a => a.Configuration);
 
 					foreach (var attr in attributes)
 					{
-						var param = attr.BuildExtensionParam(mapping, query, memberInfo, arguments, convertHelper);
+						var param = attr.BuildExtensionParam(dataContext, query, memberInfo, arguments, convertHelper);
 						chains.Add(param);
 					}
 
@@ -499,7 +501,7 @@ namespace LinqToDB
 				return str;
 			}
 
-			SqlExtensionParam BuildExtensionParam(MappingSchema mapping, SelectQuery query, MemberInfo member, Expression[] arguments, ConvertHelper convertHelper)
+			SqlExtensionParam BuildExtensionParam(IDataContext dataContext, SelectQuery query, MemberInfo member, Expression[] arguments, ConvertHelper convertHelper)
 			{
 				var method = member as MethodInfo;
 				var type   = member.GetMemberType();
@@ -554,7 +556,7 @@ namespace LinqToDB
 						}
 					);
 
-					var builder = new ExtensionBuilder(Configuration, mapping, query, extension, convertHelper, member, arguments);
+					var builder = new ExtensionBuilder(Configuration, dataContext, query, extension, convertHelper, member, arguments);
 					callBuilder.Build(builder);
 
 					result = builder.ResultExpression != null ? new SqlExtensionParam(TokenName, builder.ResultExpression) : new SqlExtensionParam(TokenName, builder.Extension);
@@ -655,12 +657,12 @@ namespace LinqToDB
 				return sqlExpression;
 			}
 
-			public override ISqlExpression GetExpression(MappingSchema mapping, SelectQuery query, Expression expression, Func<Expression, ISqlExpression> converter)
+			public override ISqlExpression GetExpression(IDataContext dataContext, SelectQuery query, Expression expression, Func<Expression, ISqlExpression> converter)
 			{
 				var helper = new ConvertHelper(converter);
 
 				// chain starts from the tail
-				var chain  = BuildFunctionsChain(mapping, query, expression, helper);
+				var chain  = BuildFunctionsChain(dataContext, query, expression, helper);
 
 				if (chain.Count == 0)
 					throw new InvalidOperationException("No sequnce found");
@@ -676,19 +678,20 @@ namespace LinqToDB
 					return replaced[0].Expression;
 				}
 
+				var mappingSchema = dataContext.MappingSchema;
 				var mainExtension = main.Extension;
 
 				// suggesting type
 				var type = chain
 					.Where(c => c.Extension != null)
 					.Select(c => c.Extension.SystemType)
-					.FirstOrDefault(t => t != null && mapping.IsScalarType(t));
+					.FirstOrDefault(t => t != null && mappingSchema.IsScalarType(t));
 
 				if (type == null)
 					type = chain
 						.Where(c => c.Expression != null)
 						.Select(c => c.Expression.SystemType)
-						.FirstOrDefault(t => t != null && mapping.IsScalarType(t));
+						.FirstOrDefault(t => t != null && mappingSchema.IsScalarType(t));
 
 				mainExtension.SystemType = type ?? expression.Type;
 

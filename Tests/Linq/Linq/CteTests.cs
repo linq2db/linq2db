@@ -476,7 +476,7 @@ namespace Tests.Linq
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var testTable = db.CreateLocalTable<CteDMLTests>(context, nameof(TestInsert), "CteChild"))
+			using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
 			{
 				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte("CTE1_");
 				var toInsert = from p in cte1
@@ -685,7 +685,7 @@ namespace Tests.Linq
 			var hierarchyData = GeHirarchyData();
 
 			using (var db = GetDataContext(context))
-			using (var tree = db.CreateLocalTable(context, "19", hierarchyData))
+			using (var tree = db.CreateLocalTable(hierarchyData))
 			{
 				var hierarchy = GetHierarchyDown(tree, db);
 
@@ -702,7 +702,7 @@ namespace Tests.Linq
 			var hierarchyData = GeHirarchyData();
 
 			using (var db = GetDataContext(context))
-			using (var tree = db.CreateLocalTable(context, "20", hierarchyData))
+			using (var tree = db.CreateLocalTable(hierarchyData))
 			{
 				var hierarchy1 = GetHierarchyDown(tree, db);
 				var hierarchy2 = GetHierarchyDown(tree, db);
@@ -727,7 +727,7 @@ namespace Tests.Linq
 			var hierarchyData = GeHirarchyData();
 
 			using (var db = GetDataContext(context))
-			using (var tree = db.CreateLocalTable(context, "21", hierarchyData))
+			using (var tree = db.CreateLocalTable(hierarchyData))
 			{
 				var hierarchy = GetHierarchyDown(tree, db);
 				var expected = EnumerateDown(hierarchyData, 0, null);
@@ -742,8 +742,8 @@ namespace Tests.Linq
 			var hierarchyData = GeHirarchyData();
 
 			using (var db          = GetDataContext(context))
-			using (var tree        = db.CreateLocalTable               (context, "17", hierarchyData))
-			using (var resultTable = db.CreateLocalTable<HierarchyData>(context, "18"))
+			using (var tree        = db.CreateLocalTable(hierarchyData))
+			using (var resultTable = db.CreateLocalTable<HierarchyData>())
 			{
 				var hierarchy = GetHierarchyDown(tree, db);
 				hierarchy.Insert(resultTable, r => r);
@@ -758,8 +758,8 @@ namespace Tests.Linq
 		[Test]
 		public void RecursiveDeepNesting([CteContextSource(true, ProviderName.DB2)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var tree = db.CreateLocalTable<HierarchyTree>(context, "22"))
+			using (var db   = GetDataContext(context))
+			using (var tree = db.CreateLocalTable<HierarchyTree>())
 			{
 				var hierarchy = GetHierarchyDown(tree, db);
 
