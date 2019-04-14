@@ -66,28 +66,32 @@ before_build:
     .\Build\AppVeyor.FixVersionProps.ps1  -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
     .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion $env:APPVEYOR_REPO_BRANCH
 
-    $createDb = {
-        param($dbName)
-        $sqlInstance = "(local)\SQL2014"
+    $env:MYSQL_PWD="Password12!"
+    $env:PGUSER="postgres"
+    $env:PGPASSWORD="Password12!"
+    $sqlInstance = "(local)\SQL2014"
 
-        # create database
-        sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    # create databases
+    $dbName = "TestDatanet45"
+    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
+    iex "& $cmd"
+    $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
+    iex "& $cmd"
 
-        # MySql
-        $env:MYSQL_PWD="Password12!"
-        $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
-        iex "& $cmd"
+    $dbName = "TestDatanetcore1"
+    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
+    iex "& $cmd"
+    $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
+    iex "& $cmd"
 
-        # PgSql
-        $env:PGUSER="postgres"
-        $env:PGPASSWORD="Password12!"
-        $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
-        iex "& $cmd"
-    }
-
-    Invoke-Command $createDb -ArgumentList "TestDatanet45"
-    Invoke-Command $createDb -ArgumentList "TestDatanetcore1"
-    Invoke-Command $createDb -ArgumentList "TestDatanetcore2"
+    $dbName = "TestDatanetcore2"
+    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
+    iex "& $cmd"
+    $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
+    iex "& $cmd"
 
     # Access ACE provider
     #(New-Object Net.WebClient).DownloadFile("https://download.microsoft.com/download/2/4/3/24375141-E08D-4803-AB0E-10F2E3A07AAA/AccessDatabaseEngine.exe", "$env:appveyor_build_folder\AccessDatabaseEngine.exe")
