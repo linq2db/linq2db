@@ -35,8 +35,6 @@ namespace Tests.Linq
 			{
 				var _ = db.GetTable<TestParent>().Count(t => t.ID > 0);
 			}
-
-			Assert.Fail();
 		}
 
 		[Test]

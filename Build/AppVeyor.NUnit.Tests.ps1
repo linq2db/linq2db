@@ -35,9 +35,9 @@ $logFileNameCore2 = "$env:APPVEYOR_BUILD_FOLDER\nunit_core2_results.xml"
 $logFileNameCore1 = "$env:APPVEYOR_BUILD_FOLDER\nunit_core1_results.xml"
 
 $dir = Get-Location
-Start-Job $net46Tests  -ArgumentList $dir,$logFileNameNet45
-Start-Job $netcore2Tests  -ArgumentList $dir,$logFileNameCore2
-Start-Job $netcore1Tests  -ArgumentList $dir,$logFileNameCore1
+Start-Job -Name "netfx_tests" $net46Tests -ArgumentList $dir,$logFileNameNet45
+Start-Job -Name "netcore_2_tests" $netcore2Tests -ArgumentList $dir,$logFileNameCore2
+Start-Job -Name "netcore_1_tests" $netcore1Tests -ArgumentList $dir,$logFileNameCore1
 
 While (Get-Job -State "Running")
 {
@@ -45,15 +45,17 @@ While (Get-Job -State "Running")
 }
 
 $results = Get-Job | Receive-Job
-Write-Host "WRITING TEST OUTPUT:"
+
+# actually takes some time, so disabling it also will speed-up testrun
+Write-Host "Writing tests output"
 $results | Foreach {$_.output} | Write-Host
 
-Write-Host "UPLOADING LOGS:"
+Write-Host "Uploading test results"
 $url = "https://ci.appveyor.com/api/testresults/nunit3/$env:APPVEYOR_JOB_ID"
 #$wc.UploadFile($url, $logFileNameNet45)
 $wc.UploadFile($url, $logFileNameCore2)
 $wc.UploadFile($url, $logFileNameCore1)
 
 $exit = ($results | Foreach {$_.status} | Measure-Object -Sum).Sum
-
+Write-Host "Exit code (sum): $exit"
 $host.SetShouldExit($exit)
