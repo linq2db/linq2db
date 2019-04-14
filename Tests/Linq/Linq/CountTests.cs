@@ -173,7 +173,7 @@ namespace Tests.Linq
 					select g.Count(ch => ch.ChildID > 20));
 		}
 
-		[ActiveIssue("Unsupported by Informix?", Configurations = new[] { ProviderName.Informix, ProviderName.SapHana })]
+		[ActiveIssue(1685, Configurations = new[] { ProviderName.Informix, ProviderName.SapHana })]
 		[Test]
 		public void GroupBy21([DataSources] string context)
 		{
@@ -193,7 +193,7 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
-		[ActiveIssue("Unsupported by Informix?", Configurations = new[] { ProviderName.Informix, ProviderName.SapHana })]
+		[ActiveIssue(1685, Configurations = new[] { ProviderName.Informix, ProviderName.SapHana })]
 		[Test]
 		public void GroupBy22([DataSources] string context)
 		{

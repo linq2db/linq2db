@@ -40,7 +40,6 @@ namespace Tests.xUpdate
 			[Column]                       public decimal Field1;
 		}
 
-		// SAP hana not related to oracle this issue, we just cannot use two ActiveIssue attributes
 		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
 		public void TruncateIdentityTest([DataSources(ProviderName.Informix, ProviderName.SapHana)]
