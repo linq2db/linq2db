@@ -205,6 +205,37 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
+		public static MethodInfo GetPublicInstanceMethodEx(this Type type, string name, params Type[] types)
+		{
+#if NETSTANDARD1_6
+			// https://github.com/dotnet/corefx/issues/12921
+			return type.GetMethodsEx().FirstOrDefault(mi =>
+			{
+				var res = !mi.IsStatic && mi.IsPublic && mi.Name == name;
+				if (!res)
+					return res;
+
+				var pars = mi.GetParameters().Select(_ => _.ParameterType).ToArray();
+
+				if (types.Length == 0 && pars.Length == 0)
+					return true;
+
+				if (pars.Length != types.Length)
+					return false;
+
+				for (var i = 0; i < types.Length; i++)
+				{
+					if (types[i] != pars[i])
+						return false;
+				}
+
+				return true;
+			});
+#else
+			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Public, null, types, null);
+#endif
+		}
+
 		public static MethodInfo GetMethodEx(this Type type, string name)
 		{
 			return type.GetMethod(name);

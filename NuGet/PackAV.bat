@@ -2,6 +2,7 @@
 del *.nupkg
 
 ..\Redist\NuGet Pack linq2db.nuspec
+..\Redist\NuGet Pack linq2db.Tools.nuspec
 
 ..\Redist\NuGet Pack linq2db.Access.nuspec
 ..\Redist\NuGet Pack linq2db.DB2.nuspec

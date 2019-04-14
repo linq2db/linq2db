@@ -199,9 +199,9 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.DB2,
 				ProviderName.Informix,
-				ProviderName.Firebird, TestProvName.Firebird3,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				TestProvName.AllFirebird,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
 				ProviderName.Access,
 				ProviderName.SapHana)]
 			string context)
@@ -259,9 +259,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.DB2,
 				ProviderName.Informix,
-				ProviderName.Firebird,
-				ProviderName.PostgreSQL,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -333,7 +331,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTime21([DataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] string context)
+		public void DateTime21([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -358,11 +356,11 @@ namespace Tests.Linq
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				ProviderName.DB2,
 				ProviderName.Informix,
-				ProviderName.Firebird, TestProvName.Firebird3,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57,
-				ProviderName.Sybase, ProviderName.SybaseManaged,
+				TestProvName.AllFirebird,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllMySql,
+				TestProvName.AllSybase,
 				ProviderName.SapHana)]
 			string context)
 		{
@@ -389,11 +387,11 @@ namespace Tests.Linq
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				ProviderName.DB2,
 				ProviderName.Informix,
-				ProviderName.Firebird, TestProvName.Firebird3,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57,
-				ProviderName.Sybase, ProviderName.SybaseManaged,
+				TestProvName.AllFirebird,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllMySql,
+				TestProvName.AllSybase,
 				ProviderName.SapHana)]
 			string context)
 		{
@@ -423,11 +421,11 @@ namespace Tests.Linq
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				ProviderName.DB2,
 				ProviderName.Informix,
-				ProviderName.Firebird, TestProvName.Firebird3,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQL11, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.MySql, ProviderName.MySqlConnector, TestProvName.MariaDB, TestProvName.MySql57,
-				ProviderName.Sybase, ProviderName.SybaseManaged,
+				TestProvName.AllFirebird,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllMySql,
+				TestProvName.AllSybase,
 				ProviderName.SapHana)]
 			string context)
 		{
@@ -524,8 +522,7 @@ namespace Tests.Linq
 
 		[Test, Category("WindowsOnly")]
 		public void Unicode([DataSources(
-			ProviderName.Informix, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.Sybase, ProviderName.SybaseManaged)]
+			ProviderName.Informix, TestProvName.AllFirebird, TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

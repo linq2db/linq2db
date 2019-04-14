@@ -113,9 +113,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeDistinct([DataSources(
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void TakeDistinct([DataSources(TestProvName.AllSybase, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

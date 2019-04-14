@@ -53,6 +53,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[Category("SkipCI")]
 		[Test, Category("WindowsOnly")]
 		public void Test2()
 		{

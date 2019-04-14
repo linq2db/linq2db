@@ -22,17 +22,8 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SybaseTests : TestBase
 	{
-		[AttributeUsage(AttributeTargets.Parameter)]
-		class SybaseDataSourcesAttribute : IncludeDataSourcesAttribute
-		{
-			public SybaseDataSourcesAttribute(bool includeLinqService = false)
-				: base(includeLinqService, ProviderName.Sybase, ProviderName.SybaseManaged)
-			{
-			}
-		}
-
 		[Test]
-		public void TestParameters([SybaseDataSources] string context)
+		public void TestParameters([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -63,7 +54,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDataTypes([SybaseDataSources] string context)
+		public void TestDataTypes([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -159,7 +150,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestNumerics([SybaseDataSources] string context)
+		public void TestNumerics([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -213,7 +204,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDate([SybaseDataSources] string context)
+		public void TestDate([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -227,7 +218,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestSmallDateTime([SybaseDataSources] string context)
+		public void TestSmallDateTime([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -242,7 +233,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDateTime([SybaseDataSources] string context)
+		public void TestDateTime([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -258,7 +249,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTimeSpan([SybaseDataSources] string context)
+		public void TestTimeSpan([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -275,7 +266,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestChar([SybaseDataSources] string context)
+		public void TestChar([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -319,7 +310,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestString([SybaseDataSources] string context)
+		public void TestString([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -371,7 +362,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void TestUnicodeString(
-			[SybaseDataSources] string context,
+			[IncludeDataSources(TestProvName.AllSybase)] string context,
 			[ValueSource(nameof(StringTestCases))] Tuple<string,string> testCase)
 		{
 			using (var conn = new DataConnection(context))
@@ -404,7 +395,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestBinary([SybaseDataSources] string context)
+		public void TestBinary([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			var arr1 = new byte[] { 57, 48        };
 			var arr2 = new byte[] { 57, 48, 0, 0  };
@@ -435,7 +426,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestGuid([SybaseDataSources] string context)
+		public void TestGuid([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -455,7 +446,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTimestamp([SybaseDataSources] string context)
+		public void TestTimestamp([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -467,7 +458,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestXml([SybaseDataSources] string context)
+		public void TestXml([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -493,7 +484,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestEnum1([SybaseDataSources] string context)
+		public void TestEnum1([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -505,7 +496,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestEnum2([SybaseDataSources] string context)
+		public void TestEnum2([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -519,7 +510,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void BulkCopyLinqTypes([SybaseDataSources] string context)
+		public void BulkCopyLinqTypes([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{

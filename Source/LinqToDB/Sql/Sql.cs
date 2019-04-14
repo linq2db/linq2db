@@ -55,6 +55,12 @@ namespace LinqToDB
 			return obj;
 		}
 
+		[Sql.Extension("{array, ', '}", ServerSideOnly = true)]
+		internal static T[] Spread<T>([ExprParameter] T[] array)
+		{
+			throw new InvalidOperationException();
+		}
+
 		[CLSCompliant(false)]
 		[Sql.Expression("{0}", 0, CanBeNull = true)]
 		public static T AsNullable<T>(T value)
@@ -714,7 +720,18 @@ namespace LinqToDB
 		[Sql.Property(PN.Access,   "Now",               ServerSideOnly = true, CanBeNull = false)]
 		[Sql.Function(PN.SqlCe,    "GetDate",           ServerSideOnly = true, CanBeNull = false)]
 		[Sql.Function(PN.Sybase,   "GetDate",           ServerSideOnly = true, CanBeNull = false)]
-		public static DateTime CurrentTimestamp => throw new LinqException("The 'CurrentTimestamp' is server side only property.");
+		public static DateTime CurrentTimestamp => throw new LinqException("'CurrentTimestamp' is server side only property.");
+
+		[Sql.Function  (PN.SqlServer , "SYSUTCDATETIME"                      , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Function  (PN.Sybase    , "GETUTCDATE"                          , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Expression(PN.SQLite    , "DATETIME('now')"                     , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Function  (PN.MySql     , "UTC_TIMESTAMP"                       , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Expression(PN.PostgreSQL, "timezone('UTC', now())"              , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Expression(PN.DB2       , "CURRENT TIMESTAMP - CURRENT TIMEZONE", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Subtraction)]
+		[Sql.Expression(PN.Oracle    , "SYS_EXTRACT_UTC(SYSTIMESTAMP)"       , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
+		[Sql.Property  (PN.SapHana   , "CURRENT_UTCTIMESTAMP"                , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
+		[Sql.Expression(PN.Informix  , "datetime(1970-01-01 00:00:00) year to second + (dbinfo('utc_current')/86400)::int::char(9)::interval day(9) to day + (mod(dbinfo('utc_current'), 86400))::char(5)::interval second(5) to second", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
+		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;
 
 		[Sql.Property(             "CURRENT_TIMESTAMP", CanBeNull = false)]
 		[Sql.Property(PN.Informix, "CURRENT",           CanBeNull = false)]
@@ -951,6 +968,7 @@ namespace LinqToDB
 
 		#region Text Functions
 
+		[Obsolete("Use Sql.Ext.SqlServer().FreeText methods")]
 		[Sql.Expression("FREETEXT({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
 		public static bool FreeText(object table, string text)
 		{

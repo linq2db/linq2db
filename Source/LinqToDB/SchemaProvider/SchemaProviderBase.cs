@@ -158,8 +158,15 @@ namespace LinqToDB.SchemaProvider
 					if (thisTable == null || otherTable == null)
 						continue;
 
+					var stringComparison = ForeignKeyColumnComparison(fk.OtherColumn);
+
 					var thisColumn  = (from c in thisTable. Columns where c.ColumnName == fk.ThisColumn   select c).SingleOrDefault();
-					var otherColumn = (from c in otherTable.Columns where c.ColumnName == fk.OtherColumn  select c).SingleOrDefault();
+					var otherColumn =
+					(
+						from c in otherTable.Columns
+						where string.Compare(c.ColumnName, fk.OtherColumn, stringComparison)  == 0
+						select c
+					).SingleOrDefault();
 
 					if (thisColumn == null || otherColumn == null)
 						continue;
@@ -316,6 +323,8 @@ namespace LinqToDB.SchemaProvider
 
 			}, options);
 		}
+
+		protected virtual StringComparison ForeignKeyColumnComparison(string column) => StringComparison.Ordinal;
 
 		protected static HashSet<string> GetHashSet(string[] data, IEqualityComparer<string> comparer)
 		{

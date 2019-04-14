@@ -83,6 +83,11 @@ namespace LinqToDB.Mapping
 		public bool IsColumnAttributeRequired { get; private set; }
 
 		/// <summary>
+		/// Gets flags for which operation values are skipped.
+		/// </summary>
+		public SkipModification SkipModificationFlags { get; private set; }
+
+		/// <summary>
 		/// Gets the dynamic columns store descriptor.
 		/// </summary>
 		public ColumnDescriptor DynamicColumnsStore { get; private set; }
@@ -226,6 +231,8 @@ namespace LinqToDB.Mapping
 			foreach (var attr in typeColumnAttrs.Concat(attrs))
 				if (attr.IsColumn)
 					SetColumn(attr, mappingSchema);
+
+			SkipModificationFlags = Columns.Aggregate(SkipModification.None, (s, c) => s | c.SkipModificationFlags);
 		}
 
 		void SetColumn(ColumnAttribute attr, MappingSchema mappingSchema)

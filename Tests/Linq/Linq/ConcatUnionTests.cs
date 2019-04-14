@@ -860,7 +860,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatInheritance([IncludeDataSources(false, ProviderName.SQLiteClassic)] string context)
+		public void TestConcatInheritance([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			var testData = new[]
 			{

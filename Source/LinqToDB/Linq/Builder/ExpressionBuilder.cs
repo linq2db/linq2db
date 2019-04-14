@@ -550,6 +550,21 @@ namespace LinqToDB.Linq.Builder
 							break;
 						}
 
+					case ExpressionType.Convert:
+						{
+							var ex = (UnaryExpression)expr;
+							if (ex.Method != null)
+							{
+								var l = ConvertMethodExpression(ex.Method.DeclaringType, ex.Method);
+								if (l != null)
+								{
+									var exposed = l.GetBody(ex.Operand);
+									return ExposeExpression(exposed);
+								}
+							}
+							break;
+						}
+
 					case ExpressionType.Constant :
 						{
 							var c = (ConstantExpression)expr;

@@ -1737,5 +1737,46 @@ namespace Tests.Linq
 				}
 			}
 		}
+
+		[Table]
+		public class Issue1622Table
+		{
+			[Identity, PrimaryKey]
+			public int Id { get; set; }
+			[Column]
+			public string SomeText { get; set; }
+		}
+
+		public enum Issue1622Enum
+		{
+			Value1, Value2
+		}
+
+		[Sql.Expression("{0} = {1}", InlineParameters = true, ServerSideOnly = true, IsPredicate = true)]
+		public static bool SomeComparison(string column, Issue1622Enum value) => throw new InvalidOperationException();
+
+		[Test, ActiveIssue(1622)]
+		public void Issue1622Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.SetValueToSqlConverter(typeof(Issue1622Enum),
+					(sb, dt, v) =>
+					{
+						sb.Append("'").Append(((Issue1622Enum)v).ToString()).Append("_suffix'");
+					});
+
+				using (var table = db.CreateLocalTable<Issue1622Table>())
+				{
+					var item = new Issue1622Table() { Id = 1 };
+					db.Insert(item);
+
+					//var res = table.Where(e => SomeComparison(e.SomeText, Issue1622Enum.Value1)).ToArray();
+					var res2 = table.Where(e => e.Id == 1).FirstOrDefault();
+
+					Assert.That(item.Id, Is.EqualTo(res2.Id));
+				}
+			}
+		}
 	}
 }

@@ -16,7 +16,8 @@ namespace LinqToDB.Common
 		{
 			var dataTypeStr = DataType == DataType.Undefined ? string.Empty : $", {DataType}";
 			var dbTypeStr   = string.IsNullOrEmpty(DbType)   ? string.Empty : $", \"{DbType}\"";
-			return $"{SystemType}{dataTypeStr}{dbTypeStr}";
+			var lengthStr   = Length == null                 ? string.Empty : $", \"{Length}\"";
+			return $"{SystemType}{dataTypeStr}{dbTypeStr}{lengthStr}";
 		}
 
 		[DebuggerStepThrough]
@@ -33,6 +34,14 @@ namespace LinqToDB.Common
 		}
 
 		[DebuggerStepThrough]
+		public DbDataType(Type systemType, DataType dataType, string dbType, int? length) : this(systemType)
+		{
+			DataType   = dataType;
+			DbType     = dbType;
+			Length     = length;
+		}
+
+		[DebuggerStepThrough]
 		public DbDataType(Type systemType, string dbType) : this(systemType)
 		{
 			DbType = dbType;
@@ -41,16 +50,18 @@ namespace LinqToDB.Common
 		public Type     SystemType { get; }
 		public DataType DataType   { get; }
 		public string   DbType     { get; }
+		public int?     Length     { get; }
 
-		public DbDataType WithSystemType(Type     systemType) => new DbDataType(systemType, DataType, DbType);
-		public DbDataType WithDataType  (DataType dataType  ) => new DbDataType(SystemType, dataType, DbType);
-		public DbDataType WithDbType    (string   dbName    ) => new DbDataType(SystemType, DataType, dbName);
+		public DbDataType WithSystemType(Type     systemType) => new DbDataType(systemType, DataType, DbType, Length);
+		public DbDataType WithDataType  (DataType dataType  ) => new DbDataType(SystemType, dataType, DbType, Length);
+		public DbDataType WithDbType    (string   dbName    ) => new DbDataType(SystemType, DataType, dbName, Length);
+		public DbDataType WithLength    (int?     length    ) => new DbDataType(SystemType, DataType, DbType, length);
 
 		#region Equality members
 
 		public bool Equals(DbDataType other)
 		{
-			return SystemType == other.SystemType && DataType == other.DataType && string.Equals(DbType, other.DbType);
+			return SystemType == other.SystemType && DataType == other.DataType && string.Equals(DbType, other.DbType) && Length == other.Length;
 		}
 
 		public override bool Equals(object obj)
@@ -65,7 +76,8 @@ namespace LinqToDB.Common
 			{
 				var hashCode = (SystemType != null ? SystemType.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ (int) DataType;
-				hashCode = (hashCode * 397) ^ (DbType != null ? DbType.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ (DbType != null ? DbType.GetHashCode()       : 0);
+				hashCode = (hashCode * 397) ^ (Length != null ? Length.Value.GetHashCode() : 0);
 				return hashCode;
 			}
 		}
