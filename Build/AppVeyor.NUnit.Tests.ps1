@@ -2,7 +2,7 @@ $wc = New-Object System.Net.WebClient
 
 $net46Tests = {
 	param($logFileName)
-	$output = nunit3-console Tests\Linq\bin\AppVeyor\net46\linq2db.Tests.dll --result=$logFileName --where "cat != Ignored & cat != SkipCI" | Out-Null
+	$output = nunit3-console Tests\Linq\bin\AppVeyor\net46\linq2db.Tests.dll --result=$logFileName --where "cat != Ignored & cat != SkipCI"
 	$result = "" | Select-Object -Property output,status
 	$result.output = $output
 	$result.status = $LastExitCode
@@ -11,7 +11,7 @@ $net46Tests = {
 
 $netcore2Tests = {
 	param($logFileName)
-	$output = dotnet test Tests\Linq\ -f netcoreapp2.0 --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor | Out-Null
+	$output = dotnet test Tests\Linq\ -f netcoreapp2.0 --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor
 	$result = "" | Select-Object -Property output,status
 	$result.output = $output
 	$result.status = $LastExitCode
@@ -20,7 +20,7 @@ $netcore2Tests = {
 
 $netcore1Tests = {
 	param($logFileName)
-	$output = dotnet test Tests\Linq\ -f netcoreapp1.0 --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor  | Out-Null
+	$output = dotnet test Tests\Linq\ -f netcoreapp1.0 --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor
 	$result = "" | Select-Object -Property output,status
 	$result.output = $output
 	$result.status = $LastExitCode
