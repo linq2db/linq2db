@@ -1,7 +1,8 @@
 $wc = New-Object System.Net.WebClient
 
 $net46Tests = {
-	param($logFileName)
+	param($dir, $logFileName)
+	Set-Location $dir
 	$output = nunit3-console Tests\Linq\bin\AppVeyor\net46\linq2db.Tests.dll --result=$logFileName --where "cat != Ignored & cat != SkipCI"
 	$result = "" | Select-Object -Property output,status
 	$result.output = $output
@@ -10,7 +11,8 @@ $net46Tests = {
 }
 
 $netcore2Tests = {
-	param($logFileName)
+	param($dir, $logFileName)
+	Set-Location $dir
 	$output = dotnet test Tests\Linq\ -f netcoreapp2.0 --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor
 	$result = "" | Select-Object -Property output,status
 	$result.output = $output
@@ -19,7 +21,8 @@ $netcore2Tests = {
 }
 
 $netcore1Tests = {
-	param($logFileName)
+	param($dir, $logFileName)
+	Set-Location $dir
 	$output = dotnet test Tests\Linq\ -f netcoreapp1.0 --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor
 	$result = "" | Select-Object -Property output,status
 	$result.output = $output
@@ -31,9 +34,10 @@ $logFileNameNet45 = "$env:APPVEYOR_BUILD_FOLDER\nunit_net46_results.xml"
 $logFileNameCore2 = "$env:APPVEYOR_BUILD_FOLDER\nunit_core2_results.xml"
 $logFileNameCore1 = "$env:APPVEYOR_BUILD_FOLDER\nunit_core1_results.xml"
 
-Start-Job $net46Tests  -ArgumentList $logFileNameNet45
-Start-Job $netcore2Tests  -ArgumentList $logFileNameCore2
-Start-Job $netcore1Tests  -ArgumentList $logFileNameCore1
+$dir = Get-Location
+Start-Job $net46Tests  -ArgumentList $dir,$logFileNameNet45
+Start-Job $netcore2Tests  -ArgumentList $dir,$logFileNameCore2
+Start-Job $netcore1Tests  -ArgumentList $dir,$logFileNameCore1
 
 While (Get-Job -State "Running")
 {
