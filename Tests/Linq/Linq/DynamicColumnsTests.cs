@@ -80,7 +80,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue("HanaException : Data is Null. This method or property cannot be called on Null values.", Configuration = ProviderName.SapHana)]
 		public void SqlPropertyWithNonDynamicAssociationViaObject2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -173,7 +172,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue("HanaException : Data is Null. This method or property cannot be called on Null values.", Configuration = ProviderName.SapHana)]
 		public void SqlPropertySelectAssociated([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
@@ -264,7 +262,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue("HanaException : Data is Null. This method or property cannot be called on Null values.", Configuration = ProviderName.SapHana)]
 		public void SqlPropertyGroupByAssociated([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
