@@ -1758,7 +1758,7 @@ namespace Tests.Linq
 		[Test, ActiveIssue(1622)]
 		public void Issue1622Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, new MappingSchema()))
 			{
 				db.MappingSchema.SetValueToSqlConverter(typeof(Issue1622Enum),
 					(sb, dt, v) =>
@@ -1768,12 +1768,13 @@ namespace Tests.Linq
 
 				using (var table = db.CreateLocalTable<Issue1622Table>())
 				{
-					var item = new Issue1622Table() { Id = 1 };
+					var item = new Issue1622Table() { Id = 1, SomeText = "Value1_suffix" };
 					db.Insert(item);
 
-					//var res = table.Where(e => SomeComparison(e.SomeText, Issue1622Enum.Value1)).ToArray();
-					var res2 = table.Where(e => e.Id == 1).FirstOrDefault();
+					var res = table.Where(e => SomeComparison(e.SomeText, Issue1622Enum.Value1)).Single();
+					var res2 = table.Where(e => e.Id == 1).Single();
 
+					Assert.That(item.Id, Is.EqualTo(res.Id));
 					Assert.That(item.Id, Is.EqualTo(res2.Id));
 				}
 			}
