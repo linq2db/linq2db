@@ -609,7 +609,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Ignore("Not currently supported")]
+		[Test, ActiveIssue("Not currently supported")]
 		public void SelectComplexField()
 		{
 			using (var db = new TestDataConnection())

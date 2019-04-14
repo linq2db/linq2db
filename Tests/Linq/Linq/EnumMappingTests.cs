@@ -1741,7 +1741,7 @@ namespace Tests.Linq
 		[Table]
 		public class Issue1622Table
 		{
-			[Identity, PrimaryKey]
+			[PrimaryKey]
 			public int Id { get; set; }
 			[Column]
 			public string SomeText { get; set; }
