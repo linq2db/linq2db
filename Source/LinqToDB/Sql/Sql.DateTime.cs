@@ -18,7 +18,15 @@ namespace LinqToDB
 			Month       =  2,
 			DayOfYear   =  3,
 			Day         =  4,
-			Week        =  5,
+			/// <summary>
+			/// This date part is not recommended for use as it's implementation doesn't follow fixed
+			/// week numbering system and depends on where if calculated (in C# code or in database, where each
+			/// database could have own week numbering logic).
+			/// Current implementation use following schemas per-provider:
+			/// C# evaluation: <c>CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value, CalendarWeekRule.FirstDay, DayOfWeek.Sunday)</c>
+			/// TODO: add database-specific schemas.
+			/// </summary>
+			Week =  5,
 			WeekDay     =  6,
 			Hour        =  7,
 			Minute      =  8,

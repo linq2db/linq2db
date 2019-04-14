@@ -179,6 +179,94 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DatePartWeekNumberingType([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var dates = new[]
+				{
+					new DateTime(2018, 12, 28),
+					new DateTime(2018, 12, 29),
+					new DateTime(2018, 12, 30),
+					new DateTime(2018, 12, 31),
+					new DateTime(2019, 1, 1),
+					new DateTime(2019, 1, 2),
+					new DateTime(2019, 1, 3),
+					new DateTime(2019, 1, 4),
+					new DateTime(2019, 1, 5),
+					new DateTime(2019, 1, 6),
+					new DateTime(2019, 1, 7)
+				};
+
+				// actually 53 should be 1st week of 2019, but..
+				var isoWeeks    = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2 };
+				var usWeeks     = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2 };
+				var muslimWeeks = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2 };
+
+				var results = dates.Select(date => db.Select(() => Sql.AsSql(Sql.DatePart(Sql.DateParts.Week, date)))).ToArray().Select(_ => _.Value).ToArray();
+
+				if (isoWeeks.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses ISO week numbering schema");
+				}
+				else if (usWeeks.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses US week numbering schema");
+				}
+				else if (muslimWeeks.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses Islamic week numbering schema");
+				}
+				else
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses unknown week numbering schema");
+				}
+			}
+		}
+
+		[Test]
+		public void DatePartWeekNumberingTypeCSharp()
+		{
+			var dates = new[]
+			{
+					new DateTime(2018, 12, 28),
+					new DateTime(2018, 12, 29),
+					new DateTime(2018, 12, 30),
+					new DateTime(2018, 12, 31),
+					new DateTime(2019, 1, 1),
+					new DateTime(2019, 1, 2),
+					new DateTime(2019, 1, 3),
+					new DateTime(2019, 1, 4),
+					new DateTime(2019, 1, 5),
+					new DateTime(2019, 1, 6),
+					new DateTime(2019, 1, 7)
+				};
+
+			var isoWeeks    = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2 };
+			var usWeeks     = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2 };
+			var muslimWeeks = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2 };
+
+			var results = dates.Select(date => Sql.DatePart(Sql.DateParts.Week, date).Value).ToArray();
+
+			if (isoWeeks.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses ISO week numbering schema");
+			}
+			else if (usWeeks.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses US week numbering schema");
+			}
+			else if (muslimWeeks.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses Islamic week numbering schema");
+			}
+			else
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses unknown week numbering schema");
+			}
+		}
+
+		[Test]
 		public void DatePartWeekDay([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -224,12 +312,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatepartDynamicynamic(
+		public void DatepartDynamic(
 			[DataSources(ProviderName.Informix)] string context, 
 			[Values(
-				Sql.DateParts.Day, 
-				Sql.DateParts.Hour, 
-				Sql.DateParts.Minute, 
+				Sql.DateParts.Day,
+				Sql.DateParts.Hour,
+				Sql.DateParts.Minute,
 				Sql.DateParts.Month,
 				Sql.DateParts.Year,
 				Sql.DateParts.Second
