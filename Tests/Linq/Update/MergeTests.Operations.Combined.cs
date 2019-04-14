@@ -112,7 +112,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithConditionDeleteWithConditionUpdate([MergeDataContextSource(
-			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
 			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Informix,
 			ProviderName.SapHana, ProviderName.Firebird, ProviderName.Sybase)]
 			string context)
@@ -239,7 +239,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertWithConditionInsertUpdateWithConditionDeleteWithConditionDelete([MergeDataContextSource(
-			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
 			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 			string context)
@@ -312,7 +312,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateWithConditionUpdate([MergeDataContextSource(
 			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
 			TestProvName.SqlAzure, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 			string context)
 		{

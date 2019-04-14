@@ -36,11 +36,11 @@ namespace Tests
 		public const string AllFirebird          = "Firebird,Firebird3";
 		public const string AllSQLite            = "SQLite.Classic,SQLite.MS";
 		public const string AllSybase            = "Sybase,Sybase.Managed";
-		public const string AllSqlServer         = "SqlServer.2000,SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlAzure.2012";
-		public const string AllSqlServer2005Plus = "SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlAzure.2012";
-		public const string AllSqlServer2008Plus = "SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlAzure.2012";
-		public const string AllSqlServer2012Plus = "SqlServer.2012,SqlServer.2014,SqlAzure.2012";
-		public const string AllSqlServer2016Plus = "SqlAzure.2012";
+		public const string AllSqlServer         = "SqlServer.2000,SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure.2012";
+		public const string AllSqlServer2005Plus = "SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure.2012";
+		public const string AllSqlServer2008Plus = "SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure.2012";
+		public const string AllSqlServer2012Plus = "SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure.2012";
+		public const string AllSqlServer2016Plus = "SqlServer.2017,SqlAzure.2012";
 		public const string AllSQLiteNorthwind   = "Northwind.SQLite,Northwind.SQLite.MS";
 	}
 }

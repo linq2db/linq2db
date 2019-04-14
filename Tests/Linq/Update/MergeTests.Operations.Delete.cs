@@ -136,7 +136,7 @@ namespace Tests.xUpdate
 		public void SameSourceDeleteWithPredicateDelete([MergeDataContextSource(
 			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure,
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017, TestProvName.SqlAzure,
 			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 			string context)
 		{
