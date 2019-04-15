@@ -56,7 +56,7 @@ $results = Get-Job | Receive-Job
 
 # push outputs to artifacts always, not only on success
 Write-Host "Publish test outputs to artifacts..."
-$results | %{ Out-File -FilePath "$env:APPVEYOR_BUILD_FOLDER\$($_.name)_test_outputs.log" -InputObject $_.output -Append; Push-AppveyorArtifact "$($_.name)_test_outputs.log" -FileName "$env:APPVEYOR_BUILD_FOLDER\$($_.name)_test_outputs.log" }
+$results | %{ Out-File -FilePath "$env:APPVEYOR_BUILD_FOLDER\$($_.name)_test_outputs.log" -InputObject $_.output -Append; Push-AppveyorArtifact "$($_.name)_test_outputs.log" -FileName "$($_.name)_test_outputs.log" }
 Write-Host "Done."
 
 # set error status on any test runner failed
