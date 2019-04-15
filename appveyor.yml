@@ -79,14 +79,14 @@ before_build:
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
     iex "& $cmd"
 
-    $dbName = "TestDatanetcore1"
+    $dbName = "TestDatacore1"
     sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
     $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
     iex "& $cmd"
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
     iex "& $cmd"
 
-    $dbName = "TestDatanetcore2"
+    $dbName = "TestDatacore2"
     sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
     $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
     iex "& $cmd"
