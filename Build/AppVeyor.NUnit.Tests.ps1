@@ -3,7 +3,7 @@ $wc = New-Object System.Net.WebClient
 $net46Tests = {
 	param($dir, $logFileName)
 	Set-Location $dir
-	$output = nunit3-console Tests\Linq\bin\AppVeyor\net46\linq2db.Tests.dll --result=$logFileName;format=AppVeyor --where "cat != Ignored & cat != SkipCI"
+	$output = nunit3-console Tests\Linq\bin\AppVeyor\net46\linq2db.Tests.dll --result=$logFileName --where "cat != Ignored && cat != SkipCI"
 	$result = "" | Select-Object -Property output,status,name
 	$result.output = $output
 	$result.status = $LastExitCode

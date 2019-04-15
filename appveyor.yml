@@ -125,7 +125,7 @@ test_script:
 
 artifacts:
 - path: \**\linq2db*.nupkg
-- path: \**\*.xml
+- path: \**\*.trx
 - path: \**\*.log
 
 deploy:

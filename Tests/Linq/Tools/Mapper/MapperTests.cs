@@ -49,6 +49,8 @@ namespace Tests.Tools.Mapper
 				.Compile();
 
 			mapper(new TestMap(), new TestMap(), null);
+
+			Assert.Fail("Test CI fail");
 		}
 
 		[Test]
