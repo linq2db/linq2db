@@ -125,7 +125,8 @@ test_script:
 
 artifacts:
 - path: \**\linq2db*.nupkg
-- path: \**\*.trx
+- path: \**\*.xml
+- path: \**\*.log
 
 deploy:
 - provider: NuGet
