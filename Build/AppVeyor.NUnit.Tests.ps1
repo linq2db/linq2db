@@ -60,4 +60,4 @@ $results | %{ Out-File -FilePath "$env:APPVEYOR_BUILD_FOLDER\$($_.name)_test_out
 Write-Host "Done."
 
 # set error status on any test runner failed
-%{ $results | %{ if ($_.code -ne 0) { $host.SetShouldExit(-1); exit }} }
+%{ $results | %{ if ($_.status -ne 0) { $host.SetShouldExit(-1); exit }} }
