@@ -1,5 +1,3 @@
-$wc = New-Object System.Net.WebClient
-
 $net46Tests = {
 	param($dir, $logFileName)
 	Set-Location $dir
@@ -33,9 +31,9 @@ $netcore1Tests = {
 	return $result
 }
 
-$logFileNameNet45 = "$env:APPVEYOR_BUILD_FOLDER\nunit_net46_results.trx"
-$logFileNameCore2 = "$env:APPVEYOR_BUILD_FOLDER\nunit_core2_results.trx"
-$logFileNameCore1 = "$env:APPVEYOR_BUILD_FOLDER\nunit_core1_results.trx"
+$logFileNameNet45 = "$env:APPVEYOR_BUILD_FOLDER\net46_test_results.xml"
+$logFileNameCore2 = "$env:APPVEYOR_BUILD_FOLDER\core2_test_results.trx"
+$logFileNameCore1 = "$env:APPVEYOR_BUILD_FOLDER\core1_test_results.trx"
 
 $dir = Get-Location
 Start-Job -Name "netfx_tests" $net46Tests -ArgumentList $dir,$logFileNameNet45
@@ -49,20 +47,19 @@ While (Get-Job -State "Running")
 
 $results = Get-Job | Receive-Job
 
-# actually takes some time, so disabling it also will speed-up testrun
-Write-Host "Writing tests output"
-#$results | Foreach {$_.output} | Write-Host
-
-Write-Host "Uploading test results"
-$url = "https://ci.appveyor.com/api/testresults/nunit3/$env:APPVEYOR_JOB_ID"
+#Write-Host "Uploading test results"
+#$url = "https://ci.appveyor.com/api/testresults/nunit3/$env:APPVEYOR_JOB_ID"
+#$wc = New-Object System.Net.WebClient
 #$wc.UploadFile($url, $logFileNameNet45)
 #$wc.UploadFile($url, $logFileNameCore2)
 #$wc.UploadFile($url, $logFileNameCore1)
 
-Write-Host "Logs path: $logFileNameNet45"
+# push outputs to artifacts always, not only on success
+Write-Host "Publish test outputs to artifacts..."
+$results | %{ Out-File -FilePath "$env:APPVEYOR_BUILD_FOLDER\{$_.name}_test_outputs.log" -Append; Push-AppveyorArtifact "{$_.name}_test_outputs.log" -FileName "$env:APPVEYOR_BUILD_FOLDER\{$_.name}_test_outputs.log" }
+Write-Host "Done."
 
-$results | Where-Object {$_.name -eq "netfx"} | Foreach {$_.output} | Out-File -FilePath "$env:APPVEYOR_BUILD_FOLDER\netfx_tests.log" -Append
-
-$exit = ($results | Foreach {$_.status} | Measure-Object -Sum).Sum
-Write-Host "Exit code (sum): $exit"
-#$host.SetShouldExit($exit)
+# set error status on any test runner failed
+if (($results).(Where-Object {$_.status -neq 0}).Count -neq 0) {
+	$host.SetShouldExit(-1)
+}
