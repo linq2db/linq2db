@@ -65,4 +65,4 @@ $results | Where-Object {$_.name -eq "netfx"} | Foreach {$_.output} | Out-File -
 
 $exit = ($results | Foreach {$_.status} | Measure-Object -Sum).Sum
 Write-Host "Exit code (sum): $exit"
-$host.SetShouldExit($exit)
+#$host.SetShouldExit($exit)
