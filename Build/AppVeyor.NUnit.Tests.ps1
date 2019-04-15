@@ -36,8 +36,8 @@ $logFileNameCore2 = "$env:APPVEYOR_BUILD_FOLDER\core2_test_results.trx"
 $logFileNameCore1 = "$env:APPVEYOR_BUILD_FOLDER\core1_test_results.trx"
 
 $dir = Get-Location
-Start-Job -Name "netfx_tests" $net46Tests -ArgumentList $dir,$logFileNameNet45
-#Start-Job -Name "netcore_2_tests" $netcore2Tests -ArgumentList $dir,$logFileNameCore2
+#Start-Job -Name "netfx_tests" $net46Tests -ArgumentList $dir,$logFileNameNet45
+Start-Job -Name "netcore_2_tests" $netcore2Tests -ArgumentList $dir,$logFileNameCore2
 #Start-Job -Name "netcore_1_tests" $netcore1Tests -ArgumentList $dir,$logFileNameCore1
 
 While (Get-Job -State "Running")
