@@ -1,79 +1,64 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Extensions;
-	using Mapping;
-	using SqlQuery;
 
-	class AggregationBuilder : MethodCallBuilder
+	class MethodChainBuilder : MethodCallBuilder
 	{
-		public static string[] MethodNames = { "Average", "Min", "Max", "Sum" };
-
-		public static Sql.ExpressionAttribute GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
-		{
-			var functions = mapping.GetAttributes<Sql.ExpressionAttribute>(methodCall.Method.ReflectedTypeEx(),
-				methodCall.Method,
-				f => f.Configuration);
-			return functions.FirstOrDefault(f => f.IsAggregate);
-		}
-
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			if (methodCall.IsQueryable(MethodNames) || methodCall.IsAsyncExtension(MethodNames))
-				return true;
-
-			return false;
+			var functions = Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
+			return functions.Any(f => f.ChainPrecedence >= 0);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
+			var functions = Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
 
-			if (sequence.SelectQuery.Select.IsDistinct        ||
-			    sequence.SelectQuery.Select.TakeValue != null ||
-			    sequence.SelectQuery.Select.SkipValue != null ||
-			   !sequence.SelectQuery.GroupBy.IsEmpty)
+			var chain = Sql.ExtensionAttribute.BuildFunctionsChain(builder.MappingSchema, methodCall);
+			IBuildContext sequence = null;
+
+			foreach (var expression in chain)
 			{
-				sequence = new SubQueryContext(sequence);
-			}
-
-			if (sequence.SelectQuery.OrderBy.Items.Count > 0)
-			{
-				if (sequence.SelectQuery.Select.TakeValue == null && sequence.SelectQuery.Select.SkipValue == null)
-					sequence.SelectQuery.OrderBy.Items.Clear();
-				else
-					sequence = new SubQueryContext(sequence);
-			}
-
-			var context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
-
-			var methodName = methodCall.Method.Name.Replace("Async", "");
-
-			var sql = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
-
-			if (sql.Length == 1 && sql[0] is SelectQuery query)
-			{
-				if (query.Select.Columns.Count == 1)
+				if (expression is MethodCallExpression mc)
 				{
-					var join = query.OuterApply();
-					context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-					sql[0] = query.Select.Columns[0];
+					if (mc.Arguments.Count > 0)
+					{
+						if (typeof(IEnumerable<>).IsSameOrParentOf(mc.Arguments[0].Type))
+							sequence = builder.BuildSequence(new BuildInfo(buildInfo, mc.Arguments[0]));
+						else if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(mc.Arguments[0].Type))
+							sequence = builder.BuildSequence(new BuildInfo(buildInfo,
+								((Sql.IQueryableContainer)mc.Arguments[0].EvaluateExpression()).Query.Expression));
+					}
 				}
 			}
 
-			ISqlExpression sqlExpression = new SqlFunction(methodCall.Type, methodName, true, sql);
+			if (sequence == null)
+				throw new LinqToDBException($"{methodCall} can not be converted to SQL.");
 
-			if (sqlExpression == null)
-				throw new LinqToDBException("Invalid Aggregate function implementation");
+			var finalFunction = functions.FirstOrDefault(f => f.ChainPrecedence == 0);
+			if (finalFunction == null)
+				finalFunction = functions.FirstOrDefault(f => f.ChainPrecedence < 0);
+			if (finalFunction == null)
+			{
+				// it means that function is just sequence provider
+				return sequence;
+			}
+				
+			var sqlExpression = finalFunction.GetExpression(builder.MappingSchema, buildInfo.SelectQuery, methodCall,
+				e => builder.ConvertToExtensionSql(sequence, e));
 
+			var context = new ChainContext(buildInfo.Parent, sequence, methodCall);
 			context.Sql        = context.SelectQuery;
-			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodName);
+			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodCall.Method.Name);
 
 			return context;
 		}
@@ -84,9 +69,9 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		class AggregationContext : SequenceContextBase
+		class ChainContext : SequenceContextBase
 		{
-			public AggregationContext(IBuildContext parent, IBuildContext sequence, MethodCallExpression methodCall)
+			public ChainContext(IBuildContext parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)
 			{
 				_returnType = methodCall.Method.ReturnType;
@@ -134,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression expr;
 
-				if (_returnType.IsClassEx() || _methodName == "Sum" || _returnType.IsNullable())
+				if (_returnType.IsClassEx() || _returnType.IsNullable())
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex);
 				}
@@ -190,5 +175,6 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 		}
+
 	}
 }

@@ -41,6 +41,7 @@ namespace Tests
 		public const string AllSqlServer2008Plus = "SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure.2012";
 		public const string AllSqlServer2012Plus = "SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure.2012";
 		public const string AllSqlServer2016Plus = "SqlServer.2017,SqlAzure.2012";
+		public const string AllSqlServer2017Plus = "SqlServer.2017";
 		public const string AllSQLiteNorthwind   = "Northwind.SQLite,Northwind.SQLite.MS";
 	}
 }

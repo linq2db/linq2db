@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -10,6 +11,21 @@ namespace Tests.Linq
 	[TestFixture]
 	public class StringFunctionsTests : TestBase
 	{
+		static string AggregateStrings(string separator, IEnumerable<string> arguments)
+		{
+			var result = arguments.Aggregate((v1, v2) =>
+			{
+				if (v1 == null && v2 == null)
+					return null;
+				if (v1 == null)
+					return v2;
+				if (v2 == null)
+					return v1;
+				return v1 + separator + v2;
+			});
+			return result;
+		}
+
 		[Table]
 		class SampleClass
 		{
@@ -22,7 +38,7 @@ namespace Tests.Linq
 		public class StringTestSourcesAttribute : IncludeDataSourcesAttribute
 		{
 			public StringTestSourcesAttribute(bool includeLinqService = true) : base(includeLinqService,
-				TestProvName.AllSqlServer2016Plus,
+				TestProvName.AllSqlServer2017Plus,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
 				ProviderName.SapHana,
@@ -48,8 +64,10 @@ namespace Tests.Linq
 					select new
 					{
 						Max = g.Max(),
-						Values = g.StringAggregate(" -> "),
+						Values = g.StringAggregate(" -> ").DefaultOrder(),
 					};
+
+				var zz = actual.ToArray();
 
 				var expected = from t in data
 					group t.Value1 by new {t.Id, Value = t.Value1}
@@ -57,7 +75,7 @@ namespace Tests.Linq
 					select new
 					{
 						Max = g.Max(),
-						Values = g.StringAggregate(" -> "),
+						Values = AggregateStrings(" -> ", g),
 					};
 
 				AreEqual(expected, actual);
@@ -77,7 +95,7 @@ namespace Tests.Linq
 					into g
 					select new
 					{
-						Values = g.StringAggregate(" -> ", e => e.Value1),
+						Values = g.StringAggregate(" -> ", e => e.Value1).DefaultOrder(),
 					};
 
 				var expected = from t in data
@@ -85,7 +103,7 @@ namespace Tests.Linq
 					into g
 					select new
 					{
-						Values = g.StringAggregate(" -> ", e => e.Value1),
+						Values = AggregateStrings(" -> ", g.Select(e => e.Value1)),
 					};
 
 				AreEqual(expected, actual);
@@ -100,8 +118,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
-				var actual   = table.Select(t => t.Value1).StringAggregate(" -> ");
-				var expected = data .Select(t => t.Value1).StringAggregate(" -> ");
+				var actual   = table.Select(t => t.Value1).StringAggregate(" -> ").DefaultOrder();
+				var expected = AggregateStrings(" -> ", data.Select(t => t.Value1));
 				Assert.AreEqual(expected, actual);
 			}
 		}
@@ -114,14 +132,20 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
-				var actual   = table.AsQueryable().StringAggregate(" -> ", t => t.Value1);
-				var expected = data .StringAggregate(" -> ", t => t.Value1);
+				var actual   = table.AsQueryable().StringAggregate(" -> ", t => t.Value1).DefaultOrder();
+				var expected = AggregateStrings(" -> ", data.Select(t => t.Value1));
 				Assert.AreEqual(expected, actual);
 			}
 		}
 
 		[Test]
-		public void ConcatWSTest([StringTestSources] string context)
+		public void ConcatWSTest([
+			IncludeDataSources(
+				TestProvName.AllSqlServer,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllMySql,
+				TestProvName.AllSQLite
+			)] string context)
 		{
 			var data = GenerateData();
 

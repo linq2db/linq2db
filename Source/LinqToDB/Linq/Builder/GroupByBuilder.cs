@@ -496,7 +496,7 @@ namespace LinqToDB.Linq.Builder
 						if (call.Arguments[0] == e && typeof(IGrouping<,>).IsSameOrParentOf(ex.Type))
 							return _element.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
 
-						return Builder.ConvertToSql(_element, ex, true);
+						return Builder.ConvertToExtensionSql(_element, ex);
 					});
 
 					if (expr != null)
