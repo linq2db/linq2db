@@ -1336,7 +1336,8 @@ namespace LinqToDB.Linq.Builder
 
 		ParameterAccessor BuildParameter(Expression expr, BuildParameterType buildParameterType = BuildParameterType.Default)
 		{
-			if (_parameters.TryGetValue(expr, out var p))
+			ParameterAccessor p = null;
+			if (!DataContext.SqlProviderFlags.IsParameterOrderDependent && _parameters.TryGetValue(expr, out p))
 				return p;
 
 			string name = null;
@@ -1374,7 +1375,8 @@ namespace LinqToDB.Linq.Builder
 				CurrentSqlParameters.Add(p);
 			}
 
-			_parameters.Add(expr, p);
+			if (!DataContext.SqlProviderFlags.IsParameterOrderDependent)
+				_parameters.Add(expr, p);
 
 			return p;
 		}

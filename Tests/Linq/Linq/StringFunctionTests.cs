@@ -341,7 +341,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1685, Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,
