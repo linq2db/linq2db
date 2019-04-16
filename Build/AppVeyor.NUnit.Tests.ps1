@@ -36,16 +36,16 @@ $logFileNameCore2 = "$env:APPVEYOR_BUILD_FOLDER\core2_test_results.trx"
 $logFileNameCore1 = "$env:APPVEYOR_BUILD_FOLDER\core1_test_results.trx"
 
 # disable slow (and so useless) integration with tests tab
-Write-Host "Search for appveyor.addins file..."
-$matches = $env:PATH.Split(';') | %{ join-path $_ "appveyor.addins"} | ?{ test-path $_ }
+#Write-Host "Search for appveyor.addins file..."
+#$matches = $env:PATH.Split(';') | %{ join-path $_ "appveyor.addins"} | ?{ test-path $_ }
 
-if ($matches.Length -eq 0){
-	"Nothing found"
-} else {
-	$matches
-}
+#if ($matches.Length -eq 0){
+#	"Nothing found"
+#} else {
+#	$matches
+#}
 
-#Remove-Item "$env:SYSTEMDRIVE\Tools\NUnit3\bin\appveyor.addins"
+Remove-Item "C:\Tools\NUnit3\appveyor.addins"
 
 $dir = Get-Location
 Start-Job -Name "netfx_tests" $net46Tests -ArgumentList $dir,$logFileNameNet45
