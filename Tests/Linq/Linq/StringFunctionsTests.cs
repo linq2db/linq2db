@@ -67,8 +67,6 @@ namespace Tests.Linq
 						Values = g.StringAggregate(" -> ").DefaultOrder(),
 					};
 
-				var zz = actual.ToArray();
-
 				var expected = from t in data
 					group t.Value1 by new {t.Id, Value = t.Value1}
 					into g
@@ -76,6 +74,38 @@ namespace Tests.Linq
 					{
 						Max = g.Max(),
 						Values = AggregateStrings(" -> ", g),
+					};
+
+				AreEqual(expected, actual);
+			}
+		}
+
+		[Test]
+		public void AggregationOrderTest([IncludeDataSources(ProviderName.SqlServer2017)] string context)
+		{
+			var data = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var actual = from t in table
+					group t.Value1 by new {t.Id, Value = t.Value1}
+					into g
+					select new
+					{
+						Max = g.Max(),
+						Values = g.StringAggregate(" -> ").OrderBy(),
+						ValuesDesc = g.StringAggregate(" -> ").OrderByDescending(),
+					};
+
+				var expected = from t in data
+					group t.Value1 by new {t.Id, Value = t.Value1}
+					into g
+					select new
+					{
+						Max = g.Max(),
+						Values = AggregateStrings(" -> ", g.OrderBy(e => e)),
+						ValuesDesc = AggregateStrings(" -> ", g.OrderByDescending(e => e)),
 					};
 
 				AreEqual(expected, actual);
@@ -111,6 +141,37 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void AggregationOrderdSelectorTest([IncludeDataSources(ProviderName.SqlServer2017)] string context)
+		{
+			var data = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var actual = from t in table
+					group t by new {t.Id, Value = t.Value1}
+					into g
+					select new
+					{
+						Values     = g.StringAggregate(" -> ", e => e.Value1).OrderBy(e => e.Value3),
+						ValuesDesc = g.StringAggregate(" -> ", e => e.Value1).OrderByDescending(e => e.Value3),
+					};
+
+				var expected = from t in data
+					group t by new {t.Id, Value = t.Value1}
+					into g
+					select new
+					{
+						Values     = AggregateStrings(" -> ", g.OrderBy(e => e.Value3).Select(e => e.Value1)),
+						ValuesDesc = AggregateStrings(" -> ", g.OrderByDescending(e => e.Value3).Select(e => e.Value1)),
+					};
+
+				AreEqual(expected, actual);
+			}
+		}
+
+
+		[Test]
 		public void FinalAggregationTest([StringTestSources] string context)
 		{
 			var data = GenerateData();
@@ -121,6 +182,32 @@ namespace Tests.Linq
 				var actual   = table.Select(t => t.Value1).StringAggregate(" -> ").DefaultOrder();
 				var expected = AggregateStrings(" -> ", data.Select(t => t.Value1));
 				Assert.AreEqual(expected, actual);
+			}
+		}
+
+		[Test]
+		public void FinalAggregationOrderedTest([IncludeDataSources(ProviderName.SqlServer2017)] string context)
+		{
+			var data = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var actualAsc   = table.Select(t => t.Value1).StringAggregate(" -> ").OrderBy();
+				var expectedAsc = AggregateStrings(" -> ", data.Select(t => t.Value1).OrderBy(d => d));
+				Assert.AreEqual(expectedAsc, actualAsc);
+
+				var actualAscExpr   = table.Select(t => t.Value1).StringAggregate(" -> ").OrderBy(d => d);
+				var expectedAscExpr = AggregateStrings(" -> ", data.Select(t => t.Value1).OrderBy(d => d));
+				Assert.AreEqual(expectedAscExpr, actualAscExpr);
+
+				var actualDesc   = table.Select(t => t.Value1).StringAggregate(" -> ").OrderByDescending();
+				var expectedDesc = AggregateStrings(" -> ", data.Select(t => t.Value1).OrderByDescending(d => d));
+				Assert.AreEqual(expectedDesc, actualDesc);
+
+				var actualDescExpr   = table.Select(t => t.Value1).StringAggregate(" -> ").OrderByDescending(d => d);
+				var expectedDescExpr = AggregateStrings(" -> ", data.Select(t => t.Value1).OrderByDescending(d => d));
+				Assert.AreEqual(expectedDescExpr, actualDescExpr);
 			}
 		}
 

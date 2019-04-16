@@ -673,6 +673,16 @@ namespace LinqToDB.Linq.Builder
 		{
 			expression = expression.Unwrap();
 
+			if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(expression.Type))
+			{
+				Expression preparedExpression;
+				if (expression.NodeType == ExpressionType.Call)
+					preparedExpression = ((MethodCallExpression)expression).Arguments[0];
+				else 
+					preparedExpression = ((Sql.IQueryableContainer)expression.EvaluateExpression()).Query.Expression;
+				return ConvertToExtensionSql(context, preparedExpression);
+			}
+
 			if (expression is LambdaExpression lambda)
 			{
 				var saveParent = context.Parent;
@@ -681,8 +691,11 @@ namespace LinqToDB.Linq.Builder
 					exprCtx = new ExpressionContext(context, sc.Sequence, lambda);
 				else
 					exprCtx = new ExpressionContext(context.Parent, context, lambda);
-				var result = ConvertToSql(exprCtx, lambda.Body, true);
+				var result = ConvertToSql(exprCtx, lambda.Body);
 				ReplaceParent(context.Parent, saveParent);
+				if (!(result is SqlField field) || field.Table.All != field)
+					return result;
+				result = context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
 				return result;
 			}
 
