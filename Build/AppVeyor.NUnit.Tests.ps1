@@ -49,8 +49,8 @@ Remove-Item "C:\Tools\NUnit3\appveyor.addins"
 
 $dir = Get-Location
 Start-Job -Name "netfx_tests" $net46Tests -ArgumentList $dir,$logFileNameNet45
-#Start-Job -Name "netcore_2_tests" $netcore2Tests -ArgumentList $dir,$logFileNameCore2
-#Start-Job -Name "netcore_1_tests" $netcore1Tests -ArgumentList $dir,$logFileNameCore1
+Start-Job -Name "netcore_2_tests" $netcore2Tests -ArgumentList $dir,$logFileNameCore2
+Start-Job -Name "netcore_1_tests" $netcore1Tests -ArgumentList $dir,$logFileNameCore1
 
 While (Get-Job -State "Running")
 {
@@ -59,14 +59,7 @@ While (Get-Job -State "Running")
 
 $results = Get-Job | Receive-Job
 
-#Write-Host "Uploading test results"
-#$url = "https://ci.appveyor.com/api/testresults/nunit3/$env:APPVEYOR_JOB_ID"
-#$wc = New-Object System.Net.WebClient
-#$wc.UploadFile($url, $logFileNameNet45)
-#$wc.UploadFile($url, $logFileNameCore2)
-#$wc.UploadFile($url, $logFileNameCore1)
-
-# push outputs to artifacts always, not only on success
+# push outputs to artifacts explicitly
 Write-Host "Publish test outputs to artifacts..."
 $results | %{ Out-File -FilePath "$env:APPVEYOR_BUILD_FOLDER\$($_.name)_test_outputs.log" -InputObject $_.output -Append; Push-AppveyorArtifact "$($_.name)_test_outputs.log" -FileName "$($_.name)_test_outputs.log" }
 Write-Host "Done."
