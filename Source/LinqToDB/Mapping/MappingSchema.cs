@@ -979,7 +979,7 @@ namespace LinqToDB.Mapping
 					if (configGetter(a) == c)
 						list.Add(a);
 				if (exactForConfiguration && list.Count > 0)
-					break;
+					return list.ToArray();
 			}
 
 			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
@@ -1009,7 +1009,7 @@ namespace LinqToDB.Mapping
 					if (configGetter(a) == c)
 						list.Add(a);
 				if (exactForConfiguration && list.Count > 0)
-					break;
+					return list.ToArray();
 			}
 
 			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
