@@ -50,7 +50,7 @@ namespace Tests.Tools.Mapper
 
 			mapper(new TestMap(), new TestMap(), null);
 
-			//Assert.Fail("Test CI fail");
+			Assert.Fail("Test CI fail");
 		}
 
 		[Test]
