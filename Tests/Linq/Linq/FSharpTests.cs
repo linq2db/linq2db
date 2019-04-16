@@ -67,7 +67,7 @@ namespace Tests.Linq
 				FSharp.SelectTest.SelectField(db);
 		}
 
-		[Test, Ignore("Not currently supported")]
+		[Test, ActiveIssue("Not currently supported")]
 		public void SelectFieldDeeplyComplexPerson([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -81,7 +81,7 @@ namespace Tests.Linq
 				FSharp.InsertTest.Insert1(db);
 		}
 
-		[Test, Ignore("It breaks following tests.")]
+		[Test, ActiveIssue("It breaks following tests.")]
 		public void Insert2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

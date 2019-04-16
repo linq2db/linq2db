@@ -808,7 +808,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Ignore("Failed")]
+		[Test]
 		public void UnionGroupByTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

@@ -55,6 +55,12 @@ namespace LinqToDB
 			return obj;
 		}
 
+		[Sql.Extension("{array, ', '}", ServerSideOnly = true)]
+		internal static T[] Spread<T>([ExprParameter] T[] array)
+		{
+			throw new InvalidOperationException();
+		}
+
 		[CLSCompliant(false)]
 		[Sql.Expression("{0}", 0, CanBeNull = true)]
 		public static T AsNullable<T>(T value)
@@ -1113,6 +1119,7 @@ namespace LinqToDB
 
 		#region Text Functions
 
+		[Obsolete("Use Sql.Ext.SqlServer().FreeText methods")]
 		[Sql.Expression("FREETEXT({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
 		public static bool FreeText(object table, string text)
 		{

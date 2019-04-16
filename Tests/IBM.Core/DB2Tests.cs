@@ -26,7 +26,7 @@ namespace Tests.DataProvider
 	{
 		const string CurrentProvider = ProviderName.DB2;
 
-		[Test, Ignore("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
 		public void ParameterTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -40,7 +40,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Ignore("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
 		public void DataTypeTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -134,7 +134,7 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test, Ignore("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
 		public void NumericTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -183,7 +183,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Ignore("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
 		public void DateTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -197,7 +197,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Ignore("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
 		public void DateTimeTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -213,7 +213,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Ignore("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
 		public void TimeSpanTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -230,7 +230,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Ignore("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
 		public void CharTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -266,7 +266,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Ignore("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
 		public void StringTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -331,7 +331,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Ignore("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
 		public void XmlTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -369,7 +369,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Ignore("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
 		public void EnumTest2([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))

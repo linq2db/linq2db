@@ -388,5 +388,50 @@ namespace Tests.Data
 				Assert.True(openAsync);
 			}
 		}
+
+		[Test]
+		[Category("SkipCI")]
+		public void CommandTimeoutTest([IncludeDataSources(ProviderName.SqlServer2014)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var forUpdate = db.Person.First();
+				db.QueryHints.Add("WAITFOR DELAY '00:01';");
+				var start = DateTimeOffset.Now;
+				try
+				{
+					db.Update(forUpdate);
+				}
+				catch { }
+				finally
+				{
+					var time = DateTimeOffset.Now - start;
+					Assert.True(time >= TimeSpan.FromSeconds(30));
+					Assert.True(time < TimeSpan.FromSeconds(32));
+				}
+
+				start = DateTimeOffset.Now;
+				try
+				{
+					db.CommandTimeout = 10;
+					db.Update(forUpdate);
+				}
+				catch { }
+				finally
+				{
+					var time = DateTimeOffset.Now - start;
+					Assert.True(time >= TimeSpan.FromSeconds(10));
+					Assert.True(time < TimeSpan.FromSeconds(12));
+				}
+
+				start = DateTimeOffset.Now;
+				db.CommandTimeout = 0;
+				db.Update(forUpdate);
+				var time2 = DateTimeOffset.Now - start;
+				Assert.True(time2 >= TimeSpan.FromSeconds(60));
+				Assert.True(time2 < TimeSpan.FromSeconds(62));
+			}
+		}
+
 	}
 }

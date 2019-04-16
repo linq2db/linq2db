@@ -95,7 +95,9 @@ namespace LinqToDB.Linq
 
 		public ITable<T> ChangeDatabaseName(string databaseName)
 		{
-			var table = new Table<T>(DataContext);
+			var table          = new Table<T>(DataContext);
+			table.TableName    = TableName;
+			table.SchemaName   = SchemaName;
 			table.Expression   = Expression;
 			table.DatabaseName = databaseName;
 			return table;
@@ -103,17 +105,21 @@ namespace LinqToDB.Linq
 
 		public ITable<T> ChangeSchemaName(string schemaName)
 		{
-			var table = new Table<T>(DataContext);
-			table.Expression = Expression;
-			table.SchemaName = schemaName;
+			var table          = new Table<T>(DataContext);
+			table.TableName    = TableName;
+			table.DatabaseName = DatabaseName;
+			table.Expression   = Expression;
+			table.SchemaName   = schemaName;
 			return table;
 		}
 
 		public ITable<T> ChangeTableName(string tableName)
 		{
-			var table = new Table<T>(DataContext);
-			table.Expression = Expression;
-			table.TableName  = tableName;
+			var table          = new Table<T>(DataContext);
+			table.SchemaName   = SchemaName;
+			table.DatabaseName = DatabaseName;
+			table.Expression   = Expression;
+			table.TableName    = tableName;
 			return table;
 		}
 

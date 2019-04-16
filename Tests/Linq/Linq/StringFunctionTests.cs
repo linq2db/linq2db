@@ -341,10 +341,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
+		[ActiveIssue(1685, Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void IndexOf3([DataSources(
-			ProviderName.DB2, TestProvName.AllFirebird, ProviderName.Informix,
+			ProviderName.DB2, TestProvName.AllFirebird,
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.SQLiteMS)]
 			string context)
 		{

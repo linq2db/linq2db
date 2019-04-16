@@ -203,6 +203,7 @@ namespace Tests.Linq
 			}
 		}
 
+#pragma warning disable CS0618
 		[Test, Category("FreeText")]
 		public void FreeText1([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
@@ -266,6 +267,7 @@ namespace Tests.Linq
 				Assert.That(list.Count, Is.GreaterThan(0));
 			}
 		}
+#pragma warning restore CS0618
 
 		[Test]
 		public void WithUpdateLock([IncludeDataSources(TestProvName.Northwind)] string context)
@@ -288,7 +290,7 @@ namespace Tests.Linq
 				var q =
 					from t in db.Product
 					join c in db.FreeTextTable<Northwind.Category, int>(c => c.Description, "sweetest candy bread and dry meat") on t.CategoryID equals c.Key
-					orderby t.ProductName descending 
+					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
 				Assert.That(list.Count, Is.GreaterThan(0));
@@ -310,7 +312,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Category("FreeText"), ActiveIssue(386)]
+		[Test, Category("FreeText")]
+		[ActiveIssue(386)]
 		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -324,6 +327,5 @@ namespace Tests.Linq
 				Assert.That(list.Count, Is.GreaterThan(0));
 			}
 		}
-
 	}
 }

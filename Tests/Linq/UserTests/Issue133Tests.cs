@@ -23,7 +23,7 @@ namespace Tests.UserTests
 			throw new InvalidOperationException("This function should be used only in database code");
 		}
 
-		[Test, Ignore("Wrong Having detection")]
+		[Test, ActiveIssue("Wrong Having detection")]
 		public void NegativeWhereTest([SupportsAnalyticFunctionsContext] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -56,7 +56,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, Ignore("Wrong Having detection")]
+		[Test, ActiveIssue("Wrong Having detection")]
 		public void PositiveWindowFunctionsWhereTest([SupportsAnalyticFunctionsContext] string context)
 		{
 			using (var db = GetDataContext(context))

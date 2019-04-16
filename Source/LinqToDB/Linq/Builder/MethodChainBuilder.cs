@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 				return sequence;
 			}
 				
-			var sqlExpression = finalFunction.GetExpression(builder.MappingSchema, buildInfo.SelectQuery, methodCall,
+			var sqlExpression = finalFunction.GetExpression(builder.DataContext, buildInfo.SelectQuery, methodCall,
 				e => builder.ConvertToExtensionSql(sequence, e));
 
 			var context = new ChainContext(buildInfo.Parent, sequence, methodCall);

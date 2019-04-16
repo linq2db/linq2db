@@ -337,7 +337,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, Ignore("It works too long.")]
+		[Test, Explicit("It works too long.")]
 		public void BulkCopyMultipleRows([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			BulkCopyTest(context, BulkCopyType.MultipleRows);
@@ -349,7 +349,7 @@ namespace Tests.DataProvider
 			BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows);
 		}
 
-		[Test, Ignore("It works too long.")]
+		[Test, Explicit("It works too long.")]
 		public void BulkCopyProviderSpecific([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
