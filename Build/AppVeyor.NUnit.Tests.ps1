@@ -36,7 +36,7 @@ $logFileNameCore2 = "$env:APPVEYOR_BUILD_FOLDER\core2_test_results.trx"
 $logFileNameCore1 = "$env:APPVEYOR_BUILD_FOLDER\core1_test_results.trx"
 
 # disable slow (and so useless) integration with tests tab
-Write-Host "Search for appveyor.addins file...
+Write-Host "Search for appveyor.addins file..."
 $matches = $env:PATH.Split(';') | %{ join-path $_ "appveyor.addins"} | ?{ test-path $_ }
 
 if ($matches.Length -eq 0){
