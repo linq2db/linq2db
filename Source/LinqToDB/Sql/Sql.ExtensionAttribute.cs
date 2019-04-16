@@ -414,11 +414,11 @@ namespace LinqToDB
 					return Array<ExtensionAttribute>.Empty;
 
 				var attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedTypeEx(), memberInfo,
-						a => string.IsNullOrEmpty(a.Configuration) ? "___" : a.Configuration);
+						a => string.IsNullOrEmpty(a.Configuration) ? "___" : a.Configuration, inherit: true, exactForConfiguration: true);
 				if (attributes.Length == 0)
 					attributes =
 						mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedTypeEx(), memberInfo,
-							a => a.Configuration);
+							a => a.Configuration, inherit: true, exactForConfiguration: true);
 
 				if (attributes.Length == 0)
 				{
