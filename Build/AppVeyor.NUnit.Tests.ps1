@@ -35,7 +35,7 @@ $logFileNameNet45 = "$env:APPVEYOR_BUILD_FOLDER\net46_test_results.xml"
 $logFileNameCore2 = "$env:APPVEYOR_BUILD_FOLDER\core2_test_results.trx"
 $logFileNameCore1 = "$env:APPVEYOR_BUILD_FOLDER\core1_test_results.trx"
 
-# disable slow (and so useless) integration with tests tab
+# disable very slow integration with tests tab
 #Write-Host "Search for appveyor.addins file..."
 #$matches = $env:PATH.Split(';') | %{ join-path $_ "appveyor.addins"} | ?{ test-path $_ }
 
