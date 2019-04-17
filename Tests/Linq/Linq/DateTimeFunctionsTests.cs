@@ -610,7 +610,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -642,7 +641,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -674,7 +672,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -706,7 +703,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -739,7 +735,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
 				ProviderName.Access)]
 			string context)

@@ -895,8 +895,9 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Sql.Function]
-		[Sql.Function(PN.MySql, "TIMESTAMPDIFF")]
+		[Sql.Function(PN.MySql,   "TIMESTAMPDIFF")]
 		[Sql.DatePart(PN.SapHana, "{0}", true, new[] { null, null, null, null, "Days_Between({0}, {1})", null, null, "Seconds_Between({0}, {1}) / 3600", "Seconds_Between({0}, {1}) / 60", "Seconds_Between({0}, {1})", "Nano100_Between({0}, {1}) / 10000" }, 0, 1, 2)]
+		[Sql.DatePart(PN.SQLite,  "cast((strftime(\"%s\", {{1}}) - strftime(\"%s\", {{0}})){0} as int)", true, new[] { null, null, null, null, "/86400", null, null, "/3600", "/60", "", "*1000" }, 0, 1, 2)]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)
