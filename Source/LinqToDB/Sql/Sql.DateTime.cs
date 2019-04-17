@@ -19,12 +19,18 @@ namespace LinqToDB
 			DayOfYear   =  3,
 			Day         =  4,
 			/// <summary>
-			/// This date part is not recommended for use as it's implementation doesn't follow fixed
-			/// week numbering system and depends on where if calculated (in C# code or in database, where each
-			/// database could have own week numbering logic).
-			/// Current implementation use following schemas per-provider:
+			/// This date part behavior depends on used database and also depends on where if calculated - in C# code or in database.
+			/// Eeach database could have own week numbering logic, see notes below.
+			/// 
+			/// Current implementation uses following schemas per-provider:
 			/// C# evaluation: <c>CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value, CalendarWeekRule.FirstDay, DayOfWeek.Sunday)</c>
-			/// TODO: add database-specific schemas.
+			/// Databases:
+			/// US numbering schema used by: MS Access, SQL CE, SQL Server, SAP/Sybase ASE, Informix databases;
+			/// US 0-based numbering schema used by MySQL database;
+			/// ISO numbering schema with incorrect numbering of first week used by: SAP HANA database;
+			/// ISO numbering schema with proper numbering of first week used by: Firebird, PostgreSQL databases;
+			/// Primitive (each 7 days counted as week) numbering schema: DB2, Oracle databases;
+			/// SQLite numbering logic cannot be classified by human being.
 			/// </summary>
 			Week =  5,
 			WeekDay     =  6,

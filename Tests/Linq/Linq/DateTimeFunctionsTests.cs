@@ -195,13 +195,18 @@ namespace Tests.Linq
 					new DateTime(2019, 1, 4),
 					new DateTime(2019, 1, 5),
 					new DateTime(2019, 1, 6),
-					new DateTime(2019, 1, 7)
+					new DateTime(2019, 1, 7),
+					new DateTime(2019, 1, 8)
 				};
 
 				// actually 53 should be 1st week of 2019, but..
-				var isoWeeks    = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2 };
-				var usWeeks     = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2 };
-				var muslimWeeks = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2 };
+				var isoWeeks              = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var sqliteParodyNumbering = new[] { 52, 52, 52, 53, 0, 0, 0, 0, 0, 0, 1, 1 };
+				var isoProperWeeks        = new[] { 52, 52, 52,  1, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var usWeeks               = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2, 2 };
+				var usWeeksZeroBased      = new[] { 51, 51, 52, 52, 0, 0, 0, 0, 0, 1, 1, 1 };
+				var muslimWeeks           = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2, 2 };
+				var primitive             = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 1, 2 };
 
 				var results = dates
 					.Select(date => db.Select(() => Sql.AsSql(Sql.DatePart(Sql.DateParts.Week, Sql.ToSql(date)))))
@@ -213,6 +218,10 @@ namespace Tests.Linq
 				{
 					Assert.Pass($"Context {db.DataProvider.Name} uses ISO week numbering schema");
 				}
+				else if (isoProperWeeks.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses PROPER ISO week numbering schema");
+				}
 				else if (usWeeks.SequenceEqual(results))
 				{
 					Assert.Pass($"Context {db.DataProvider.Name} uses US week numbering schema");
@@ -221,9 +230,21 @@ namespace Tests.Linq
 				{
 					Assert.Pass($"Context {db.DataProvider.Name} uses Islamic week numbering schema");
 				}
+				else if (primitive.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses PRIMITIVE week numbering schema");
+				}
+				else if (sqliteParodyNumbering.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses SQLite inhuman numbering logic");
+				}
+				else if (usWeeksZeroBased.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses US 0-based week numbering schema");
+				}
 				else
 				{
-					Assert.Pass($"Context {db.DataProvider.Name} uses unknown week numbering schema");
+					Assert.Fail($"Context {db.DataProvider.Name} uses unknown week numbering schema");
 				}
 			}
 		}
@@ -243,18 +264,28 @@ namespace Tests.Linq
 					new DateTime(2019, 1, 4),
 					new DateTime(2019, 1, 5),
 					new DateTime(2019, 1, 6),
-					new DateTime(2019, 1, 7)
+					new DateTime(2019, 1, 7),
+					new DateTime(2019, 1, 8)
 				};
 
-			var isoWeeks    = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2 };
-			var usWeeks     = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2 };
-			var muslimWeeks = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2 };
+				// actually 53 should be 1st week of 2019, but..
+				var isoWeeks              = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var sqliteParodyNumbering = new[] { 52, 52, 52, 53, 0, 0, 0, 0, 0, 0, 1, 1 };
+				var isoProperWeeks        = new[] { 52, 52, 52,  1, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var usWeeks               = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2, 2 };
+				var usWeeksZeroBased      = new[] { 51, 51, 52, 52, 0, 0, 0, 0, 0, 1, 1, 1 };
+				var muslimWeeks           = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2, 2 };
+				var primitive             = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 1, 2 };
 
 			var results = dates.Select(date => Sql.DatePart(Sql.DateParts.Week, date).Value).ToArray();
 
 			if (isoWeeks.SequenceEqual(results))
 			{
 				Assert.Pass("Sql.DatePart C# implementation uses ISO week numbering schema");
+			}
+			else if (isoProperWeeks.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses PROPER ISO week numbering schema");
 			}
 			else if (usWeeks.SequenceEqual(results))
 			{
@@ -264,9 +295,21 @@ namespace Tests.Linq
 			{
 				Assert.Pass("Sql.DatePart C# implementation uses Islamic week numbering schema");
 			}
+			else if (primitive.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses PRIMITIVE week numbering schema");
+			}
+			else if (sqliteParodyNumbering.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses SQLite inhuman numbering logic");
+			}
+			else if (usWeeksZeroBased.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses US 0-based week numbering schema");
+			}
 			else
 			{
-				Assert.Pass("Sql.DatePart C# implementation uses unknown week numbering schema");
+				Assert.Fail("Sql.DatePart C# implementation uses unknown week numbering schema");
 			}
 		}
 
