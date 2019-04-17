@@ -296,7 +296,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcatWSTest([
+		public void ConcatStringsTest([
 			IncludeDataSources(
 				TestProvName.AllSqlServer,
 				TestProvName.AllPostgreSQL,
@@ -309,23 +309,23 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
-				var actualOne   = table.Select(t => Sql.ConcatWS(" -> ", t.Value2));
-				var expectedOne = data .Select(t => Sql.ConcatWS(" -> ", t.Value2));
+				var actualOne   = table.Select(t => Sql.ConcatStrings(" -> ", t.Value2));
+				var expectedOne = data .Select(t => Sql.ConcatStrings(" -> ", t.Value2));
 
 				Assert.AreEqual(expectedOne, actualOne);
 
-				var actualOneNull   = table.Select(t => Sql.ConcatWS(" -> ", t.Value3));
-				var expectedOneNull = data .Select(t => Sql.ConcatWS(" -> ", t.Value3));
+				var actualOneNull   = table.Select(t => Sql.ConcatStrings(" -> ", t.Value3));
+				var expectedOneNull = data .Select(t => Sql.ConcatStrings(" -> ", t.Value3));
 
 				Assert.AreEqual(expectedOneNull, actualOneNull);
 
-				var actual   = table.Select(t => Sql.ConcatWS(" -> ", t.Value3, t.Value1, t.Value2));
-				var expected = data .Select(t => Sql.ConcatWS(" -> ", t.Value3, t.Value1, t.Value2));
+				var actual   = table.Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value1, t.Value2));
+				var expected = data .Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value1, t.Value2));
 
 				Assert.AreEqual(expected, actual);
 
-				var actualAllEmpty   = table.Select(t => Sql.ConcatWS(" -> ", t.Value3, t.Value3));
-				var expectedAllEmpty = data .Select(t => Sql.ConcatWS(" -> ", t.Value3, t.Value3));
+				var actualAllEmpty   = table.Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value3));
+				var expectedAllEmpty = data .Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value3));
 
 				Assert.AreEqual(expectedAllEmpty, actualAllEmpty);
 			}

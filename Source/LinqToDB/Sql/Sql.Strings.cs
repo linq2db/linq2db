@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using JetBrains.Annotations;
-using LinqToDB.Expressions;
-using LinqToDB.Linq;
-using LinqToDB.SqlQuery;
+
 using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
+	using Linq;
+	using SqlQuery;
+
 	public static class StringAggregateExtensions
 	{
 		[Sql.Extension("WITHIN GROUP ({order_by_clause})", TokenName = "aggregation_ordering", ChainPrecedence = 2)]
@@ -81,7 +82,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(OrderByDescending, aggregate),
-					new Expression[] { Expression.Constant(aggregate) }
+					Expression.Constant(aggregate)
 				));
 
 			return new Sql.StringAggregateNotOrderedImpl<string>(query);
@@ -166,17 +167,17 @@ namespace LinqToDB
 			public IQueryable Query { get; }
 		}
 
-		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}", IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({source}, {separator})",                           IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SapHana,       "STRING_AGG({source}, {separator})",                           IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({source}, {separator})",                         IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({source} SEPARATOR {separator})",                IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.Oracle,        "LISTAGG({source}, {separator}) {aggregation_ordering}",       IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.OracleNative,  "LISTAGG({source}, {separator}) {aggregation_ordering}",       IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.DB2,           "LISTAGG({source}, {separator})",                              IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.DB2LUW,        "LISTAGG({source}, {separator})",                              IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.DB2zOS,        "LISTAGG({source}, {separator})",                              IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.Firebird,      "LIST({source}, {separator})",                                 IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SapHana,       "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({source}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({source}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.Oracle,        "LISTAGG({source}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.OracleNative,  "LISTAGG({source}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.DB2,           "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.DB2LUW,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<string> StringAggregate(
 			[ExprParameter] [NotNull] this IQueryable<string> source,
 			[ExprParameter] [NotNull] string separator)
@@ -194,17 +195,17 @@ namespace LinqToDB
 			return new StringAggregateNotOrderedImpl<string>(query);
 		}
 
-		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",  IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({selector}, {separator})",                            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SapHana,       "STRING_AGG({selector}, {separator})",                            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({selector}, {separator})",                          IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({selector} SEPARATOR {separator})",                 IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.Oracle,        "LISTAGG({selector}, {separator}) {aggregation_ordering}",        IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.OracleNative,  "LISTAGG({selector}, {separator}) {aggregation_ordering}",        IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.DB2,           "LISTAGG({selector}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.DB2LUW,        "LISTAGG({selector}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.Firebird,      "LIST({selector}, {separator})",                                  IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SapHana,       "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({selector}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({selector}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.Oracle,        "LISTAGG({selector}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.OracleNative,  "LISTAGG({selector}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.DB2,           "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.DB2LUW,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
 			                [NotNull] this IEnumerable<T> source,
 			[ExprParameter] [NotNull] string separator,
@@ -213,17 +214,17 @@ namespace LinqToDB
 			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
 		}
 
-		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",  IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({selector}, {separator})",                            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SapHana,       "STRING_AGG({selector}, {separator})",                            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({selector}, {separator})",                          IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({selector} SEPARATOR {separator})",                 IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.Oracle,        "LISTAGG({selector}, {separator}) {aggregation_ordering}",        IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.OracleNative,  "LISTAGG({selector}, {separator}) {aggregation_ordering}",        IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.DB2,           "LISTAGG({selector}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.DB2LUW,        "LISTAGG({selector}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.Firebird,      "LIST({selector}, {separator})",                                  IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SapHana,       "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({selector}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({selector}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.Oracle,        "LISTAGG({selector}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.OracleNative,  "LISTAGG({selector}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.DB2,           "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.DB2LUW,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
 			                [NotNull] this IQueryable<T> source,
 			[ExprParameter] [NotNull] string separator,
@@ -243,18 +244,17 @@ namespace LinqToDB
 			return new StringAggregateNotOrderedImpl<T>(query);
 		}
 
-		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",  IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({source}, {separator})",                            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SapHana,       "STRING_AGG({source}, {separator})",                            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({source}, {separator})",                          IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({source} SEPARATOR {separator})",                 IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.Oracle,        "LISTAGG({source}, {separator}) {aggregation_ordering}",        IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.OracleNative,  "LISTAGG({source}, {separator}) {aggregation_ordering}",        IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.DB2,           "LISTAGG({source}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.DB2LUW,        "LISTAGG({source}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.DB2zOS,        "LISTAGG({source}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.Firebird,      "LIST({source}, {separator})",                                  IsAggregate = true, ChainPrecedence = 10)]
-
+		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SapHana,       "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({source}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({source}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.Oracle,        "LISTAGG({source}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.OracleNative,  "LISTAGG({source}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.DB2,           "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.DB2LUW,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<string> StringAggregate(
 			[ExprParameter] [NotNull] this IEnumerable<string> source,
 			[ExprParameter] [NotNull] string separator)
@@ -264,7 +264,7 @@ namespace LinqToDB
 
 		#endregion
 
-		#region ConcatWS
+		#region ConcatStrings
 
 		class CommonConcatWsArgumentsBuilder : Sql.IExtensionCallBuilder
 		{
@@ -365,12 +365,18 @@ namespace LinqToDB
 			}
 		}
 
+		/// <summary>
+		/// Concatenates NOT NULL strings, using the specified separator between each member.
+		/// </summary>
+        /// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
+    	/// <param name="arguments">A collection that contains the strings to concatenate.</param>
+		/// <returns></returns>
 		[Sql.Extension(PN.SqlServer2017, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')")]
 		[Sql.Extension(PN.PostgreSQL,    "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null)]
 		[Sql.Extension(PN.MySql,         "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null)]
 		[Sql.Extension(PN.SqlServer,     "", BuilderType = typeof(OldSqlServerConcatWsBuilder))]
 		[Sql.Extension(PN.SQLite,        "", BuilderType = typeof(SqliteConcatWsBuilder))]
-		public static string ConcatWS(
+		public static string ConcatStrings(
 			[ExprParameter] [NotNull] string separator,
 			                [NotNull] params string[] arguments)
 		{
