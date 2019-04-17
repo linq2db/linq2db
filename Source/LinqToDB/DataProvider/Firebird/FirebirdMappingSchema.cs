@@ -29,27 +29,13 @@ namespace LinqToDB.DataProvider.Firebird
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
-			string dbType;
-			string format;
+			var dbType = dt.DbType ?? "timestamp";
+			var format = "CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})";
 
 			if (value.Millisecond == 0)
-			{
-				if (value.Hour == 0 && value.Minute == 0 && value.Second == 0)
-				{
-					format = "CAST('{0:yyyy-MM-dd}' AS {1})";
-					dbType = dt.DbType ?? "date";
-				}
-				else
-				{
-					format = "CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})";
-					dbType = dt.DbType ?? "timestamp";
-				}
-			}
-			else
-			{
-				format = "CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})";
-				dbType = dt.DbType ?? "timestamp";
-			}
+				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0
+					? "CAST('{0:yyyy-MM-dd}' AS {1})"
+					: "CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})";
 
 			stringBuilder.AppendFormat(format, value, dbType);
 		}
