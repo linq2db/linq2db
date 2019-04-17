@@ -33,10 +33,10 @@ namespace LinqToDB.Linq.Builder
 					if (mc.Arguments.Count > 0)
 					{
 						if (typeof(IEnumerable<>).IsSameOrParentOf(mc.Arguments[0].Type))
-							sequence = builder.BuildSequence(new BuildInfo(buildInfo, mc.Arguments[0]));
+							sequence = builder.BuildSequence(new BuildInfo(buildInfo, mc.Arguments[0]) {IsChain = true});
 						else if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(mc.Arguments[0].Type))
 							sequence = builder.BuildSequence(new BuildInfo(buildInfo,
-								((Sql.IQueryableContainer)mc.Arguments[0].EvaluateExpression()).Query.Expression));
+								((Sql.IQueryableContainer)mc.Arguments[0].EvaluateExpression()).Query.Expression) {IsChain = true});
 					}
 				}
 			}
@@ -44,14 +44,11 @@ namespace LinqToDB.Linq.Builder
 			if (sequence == null)
 				throw new LinqToDBException($"{methodCall} can not be converted to SQL.");
 
-			var finalFunction = functions.FirstOrDefault(f => f.ChainPrecedence == 0);
-			if (finalFunction == null)
-				finalFunction = functions.FirstOrDefault(f => f.ChainPrecedence < 0);
-			if (finalFunction == null)
-			{
+			if (buildInfo.IsChain)
 				// it means that function is just sequence provider
 				return sequence;
-			}
+
+			var finalFunction = functions.First();
 				
 			var sqlExpression = finalFunction.GetExpression(builder.DataContext, buildInfo.SelectQuery, methodCall,
 				e => builder.ConvertToExtensionSql(sequence, e));

@@ -377,6 +377,10 @@ namespace LinqToDB
 
 			public Type      BuilderType     { get; set; }
 			public object    BuilderValue    { get; set; }
+
+			/// <summary>
+			/// Defines in which order process extensions. Items will be ordered Descending.
+			/// </summary>
 			public int       ChainPrecedence { get; set; }
 
 			public ExtensionAttribute(string expression): this(string.Empty, expression)
