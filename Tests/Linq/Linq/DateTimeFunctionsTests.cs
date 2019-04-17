@@ -203,7 +203,11 @@ namespace Tests.Linq
 				var usWeeks     = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2 };
 				var muslimWeeks = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2 };
 
-				var results = dates.Select(date => db.Select(() => Sql.AsSql(Sql.DatePart(Sql.DateParts.Week, date)))).ToArray().Select(_ => _.Value).ToArray();
+				var results = dates
+					.Select(date => db.Select(() => Sql.AsSql(Sql.DatePart(Sql.DateParts.Week, Sql.ToSql(date)))))
+					.AsEnumerable()
+					.Select(_ => _.Value)
+					.ToArray();
 
 				if (isoWeeks.SequenceEqual(results))
 				{
