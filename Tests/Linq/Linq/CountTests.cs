@@ -174,7 +174,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy21([DataSources] string context)
+		public void GroupBy21([DataSources(ProviderName.Informix)] string context)
 		{
 			var n = 1;
 
@@ -193,7 +193,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy22([DataSources] string context)
+		public void GroupBy22([DataSources(ProviderName.Informix)] string context)
 		{
 			var n = 1;
 
