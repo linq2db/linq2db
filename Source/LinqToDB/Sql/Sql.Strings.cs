@@ -169,7 +169,7 @@ namespace LinqToDB
 
 		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SapHana,       "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SapHana,       "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({source}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({source}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Oracle,        "LISTAGG({source}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
@@ -197,7 +197,7 @@ namespace LinqToDB
 
 		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SapHana,       "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SapHana,       "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({selector}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({selector}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Oracle,        "LISTAGG({selector}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
@@ -216,7 +216,7 @@ namespace LinqToDB
 
 		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SapHana,       "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SapHana,       "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({selector}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({selector}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Oracle,        "LISTAGG({selector}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
@@ -246,7 +246,7 @@ namespace LinqToDB
 
 		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SapHana,       "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SapHana,       "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({source}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({source}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Oracle,        "LISTAGG({source}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]

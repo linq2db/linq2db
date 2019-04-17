@@ -58,8 +58,7 @@ namespace Tests.Linq
 				ProviderName.SapHana,
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
-				ProviderName.DB2,
-				TestProvName.AllFirebird)
+				ProviderName.DB2)
 			{
 			}
 		}
