@@ -115,7 +115,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 			var oldProvider      = DataConnection.GetDataProvider(context);

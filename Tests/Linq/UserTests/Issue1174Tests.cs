@@ -49,9 +49,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestConcurrentSelect(
-			[IncludeDataSources(false, ProviderName.SqlServer,ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context
-		)
+		public void TestConcurrentSelect([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var dbFactory = MyDB.CreateFactory(context, 1, TimeSpan.FromSeconds(1));
 

@@ -12,7 +12,7 @@ namespace Tests.Linq
 	{
 		[Test]
 		public void ApplyJoinArray(
-			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)] 
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)]
 			string context)
 		{
 			var doe = "Doe";
@@ -170,7 +170,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray6([DataSources(ProviderName.Access, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)] string context)
+		public void InnerJoinArray6([DataSources(ProviderName.Access, TestProvName.AllPostgreSQLLess10)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -192,7 +192,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("PosgreSql needs type for literals. We have to rewise literals generation.")]
 		[Test]
-		public void InnerJoinArray6Postgres([IncludeDataSources(ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)] 
+		public void InnerJoinArray6Postgres([IncludeDataSources(TestProvName.AllPostgreSQL)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

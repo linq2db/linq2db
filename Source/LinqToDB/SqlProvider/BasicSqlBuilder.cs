@@ -2156,7 +2156,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var field = (SqlField)expr;
 
-						if (buildTableName)
+						if (buildTableName && field.Table != null)
 						{
 							//TODO: looks like SqlBuilder is trying to fix issue with bad table mapping from Builder. Merge Tests fails.
 							var ts = Statement.SelectQuery?.GetTableSource(field.Table);
@@ -2203,7 +2203,7 @@ namespace LinqToDB.SqlProvider
 							}
 						}
 
-						if (field == field.Table.All)
+						if (field == field.Table?.All)
 						{
 							StringBuilder.Append("*");
 						}
@@ -2303,7 +2303,7 @@ namespace LinqToDB.SqlProvider
 						}
 						else
 						{
-							BuildValue(new SqlDataType(parm.DataType, parm.SystemType, 0, 0, 0, parm.DbType), parm.Value);
+							BuildValue(new SqlDataType(parm.DataType, parm.SystemType, parm.DbSize, 0, 0, parm.DbType), parm.Value);
 						}
 					}
 
@@ -2360,6 +2360,8 @@ namespace LinqToDB.SqlProvider
 		{
 			if (text.IsNullOrEmpty())
 				return text;
+
+			text = text.Replace("\r", "");
 
 	        var strArray = text.Split('\n');
 	        var sb = new StringBuilder();

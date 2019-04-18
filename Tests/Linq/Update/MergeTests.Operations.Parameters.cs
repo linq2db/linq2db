@@ -144,7 +144,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void TestParameters2([MergeBySourceDataContextSource] string context)
+		public void TestParameters2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -189,7 +189,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void TestParametersInListSourceProperty([MergeBySourceDataContextSource] string context)
+		public void TestParametersInListSourceProperty([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -365,7 +365,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void TestParametersInDeleteBySourceCondition([MergeBySourceDataContextSource] string context)
+		public void TestParametersInDeleteBySourceCondition([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -388,7 +388,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void TestParametersInUpdateBySourceCondition([MergeBySourceDataContextSource] string context)
+		public void TestParametersInUpdateBySourceCondition([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -495,7 +495,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void TestParametersInUpdateBySourceExpression([MergeBySourceDataContextSource] string context)
+		public void TestParametersInUpdateBySourceExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -605,9 +605,7 @@ namespace Tests.xUpdate
 
 		// Provider optimize scalar parameters
 		[Test]
-		public void TestParametersInUpdateWithDeleteDeleteCondition([IncludeDataSources(false,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
-			string context)
+		public void TestParametersInUpdateWithDeleteDeleteCondition([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

@@ -26,8 +26,8 @@ namespace Tests.DataProvider
 	{
 		const string CurrentProvider = ProviderName.DB2;
 
-		[Test]
-		public void TestParameters([IncludeDataSources(CurrentProvider)] string context)
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		public void ParameterTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -40,8 +40,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDataTypes([IncludeDataSources(CurrentProvider)] string context)
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		public void DataTypeTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -134,8 +134,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test]
-		public void TestNumerics([IncludeDataSources(CurrentProvider)] string context)
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		public void NumericTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -183,8 +183,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDate([IncludeDataSources(CurrentProvider)] string context)
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		public void DateTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -197,8 +197,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDateTime([IncludeDataSources(CurrentProvider)] string context)
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		public void DateTimeTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -213,8 +213,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestTimeSpan([IncludeDataSources(CurrentProvider)] string context)
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		public void TimeSpanTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -230,8 +230,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestChar([IncludeDataSources(CurrentProvider)] string context)
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		public void CharTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -266,8 +266,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestString([IncludeDataSources(CurrentProvider)] string context)
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		public void StringTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -296,7 +296,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestBinary([IncludeDataSources(CurrentProvider)] string context)
+		public void BinaryTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var arr1 = new byte[] {         49, 50 };
 			var arr2 = new byte[] { 49, 50, 51, 52 };
@@ -312,7 +312,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestGuid([IncludeDataSources(CurrentProvider)] string context)
+		public void GuidTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -331,8 +331,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestXml([IncludeDataSources(CurrentProvider)] string context)
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		public void XmlTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -358,7 +358,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestEnum1([IncludeDataSources(CurrentProvider)] string context)
+		public void EnumTest1([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -369,8 +369,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestEnum2([IncludeDataSources(CurrentProvider)] string context)
+		[Test, ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		public void EnumTest2([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -467,7 +467,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestBinarySize([IncludeDataSources(CurrentProvider)] string context)
+		public void BinarySizeTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -496,7 +496,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestClobSize([IncludeDataSources(CurrentProvider)] string context)
+		public void ClobSizeTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -530,7 +530,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTypes([IncludeDataSources(CurrentProvider)] string context)
+		public void TypesTest([IncludeDataSources(CurrentProvider)] string context)
 		{
 			//IBM.Data.DB2.DB2Parameter p = null;
 			//p.

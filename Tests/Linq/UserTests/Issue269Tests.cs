@@ -12,14 +12,15 @@ namespace Tests.UserTests
 		class TestDataContextSourceAttribute : DataSourcesAttribute
 		{
 			public TestDataContextSourceAttribute() : base(
-				ProviderName.Access, ProviderName.SQLiteClassic, ProviderName.Oracle,
-				ProviderName.MySql, ProviderName.MySqlConnector, ProviderName.Sybase, ProviderName.SybaseManaged,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.Access,
+				TestProvName.AllSQLite,
+				TestProvName.AllOracle,
+				TestProvName.AllMySql,
+				TestProvName.AllSybase,
+				TestProvName.AllSqlServer,
 				ProviderName.DB2,
 				ProviderName.SqlCe,
-				TestProvName.MySql57,
-				ProviderName.SapHana,
-				ProviderName.SQLiteMS, ProviderName.SqlServer2000, TestProvName.MariaDB)
+				ProviderName.SapHana)
 			{
 			}
 		}

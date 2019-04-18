@@ -118,7 +118,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains3([DataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)] string context)
+		public void Contains3([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -161,7 +161,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains4([DataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)] string context)
+		public void Contains4([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -202,9 +202,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains5([DataSources(
-			ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged)]
-			string context)
+		public void Contains5([DataSources(ProviderName.Access, ProviderName.SqlServer2000, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

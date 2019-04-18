@@ -95,12 +95,8 @@ namespace Tests.Linq
 					from p in db.Parent where p.Children.Count > 2 select p);
 		}
 
-		[ActiveIssue("not supported?", Configurations = new[] { ProviderName.SapHana })]
 		[Test]
-		public void SubQueryCount([IncludeDataSources(
-				ProviderName.SqlServer2008, ProviderName.SqlServer2012,
-				ProviderName.SqlServer2014, ProviderName.SapHana)]
-			string context)
+		public void SubQueryCount([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -177,7 +173,7 @@ namespace Tests.Linq
 					select g.Count(ch => ch.ChildID > 20));
 		}
 
-		[ActiveIssue("Unsupported by Informix?", Configurations = new[] { ProviderName.Informix, ProviderName.SapHana })]
+		[ActiveIssue(1685, Configurations = new[] { ProviderName.Informix, ProviderName.SapHana })]
 		[Test]
 		public void GroupBy21([DataSources] string context)
 		{
@@ -197,7 +193,7 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
-		[ActiveIssue("Unsupported by Informix?", Configurations = new[] { ProviderName.Informix, ProviderName.SapHana })]
+		[ActiveIssue(1685, Configurations = new[] { ProviderName.Informix, ProviderName.SapHana })]
 		[Test]
 		public void GroupBy22([DataSources] string context)
 		{
@@ -217,12 +213,8 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
-		[ActiveIssue("Unsupported by Informix?", Configurations = new[] { ProviderName.Informix })]
 		[Test]
-		public void GroupBy23([DataSources(
-			ProviderName.SqlCe, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Access)]
-			string context)
+		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, ProviderName.SqlServer2000, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -238,7 +230,7 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
-		[ActiveIssue("Unsupported by Informix?", Configurations = new[] { ProviderName.Informix })]
+		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
 		[Test]
 		public void GroupBy3([DataSources] string context)
 		{
@@ -524,10 +516,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery6([DataSources(
-			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.Sybase, ProviderName.SybaseManaged)]
-			string context)
+		public void SubQuery6([DataSources(ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -536,10 +525,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery7([DataSources(
-			ProviderName.SqlCe, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.Access /* Fix It*/)]
-			string context)
+		public void SubQuery7([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

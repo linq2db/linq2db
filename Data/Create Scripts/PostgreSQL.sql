@@ -44,6 +44,10 @@ CREATE TABLE "Person"
 )
 GO
 
+COMMENT ON TABLE  "Person"            IS 'This is the Person table';
+COMMENT ON COLUMN "Person"."PersonID" IS 'This is the Person.PersonID column';
+GO
+
 INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('John',   'Pupkin',    'M')
 GO
 INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Tester', 'Testerson', 'M')
@@ -168,6 +172,9 @@ GO
 DROP TABLE IF EXISTS "SequenceTest3"
 GO
 
+DROP TABLE IF EXISTS "SequenceCustomNamingTest"
+GO
+
 DROP SEQUENCE IF EXISTS SequenceTestSeq
 GO
 
@@ -179,6 +186,10 @@ GO
 
 CREATE SEQUENCE "SequenceTest2_ID_seq" INCREMENT 1 START 1
 GO
+
+DROP SEQUENCE IF EXISTS test_schema."SequenceCustomNamingTest__seq__"
+GO
+
 
 CREATE TABLE "SequenceTest1"
 (
@@ -200,7 +211,6 @@ CREATE TABLE "SequenceTest3"
 	"Value" VARCHAR(50)
 )
 GO
-
 
 DROP TABLE IF EXISTS "TestIdentity"
 GO
@@ -440,6 +450,18 @@ GO
 
 CREATE SEQUENCE test_schema."TestSchemaIdentity_ID_seq" INCREMENT 1 START 1
 GO
+
+
+CREATE SEQUENCE test_schema."SequenceCustomNamingTest__seq__" INCREMENT 1 START 1
+GO
+
+CREATE TABLE "SequenceCustomNamingTest"
+(
+	"ID"    INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema."SequenceCustomNamingTest__seq__"'),
+	"Value" VARCHAR(50)
+)
+GO
+
 
 CREATE TABLE test_schema."TestSchemaIdentity" (
 	"ID" INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema."TestSchemaIdentity_ID_seq"')

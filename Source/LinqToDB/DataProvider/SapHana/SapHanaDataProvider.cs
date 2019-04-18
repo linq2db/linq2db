@@ -158,5 +158,11 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			return new SapHanaMergeBuilder<TTarget, TSource>(connection, merge);
 		}
+
+		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			// provider fails to set AllowDBNull for some results
+			return true;
+		}
 	}
 }

@@ -29,6 +29,7 @@ namespace Tests.UserTests
 		// Informix disabled due to issue, described here (but it reproduced with client 4.1):
 		// https://www-01.ibm.com/support/docview.wss?uid=swg1IC66046
 		[Test, Category("WindowsOnly")]
+		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
 		public void Test([DataSources(ProviderName.SQLiteMS, ProviderName.Informix)] string context)
 		{
 			using (var semaphore = new Semaphore(0, 10))

@@ -14,7 +14,7 @@ namespace Tests.UserTests
 	public class Issue737Tests : TestBase
 	{
 		[Test]
-		public void Test([IncludeDataSources(ProviderName.SqlServer2014)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{

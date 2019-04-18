@@ -56,10 +56,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestInsert([DataSources(false,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Sybase,
-			ProviderName.SybaseManaged, ProviderName.Informix)]
-			string context)
+		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, ProviderName.Informix)] string context)
 		{
 			const int recordsCount = 20;
 
