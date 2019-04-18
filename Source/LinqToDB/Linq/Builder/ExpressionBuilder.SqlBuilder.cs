@@ -1336,8 +1336,7 @@ namespace LinqToDB.Linq.Builder
 
 		ParameterAccessor BuildParameter(Expression expr, BuildParameterType buildParameterType = BuildParameterType.Default)
 		{
-			ParameterAccessor p = null;
-			if (_parameters.TryGetValue(expr, out p))
+			if (_parameters.TryGetValue(expr, out var p))
 				return p;
 
 			string name = null;
