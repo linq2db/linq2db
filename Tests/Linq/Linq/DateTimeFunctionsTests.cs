@@ -179,6 +179,141 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DatePartWeekNumberingType([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var dates = new[]
+				{
+					new DateTime(2018, 12, 28),
+					new DateTime(2018, 12, 29),
+					new DateTime(2018, 12, 30),
+					new DateTime(2018, 12, 31),
+					new DateTime(2019, 1, 1),
+					new DateTime(2019, 1, 2),
+					new DateTime(2019, 1, 3),
+					new DateTime(2019, 1, 4),
+					new DateTime(2019, 1, 5),
+					new DateTime(2019, 1, 6),
+					new DateTime(2019, 1, 7),
+					new DateTime(2019, 1, 8)
+				};
+
+				// actually 53 should be 1st week of 2019, but..
+				var isoWeeks              = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var sqliteParodyNumbering = new[] { 52, 52, 52, 53, 0, 0, 0, 0, 0, 0, 1, 1 };
+				var isoProperWeeks        = new[] { 52, 52, 52,  1, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var usWeeks               = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2, 2 };
+				var usWeeksZeroBased      = new[] { 51, 51, 52, 52, 0, 0, 0, 0, 0, 1, 1, 1 };
+				var muslimWeeks           = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2, 2 };
+				var primitive             = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 1, 2 };
+
+				var results = dates
+					.Select(date => db.Select(() => Sql.AsSql(Sql.DatePart(Sql.DateParts.Week, Sql.ToSql(date)))))
+					.AsEnumerable()
+					.Select(_ => _.Value)
+					.ToArray();
+
+				if (isoWeeks.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses ISO week numbering schema");
+				}
+				else if (isoProperWeeks.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses PROPER ISO week numbering schema");
+				}
+				else if (usWeeks.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses US week numbering schema");
+				}
+				else if (muslimWeeks.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses Islamic week numbering schema");
+				}
+				else if (primitive.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses PRIMITIVE week numbering schema");
+				}
+				else if (sqliteParodyNumbering.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses SQLite inhuman numbering logic");
+				}
+				else if (usWeeksZeroBased.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses US 0-based week numbering schema");
+				}
+				else
+				{
+					Assert.Fail($"Context {db.DataProvider.Name} uses unknown week numbering schema");
+				}
+			}
+		}
+
+		[Test]
+		public void DatePartWeekNumberingTypeCSharp()
+		{
+			var dates = new[]
+			{
+					new DateTime(2018, 12, 28),
+					new DateTime(2018, 12, 29),
+					new DateTime(2018, 12, 30),
+					new DateTime(2018, 12, 31),
+					new DateTime(2019, 1, 1),
+					new DateTime(2019, 1, 2),
+					new DateTime(2019, 1, 3),
+					new DateTime(2019, 1, 4),
+					new DateTime(2019, 1, 5),
+					new DateTime(2019, 1, 6),
+					new DateTime(2019, 1, 7),
+					new DateTime(2019, 1, 8)
+				};
+
+				// actually 53 should be 1st week of 2019, but..
+				var isoWeeks              = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var sqliteParodyNumbering = new[] { 52, 52, 52, 53, 0, 0, 0, 0, 0, 0, 1, 1 };
+				var isoProperWeeks        = new[] { 52, 52, 52,  1, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var usWeeks               = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2, 2 };
+				var usWeeksZeroBased      = new[] { 51, 51, 52, 52, 0, 0, 0, 0, 0, 1, 1, 1 };
+				var muslimWeeks           = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2, 2 };
+				var primitive             = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 1, 2 };
+
+			var results = dates.Select(date => Sql.DatePart(Sql.DateParts.Week, date).Value).ToArray();
+
+			if (isoWeeks.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses ISO week numbering schema");
+			}
+			else if (isoProperWeeks.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses PROPER ISO week numbering schema");
+			}
+			else if (usWeeks.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses US week numbering schema");
+			}
+			else if (muslimWeeks.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses Islamic week numbering schema");
+			}
+			else if (primitive.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses PRIMITIVE week numbering schema");
+			}
+			else if (sqliteParodyNumbering.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses SQLite inhuman numbering logic");
+			}
+			else if (usWeeksZeroBased.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses US 0-based week numbering schema");
+			}
+			else
+			{
+				Assert.Fail("Sql.DatePart C# implementation uses unknown week numbering schema");
+			}
+		}
+
+		[Test]
 		public void DatePartWeekDay([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -221,6 +356,29 @@ namespace Tests.Linq
 				AreEqual(
 					from t in    Types select           Sql.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue),
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue)));
+		}
+
+		[Test]
+		public void DatepartDynamic(
+			[DataSources(ProviderName.Informix)] string context, 
+			[Values(
+				Sql.DateParts.Day,
+				Sql.DateParts.Hour,
+				Sql.DateParts.Minute,
+				Sql.DateParts.Month,
+				Sql.DateParts.Year,
+				Sql.DateParts.Second
+				)] Sql.DateParts datepart)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected =
+					from t in Types select Sql.DatePart(datepart, t.DateTimeValue);
+				var result =
+					from t in db.Types select Sql.AsSql(Sql.DatePart(datepart, t.DateTimeValue));
+
+				AreEqual(expected, result);
+			}
 		}
 
 		[Test]
@@ -531,7 +689,7 @@ namespace Tests.Linq
 				db.Insert(new LinqDataTypes { ID = 5000, SmallIntValue = -2, DateTimeValue = new DateTime(2018, 01, 03) });
 
 				var result = db.Types
-					.Count(t => t.ID == 5000 && t.DateTimeValue.AddDays(t.SmallIntValue) < new DateTime(2018, 01, 02));
+					.Count(t => t.ID == 5000 && Sql.AsSql(t.DateTimeValue.AddDays(t.SmallIntValue)) < new DateTime(2018, 01, 02));
 
 				Assert.AreEqual(1, result);
 
@@ -581,6 +739,36 @@ namespace Tests.Linq
 				AreEqual(
 					from t in Types select Sql.DateAdd(Sql.DateParts.Year, t.SmallIntValue, t.DateTimeValue).Value.Date,
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, t.SmallIntValue, t.DateTimeValue)).Value.Date);
+			}
+		}
+
+		public static DateTime Truncate(DateTime date, long resolution)
+	    {
+	        return new DateTime(date.Ticks - (date.Ticks % resolution), date.Kind);
+	    }
+
+		[Test]
+		public void AddDynamicFromColumn(
+			[DataSources(ProviderName.Informix)] string context, 
+			[Values(
+				Sql.DateParts.Day, 
+				Sql.DateParts.Hour, 
+				Sql.DateParts.Minute, 
+				Sql.DateParts.Month,
+				Sql.DateParts.Year,
+				Sql.DateParts.Second
+				)] Sql.DateParts datepart)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected =
+					(from t in Types select Sql.DateAdd(datepart, t.SmallIntValue, t.DateTimeValue)).Select(d =>
+						Truncate(d.Value, TimeSpan.TicksPerSecond));
+				var result =
+					(from t in db.Types select Sql.AsSql(Sql.DateAdd(datepart, t.SmallIntValue, t.DateTimeValue)))
+					.ToList().Select(d => Truncate(d.Value, TimeSpan.TicksPerSecond));
+
+				AreEqual(expected, result);
 			}
 		}
 

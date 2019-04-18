@@ -447,7 +447,9 @@ namespace LinqToDB
 				return chains;
 			}
 
-			public static string ResolveExpressionValues([NotNull] string expression, [NotNull] Func<string, string, string> valueProvider)
+			public static string ResolveExpressionValues(
+				[NotNull] string expression,
+				[NotNull] Func<string, string, string> valueProvider)
 			{
 				if (expression    == null) throw new ArgumentNullException(nameof(expression));
 				if (valueProvider == null) throw new ArgumentNullException(nameof(valueProvider));
@@ -559,7 +561,9 @@ namespace LinqToDB
 					var builder = new ExtensionBuilder(Configuration, dataContext, query, extension, convertHelper, member, arguments);
 					callBuilder.Build(builder);
 
-					result = builder.ResultExpression != null ? new SqlExtensionParam(TokenName, builder.ResultExpression) : new SqlExtensionParam(TokenName, builder.Extension);
+					result = builder.ResultExpression != null ?
+						new SqlExtensionParam(TokenName, builder.ResultExpression) :
+						new SqlExtensionParam(TokenName, builder.Extension);
 				}
 
 				result = result ?? new SqlExtensionParam(TokenName, extension);
@@ -665,7 +669,7 @@ namespace LinqToDB
 				var chain  = BuildFunctionsChain(dataContext, query, expression, helper);
 
 				if (chain.Count == 0)
-					throw new InvalidOperationException("No sequnce found");
+					throw new InvalidOperationException("No sequence found");
 
 				var ordered = chain.Where(c => c.Extension != null).OrderByDescending(c => c.Extension.ChainPrecedence).ToArray();
 				var main    = ordered.FirstOrDefault();
@@ -713,6 +717,5 @@ namespace LinqToDB
 				return res;
 			}
 		}
-
 	}
 }
