@@ -293,10 +293,11 @@ namespace LinqToDB.SqlQuery
 
 			var str = Regex.Replace(expression, pattern, match =>
 			{
-                string open = match.Groups["open"].Value;
-                string close = match.Groups["close"].Value;
-                string key = match.Groups["key"].Value;
-                string format = match.Groups["format"].Value;
+                string open   = match.Groups["open"].Value;
+                string key    = match.Groups["key"].Value;
+
+                //string close  = match.Groups["close"].Value;
+                //string format = match.Groups["format"].Value;
 
                 if (open.Length % 2 == 0)
                     return match.Value;
