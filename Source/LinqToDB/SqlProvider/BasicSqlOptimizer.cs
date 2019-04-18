@@ -30,7 +30,7 @@ namespace LinqToDB.SqlProvider
 			FinalizeCte(statement);
 
 //statement.EnsureFindTables();
-			//TODO: We can use Walk here but OptimizeUnions fails with subqueris. Needs revising.
+			//TODO: We can use Walk here but OptimizeUnions fails with subqueries. Needs revising.
 			statement.WalkQueries(
 				selectQuery =>
 				{
@@ -72,7 +72,6 @@ namespace LinqToDB.SqlProvider
 				OptimizeJoins(statement);
 
 //statement.EnsureFindTables();
-			statement.SetAliases();
 
 			return statement;
 		}

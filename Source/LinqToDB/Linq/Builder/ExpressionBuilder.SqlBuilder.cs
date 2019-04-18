@@ -1337,17 +1337,16 @@ namespace LinqToDB.Linq.Builder
 		ParameterAccessor BuildParameter(Expression expr, BuildParameterType buildParameterType = BuildParameterType.Default)
 		{
 			ParameterAccessor p = null;
-			if (!DataContext.SqlProviderFlags.IsParameterOrderDependent && _parameters.TryGetValue(expr, out p))
+			if (_parameters.TryGetValue(expr, out p))
 				return p;
 
 			string name = null;
 
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
-			if (!DataContext.SqlProviderFlags.IsParameterOrderDependent)
-				foreach (var accessor in _parameters)
-					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), compareConstantValues: true))
-						p = accessor.Value;
+			foreach (var accessor in _parameters)
+				if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), compareConstantValues: true))
+					p = accessor.Value;
 
 			if (p == null)
 			{
@@ -1375,8 +1374,7 @@ namespace LinqToDB.Linq.Builder
 				CurrentSqlParameters.Add(p);
 			}
 
-			if (!DataContext.SqlProviderFlags.IsParameterOrderDependent)
-				_parameters.Add(expr, p);
+			_parameters.Add(expr, p);
 
 			return p;
 		}

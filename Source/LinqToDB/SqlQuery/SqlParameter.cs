@@ -31,6 +31,8 @@ namespace LinqToDB.SqlQuery
 		public string   LikeEnd          { get; set; }
 		public bool     ReplaceLike      { get; set; }
 
+		internal int?   AccessorId       { get; set; }
+
 		private object _value;
 		public  object  Value
 		{
@@ -205,7 +207,8 @@ namespace LinqToDB.SqlQuery
 					DbSize           = DbSize,
 					LikeStart        = LikeStart,
 					LikeEnd          = LikeEnd,
-					ReplaceLike      = ReplaceLike
+					ReplaceLike      = ReplaceLike,
+					AccessorId       = AccessorId
 				};
 
 				objectTree.Add(this, clone = p);

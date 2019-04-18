@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.SqlQuery
 {
@@ -1140,7 +1141,28 @@ namespace LinqToDB.SqlQuery
 			where T : class, IQueryElement
 		{
 			_visitedElements.Clear();
+			_all = false;
 			return (T)ConvertInternal(element, action) ?? element;
+		}
+
+		public T ConvertAll<T>(T element, Func<IQueryElement,IQueryElement> action)
+			where T : class, IQueryElement
+		{
+			_visitedElements.Clear();
+			_all = true;
+			return (T)ConvertInternal(element, action) ?? element;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		void AddVisited(IQueryElement element, IQueryElement newElement)
+		{
+			if (!_all)
+				_visitedElements[element] = newElement;
+			else
+			{
+				if (!_visitedElements.ContainsKey(element))
+					_visitedElements[element] = newElement;
+			}
 		}
 
 		IQueryElement ConvertInternal(IQueryElement element, Func<IQueryElement,IQueryElement> action)
@@ -1150,7 +1172,8 @@ namespace LinqToDB.SqlQuery
 
 			IQueryElement parent;
 
-			if (_visitedElements.TryGetValue(element, out var newElement))
+			IQueryElement newElement = null;
+			if (!_all && _visitedElements.TryGetValue(element, out newElement))
 				return newElement;
 
 			switch (element.ElementType)
@@ -1219,7 +1242,7 @@ namespace LinqToDB.SqlQuery
 
 							newElement = new SqlTable(table, fields2, targs ?? table.TableArguments);
 
-							_visitedElements[((SqlTable)newElement).All] = table.All;
+							AddVisited(((SqlTable)newElement).All, table.All);
 						}
 
 						break;
@@ -1250,13 +1273,13 @@ namespace LinqToDB.SqlQuery
 
 									fields2[i] = new SqlField(field);
 
-									_visitedElements[field] = fields2[i];
+									AddVisited(field, fields2[i]);
 								}
 							}
 
 							newElement = new SqlCteTable(table, fields2, cte);
 
-							_visitedElements[((SqlCteTable)newElement).All] = table.All;
+							AddVisited(((SqlCteTable)newElement).All, table.All);
 						}
 
 						break;
@@ -1291,7 +1314,7 @@ namespace LinqToDB.SqlQuery
 
 							newElement = new SqlRawSqlTable(table, fields2, targs ?? table.Parameters);
 
-							_visitedElements[((SqlRawSqlTable)newElement).All] = table.All;
+							AddVisited(((SqlRawSqlTable)newElement).All, table.All);
 						}
 
 						break;
@@ -1810,7 +1833,7 @@ namespace LinqToDB.SqlQuery
 
 								if (ret != null && !ReferenceEquals(e, ret))
 								{
-									_visitedElements.Add(e, ret);
+									AddVisited(e, ret);
 									return true;
 								}
 
@@ -1838,7 +1861,7 @@ namespace LinqToDB.SqlQuery
 							(SelectQuery)parent,
 							q.IsParameterDependent);
 
-						_visitedElements[q] = action(nq) ?? nq;
+						AddVisited(q, action(nq) ?? nq);
 
 						return nq;
 					}
@@ -1846,7 +1869,7 @@ namespace LinqToDB.SqlQuery
 
 			newElement = newElement == null ? action(element) : (action(newElement) ?? newElement);
 
-			_visitedElements.Add(element, newElement);
+			AddVisited(element, newElement);
 
 			return newElement;
 		}

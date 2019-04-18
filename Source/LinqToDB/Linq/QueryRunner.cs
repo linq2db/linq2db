@@ -103,6 +103,13 @@ namespace LinqToDB.Linq
 			foreach (var sql in query.Queries)
 			{
 				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement);
+
+				// normalize parameters
+				if (query.SqlProviderFlags.IsParameterOrderDependent) 
+					sql.Statement = NormalizeParameters(sql.Statement, sql.Parameters);
+
+				sql.Statement.SetAliases();
+
 				var parameters =
 					sql.Parameters
 						.Select(p => new {p, idx = sql.Statement.Parameters.IndexOf(p.SqlParameter)})
@@ -127,6 +134,146 @@ namespace LinqToDB.Linq
 
 				sql.Parameters = parameters.ToList();
 			}
+		}
+
+		private static bool HasQueryParameters(ISqlExpression expr)
+		{
+			var hasParameters  = null != QueryVisitor.Find(expr,
+				el => el.ElementType == QueryElementType.SqlParameter &&
+				      ((SqlParameter)el).IsQueryParameter);
+
+			return hasParameters;
+		}
+
+		private static T NormalizeExpressions<T>(T expression, HashSet<ISqlExpression> found) 
+			where T : class, IQueryElement
+		{
+			var result = new QueryVisitor().ConvertAll(expression, e =>
+			{
+				if (e.ElementType == QueryElementType.SqlExpression)
+				{
+					var expr = (SqlExpression)e;
+
+					// we interested in modifying only expressions which have parameters
+					if (HasQueryParameters(expr))
+					{
+						if (expr.Expr.IsNullOrEmpty() || expr.Parameters.Length == 0)
+							return expr;
+
+						var newExpressions = new List<ISqlExpression>();
+						var isModified     = false;
+
+						var newExpr = QueryHelper.TransformExpressionIndexes(expr.Expr,
+							idx =>
+							{
+								if (idx >= 0 && idx < expr.Parameters.Length)
+								{
+									var paramExpr  = expr.Parameters[idx];
+									var normalized = paramExpr;
+									var newIndex   = newExpressions.Count;
+									if (HasQueryParameters(paramExpr))
+									{
+										if (!found.Add(paramExpr))
+										{
+											// we have to clone
+											normalized = (ISqlExpression)normalized.Clone(
+												new Dictionary<ICloneableElement, ICloneableElement>(), c => true);
+											isModified = true;
+										}
+											
+										normalized = NormalizeExpressions(normalized, found);
+										isModified = normalized != paramExpr;
+									}
+										
+									newExpressions.Add(paramExpr);
+									return newIndex;
+								}
+								return idx;
+							});
+
+						if (isModified || newExpr != expr.Expr)
+						{
+							return new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, newExpressions.ToArray());
+						}
+
+						return expr;
+					}
+				}
+
+				return e;
+			});
+
+			return result;
+		}
+
+		private static SqlStatement NormalizeParameters(SqlStatement statement, List<ParameterAccessor> accessors)
+		{
+			// remember accessor indexes
+			new QueryVisitor().VisitAll(statement, e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					var parameter = (SqlParameter)e;
+					if (parameter.IsQueryParameter)
+					{
+						parameter.AccessorId =
+							accessors.FindIndex(a => object.ReferenceEquals(a.SqlParameter, parameter));
+					}
+				}
+			});
+			
+			// correct expressions, we have to put expressions in correct order and duplicate them if they are reused 
+
+			statement = NormalizeExpressions(statement, new HashSet<ISqlExpression>());
+
+			var uniqueParameters = new HashSet<SqlParameter>();
+			statement = new QueryVisitor().ConvertAll(statement, e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					var parameter = (SqlParameter)e;
+					if (parameter.IsQueryParameter && !uniqueParameters.Add(parameter))
+					{
+						var newParameter =
+							(IQueryElement)parameter.Clone(new Dictionary<ICloneableElement, ICloneableElement>(),
+								c => true);
+						return newParameter;
+					}
+				}
+
+				return e;
+			});
+
+
+			// clone accessors for new parameters
+			new QueryVisitor().Visit(statement, e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					var parameter = (SqlParameter)e;
+					if (parameter.IsQueryParameter && parameter.AccessorId != null)
+					{
+						var accessor = accessors[parameter.AccessorId.Value];
+						if (!ReferenceEquals(accessor.SqlParameter, parameter))
+						{
+							var newAccessor = new ParameterAccessor
+							(
+								accessor.Expression,
+								accessor.Accessor,
+								accessor.DataTypeAccessor,
+								accessor.DbTypeAccessor,
+								accessor.SizeAccessor,
+								parameter
+							);
+
+							parameter.AccessorId = accessors.Count;
+							accessors.Add(newAccessor);
+						}
+					}
+				}
+			});
+
+			return statement;
 		}
 
 		static void ClearParameters(Query query)
