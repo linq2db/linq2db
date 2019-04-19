@@ -597,7 +597,16 @@ namespace Tests.Linq
 		public void DateAddMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
-				(from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 41, t.DateTimeValue))).ToList();
+			{
+				var res1 = (from t in db.Types select           Sql.DateAdd(Sql.DateParts.Millisecond, 41, t.DateTimeValue)) .ToList();
+				var res2 = (from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 41, t.DateTimeValue))).ToList();
+
+				for (int i =0; i < res1.Count; i++)
+				{
+					var delta = res1[i] - res2[i];
+					Assert.IsTrue(delta.Between(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(1)));
+				}
+			}
 		}
 
 		[Test]
@@ -659,7 +668,16 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-				(from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMilliseconds(221))).ToList();
+			{
+				var res1 = (from t in db.Types select          (t.DateTimeValue.AddMilliseconds(221))).ToList();
+				var res2 = (from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMilliseconds(221))).ToList();
+
+				for (int i = 0; i < res1.Count; i++)
+				{
+					var delta = res1[i] - res2[i];
+					Assert.IsTrue(delta.Between(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(1)));
+				}
+			}
 		}
 
 		[Test]
@@ -798,7 +816,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -830,7 +847,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -862,7 +878,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -894,7 +909,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -910,15 +924,20 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
 				ProviderName.Access)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           (int)(t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds,
-					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds));
+			{
+				var res1 = (from t in Types select (int)(t.DateTimeValue.AddMilliseconds(100) - t.DateTimeValue).TotalMilliseconds).ToList();
+				var res2 = (from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMilliseconds(100) - t.DateTimeValue).TotalMilliseconds)).ToList();
+				for (int i = 0; i < res1.Count; i++)
+				{
+					var delta = res1[i] - res2[i];
+					Assert.AreEqual(delta, 0, 1);
+				}
+			}
 		}
 
 		[Test]
@@ -927,15 +946,21 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
 				ProviderName.Access)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1)),
-					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1))));
+			{
+				var res1 = (from t in Types    select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(42))).ToList();
+				var res2 = (from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(42)))).ToList();
+
+				for (int i = 0; i < res1.Count; i++)
+				{
+					var delta = res1[i] - res2[i];
+					Assert.AreEqual(delta.Value, 0, 1);
+				}
+			}
 		}
 
 		#endregion
