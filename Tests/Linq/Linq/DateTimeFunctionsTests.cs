@@ -927,7 +927,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			AreEqual(
-					from t in Types    select (int)          (t.DateTimeValue.AddSeconds(100) - t.DateTimeValue).TotalMilliseconds,
+					from t in    Types select           (int)(t.DateTimeValue.AddSeconds(100) - t.DateTimeValue).TotalMilliseconds,
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(100) - t.DateTimeValue).TotalMilliseconds));
 		}
 
