@@ -598,8 +598,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var res1 = (from t in db.Types select           Sql.DateAdd(Sql.DateParts.Millisecond, 41, t.DateTimeValue)) .ToList();
-				var res2 = (from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 41, t.DateTimeValue))).ToList();
+				var res1 = (from t in db.Types select           Sql.DateAdd(Sql.DateParts.Millisecond, 226, t.DateTimeValue)) .ToList();
+				var res2 = (from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 226, t.DateTimeValue))).ToList();
 
 				for (int i =0; i < res1.Count; i++)
 				{
@@ -669,14 +669,15 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var res1 = (from t in db.Types select          (t.DateTimeValue.AddMilliseconds(221))).ToList();
-				var res2 = (from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMilliseconds(221))).ToList();
+				var res1 = (from t in db.Types select          (t.DateTimeValue.AddMilliseconds(226))).ToList();
+				var res2 = (from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMilliseconds(226))).ToList();
 
 				for (int i = 0; i < res1.Count; i++)
 				{
 					var delta = res1[i] - res2[i];
 					Assert.IsTrue(delta.Between(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(1)));
 				}
+
 			}
 		}
 
@@ -929,15 +930,9 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			{
-				var res1 = (from t in Types select (int)(t.DateTimeValue.AddMilliseconds(100) - t.DateTimeValue).TotalMilliseconds).ToList();
-				var res2 = (from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMilliseconds(100) - t.DateTimeValue).TotalMilliseconds)).ToList();
-				for (int i = 0; i < res1.Count; i++)
-				{
-					var delta = res1[i] - res2[i];
-					Assert.AreEqual(delta, 0, 1);
-				}
-			}
+			AreEqual(
+					from t in Types select (int)(t.DateTimeValue.AddSeconds(100) - t.DateTimeValue).TotalMilliseconds,
+					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(100) - t.DateTimeValue).TotalMilliseconds));
 		}
 
 		[Test]
@@ -951,16 +946,9 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			{
-				var res1 = (from t in Types    select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(42))).ToList();
-				var res2 = (from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(42)))).ToList();
-
-				for (int i = 0; i < res1.Count; i++)
-				{
-					var delta = res1[i] - res2[i];
-					Assert.AreEqual(delta.Value, 0, 1);
-				}
-			}
+				AreEqual(
+						from t in Types    select           Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(42)),
+						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(42))));
 		}
 
 		#endregion
