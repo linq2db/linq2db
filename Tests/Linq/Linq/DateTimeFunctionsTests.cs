@@ -1117,7 +1117,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, ActiveIssue(1615)]
+		[Test]
 		public void Issue1615Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
