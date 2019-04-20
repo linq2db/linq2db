@@ -110,30 +110,30 @@ namespace Tests
 			SetConverterToV3(baseProvider.NpgsqlLineType          , NpgsqlLineType);
 			SetConverterToV3NpgsqlInet(baseProvider.NpgsqlInetType, NpgsqlInetType);
 
-			_setMoney = GetSetParameter(connectionType    , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Money");
+			_setMoney     = GetSetParameter(connectionType    , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Money");
 			_setVarBinary = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Bytea");
-			_setBoolean = GetSetParameter(connectionType  , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Boolean");
-			_setXml = GetSetParameter(connectionType      , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Xml");
-			_setText = GetSetParameter(connectionType     , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Text");
-			_setBit = GetSetParameter(connectionType      , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Bit");
-			_setHstore = GetSetParameter(connectionType   , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Hstore");
-			_setJson = GetSetParameter(connectionType     , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Json");
-			_setJsonb = GetSetParameter(connectionType    , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Jsonb");
+			_setBoolean   = GetSetParameter(connectionType  , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Boolean");
+			_setXml       = GetSetParameter(connectionType      , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Xml");
+			_setText      = GetSetParameter(connectionType     , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Text");
+			_setBit       = GetSetParameter(connectionType      , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Bit");
+			_setHstore    = GetSetParameter(connectionType   , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Hstore");
+			_setJson      = GetSetParameter(connectionType     , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Json");
+			_setJsonb     = GetSetParameter(connectionType    , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Jsonb");
 
 			_setNativeParameterType = GetSetParameter<object>(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType);
 		}
 
-		static Action<IDbDataParameter> _setMoney;
-		static Action<IDbDataParameter> _setVarBinary;
-		static Action<IDbDataParameter> _setBoolean;
-		static Action<IDbDataParameter> _setXml;
-		static Action<IDbDataParameter> _setText;
-		static Action<IDbDataParameter> _setBit;
-		static Action<IDbDataParameter> _setHstore;
-		static Action<IDbDataParameter> _setJsonb;
-		static Action<IDbDataParameter> _setJson;
+		Action<IDbDataParameter> _setMoney;
+		Action<IDbDataParameter> _setVarBinary;
+		Action<IDbDataParameter> _setBoolean;
+		Action<IDbDataParameter> _setXml;
+		Action<IDbDataParameter> _setText;
+		Action<IDbDataParameter> _setBit;
+		Action<IDbDataParameter> _setHstore;
+		Action<IDbDataParameter> _setJsonb;
+		Action<IDbDataParameter> _setJson;
 
-		static Action<IDbDataParameter, object> _setNativeParameterType;
+		Action<IDbDataParameter, object> _setNativeParameterType;
 
 		private void SetConverterToV3NpgsqlInet(Type from, Type to)
 		{
