@@ -12,10 +12,8 @@ namespace LinqToDB.Linq.Builder
 
 	partial class TableBuilder
 	{
-#if !NET45
-		private static MethodInfo _getArgumentMethodInfo =
-			MemberHelper.MethodOf(() => ((FormattableString)null).GetArgument(0));
-#endif
+		private static MethodInfo _asSqlMethodInfo =
+			MemberHelper.MethodOf(() => Sql.AsSql(""));
 
 		static IBuildContext BuildRawSqlTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
@@ -24,27 +22,32 @@ namespace LinqToDB.Linq.Builder
 			if (builder.MappingSchema.IsScalarType(methodCall.Method.GetGenericArguments()[0]))
 				throw new LinqToDBException("Selection of scalar types not supported by FromSql method. Use mapping class with one column for scalar values");
 
-			string                  format;
-			IEnumerable<Expression> arguments;
+			PrepareRawSqlArguments(methodCall.Arguments[1],
+				methodCall.Arguments.Count > 2 ? methodCall.Arguments[2] : null,
+				out var format, out var arguments);
 
-			var sqlExpr = methodCall.Arguments[1];
+			var sqlArguments = arguments.Select(a => builder.ConvertToSql(buildInfo.Parent, a)).ToArray();
 
+			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], format, sqlArguments);
+		}
+
+		public static void PrepareRawSqlArguments(Expression fromatArg, Expression parametersArg, out string format, out IEnumerable<Expression> arguments)
+		{
 			// Consider that FormattableString is used
-			if (sqlExpr.NodeType == ExpressionType.Call)
+			if (fromatArg.NodeType == ExpressionType.Call)
 			{
-				var mc = (MethodCallExpression)sqlExpr;
+				var mc = (MethodCallExpression)fromatArg;
 
-				format    = (string)mc.Arguments[0].EvaluateExpression();
+				format = (string)mc.Arguments[0].EvaluateExpression();
 				arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
-
 			}
 			else
 			{
-				var evaluatedSql = sqlExpr.EvaluateExpression();
+				var evaluatedSql = fromatArg.EvaluateExpression();
 #if !NET45
 				if (evaluatedSql is FormattableString formattable)
 				{
-					format    = formattable.Format;
+					format = formattable.Format;
 					arguments = formattable.GetArguments().Select(Expression.Constant);
 				}
 				else
@@ -52,16 +55,18 @@ namespace LinqToDB.Linq.Builder
 				{
 					var rawSqlString = (RawSqlString)evaluatedSql;
 
-					format        = rawSqlString.Format;
-					var arrayExpr = methodCall.Arguments[2];
-					var array     = (object[])arrayExpr.EvaluateExpression();
-					arguments     = array.Select(Expression.Constant);
+					format = rawSqlString.Format;
+					var arrayExpr = parametersArg;
+
+					if (arrayExpr.NodeType == ExpressionType.NewArrayInit)
+						arguments = ((NewArrayExpression)arrayExpr).Expressions;
+					else
+					{
+						var array = (object[])arrayExpr.EvaluateExpression();
+						arguments = array.Select(Expression.Constant);
+					}
 				}
 			}
-
-			var sqlArguments = arguments.Select(a => builder.ConvertToSql(buildInfo.Parent, a)).ToArray();
-
-			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], format, sqlArguments);
 		}
 
 		class RawSqlContext : TableContext

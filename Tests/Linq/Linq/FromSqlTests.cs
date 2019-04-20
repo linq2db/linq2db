@@ -25,6 +25,23 @@ namespace Tests.Linq
 
 			[Column("value", Length = 50)]
 			public string Value { get; set; }
+
+
+			public SomeOtherClass AssociatedOne { get; set; }
+
+		}
+
+		[Table(Name = "sample_other_class")]
+		class SomeOtherClass
+		{
+			[Column("id")]
+			public int Id       { get; set; }
+
+			[Column("parent_id")]
+			public int ParentId { get; set; }
+
+			[Column("value", Length = 50)]
+			public string Value { get; set; }
 		}
 
 		static SampleClass[] GenerateTestData()
@@ -57,7 +74,7 @@ namespace Tests.Linq
 		public void TestFormattable([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, $"15_{endId}", GenerateTestData()))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
 			{
 				int startId = 5;
 
@@ -81,7 +98,7 @@ namespace Tests.Linq
 		public void TestFormattable2([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, $"4_{endId}", GenerateTestData()))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
 			{
 				int startId = 5;
 
@@ -106,7 +123,7 @@ namespace Tests.Linq
 		public void TestFormattableSameParam([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, $"13_{endId}", GenerateTestData()))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
 			{
 				int startId = 5;
 
@@ -132,7 +149,7 @@ namespace Tests.Linq
 		public void TestFormattableInExpr([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, $"12_{endId}", GenerateTestData()))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
 			{
 				int startId = 5;
 
@@ -160,7 +177,7 @@ namespace Tests.Linq
 		public void TestFormattableInExpr2([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, $"11_{endId}", GenerateTestData()))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
 			{
 				int startId = 5;
 
@@ -190,7 +207,7 @@ namespace Tests.Linq
 		public void TestParameters([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, $"8_{endId}", GenerateTestData()))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
 			{
 				int startId = 5;
 
@@ -215,7 +232,7 @@ namespace Tests.Linq
 		public void TestParametersInExpr([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, $"9_{endId}", GenerateTestData()))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
 			{
 				int startId = 1;
 
@@ -244,7 +261,7 @@ namespace Tests.Linq
 		public void TestParametersInExpr2([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(context, $"10_{endId}", GenerateTestData()))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
 			{
 				int startId = 5;
 
@@ -270,9 +287,42 @@ namespace Tests.Linq
 			}
 		}
 
+		private const string someGeneratedSqlString = "SELECT * FROM sample_other_class where parent_id = {0} and id >= {1}";
+
+		[Test]
+		public void TestAsosciation(
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, 
+			[Values(14, 15)] int startId
+		)
+		{
+			var ms = new MappingSchema();
+
+			var idFilter = 1;
+
+			ms.GetFluentMappingBuilder()
+				.Entity<SampleClass>()
+				.Association(x => x.AssociatedOne,
+					(x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter));
+
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(GenerateTestData()))
+			using (var other = db.CreateLocalTable<SomeOtherClass>())
+			{
+
+				var query = from t in table
+					select new
+					{
+						t.Id,
+						t.AssociatedOne
+					};
+
+				var result = query.ToArray();
+			}
+		}
+
 		[Test]
 		public void TestTableValueFunction(
-			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context,
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[Values(0, 1)] int offset)
 		{
 			using (var db = GetDataContext(context))
@@ -302,7 +352,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestScalar(
-			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

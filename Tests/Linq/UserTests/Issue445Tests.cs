@@ -18,7 +18,7 @@ namespace Tests.UserTests
 		class IssueContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public IssueContextSourceAttribute(bool includeLinqService = true)
-				: base(includeLinqService, ProviderName.SQLiteClassic, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SQLiteMS)
+				: base(includeLinqService, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)
 			{ }
 		}
 
@@ -117,9 +117,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void ConnectionPoolException1([IncludeDataSources(false,
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012)]
-			string context)
+		public void ConnectionPoolException1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			Assert.Throws<InvalidOperationException>(() =>
 			{

@@ -432,10 +432,10 @@ namespace LinqToDB.Linq.Builder
 									return ExpandExpression(lambda);
 								}
 							}
-							
+
 							return mc;
-						}		
-						
+						}
+
 					case ExpressionType.Invoke:
 						{
 							var invocation = (InvocationExpression)expr;
@@ -547,6 +547,21 @@ namespace LinqToDB.Linq.Builder
 								return ExposeExpression(ex);
 							}
 
+							break;
+						}
+
+					case ExpressionType.Convert:
+						{
+							var ex = (UnaryExpression)expr;
+							if (ex.Method != null)
+							{
+								var l = ConvertMethodExpression(ex.Method.DeclaringType, ex.Method);
+								if (l != null)
+								{
+									var exposed = l.GetBody(ex.Operand);
+									return ExposeExpression(exposed);
+								}
+							}
 							break;
 						}
 
@@ -684,27 +699,37 @@ namespace LinqToDB.Linq.Builder
 					{
 						var call = (MethodCallExpression)expr;
 
-						if (call.IsQueryable())
+						if (call.IsQueryable() || call.IsAsyncExtension())
 						{
 							switch (call.Method.Name)
 							{
-								case "Where"              : return new TransformInfo(ConvertWhere     (call));
-								case "GroupBy"            : return new TransformInfo(ConvertGroupBy   (call));
-								case "SelectMany"         : return new TransformInfo(ConvertSelectMany(call));
-								case "Select"             : return new TransformInfo(ConvertSelect    (call));
-								case "LongCount"          :
-								case "Count"              :
-								case "Single"             :
-								case "SingleOrDefault"    :
-								case "First"              :
-								case "FirstOrDefault"     : return new TransformInfo(ConvertPredicate (call));
-								case "Min"                :
-								case "Max"                : return new TransformInfo(ConvertSelector  (call, true));
-								case "Sum"                :
-								case "Average"            : return new TransformInfo(ConvertSelector  (call, false));
-								case "ElementAt"          :
-								case "ElementAtOrDefault" : return new TransformInfo(ConvertElementAt (call));
-								case "LoadWith"           : return new TransformInfo(expr, true);
+								case "Where"                : return new TransformInfo(ConvertWhere         (call));
+								case "GroupBy"              : return new TransformInfo(ConvertGroupBy       (call));
+								case "SelectMany"           : return new TransformInfo(ConvertSelectMany    (call));
+								case "Select"               : return new TransformInfo(ConvertSelect        (call));
+								case "LongCount"            :
+								case "Count"                :
+								case "Single"               :
+								case "SingleOrDefault"      :
+								case "First"                :
+								case "FirstOrDefault"       : return new TransformInfo(ConvertPredicate     (call));
+								case "LongCountAsync"       :
+								case "CountAsync"           :
+								case "SingleAsync"          :
+								case "SingleOrDefaultAsync" :
+								case "FirstAsync"           :
+								case "FirstOrDefaultAsync"  : return new TransformInfo(ConvertPredicateAsync(call));
+								case "Min"                  :
+								case "Max"                  : return new TransformInfo(ConvertSelector      (call, true));
+								case "Sum"                  :
+								case "Average"              : return new TransformInfo(ConvertSelector      (call, false));
+								case "MinAsync"             :
+								case "MaxAsync"             : return new TransformInfo(ConvertSelectorAsync (call, true));
+								case "SumAsync"             :
+								case "AverageAsync"         : return new TransformInfo(ConvertSelectorAsync (call, false));
+								case "ElementAt"            :
+								case "ElementAtOrDefault"   : return new TransformInfo(ConvertElementAt     (call));
+								case "LoadWith"             : return new TransformInfo(expr, true);
 							}
 						}
 						else
@@ -817,7 +842,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var param    = Expression.Parameter(call.Type, "p");
 			var selector = expr.Transform(e => e == call ? param : e);
-			var method   = GetQueriableMethodInfo(call, (m, _) => m.Name == call.Method.Name && m.GetParameters().Length == 1);
+			var method   = GetQueryableMethodInfo(call, (m, _) => m.Name == call.Method.Name && m.GetParameters().Length == 1);
 			var select   = call.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods
 					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
@@ -1364,7 +1389,7 @@ namespace LinqToDB.Linq.Builder
 			if (method.Arguments.Count != 2)
 				return method;
 
-			var cm = GetQueriableMethodInfo(method, (m,_) => m.Name == method.Method.Name && m.GetParameters().Length == 1);
+			var cm = GetQueryableMethodInfo(method, (m,_) => m.Name == method.Method.Name && m.GetParameters().Length == 1);
 			var wm = GetMethodInfo(method, "Where");
 
 			var argType = method.Method.GetGenericArguments()[0];
@@ -1376,6 +1401,26 @@ namespace LinqToDB.Linq.Builder
 				Expression.Call(null, wm,
 					OptimizeExpression(method.Arguments[0]),
 					OptimizeExpression(method.Arguments[1])));
+		}
+
+		Expression ConvertPredicateAsync(MethodCallExpression method)
+		{
+			if (method.Arguments.Count != 3)
+				return method;
+
+			var cm = typeof(AsyncExtensions).GetMethodsEx().First(m => m.Name == method.Method.Name && m.GetParameters().Length == 2);
+			var wm = GetMethodInfo(method, "Where");
+
+			var argType = method.Method.GetGenericArguments()[0];
+
+			wm = wm.MakeGenericMethod(argType);
+			cm = cm.MakeGenericMethod(argType);
+
+			return Expression.Call(null, cm,
+				Expression.Call(null, wm,
+					OptimizeExpression(method.Arguments[0]),
+					OptimizeExpression(method.Arguments[1])),
+				OptimizeExpression(method.Arguments[2]));
 		}
 
 		#endregion
@@ -1391,7 +1436,7 @@ namespace LinqToDB.Linq.Builder
 
 			var types = GetMethodGenericTypes(method);
 			var sm    = GetMethodInfo(method, "Select");
-			var cm    = GetQueriableMethodInfo(method, (m,isDefault) =>
+			var cm    = GetQueryableMethodInfo(method, (m,isDefault) =>
 			{
 				if (m.Name == method.Method.Name)
 				{
@@ -1421,6 +1466,48 @@ namespace LinqToDB.Linq.Builder
 				OptimizeExpression(Expression.Call(null, sm,
 					method.Arguments[0],
 					method.Arguments[1])));
+		}
+
+		Expression ConvertSelectorAsync(MethodCallExpression method, bool isGeneric)
+		{
+			if (method.Arguments.Count != 3)
+				return method;
+
+			isGeneric = isGeneric && method.Method.DeclaringType == typeof(AsyncExtensions);
+
+			var types = GetMethodGenericTypes(method);
+			var sm    = GetMethodInfo(method, "Select");
+			var cm    = typeof(AsyncExtensions).GetMethodsEx().First(m =>
+			{
+				if (m.Name == method.Method.Name)
+				{
+					var ps = m.GetParameters();
+
+					if (ps.Length == 2)
+					{
+						if (isGeneric)
+							return true;
+
+						var ts = ps[0].ParameterType.GetGenericArgumentsEx();
+						return ts[0] == types[1];// || isDefault && ts[0].IsGenericParameter;
+					}
+				}
+
+				return false;
+			});
+
+			var argType = types[0];
+
+			sm = sm.MakeGenericMethod(argType, types[1]);
+
+			if (cm.IsGenericMethodDefinition)
+				cm = cm.MakeGenericMethod(types[1]);
+
+			return Expression.Call(null, cm,
+				OptimizeExpression(Expression.Call(null, sm,
+					method.Arguments[0],
+					method.Arguments[1])),
+				OptimizeExpression(method.Arguments[2]));
 		}
 
 		#endregion
@@ -1522,13 +1609,13 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				skipMethod = GetQueriableMethodInfo(method, (mi,_) => mi.Name == "Skip");
+				skipMethod = GetQueryableMethodInfo(method, (mi,_) => mi.Name == "Skip");
 			}
 
 			skipMethod = skipMethod.MakeGenericMethod(sourceType);
 
 			var methodName  = method.Method.Name == "ElementAt" ? "First" : "FirstOrDefault";
-			var firstMethod = GetQueriableMethodInfo(method, (mi,_) => mi.Name == methodName && mi.GetParameters().Length == 1);
+			var firstMethod = GetQueryableMethodInfo(method, (mi,_) => mi.Name == methodName && mi.GetParameters().Length == 1);
 
 			firstMethod = firstMethod.MakeGenericMethod(sourceType);
 
@@ -1539,7 +1626,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		MethodInfo GetQueriableMethodInfo(MethodCallExpression method, [InstantHandle] Func<MethodInfo,bool,bool> predicate)
+		MethodInfo GetQueryableMethodInfo(MethodCallExpression method, [InstantHandle] Func<MethodInfo,bool,bool> predicate)
 		{
 			return method.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods.FirstOrDefault(m => predicate(m, false)) ?? EnumerableMethods.First(m => predicate(m, true)):

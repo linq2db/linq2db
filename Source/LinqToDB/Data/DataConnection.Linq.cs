@@ -69,7 +69,7 @@ namespace LinqToDB.Data
 				return new DataConnection(DataProvider, _connection)
 				{
 					MappingSchema    = MappingSchema,
-					Transaction      = Transaction,
+					TransactionAsync = TransactionAsync,
 					IsMarsEnabled    = IsMarsEnabled,
 					ConnectionString = ConnectionString,
 				};

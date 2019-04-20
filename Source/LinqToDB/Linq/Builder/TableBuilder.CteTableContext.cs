@@ -98,6 +98,14 @@ namespace LinqToDB.Linq.Builder
 				return _cteQueryContext ?? (_cteQueryContext = Builder.GetCteContext(_cteExpression));
 			}
 
+			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFor)
+			{
+				var queryContext = GetQueryContext();
+				if (queryContext == null)
+					return base.IsExpression(expression, level, requestFor);
+				return queryContext.IsExpression(expression, level, requestFor);
+			}
+
 			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
 			{
 				var queryContext = GetQueryContext();

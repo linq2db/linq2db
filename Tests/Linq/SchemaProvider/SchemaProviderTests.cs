@@ -2,25 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+
 using NUnit.Framework;
 
 namespace Tests.SchemaProvider
 {
-	using LinqToDB;
-	using LinqToDB.Data;
-	using LinqToDB.DataProvider.SqlServer;
-	using LinqToDB.Mapping;
-	using LinqToDB.SchemaProvider;
-
 	[TestFixture]
 	public class SchemaProviderTests : TestBase
 	{
 		[Test]
-		public void Test([DataSources(false, ProviderName.SQLiteMS,
-				ProviderName.MySqlConnector, TestProvName.MySql57
-#if NETSTANDARD2_0
-				, ProviderName.MySql
-#endif
+		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
+//#if NETSTANDARD2_0
+//				, ProviderName.MySql
+//#endif
 			)]
 			string context)
 		{
@@ -141,9 +139,7 @@ namespace Tests.SchemaProvider
 #if !NETSTANDARD2_0
 
 		[Test]
-		public void MySqlTest([IncludeDataSources(
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
-			string context)
+		public void MySqlTest([IncludeDataSources(TestProvName.AllMySqlData)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -162,8 +158,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void MySqlPKTest([IncludeDataSources(
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
+		public void MySqlPKTest([IncludeDataSources(TestProvName.AllMySqlData)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -186,11 +181,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void PostgreSQLTest(
-			[IncludeDataSources(
-				false,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
-			string context)
+		public void PostgreSQLTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -232,11 +223,10 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS,
-				ProviderName.MySqlConnector
-#if NETSTANDARD2_0
-				, ProviderName.MySql, TestProvName.MySql57
-#endif
+		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
+//#if NETSTANDARD2_0
+//				, ProviderName.MySql, TestProvName.MySql57
+//#endif
 			)]
 			string context)
 		{
@@ -255,11 +245,10 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS,
-				ProviderName.MySqlConnector
-#if NETSTANDARD2_0
-				, ProviderName.MySql, TestProvName.MySql57
-#endif
+		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
+//#if NETSTANDARD2_0
+//				, ProviderName.MySql, TestProvName.MySql57
+//#endif
 			)]
 			string context)
 		{
@@ -322,11 +311,10 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS,
-				ProviderName.MySqlConnector, TestProvName.MySql57
-#if NETSTANDARD2_0
-				, ProviderName.MySql
-#endif
+		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
+//#if NETSTANDARD2_0
+//				, ProviderName.MySql
+//#endif
 			)]
 			string context)
 		{
@@ -350,10 +338,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void ForeignKeyMemberNameTest1([IncludeDataSources(false,
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void ForeignKeyMemberNameTest1([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -373,7 +358,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void ForeignKeyMemberNameTest2([IncludeDataSources(false, TestProvName.Northwind)]
+		public void ForeignKeyMemberNameTest2([IncludeDataSources(TestProvName.Northwind)]
 			string context)
 		{
 			using (var db = new DataConnection(context))

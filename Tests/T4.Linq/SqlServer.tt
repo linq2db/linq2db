@@ -9,7 +9,7 @@
 //	NamespaceName   = "DataContext";
 //	DataContextName = "NorthwindDB";
 	DatabaseName    = null;//"Northwind";
-	GenerateDatabaseName = true;
+	GenerateDatabaseName = false;
 	OneToManyAssociationType = "List<{0}>";
 	GenerateSchemaAsType = true;
 	GenerateAssociationExtensions = true;

@@ -76,10 +76,10 @@ namespace LinqToDB.SqlQuery
 
 		public Type SystemType => typeof(bool);
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			foreach (var condition in Conditions)
-				condition.Predicate.Walk(skipColumns, func);
+				condition.Predicate.Walk(options, func);
 
 			return func(this);
 		}

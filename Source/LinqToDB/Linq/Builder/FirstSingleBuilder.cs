@@ -16,8 +16,8 @@ namespace LinqToDB.Linq.Builder
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return
-				methodCall.IsQueryable(MethodNames) &&
-				methodCall.Arguments.Count == 1;
+				methodCall.IsQueryable     (MethodNames) && methodCall.Arguments.Count == 1 ||
+				methodCall.IsAsyncExtension(MethodNames) && methodCall.Arguments.Count == 2;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -29,22 +29,20 @@ namespace LinqToDB.Linq.Builder
 			{
 				switch (methodCall.Method.Name)
 				{
-					case "First"           :
-					case "FirstOrDefault"  :
+					case "First"                :
+					case "FirstOrDefault"       :
+					case "FirstAsync"           :
+					case "FirstOrDefaultAsync"  :
 						take = 1;
 						break;
 
-					case "Single"          :
-					case "SingleOrDefault" :
+					case "Single"               :
+					case "SingleOrDefault"      :
+					case "SingleAsync"          :
+					case "SingleOrDefaultAsync" :
 						if (!buildInfo.IsSubQuery)
-						{
-							var takeValue = buildInfo.SelectQuery.Select.TakeValue as SqlValue;
-
-							if (takeValue != null && (int) takeValue.Value >= 2)
-							{
+							if (buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value >= 2)
 								take = 2;
-							}
-						}
 
 						break;
 				}
@@ -59,7 +57,9 @@ namespace LinqToDB.Linq.Builder
 		protected override SequenceConvertInfo Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
 		{
-			if (methodCall.Arguments.Count == 2)
+			var isAsync = methodCall.Method.Name.EndsWith("Async");
+
+			if (methodCall.Arguments.Count == (isAsync ? 3 : 2))
 			{
 				var predicate = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 				var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0], true);
@@ -102,7 +102,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Sequence.BuildQuery(query, queryParameter);
 
-				switch (_methodCall.Method.Name)
+				switch (_methodCall.Method.Name.Replace("Async", ""))
 				{
 					case "First"           : GetFirstElement          (query); break;
 					case "FirstOrDefault"  : GetFirstOrDefaultElement (query); break;
@@ -257,7 +257,9 @@ namespace LinqToDB.Linq.Builder
 						if (Sequence.IsExpression(null, level, RequestFor.Object).Result)
 							return Builder.BuildMultipleQuery(Parent, _methodCall, enforceServerSide);
 
-						return Builder.BuildSql(_methodCall.Type, Parent.SelectQuery.Select.Add(SelectQuery));
+						var idx = Parent.SelectQuery.Select.Add(SelectQuery);
+						    idx = Parent.ConvertToParentIndex(idx, Parent);
+						return Builder.BuildSql(_methodCall.Type, idx);
 					}
 
 					return null;

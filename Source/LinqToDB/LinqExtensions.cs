@@ -39,15 +39,8 @@ namespace LinqToDB
 			if (table == null) throw new ArgumentNullException(nameof(table));
 			if (name  == null) throw new ArgumentNullException(nameof(name));
 
-			if (table is Table<T> tbl)
-				tbl.TableName = name;
-			else
-				table.Expression = Expression.Call(
-					null,
-					TableNameMethodInfo.MakeGenericMethod(typeof(T)),
-					new[] { table.Expression, Expression.Constant(name) });
-
-			return table;
+			var result = ((ITableMutable<T>)table).ChangeTableName(name);
+			return result;
 		}
 
 		internal static readonly MethodInfo DatabaseNameMethodInfo = MemberHelper.MethodOf(() => DatabaseName<int>(null, null)).GetGenericMethodDefinition();
@@ -70,15 +63,8 @@ namespace LinqToDB
 			if (table == null) throw new ArgumentNullException(nameof(table));
 			if (name  == null) throw new ArgumentNullException(nameof(name));
 
-			if (table is Table<T> tbl)
-				tbl.DatabaseName = name;
-			else
-				table.Expression = Expression.Call(
-					null,
-					DatabaseNameMethodInfo.MakeGenericMethod(typeof(T)),
-					new[] { table.Expression, Expression.Constant(name) });
-
-			return table;
+			var result = ((ITableMutable<T>)table).ChangeDatabaseName(name);
+			return result;
 		}
 
 		/// <summary>
@@ -114,18 +100,8 @@ namespace LinqToDB
 		[Pure]
 		public static ITable<T> SchemaName<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string name)
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-			if (name  == null) throw new ArgumentNullException(nameof(name));
-
-			if (table is Table<T> tbl)
-				tbl.SchemaName = name;
-			else
-				table.Expression = Expression.Call(
-					null,
-					SchemaNameMethodInfo.MakeGenericMethod(typeof(T)),
-					new[] { table.Expression, Expression.Constant(name) });
-
-			return table;
+			var result = ((ITableMutable<T>)table).ChangeSchemaName(name);
+			return result;
 		}
 
 		static readonly MethodInfo _withTableExpressionMethodInfo = MemberHelper.MethodOf(() => WithTableExpression<int>(null, null)).GetGenericMethodDefinition();

@@ -10,11 +10,7 @@ namespace Tests.UserTests
 	public class Issue356Tests : TestBase
 	{
 		[Test]
-		public void Test1(
-			[DataSources(
-				ProviderName.Sybase,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
-			string context)
+		public void Test1([DataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -33,9 +29,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([DataSources(
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Access)]
-			string context)
+		public void Test2([DataSources(TestProvName.AllSybase, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -56,9 +50,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test3([DataSources(true,
-				ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged)]
-			string context)
+		public void Test3([DataSources(ProviderName.Access, ProviderName.SqlServer2000, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -10,10 +10,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test]
-		public void MergeIntoWithTargetHintSqlServer([IncludeDataSources(false,
-			TestProvName.SqlAzure, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void MergeIntoWithTargetHintSqlServer([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -45,10 +42,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UsingTargetWithTargetHintSqlServer([IncludeDataSources(false,
-			TestProvName.SqlAzure, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void UsingTargetWithTargetHintSqlServer([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -105,10 +99,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithTargetHintSqlServer([IncludeDataSources(false,
-			TestProvName.SqlAzure, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void MergeWithTargetHintSqlServer([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -148,9 +139,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeIntoWithTargetHintOracle([IncludeDataSources(false,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
-			string context)
+		public void MergeIntoWithTargetHintOracle([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -182,7 +171,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeIntoWithTargetHintInformix([IncludeDataSources(false, ProviderName.Informix)]
+		public void MergeIntoWithTargetHintInformix([IncludeDataSources(ProviderName.Informix)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))

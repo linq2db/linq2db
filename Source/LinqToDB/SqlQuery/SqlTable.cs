@@ -7,8 +7,8 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Common;
-	using LinqToDB.Data;
+	using Common;
+	using Data;
 	using Mapping;
 
 	public class SqlTable : ISqlTableSource
@@ -74,26 +74,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var column in ed.Columns)
 			{
-				var field = new SqlField
-				{
-					SystemType       = column.MemberType,
-					Name             = column.MemberName,
-					PhysicalName     = column.ColumnName,
-					CanBeNull        = column.CanBeNull,
-					IsPrimaryKey     = column.IsPrimaryKey,
-					PrimaryKeyOrder  = column.PrimaryKeyOrder,
-					IsIdentity       = column.IsIdentity,
-					IsInsertable     = !column.SkipOnInsert,
-					IsUpdatable      = !column.SkipOnUpdate,
-					DataType         = column.DataType,
-					DbType           = column.DbType,
-					Length           = column.Length,
-					Precision        = column.Precision,
-					Scale            = column.Scale,
-					CreateFormat     = column.CreateFormat,
-					CreateOrder      = column.Order,
-					ColumnDescriptor = column,
-				};
+				var field = new SqlField(column);
 
 				Add(field);
 
@@ -118,7 +99,7 @@ namespace LinqToDB.SqlQuery
 						try
 						{
 							var converter = mappingSchema.GetConverter(
-								new DbDataType(field.SystemType, field.DataType, field.DbType),
+								new DbDataType(field.SystemType, field.DataType, field.DbType, field.Length),
 								new DbDataType(typeof(DataParameter)), true);
 
 							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.SystemType, mappingSchema));
@@ -371,11 +352,11 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public virtual ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public virtual ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			if (TableArguments != null)
 				for (var i = 0; i < TableArguments.Length; i++)
-					TableArguments[i] = TableArguments[i].Walk(skipColumns, func);
+					TableArguments[i] = TableArguments[i].Walk(options, func);
 
 			return func(this);
 		}

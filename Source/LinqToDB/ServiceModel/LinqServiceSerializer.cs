@@ -71,11 +71,11 @@ namespace LinqToDB.ServiceModel
 					case TypeCode.Decimal  : return ((decimal) value).ToString(CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return ((double)  value).ToString(CultureInfo.InvariantCulture);
 					case TypeCode.Single   : return ((float)   value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.DateTime : return ((DateTime)value).ToString("o");
+					case TypeCode.DateTime : return ((DateTime)value).ToBinary().ToString(CultureInfo.InvariantCulture);
 				}
 
 				if (type == typeof(DateTimeOffset))
-					return ((DateTimeOffset)value).ToString("o");
+					return  ((DateTimeOffset)value).UtcTicks.ToString(CultureInfo.InvariantCulture);
 
 				return Converter.ChangeTypeTo<string>(value);
 			}
@@ -500,11 +500,11 @@ namespace LinqToDB.ServiceModel
 					case TypeCode.Decimal  : return decimal. Parse(str, CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return double.  Parse(str, CultureInfo.InvariantCulture);
 					case TypeCode.Single   : return float.   Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.DateTime : return DateTime.ParseExact(str, "o", CultureInfo.InvariantCulture);
+					case TypeCode.DateTime : return DateTime.FromBinary(long.Parse(str, CultureInfo.InvariantCulture));
 				}
 
 				if (type == typeof(DateTimeOffset))
-					return DateTimeOffset.ParseExact(str, "o", CultureInfo.InvariantCulture);
+					return new DateTimeOffset(long.Parse(str, CultureInfo.InvariantCulture), TimeSpan.Zero);
 
 				return Converter.ChangeType(str, type);
 			}
@@ -683,6 +683,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Scale);
 							Append(elem.CreateFormat);
 							Append(elem.CreateOrder);
+							AppendDelayed(elem.Table);
 
 							break;
 						}
@@ -763,6 +764,7 @@ namespace LinqToDB.ServiceModel
 
 							Append((int)elem.ValueType.DataType);
 							Append(elem.ValueType.DbType);
+							Append(elem.ValueType.Length);
 
 							Append(elem.SystemType, elem.Value);
 							break;
@@ -1338,7 +1340,8 @@ namespace LinqToDB.ServiceModel
 							var createFormat     = ReadString();
 							var createOrder      = ReadNullableInt();
 
-							obj = new SqlField
+							SqlField field;
+							obj = field = new SqlField
 							{
 								SystemType      = systemType,
 								Name            = name,
@@ -1355,8 +1358,13 @@ namespace LinqToDB.ServiceModel
 								Precision       = precision,
 								Scale           = scale,
 								CreateFormat    = createFormat,
-								CreateOrder     = createOrder,
+								CreateOrder     = createOrder
 							};
+
+							ReadDelayedObject(table =>
+							{
+								field.Table = table as ISqlTableSource;
+							});
 
 							break;
 						}
@@ -1380,7 +1388,7 @@ namespace LinqToDB.ServiceModel
 							var isQueryParameter = ReadBool();
 							var dataType         = (DataType)ReadInt();
 							var dbType           = ReadString();
-							var dbSize           = ReadInt();
+							var dbSize           = ReadNullableInt();
 							var likeStart        = ReadString();
 							var likeEnd          = ReadString();
 							var replaceLike      = ReadBool();
@@ -1431,11 +1439,12 @@ namespace LinqToDB.ServiceModel
 						{
 							var dataType   = (DataType)ReadInt();
 							var dbType     = ReadString();
+							var length     = ReadNullableInt();
 
 							var systemType = Read<Type>();
 							var value      = ReadValue(systemType);
 
-							obj = new SqlValue(new DbDataType(systemType, dataType, dbType), value);
+							obj = new SqlValue(new DbDataType(systemType, dataType, dbType, length), value);
 
 							break;
 						}
