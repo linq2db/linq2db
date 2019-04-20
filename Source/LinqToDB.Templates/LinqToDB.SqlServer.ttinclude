@@ -21,7 +21,7 @@
 	}
 #>
 <#+
-bool GenerateSqlServerFreeText = true; // Defines whether to generate extensions for Free Text search, or not
+bool GenerateSqlServerFreeText = false; // Defines whether to generate extensions for Free Text search, or not
 
 void DoGenerateSqlServerFreeText()
 {

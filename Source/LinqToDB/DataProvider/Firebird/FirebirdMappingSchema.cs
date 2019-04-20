@@ -20,10 +20,24 @@ namespace LinqToDB.DataProvider.Firebird
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
 			// firebird string literals can contain only limited set of characters, so we should encode them
-			SetValueToSqlConverter(typeof(string), (sb, dt, v) => ConvertStringToSql(sb, (string)v));
-			SetValueToSqlConverter(typeof(char)  , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string)  , (sb, dt, v) => ConvertStringToSql(sb, (string)v));
+			SetValueToSqlConverter(typeof(char)    , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[])  , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => BuildDateTime(sb, dt, (DateTime)v));
+		}
+
+		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
+		{
+			var dbType = dt.DbType ?? "timestamp";
+			var format = "CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})";
+
+			if (value.Millisecond == 0)
+				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0
+					? "CAST('{0:yyyy-MM-dd}' AS {1})"
+					: "CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})";
+
+			stringBuilder.AppendFormat(format, value, dbType);
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

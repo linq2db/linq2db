@@ -56,6 +56,27 @@ namespace LinqToDB.SqlQuery
 			ColumnDescriptor = field.ColumnDescriptor;
 		}
 
+		public SqlField(ColumnDescriptor column)
+		{
+			SystemType       = column.MemberType;
+			Name             = column.MemberName;
+			PhysicalName     = column.ColumnName;
+			CanBeNull        = column.CanBeNull;
+			IsPrimaryKey     = column.IsPrimaryKey;
+			PrimaryKeyOrder  = column.PrimaryKeyOrder;
+			IsIdentity       = column.IsIdentity;
+			IsInsertable     = !column.SkipOnInsert;
+			IsUpdatable      = !column.SkipOnUpdate;
+			DataType         = column.DataType;
+			DbType           = column.DbType;
+			Length           = column.Length;
+			Precision        = column.Precision;
+			Scale            = column.Scale;
+			CreateFormat     = column.CreateFormat;
+			CreateOrder      = column.Order;
+			ColumnDescriptor = column;
+		}
+
 		public Type             SystemType       { get; set; }
 		public string           Alias            { get; set; }
 		public string           Name             { get; set; }
@@ -110,7 +131,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			return func(this);
 		}
@@ -146,11 +167,13 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			return sb
-				.Append('t')
-				.Append(Table.SourceID)
-				.Append('.')
-				.Append(Name);
+			if (Table != null)
+				sb
+					.Append('t')
+					.Append(Table.SourceID)
+					.Append('.');
+
+			return sb.Append(Name);
 		}
 
 		#endregion

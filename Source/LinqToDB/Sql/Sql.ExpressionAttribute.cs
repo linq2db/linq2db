@@ -127,10 +127,13 @@ namespace LinqToDB
 				};
 			}
 
-			public virtual ISqlExpression GetExpression(MappingSchema mapping, SelectQuery query, Expression expression, Func<Expression, ISqlExpression> converter)
+			public virtual ISqlExpression GetExpression(IDataContext dataContext, SelectQuery query,
+				Expression expression, Func<Expression, ISqlExpression> converter)
 			{
 				return null;
 			}
+
+			public virtual bool GetIsPredicate(Expression expression) => IsPredicate;
 		}
 	}
 }

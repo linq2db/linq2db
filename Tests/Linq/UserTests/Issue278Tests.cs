@@ -142,7 +142,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestQueryCacheFull([IncludeDataSources(false, TestProvName.NoopProvider)] string context)
+		public void TestQueryCacheFull([IncludeDataSources(TestProvName.NoopProvider)] string context)
 		{
 			var oldValue = Configuration.Linq.DisableQueryCache;
 
@@ -181,7 +181,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestQueryCacheOverflow([IncludeDataSources(false, TestProvName.NoopProvider)] string context)
+		public void TestQueryCacheOverflow([IncludeDataSources(TestProvName.NoopProvider)] string context)
 		{
 			var oldValue = Configuration.Linq.DisableQueryCache;
 

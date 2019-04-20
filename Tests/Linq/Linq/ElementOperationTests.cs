@@ -136,7 +136,6 @@ namespace Tests.Linq
 					from p in db.Parent select db.Child.FirstOrDefault());
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void NestedFirstOrDefault2([DataSources] string context)
 		{
@@ -148,8 +147,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedFirstOrDefault3([DataSources(
-			ProviderName.Informix, ProviderName.Firebird, ProviderName.SapHana)]
+		public void NestedFirstOrDefault3([DataSources(ProviderName.Informix, ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -159,12 +157,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedFirstOrDefault4(
-			[DataSources(
-				ProviderName.Informix,
-				ProviderName.Firebird,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)]
-			string context)
+		public void NestedFirstOrDefault4([DataSources(ProviderName.Informix, TestProvName.AllPostgreSQLLess10)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -173,7 +166,6 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.Where(c => c.ParentID > 0).Distinct().FirstOrDefault());
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void NestedFirstOrDefault5([DataSources] string context)
 		{

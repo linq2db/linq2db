@@ -127,12 +127,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			Source = (ISqlTableSource)Source.Walk(skipColumns, func);
+			Source = (ISqlTableSource)Source.Walk(options, func);
 
 			foreach (var t in Joins)
-				((ISqlExpressionWalkable)t).Walk(skipColumns, func);
+				((ISqlExpressionWalkable)t).Walk(options, func);
 
 			return this;
 		}

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB
 {
+	using Async;
 	using Linq;
 
 	public static partial class AsyncExtensions
@@ -103,6 +104,7 @@ namespace LinqToDB
 #>
 		#region <#= info.Method #>Async<<#= info.Type #><#= paramName #>>
 
+		[ElementAsync]
 		public static Task<<#= info.RetType #>> <#= info.Method #>Async<#= info.GParams #>(
 			this IQueryable<<#= info.SParam #>> source<#= param #>,
 			CancellationToken token = default(CancellationToken))
@@ -114,7 +116,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<<#= info.RetType #>>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<<#= info.SParam #>><#= paramType #>, <#= info.RetType #>>(Queryable.<#= info.Method #>), source<#= paramName #>),
+						MethodHelper.GetMethodInfo(new Func<IQueryable<<#= info.SParam #>><#= paramType #>,<#= info.RetType #>>(Queryable.<#= info.Method #>), source<#= paramName #>),
 						arguments: new Expression[<#= exprCount #>] { source.Expression<#= paramExpr #> }) as Expression,
 					token);
 			}

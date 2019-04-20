@@ -99,10 +99,7 @@ namespace Tests.Linq
 	{
 
 		[Test]
-		public void Issue326([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014, TestProvName.SqlAzure)]
-			string context)
+		public void Issue326([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

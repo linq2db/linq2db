@@ -57,13 +57,12 @@ namespace Tests.UserTests
 			[DataSources(
 				false,
 #if NETSTANDARD1_6
-				ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2014, TestProvName.SqlAzure,
+				TestProvName.AllMySqlData,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSqlServer,
 #endif
 				ProviderName.MySqlConnector,
-				ProviderName.OracleManaged,
-				ProviderName.OracleNative,
+				TestProvName.AllOracle,
 				ProviderName.SapHana)]
 					string context,
 			[Values]
@@ -77,7 +76,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue("AvoidSpecificDataProviderAPI support missing", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative })]
+		[ActiveIssue("AvoidSpecificDataProviderAPI support missing", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public void TestFactory([DataSources(false)] string context, [Values] bool providerSpecific)
 		{

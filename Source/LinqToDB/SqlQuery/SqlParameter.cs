@@ -26,7 +26,7 @@ namespace LinqToDB.SqlQuery
 		public bool     IsQueryParameter { get; set; }
 		public DataType DataType         { get; set; }
 		public string   DbType           { get; set; }
-		public int      DbSize           { get; set; }
+		public int?     DbSize           { get; set; }
 		public string   LikeStart        { get; set; }
 		public string   LikeEnd          { get; set; }
 		public bool     ReplaceLike      { get; set; }
@@ -148,7 +148,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			return func(this);
 		}

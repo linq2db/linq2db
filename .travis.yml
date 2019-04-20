@@ -20,7 +20,8 @@ addons:
     - libunwind8
     - zlib1g
 
-dotnet: 2.0.0
+dotnet: 2.1.502
+mono: none
 
 os:  
   - linux

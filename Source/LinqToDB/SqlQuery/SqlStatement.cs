@@ -129,12 +129,12 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		static SqlField GetUnderlayingField(ISqlExpression expr)
+		static SqlField GetUnderlyingField(ISqlExpression expr)
 		{
 			switch (expr.ElementType)
 			{
 				case QueryElementType.SqlField: return (SqlField)expr;
-				case QueryElementType.Column  : return GetUnderlayingField(((SqlColumn)expr).Expression);
+				case QueryElementType.Column  : return GetUnderlyingField(((SqlColumn)expr).Expression);
 			}
 
 			throw new InvalidOperationException();
@@ -167,7 +167,7 @@ namespace LinqToDB.SqlQuery
 						if (keys.Count == 1)
 						{
 							var values = new List<ISqlExpression>();
-							var field  = GetUnderlayingField(keys[0]);
+							var field  = GetUnderlyingField(keys[0]);
 							var cd     = field.ColumnDescriptor;
 
 							foreach (var item in items)
@@ -191,7 +191,7 @@ namespace LinqToDB.SqlQuery
 
 								foreach (var key in keys)
 								{
-									var field = GetUnderlayingField(key);
+									var field = GetUnderlyingField(key);
 									var cd    = field.ColumnDescriptor;
 									var value = cd.MemberAccessor.GetValue(item);
 									var cond  = value == null ?
@@ -280,7 +280,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression>
 
-		public abstract ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func);
+		public abstract ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func);
 
 		#endregion
 
