@@ -469,7 +469,8 @@ namespace LinqToDB
 					case Sql.DateParts.Hour        : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number,                  24)); break;
 					case Sql.DateParts.Minute      : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number,             60 * 24)); break;
 					case Sql.DateParts.Second      : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number,        60 * 60 * 24)); break;
-					case Sql.DateParts.Millisecond : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number, 1000 * 60 * 60 * 24)); break;	
+						// adding number to timestamp instead of adding interval leads to wrong result type and loose of precision
+					case Sql.DateParts.Millisecond : builder.ResultExpression = builder.Add<DateTime>(date, builder.Mul(new SqlExpression("interval '0.001' second", Precedence.Primary), number, typeof(int))); break;	
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
