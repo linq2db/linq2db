@@ -707,12 +707,17 @@ namespace Tests.Linq
 			{
 				db.Insert(new LinqDataTypes { ID = 5000, SmallIntValue = -2, DateTimeValue = new DateTime(2018, 01, 03) });
 
-				var result = db.Types
-					.Count(t => t.ID == 5000 && Sql.AsSql(t.DateTimeValue.AddDays(t.SmallIntValue)) < new DateTime(2018, 01, 02));
+				try
+				{
+					var result = db.Types
+						.Count(t => t.ID == 5000 && Sql.AsSql(t.DateTimeValue.AddDays(t.SmallIntValue)) < new DateTime(2018, 01, 02));
 
-				Assert.AreEqual(1, result);
-
-				db.Types.Delete(t => t.ID == 5000);
+					Assert.AreEqual(1, result);
+				}
+				finally
+				{
+					db.Types.Delete(t => t.ID == 5000);
+				}
 			}
 		}
 
@@ -915,6 +920,14 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Second, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
+		// This test and DateDiffMillisecond could fail for SQLite.MS due to 1 millisecond difference in
+		// expected and returned results
+		// This happen only on following conditions:
+		// - access provider enabled
+		// - tests against run before those tests (at least AddDynamicFromColumn)
+		// Possible reason:
+		// looks like Access runtime modify some C++ runtime options that affect runtime's rounding behavior
+		// used also by SQLite provider's native part
 		[Test]
 		public void SubDateMillisecond(
 			[DataSources(
@@ -931,6 +944,7 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds));
 		}
 
+		// see SubDateMillisecond commet for SQLite.MS
 		[Test]
 		public void DateDiffMillisecond(
 			[DataSources(
