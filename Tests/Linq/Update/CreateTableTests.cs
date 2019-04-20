@@ -23,7 +23,6 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		public void CreateTable1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -46,7 +45,6 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		public async Task CreateTable1Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
