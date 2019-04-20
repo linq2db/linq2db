@@ -22,18 +22,18 @@ This also will install:
 
 After package installing you will see new `LinqToDB.Templates` folder in your project, this folder contains all needed T4 stuff to generate your model.
 
-To create a data model template copy CopyMe.<DB_NAME>.tt.txt file from LinqToDB.Templates project folder to desired location and rename it to file with `.tt` extension, e.g. `MyModel.tt`. For SDK projects see important notes below.
+To create a data model template copy `CopyMe.<DB_NAME>.tt.txt` file from `LinqToDB.Templates` project folder to desired location and rename it to file with `.tt` extension, e.g. `MyModel.tt`. For SDK projects see important notes below.
 
-Next you need to edit content of your tt file. It contains following main sections:
+Next you need to edit content of your `.tt` file. It contains following main sections:
 
 1. Configuration of database structure load process (`GetSchemaOptions` object properties, read more about it below)
-1. Database structure load call - this is a call to `LoadMatadata()` function - it connects to your database and fetches all needed metadata (table structure, views, procedures and so on)
+1. Database structure load call - this is a call to `LoadMatadata()` function - it connects to your database and fetches all needed metadata (table structure, views, procedures and so on). Here you need to specify connection options for your database
 1. Customization of model generation process (read below)
-1. Call to `GenerateModel()` method to generate c# file with data model classes
+1. Call to `GenerateModel()` method to generate C# file with data model classes
 
-#### SDK project specific
+#### SDK project specifics
 
-Because SDK projects install nuget content files as references to files in Nuget cache instead of copying them into project's folder, to run T4 templates you'll need create empty `<choose_your_name>.tt` file manually and paste content of `CopyMe.<DB_NAME>.tt.txt` to it. Also it is not recommended to alter `*.ttinclude` files directly as you will alter nuget cache content, which will affect any other SDK projects that use that package.
+Because SDK projects install nuget content files as references to files in `nuget` cache instead of copying them into project's folder, to run T4 templates you'll need create empty `<choose_your_name>.tt` file manually and paste content of `CopyMe.<DB_NAME>.tt.txt` to it. Also it is not recommended to alter `*.ttinclude` files directly as you will alter nuget cache content, which will affect any other SDK projects that use that package.
 
 ## Configuring schema load process
 
