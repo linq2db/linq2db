@@ -37,9 +37,9 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementType ElementType => QueryElementType.MergeSourceTable;
 		public override SqlTableType SqlTableType => SqlTableType.MergeSource;
 
-		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
-			return SourceQuery?.Walk(skipColumns, func);
+			return SourceQuery?.Walk(options, func);
 		}
 
 		public void WalkQueries(Func<SelectQuery, SelectQuery> func)

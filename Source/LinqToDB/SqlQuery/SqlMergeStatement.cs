@@ -54,15 +54,15 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
-			Target.Walk(skipColumns, func);
-			Source.Walk(skipColumns, func);
+			Target.Walk(options, func);
+			Source.Walk(options, func);
 
-			((ISqlExpressionWalkable)On).Walk(skipColumns, func);
+			((ISqlExpressionWalkable)On).Walk(options, func);
 
 			for (var i = 0; i < Operations.Count; i++)
-				((ISqlExpressionWalkable)Operations[i]).Walk(skipColumns, func);
+				((ISqlExpressionWalkable)Operations[i]).Walk(options, func);
 
 			return null;
 		}

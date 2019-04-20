@@ -62,7 +62,7 @@ namespace LinqToDB.SqlQuery
 			throw new NotImplementedException();
 		}
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
 			throw new NotImplementedException();
 		}

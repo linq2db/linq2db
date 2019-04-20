@@ -123,14 +123,14 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Where)?.Walk(skipColumns, func);
+			((ISqlExpressionWalkable)Where)?.Walk(options, func);
 
 			foreach (var t in Items)
-				((ISqlExpressionWalkable)t).Walk(skipColumns, func);
+				((ISqlExpressionWalkable)t).Walk(options, func);
 
-			((ISqlExpressionWalkable)WhereDelete)?.Walk(skipColumns, func);
+			((ISqlExpressionWalkable)WhereDelete)?.Walk(options, func);
 
 			return null;
 		}

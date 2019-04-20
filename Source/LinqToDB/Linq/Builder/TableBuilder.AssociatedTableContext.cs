@@ -268,7 +268,7 @@ namespace LinqToDB.Linq.Builder
 						((SqlTable)sourceToReplace.Source).Fields.Values.ToDictionary(f => (ISqlExpression)f,
 							f => parent.SqlTable.Fields[f.Name]);
 
-					ownerTableSource.Walk(false, e =>
+					ownerTableSource.Walk(new WalkOptions(), e =>
 					{
 						if (_replaceMap.TryGetValue(e, out var newField))
 							return newField;
