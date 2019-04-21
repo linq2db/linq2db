@@ -271,6 +271,74 @@ namespace Tests.Mapping
 			}
 		}
 
+		[Table("DynamicColumnsTestTable")]
+		[DynamicColumnAccessor(
+			GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty),
+			GetterExpressionMethod = nameof(GetPropertyExpression), SetterExpressionMethod = nameof(SetPropertyExpression))]
+		class MultipleGetterSetterMethods
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[DynamicColumnsStore]
+			public Dictionary<string, object> Values { get; set; } = new Dictionary<string, object>();
+
+			public object GetProperty(string name, object defaultValue)
+			{
+				if (!Values.TryGetValue(name, out object value))
+					value = defaultValue;
+
+				return value;
+			}
+
+			public void SetProperty(string name, object value)
+			{
+				Values[name] = value;
+			}
+			public static Expression<Func<InstanceGetterSetterExpressionMethods, string, object, object>> GetPropertyExpression()
+			{
+				return (instance, name, defaultValue) => instance.GetProperty(name, defaultValue);
+			}
+
+			public static Expression<Action<InstanceGetterSetterMethods, string, object>> SetPropertyExpression()
+			{
+				return (instance, name, value) => instance.SetProperty(name, value);
+			}
+		}
+
+		[Table("DynamicColumnsTestTable")]
+		[DynamicColumnAccessor]
+		class NoGetterSetterMethods
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[DynamicColumnsStore]
+			public Dictionary<string, object> Values { get; set; } = new Dictionary<string, object>();
+
+			public object GetProperty(string name, object defaultValue)
+			{
+				if (!Values.TryGetValue(name, out object value))
+					value = defaultValue;
+
+				return value;
+			}
+
+			public void SetProperty(string name, object value)
+			{
+				Values[name] = value;
+			}
+			public static Expression<Func<InstanceGetterSetterExpressionMethods, string, object, object>> GetPropertyExpression()
+			{
+				return (instance, name, defaultValue) => instance.GetProperty(name, defaultValue);
+			}
+
+			public static Expression<Action<InstanceGetterSetterMethods, string, object>> SetPropertyExpression()
+			{
+				return (instance, name, value) => instance.SetProperty(name, value);
+			}
+		}
+
 		[Test]
 		public void TestDynamicColumnStoreFromMetadataReader([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
@@ -730,6 +798,44 @@ namespace Tests.Mapping
 				Assert.AreEqual(1, data[0].Values.Count);
 				Assert.AreEqual("Name", data[0].Values.Keys.Single());
 				Assert.AreEqual("accessor_def", data[0].Values["Name"]);
+			}
+		}
+
+		[Test]
+		public void TestDynamicColumnStoreMultipleGetterSetters([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder()
+				.Entity<MultipleGetterSetterMethods>()
+				.Property(x => Sql.Property<string>(x, "Name"));
+
+			using (var db = GetDataContext(context, ms))
+			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
+			{
+				var obj = new MultipleGetterSetterMethods { Id = 5 };
+				obj.Values.Add("Name", "test_name");
+
+				Assert.Throws<LinqToDBException>(() => db.Insert(obj));
+				Assert.Throws<LinqToDBException>(() => db.GetTable<MultipleGetterSetterMethods>().ToList());
+			}
+		}
+
+		[Test]
+		public void TestDynamicColumnStoreNoGetterSetters([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder()
+				.Entity<NoGetterSetterMethods>()
+				.Property(x => Sql.Property<string>(x, "Name"));
+
+			using (var db = GetDataContext(context, ms))
+			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
+			{
+				var obj = new NoGetterSetterMethods { Id = 5 };
+				obj.Values.Add("Name", "test_name");
+
+				Assert.Throws<LinqToDBException>(() => db.Insert(obj));
+				Assert.Throws<LinqToDBException>(() => db.GetTable<NoGetterSetterMethods>().ToList());
 			}
 		}
 	}
