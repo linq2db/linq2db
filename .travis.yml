@@ -1,6 +1,6 @@
 language: csharp
 sudo: required
-dist: trusty
+dist: xenial
 
 branches:
   only:
