@@ -9,6 +9,9 @@ branches:
     - /release.*/
     - /dev.*/
 
+services:
+    - mysql
+
 addons:
   postgresql: "9.6"
   apt:
