@@ -15,14 +15,14 @@ namespace Tests.Linq
 	public class DateTimeFunctionsTests : TestBase
 	{
 		//This custom comparers allows for an error of 1 millisecond.  
-		public class CustomMillisecondsComparer : IEqualityComparer<int>
+		public class CustomIntComparer : IEqualityComparer<int>
 		{
 			public bool Equals(int x, int y) => (x >= (y - 1) && x <= (y + 1));
 
 			public int GetHashCode(int x) => 0;
 		}
 
-		public class CustomNullableMillisecondsComparer : IEqualityComparer<int?>
+		public class CustomNullableIntComparer : IEqualityComparer<int?>
 		{
 			public bool Equals(int? x, int? y)
 			{
@@ -974,7 +974,7 @@ namespace Tests.Linq
 					AreEqual(
 						from t in Types select (int)(t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds,
 						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds),
-						new CustomMillisecondsComparer());
+						new CustomIntComparer());
 				}
 				else
 				{
@@ -1003,7 +1003,7 @@ namespace Tests.Linq
 					AreEqual(
 						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1)),
 						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1))),
-						new CustomNullableMillisecondsComparer());
+						new CustomNullableIntComparer());
 				}
 				else
 				{
