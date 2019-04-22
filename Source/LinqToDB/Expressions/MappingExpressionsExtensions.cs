@@ -18,9 +18,7 @@ namespace LinqToDB.Extensions
 			if (members.Length > 1)
 				throw new LinqToDBException($"Ambiguous members '{memberName}' for type '{type.Name}' has been found");
 
-			var propInfo = members[0] as PropertyInfo;
-
-			if (propInfo != null)
+			if (members[0] is PropertyInfo propInfo)
 			{
 				var value = propInfo.GetValue(null, null);
 				if (value == null)
@@ -33,8 +31,7 @@ namespace LinqToDB.Extensions
 			}
 			else
 			{
-				var method = members[0] as MethodInfo;
-				if (method != null)
+				if (members[0] is MethodInfo method)
 				{
 					if (method.GetParameters().Length > 0)
 						throw new LinqToDBException($"Method '{memberName}' for type '{type.Name}' should have no parameters");
