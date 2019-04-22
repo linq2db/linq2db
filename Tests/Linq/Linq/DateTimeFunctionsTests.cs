@@ -920,6 +920,25 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Second, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
+		public class SQLiteMSMillisecondsComparer : IEqualityComparer<int>
+		{
+			public bool Equals(int x, int y) => (x >= (y - 1) && x <= (y + 1));
+
+			public int GetHashCode(int x) => 0;
+		}
+
+		public class SQLiteMSDateDiffComparer : IEqualityComparer<int?>
+		{
+			public bool Equals(int? x, int? y)
+			{
+				if (!x.HasValue) return false;
+				if (!y.HasValue) return false;
+				return (x.Value >= (y.Value - 1) && x.Value <= (y.Value + 1));
+			}
+
+			public int GetHashCode(int? x) => 0;
+		}
+
 		// This test and DateDiffMillisecond could fail for SQLite.MS due to 1 millisecond difference in
 		// expected and returned results
 		// This happen only on following conditions:
@@ -939,9 +958,22 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           (int)(t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds,
-					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds));
+			{
+				if (context.Contains(ProviderName.SQLiteMS))
+				{
+					IEqualityComparer<int> customComparer = new SQLiteMSMillisecondsComparer();
+					AreEqual(
+						from t in Types select (int)(t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds,
+						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds),
+						customComparer);
+				}
+				else
+				{
+					AreEqual(
+						from t in Types select (int)(t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds,
+						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds));
+				}
+			}
 		}
 
 		// see SubDateMillisecond commet for SQLite.MS
@@ -956,9 +988,22 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1)),
-					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1))));
+			{
+				if(context.Contains(ProviderName.SQLiteMS))
+				{
+					IEqualityComparer<int?> customComparer = new SQLiteMSDateDiffComparer();
+					AreEqual(
+						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1)),
+						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1))),
+						customComparer);
+				}
+				else
+				{
+					AreEqual(
+						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1)),
+						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1))));
+				}
+			}
 		}
 
 		#endregion
