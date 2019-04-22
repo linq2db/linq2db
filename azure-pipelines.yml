@@ -25,9 +25,7 @@ steps:
 
 - task: MSBuild@1
   inputs:
-    solution: $'(solution)'
-    platform: $'(buildPlatform)'
-    configuration: $'(buildConfiguration)'
+    solution: '**/*.sln'
 
 #- task: VSTest@2
 #  inputs:
