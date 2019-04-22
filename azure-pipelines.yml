@@ -6,7 +6,7 @@ trigger:
 - master
 
 pool:
-  vmImage: 'VS2017-Win2016'
+  vmImage: 'ubuntu-16.04'
 
 variables:
   solution: '**/*.sln'
@@ -23,7 +23,7 @@ steps:
 # do this before all your .NET Core tasks
 - task: DotNetCoreInstaller@0
   inputs:
-    version: '1.0.500' # replace this value with the version that you need for your project
+    version: '2.1.300' # replace this value with the version that you need for your project
 
 - task: MSBuild@1
   inputs:
