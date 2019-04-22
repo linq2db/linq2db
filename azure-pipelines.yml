@@ -26,10 +26,8 @@ steps:
 - task: MSBuild@1
   inputs:
     solution: $'(solution)'
-    clean: true
     platform: $'(buildPlatform)'
     configuration: $'(buildConfiguration)'
-
 
 #- task: VSTest@2
 #  inputs:
