@@ -14,12 +14,12 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-
 - task: MSBuild@1
   inputs:
-    solution: '$(solution)'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    solution: $'(solution)'
+    clean: true
+    platform: $'(buildPlatform)'
+    configuration: $'(buildConfiguration)'
     restoreNugetPackages: true
 
 #- task: VSTest@2
