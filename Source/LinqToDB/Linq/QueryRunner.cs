@@ -195,17 +195,19 @@ namespace LinqToDB.Linq
 				else if (e.ElementType == QueryElementType.SqlParameter)
 				{
 					var parameter = (SqlParameter)e;
-					if (parameter.IsQueryParameter && !found.Add(parameter))
+					if (parameter.IsQueryParameter)
 					{
-						var newParameter =
-							(IQueryElement)parameter.Clone(new Dictionary<ICloneableElement, ICloneableElement>(),
-								c => true);
+						if (!found.Add(parameter))
+						{
+							var newParameter =
+								(IQueryElement)parameter.Clone(new Dictionary<ICloneableElement, ICloneableElement>(),
+									c => true);
+							return newParameter;
+						}
 
 						// notify visitor to process this parameter always
 						if (!parameterDuplicateVisitor.VisitedElements.ContainsKey(parameter))
 							parameterDuplicateVisitor.VisitedElements.Add(parameter, null);
-
-						return newParameter;
 					}
 				}
 
