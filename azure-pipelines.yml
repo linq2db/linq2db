@@ -25,6 +25,8 @@ steps:
   inputs:
     version: '1.0.0' # replace this value with the version that you need for your project
 
+- script: dotnet restore
+
 - task: MSBuild@1
   inputs:
     solution: '$(solution)'
