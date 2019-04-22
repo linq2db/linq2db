@@ -148,8 +148,7 @@ namespace LinqToDB.Linq
 		private static T NormalizeExpressions<T>(T expression, HashSet<ISqlExpression> found) 
 			where T : class, IQueryElement
 		{
-			var parameterDuplicateVisitor = new QueryVisitor();
-			var result = parameterDuplicateVisitor.ConvertImmutable(expression, e =>
+			var result = new QueryVisitor().ConvertImmutable(expression, e =>
 			{
 				if (e.ElementType == QueryElementType.SqlExpression)
 				{
@@ -175,7 +174,7 @@ namespace LinqToDB.Linq
 									if (HasQueryParameters(paramExpr))
 									{
 										normalized = NormalizeExpressions(normalized, found);
-										isModified = normalized != paramExpr;
+										isModified = isModified || normalized != paramExpr;
 									}
 										
 									newExpressions.Add(paramExpr);
@@ -192,25 +191,6 @@ namespace LinqToDB.Linq
 						return expr;
 					}
 				}
-				else if (e.ElementType == QueryElementType.SqlParameter)
-				{
-					var parameter = (SqlParameter)e;
-					if (parameter.IsQueryParameter)
-					{
-						if (!found.Add(parameter))
-						{
-							var newParameter =
-								(IQueryElement)parameter.Clone(new Dictionary<ICloneableElement, ICloneableElement>(),
-									c => true);
-							return newParameter;
-						}
-
-						// notify visitor to process this parameter always
-						if (!parameterDuplicateVisitor.VisitedElements.ContainsKey(parameter))
-							parameterDuplicateVisitor.VisitedElements.Add(parameter, null);
-					}
-				}
-
 
 				return e;
 			});
@@ -235,8 +215,34 @@ namespace LinqToDB.Linq
 			});
 			
 			// correct expressions, we have to put expressions in correct order and duplicate them if they are reused 
-
 			statement = NormalizeExpressions(statement, new HashSet<ISqlExpression>());
+
+			// clone duplicated parameters
+			var parameterDuplicateVisitor = new QueryVisitor();
+			var found = new HashSet<SqlParameter>();
+			statement = parameterDuplicateVisitor.ConvertImmutable(statement, e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					var parameter = (SqlParameter)e;
+					if (parameter.IsQueryParameter)
+					{
+						if (!found.Add(parameter))
+						{
+							var newParameter =
+								(SqlParameter)parameter.Clone(new Dictionary<ICloneableElement, ICloneableElement>(),
+									c => true);
+
+							return newParameter;
+						}
+
+						// notify visitor to process this parameter always
+						parameterDuplicateVisitor.VisitedElements.Add(parameter, null);
+					}
+				}
+
+				return e;
+			});
 
 			// clone accessors for new parameters
 			new QueryVisitor().Visit(statement, e =>
