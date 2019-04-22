@@ -22,11 +22,7 @@ namespace LinqToDB.Extensions
 			{
 				case PropertyInfo propInfo:
 					{
-						var value = propInfo.GetValue(null, null);
-						if (value == null)
-							return null;
-
-						if (value is TExpression expression)
+						if (propInfo.GetValue(null, null) is TExpression expression)
 							return expression;
 
 						throw new LinqToDBException($"Property '{memberName}' for type '{type.Name}' should return expression");
@@ -36,11 +32,7 @@ namespace LinqToDB.Extensions
 						if (method.GetParameters().Length > 0)
 							throw new LinqToDBException($"Method '{memberName}' for type '{type.Name}' should have no parameters");
 
-						var value = method.Invoke(null, Array<object>.Empty);
-						if (value == null)
-							return null;
-
-						if (value is TExpression expression)
+						if (method.Invoke(null, Array<object>.Empty) is TExpression expression)
 							return expression;
 
 						throw new LinqToDBException($"Method '{memberName}' for type '{type.Name}' should return expression");
