@@ -20,13 +20,18 @@ steps:
   inputs:
     restoreSolution: '$(solution)'
 
+# do this before all your .NET Core tasks
+- task: DotNetCoreInstaller@0
+  inputs:
+    version: '1.0.5' # replace this value with the version that you need for your project
+
 - task: MSBuild@1
   inputs:
     solution: '$(solution)'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-- task: VSTest@2
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+#- task: VSTest@2
+#  inputs:
+#    platform: '$(buildPlatform)'
+#    configuration: '$(buildConfiguration)'
