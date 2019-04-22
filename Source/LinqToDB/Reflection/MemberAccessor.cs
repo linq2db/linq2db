@@ -217,7 +217,7 @@ namespace LinqToDB.Reflection
 							ed.DynamicColumnGetter.GetBody(
 								objParam,
 								Expression.Constant(memberInfo.Name),
-								new DefaultValueExpression(ed.MappingSchema, Type)),
+								Expression.Convert(new DefaultValueExpression(ed.MappingSchema, Type), typeof(object))),
 							Type),
 						objParam);
 				}
