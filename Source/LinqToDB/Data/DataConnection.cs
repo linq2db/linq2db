@@ -19,6 +19,7 @@ namespace LinqToDB.Data
 	using DataProvider;
 	using Expressions;
 	using LinqToDB.Async;
+	using LinqToDB.Data.DbCommandProcessor;
 	using Mapping;
 	using RetryPolicy;
 
@@ -1134,7 +1135,7 @@ namespace LinqToDB.Data
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				using (DataProvider.ExecuteScope())
-					return Command.ExecuteNonQuery();
+					return Command.ExecuteNonQueryExt();
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -1155,7 +1156,7 @@ namespace LinqToDB.Data
 			{
 				int ret;
 				using (DataProvider.ExecuteScope())
-					ret = Command.ExecuteNonQuery();
+					ret = Command.ExecuteNonQueryExt();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -1194,7 +1195,7 @@ namespace LinqToDB.Data
 		object ExecuteScalar()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return Command.ExecuteScalar();
+				return Command.ExecuteScalarExt();
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -1212,7 +1213,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = Command.ExecuteScalar();
+				var ret = Command.ExecuteScalarExt();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -1256,7 +1257,7 @@ namespace LinqToDB.Data
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				using (DataProvider.ExecuteScope())
-					return Command.ExecuteReader(GetCommandBehavior(commandBehavior));
+					return Command.ExecuteReaderExt(GetCommandBehavior(commandBehavior));
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -1277,7 +1278,7 @@ namespace LinqToDB.Data
 				IDataReader ret;
 
 				using (DataProvider.ExecuteScope())
-					ret = Command.ExecuteReader(GetCommandBehavior(commandBehavior));
+					ret = Command.ExecuteReaderExt(GetCommandBehavior(commandBehavior));
 
 				if (TraceSwitch.TraceInfo)
 				{
