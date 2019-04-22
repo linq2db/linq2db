@@ -148,7 +148,8 @@ namespace LinqToDB.Linq
 		private static T NormalizeExpressions<T>(T expression, HashSet<ISqlExpression> found) 
 			where T : class, IQueryElement
 		{
-			var result = new QueryVisitor().ConvertAll(expression, e =>
+			var parameterDuplicateVisitor = new QueryVisitor();
+			var result = parameterDuplicateVisitor.ConvertImmutable(expression, e =>
 			{
 				if (e.ElementType == QueryElementType.SqlExpression)
 				{
@@ -173,14 +174,6 @@ namespace LinqToDB.Linq
 									var newIndex   = newExpressions.Count;
 									if (HasQueryParameters(paramExpr))
 									{
-										if (!found.Add(paramExpr))
-										{
-											// we have to clone
-											normalized = (ISqlExpression)normalized.Clone(
-												new Dictionary<ICloneableElement, ICloneableElement>(), c => true);
-											isModified = true;
-										}
-											
 										normalized = NormalizeExpressions(normalized, found);
 										isModified = normalized != paramExpr;
 									}
@@ -199,6 +192,23 @@ namespace LinqToDB.Linq
 						return expr;
 					}
 				}
+				else if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					var parameter = (SqlParameter)e;
+					if (parameter.IsQueryParameter && !found.Add(parameter))
+					{
+						var newParameter =
+							(IQueryElement)parameter.Clone(new Dictionary<ICloneableElement, ICloneableElement>(),
+								c => true);
+
+						// notify visitor to process this parameter always
+						if (!parameterDuplicateVisitor.VisitedElements.ContainsKey(parameter))
+							parameterDuplicateVisitor.VisitedElements.Add(parameter, null);
+
+						return newParameter;
+					}
+				}
+
 
 				return e;
 			});
@@ -216,8 +226,8 @@ namespace LinqToDB.Linq
 					var parameter = (SqlParameter)e;
 					if (parameter.IsQueryParameter)
 					{
-						parameter.AccessorId =
-							accessors.FindIndex(a => object.ReferenceEquals(a.SqlParameter, parameter));
+						var idx = accessors.FindIndex(a => object.ReferenceEquals(a.SqlParameter, parameter));
+						parameter.AccessorId = idx >= 0 ? (int?)idx : null;
 					}
 				}
 			});
@@ -225,25 +235,6 @@ namespace LinqToDB.Linq
 			// correct expressions, we have to put expressions in correct order and duplicate them if they are reused 
 
 			statement = NormalizeExpressions(statement, new HashSet<ISqlExpression>());
-
-			var uniqueParameters = new HashSet<SqlParameter>();
-			statement = new QueryVisitor().ConvertAll(statement, e =>
-			{
-				if (e.ElementType == QueryElementType.SqlParameter)
-				{
-					var parameter = (SqlParameter)e;
-					if (parameter.IsQueryParameter && !uniqueParameters.Add(parameter))
-					{
-						var newParameter =
-							(IQueryElement)parameter.Clone(new Dictionary<ICloneableElement, ICloneableElement>(),
-								c => true);
-						return newParameter;
-					}
-				}
-
-				return e;
-			});
-
 
 			// clone accessors for new parameters
 			new QueryVisitor().Visit(statement, e =>
