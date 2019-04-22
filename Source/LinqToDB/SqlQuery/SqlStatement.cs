@@ -109,7 +109,7 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		protected void CollectParameters()
+		public void CollectParameters()
 		{
 			Parameters.Clear();
 
