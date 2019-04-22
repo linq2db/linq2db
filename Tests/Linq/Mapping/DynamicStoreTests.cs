@@ -58,7 +58,7 @@ namespace Tests.Mapping
 		[DynamicColumnAccessor(GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty))]
 		class InstanceGetterSetterMethods : CustomSetterGetterBase
 		{
-			public object GetProperty(string name, object defaultValue)
+			private object GetProperty(string name, object defaultValue)
 			{
 				if (!Values.TryGetValue(name, out object value))
 					value = defaultValue;
@@ -88,7 +88,7 @@ namespace Tests.Mapping
 				return value;
 			}
 
-			public static void SetProperty(StaticGetterSetterMethods instance, string name, object value)
+			private static void SetProperty(StaticGetterSetterMethods instance, string name, object value)
 			{
 				if (!InstanceValues.ContainsKey(instance.Id))
 				{
@@ -102,12 +102,15 @@ namespace Tests.Mapping
 		[DynamicColumnAccessor(GetterExpressionMethod = nameof(GetPropertyExpression), SetterExpressionMethod =nameof(SetPropertyExpression))]
 		class InstanceGetterSetterExpressionMethods : CustomSetterGetterBase
 		{
-			public static Expression<Func<InstanceGetterSetterExpressionMethods, string, object, object>> GetPropertyExpression()
+			public static Expression<Func<InstanceGetterSetterExpressionMethods, string, object, object>> GetPropertyExpression
 			{
-				return (instance, name, defaultValue) => instance.GetProperty(name, defaultValue);
+				get
+				{
+					return (instance, name, defaultValue) => instance.GetProperty(name, defaultValue);
+				}
 			}
 
-			public static Expression<Action<InstanceGetterSetterMethods, string, object>> SetPropertyExpression()
+			public static Expression<Action<InstanceGetterSetterExpressionMethods, string, object>> SetPropertyExpression()
 			{
 				return (instance, name, value) => instance.SetProperty(name, value);
 			}
@@ -136,9 +139,12 @@ namespace Tests.Mapping
 				return (instance, name, defaultValue) => GetProperty(instance, name, defaultValue);
 			}
 
-			public static Expression<Action<StaticGetterSetterExpressionMethods, string, object>> SetPropertyExpression()
+			public static Expression<Action<StaticGetterSetterExpressionMethods, string, object>> SetPropertyExpression
 			{
-				return (instance, name, value) => SetProperty(instance, name, value);
+				get
+				{
+					return (instance, name, value) => SetProperty(instance, name, value);
+				}
 			}
 
 			public static object GetProperty(StaticGetterSetterExpressionMethods instance, string name, object defaultValue)
@@ -460,8 +466,8 @@ namespace Tests.Mapping
 			var builder = ms.GetFluentMappingBuilder();
 			builder.Entity<FluentMetadataBasedStore>()
 				.HasColumn(e => e.Id)
-				.Property(x => Sql.Property<string>(x, "Name"))
-				.Member(e => e.Values);
+				.DynamicColumnsStore(e => e.Values)
+				.Property(x => Sql.Property<string>(x, "Name"));
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -714,7 +720,8 @@ namespace Tests.Mapping
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
 			{
 				var obj = new CustomSetterGetterBase { Id = 5 };
-				obj.Values.Add("Name", "test_name");
+				storage.Add(5, new Dictionary<string, object>());
+				storage[5].Add("Name", "test_name");
 				db.Insert(obj);
 
 				var data = db.GetTable<CustomSetterGetterBase>().ToList();

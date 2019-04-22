@@ -533,10 +533,12 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="func">Column mapping property or field getter expression.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
-		public PropertyMappingBuilder<T> DynamicColumnsStore(Expression<Func<T, object>> func)
+		public EntityMappingBuilder<T> DynamicColumnsStore(Expression<Func<T, object>> func)
 		{
-			return new PropertyMappingBuilder<T>(this, func)
+			Member(func)
 				.HasAttribute(new DynamicColumnsStoreAttribute() { Configuration = Configuration });
+
+			return this;
 		}
 
 		public EntityMappingBuilder<T> DynamicPropertyAccessors(

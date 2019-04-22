@@ -179,7 +179,7 @@ namespace LinqToDB.Linq.Builder
 						if (member.MemberInfo.IsDynamicColumnPropertyEx())
 						{
 							var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedTypeEx());
-							var setter  = new MemberAccessor(typeAcc, member.MemberInfo).SetterExpression;
+							var setter  = new MemberAccessor(typeAcc, member.MemberInfo, EntityDescriptor).SetterExpression;
 
 							exprs.Add(Expression.Invoke(setter, parentObject, ex));
 						}
@@ -1248,7 +1248,7 @@ namespace LinqToDB.Linq.Builder
 												Name             = fieldName,
 												PhysicalName     = fieldName,
 												ColumnDescriptor = new ColumnDescriptor(Builder.MappingSchema, new ColumnAttribute(fieldName),
-													new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member))
+													new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member, EntityDescriptor))
 											};
 
 											SqlTable.Add(newField);
