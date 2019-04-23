@@ -2657,24 +2657,32 @@ namespace LinqToDB.SqlQuery
 							var objTree = new Dictionary<ICloneableElement, ICloneableElement>();
 							foreach (var pair in _visitedElements)
 							{
-								if (pair.Value != pair.Key && pair.Key is ICloneableElement)
-									objTree.Add((ICloneableElement) pair.Key, (ICloneableElement) pair.Value);
+								if (pair.Value != pair.Key && pair.Key is ICloneableElement cloneable)
+								{
+									if (cloneable is SqlColumn clmn && clmn.Parent == q)
+										continue;
+									objTree.Add((ICloneableElement)pair.Key, (ICloneableElement)pair.Value);
+								}
 							}
 
 							objTree.Add(q, nq);
 
-							if (ReferenceEquals(fc, q.From))
-								fc = new SqlFromClause(nq, fc, objTree, e => false);
-							if (ReferenceEquals(sc, q.Select))
-								sc = new SqlSelectClause(nq, sc, objTree, e => e is SqlColumn c && c.Parent == q);
-							if (ReferenceEquals(wc, q.Where))
-								wc = new SqlWhereClause(nq, wc, objTree, e => false);
-							if (ReferenceEquals(gc, q.GroupBy))
-								gc = new SqlGroupByClause(nq, gc, objTree, e => false);
-							if (ReferenceEquals(hc, q.Having))
-								hc = new SqlWhereClause(nq, hc, objTree, e => false);
-							if (ReferenceEquals(oc, q.OrderBy))
-								oc = new SqlOrderByClause(nq, oc, objTree, e => false);
+							sc = new SqlSelectClause (nq, sc, objTree, e => e is SqlColumn c && c.Parent == q);
+							fc = new SqlFromClause   (nq, fc, objTree, e => false);
+							wc = new SqlWhereClause  (nq, wc, objTree, e => false);
+							gc = new SqlGroupByClause(nq, gc, objTree, e => false);
+							hc = new SqlWhereClause  (nq, hc, objTree, e => false);
+							oc = new SqlOrderByClause(nq, oc, objTree, e => false);
+
+							// update visited
+							foreach (var pair in objTree)
+							{
+								if (pair.Key is IQueryElement queryElement)
+								{
+									_visitedElements.Remove(queryElement);
+									_visitedElements.Add(queryElement, (IQueryElement)pair.Value);
+								}
+							}
 
 							//_visitedElements.Add(q,     nq);
 							AddVisited(q.All, nq.All);
