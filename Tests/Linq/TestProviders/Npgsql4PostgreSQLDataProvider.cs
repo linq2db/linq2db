@@ -48,7 +48,7 @@ namespace Tests
 #endif
 		}
 
-		private Type _dataReaderType;
+		private  Type _dataReaderType;
 		volatile Type _connectionType;
 
 		private readonly Assembly _assembly;
@@ -110,15 +110,15 @@ namespace Tests
 			SetConverterToV3(baseProvider.NpgsqlLineType          , NpgsqlLineType);
 			SetConverterToV3NpgsqlInet(baseProvider.NpgsqlInetType, NpgsqlInetType);
 
-			_setMoney     = GetSetParameter(connectionType    , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Money");
+			_setMoney     = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Money");
 			_setVarBinary = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Bytea");
-			_setBoolean   = GetSetParameter(connectionType  , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Boolean");
-			_setXml       = GetSetParameter(connectionType      , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Xml");
-			_setText      = GetSetParameter(connectionType     , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Text");
-			_setBit       = GetSetParameter(connectionType      , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Bit");
-			_setHstore    = GetSetParameter(connectionType   , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Hstore");
-			_setJson      = GetSetParameter(connectionType     , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Json");
-			_setJsonb     = GetSetParameter(connectionType    , "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Jsonb");
+			_setBoolean   = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Boolean");
+			_setXml       = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Xml");
+			_setText      = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Text");
+			_setBit       = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Bit");
+			_setHstore    = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Hstore");
+			_setJson      = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Json");
+			_setJsonb     = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Jsonb");
 
 			_setNativeParameterType = GetSetParameter<object>(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType);
 		}
