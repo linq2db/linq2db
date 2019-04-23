@@ -27,11 +27,12 @@ steps:
     configuration: '$(buildConfiguration)'
 
 # do this after other tasks such as building
-- task: DotNetCoreCLI@2
+- script: dotnet test Tests\Linq\ -f netcoreapp2.0 --logger trx
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
   inputs:
-    command: test
-    projects: '/Tests/**/*.csproj'
-    arguments: '--configuration $(buildConfiguration)'
+    testRunner: VSTest
+    testResultsFiles: '**/*.trx'
 
 #- task: VSTest@2
 #  inputs:
