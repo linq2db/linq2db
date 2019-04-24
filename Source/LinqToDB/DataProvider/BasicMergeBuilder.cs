@@ -737,6 +737,10 @@ namespace LinqToDB.DataProvider
 				newInsert.Parameters.AddRange(statement.Parameters);
 				newInsert.Insert.Into.Alias = TargetAlias;
 
+				// restore erased expressions
+				for (var i = 0; i < newInsert.Insert.Items.Count; i++)
+					newInsert.Insert.Items[i].Expression = statement.SelectQuery.From.Select.Columns[i].Expression;
+
 				var tables = MoveJoinsToSubqueries(newInsert, SourceAlias, null, QueryElement.InsertSetter);
 				SetSourceColumnAliases(newInsert.Insert, tables.Item1.Source);
 
@@ -748,10 +752,6 @@ namespace LinqToDB.DataProvider
 				if (IsIdentityInsertSupported
 					&& newInsert.Insert.Items.Any(_ => _.Column is SqlField field && field.IsIdentity))
 					OnInsertWithIdentity();
-
-				// restore erased expressions
-				for (var i = 0; i < newInsert.Insert.Items.Count; i++)
-					newInsert.Insert.Items[i].Expression = statement.SelectQuery.From.Select.Columns[i].Expression;
 
 				SqlBuilder.BuildInsertClauseHelper(newInsert, Command);
 			}
