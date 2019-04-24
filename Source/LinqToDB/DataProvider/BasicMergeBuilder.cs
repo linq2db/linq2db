@@ -749,6 +749,10 @@ namespace LinqToDB.DataProvider
 					&& newInsert.Insert.Items.Any(_ => _.Column is SqlField field && field.IsIdentity))
 					OnInsertWithIdentity();
 
+				// restore erased expressions
+				for (var i = 0; i < newInsert.Insert.Items.Count; i++)
+					newInsert.Insert.Items[i].Expression = statement.SelectQuery.From.Select.Columns[i].Expression;
+
 				SqlBuilder.BuildInsertClauseHelper(newInsert, Command);
 			}
 		}

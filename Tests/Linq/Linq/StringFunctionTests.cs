@@ -353,7 +353,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.LastName.IndexOf(s, n1, n2) == 1 && p.ID == 2 select p;
+				var q = from p in db.Person where p.LastName.IndexOf(s, n1, n2) == 4 && p.ID == 2 select p;
 				Assert.AreEqual(2, q.ToList().First().ID);
 			}
 		}
