@@ -13,6 +13,11 @@ namespace LinqToDB.SqlQuery
 			SystemType       = systemType;
 			Value            = value;
 			DataType         = DataType.Undefined;
+
+#if DEBUG
+			_paramNumber = ++_paramCounter;
+#endif
+
 		}
 
 		public SqlParameter(Type systemType, string name, object value, Func<object,object> valueConverter)
@@ -20,6 +25,11 @@ namespace LinqToDB.SqlQuery
 		{
 			_valueConverter = valueConverter;
 		}
+
+#if DEBUG
+		readonly int _paramNumber;
+		static   int _paramCounter;
+#endif
 
 		public string   Name             { get; set; }
 		public Type     SystemType       { get; set; }
@@ -225,9 +235,14 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			return sb
+			sb
 				.Append('@')
-				.Append(Name ?? "parameter")
+				.Append(Name ?? "parameter");
+
+#if DEBUG
+			sb.Append('(').Append(_paramNumber).Append(')');
+#endif
+			return sb
 				.Append('[')
 				.Append(Value ?? "NULL")
 				.Append(']');

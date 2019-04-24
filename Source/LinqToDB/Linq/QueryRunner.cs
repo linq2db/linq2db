@@ -145,10 +145,11 @@ namespace LinqToDB.Linq
 			return hasParameters;
 		}
 
-		private static T NormalizeExpressions<T>(T expression, HashSet<ISqlExpression> found) 
+		private static T NormalizeExpressions<T>(T expression) 
 			where T : class, IQueryElement
 		{
-			var result = new QueryVisitor().ConvertImmutable(expression, e =>
+			var queryVisitor = new QueryVisitor();
+			var result = queryVisitor.ConvertImmutable(expression, e =>
 			{
 				if (e.ElementType == QueryElementType.SqlExpression)
 				{
@@ -168,9 +169,17 @@ namespace LinqToDB.Linq
 								if (idx >= 0 && idx < expr.Parameters.Length)
 								{
 									var paramExpr  = expr.Parameters[idx];
+									var normalized = paramExpr;
 									var newIndex   = newExpressions.Count;
-									
-									newExpressions.Add(paramExpr);
+
+									if (newExpressions.Contains(normalized) && HasQueryParameters(normalized))
+									{
+										normalized = (ISqlExpression)normalized.Clone(
+											new Dictionary<ICloneableElement, ICloneableElement>(),
+											c => c == paramExpr);
+									}
+
+									newExpressions.Add(normalized);
 									return newIndex;
 								}
 								return idx;
@@ -179,6 +188,9 @@ namespace LinqToDB.Linq
 						if (newExpr != expr.Expr)
 						{
 							var newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, newExpressions.ToArray());
+							// force re-entrance
+							queryVisitor.VisitedElements.Remove(expr);
+							queryVisitor.VisitedElements.Add(expr, null);
 							return newExpression;
 						}
 
@@ -208,7 +220,7 @@ namespace LinqToDB.Linq
 			});
 			
 			// correct expressions, we have to put expressions in correct order and duplicate them if they are reused 
-			statement = NormalizeExpressions(statement, new HashSet<ISqlExpression>());
+			statement = NormalizeExpressions(statement);
 
 			var found = new HashSet<ISqlExpression>();
 			var parameterDuplicateVisitor = new QueryVisitor();
