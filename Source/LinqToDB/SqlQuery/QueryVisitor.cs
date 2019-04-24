@@ -2537,7 +2537,13 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SelectClause:
 					{
 						var sc   = (SqlSelectClause)element;
-						var cols = ConvertImmutable(sc.Columns, action, column => new SqlColumn(null, column.Expression));
+						var cols = ConvertImmutable(sc.Columns, action, column =>
+						{
+							var newColumn = new SqlColumn(sc.SelectQuery, column.Expression);
+							_visitedElements.Remove(column);
+							_visitedElements.Add(column, newColumn);
+							return newColumn;
+						});
 						var take = (ISqlExpression)ConvertImmutableInternal(sc.TakeValue, action);
 						var skip = (ISqlExpression)ConvertImmutableInternal(sc.SkipValue, action);
 
@@ -2655,26 +2661,27 @@ namespace LinqToDB.SqlQuery
 							var nq = new SelectQuery();
 
 							var objTree = new Dictionary<ICloneableElement, ICloneableElement>();
-							foreach (var pair in _visitedElements)
-							{
-								if (pair.Value != pair.Key && pair.Key is ICloneableElement cloneable)
-								{
-									if (cloneable is SqlColumn clmn && clmn.Parent == q)
-										continue;
-									objTree.Add((ICloneableElement)pair.Key, (ICloneableElement)pair.Value);
-								}
-							}
 
-							objTree.Add(q, nq);
+							if (ReferenceEquals(sc, q.Select))
+								sc = new SqlSelectClause (nq, sc, objTree, e => e is SqlColumn c && c.Parent == q);
+							if (ReferenceEquals(fc, q.From))
+								fc = new SqlFromClause   (nq, fc, objTree, e => false);
+							if (ReferenceEquals(wc, q.Where))
+								wc = new SqlWhereClause  (nq, wc, objTree, e => false);
+							if (ReferenceEquals(gc, q.GroupBy))
+								gc = new SqlGroupByClause(nq, gc, objTree, e => false);
+							if (ReferenceEquals(hc, q.Having))
+								hc = new SqlWhereClause  (nq, hc, objTree, e => false);
+							if (ReferenceEquals(oc, q.OrderBy))
+								oc = new SqlOrderByClause(nq, oc, objTree, e => false);
 
-							sc = new SqlSelectClause (nq, sc, objTree, e => e is SqlColumn c && c.Parent == q);
-							fc = new SqlFromClause   (nq, fc, objTree, e => false);
-							wc = new SqlWhereClause  (nq, wc, objTree, e => false);
-							gc = new SqlGroupByClause(nq, gc, objTree, e => false);
-							hc = new SqlWhereClause  (nq, hc, objTree, e => false);
-							oc = new SqlOrderByClause(nq, oc, objTree, e => false);
+							AddVisited(q.All, nq.All);
 
-							// update visited
+							nq.Init(sc, fc, wc, gc, hc, oc, us,
+								q.ParentSelect,
+								q.IsParameterDependent);
+
+							// update visited in case if columns were cloned
 							foreach (var pair in objTree)
 							{
 								if (pair.Key is IQueryElement queryElement)
@@ -2683,13 +2690,6 @@ namespace LinqToDB.SqlQuery
 									_visitedElements.Add(queryElement, (IQueryElement)pair.Value);
 								}
 							}
-
-							//_visitedElements.Add(q,     nq);
-							AddVisited(q.All, nq.All);
-
-							nq.Init(sc, fc, wc, gc, hc, oc, us,
-								q.ParentSelect,
-								q.IsParameterDependent);
 
 							newElement = nq;
 						}

@@ -148,8 +148,7 @@ namespace LinqToDB.Linq
 		private static T NormalizeExpressions<T>(T expression, HashSet<ISqlExpression> found) 
 			where T : class, IQueryElement
 		{
-			var parameterDuplicateVisitor = new QueryVisitor();
-			var result = parameterDuplicateVisitor.ConvertImmutable(expression, e =>
+			var result = new QueryVisitor().ConvertImmutable(expression, e =>
 			{
 				if (e.ElementType == QueryElementType.SqlExpression)
 				{
@@ -162,7 +161,6 @@ namespace LinqToDB.Linq
 							return expr;
 
 						var newExpressions = new List<ISqlExpression>();
-						var isModified     = false;
 
 						var newExpr = QueryHelper.TransformExpressionIndexes(expr.Expr,
 							idx =>
@@ -171,41 +169,20 @@ namespace LinqToDB.Linq
 								{
 									var paramExpr  = expr.Parameters[idx];
 									var newIndex   = newExpressions.Count;
-									var normalized = NormalizeExpressions(paramExpr, found);
-										isModified = isModified || normalized != paramExpr;
-										
-									newExpressions.Add(normalized);
+									
+									newExpressions.Add(paramExpr);
 									return newIndex;
 								}
 								return idx;
 							});
 
-						if (isModified || newExpr != expr.Expr)
+						if (newExpr != expr.Expr)
 						{
-							var newExpression =  new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, newExpressions.ToArray());
-							// force re-entrance for this expression if it was dynamically created 
-							parameterDuplicateVisitor.VisitedElements.Add(expr, null);
+							var newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, newExpressions.ToArray());
 							return newExpression;
 						}
 
 						return expr;
-					}
-				}
-				else if (e.ElementType == QueryElementType.SqlParameter)
-				{
-					var parameter = (SqlParameter)e;
-					if (parameter.IsQueryParameter)
-					{
-						if (!found.Add(parameter))
-						{
-							var newParameter =
-								(SqlParameter)parameter.Clone(new Dictionary<ICloneableElement, ICloneableElement>(),
-									c => true);
-							return newParameter;
-						}
-
-						// notify visitor to process this parameter always
-						parameterDuplicateVisitor.VisitedElements.Add(parameter, null);
 					}
 				}
 				return e;
@@ -232,6 +209,31 @@ namespace LinqToDB.Linq
 			
 			// correct expressions, we have to put expressions in correct order and duplicate them if they are reused 
 			statement = NormalizeExpressions(statement, new HashSet<ISqlExpression>());
+
+			var found = new HashSet<ISqlExpression>();
+			var parameterDuplicateVisitor = new QueryVisitor();
+			statement = parameterDuplicateVisitor.ConvertImmutable(statement, e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					var parameter = (SqlParameter)e;
+					if (parameter.IsQueryParameter)
+					{
+						if (!found.Add(parameter))
+						{
+							var newParameter =
+								(SqlParameter)parameter.Clone(new Dictionary<ICloneableElement, ICloneableElement>(),
+									c => true);
+							return newParameter;
+						}
+
+						// notify visitor to process this parameter always
+						parameterDuplicateVisitor.VisitedElements.Add(parameter, null);
+					}
+				}
+
+				return e;
+			});
 
 			// clone accessors for new parameters
 			new QueryVisitor().Visit(statement, e =>

@@ -190,7 +190,7 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			var parent = (SelectQuery)Parent.Clone(objectTree, doClone);
+			var parent = (SelectQuery)Parent?.Clone(objectTree, doClone);
 
 			if (!objectTree.TryGetValue(this, out var clone))
 				objectTree.Add(this, clone = new SqlColumn(
