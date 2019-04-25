@@ -448,13 +448,13 @@ namespace LinqToDB
 
 		#region Corr
 
-		[Sql.Extension("CORR({expr1}, {expr2})", IsAggregate = true)]
+		[Sql.Extension("CORR({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
 		public static Decimal Corr<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object>> expr1, [ExprParameter] Expression<Func<T, object>> expr2)
 		{
 			throw new LinqException($"'{nameof(Corr)}' is server-side method.");
 		}
 
-		[Sql.Extension("CORR({expr1}, {expr2})", IsAggregate = true)]
+		[Sql.Extension("CORR({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
 		public static Decimal Corr<TEntity>(
 			[NotNull]            this IQueryable<TEntity>               source,
 			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1,
@@ -534,13 +534,13 @@ namespace LinqToDB
 
 		#region CovarPop
 
-		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsAggregate = true)]
+		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
 		public static Decimal CovarPop<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object>> expr1, [ExprParameter] Expression<Func<T, object>> expr2)
 		{
 			throw new LinqException($"'{nameof(CovarPop)}' is server-side method.");
 		}
 
-		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsAggregate = true)]
+		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
 		public static Decimal CovarPop<TEntity>(
 			[NotNull]            this IQueryable<TEntity>               source,
 			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1,
@@ -570,13 +570,13 @@ namespace LinqToDB
 
 		#region CovarSamp
 
-		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsAggregate = true)]
+		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
 		public static Decimal CovarSamp<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object>> expr1, [ExprParameter] Expression<Func<T, object>> expr2)
 		{
 			throw new LinqException($"'{nameof(CovarSamp)}' is server-side method.");
 		}
 
-		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsAggregate = true)]
+		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsAggregate = true, ChainPrecedence = 0)]
 		public static Decimal CovarSamp<TEntity>(
 			[NotNull]            this IQueryable<TEntity>               source,
 			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1,
@@ -716,13 +716,13 @@ namespace LinqToDB
 
 		#region Median
 
-		[Sql.Extension("MEDIAN({expr})", IsAggregate = true)]
+		[Sql.Extension("MEDIAN({expr})", IsAggregate = true, ChainPrecedence = 0)]
 		public static long Median<TEntity, T>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, T> expr)
 		{
 			throw new LinqException($"'{nameof(Median)}' is server-side method.");
 		}
 
-		[Sql.Extension("MEDIAN({expr})", IsAggregate = true)]
+		[Sql.Extension("MEDIAN({expr})", IsAggregate = true, ChainPrecedence = 0)]
 		public static long Median<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
