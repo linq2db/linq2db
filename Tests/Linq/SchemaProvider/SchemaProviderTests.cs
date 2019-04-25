@@ -65,6 +65,7 @@ namespace Tests.SchemaProvider
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
+					case ProviderName.SqlServer2017 :
 					case TestProvName.SqlAzure      :
 						{
 							var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
@@ -87,6 +88,7 @@ namespace Tests.SchemaProvider
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
+					case ProviderName.SqlServer2017 :
 					case TestProvName.SqlAzure      :
 						{
 							var tbl = dbSchema.Tables.Single(at => at.TableName == "AllTypes");

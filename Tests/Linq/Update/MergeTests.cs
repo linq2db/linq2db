@@ -55,6 +55,7 @@ namespace Tests.xUpdate
 				ProviderName.SqlServer2008,
 				ProviderName.SqlServer2012,
 				ProviderName.SqlServer2014,
+				ProviderName.SqlServer2017,
 				TestProvName.SqlAzure
 			};
 

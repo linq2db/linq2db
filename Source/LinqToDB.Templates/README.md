@@ -4,40 +4,36 @@ T4 models are used to generate POCO's C# code using your database structure.
 
 ## Installation
 
-Firstly you should install one of tools packages into your project:
+First you should install one of packages with T4 templates into your project:
 
-`Install-Package linq2db.XXX`
+`Install-Package linq2db.<PROVIDER_NAME>`
 
-Where XXX is one of supported databases, for example:
+Where `<PROVIDER_NAME>` is one of supported databases, for example:
 
 `Install-Package linq2db.SqlServer`
 
-This also will install needed linq2db packages:
-
-* linq2db.t4models
-* linq2db 
-
-But **not** data provider packages (install them only if needed to compile your project, T4 models ships it's own data provider assemblies).
-
-### .Net Core specific
-
-Because of .Net Core projects do not support NuGet content files all stuff is not copied into project's folder, so to run T4 templates you'll need:
-
-* open `$(SolutionDir).tools\linq2db.t4models` in Explorer 
-* copy `CopyMe.XXX.Core.tt.txt` to your project's folder or subfolder, then you should use it instead of `CopyMe.XXX.tt.txt`
+This also will install:
+- `linq2db` package
+- T4 templates
+- Example of model generation T4 template (`CopyMe.<DB_NAME>.tt.txt`)
+- provider package (if it is available on nuget).
 
 ## Running
 
-After package installing you will see new `LinqToDB.Templates` folder in your project, this folder contains all needed T4 stuff to generate your model. Also would be created new folder in tour solution: `$(SolutionDir).tools\linq2db.t4models`, it is used to store and link assemblies, needed for generation (linq2db.dll and data provider assemblies).
+After package installing you will see new `LinqToDB.Templates` folder in your project, this folder contains all needed T4 stuff to generate your model.
 
-To create a data model template take a look at one of the CopyMe.XXX.tt.txt file in your LinqToDB.Templates project folder. Copy this file to needed project location and rename it, like `MyModel.tt`
+To create a data model template copy `CopyMe.<DB_NAME>.tt.txt` file from `LinqToDB.Templates` project folder to desired location and rename it to file with `.tt` extension, e.g. `MyModel.tt`. For SDK projects see important notes below.
 
-There are few main steps in this file:
+Next you need to edit content of your `.tt` file. It contains following main sections:
 
-1. Configuring generation process (read below)
-1. Loading metadata - this is a call to `LoadMatadata()` function - it connects to your database and fetches all needed metadata (table structure, views, and so on)
-1. Customizing generation process (read below)
-1. Calling `GenerateModel()` - this will run model generation 
+1. Configuration of database structure load process (`GetSchemaOptions` object properties, read more about it below)
+1. Database structure load call - this is a call to `LoadMatadata()` function - it connects to your database and fetches all needed metadata (table structure, views, procedures and so on). Here you need to specify connection options for your database
+1. Customization of model generation process (read below)
+1. Call to `GenerateModel()` method to generate C# file with data model classes
+
+#### SDK project specifics
+
+Because SDK projects install nuget content files as references to files in `nuget` cache instead of copying them into project's folder, to run T4 templates you'll need create empty `<choose_your_name>.tt` file manually and paste content of `CopyMe.<DB_NAME>.tt.txt` to it. Also it is not recommended to alter `*.ttinclude` files directly as you will alter nuget cache content, which will affect any other SDK projects that use that package.
 
 ## Configuring schema load process
 

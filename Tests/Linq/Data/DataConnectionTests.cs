@@ -194,6 +194,24 @@ namespace Tests.Data
 
 					break;
 				}
+
+				case ProviderName.SqlServer2017:
+					{
+						dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2017", connectionString);
+
+						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+
+						var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+
+						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2017));
+
+						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+						sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+
+						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2017));
+
+						break;
+					}
 			}
 		}
 

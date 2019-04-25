@@ -1,4 +1,6 @@
-﻿DROP TABLE IF EXISTS Doctor
+﻿SET @@global.sql_mode=(SELECT REPLACE(@@global.sql_mode, 'ONLY_FULL_GROUP_BY', ''))
+GO
+DROP TABLE IF EXISTS Doctor
 GO
 DROP TABLE IF EXISTS Patient
 GO
