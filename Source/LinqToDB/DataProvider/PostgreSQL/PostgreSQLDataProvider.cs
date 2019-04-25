@@ -437,17 +437,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 #endif
 
-		static Action<IDbDataParameter> _setMoney;
-		static Action<IDbDataParameter> _setVarBinary;
-		static Action<IDbDataParameter> _setBoolean;
-		static Action<IDbDataParameter> _setXml;
-		static Action<IDbDataParameter> _setText;
-		static Action<IDbDataParameter> _setBit;
-		static Action<IDbDataParameter> _setHstore;
-		static Action<IDbDataParameter> _setJsonb;
-		static Action<IDbDataParameter> _setJson;
+		Action<IDbDataParameter> _setMoney;
+		Action<IDbDataParameter> _setVarBinary;
+		Action<IDbDataParameter> _setBoolean;
+		Action<IDbDataParameter> _setXml;
+		Action<IDbDataParameter> _setText;
+		Action<IDbDataParameter> _setBit;
+		Action<IDbDataParameter> _setHstore;
+		Action<IDbDataParameter> _setJsonb;
+		Action<IDbDataParameter> _setJson;
 
-		static Action<IDbDataParameter, object> _setNativeParameterType;
+		Action<IDbDataParameter, object> _setNativeParameterType;
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
