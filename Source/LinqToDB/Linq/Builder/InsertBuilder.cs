@@ -105,28 +105,6 @@ namespace LinqToDB.Linq.Builder
 
 			insertStatement.Insert.WithIdentity = methodCall.Method.Name == "InsertWithIdentity";
 
-			if (insertStatement.Insert.Into == null || insertStatement.SelectQuery.From.Tables.Count == 0)
-			{
-				// cleanup columns
-				for (int i = 0; i < insertStatement.SelectQuery.Select.Columns.Count;)
-				{
-					var column = insertStatement.SelectQuery.Select.Columns[i];
-					var isDepended = QueryVisitor.Find(insertStatement.Insert, e => e == column) != null;
-					if (!isDepended)
-						insertStatement.SelectQuery.Select.Columns.RemoveAt(i);
-					else
-						i++;
-				}
-			}
-			else
-			{
-				// expressions are not used, eliminating duplicates
-				foreach (var ii in insertStatement.Insert.Items)
-				{
-					ii.Expression = null;
-				}
-			}
-
 			sequence.Statement = insertStatement;
 
 			return new InsertContext(buildInfo.Parent, sequence, insertStatement.Insert.WithIdentity);

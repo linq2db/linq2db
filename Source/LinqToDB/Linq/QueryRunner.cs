@@ -222,7 +222,8 @@ namespace LinqToDB.Linq
 			// correct expressions, we have to put expressions in correct order and duplicate them if they are reused 
 			statement = NormalizeExpressions(statement);
 
-			var found = new HashSet<ISqlExpression>();
+			var found                     = new HashSet<ISqlExpression>();
+			var columnExpressions         = new HashSet<ISqlExpression>();
 			var parameterDuplicateVisitor = new QueryVisitor();
 			statement = parameterDuplicateVisitor.ConvertImmutable(statement, e =>
 			{
@@ -231,6 +232,17 @@ namespace LinqToDB.Linq
 					var parameter = (SqlParameter)e;
 					if (parameter.IsQueryParameter)
 					{
+						var parentElement = parameterDuplicateVisitor.ParentElement;
+						if (parentElement is SqlColumn)
+							columnExpressions.Add(parameter);
+						else if (parentElement.ElementType == QueryElementType.SetExpression)
+						{
+							// consider that expression is already processed by SelectQuery and we do not need duplication.
+							// It is specific how InsertStatement is built
+							if (columnExpressions.Contains(parameter))
+								return parameter;
+						}
+
 						if (!found.Add(parameter))
 						{
 							var newParameter =
