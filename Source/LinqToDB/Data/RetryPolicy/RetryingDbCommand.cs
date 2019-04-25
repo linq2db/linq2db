@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Data.RetryPolicy
 {
 	using Configuration;
+	using LinqToDB.Data.DbCommandProcessor;
 
 	class RetryingDbCommand : DbCommand, IProxy<DbCommand>
 	{
@@ -79,34 +80,34 @@ namespace LinqToDB.Data.RetryPolicy
 
 		protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
 		{
-			return _policy.Execute(() => _command.ExecuteReader(behavior));
+			return _policy.Execute(() => _command.ExecuteReaderExt(behavior));
 		}
 
 		public override int ExecuteNonQuery()
 		{
-			return _policy.Execute(() => _command.ExecuteNonQuery());
+			return _policy.Execute(() => _command.ExecuteNonQueryExt());
 		}
 
 		public override object ExecuteScalar()
 		{
-			return _policy.Execute(() => _command.ExecuteScalar());
+			return _policy.Execute(() => _command.ExecuteScalarExt());
 		}
 
 #if !NET40
 
 		protected override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
 		{
-			return _policy.ExecuteAsync(ct => _command.ExecuteReaderAsync(behavior, ct), cancellationToken);
+			return _policy.ExecuteAsync(ct => _command.ExecuteReaderExtAsync(behavior, ct), cancellationToken);
 		}
 
 		public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
-			return _policy.ExecuteAsync(ct => _command.ExecuteNonQueryAsync(ct), cancellationToken);
+			return _policy.ExecuteAsync(ct => _command.ExecuteNonQueryExtAsync(ct), cancellationToken);
 		}
 
 		public override Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
-			return _policy.ExecuteAsync(ct => _command.ExecuteScalarAsync(ct), cancellationToken);
+			return _policy.ExecuteAsync(ct => _command.ExecuteScalarExtAsync(ct), cancellationToken);
 		}
 
 #endif
