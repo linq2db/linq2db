@@ -404,7 +404,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count2([DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)] string context)
+		public void Count2([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -422,7 +422,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Min2([DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)] string context)
+		public void Min2([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -431,9 +431,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Min3([DataSources(
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-			string context)
+		public void Min3([DataSources(TestProvName.AllSybase, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(

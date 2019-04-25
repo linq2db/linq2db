@@ -1,17 +1,15 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"                                 #>
 <#@ output extension=".generated.cs"                                                        #>
-<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"             #>
-<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude"           #>
-<#@ include file="..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude"             #>
-<#@ include file="Settings.ttinclude"                                                       #>
+<#@ include file="Shared.ttinclude"                                                         #>
 <#@ include file="SqlServer.ttinclude"                                                      #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\NET.46\net46\Microsoft.SqlServer.Types.dll" #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\NET.46\net46\linq2db.dll"                   #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"             #>
+<#@ include file="..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude"             #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\Microsoft.SqlServer.Types.dll" #>
 <#
 //	NamespaceName   = "DataContext";
 //	DataContextName = "NorthwindDB";
 	DatabaseName    = null;//"Northwind";
-	GenerateDatabaseName = true;
+	GenerateDatabaseName = false;
 	OneToManyAssociationType = "List<{0}>";
 	GenerateSchemaAsType = true;
 	GenerateAssociationExtensions = true;

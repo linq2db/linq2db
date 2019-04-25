@@ -13,9 +13,7 @@ namespace Tests.Linq
 	public class QueryHintsTests : TestBase
 	{
 		[Test]
-		public void Comment([DataSources(
-			ProviderName.Access, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
-			string context)
+		public void Comment([DataSources(ProviderName.Access, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -59,7 +57,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Option1([IncludeDataSources(ProviderName.SqlServer2012)] string context)
+		public void Option1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -86,7 +84,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Option2([IncludeDataSources(ProviderName.SqlServer2012)] string context)
+		public void Option2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

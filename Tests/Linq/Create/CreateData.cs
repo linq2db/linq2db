@@ -255,6 +255,7 @@ namespace Tests._Create
 				case TestProvName.PostgreSQL10  : RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
 				case TestProvName.PostgreSQL11  : RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
 				case ProviderName.MySql         : RunScript(context,          "\nGO\n",  "MySql");                          break;
+				case ProviderName.MySqlConnector: RunScript(context,          "\nGO\n",  "MySql");                          break;
 				case TestProvName.MySql57       : RunScript(context,          "\nGO\n",  "MySql");                          break;
 				case TestProvName.MariaDB       : RunScript(context,          "\nGO\n",  "MySql");                          break;
 				case ProviderName.SqlServer2000 : RunScript(context,          "\nGO\n",  "SqlServer2000");                  break;
@@ -262,6 +263,7 @@ namespace Tests._Create
 				case ProviderName.SqlServer2008 : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 				case ProviderName.SqlServer2012 : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 				case ProviderName.SqlServer2014 : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
+				case ProviderName.SqlServer2017 : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 				case TestProvName.SqlAzure      : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 				case ProviderName.SQLiteMS      : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;

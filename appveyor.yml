@@ -10,8 +10,8 @@ branches:
     - /dev.*/
 
 environment:
-  assemblyVersion: 2.6.4
-  packageVersion: 2.6.4
+  assemblyVersion: 2.7.0
+  packageVersion: 2.7.0
   docfxuser: "ili"
   docfxmail: "docfx@linq2db.com"
   docfxsecret:
@@ -66,33 +66,42 @@ before_build:
     .\Build\AppVeyor.FixVersionProps.ps1  -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
     .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion $env:APPVEYOR_REPO_BRANCH
 
-    $startPath = "$($env:appveyor_build_folder)\Data"
-    $sqlInstance = "(local)\SQL2014"
-    $dbName = "TestData"
-
-    # create database
-    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
-
-    # MySql
     $env:MYSQL_PWD="Password12!"
-    $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
-    iex "& $cmd"
-
-    # PgSql
     $env:PGUSER="postgres"
     $env:PGPASSWORD="Password12!"
+    $sqlInstance = "(local)\SQL2014"
+
+    # create databases
+    $dbName = "TestDatanet45"
+    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
+    iex "& $cmd"
+    $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
+    iex "& $cmd"
+
+    $dbName = "TestDatacore1"
+    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
+    iex "& $cmd"
+    $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
+    iex "& $cmd"
+
+    $dbName = "TestDatacore2"
+    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
+    iex "& $cmd"
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
     iex "& $cmd"
 
     # Access ACE provider
-    (New-Object Net.WebClient).DownloadFile("https://download.microsoft.com/download/f/d/8/fd8c20d8-e38a-48b6-8691-542403b91da1/AccessDatabaseEngine.exe", "$env:appveyor_build_folder\AccessDatabaseEngine.exe")
-    .\AccessDatabaseEngine.exe /quiet
+    #(New-Object Net.WebClient).DownloadFile("https://download.microsoft.com/download/2/4/3/24375141-E08D-4803-AB0E-10F2E3A07AAA/AccessDatabaseEngine.exe", "$env:appveyor_build_folder\AccessDatabaseEngine.exe")
+    #.\AccessDatabaseEngine.exe /quiet
 
     # docfx build & deploy
     if ($env:docfxsecret)
     {
       $gitDeploy = $env:APPVEYOR_REPO_BRANCH -eq "master"
-      #.\Build\AppVeyor.DocFx.ps1 $env:docfxuser $env:docfxsecret $env:docfxmail $gitDeploy
+      .\Build\AppVeyor.DocFx.ps1 $env:docfxuser $env:docfxsecret $env:docfxmail $gitDeploy
     }
     else
     {
@@ -116,7 +125,7 @@ test_script:
 
 artifacts:
 - path: \**\linq2db*.nupkg
-- path: \**\*.trx
+- path: \**\*_test_results.*
 
 deploy:
 - provider: NuGet

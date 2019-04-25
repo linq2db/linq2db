@@ -81,6 +81,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
 			_sqlServer2008SqlOptimizer = new SqlServerSqlOptimizer    (SqlProviderFlags);
 			_sqlServer2012SqlOptimizer = new SqlServer2012SqlOptimizer(SqlProviderFlags);
+			_sqlServer2017SqlOptimizer = new SqlServer2017SqlOptimizer(SqlProviderFlags);
 
 			SetField<IDataReader,decimal>((r,i) => r.GetDecimal(i));
 			SetField<IDataReader,decimal>("money",      (r,i) => SqlServerTools.DataReaderGetMoney  (r, i));
@@ -107,6 +108,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			public static readonly SqlServer2005MappingSchema SqlServer2005MappingSchema = new SqlServer2005MappingSchema();
 			public static readonly SqlServer2008MappingSchema SqlServer2008MappingSchema = new SqlServer2008MappingSchema();
 			public static readonly SqlServer2012MappingSchema SqlServer2012MappingSchema = new SqlServer2012MappingSchema();
+			public static readonly SqlServer2017MappingSchema SqlServer2017MappingSchema = new SqlServer2017MappingSchema();
 		}
 
 		public override MappingSchema MappingSchema
@@ -119,6 +121,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					case SqlServerVersion.v2005 : return MappingSchemaInstance.SqlServer2005MappingSchema;
 					case SqlServerVersion.v2008 : return MappingSchemaInstance.SqlServer2008MappingSchema;
 					case SqlServerVersion.v2012 : return MappingSchemaInstance.SqlServer2012MappingSchema;
+					case SqlServerVersion.v2017 : return MappingSchemaInstance.SqlServer2017MappingSchema;
 				}
 
 				return base.MappingSchema;
@@ -138,6 +141,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2017 : return new SqlServer2017SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 			}
 
 			throw new InvalidOperationException();
@@ -147,6 +151,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		readonly ISqlOptimizer _sqlServer2005SqlOptimizer;
 		readonly ISqlOptimizer _sqlServer2008SqlOptimizer;
 		readonly ISqlOptimizer _sqlServer2012SqlOptimizer;
+		readonly ISqlOptimizer _sqlServer2017SqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
@@ -156,6 +161,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case SqlServerVersion.v2005 : return _sqlServer2005SqlOptimizer;
 				case SqlServerVersion.v2008 : return _sqlServer2008SqlOptimizer;
 				case SqlServerVersion.v2012 : return _sqlServer2012SqlOptimizer;
+				case SqlServerVersion.v2017 : return _sqlServer2017SqlOptimizer;
 			}
 
 			return _sqlServer2008SqlOptimizer;
@@ -272,8 +278,11 @@ namespace LinqToDB.DataProvider.SqlServer
 						}
 					case SqlDbType.VarChar:
 						{
-							if (value is string strValue && strValue.Length > 8000)
+							var strValue = value as string;
+							if ((strValue != null && strValue.Length > 8000) || (value != null && strValue == null))
 								param.Size = -1;
+							else if (dataType.Length != null && dataType.Length <= 8000 && (strValue == null || strValue.Length <= dataType.Length))
+								param.Size = dataType.Length.Value;
 							else
 								param.Size = 8000;
 
@@ -281,10 +290,25 @@ namespace LinqToDB.DataProvider.SqlServer
 						}
 					case SqlDbType.NVarChar:
 						{
-							if (value is string strValue && strValue.Length > 4000)
+							var strValue = value as string;
+							if ((strValue != null && strValue.Length > 4000) || (value != null && strValue == null))
 								param.Size = -1;
+							else if (dataType.Length != null && dataType.Length <= 4000 && (strValue == null || strValue.Length <= dataType.Length))
+								param.Size = dataType.Length.Value;
 							else
 								param.Size = 4000;
+
+							break;
+						}
+					case SqlDbType.VarBinary:
+						{
+							var binaryValue = value as byte[];
+							if ((binaryValue != null && binaryValue.Length > 8000) || (value != null && binaryValue == null))
+								param.Size = -1;
+							else if (dataType.Length != null && dataType.Length <= 8000 && (binaryValue == null || binaryValue.Length <= dataType.Length))
+								param.Size = dataType.Length.Value;
+							else
+								param.Size = 8000;
 
 							break;
 						}

@@ -116,6 +116,7 @@ CREATE COLUMN TABLE "Doctor"
 );;
 ALTER TABLE "Doctor" ADD CONSTRAINT "FK_Doctor_Person" FOREIGN KEY ("PersonID") REFERENCES "Person" ("PersonID") ON UPDATE CASCADE ON DELETE CASCADE;;
 
+INSERT INTO "Doctor" ("PersonID", "Taxonomy") VALUES (1, 'Psychiatry');;
 
 CREATE COLUMN TABLE "Patient"
 (

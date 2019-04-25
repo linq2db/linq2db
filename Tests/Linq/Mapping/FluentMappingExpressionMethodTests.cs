@@ -1,11 +1,14 @@
 ﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Tools;
 
 namespace Tests.Playground
 {
+	using Tools;
+
 	[TestFixture]
 	public class FluentMappingExpressionMethodTests : TestBase
 	{
@@ -59,13 +62,14 @@ namespace Tests.Playground
 			using (var db = GetDataContext(context, CreateMappingSchema()))
 			{
 				var testData = GenerateData();
+
 				using (var table = db.CreateLocalTable(testData))
 				{
 					var meterialized = table.ToArray();
-					var expected = meterialized.Select(e => new InstanceClass
+					var expected     = meterialized.Select(e => new InstanceClass
 						{ Id = e.Id, Value = e.Value, EntityMaterialized = "M" + e.Id.ToString() });
-					
-					AreEqual(expected, meterialized, ComparerBuilder<InstanceClass>.GetEqualityComparer());
+
+					AreEqualWithComparer(expected, meterialized);
 				}
 			}
 		}

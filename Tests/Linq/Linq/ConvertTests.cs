@@ -12,7 +12,7 @@ namespace Tests.Linq
 	public class ConvertTests : TestBase
 	{
 		[Test]
-		public void Test1([DataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] string context)
+		public void Test1([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(1, (from t in db.Types where t.MoneyValue * t.ID == 1.11m  select t).Single().ID);
@@ -39,29 +39,29 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToBigInt([DataSources(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)] string context)
+		public void ToBigInt([DataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select Sql.Convert(Sql.BigInt, t.MoneyValue),
+					from t in Types select Sql.Convert(Sql.BigInt, t.MoneyValue),
 					from t in db.Types select Sql.Convert(Sql.BigInt, t.MoneyValue));
 		}
 
 		[Test]
-		public void ToInt64([DataSources(ProviderName.MySql)] string context)
+		public void ToInt64([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (Int64)t.MoneyValue where p > 0 select p,
+					from p in from t in Types select (Int64)t.MoneyValue where p > 0 select p,
 					from p in from t in db.Types select (Int64)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
-		public void ConvertToInt64([DataSources(ProviderName.MySql, ProviderName.SQLiteMS)] string context)
+		public void ConvertToInt64([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p,
+					from p in from t in Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p,
 					from p in from t in db.Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p);
 		}
 
@@ -151,58 +151,59 @@ namespace Tests.Linq
 		#region UInts
 
 		[Test]
-		public void ToUInt1([DataSources(ProviderName.MySql)] string context)
+		public void ToUInt1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.ConvertTo<uint>.From(t.MoneyValue),
+					from t in Types select Sql.ConvertTo<uint>.From(t.MoneyValue),
 					from t in db.Types select Sql.AsSql(Sql.ConvertTo<uint>.From(t.MoneyValue)));
 		}
 
 		[Test]
-		public void ToUInt2([DataSources(ProviderName.MySql)] string context)
+		public void ToUInt2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Convert<uint,decimal>(t.MoneyValue),
-					from t in db.Types select Sql.AsSql(Sql.Convert<uint,decimal>(t.MoneyValue)));
+					from t in Types select Sql.Convert<uint, decimal>(t.MoneyValue),
+					from t in db.Types select Sql.AsSql(Sql.Convert<uint, decimal>(t.MoneyValue)));
 		}
 
 		[Test]
-		public void ToUInt64([DataSources(ProviderName.MySql)] string context)
+		public void ToUInt64([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (UInt64)t.MoneyValue where p > 0 select p,
+					from p in from t in Types select (UInt64)t.MoneyValue where p > 0 select p,
 					from p in from t in db.Types select (UInt64)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
-		public void ConvertToUInt64([DataSources(ProviderName.MySql, ProviderName.SQLiteMS)] string context)
+		public void ConvertToUInt64([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select Convert.ToUInt64(t.MoneyValue) where p > 0 select p,
+					from p in from t in Types select Convert.ToUInt64(t.MoneyValue) where p > 0 select p,
 					from p in from t in db.Types select Convert.ToUInt64(t.MoneyValue) where p > 0 select p);
 		}
 
 		[Test]
-		public void ToUInt32([DataSources(ProviderName.MySql)] string context)
+		public void ToUInt32([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select (UInt32)t.MoneyValue where p > 0 select p,
+					from p in from t in Types select (UInt32)t.MoneyValue where p > 0 select p,
 					from p in from t in db.Types select (UInt32)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
-		public void ConvertToUInt32([DataSources(ProviderName.MySql, ProviderName.SQLiteMS)] string context)
+		public void ConvertToUInt32([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in from t in    Types select Convert.ToUInt32(t.MoneyValue) where p > 0 select p,
+					from p in from t in Types select Convert.ToUInt32(t.MoneyValue) where p > 0 select p,
 					from p in from t in db.Types select Convert.ToUInt32(t.MoneyValue) where p > 0 select p);
 		}
+
 
 		[Test]
 		public void ToUInt16([DataSources] string context)
@@ -402,11 +403,9 @@ namespace Tests.Linq
 		}
 
 		// needs debugging, but suspect it fails due to issue 730
-		[ActiveIssue(730, Configurations = new[] { ProviderName.Sybase, ProviderName.SybaseManaged }, SkipForNonLinqService = true)]
+		[ActiveIssue(730, Configuration = TestProvName.AllSybase, SkipForNonLinqService = true)]
 		[Test]
-		public void ToSqlTime([DataSources(
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-			string context)
+		public void ToSqlTime([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -460,12 +459,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToDefaultChar(
-			[DataSources(
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.Firebird, TestProvName.Firebird3,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
-			string context)
+		public void ToDefaultChar([DataSources(TestProvName.AllOracle, TestProvName.AllFirebird, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -483,9 +477,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToDefaultVarChar([DataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird,
-			TestProvName.Firebird3, ProviderName.PostgreSQL)]
+		public void ToDefaultVarChar([DataSources(TestProvName.AllOracle, TestProvName.AllFirebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -504,12 +496,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToDefaultNChar(
-			[DataSources(
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.Firebird, TestProvName.Firebird3,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest)]
-		string context)
+		public void ToDefaultNChar([DataSources(TestProvName.AllOracle, TestProvName.AllFirebird, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -527,10 +514,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToDefaultNVarChar([DataSources(
-			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird,
-			TestProvName.Firebird3, ProviderName.PostgreSQL)]
-			string context)
+		public void ToDefaultNVarChar([DataSources(TestProvName.AllOracle, TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

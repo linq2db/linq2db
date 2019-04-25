@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
@@ -45,7 +46,7 @@ namespace Tests.Linq
 				return (db,p) => db.Doctor.Count(d => d.PersonID == p.PersonID);
 			}
 
-			public static IEqualityComparer<PersonCalculated> Comparer = Tools.ComparerBuilder<PersonCalculated>.GetEqualityComparer();
+			public static IEqualityComparer<PersonCalculated> Comparer = ComparerBuilder.GetEqualityComparer<PersonCalculated>();
 		}
 
 		[Table("Doctor")]
@@ -115,7 +116,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void CalculatedColumnTest4([DataSources] string context)
 		{

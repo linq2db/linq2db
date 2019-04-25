@@ -17,6 +17,8 @@ using LinqToDB.Data;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.Tools;
+using LinqToDB.Tools.Comparers;
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using LinqToDB.ServiceModel;
@@ -295,6 +297,7 @@ namespace Tests
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
 			ProviderName.SqlServer2014,
+			ProviderName.SqlServer2017,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
@@ -306,6 +309,7 @@ namespace Tests
 			TestProvName.PostgreSQL11,
 			TestProvName.PostgreSQLLatest,
 			ProviderName.MySql,
+			ProviderName.MySqlConnector,
 			TestProvName.MySql57,
 			TestProvName.MariaDB,
 			ProviderName.SQLiteMS
@@ -923,6 +927,11 @@ namespace Tests
 			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, sort);
 		}
 
+		protected void AreEqualWithComparer<T>(IEnumerable<T> expected, IEnumerable<T> result)
+		{
+			AreEqual(t => t, expected, result, ComparerBuilder.GetEqualityComparer<T>());
+		}
+
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
 		{
 			AreEqual(t => t, expected, result, comparer);
@@ -938,7 +947,7 @@ namespace Tests
 			AreEqual(fixSelector, expected, result, EqualityComparer<T>.Default);
 		}
 
-		protected void AreEqual<T>(Func<T, T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
+		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
 		{
 			AreEqual<T>(fixSelector, expected, result, comparer, null);
 		}
@@ -970,12 +979,17 @@ namespace Tests
 			var message        = new StringBuilder();
 
 			if (exceptResult != 0 || exceptExpected != 0)
+			{
+				Debug.WriteLine(resultList.  ToDiagnosticString());
+				Debug.WriteLine(expectedList.ToDiagnosticString());
+
 				for (var i = 0; i < resultList.Count; i++)
 				{
 					Debug.  WriteLine   ("{0} {1} --- {2}", comparer.Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 					message.AppendFormat("{0} {1} --- {2}", comparer.Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 					message.AppendLine  ();
 				}
+			}
 
 			Assert.AreEqual(0, exceptExpected, $"Expected Was{Environment.NewLine}{message}");
 			Assert.AreEqual(0, exceptResult,   $"Expect Result{Environment.NewLine}{message}");

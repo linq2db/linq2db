@@ -40,10 +40,13 @@ namespace Tests.UserTests
 
 		[Test]
 		public void Test([DataSources(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
-			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.Firebird, ProviderName.SapHana)]
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Informix,
+			TestProvName.AllOracle,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			ProviderName.SapHana)]
 			string context)
 		{
 			var harnessIds = new int[2];

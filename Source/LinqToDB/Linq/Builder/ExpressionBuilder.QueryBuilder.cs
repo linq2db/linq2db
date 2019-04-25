@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading;
 
 using LinqToDB.Common;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -225,6 +226,13 @@ namespace LinqToDB.Linq.Builder
 					break;
 
 				case ExpressionType.Conditional:
+					var cond    = (ConditionalExpression)expr;
+					var newTest = CorrectEquality(context, cond.Test);
+					if (newTest != cond.Test)
+					{
+						cond = cond.Update(newTest, cond.IfTrue, cond.IfFalse);
+						return new TransformInfo(BuildExpression(context, cond, enforceServerSide));
+					}
 
 					if (CanBeTranslatedToSql(context, ConvertExpression(expr), true))
 						return new TransformInfo(BuildSql(context, expr, alias));
@@ -289,6 +297,49 @@ namespace LinqToDB.Linq.Builder
 							var memberAlias = ne.Members?[i].Name;
 							var newArgument =
 								a.Transform(ae => TransformExpression(context, ae, enforceServerSide, memberAlias));
+
+							// Update nullability
+							if (newArgument.NodeType == ExpressionType.Call)
+							{
+								var mc = (MethodCallExpression)newArgument;
+								var attr = MappingSchema.GetAttribute<Sql.ExpressionAttribute>(mc.Type, mc.Method);
+
+								if (attr != null 
+								    && attr.IsNullable == Sql.IsNullableType.IfAnyParameterNullable 
+								    && mc.Arguments.Count == 1 
+									&& attr.Expression == "{0}" 
+								    && mc.Method.ReturnParameter?.ParameterType.IsNullable() == true
+								)
+								{
+									var parameter = mc.Method.GetParameters()[0];
+									if (mc.Method.ReturnParameter?.ParameterType != parameter.ParameterType 
+										&& parameter.ParameterType.IsValueTypeEx()
+										&& mc.Arguments[0] is ConvertFromDataReaderExpression readerExpression)
+									{
+										newArgument = readerExpression.MakeNullable();
+									}
+								}
+							}
+							else if (newArgument.NodeType == ExpressionType.Convert || newArgument.NodeType == ExpressionType.ConvertChecked)
+							{
+								var conv = (UnaryExpression)newArgument;
+								if (ne.Members?[i].GetMemberType().IsNullable() == true
+								    && conv.Operand is ConvertFromDataReaderExpression readerExpression
+								    && !readerExpression.Type.IsNullable())
+								{
+									newArgument = readerExpression.MakeNullable();
+								}
+							}
+							else if (newArgument.NodeType == ExpressionType.Extension &&
+							         newArgument is ConvertFromDataReaderExpression readerExpression)
+							{
+								if (ne.Members?[i].GetMemberType().IsNullable() == true &&
+								    !readerExpression.Type.IsNullable())
+								{
+									newArgument = readerExpression.MakeNullable();
+								}
+							}
+
 							a = newArgument;
 							arguments.Add(a);
 						}
@@ -318,6 +369,66 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return new TransformInfo(expr);
+		}
+
+		Expression CorrectEquality(IBuildContext context, Expression expr)
+		{
+			var result = expr.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Equal || e.NodeType == ExpressionType.NotEqual)
+				{
+					var b = (BinaryExpression)e;
+
+					Expression cnt = null;
+					Expression obj = null;
+
+					if      (IsNullConstant(b.Left))  { cnt = b.Left;  obj = b.Right; }
+					else if (IsNullConstant(b.Right)) { cnt = b.Right; obj = b.Left;  }
+
+					if (cnt != null)
+					{
+						var objContext = GetContext(context, obj);
+						if (objContext != null && objContext.IsExpression(obj, 0, RequestFor.Object).Result)
+						{
+							var sql = objContext.ConvertToSql(obj, 0, ConvertFlags.Key);
+							if (sql.Length == 0)
+								sql = objContext.ConvertToSql(obj, 0, ConvertFlags.All);
+
+							if (sql.Length > 0)
+							{
+								Expression predicate = null;
+								foreach (var f in sql)
+								{
+									if (f.Sql is SqlField field && field.Table.All == field)
+										continue;
+
+									var valueType = f.Sql.SystemType;
+
+									if (!valueType.IsNullable() && valueType.IsValueTypeEx())
+										valueType = typeof(Nullable<>).MakeGenericType(valueType);
+
+									var reader     = BuildSql(context, f.Sql, valueType, null);
+									var comparison = Expression.MakeBinary(e.NodeType,
+										Expression.Default(valueType), reader);
+
+									predicate = predicate == null
+										? comparison
+										: Expression.MakeBinary(
+											e.NodeType == ExpressionType.Equal
+												? ExpressionType.AndAlso
+												: ExpressionType.OrElse, predicate, comparison);
+								}
+
+								if (predicate != null)
+									return predicate;
+							}
+						}
+					}
+				}
+
+				return e;
+			});
+			return result;
 		}
 
 		static bool IsMultipleQuery(MethodCallExpression ce)
@@ -385,6 +496,20 @@ namespace LinqToDB.Linq.Builder
 			idx = context.ConvertToParentIndex(idx, context);
 
 			var field = BuildSql(expression, idx);
+
+			return field;
+		}
+
+		Expression BuildSql(IBuildContext context, ISqlExpression sqlExpression, Type overrideType, string alias)
+		{
+			var idx   = context.SelectQuery.Select.Add(sqlExpression);
+
+			if (alias != null)
+				context.SelectQuery.Select.Columns[idx].RawAlias = alias;
+
+			idx = context.ConvertToParentIndex(idx, context);
+
+			var field = BuildSql(overrideType ?? sqlExpression.SystemType, idx);
 
 			return field;
 		}

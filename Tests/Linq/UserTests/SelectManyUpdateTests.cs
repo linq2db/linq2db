@@ -47,9 +47,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([DataSources(
-			ProviderName.Access, ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
-			string context)
+		public void Test2([DataSources(ProviderName.Access, ProviderName.Informix, TestProvName.AllSybase)] string context)
 		{
 			var harnessIds = new int[0];
 

@@ -46,7 +46,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestWithoutTransaction([DataSources(false,
 			// those providers doesn't support stored procedures
-			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+			ProviderName.SqlCe, TestProvName.AllSQLite,
 			// those providers miss procedure schema load implementation for now
 			ProviderName.Informix)]
 			string context)
@@ -83,14 +83,15 @@ namespace Tests.UserTests
 		[Test]
 		public void TestWithTransaction([DataSources(false,
 			// those providers doesn't support stored procedures
-			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
 			// those providers miss procedure schema load implementation for now
 			ProviderName.Informix,
 			// those providers cannot load schema when in transaction
-			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged,
-			ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB, ProviderName.PostgreSQL,
-			ProviderName.SqlServer2000, ProviderName.SqlServer2005, TestProvName.SqlAzure,
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			ProviderName.DB2,
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			TestProvName.AllSqlServer)]
 			string context)
 		{
 			using (var db = new DataConnection(context))
@@ -116,10 +117,9 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestWithTransactionThrowsFromProvider([IncludeDataSources(false,
+		public void TestWithTransactionThrowsFromProvider([IncludeDataSources(
 			ProviderName.DB2,
-			ProviderName.SqlServer2000, ProviderName.SqlServer2005, TestProvName.SqlAzure,
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			TestProvName.AllSqlServer)]
 			string context)
 		{
 			using (var db = new DataConnection(context))
@@ -140,10 +140,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestWithTransactionThrowsFromLinqToDB([IncludeDataSources(false,
-			ProviderName.Sybase, ProviderName.SybaseManaged,
-			ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB)]
-			string context)
+		public void TestWithTransactionThrowsFromLinqToDB([IncludeDataSources(TestProvName.AllSybase, TestProvName.AllMySql)] string context)
 		{
 			using (var db = new DataConnection(context))
 			using (db.BeginTransaction())

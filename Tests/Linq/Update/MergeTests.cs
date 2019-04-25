@@ -16,24 +16,6 @@ namespace Tests.xUpdate
 	public partial class MergeTests : TestBase
 	{
 		[AttributeUsage(AttributeTargets.Parameter)]
-		public class MergeUpdateWithDeleteDataContextSourceAttribute : IncludeDataSourcesAttribute
-		{
-			public MergeUpdateWithDeleteDataContextSourceAttribute()
-				: base(false, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)
-			{
-			}
-		}
-
-		[AttributeUsage(AttributeTargets.Parameter)]
-		public class MergeBySourceDataContextSourceAttribute : IncludeDataSourcesAttribute
-		{
-			public MergeBySourceDataContextSourceAttribute()
-				: base(false, TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)
-			{
-			}
-		}
-
-		[AttributeUsage(AttributeTargets.Parameter)]
 		public class MergeDataContextSourceAttribute : DataSourcesAttribute
 		{
 			static string[] Unsupported =
@@ -52,6 +34,7 @@ namespace Tests.xUpdate
 				TestProvName.PostgreSQL11,
 				TestProvName.PostgreSQLLatest,
 				ProviderName.MySql,
+				ProviderName.MySqlConnector,
 				TestProvName.MySql57,
 				TestProvName.MariaDB
 			};
@@ -71,7 +54,9 @@ namespace Tests.xUpdate
 				ProviderName.SybaseManaged,
 				ProviderName.SqlServer2008,
 				ProviderName.SqlServer2012,
-				ProviderName.SqlServer2014
+				ProviderName.SqlServer2014,
+				ProviderName.SqlServer2017,
+				TestProvName.SqlAzure
 			};
 
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)

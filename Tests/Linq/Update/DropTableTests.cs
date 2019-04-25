@@ -51,6 +51,7 @@ namespace Tests.xUpdate
 			public int ID1 { get; set; }
 		}
 
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void DropCurrentDatabaseTableWIthIdentityTest([DataSources] string context)
 		{
@@ -58,6 +59,7 @@ namespace Tests.xUpdate
 			{
 				// cleanup
 				db.DropTable<DropTableTestID>(throwExceptionIfNotExists: false);
+				db.Close();
 
 				var table = db.CreateTable<DropTableTestID>();
 

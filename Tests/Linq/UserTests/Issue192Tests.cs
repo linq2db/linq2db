@@ -75,8 +75,8 @@ namespace Tests.UserTests
 			ms.SetConvertExpression<Guid?,  DataParameter>(_ => DataParameter.VarChar(null, _.ToString()));
 			ms.SetConvertExpression<string, Guid?>(_ => Guid.Parse(_));
 
-			using (var db = GetDataContext(context, ms))
-			using (db.CreateLocalTable<TypeConvertTable>())
+			using (var db  = GetDataContext(context, ms))
+			using (var tbl = db.CreateLocalTable<TypeConvertTable>())
 			{
 				var notVerified = new TypeConvertTable
 				{
@@ -92,31 +92,31 @@ namespace Tests.UserTests
 					GuidValue = Guid.NewGuid()
 				};
 
-				db.Insert(notVerified);
-				db.Insert(verified);
+				db.Insert(notVerified, tbl.TableName);
+				db.Insert(verified,    tbl.TableName);
 
 
-				Assert.AreEqual(1, db.GetTable<TypeConvertTableRaw>().Count(_ => _.BoolValue == 'N'));
-				Assert.AreEqual(1, db.GetTable<TypeConvertTableRaw>().Count(_ => _.BoolValue == 'Y'));
-				Assert.AreEqual(1, db.GetTable<TypeConvertTableRaw>().Count(_ => _.GuidValue == verified.GuidValue.ToString()));
+				Assert.AreEqual(1, db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.BoolValue == 'N'));
+				Assert.AreEqual(1, db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.BoolValue == 'Y'));
+				Assert.AreEqual(1, db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.GuidValue == verified.GuidValue.ToString()));
 
-				Assert.AreEqual(notVerified, db.GetTable<TypeConvertTable>().First(_ => _.BoolValue == false));
-				Assert.AreEqual(verified,    db.GetTable<TypeConvertTable>().First(_ => _.BoolValue == true));
+				Assert.AreEqual(notVerified, tbl.First(_ => _.BoolValue == false));
+				Assert.AreEqual(verified,    tbl.First(_ => _.BoolValue == true));
 
-				Assert.AreEqual(notVerified, db.GetTable<TypeConvertTable>().First(_ => _.BoolValue != true));
-				Assert.AreEqual(verified,    db.GetTable<TypeConvertTable>().First(_ => _.BoolValue != false));
+				Assert.AreEqual(notVerified, tbl.First(_ => _.BoolValue != true));
+				Assert.AreEqual(verified,    tbl.First(_ => _.BoolValue != false));
 
-				Assert.AreEqual(notVerified, db.GetTable<TypeConvertTable>().First(_ => !_.BoolValue));
-				Assert.AreEqual(verified,    db.GetTable<TypeConvertTable>().First(_ =>  _.BoolValue));
+				Assert.AreEqual(notVerified, tbl.First(_ => !_.BoolValue));
+				Assert.AreEqual(verified,    tbl.First(_ =>  _.BoolValue));
 
-				Assert.AreEqual(notVerified, db.GetTable<TypeConvertTable>().First(_ => _.BoolValue.Equals(false)));
-				Assert.AreEqual(verified,    db.GetTable<TypeConvertTable>().First(_ => _.BoolValue.Equals(true)));
+				Assert.AreEqual(notVerified, tbl.First(_ => _.BoolValue.Equals(false)));
+				Assert.AreEqual(verified,    tbl.First(_ => _.BoolValue.Equals(true)));
 
-				Assert.AreEqual(notVerified, db.GetTable<TypeConvertTable>().First(_ => !_.BoolValue.Equals(true)));
-				Assert.AreEqual(verified,    db.GetTable<TypeConvertTable>().First(_ => !_.BoolValue.Equals(false)));
+				Assert.AreEqual(notVerified, tbl.First(_ => !_.BoolValue.Equals(true)));
+				Assert.AreEqual(verified,    tbl.First(_ => !_.BoolValue.Equals(false)));
 
-				Assert.AreEqual(notVerified, db.GetTable<TypeConvertTable>().First(_ => _.GuidValue == notVerified.GuidValue));
-				Assert.AreEqual(verified,    db.GetTable<TypeConvertTable>().First(_ => _.GuidValue == verified   .GuidValue));
+				Assert.AreEqual(notVerified, tbl.First(_ => _.GuidValue == notVerified.GuidValue));
+				Assert.AreEqual(verified,    tbl.First(_ => _.GuidValue == verified   .GuidValue));
 			}
 		}
 	}

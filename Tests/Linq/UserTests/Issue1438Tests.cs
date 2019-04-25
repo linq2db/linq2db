@@ -18,7 +18,8 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void GeneralTest([DataSources(ProviderName.Sybase, ProviderName.OracleNative)] string context)
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		public void GeneralTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -45,7 +46,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SpecificTest([IncludeDataSources(false, ProviderName.PostgreSQL)] string context, [Values] bool avoidProviderSpecificApi)
+		public void SpecificTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool avoidProviderSpecificApi)
 		{
 			using (new AvoidSpecificDataProviderAPI(avoidProviderSpecificApi))
 			{

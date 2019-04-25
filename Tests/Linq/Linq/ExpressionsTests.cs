@@ -89,7 +89,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression5([DataSources(ProviderName.SqlCe, ProviderName.Firebird)] string context)
+		public void MethodExpression5([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var n = 2;
 
@@ -135,7 +135,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression7([DataSources(ProviderName.SqlCe, ProviderName.Firebird)] string context)
+		public void MethodExpression7([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var n = 2;
 
@@ -179,9 +179,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression9([IncludeDataSources(
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void MethodExpression9([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 				AreEqual(
@@ -200,9 +198,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression10([IncludeDataSources(
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void MethodExpression10([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 				AreEqual(
@@ -431,7 +427,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void ToLowerInvariantTest([DataSources] string context)
 		{

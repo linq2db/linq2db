@@ -63,7 +63,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsConstant4([DataSources(ProviderName.Firebird, TestProvName.Firebird3)] string context)
+		public void ContainsConstant4([DataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -341,11 +341,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
+		[ActiveIssue(1685, Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void IndexOf3([DataSources(
-			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix,
-			ProviderName.SqlCe, ProviderName.Sybase, ProviderName.Access, ProviderName.SQLiteMS)]
+			ProviderName.DB2, TestProvName.AllFirebird,
+			ProviderName.SqlCe, ProviderName.Access, ProviderName.SQLiteMS)]
 			string context)
 		{
 			var s = "e";
@@ -361,7 +361,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf1([DataSources(
-			ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix,
+			ProviderName.DB2, ProviderName.Informix,
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -515,9 +515,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Stuff2([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void Stuff2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

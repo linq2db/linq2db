@@ -1,17 +1,16 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.Mapping;
-using Npgsql;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
+
 namespace Tests.UserTests
 {
-	[TestFixture]
+	[TestFixture, Parallelizable(ParallelScope.None)]
 	public class Issue1498Tests : TestBase
 	{
 		public class Topic

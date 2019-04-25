@@ -23,13 +23,12 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.Informix,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				TestProvName.Firebird3,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
-				ProviderName.Sybase, ProviderName.SybaseManaged,
+				TestProvName.AllSybase,
 				ProviderName.SapHana)]
 			string context)
 		{
@@ -45,12 +44,9 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.Informix,
-				ProviderName.MySql,
-				ProviderName.PostgreSQL,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
-				ProviderName.Sybase)]
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -65,16 +61,16 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Firebird, TestProvName.Firebird3,
+				TestProvName.AllFirebird,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllOracle,
+				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.SapHana,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
-				ProviderName.Sybase, ProviderName.SybaseManaged)]
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -89,16 +85,16 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Firebird, TestProvName.Firebird3,
+				TestProvName.AllFirebird,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllOracle,
+				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.SapHana,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
-				ProviderName.Sybase, ProviderName.SybaseManaged)]
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -113,16 +109,16 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Firebird, TestProvName.Firebird3,
+				TestProvName.AllFirebird,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllOracle,
+				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.SapHana,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
-				ProviderName.Sybase, ProviderName.SybaseManaged)]
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -137,16 +133,16 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Firebird, TestProvName.Firebird3,
+				TestProvName.AllFirebird,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllOracle,
+				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.SapHana,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
-				ProviderName.Sybase, ProviderName.SybaseManaged)]
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -161,16 +157,16 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Firebird, TestProvName.Firebird3,
+				TestProvName.AllFirebird,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllOracle,
+				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.SapHana,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
-				ProviderName.Sybase, ProviderName.SybaseManaged)]
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -186,16 +182,16 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Firebird, TestProvName.Firebird3,
+				TestProvName.AllFirebird,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllOracle,
+				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.SapHana,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
-				ProviderName.Sybase, ProviderName.SybaseManaged)]
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -213,16 +209,16 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Firebird, TestProvName.Firebird3,
+				TestProvName.AllFirebird,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllOracle,
+				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.SapHana,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
-				ProviderName.Sybase, ProviderName.SybaseManaged)]
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -245,16 +241,15 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Firebird,
 				ProviderName.Informix,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllOracle,
+				TestProvName.AllSybase,
 				ProviderName.SapHana,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
-				ProviderName.Sybase, ProviderName.SybaseManaged)]
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -282,16 +277,15 @@ namespace Tests.xUpdate
 				false,
 				ProviderName.Access,
 				ProviderName.DB2,
-				ProviderName.Firebird,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllOracle,
+				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.OracleNative, ProviderName.OracleManaged,
-				ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
 				ProviderName.SapHana,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
-				ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
-				ProviderName.Sybase, ProviderName.SybaseManaged)]
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))

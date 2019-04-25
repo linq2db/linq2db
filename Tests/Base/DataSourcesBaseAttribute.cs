@@ -18,7 +18,7 @@ namespace Tests
 		protected DataSourcesBaseAttribute(bool includeLinqService, string[] providers)
 		{
 			IncludeLinqService = includeLinqService;
-			Providers          = providers;
+			Providers          = providers.SelectMany(p => p.Split(',').Select(_ => _.Trim())).ToArray();
 		}
 
 		public IEnumerable GetData(IParameterInfo parameter)

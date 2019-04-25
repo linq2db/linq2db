@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -19,12 +19,13 @@ namespace Tests.Linq
 			public int Id;
 
 			[Column("char20DataType")]
-			[Column(Configuration = ProviderName.SqlCe,      IsColumn = false)]
-			[Column(Configuration = ProviderName.DB2,        IsColumn = false)]
-			[Column(Configuration = ProviderName.PostgreSQL, IsColumn = false)]
-			[Column(Configuration = ProviderName.MySql,      IsColumn = false)]
-			[Column(Configuration = TestProvName.MySql57,    IsColumn = false)]
-			[Column(Configuration = TestProvName.MariaDB,    IsColumn = false)]
+			[Column(Configuration = ProviderName.SqlCe,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.DB2,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
+			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.MySqlConnector, IsColumn = false)]
+			[Column(Configuration = TestProvName.MySql57,        IsColumn = false)]
+			[Column(Configuration = TestProvName.MariaDB,        IsColumn = false)]
 			public string String;
 
 			[Column("ncharDataType")]
@@ -32,6 +33,7 @@ namespace Tests.Linq
 			[Column("CHAR20DATATYPE" , Configuration = ProviderName.DB2)]
 			[Column("char20DataType" , Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , Configuration = ProviderName.MySql)]
+			[Column("char20DataType" , Configuration = ProviderName.MySqlConnector)]
 			[Column("char20DataType" , Configuration = TestProvName.MySql57)]
 			[Column("char20DataType" , Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
@@ -46,12 +48,13 @@ namespace Tests.Linq
 			public int Id;
 
 			[Column("char20DataType")]
-			[Column(Configuration = ProviderName.SqlCe,      IsColumn = false)]
-			[Column(Configuration = ProviderName.DB2,        IsColumn = false)]
-			[Column(Configuration = ProviderName.PostgreSQL, IsColumn = false)]
-			[Column(Configuration = ProviderName.MySql,      IsColumn = false)]
-			[Column(Configuration = TestProvName.MySql57,    IsColumn = false)]
-			[Column(Configuration = TestProvName.MariaDB,    IsColumn = false)]
+			[Column(Configuration = ProviderName.SqlCe,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.DB2,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
+			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.MySqlConnector, IsColumn = false)]
+			[Column(Configuration = TestProvName.MySql57,		 IsColumn = false)]
+			[Column(Configuration = TestProvName.MariaDB,		 IsColumn = false)]
 			public char? Char;
 
 			[Column("ncharDataType"  , DataType = DataType.NChar)]
@@ -59,6 +62,7 @@ namespace Tests.Linq
 			[Column("CHAR20DATATYPE" , DataType = DataType.NChar, Configuration = ProviderName.DB2)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySql)]
+			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySqlConnector)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MySql57)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
@@ -284,6 +288,8 @@ namespace Tests.Linq
 
 						if (context == ProviderName.MySql
 							  || context == ProviderName.MySql + ".LinqService"
+							  || context == ProviderName.MySqlConnector
+							  || context == ProviderName.MySqlConnector + ".LinqService"
 							  || context == TestProvName.MySql57
 							  || context == TestProvName.MySql57 + ".LinqService"
 							  || context == TestProvName.MariaDB
@@ -312,7 +318,9 @@ namespace Tests.Linq
 				|| context == ProviderName.DB2        + ".LinqService"
 				|| context.Contains(ProviderName.PostgreSQL)
 				|| context == ProviderName.MySql
-				|| context == ProviderName.MySql      + ".LinqService"
+				|| context == ProviderName.MySql + ".LinqService"
+				|| context == ProviderName.MySqlConnector
+				|| context == ProviderName.MySqlConnector + ".LinqService"
 				|| context == TestProvName.MySql57
 				|| context == TestProvName.MySql57    + ".LinqService"
 				|| context == TestProvName.MariaDB

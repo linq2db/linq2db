@@ -1,12 +1,11 @@
-﻿using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
@@ -54,6 +53,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[Category("SkipCI")]
 		[Test, Category("WindowsOnly")]
 		public void Test2()
 		{

@@ -178,7 +178,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void AssociationProjectionTest([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationProjectionTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -220,7 +220,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void AssociationObjectTest([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationObjectTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -250,7 +250,6 @@ namespace Tests.Playground
 		static void CreateFunction(DataConnection dc, string tableName)
 		{
 			DropFunction(dc);
-			dc.Execute("DROP FUNCTION IF EXISTS dbo.fn_SomeFunction;");
 
 			dc.Execute($@"CREATE FUNCTION fn_SomeFunction (@id AS INT)
 RETURNS TABLE
@@ -264,11 +263,13 @@ AS RETURN
 
 		static void DropFunction(DataConnection dc)
 		{
-			dc.Execute("DROP FUNCTION IF EXISTS dbo.fn_SomeFunction;");
+			dc.Execute(@"
+				IF EXISTS (SELECT * FROM sysobjects WHERE id = object_id(N'fn_SomeFunction') AND xtype IN (N'FN', N'IF', N'TF'))
+					DROP FUNCTION fn_SomeFunction");
 		}
 
 		[Test]
-		public void AssociationObjectTest2([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void AssociationObjectTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -285,7 +286,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationLoadWithTest([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationLoadWithTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -303,7 +304,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyTest([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationOneToManyTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -335,7 +336,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyTest2([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationOneToManyTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -359,7 +360,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyTest3([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationOneToManyTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -383,7 +384,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyLazy([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void AssociationOneToManyLazy([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -406,7 +407,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyLazyProjection([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void AssociationOneToManyLazyProjection([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -436,7 +437,7 @@ AS RETURN
 					OtherFromSql  = e.OtherFromSql
 				});
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+				AreEqualWithComparer(expected, result);
 				DropFunction(db);
 			}
 		}
@@ -477,7 +478,7 @@ WHERE
 		}
 
 		[Test]
-		public void AssociationFromSqlTest([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void AssociationFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable<FewNumberEntity>())

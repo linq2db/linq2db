@@ -21,7 +21,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TruncateTableTest([DataSources(ProviderName.OracleNative)] string context)
+		public void TruncateTableTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -40,10 +40,9 @@ namespace Tests.xUpdate
 			[Column]                       public decimal Field1;
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
+		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
-		public void TruncateIdentityTest([DataSources(
-			ProviderName.OracleNative, ProviderName.Informix)]
+		public void TruncateIdentityTest([DataSources(ProviderName.Informix, ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -73,7 +72,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TruncateIdentityNoResetTest([DataSources(ProviderName.OracleNative)] string context)
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		public void TruncateIdentityNoResetTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

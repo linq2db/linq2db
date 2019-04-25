@@ -445,15 +445,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartMillisecond([DataSources(
-			Informix, ProviderName.MySql, Access, SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
-			string context)
+		public void DatePartMillisecond([DataSources(Informix, TestProvName.AllMySql, Access, SapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue),
+					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue),
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue)));
 		}
+
 
 		#endregion
 	}

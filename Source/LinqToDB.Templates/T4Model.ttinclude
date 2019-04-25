@@ -27,7 +27,7 @@ void GenerateModel()
 	WriteLine("");
 	WriteLine("#pragma warning disable 1591");
 	WriteLine("");
-	
+
 	BeforeGenerateModel();
 
 	Model.Render(this);

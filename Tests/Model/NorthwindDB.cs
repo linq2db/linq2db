@@ -36,7 +36,9 @@ namespace Tests.Model
 			public int Rank;
 		}
 
+#pragma warning disable CS0618
 		[FreeTextTableExpression]
+#pragma warning restore CS0618
 		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(string field, string text)
 		{
 			var methodInfo = typeof(NorthwindDB).GetMethod("FreeTextTable", new [] {typeof(string), typeof(string)})
@@ -49,7 +51,9 @@ namespace Tests.Model
 				text);
 		}
 
+#pragma warning disable CS0618
 		[FreeTextTableExpression]
+#pragma warning restore CS0618
 		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(Expression<Func<TTable,string>> fieldSelector, string text)
 		{
 			var methodInfo = typeof(NorthwindDB).GetMethods()

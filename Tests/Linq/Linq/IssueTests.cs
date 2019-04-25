@@ -63,15 +63,7 @@ namespace Tests.Linq
 		// https://github.com/linq2db/linq2db/issues/60
 		//
 		[Test]
-		public void Issue60Test([IncludeDataSources(
-			ProviderName.SqlServer2000,
-			ProviderName.SqlServer2005,
-			ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014,
-			TestProvName.SqlAzure,
-			ProviderName.SqlCe)]
-			string context)
+		public void Issue60Test([IncludeDataSources(TestProvName.AllSqlServer, ProviderName.SqlCe)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -433,7 +425,6 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void Issue376([DataSources] string context)
 		{
@@ -597,9 +588,8 @@ namespace Tests.Linq
 			public IQueryable<InsertIssueTest> Association => throw new InvalidOperationException();
 		}
 
-		// Sybase: we need to get rid of bit field from AllTypes table as it creates a lot of issues with testing
 		[Test]
-		public void InsertFromSelectWithNullableFilter([DataSources(ProviderName.Sybase)] string context)
+		public void InsertFromSelectWithNullableFilter([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
