@@ -272,7 +272,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Round9([DataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] string context)
+		public void Round9([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -299,7 +299,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Round12([DataSources(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] string context)
+		public void Round12([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			var mp = MidpointRounding.AwayFromZero;
 

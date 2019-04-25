@@ -48,7 +48,7 @@ namespace Tests.Playground
 			using (var db = GetDataContext(context, CreateMappingSchema()))
 			{
 				var testData = GenerateData();
-				using (var table = db.CreateLocalTable(context, "6", testData))
+				using (var table = db.CreateLocalTable(testData))
 				{
 					Assert.AreEqual(testData.Length,
 						table.Where(t => Sql.AsNotNull(t.EntityValue) == t.Id.ToString() + t.Value).Count());

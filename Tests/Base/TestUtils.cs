@@ -1,15 +1,20 @@
-﻿using LinqToDB;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using LinqToDB.Data;
 using System.Threading;
-using Tests.Model;
+
+using JetBrains.Annotations;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.Firebird;
 using LinqToDB.SchemaProvider;
 
 namespace Tests
 {
+	using Model;
+
 	public static class TestUtils
 	{
 		private static int _cnt;
@@ -94,6 +99,7 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case ProviderName.SqlServer2017:
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
 			}
@@ -176,6 +182,7 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case ProviderName.SqlServer2017:
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
 				case ProviderName.Informix:
@@ -210,51 +217,47 @@ namespace Tests
 			return fix ? value.AddMilliseconds(-value.Millisecond) : value;
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string tableName = null)
+		class FirebirdTempTable<T> : TempTable<T>
 		{
-			try
+			public FirebirdTempTable([NotNull] IDataContext db, string tableName = null, string databaseName = null, string schemaName = null) 
+				: base(db, tableName, databaseName, schemaName)
 			{
-				return new TempTable<T>(db, tableName);
 			}
-			catch
+
+			public override void Dispose()
 			{
-				db.DropTable<T>(tableName, throwExceptionIfNotExists:false);
-				return new TempTable<T>(db, tableName);
+				DataContext.Close();
+				FirebirdTools.ClearAllPools();
+				base.Dispose();
 			}
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(
-			this IDataContext db, string context, string methodName, string tableName = null)
+		static TempTable<T> CreateTable<T>(IDataContext db, string tableName) =>
+			db.CreateSqlProvider() is FirebirdSqlBuilder ?
+				new FirebirdTempTable<T>(db, tableName) : 
+				new         TempTable<T>(db, tableName);
+
+		static void ClearDataContext(IDataContext db)
 		{
-			if (context.StartsWith(ProviderName.Firebird))
+			if (db.CreateSqlProvider() is FirebirdSqlBuilder)
 			{
-				var ctx = context
-					.Replace(ProviderName.Firebird, "f")
-					.Replace("LinqService",         "ls")
-					.Replace(".",                   "");
-
-				tableName = $"{tableName ?? typeof(T).Name}_{ctx}_{methodName}";
+				db.Close();
+				FirebirdTools.ClearAllPools();
 			}
+		}
 
-			if (context.StartsWith(ProviderName.Oracle))
-			{
-				var ctx = context
-					.Replace(ProviderName.OracleNative,  "on")
-					.Replace(ProviderName.OracleManaged, "om")
-					.Replace("LinqService",              "ls")
-					.Replace(".",                        "");
-
-				tableName = $"{tableName ?? typeof(T).Name}_{ctx}_{methodName}";
-			}
-
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db,
+			string tableName = null)
+		{
 			try
 			{
-				return new TempTable<T>(db, tableName);
+				return CreateTable<T>(db, tableName);
 			}
 			catch
 			{
-				db.DropTable<T>(tableName);
-				return new TempTable<T>(db, tableName);
+				ClearDataContext(db);
+				db.DropTable<T>(tableName, throwExceptionIfNotExists:false);
+				return CreateTable<T>(db, tableName);
 			}
 		}
 
@@ -279,24 +282,6 @@ namespace Tests
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items)
 		{
 			return CreateLocalTable(db, null, items);
-		}
-
-		public static TempTable<T> CreateLocalTable<T>(
-			this IDataContext db, string context, string methodName, IEnumerable<T> items)
-		{
-			string tableName = null;
-
-			if (context.StartsWith(ProviderName.Firebird))
-			{
-				var ctx = context
-					.Replace(ProviderName.Firebird, "f")
-					.Replace("LinqService",         "ls")
-					.Replace(".",                   "");
-
-				tableName = $"{typeof(T).Name}_{ctx}_{methodName}";
-			}
-
-			return CreateLocalTable(db, tableName, items);
 		}
 	}
 }

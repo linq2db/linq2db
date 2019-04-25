@@ -40,6 +40,7 @@ namespace LinqToDB.Linq.Builder
 			new DistinctBuilder            (),
 			new FirstSingleBuilder         (),
 			new AggregationBuilder         (),
+			new MethodChainBuilder         (),
 			new ScalarSelectBuilder        (),
 			new CountBuilder               (),
 			new PassThroughBuilder         (),
@@ -548,6 +549,21 @@ namespace LinqToDB.Linq.Builder
 								return ExposeExpression(ex);
 							}
 
+							break;
+						}
+
+					case ExpressionType.Convert:
+						{
+							var ex = (UnaryExpression)expr;
+							if (ex.Method != null)
+							{
+								var l = ConvertMethodExpression(ex.Method.DeclaringType, ex.Method);
+								if (l != null)
+								{
+									var exposed = l.GetBody(ex.Operand);
+									return ExposeExpression(exposed);
+								}
+							}
 							break;
 						}
 

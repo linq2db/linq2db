@@ -102,11 +102,11 @@ namespace LinqToDB.Expressions
 			return mi is PropertyInfo info ? info.GetGetMethodEx() : (MethodInfo)mi;
 		}
 
-//		public static MethodInfo MethodOf(Expression<Func<object>> func)
-//		{
-//			var mi = GetMemberInfo(func);
-//			return mi is PropertyInfo info ? info.GetGetMethodEx() : (MethodInfo)mi;
-//		}
+		public static MethodInfo MethodOf(Expression<Func<object>> func)
+		{
+			var mi = GetMemberInfo(func);
+			return mi is PropertyInfo info ? info.GetGetMethodEx() : (MethodInfo)mi;
+		}
 
 		public static MethodInfo MethodOf(Expression<Action> func)
 		{

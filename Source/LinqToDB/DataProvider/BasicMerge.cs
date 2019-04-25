@@ -351,7 +351,7 @@ namespace LinqToDB.DataProvider
 
 						StringBuilder.Append(name);
 						Parameters.Add(new DataParameter(pname == "?" ? pname : "p" + pidx, value,
-							column.DataType, column.DbType));
+							column.DataType, column.DbType) { Size = column.Length });
 					}
 
 					StringBuilder.Append(",");
@@ -437,7 +437,7 @@ namespace LinqToDB.DataProvider
 
 						StringBuilder.Append(name);
 						Parameters.Add(new DataParameter(pname == "?" ? pname : "p" + pidx, value,
-							column.Column.DataType, column.Column.DbType));
+							column.Column.DataType, column.Column.DbType) { Size = column.Column.Length });
 					}
 
 					if (!hasData)

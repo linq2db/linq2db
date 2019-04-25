@@ -44,17 +44,8 @@ namespace Tests.DataProvider
 #endif
 		}
 
-		[AttributeUsage(AttributeTargets.Parameter)]
-		class SqlServerDataContextAttribute : IncludeDataSourcesAttribute
-		{
-			public SqlServerDataContextAttribute(bool includeLinqService = true)
-				: base(includeLinqService, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)
-			{
-			}
-		}
-
 		[Test]
-		public void TestHierarchyId([SqlServerDataContext] string context)
+		public void TestHierarchyId([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -82,7 +73,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void CreateTest([SqlServerDataContext] string context)
+		public void CreateTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -91,7 +82,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestGeography([SqlServerDataContext(false)] string context)
+		public void TestGeography([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -125,7 +116,7 @@ namespace Tests.DataProvider
 			[Column] public SqlHierarchyId HID;
 
 			static List<SqlTypes> _data;
-			public  static IEnumerable<SqlTypes> Data([SqlServerDataContext] string context)
+			public  static IEnumerable<SqlTypes> Data([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 			{
 				if (_data == null)
 					using (var db = new DataConnection(context.Replace(".LinqService", "")))
@@ -147,7 +138,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Where1([SqlServerDataContext] string context)
+		public void Where1([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -162,7 +153,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Where2([SqlServerDataContext] string context)
+		public void Where2([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -177,7 +168,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Where3([SqlServerDataContext] string context)
+		public void Where3([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -192,7 +183,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Where4([SqlServerDataContext] string context)
+		public void Where4([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -207,7 +198,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Where5([SqlServerDataContext] string context)
+		public void Where5([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -222,7 +213,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Where6([SqlServerDataContext] string context)
+		public void Where6([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -245,7 +236,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Where7([SqlServerDataContext] string context)
+		public void Where7([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -260,7 +251,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Where8([SqlServerDataContext] string context)
+		public void Where8([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

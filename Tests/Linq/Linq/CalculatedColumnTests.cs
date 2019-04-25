@@ -116,7 +116,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void CalculatedColumnTest4([DataSources] string context)
 		{

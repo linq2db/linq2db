@@ -808,7 +808,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Ignore("Failed")]
+		[Test]
 		public void UnionGroupByTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -860,7 +860,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatInheritance([IncludeDataSources(false, ProviderName.SQLiteClassic)] string context)
+		public void TestConcatInheritance([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			var testData = new[]
 			{

@@ -234,7 +234,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubQueryTest([DataSources(
 			ProviderName.Access, ProviderName.Informix, ProviderName.SqlCe,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
+			TestProvName.AllSybase, ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

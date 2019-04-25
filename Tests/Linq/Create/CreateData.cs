@@ -263,6 +263,7 @@ namespace Tests._Create
 				case ProviderName.SqlServer2008 : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 				case ProviderName.SqlServer2012 : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 				case ProviderName.SqlServer2014 : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
+				case ProviderName.SqlServer2017 : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 				case TestProvName.SqlAzure      : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 				case ProviderName.SQLiteMS      : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
@@ -28,7 +29,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void BasicOperations([IncludeDataSources(false, ProviderName.SQLiteMS)] string context, [Values("Value1", "Value2")] string columnName)
+		public void BasicOperations([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values("Value1", "Value2")] string columnName)
 		{
 			var ms = CreateMappingSchema(columnName);
 
@@ -58,7 +59,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task BasicOperationsAsync([IncludeDataSources(false, ProviderName.SQLiteMS)] string context, [Values("Value1", "Value2")] string columnName)
+		public async Task BasicOperationsAsync([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values("Value1", "Value2")] string columnName)
 		{
 			var ms = CreateMappingSchema(columnName);
 
@@ -88,15 +89,17 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSchema([IncludeDataSources(false, ProviderName.SQLiteMS)] string context)
+		public void TestSchema([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
 			void TestMethod(string columnName, string schemaName = null)
 			{
 				var ms = CreateMappingSchema(columnName, schemaName);
-				using (var db = GetDataContext(context, ms))
+				using (var db = (DataConnection)GetDataContext(context, ms))
 				using (db.CreateLocalTable<SampleClass>())
 				{
 					db.Insert(new SampleClass() { Id = 1, StrKey = "K1", Value = "V1" });
+					if (!db.LastQuery.Contains(columnName))
+						throw new Exception("Invalid schema");
 				}
 			}
 

@@ -32,7 +32,6 @@
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 
-		<PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
 		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" />
 	</ItemGroup>

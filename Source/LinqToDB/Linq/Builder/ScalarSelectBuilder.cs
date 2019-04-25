@@ -119,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 
 			public int ConvertToParentIndex(int index, IBuildContext context)
 			{
-				throw new NotImplementedException();
+				return Parent?.ConvertToParentIndex(index, context) ?? index;
 			}
 
 			public void SetAlias(string alias)

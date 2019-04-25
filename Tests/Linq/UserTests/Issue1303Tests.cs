@@ -23,7 +23,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestBinary([DataSources] string context, [Values] bool inlineParameters)
 		{
-			using (var db = GetDataContext(context))
+			using (var db  = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Issue1303>())
 			{
 				// Informix: apply inlining to insert to test binary parameters

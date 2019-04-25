@@ -834,15 +834,16 @@ namespace LinqToDB.Data
 				var p        = dataConnection.Command.CreateParameter();
 				var dataType = parameter.DataType;
 				var dbType   = parameter.DbType;
+				var size     = parameter.Size;
 				var value    = parameter.Value;
 
 				if (dataType == DataType.Undefined && value != null)
 					dataType = dataConnection.MappingSchema.GetDataType(value.GetType()).DataType;
 
 				if (parameter.Direction != null) p.Direction = parameter.Direction.Value;
-				if (parameter.Size      != null) p.Size      = parameter.Size.     Value;
+				if (size                != null) p.Size      = size.               Value;
 
-				dataConnection.DataProvider.SetParameter(p, parameter.Name, new DbDataType(value != null ? value.GetType() : typeof(object), dataType, dbType), value);
+				dataConnection.DataProvider.SetParameter(p, parameter.Name, new DbDataType(value != null ? value.GetType() : typeof(object), dataType, dbType, size), value);
 				dataConnection.Command.Parameters.Add(p);
 			}
 		}
@@ -917,11 +918,11 @@ namespace LinqToDB.Data
 			if (parameters == null)
 				return null;
 
-			if (parameters is DataParameter[])
-				return (DataParameter[])parameters;
-
-			if (parameters is DataParameter)
-				return new[] { (DataParameter)parameters };
+			switch (parameters)
+			{
+				case DataParameter[] dataParameters : return dataParameters;
+				case DataParameter   dataParameter  : return new[] { dataParameter };
+			}
 
 			var type = parameters.GetType();
 			var key  = new ParamKey(type, dataConnection.ID);

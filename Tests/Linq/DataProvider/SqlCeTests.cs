@@ -499,9 +499,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void ParametersInlining(
-			[IncludeDataSources(false, ProviderName.SqlCe)] string context,
-			[Values] bool inline)
+		public void ParametersInlining([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] bool inline)
 		{
 			Query.ClearCaches();
 			var defaultValue = SqlCeConfiguration.InlineFunctionParameters;

@@ -83,27 +83,37 @@ namespace LinqToDB.SqlProvider
 			{
 				var foundCte  = new Dictionary<CteClause, HashSet<CteClause>>();
 
+				void RegisterDependency(CteClause cteClause)
+				{
+					if (foundCte.ContainsKey(cteClause))
+						return;
+
+					var dependsOn = new HashSet<CteClause>();
+					new QueryVisitor().Visit(cteClause.Body, ce =>
+					{
+						if (ce.ElementType == QueryElementType.SqlCteTable)
+						{
+							var subCte = ((SqlCteTable)ce).Cte;
+							dependsOn.Add(subCte);
+						}
+
+					});
+					// self-reference is allowed, so we do not need to add dependency
+					dependsOn.Remove(cteClause);
+					foundCte.Add(cteClause, dependsOn);
+
+					foreach (var clause in dependsOn)
+					{
+						RegisterDependency(clause);
+					}
+				}
+
 				new QueryVisitor().Visit(select.SelectQuery, e =>
 					{
 						if (e.ElementType == QueryElementType.SqlCteTable)
 						{
 							var cte = ((SqlCteTable)e).Cte;
-							if (!foundCte.ContainsKey(cte))
-							{
-								var dependsOn = new HashSet<CteClause>();
-								new QueryVisitor().Visit(cte.Body, ce =>
-								{
-									if (ce.ElementType == QueryElementType.SqlCteTable)
-									{
-										var subCte = ((SqlCteTable)ce).Cte;
-										dependsOn.Add(subCte);
-									}
-
-								});
-								// self-reference is allowed, so we do not need to add dependency
-								dependsOn.Remove(cte);
-								foundCte.Add(cte, dependsOn);
-							}
+							RegisterDependency(cte);
 						}
 					}
 				);
@@ -115,14 +125,6 @@ namespace LinqToDB.SqlProvider
 					// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
 					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
 						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
-
-					// append missing CTE's from dependencies
-					var hasSet = new HashSet<CteClause>(foundCte.Values.SelectMany(hs => hs));
-					foreach (var clause in hasSet)
-					{
-						if (!foundCte.ContainsKey(clause))
-							foundCte.Add(clause, new HashSet<CteClause>());
-					}
 
 					var ordered = TopoSorting.TopoSort(foundCte.Keys, i => foundCte[i]).ToList();
 
@@ -860,6 +862,7 @@ namespace LinqToDB.SqlProvider
 							{
 								parameterExpr2.DataType = field.DataType;
 								parameterExpr2.DbType   = field.DbType;
+								parameterExpr2.DbSize   = field.Length;
 							}
 						}
 
@@ -874,6 +877,7 @@ namespace LinqToDB.SqlProvider
 							{
 								parameterExpr1.DataType = field.DataType;
 								parameterExpr1.DbType   = field.DbType;
+								parameterExpr1.DbSize   = field.Length;
 							}
 						}
 

@@ -274,3 +274,21 @@ CREATE TABLE TEST_T4_CASING
 	snake_case            INT    NOT NULL,
 	camelCase             INT    NOT NULL
 );
+
+DROP TABLE IF EXISTS FTS3_TABLE;
+CREATE VIRTUAL TABLE FTS3_TABLE USING FTS3(text1 TEXT, text2 TEXT);
+
+DROP TABLE IF EXISTS FTS4_TABLE;
+CREATE VIRTUAL TABLE FTS4_TABLE USING FTS4(text1 TEXT, text2 TEXT);
+
+INSERT INTO FTS3_TABLE(text1, text2) VALUES('this is text1', 'this is text2');
+INSERT INTO FTS3_TABLE(text1, text2) VALUES('looking for something?', 'found it!');
+INSERT INTO FTS3_TABLE(text1, text2) VALUES('record not found', 'empty');
+INSERT INTO FTS3_TABLE(text1, text2) VALUES('for snippet testing', 'During 30 Nov-1 Dec, 2-3oC drops. Cool in the upper portion, minimum temperature 14-16oC and cool elsewhere, minimum temperature 17-20oC. Cold to very cold on mountaintops, minimum temperature 6-12oC. Northeasterly winds 15-30 km/hr. After that, temperature increases. Northeasterly winds 15-30 km/hr.');
+
+INSERT INTO FTS4_TABLE(text1, text2) VALUES('this is text1', 'this is text2');
+INSERT INTO FTS4_TABLE(text1, text2) VALUES('looking for something?', 'found it!');
+INSERT INTO FTS4_TABLE(text1, text2) VALUES('record not found', 'empty');
+INSERT INTO FTS4_TABLE(text1, text2) VALUES('for snippet testing', 'During 30 Nov-1 Dec, 2-3oC drops. Cool in the upper portion, minimum temperature 14-16oC and cool elsewhere, minimum temperature 17-20oC. Cold to very cold on mountaintops, minimum temperature 6-12oC. Northeasterly winds 15-30 km/hr. After that, temperature increases. Northeasterly winds 15-30 km/hr.');
+
+

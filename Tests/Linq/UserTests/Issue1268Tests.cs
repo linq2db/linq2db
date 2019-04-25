@@ -31,9 +31,7 @@ namespace Tests.UserTests
 
 
 		[Test]
-		public void InsertWithDynamicColumn(
-			[IncludeDataSources(true, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		string context)
+		public void InsertWithDynamicColumn([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var ms = new MappingSchema();
 			var builder = ms.GetFluentMappingBuilder();

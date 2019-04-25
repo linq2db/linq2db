@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LinqToDB.Linq
 {
-	class Table<T> : ExpressionQuery<T>, ITable<T>, ITable
+	class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
 	{
 		public Table(IDataContext dataContext)
 		{
@@ -92,6 +92,36 @@ namespace LinqToDB.Linq
 			DataContext.CreateSqlProvider()
 				.ConvertTableName(new StringBuilder(), DatabaseName, SchemaName, TableName)
 				.ToString();
+
+		public ITable<T> ChangeDatabaseName(string databaseName)
+		{
+			var table          = new Table<T>(DataContext);
+			table.TableName    = TableName;
+			table.SchemaName   = SchemaName;
+			table.Expression   = Expression;
+			table.DatabaseName = databaseName;
+			return table;
+		}
+
+		public ITable<T> ChangeSchemaName(string schemaName)
+		{
+			var table          = new Table<T>(DataContext);
+			table.TableName    = TableName;
+			table.DatabaseName = DatabaseName;
+			table.Expression   = Expression;
+			table.SchemaName   = schemaName;
+			return table;
+		}
+
+		public ITable<T> ChangeTableName(string tableName)
+		{
+			var table          = new Table<T>(DataContext);
+			table.SchemaName   = SchemaName;
+			table.DatabaseName = DatabaseName;
+			table.Expression   = Expression;
+			table.TableName    = tableName;
+			return table;
+		}
 
 		#region Overrides
 

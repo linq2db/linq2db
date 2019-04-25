@@ -178,7 +178,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void AssociationProjectionTest([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationProjectionTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -220,7 +220,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void AssociationObjectTest([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationObjectTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -269,7 +269,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationObjectTest2([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void AssociationObjectTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -286,7 +286,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationLoadWithTest([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationLoadWithTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -304,7 +304,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyTest([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationOneToManyTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -336,7 +336,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyTest2([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationOneToManyTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -360,7 +360,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyTest3([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationOneToManyTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -384,7 +384,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyLazy([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void AssociationOneToManyLazy([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -407,7 +407,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyLazyProjection([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void AssociationOneToManyLazyProjection([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -478,7 +478,7 @@ WHERE
 		}
 
 		[Test]
-		public void AssociationFromSqlTest([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void AssociationFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable<FewNumberEntity>())
