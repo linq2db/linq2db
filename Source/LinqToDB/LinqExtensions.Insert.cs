@@ -41,29 +41,6 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Inserts single record into target table and returns inserted record.
-		/// </summary>
-		/// <typeparam name="TTarget">Inserted record type.</typeparam>
-		/// <param name="target">Target table.</param>
-		/// <param name="obj">Object with data to insert.</param>
-		/// <returns>Inserted record.</returns>
-		public static TTarget InsertWithOutput<TTarget>(
-			[NotNull]                this ITable<TTarget> target,
-			[NotNull, InstantHandle] TTarget              obj)
-		{
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (obj    == null) throw new ArgumentNullException(nameof(obj));
-
-			IQueryable<TTarget> query = target;
-
-			return query.Provider.CreateQuery<TTarget>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
-					new[] { query.Expression, Expression.Constant(obj) })).AsEnumerable().First();
-		}
-
-		/// <summary>
 		/// Inserts single record into target table asynchronously and returns inserted record.
 		/// </summary>
 		/// <typeparam name="TTarget">Inserted record type.</typeparam>
@@ -91,6 +68,60 @@ namespace LinqToDB
 				return queryAsync.ExecuteAsync<TTarget>(expr, token);
 
 			return TaskEx.Run(() => query.Provider.Execute<TTarget>(expr), token);
+
+		}
+
+		/// <summary>
+		/// Inserts single record into target table and returns inserted record.
+		/// </summary>
+		/// <typeparam name="TTarget">Inserted record type.</typeparam>
+		/// <param name="target">Target table.</param>
+		/// <param name="obj">Object with data to insert.</param>
+		/// <returns>Inserted record.</returns>
+		public static TTarget InsertWithOutput<TTarget>(
+			[NotNull]                this ITable<TTarget> target,
+			[NotNull, InstantHandle] TTarget              obj)
+		{
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (obj    == null) throw new ArgumentNullException(nameof(obj));
+
+			IQueryable<TTarget> query = target;
+
+			return query.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
+					new[] { query.Expression, Expression.Constant(obj) })).AsEnumerable().First();
+		}
+
+		/// <summary>
+		/// Inserts single record into target table asynchronously and returns inserted record.
+		/// </summary>
+		/// <typeparam name="TTarget">Inserted record type.</typeparam>
+		/// <param name="target">Target table.</param>
+		/// <param name="obj">Object with data to insert.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Inserted record.</returns>
+		public static Task<TTarget> InsertWithOutputAsync<TTarget>(
+			[NotNull]                this ITable<TTarget> target,
+			[NotNull, InstantHandle] TTarget              obj,
+			CancellationToken                             token = default)
+		{
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (obj    == null) throw new ArgumentNullException(nameof(obj));
+
+			IQueryable<TTarget> query = target;
+
+			if (query.Provider is IQueryProviderAsync provider)
+			{
+				return provider.ExecuteAsync<TTarget>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
+						new[] { query.Expression, Expression.Constant(obj) })).FirstAsync(token);
+			}
+
+			return AsyncExtensions.GetTask(() => target.InsertWithOutput(obj));
 
 		}
 

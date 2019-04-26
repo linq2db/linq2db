@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -33,8 +34,8 @@ namespace Tests.Playground
 				.ToArray();
 		}
 
-		[Test, Combinatorial]
-		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(ProviderName.SqlServer)] string context)
+		[Test]
+		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var sourceData = GetSourceData();
 			using (var db = GetDataContext(context))
@@ -68,8 +69,8 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test, Combinatorial]
-		public void InsertWithOutputFromQueryTest([IncludeDataSources(ProviderName.SqlServer)] string context)
+		[Test]
+		public void InsertWithOutputFromQueryTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var sourceData = GetSourceData();
 			using (var db = GetDataContext(context))
@@ -98,8 +99,8 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test, Combinatorial]
-		public void InsertWithOutputTest3([IncludeDataSources(ProviderName.SqlServer)] string context)
+		[Test]
+		public void InsertWithOutputTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -137,8 +138,8 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test, Combinatorial]
-		public void InsertWithOutputTest4([IncludeDataSources(ProviderName.SqlServer)] string context)
+		[Test]
+		public void InsertWithOutputTest4([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -172,36 +173,50 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test, Combinatorial]
-		public void InsertWithOutputObjTest1([IncludeDataSources(ProviderName.SqlServer)] string context)
+		[Test]
+		public void InsertWithOutputObjTest1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable<TableWithData>())
 			{
-				const int idsLimit = 1000;
-
-				try
+				var data = new TableWithData
 				{
-					var id = idsLimit + 1;
+					Value = value * 100,
+					Id = value,
+					ValueStr = "SomeStr" + value
+				};
 
-					var child = new Child
-					{
-						ParentID = 1001,
-						ChildID  = id
-					};
+				var output = source.InsertWithOutput(data);
 
-					var output = db.Child.InsertWithOutput(child);
-
-					Assert.AreEqual(db.Child.Single(c => c.ChildID > idsLimit), output);
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > idsLimit);
-				}
+				Assert.AreEqual(data.Id,       output.Id);
+				Assert.AreEqual(data.Value,    output.Value);
+				Assert.AreEqual(data.ValueStr, output.ValueStr);
 			}
 		}
 
-		[Test, Combinatorial]
-		public void InsertWithOutputIntoTest1([IncludeDataSources(ProviderName.SqlServer)] string context)
+		[Test]
+		public async Task InsertWithOutputObjAsyncTest1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		{
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable<TableWithData>())
+			{
+				var data = new TableWithData
+				{
+					Value = value * 100,
+					Id = value,
+					ValueStr = "SomeStr" + value
+				};
+
+				var output = await source.InsertWithOutputAsync(data);
+
+				Assert.AreEqual(data.Id,       output.Id);
+				Assert.AreEqual(data.Value,    output.Value);
+				Assert.AreEqual(data.ValueStr, output.ValueStr);
+			}
+		}
+
+		[Test]
+		public void InsertWithOutputIntoTest1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -256,8 +271,8 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test, Combinatorial]
-		public void InsertWithOutputIntoTest2([IncludeDataSources(ProviderName.SqlServer)] string context)
+		[Test]
+		public void InsertWithOutputIntoTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

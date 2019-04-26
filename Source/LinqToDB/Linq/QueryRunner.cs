@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -220,7 +221,55 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		internal static ParameterAccessor GetParameter(Type type, IDataContext dataContext, SqlField field, ParameterExpression parametersParam = null)
+		internal static ParameterAccessor GetParameterFromMethod(int argIndex, Type objType, IDataContext dataContext, SqlField field, ParameterExpression parametersParam)
+		{
+			var exprParam = Expression.Parameter(typeof(Expression), "expr");
+
+			var argAccess = Expression.MakeIndex(
+				Expression.PropertyOrField(Expression.Convert(exprParam, typeof(MethodCallExpression)), "Arguments"),
+				typeof(ReadOnlyCollection<Expression>).GetPropertyEx("Item"),
+				new[] { Expression.Constant(argIndex) });
+
+			var objectAccess = Expression.Convert(
+				Expression.Call(null,
+					MemberHelper.MethodOf(() => InternalExtensions.EvaluateExpression(null)), argAccess),
+				objType);
+
+			Expression getter = field.ColumnDescriptor.MemberAccessor.GetterExpression.GetBody(objectAccess);
+
+			Expression dataTypeExpression = Expression.Constant(DataType.Undefined);
+			Expression dbTypeExpression   = Expression.Constant(null, typeof(string));
+			Expression dbSizeExpression   = Expression.Constant(field.Length, typeof(int?));
+
+			var convertExpression = dataContext.MappingSchema.GetConvertExpression(new DbDataType(field.SystemType, field.DataType, field.DbType, field.Length),
+				new DbDataType(typeof(DataParameter), field.DataType, field.DbType, field.Length), createDefault: false);
+
+			if (convertExpression != null)
+			{
+				var body           = convertExpression.GetBody(getter);
+				getter             = Expression.PropertyOrField(body, "Value");
+				dataTypeExpression = Expression.PropertyOrField(body, "DataType");
+				dbTypeExpression   = Expression.PropertyOrField(body, "DbType");
+				dbSizeExpression   = Expression.PropertyOrField(body, "Size");
+			}
+
+			var param = ExpressionBuilder.CreateParameterAccessor(
+				dataContext, 
+				getter, 
+				dataTypeExpression, 
+				dbTypeExpression, 
+				dbSizeExpression, 
+				getter, 
+				exprParam,
+				parametersParam, 
+				field.Name.Replace('.', '_'),
+				expr: convertExpression);
+
+			return param;
+		}
+
+
+		internal static ParameterAccessor GetParameter(Type type, IDataContext dataContext, SqlField field)
 		{
 			var exprParam = Expression.Parameter(typeof(Expression), "expr");
 
@@ -249,7 +298,7 @@ namespace LinqToDB.Linq
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, getter, dataTypeExpression, dbTypeExpression, dbSizeExpression, getter, exprParam, parametersParam ?? Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'), expr: convertExpression);
+				dataContext, getter, dataTypeExpression, dbTypeExpression, dbSizeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'), expr: convertExpression);
 
 			return param;
 		}

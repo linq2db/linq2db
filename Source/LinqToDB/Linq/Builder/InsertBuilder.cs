@@ -84,8 +84,8 @@ namespace LinqToDB.Linq.Builder
 					// static int Insert<T>(this Table<T> target, Expression<Func<T>> setter)
 					// static TTarget InsertWithOutput<TTarget>(this ITable<TTarget> target, Expression<Func<TTarget>> setter)
 					// static TTarget InsertWithOutput<TTarget>(this ITable<TTarget> target, Expression<Func<TTarget>> setter, Expression<Func<TTarget,TOutput>> outputExpression)
-
-					var arg = methodCall.Arguments[1].Unwrap();
+					var argIndex = 1;
+					var arg = methodCall.Arguments[argIndex].Unwrap();
 					LambdaExpression setter = null;
 					switch (arg)
 					{
@@ -105,8 +105,7 @@ namespace LinqToDB.Linq.Builder
 							}
 						default:
 							{
-								var obj = arg.EvaluateExpression();
-								var objType = obj.GetType();
+								var objType = arg.Type;
 
 								var ed   = builder.MappingSchema.GetEntityDescriptor(objType);
 								var into = sequence;
@@ -123,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 
 									var column    = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 									var parameter = 
-										QueryRunner.GetParameter(objType, builder.DataContext, field, ExpressionBuilder.ParametersParam);
+										QueryRunner.GetParameterFromMethod(argIndex, objType, builder.DataContext, field, ExpressionBuilder.ParametersParam);
 									builder.CurrentSqlParameters.Add(parameter);
 
 									insertStatement.Insert.Items.Add(new SqlSetExpression(column[0].Sql, parameter.SqlParameter));
