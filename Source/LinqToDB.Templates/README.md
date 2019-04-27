@@ -106,6 +106,16 @@ EnableNullableReferenceTypes   = false;
 EnforceModelNullability        = true;
 // Defines method to distinguish value types from reference types by type name
 // used by nullable reference types feature to detect reference types, when only type name available
+// If EnableNullableReferenceTypes enabled, can throw following exception:
+// "Cannot resolve type name: {typeName}. Override IsValueType delegate to resolve it"
+// in that case you must provide your own resolver for unresolved types
+// IsValueType = typeName => {
+//    switch (typeName)
+//    {
+//        case "unresolved type name": return true; // or false for reference type
+//        default: return IsValueTypeDefault(typeName);
+//    }
+// };
 Func<string, boolean> IsValueType = IsValueTypeDefault;
 
 /* Data context configuration */

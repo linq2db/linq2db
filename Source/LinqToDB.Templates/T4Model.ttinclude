@@ -1769,7 +1769,7 @@ static bool IsValueTypeDefault(string typeName)
 	}
 
 	if (EnableNullableReferenceTypes)
-		throw new InvalidOperationException($"Cannot resolve type name: {typeName}");
+		throw new InvalidOperationException($"Cannot resolve type name: {typeName}. Override IsValueType delegate to resolve it");
 
 	return false;
 }
