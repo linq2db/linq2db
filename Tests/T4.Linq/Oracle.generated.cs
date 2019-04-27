@@ -418,7 +418,7 @@ namespace OracleDataContext
 	{
 		#region PersonUpdate
 
-		public static int PersonUpdate(this DataConnection dataConnection, decimal? PPERSONID, string PFIRSTNAME, string PLASTNAME, string PMIDDLENAME, string PGENDER)
+		public static int PersonUpdate(this DataConnection dataConnection, decimal? PPERSONID, string? PFIRSTNAME, string? PLASTNAME, string? PMIDDLENAME, string? PGENDER)
 		{
 			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE",
 				new DataParameter("PPERSONID",   PPERSONID,   DataType.Decimal),
@@ -442,7 +442,7 @@ namespace OracleDataContext
 
 		#region OUTREFTEST
 
-		public static int OUTREFTEST(this DataConnection dataConnection, decimal? PID, out decimal? POUTPUTID, ref decimal? PINPUTOUTPUTID, string PSTR, out string POUTPUTSTR, ref string PINPUTOUTPUTSTR)
+		public static int OUTREFTEST(this DataConnection dataConnection, decimal? PID, out decimal? POUTPUTID, ref decimal? PINPUTOUTPUTID, string? PSTR, out string? POUTPUTSTR, ref string? PINPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFTEST",
 				new DataParameter("PID",             PID,             DataType.Decimal),
@@ -454,8 +454,8 @@ namespace OracleDataContext
 
 			POUTPUTID       = Converter.ChangeTypeTo<decimal?>(((IDbDataParameter)dataConnection.Command.Parameters["POUTPUTID"]).      Value);
 			PINPUTOUTPUTID  = Converter.ChangeTypeTo<decimal?>(((IDbDataParameter)dataConnection.Command.Parameters["PINPUTOUTPUTID"]). Value);
-			POUTPUTSTR      = Converter.ChangeTypeTo<string>  (((IDbDataParameter)dataConnection.Command.Parameters["POUTPUTSTR"]).     Value);
-			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string>  (((IDbDataParameter)dataConnection.Command.Parameters["PINPUTOUTPUTSTR"]).Value);
+			POUTPUTSTR      = Converter.ChangeTypeTo<string?> (((IDbDataParameter)dataConnection.Command.Parameters["POUTPUTSTR"]).     Value);
+			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?> (((IDbDataParameter)dataConnection.Command.Parameters["PINPUTOUTPUTSTR"]).Value);
 
 			return ret;
 		}
@@ -464,15 +464,15 @@ namespace OracleDataContext
 
 		#region OUTREFENUMTEST
 
-		public static int OUTREFENUMTEST(this DataConnection dataConnection, string PSTR, out string POUTPUTSTR, ref string PINPUTOUTPUTSTR)
+		public static int OUTREFENUMTEST(this DataConnection dataConnection, string? PSTR, out string? POUTPUTSTR, ref string? PINPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST",
 				new DataParameter("PSTR",            PSTR,            DataType.NVarChar),
 				new DataParameter("POUTPUTSTR", null,      DataType.NVarChar) { Direction = ParameterDirection.Output },
 				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, DataType.NVarChar) { Direction = ParameterDirection.InputOutput });
 
-			POUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["POUTPUTSTR"]).     Value);
-			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["PINPUTOUTPUTSTR"]).Value);
+			POUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["POUTPUTSTR"]).     Value);
+			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["PINPUTOUTPUTSTR"]).Value);
 
 			return ret;
 		}

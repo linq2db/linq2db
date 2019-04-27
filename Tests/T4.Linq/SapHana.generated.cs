@@ -14010,7 +14010,7 @@ namespace SapHanaDataContext
 	{
 		#region FindNologgingTable
 
-		public static int FindNologgingTable(this DataConnection dataConnection, string SCHEMANAME, string TABLENAME, out int? RESULT)
+		public static int FindNologgingTable(this DataConnection dataConnection, string? SCHEMANAME, string? TABLENAME, out int? RESULT)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYS\".\"FIND_NOLOGGING_TABLE\"",
 				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar),
@@ -14026,7 +14026,7 @@ namespace SapHanaDataContext
 
 		#region DsoRehash
 
-		public static int DsoRehash(this DataConnection dataConnection, string DSONAME, string HASHFUNCTION)
+		public static int DsoRehash(this DataConnection dataConnection, string? DSONAME, string? HASHFUNCTION)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"DSO_REHASH\"",
 				new DataParameter("DSONAME",      DSONAME,      DataType.VarChar),
@@ -14037,12 +14037,12 @@ namespace SapHanaDataContext
 
 		#region DsoVersion
 
-		public static int DsoVersion(this DataConnection dataConnection, out string DSOVERSION)
+		public static int DsoVersion(this DataConnection dataConnection, out string? DSOVERSION)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYS\".\"DSO_VERSION\"",
 				new DataParameter("DSOVERSION", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 20 });
 
-			DSOVERSION = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["DSOVERSION"]).Value);
+			DSOVERSION = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["DSOVERSION"]).Value);
 
 			return ret;
 		}
@@ -14105,7 +14105,7 @@ namespace SapHanaDataContext
 
 		#region GetObjectDefinition
 
-		public static IEnumerable<GetObjectDEFINITIONResult> GetObjectDefinition(this DataConnection dataConnection, string SCHEMA, string OBJECT)
+		public static IEnumerable<GetObjectDEFINITIONResult> GetObjectDefinition(this DataConnection dataConnection, string? SCHEMA, string? OBJECT)
 		{
 			return dataConnection.QueryProc<GetObjectDEFINITIONResult>("\"SYS\".\"GET_OBJECT_DEFINITION\"",
 				new DataParameter("SCHEMA", SCHEMA, DataType.NVarChar),
@@ -14134,7 +14134,7 @@ namespace SapHanaDataContext
 
 		#region AnalyzeColumnsToMaterialize
 
-		public static IEnumerable<AnalyzeColumnsToMATERIALIZEResult> AnalyzeColumnsToMaterialize(this DataConnection dataConnection, string SELECT_STMT)
+		public static IEnumerable<AnalyzeColumnsToMATERIALIZEResult> AnalyzeColumnsToMaterialize(this DataConnection dataConnection, string? SELECT_STMT)
 		{
 			return dataConnection.QueryProc<AnalyzeColumnsToMATERIALIZEResult>("\"SYS\".\"ANALYZE_COLUMNS_TO_MATERIALIZE\"",
 				new DataParameter("SELECT_STMT", SELECT_STMT, DataType.Text));
@@ -14240,7 +14240,7 @@ namespace SapHanaDataContext
 
 		#region CheckFunctionFromRsToCsEngine
 
-		public static IEnumerable<CheckFunctionFromRsToCsENGINEResult> CheckFunctionFromRsToCsEngine(this DataConnection dataConnection, string FUNCTION_NAME)
+		public static IEnumerable<CheckFunctionFromRsToCsENGINEResult> CheckFunctionFromRsToCsEngine(this DataConnection dataConnection, string? FUNCTION_NAME)
 		{
 			return dataConnection.QueryProc<CheckFunctionFromRsToCsENGINEResult>("\"SYS\".\"CHECK_FUNCTION_FROM_RS_TO_CS_ENGINE\"",
 				new DataParameter("FUNCTION_NAME", FUNCTION_NAME, DataType.VarChar));
@@ -14272,7 +14272,7 @@ namespace SapHanaDataContext
 
 		#region TableStatistics
 
-		public static int TableStatistics(this DataConnection dataConnection, string TABLE_IN, string TABLE_OUT)
+		public static int TableStatistics(this DataConnection dataConnection, string? TABLE_IN, string? TABLE_OUT)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"TABLE_STATISTICS\"",
 				new DataParameter("TABLE_IN",  TABLE_IN,  DataType.NVarChar),
@@ -14283,7 +14283,7 @@ namespace SapHanaDataContext
 
 		#region ReorganizeRowstore
 
-		public static int ReorganizeRowstore(this DataConnection dataConnection, string ACTION_NAME, string SCHEMA_NAME, string TABLE_NAME)
+		public static int ReorganizeRowstore(this DataConnection dataConnection, string? ACTION_NAME, string? SCHEMA_NAME, string? TABLE_NAME)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"REORGANIZE_ROWSTORE\"",
 				new DataParameter("ACTION_NAME", ACTION_NAME, DataType.VarChar),
@@ -14295,15 +14295,15 @@ namespace SapHanaDataContext
 
 		#region IsValidUserName
 
-		public static int IsValidUserName(this DataConnection dataConnection, string USER_NAME, out int? ERROR_CODE, out string ERROR_MESSAGE)
+		public static int IsValidUserName(this DataConnection dataConnection, string? USER_NAME, out int? ERROR_CODE, out string? ERROR_MESSAGE)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYS\".\"IS_VALID_USER_NAME\"",
 				new DataParameter("USER_NAME",     USER_NAME,     DataType.NVarChar),
 				new DataParameter("ERROR_CODE", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
 				new DataParameter("ERROR_MESSAGE", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 128 });
 
-			ERROR_CODE    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["ERROR_CODE"]).   Value);
-			ERROR_MESSAGE = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["ERROR_MESSAGE"]).Value);
+			ERROR_CODE    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["ERROR_CODE"]).   Value);
+			ERROR_MESSAGE = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["ERROR_MESSAGE"]).Value);
 
 			return ret;
 		}
@@ -14312,15 +14312,15 @@ namespace SapHanaDataContext
 
 		#region IsValidPassword
 
-		public static int IsValidPassword(this DataConnection dataConnection, string PASSWORD, out int? ERROR_CODE, out string ERROR_MESSAGE)
+		public static int IsValidPassword(this DataConnection dataConnection, string? PASSWORD, out int? ERROR_CODE, out string? ERROR_MESSAGE)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYS\".\"IS_VALID_PASSWORD\"",
 				new DataParameter("PASSWORD",      PASSWORD,      DataType.NVarChar),
 				new DataParameter("ERROR_CODE", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
 				new DataParameter("ERROR_MESSAGE", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 128 });
 
-			ERROR_CODE    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["ERROR_CODE"]).   Value);
-			ERROR_MESSAGE = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["ERROR_MESSAGE"]).Value);
+			ERROR_CODE    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["ERROR_CODE"]).   Value);
+			ERROR_MESSAGE = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["ERROR_MESSAGE"]).Value);
 
 			return ret;
 		}
@@ -14329,7 +14329,7 @@ namespace SapHanaDataContext
 
 		#region GetNextNumberFromNumberRange
 
-		public static int GetNextNumberFromNumberRange(this DataConnection dataConnection, string SCHEMA_NAME, string TABLE_NAME, string CLIENT_ID, string NUMBER_RANGE, string NUMBER_RANGE_OBJECT, string NUMBER_RANGE_SUBOBJECT, string NUMBER_RANGE_TO_YEAR, int? QUANTITY, int? AUTONOMOUS_TRANSACTION, int? NUMBER_RANGE_CYCLE, decimal? WARNING_PERCENTAGE, out decimal? NEW_NUMBER, out int? NEW_QUANTITY, out int? RC)
+		public static int GetNextNumberFromNumberRange(this DataConnection dataConnection, string? SCHEMA_NAME, string? TABLE_NAME, string? CLIENT_ID, string? NUMBER_RANGE, string? NUMBER_RANGE_OBJECT, string? NUMBER_RANGE_SUBOBJECT, string? NUMBER_RANGE_TO_YEAR, int? QUANTITY, int? AUTONOMOUS_TRANSACTION, int? NUMBER_RANGE_CYCLE, decimal? WARNING_PERCENTAGE, out decimal? NEW_NUMBER, out int? NEW_QUANTITY, out int? RC)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYS\".\"GET_NEXT_NUMBER_FROM_NUMBER_RANGE\"",
 				new DataParameter("SCHEMA_NAME",  SCHEMA_NAME,  DataType.NVarChar),
@@ -14358,7 +14358,7 @@ namespace SapHanaDataContext
 
 		#region TextConfigurationDrop
 
-		public static int TextConfigurationDrop(this DataConnection dataConnection, string SCHEMA_NAME, string NAME, string TYPE)
+		public static int TextConfigurationDrop(this DataConnection dataConnection, string? SCHEMA_NAME, string? NAME, string? TYPE)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"TEXT_CONFIGURATION_DROP\"",
 				new DataParameter("SCHEMA_NAME", SCHEMA_NAME, DataType.NVarChar),
@@ -14370,7 +14370,7 @@ namespace SapHanaDataContext
 
 		#region GetDynamicResultCacheImplicitMatchCandidatesInStatement
 
-		public static IEnumerable<GetDynamicResultCacheImplicitMatchCandidatesInSTATEMENTResult> GetDynamicResultCacheImplicitMatchCandidatesInStatement(this DataConnection dataConnection, string SQL_STATEMENT)
+		public static IEnumerable<GetDynamicResultCacheImplicitMatchCandidatesInSTATEMENTResult> GetDynamicResultCacheImplicitMatchCandidatesInStatement(this DataConnection dataConnection, string? SQL_STATEMENT)
 		{
 			return dataConnection.QueryProc<GetDynamicResultCacheImplicitMatchCandidatesInSTATEMENTResult>("\"SYS\".\"GET_DYNAMIC_RESULT_CACHE_IMPLICIT_MATCH_CANDIDATES_IN_STATEMENT\"",
 				new DataParameter("SQL_STATEMENT", SQL_STATEMENT, DataType.NText));
@@ -14385,7 +14385,7 @@ namespace SapHanaDataContext
 
 		#region CdsCatalogCleanup
 
-		public static int CdsCatalogCleanup(this DataConnection dataConnection, out byte? SUCCESS, out string MESSAGE, string SCHEMA_NAME, string NAMESPACE_FILTER)
+		public static int CdsCatalogCleanup(this DataConnection dataConnection, out byte? SUCCESS, out string? MESSAGE, string? SCHEMA_NAME, string? NAMESPACE_FILTER)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_RT\".\"CDS_CATALOG_CLEANUP\"",
 				new DataParameter("SUCCESS", null, DataType.Byte) { Direction = ParameterDirection.Output, Size = 3 },
@@ -14393,8 +14393,8 @@ namespace SapHanaDataContext
 				new DataParameter("SCHEMA_NAME", SCHEMA_NAME, DataType.NVarChar),
 				new DataParameter("NAMESPACE_FILTER", NAMESPACE_FILTER, DataType.NVarChar));
 
-			SUCCESS = Converter.ChangeTypeTo<byte?> (((IDbDataParameter)dataConnection.Command.Parameters["SUCCESS"]).Value);
-			MESSAGE = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MESSAGE"]).Value);
+			SUCCESS = Converter.ChangeTypeTo<byte?>  (((IDbDataParameter)dataConnection.Command.Parameters["SUCCESS"]).Value);
+			MESSAGE = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MESSAGE"]).Value);
 
 			return ret;
 		}
@@ -14403,7 +14403,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGTABLE
 
-		public static int DROPEXISTINGTABLE0(this DataConnection dataConnection, string TABLENAME, string SCHEMANAME)
+		public static int DROPEXISTINGTABLE0(this DataConnection dataConnection, string? TABLENAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGTABLE\"",
 				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
@@ -14414,7 +14414,7 @@ namespace SapHanaDataContext
 
 		#region DROPCONSTRAINTFROMTABLE
 
-		public static int DROPCONSTRAINTFROMTABLE0(this DataConnection dataConnection, string TABLENAME, string CONSTRAINTNAME, string SCHEMANAME)
+		public static int DROPCONSTRAINTFROMTABLE0(this DataConnection dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPCONSTRAINTFROMTABLE\"",
 				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
@@ -14426,7 +14426,7 @@ namespace SapHanaDataContext
 
 		#region PersonInsert
 
-		public static int PersonInsert(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
+		public static int PersonInsert(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert\"",
 				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
@@ -14439,7 +14439,7 @@ namespace SapHanaDataContext
 
 		#region PersonInsertOutputParameter
 
-		public static int PersonInsertOutputParameter(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static int PersonInsertOutputParameter(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert_OutputParameter\"",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
@@ -14457,7 +14457,7 @@ namespace SapHanaDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this DataConnection dataConnection, int? PERSONID, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
+		public static int PersonUpdate(this DataConnection dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Update\"",
 				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
@@ -14500,7 +14500,7 @@ namespace SapHanaDataContext
 
 		#region PatientSelectByName
 
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
 			return dataConnection.QueryProc<PatientSelectByNameResult>("\"TESTHANA\".\"Patient_SelectByName\"",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
@@ -14521,7 +14521,7 @@ namespace SapHanaDataContext
 
 		#region OutRefTest
 
-		public static int OutRefTest0(this DataConnection dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string STR, out string OUTPUTSTR, ref string INPUTOUTPUTSTR)
+		public static int OutRefTest0(this DataConnection dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefTest\"",
 				new DataParameter("ID",             ID,             DataType.Int32),
@@ -14531,10 +14531,10 @@ namespace SapHanaDataContext
 				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
-			OUTPUTID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
-			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
+			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
 
 			return ret;
 		}
@@ -14543,15 +14543,15 @@ namespace SapHanaDataContext
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest0(this DataConnection dataConnection, string STR, out string OUTPUTSTR, ref string INPUTOUTPUTSTR)
+		public static int OutRefEnumTest0(this DataConnection dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefEnumTest\"",
 				new DataParameter("STR",            STR,            DataType.VarChar),
 				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
-			OUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
 
 			return ret;
 		}
@@ -14674,7 +14674,7 @@ namespace SapHanaDataContext
 
 		#region OutRefTest
 
-		public static int OutRefTest1(this DataConnection dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string STR, out string OUTPUTSTR, ref string INPUTOUTPUTSTR)
+		public static int OutRefTest1(this DataConnection dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYSTEM\".\"OutRefTest\"",
 				new DataParameter("ID",             ID,             DataType.Int32),
@@ -14684,10 +14684,10 @@ namespace SapHanaDataContext
 				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
-			OUTPUTID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
-			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
+			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
 
 			return ret;
 		}
@@ -14711,15 +14711,15 @@ namespace SapHanaDataContext
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest1(this DataConnection dataConnection, string STR, out string OUTPUTSTR, ref string INPUTOUTPUTSTR)
+		public static int OutRefEnumTest1(this DataConnection dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYSTEM\".\"OutRefEnumTest\"",
 				new DataParameter("STR",            STR,            DataType.VarChar),
 				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
-			OUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
 
 			return ret;
 		}
@@ -14803,7 +14803,7 @@ namespace SapHanaDataContext
 
 		#region PersonSelectListByName
 
-		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME)
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
 			return dataConnection.QueryProc<PersonSelectListByNameResult>("\"TESTHANA\".\"Person_SelectListByName\"",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
@@ -14844,7 +14844,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGPROCEDURE
 
-		public static int DROPEXISTINGPROCEDURE0(this DataConnection dataConnection, string PROCEDURENAME, string SCHEMANAME)
+		public static int DROPEXISTINGPROCEDURE0(this DataConnection dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGPROCEDURE\"",
 				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
@@ -14855,7 +14855,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGFUNCTION
 
-		public static int DROPEXISTINGFUNCTION0(this DataConnection dataConnection, string FUNCTIONNAME, string SCHEMANAME)
+		public static int DROPEXISTINGFUNCTION0(this DataConnection dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGFUNCTION\"",
 				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
@@ -14881,7 +14881,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGVIEW
 
-		public static int DROPEXISTINGVIEW0(this DataConnection dataConnection, string VIEWNAME, string SCHEMANAME)
+		public static int DROPEXISTINGVIEW0(this DataConnection dataConnection, string? VIEWNAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGVIEW\"",
 				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
@@ -14956,7 +14956,7 @@ namespace SapHanaDataContext
 
 		#region PersonSelectByName
 
-		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
 			return dataConnection.QueryProc<PersonSelectByNameResult>("\"TESTHANA\".\"Person_SelectByName\"",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
@@ -14997,7 +14997,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGPROCEDURE
 
-		public static int DROPEXISTINGPROCEDURE1(this DataConnection dataConnection, string PROCEDURENAME, string SCHEMANAME)
+		public static int DROPEXISTINGPROCEDURE1(this DataConnection dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"DROPEXISTINGPROCEDURE\"",
 				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
@@ -15008,7 +15008,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGFUNCTION
 
-		public static int DROPEXISTINGFUNCTION1(this DataConnection dataConnection, string FUNCTIONNAME, string SCHEMANAME)
+		public static int DROPEXISTINGFUNCTION1(this DataConnection dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"DROPEXISTINGFUNCTION\"",
 				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
@@ -15034,7 +15034,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGVIEW
 
-		public static int DROPEXISTINGVIEW1(this DataConnection dataConnection, string VIEWNAME, string SCHEMANAME)
+		public static int DROPEXISTINGVIEW1(this DataConnection dataConnection, string? VIEWNAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"DROPEXISTINGVIEW\"",
 				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
@@ -15045,7 +15045,7 @@ namespace SapHanaDataContext
 
 		#region DROPCONSTRAINTFROMTABLE
 
-		public static int DROPCONSTRAINTFROMTABLE1(this DataConnection dataConnection, string TABLENAME, string CONSTRAINTNAME, string SCHEMANAME)
+		public static int DROPCONSTRAINTFROMTABLE1(this DataConnection dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"DROPCONSTRAINTFROMTABLE\"",
 				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
@@ -15415,7 +15415,7 @@ namespace SapHanaDataContext
 
 		#region AflWrapperEraser
 
-		public static int AflWrapperEraser(this DataConnection dataConnection, string PROCORIG)
+		public static int AflWrapperEraser(this DataConnection dataConnection, string? PROCORIG)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"AFL_WRAPPER_ERASER\"",
 				new DataParameter("PROCORIG", PROCORIG, DataType.VarChar));
@@ -15681,14 +15681,14 @@ namespace SapHanaDataContext
 
 		#region SharedMailRecipients
 
-		public static int SharedMailRecipients(this DataConnection dataConnection, int? ALERT_ID, string FREQUENCY, out string RECIPIENTS)
+		public static int SharedMailRecipients(this DataConnection dataConnection, int? ALERT_ID, string? FREQUENCY, out string? RECIPIENTS)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_MAIL_RECIPIENTS\"",
 				new DataParameter("ALERT_ID",   ALERT_ID,   DataType.Int32),
 				new DataParameter("FREQUENCY",  FREQUENCY,  DataType.VarChar),
 				new DataParameter("RECIPIENTS", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
 
-			RECIPIENTS = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["RECIPIENTS"]).Value);
+			RECIPIENTS = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["RECIPIENTS"]).Value);
 
 			return ret;
 		}
@@ -15697,7 +15697,7 @@ namespace SapHanaDataContext
 
 		#region SharedMailBody
 
-		public static int SharedMailBody(this DataConnection dataConnection, string SNAPSHOT, string ALERT_NAME, string RATING, string DETAILS, string USER_ACTION, out string BODY)
+		public static int SharedMailBody(this DataConnection dataConnection, string? SNAPSHOT, string? ALERT_NAME, string? RATING, string? DETAILS, string? USER_ACTION, out string? BODY)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_MAIL_BODY\"",
 				new DataParameter("SNAPSHOT", SNAPSHOT, DataType.VarChar),
@@ -15707,7 +15707,7 @@ namespace SapHanaDataContext
 				new DataParameter("USER_ACTION", USER_ACTION, DataType.VarChar),
 				new DataParameter("BODY", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
 
-			BODY = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["BODY"]).Value);
+			BODY = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["BODY"]).Value);
 
 			return ret;
 		}
@@ -15716,7 +15716,7 @@ namespace SapHanaDataContext
 
 		#region SharedColumnComments
 
-		public static int SharedColumnComments(this DataConnection dataConnection, string SYS_SCHEMA, string SYS_VIEW, string STAT_SCHEMA, string STAT_VIEW)
+		public static int SharedColumnComments(this DataConnection dataConnection, string? SYS_SCHEMA, string? SYS_VIEW, string? STAT_SCHEMA, string? STAT_VIEW)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_COLUMN_COMMENTS\"",
 				new DataParameter("SYS_SCHEMA",  SYS_SCHEMA,  DataType.VarChar),
@@ -15729,7 +15729,7 @@ namespace SapHanaDataContext
 
 		#region SharedViewComments
 
-		public static int SharedViewComments(this DataConnection dataConnection, string SYS_SCHEMA, string SYS_VIEW, string STAT_SCHEMA, string STAT_VIEW)
+		public static int SharedViewComments(this DataConnection dataConnection, string? SYS_SCHEMA, string? SYS_VIEW, string? STAT_SCHEMA, string? STAT_VIEW)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_VIEW_COMMENTS\"",
 				new DataParameter("SYS_SCHEMA",  SYS_SCHEMA,  DataType.VarChar),
@@ -15742,7 +15742,7 @@ namespace SapHanaDataContext
 
 		#region SharedAssignComments
 
-		public static int SharedAssignComments(this DataConnection dataConnection, string SYS_SCHEMA, string SYS_VIEW, string SYS_COLUMN, string STAT_SCHEMA, string STAT_VIEW, string STAT_COLUMN)
+		public static int SharedAssignComments(this DataConnection dataConnection, string? SYS_SCHEMA, string? SYS_VIEW, string? SYS_COLUMN, string? STAT_SCHEMA, string? STAT_VIEW, string? STAT_COLUMN)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_ASSIGN_COMMENTS\"",
 				new DataParameter("SYS_SCHEMA",  SYS_SCHEMA,  DataType.VarChar),
@@ -15768,7 +15768,7 @@ namespace SapHanaDataContext
 
 		#region SharedCreateUnionView
 
-		public static int SharedCreateUnionView(this DataConnection dataConnection, string PREFIX, string VIEW_NAME, string SYNONYM_NAME)
+		public static int SharedCreateUnionView(this DataConnection dataConnection, string? PREFIX, string? VIEW_NAME, string? SYNONYM_NAME)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_CREATE_UNION_VIEW\"",
 				new DataParameter("PREFIX",       PREFIX,       DataType.VarChar),
@@ -15780,7 +15780,7 @@ namespace SapHanaDataContext
 
 		#region SharedDropUnionView
 
-		public static int SharedDropUnionView(this DataConnection dataConnection, string VIEW_NAME, string SYNONYM_NAME)
+		public static int SharedDropUnionView(this DataConnection dataConnection, string? VIEW_NAME, string? SYNONYM_NAME)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_DROP_UNION_VIEW\"",
 				new DataParameter("VIEW_NAME",    VIEW_NAME,    DataType.VarChar),
@@ -15791,7 +15791,7 @@ namespace SapHanaDataContext
 
 		#region SharedCopyProfiles
 
-		public static int SharedCopyProfiles(this DataConnection dataConnection, string OLD_PROFILE, string NEW_PROFILE)
+		public static int SharedCopyProfiles(this DataConnection dataConnection, string? OLD_PROFILE, string? NEW_PROFILE)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_COPY_PROFILES\"",
 				new DataParameter("OLD_PROFILE", OLD_PROFILE, DataType.VarChar),
@@ -15802,7 +15802,7 @@ namespace SapHanaDataContext
 
 		#region SharedBuildViews
 
-		public static int SharedBuildViews(this DataConnection dataConnection, string CMD, string PREFIX, string EX_TYPE)
+		public static int SharedBuildViews(this DataConnection dataConnection, string? CMD, string? PREFIX, string? EX_TYPE)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_BUILD_VIEWS\"",
 				new DataParameter("CMD",     CMD,     DataType.VarChar),
@@ -15830,7 +15830,7 @@ namespace SapHanaDataContext
 
 		#region SharedBuildSrViews
 
-		public static int SharedBuildSrViews(this DataConnection dataConnection, string CMD, string PREFIX)
+		public static int SharedBuildSrViews(this DataConnection dataConnection, string? CMD, string? PREFIX)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_BUILD_SR_VIEWS\"",
 				new DataParameter("CMD",    CMD,    DataType.VarChar),
@@ -15841,7 +15841,7 @@ namespace SapHanaDataContext
 
 		#region SharedBuildAaViews
 
-		public static int SharedBuildAaViews(this DataConnection dataConnection, string CMD, string PREFIX)
+		public static int SharedBuildAaViews(this DataConnection dataConnection, string? CMD, string? PREFIX)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_BUILD_AA_VIEWS\"",
 				new DataParameter("CMD",    CMD,    DataType.VarChar),
@@ -16294,15 +16294,15 @@ namespace SapHanaDataContext
 
 		#region SearchCatalogCleanup
 
-		public static int SearchCatalogCleanup(this DataConnection dataConnection, out byte? SUCCESS, out string MESSAGE, string SCHEMA_NAME)
+		public static int SearchCatalogCleanup(this DataConnection dataConnection, out byte? SUCCESS, out string? MESSAGE, string? SCHEMA_NAME)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_RT\".\"SEARCH_CATALOG_CLEANUP\"",
 				new DataParameter("SUCCESS", null, DataType.Byte) { Direction = ParameterDirection.Output, Size = 3 },
 				new DataParameter("MESSAGE", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 3000 },
 				new DataParameter("SCHEMA_NAME", SCHEMA_NAME, DataType.NVarChar));
 
-			SUCCESS = Converter.ChangeTypeTo<byte?> (((IDbDataParameter)dataConnection.Command.Parameters["SUCCESS"]).Value);
-			MESSAGE = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MESSAGE"]).Value);
+			SUCCESS = Converter.ChangeTypeTo<byte?>  (((IDbDataParameter)dataConnection.Command.Parameters["SUCCESS"]).Value);
+			MESSAGE = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MESSAGE"]).Value);
 
 			return ret;
 		}
@@ -16311,7 +16311,7 @@ namespace SapHanaDataContext
 
 		#region DeleteSchemaFromBimcTables
 
-		public static int DeleteSchemaFromBimcTables(this DataConnection dataConnection, string SCHEMA_NAME)
+		public static int DeleteSchemaFromBimcTables(this DataConnection dataConnection, string? SCHEMA_NAME)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_BI\".\"DELETE_SCHEMA_FROM_BIMC_TABLES\"",
 				new DataParameter("SCHEMA_NAME", SCHEMA_NAME, DataType.NVarChar));
@@ -16321,7 +16321,7 @@ namespace SapHanaDataContext
 
 		#region AflpmEraser
 
-		public static int AflpmEraser(this DataConnection dataConnection, string PROC)
+		public static int AflpmEraser(this DataConnection dataConnection, string? PROC)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"AFLPM_ERASER\"",
 				new DataParameter("PROC", PROC, DataType.VarChar));
@@ -16331,7 +16331,7 @@ namespace SapHanaDataContext
 
 		#region AfllangWrapperProcedureDrop
 
-		public static int AfllangWrapperProcedureDrop(this DataConnection dataConnection, string SCHEMA_NAME, string PROCEDURE_NAME)
+		public static int AfllangWrapperProcedureDrop(this DataConnection dataConnection, string? SCHEMA_NAME, string? PROCEDURE_NAME)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"AFLLANG_WRAPPER_PROCEDURE_DROP\"",
 				new DataParameter("SCHEMA_NAME",    SCHEMA_NAME,    DataType.NVarChar),
@@ -16351,14 +16351,14 @@ namespace SapHanaDataContext
 
 		#region SharedConstraintColumnNames
 
-		public static int SharedConstraintColumnNames(this DataConnection dataConnection, string TABLE_NAME1, string TABLE_NAME2, out string COLUMN_NAMES)
+		public static int SharedConstraintColumnNames(this DataConnection dataConnection, string? TABLE_NAME1, string? TABLE_NAME2, out string? COLUMN_NAMES)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_CONSTRAINT_COLUMN_NAMES\"",
 				new DataParameter("TABLE_NAME1",  TABLE_NAME1,  DataType.VarChar),
 				new DataParameter("TABLE_NAME2",  TABLE_NAME2,  DataType.VarChar),
 				new DataParameter("COLUMN_NAMES", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
 
-			COLUMN_NAMES = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
+			COLUMN_NAMES = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
 
 			return ret;
 		}
@@ -16367,7 +16367,7 @@ namespace SapHanaDataContext
 
 		#region MessagingDESTINATIONS__insert
 
-		public static int MessagingDESTINATIONS__insert(this DataConnection dataConnection, string DESTINATION_ID, string DESTINATION_TYPE, string CONFIGURATION)
+		public static int MessagingDESTINATIONS__insert(this DataConnection dataConnection, string? DESTINATION_ID, string? DESTINATION_TYPE, string? CONFIGURATION)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_XB\".\"MESSAGING_DESTINATIONS::insert\"",
 				new DataParameter("DESTINATION_ID",   DESTINATION_ID,   DataType.VarChar),
@@ -16379,7 +16379,7 @@ namespace SapHanaDataContext
 
 		#region MessagingDESTINATIONS__delete
 
-		public static int MessagingDESTINATIONS__delete(this DataConnection dataConnection, string DESTINATION_ID)
+		public static int MessagingDESTINATIONS__delete(this DataConnection dataConnection, string? DESTINATION_ID)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_XB\".\"MESSAGING_DESTINATIONS::delete\"",
 				new DataParameter("DESTINATION_ID", DESTINATION_ID, DataType.VarChar));
@@ -16389,7 +16389,7 @@ namespace SapHanaDataContext
 
 		#region MessagingSUBSCRIPTIONS__insert
 
-		public static int MessagingSUBSCRIPTIONS__insert(this DataConnection dataConnection, string DESTINATION_ID, string TOPIC_PATTERN, byte? QOS, string SCHEMA_NAME, string TABLE_NAME, string FORMAT, string SETTINGS)
+		public static int MessagingSUBSCRIPTIONS__insert(this DataConnection dataConnection, string? DESTINATION_ID, string? TOPIC_PATTERN, byte? QOS, string? SCHEMA_NAME, string? TABLE_NAME, string? FORMAT, string? SETTINGS)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_XB\".\"MESSAGING_SUBSCRIPTIONS::insert\"",
 				new DataParameter("DESTINATION_ID", DESTINATION_ID, DataType.VarChar),
@@ -16405,7 +16405,7 @@ namespace SapHanaDataContext
 
 		#region MessagingSUBSCRIPTIONS__delete
 
-		public static int MessagingSUBSCRIPTIONS__delete(this DataConnection dataConnection, string DESTINATION_ID, string TOPIC_PATTERN, byte? QOS)
+		public static int MessagingSUBSCRIPTIONS__delete(this DataConnection dataConnection, string? DESTINATION_ID, string? TOPIC_PATTERN, byte? QOS)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_XB\".\"MESSAGING_SUBSCRIPTIONS::delete\"",
 				new DataParameter("DESTINATION_ID", DESTINATION_ID, DataType.VarChar),
@@ -16433,7 +16433,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGTABLE
 
-		public static int DROPEXISTINGTABLE1(this DataConnection dataConnection, string TABLENAME, string SCHEMANAME)
+		public static int DROPEXISTINGTABLE1(this DataConnection dataConnection, string? TABLENAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"DROPEXISTINGTABLE\"",
 				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
@@ -16475,7 +16475,7 @@ namespace SapHanaDataContext
 
 		#region SharedPrepareCollector
 
-		public static int SharedPrepareCollector(this DataConnection dataConnection, string ID, string TABLE_NAME, string VIEW_COLUMNS, string SELECT_COLUMNS)
+		public static int SharedPrepareCollector(this DataConnection dataConnection, string? ID, string? TABLE_NAME, string? VIEW_COLUMNS, string? SELECT_COLUMNS)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_PREPARE_COLLECTOR\"",
 				new DataParameter("ID",             ID,             DataType.VarChar),
@@ -16488,7 +16488,7 @@ namespace SapHanaDataContext
 
 		#region SharedMigrateCollector
 
-		public static int SharedMigrateCollector(this DataConnection dataConnection, string ID, string TABLE_NAME, string SELECT_LIST, string INSERT_LIST)
+		public static int SharedMigrateCollector(this DataConnection dataConnection, string? ID, string? TABLE_NAME, string? SELECT_LIST, string? INSERT_LIST)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_MIGRATE_COLLECTOR\"",
 				new DataParameter("ID",          ID,          DataType.VarChar),
@@ -16501,7 +16501,7 @@ namespace SapHanaDataContext
 
 		#region SharedTruncateCollector
 
-		public static int SharedTruncateCollector(this DataConnection dataConnection, int? ID, string TABLE_NAME)
+		public static int SharedTruncateCollector(this DataConnection dataConnection, int? ID, string? TABLE_NAME)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_TRUNCATE_COLLECTOR\"",
 				new DataParameter("ID",         ID,         DataType.Int32),
@@ -16512,7 +16512,7 @@ namespace SapHanaDataContext
 
 		#region SharedWriteInternalAlert
 
-		public static int SharedWriteInternalAlert(this DataConnection dataConnection, DateTime? SNAPSHOTID, string ALERTDETAILS)
+		public static int SharedWriteInternalAlert(this DataConnection dataConnection, DateTime? SNAPSHOTID, string? ALERTDETAILS)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_WRITE_INTERNAL_ALERT\"",
 				new DataParameter("SNAPSHOTID",   SNAPSHOTID,   DataType.Timestamp),
@@ -16523,13 +16523,13 @@ namespace SapHanaDataContext
 
 		#region SharedColumnNames
 
-		public static int SharedColumnNames(this DataConnection dataConnection, string TABLE_NAME, out string COLUMN_NAMES)
+		public static int SharedColumnNames(this DataConnection dataConnection, string? TABLE_NAME, out string? COLUMN_NAMES)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_COLUMN_NAMES\"",
 				new DataParameter("TABLE_NAME",   TABLE_NAME,   DataType.VarChar),
 				new DataParameter("COLUMN_NAMES", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
 
-			COLUMN_NAMES = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
+			COLUMN_NAMES = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
 
 			return ret;
 		}
@@ -16538,13 +16538,13 @@ namespace SapHanaDataContext
 
 		#region SharedKeyColumnNames
 
-		public static int SharedKeyColumnNames(this DataConnection dataConnection, string TABLE_NAME, out string COLUMN_NAMES)
+		public static int SharedKeyColumnNames(this DataConnection dataConnection, string? TABLE_NAME, out string? COLUMN_NAMES)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_KEY_COLUMN_NAMES\"",
 				new DataParameter("TABLE_NAME",   TABLE_NAME,   DataType.VarChar),
 				new DataParameter("COLUMN_NAMES", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
 
-			COLUMN_NAMES = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
+			COLUMN_NAMES = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
 
 			return ret;
 		}
@@ -16553,14 +16553,14 @@ namespace SapHanaDataContext
 
 		#region SharedCommonColumnNames
 
-		public static int SharedCommonColumnNames(this DataConnection dataConnection, string TABLE_NAME1, string TABLE_NAME2, out string COLUMN_NAMES)
+		public static int SharedCommonColumnNames(this DataConnection dataConnection, string? TABLE_NAME1, string? TABLE_NAME2, out string? COLUMN_NAMES)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_COMMON_COLUMN_NAMES\"",
 				new DataParameter("TABLE_NAME1",  TABLE_NAME1,  DataType.VarChar),
 				new DataParameter("TABLE_NAME2",  TABLE_NAME2,  DataType.VarChar),
 				new DataParameter("COLUMN_NAMES", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
 
-			COLUMN_NAMES = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
+			COLUMN_NAMES = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
 
 			return ret;
 		}
@@ -16573,7 +16573,7 @@ namespace SapHanaDataContext
 		#region CdsSchemaLastModifiedTime
 
 		[Sql.Function(Name="SYS.CDS_SCHEMA_LAST_MODIFIED_TIME", ServerSideOnly=true)]
-		public static DateTime? CdsSchemaLastModifiedTime(string SCHEMA_NAME)
+		public static DateTime? CdsSchemaLastModifiedTime(string? SCHEMA_NAME)
 		{
 			throw new InvalidOperationException();
 		}

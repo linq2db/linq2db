@@ -367,7 +367,7 @@ namespace AccessDataContext
 
 		#region PatientSelectByName
 
-		public static int PatientSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static int PatientSelectByName(this DataConnection dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.ExecuteProc("[Patient_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NText),
@@ -388,7 +388,7 @@ namespace AccessDataContext
 
 		#region PersonInsert
 
-		public static int PersonInsert(this DataConnection dataConnection, string @FirstName, string @MiddleName, string @LastName, string @Gender)
+		public static int PersonInsert(this DataConnection dataConnection, string? @FirstName, string? @MiddleName, string? @LastName, string? @Gender)
 		{
 			return dataConnection.ExecuteProc("[Person_Insert]",
 				new DataParameter("@FirstName",  @FirstName,  DataType.NText),
@@ -411,7 +411,7 @@ namespace AccessDataContext
 
 		#region PersonSelectByName
 
-		public static int PersonSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static int PersonSelectByName(this DataConnection dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.ExecuteProc("[Person_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NText),
@@ -422,7 +422,7 @@ namespace AccessDataContext
 
 		#region PersonSelectListByName
 
-		public static int PersonSelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static int PersonSelectListByName(this DataConnection dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.ExecuteProc("[Person_SelectListByName]",
 				new DataParameter("@firstName", @firstName, DataType.NText),
@@ -433,7 +433,7 @@ namespace AccessDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this DataConnection dataConnection, int? @id, int? @PersonID, string @FirstName, string @MiddleName, string @LastName, string @Gender)
+		public static int PersonUpdate(this DataConnection dataConnection, int? @id, int? @PersonID, string? @FirstName, string? @MiddleName, string? @LastName, string? @Gender)
 		{
 			return dataConnection.ExecuteProc("[Person_Update]",
 				new DataParameter("@id",         @id,         DataType.Int32),

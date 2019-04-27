@@ -738,7 +738,7 @@ void GenerateTypesFromMetadata()
 				p.TypeBuilder = () =>
 				{
 					var resultParam = p.ProcParameters.Single(pr => pr.IsResult);
-					return new ModelType(resultParam.ParameterType, !IsValueType(resultParam.ParameterType), resultParam.IsNullable).ToTypeName();
+					return resultParam.Type.ToTypeName();
 				};
 				var paramCount = p.ProcParameters.Count(pr => !pr.IsResult);
 				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + ToStringLiteral((p.Schema != null ? p.Schema + "." : null) + p.ProcedureName), "ServerSideOnly=true, IsAggregate = true" + (paramCount > 0 ? (", ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }") : null)));
@@ -749,14 +749,14 @@ void GenerateTypesFromMetadata()
 					p.ParameterBuilders.Add(() => "IEnumerable<TSource> src");
 
 				foreach (var inp in p.ProcParameters.Where(pr => !pr.IsResult))
-					p.ParameterBuilders.Add(() => $"Expression<Func<TSource, {inp.ParameterType}>> " + inp.ParameterName);
+					p.ParameterBuilders.Add(() => $"Expression<Func<TSource, {inp.Type.ToTypeName()}>> " + inp.ParameterName);
 
 				p.Name += "<TSource>";
 			}
 			else if (p.IsFunction)
 			{
 				p.IsStatic    = true;
-				p.TypeBuilder = () => p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
+				p.TypeBuilder = () => p.ProcParameters.Single(pr => pr.IsResult).Type.ToTypeName();
 				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + ToStringLiteral((p.Schema != null ? p.Schema + "." : null)  + p.ProcedureName), "ServerSideOnly=true"));
 			}
 			else
@@ -777,7 +777,7 @@ void GenerateTypesFromMetadata()
 			if (!p.IsAggregateFunction)
 				foreach (var pr in p.ProcParameters.Where(par => !par.IsResult))
 					p.ParameterBuilders.Add(() => string.Format("{0}{1} {2}",
-						pr.IsOut ? pr.IsIn ? "ref " : "out " : "", pr.ParameterType, pr.ParameterName));
+						pr.IsOut ? pr.IsIn ? "ref " : "out " : "", pr.Type.ToTypeName(), pr.ParameterName));
 
 			if (p.IsTableFunction)
 			{
@@ -904,9 +904,9 @@ void GenerateTypesFromMetadata()
 
 				if (hasOut)
 				{
-					maxLenSchema = outputParameters.Max(pr => (int?)pr.SchemaName.   Length) ?? 0;
-					maxLenParam  = outputParameters.Max(pr => (int?)pr.ParameterName.Length) ?? 0;
-					maxLenType   = outputParameters.Max(pr => (int?)pr.ParameterType.Length) ?? 0;
+					maxLenSchema = outputParameters.Max(pr => (int?)pr.SchemaName.   Length    ) ?? 0;
+					maxLenParam  = outputParameters.Max(pr => (int?)pr.ParameterName.Length    ) ?? 0;
+					maxLenType   = outputParameters.Max(pr => (int?)pr.Type.ToTypeName().Length) ?? 0;
 
 					p.BodyBuilders.Add(() => new [] { string.Empty });
 
@@ -915,8 +915,8 @@ void GenerateTypesFromMetadata()
 						p.BodyBuilders.Add(() => new [] { string.Format("{0} {1}= Converter.ChangeTypeTo<{2}>{3}(((IDbDataParameter)dataConnection.Command.Parameters[{4}]).{5}Value);",
 							pr.ParameterName,
 							LenDiff(maxLenParam,  pr.ParameterName),
-							pr.ParameterType,
-							LenDiff(maxLenType,   pr.ParameterType),
+							pr.Type.ToTypeName(),
+							LenDiff(maxLenType,   pr.Type.ToTypeName()),
 							ToStringLiteral(pr.SchemaName),
 							LenDiff(maxLenSchema, pr.SchemaName)) });
 					}

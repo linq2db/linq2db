@@ -366,7 +366,7 @@ namespace FirebirdDataContext
 
 		#region OUTREFENUMTEST
 
-		public static IEnumerable<OUTREFENUMTESTResult> OUTREFENUMTEST(this DataConnection dataConnection, string STR, string IN_INPUTOUTPUTSTR, out string INPUTOUTPUTSTR, out string OUTPUTSTR)
+		public static IEnumerable<OUTREFENUMTESTResult> OUTREFENUMTEST(this DataConnection dataConnection, string? STR, string? IN_INPUTOUTPUTSTR, out string? INPUTOUTPUTSTR, out string? OUTPUTSTR)
 		{
 			var ret = dataConnection.QueryProc<OUTREFENUMTESTResult>("OUTREFENUMTEST",
 				new DataParameter("STR",            STR,            DataType.NVarChar),
@@ -374,8 +374,8 @@ namespace FirebirdDataContext
 				new DataParameter("INPUTOUTPUTSTR", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("OUTPUTSTR", null,      DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
 
 			return ret;
 		}
@@ -390,7 +390,7 @@ namespace FirebirdDataContext
 
 		#region OUTREFTEST
 
-		public static IEnumerable<OUTREFTESTResult> OUTREFTEST(this DataConnection dataConnection, int? ID, int? IN_INPUTOUTPUTID, string STR, string IN_INPUTOUTPUTSTR, out int? INPUTOUTPUTID, out string INPUTOUTPUTSTR, out int? OUTPUTID, out string OUTPUTSTR)
+		public static IEnumerable<OUTREFTESTResult> OUTREFTEST(this DataConnection dataConnection, int? ID, int? IN_INPUTOUTPUTID, string? STR, string? IN_INPUTOUTPUTSTR, out int? INPUTOUTPUTID, out string? INPUTOUTPUTSTR, out int? OUTPUTID, out string? OUTPUTSTR)
 		{
 			var ret = dataConnection.QueryProc<OUTREFTESTResult>("OUTREFTEST",
 				new DataParameter("ID",             ID,             DataType.Int32),
@@ -402,10 +402,10 @@ namespace FirebirdDataContext
 				new DataParameter("OUTPUTID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
 				new DataParameter("OUTPUTSTR", null,      DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
-			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-			OUTPUTID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
 
 			return ret;
 		}
@@ -422,7 +422,7 @@ namespace FirebirdDataContext
 
 		#region PatientSelectall
 
-		public static IEnumerable<PatientSELECTALLResult> PatientSelectall(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
+		public static IEnumerable<PatientSELECTALLResult> PatientSelectall(this DataConnection dataConnection, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER, out string? DIAGNOSIS)
 		{
 			var ret = dataConnection.QueryProc<PatientSELECTALLResult>("PATIENT_SELECTALL",
 				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
@@ -432,12 +432,12 @@ namespace FirebirdDataContext
 				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 },
 				new DataParameter("DIAGNOSIS", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 256 }).ToList();
 
-			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
-			DIAGNOSIS  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
+			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			DIAGNOSIS  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
 
 			return ret;
 		}
@@ -456,7 +456,7 @@ namespace FirebirdDataContext
 
 		#region PatientSelectbyname
 
-		public static IEnumerable<PatientSELECTBYNAMEResult> PatientSelectbyname(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, out int? PERSONID, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
+		public static IEnumerable<PatientSELECTBYNAMEResult> PatientSelectbyname(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME, out int? PERSONID, out string? MIDDLENAME, out char? GENDER, out string? DIAGNOSIS)
 		{
 			var ret = dataConnection.QueryProc<PatientSELECTBYNAMEResult>("PATIENT_SELECTBYNAME",
 				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
@@ -466,10 +466,10 @@ namespace FirebirdDataContext
 				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 },
 				new DataParameter("DIAGNOSIS", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 256 }).ToList();
 
-			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
-			DIAGNOSIS  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			DIAGNOSIS  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
 
 			return ret;
 		}
@@ -496,7 +496,7 @@ namespace FirebirdDataContext
 
 		#region PersonInsert
 
-		public static IEnumerable<PersonINSERTResult> PersonInsert(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static IEnumerable<PersonINSERTResult> PersonInsert(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var ret = dataConnection.QueryProc<PersonINSERTResult>("PERSON_INSERT",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
@@ -519,7 +519,7 @@ namespace FirebirdDataContext
 
 		#region PersonInsertOutputparameter
 
-		public static IEnumerable<PersonInsertOUTPUTPARAMETERResult> PersonInsertOutputparameter(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static IEnumerable<PersonInsertOUTPUTPARAMETERResult> PersonInsertOutputparameter(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var ret = dataConnection.QueryProc<PersonInsertOUTPUTPARAMETERResult>("PERSON_INSERT_OUTPUTPARAMETER",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
@@ -542,7 +542,7 @@ namespace FirebirdDataContext
 
 		#region PersonSelectall
 
-		public static IEnumerable<PersonSELECTALLResult> PersonSelectall(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
+		public static IEnumerable<PersonSELECTALLResult> PersonSelectall(this DataConnection dataConnection, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER)
 		{
 			var ret = dataConnection.QueryProc<PersonSELECTALLResult>("PERSON_SELECTALL",
 				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
@@ -551,11 +551,11 @@ namespace FirebirdDataContext
 				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
 
-			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
+			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 
 			return ret;
 		}
@@ -573,7 +573,7 @@ namespace FirebirdDataContext
 
 		#region PersonSelectbykey
 
-		public static IEnumerable<PersonSELECTBYKEYResult> PersonSelectbykey(this DataConnection dataConnection, int? ID, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
+		public static IEnumerable<PersonSELECTBYKEYResult> PersonSelectbykey(this DataConnection dataConnection, int? ID, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER)
 		{
 			var ret = dataConnection.QueryProc<PersonSELECTBYKEYResult>("PERSON_SELECTBYKEY",
 				new DataParameter("ID",         ID,         DataType.Int32),
@@ -583,11 +583,11 @@ namespace FirebirdDataContext
 				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
 
-			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
+			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 
 			return ret;
 		}
@@ -605,7 +605,7 @@ namespace FirebirdDataContext
 
 		#region PersonSelectbyname
 
-		public static IEnumerable<PersonSELECTBYNAMEResult> PersonSelectbyname(this DataConnection dataConnection, string IN_FIRSTNAME, string IN_LASTNAME, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
+		public static IEnumerable<PersonSELECTBYNAMEResult> PersonSelectbyname(this DataConnection dataConnection, string? IN_FIRSTNAME, string? IN_LASTNAME, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER)
 		{
 			var ret = dataConnection.QueryProc<PersonSELECTBYNAMEResult>("PERSON_SELECTBYNAME",
 				new DataParameter("IN_FIRSTNAME", IN_FIRSTNAME, DataType.NVarChar),
@@ -616,11 +616,11 @@ namespace FirebirdDataContext
 				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
 
-			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
+			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 
 			return ret;
 		}
@@ -638,7 +638,7 @@ namespace FirebirdDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this DataConnection dataConnection, int? PERSONID, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
+		public static int PersonUpdate(this DataConnection dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
 			return dataConnection.ExecuteProc("PERSON_UPDATE",
 				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
@@ -652,14 +652,14 @@ namespace FirebirdDataContext
 
 		#region ScalarDatareader
 
-		public static IEnumerable<ScalarDATAREADERResult> ScalarDatareader(this DataConnection dataConnection, out int? INTFIELD, out string STRINGFIELD)
+		public static IEnumerable<ScalarDATAREADERResult> ScalarDatareader(this DataConnection dataConnection, out int? INTFIELD, out string? STRINGFIELD)
 		{
 			var ret = dataConnection.QueryProc<ScalarDATAREADERResult>("SCALAR_DATAREADER",
 				new DataParameter("INTFIELD", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
 				new DataParameter("STRINGFIELD", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
-			INTFIELD    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["INTFIELD"]).   Value);
-			STRINGFIELD = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["STRINGFIELD"]).Value);
+			INTFIELD    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INTFIELD"]).   Value);
+			STRINGFIELD = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["STRINGFIELD"]).Value);
 
 			return ret;
 		}
@@ -674,14 +674,14 @@ namespace FirebirdDataContext
 
 		#region ScalarOutputparameter
 
-		public static IEnumerable<ScalarOUTPUTPARAMETERResult> ScalarOutputparameter(this DataConnection dataConnection, out int? OUTPUTINT, out string OUTPUTSTRING)
+		public static IEnumerable<ScalarOUTPUTPARAMETERResult> ScalarOutputparameter(this DataConnection dataConnection, out int? OUTPUTINT, out string? OUTPUTSTRING)
 		{
 			var ret = dataConnection.QueryProc<ScalarOUTPUTPARAMETERResult>("SCALAR_OUTPUTPARAMETER",
 				new DataParameter("OUTPUTINT", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
 				new DataParameter("OUTPUTSTRING", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
-			OUTPUTINT    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTINT"]).   Value);
-			OUTPUTSTRING = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTRING"]).Value);
+			OUTPUTINT    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTINT"]).   Value);
+			OUTPUTSTRING = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTRING"]).Value);
 
 			return ret;
 		}

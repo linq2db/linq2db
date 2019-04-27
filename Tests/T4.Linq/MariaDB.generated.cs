@@ -348,7 +348,7 @@ namespace MariaDBDataContext
 
 		#region TestOutputParametersWithoutTableProcedure
 
-		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string? aInParam, out sbyte? aOutParam)
 		{
 			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
 				new DataParameter("aInParam",  aInParam,  DataType.VarChar),
@@ -380,7 +380,7 @@ namespace MariaDBDataContext
 
 		#region TestProc
 
-		public static int TestProc(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		public static int TestProc(this DataConnection dataConnection, string? aInParam, out sbyte? aOutParam)
 		{
 			var ret = dataConnection.ExecuteProc("`test_proc`",
 				new DataParameter("aInParam",  aInParam,  DataType.VarChar),
@@ -399,7 +399,7 @@ namespace MariaDBDataContext
 		#region TestFunction
 
 		[Sql.Function(Name="TestFunction", ServerSideOnly=true)]
-		public static string TestFunction(int? param)
+		public static string? TestFunction(int? param)
 		{
 			throw new InvalidOperationException();
 		}

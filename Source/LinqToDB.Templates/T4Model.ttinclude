@@ -1722,6 +1722,8 @@ static bool IsValueTypeDefault(string typeName)
 		case "ulong?":
 		case "short":
 		case "short?":
+		case "ushort":
+		case "ushort?":
 		case "float":
 		case "float?":
 		case "double":
@@ -1765,13 +1767,11 @@ static bool IsValueTypeDefault(string typeName)
 		case "SqlGeometry":
 		case "PhysicalAddress":
 		case "Array":
+		case "DataTable":
 			return false;
 	}
 
-	if (EnableNullableReferenceTypes)
-		throw new InvalidOperationException($"Cannot resolve type name: {typeName}. Override IsValueType delegate to resolve it");
-
-	return false;
+	return typeName.EndsWith("?");
 }
 
 #>

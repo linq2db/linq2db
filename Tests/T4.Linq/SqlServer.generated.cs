@@ -757,7 +757,7 @@ namespace DataModel
 	{
 		#region CustOrderHist
 
-		public static List<CustOrderHistResult> CustOrderHist(this DataConnection dataConnection, string @CustomerID)
+		public static List<CustOrderHistResult> CustOrderHist(this DataConnection dataConnection, string? @CustomerID)
 		{
 			return dataConnection.QueryProc<CustOrderHistResult>("[CustOrderHist]",
 				new DataParameter("@CustomerID", @CustomerID, DataType.NChar)).ToList();
@@ -796,7 +796,7 @@ namespace DataModel
 
 		#region CustOrdersOrders
 
-		public static List<CustOrdersOrdersResult> CustOrdersOrders(this DataConnection dataConnection, string @CustomerID)
+		public static List<CustOrdersOrdersResult> CustOrdersOrders(this DataConnection dataConnection, string? @CustomerID)
 		{
 			return dataConnection.QueryProc<CustOrdersOrdersResult>("[CustOrdersOrders]",
 				new DataParameter("@CustomerID", @CustomerID, DataType.NChar)).ToList();
@@ -858,7 +858,7 @@ namespace DataModel
 
 		#region SalesByCategory
 
-		public static List<SalesByCategoryResult> SalesByCategory(this DataConnection dataConnection, string @CategoryName, string @OrdYear)
+		public static List<SalesByCategoryResult> SalesByCategory(this DataConnection dataConnection, string? @CategoryName, string? @OrdYear)
 		{
 			return dataConnection.QueryProc<SalesByCategoryResult>("[SalesByCategory]",
 				new DataParameter("@CategoryName", @CategoryName, DataType.NVarChar),
@@ -1975,15 +1975,15 @@ namespace DataModel
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest(this DataConnection dataConnection, string @str, ref string @outputStr, ref string @inputOutputStr)
+		public static int OutRefEnumTest(this DataConnection dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[OutRefEnumTest]",
 				new DataParameter("@str",            @str,            DataType.VarChar),
 				new DataParameter("@outputStr",      @outputStr,      DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
 				new DataParameter("@inputOutputStr", @inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
-			@outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
-			@inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
+			@outputStr      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
+			@inputOutputStr = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
 
 			return ret;
 		}
@@ -1992,7 +1992,7 @@ namespace DataModel
 
 		#region OutRefTest
 
-		public static int OutRefTest(this DataConnection dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string @str, ref string @outputStr, ref string @inputOutputStr)
+		public static int OutRefTest(this DataConnection dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[OutRefTest]",
 				new DataParameter("@ID",             @ID,             DataType.Int32),
@@ -2002,10 +2002,10 @@ namespace DataModel
 				new DataParameter("@outputStr",      @outputStr,      DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
 				new DataParameter("@inputOutputStr", @inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
-			@outputID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputID"]).      Value);
-			@inputOutputID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputID"]). Value);
-			@outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
-			@inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
+			@outputID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["@outputID"]).      Value);
+			@inputOutputID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputID"]). Value);
+			@outputStr      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
+			@inputOutputStr = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
 
 			return ret;
 		}
@@ -2039,7 +2039,7 @@ namespace DataModel
 
 		#region PatientSelectByName
 
-		public static List<PatientSelectByNameResult> PatientSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static List<PatientSelectByNameResult> PatientSelectByName(this DataConnection dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -2076,7 +2076,7 @@ namespace DataModel
 
 		#region PersonInsert
 
-		public static List<PersonInsertResult> PersonInsert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
+		public static List<PersonInsertResult> PersonInsert(this DataConnection dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			return dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]",
 				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
@@ -2094,7 +2094,7 @@ namespace DataModel
 
 		#region PersonInsertOutputParameter
 
-		public static int PersonInsertOutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
+		public static int PersonInsertOutputParameter(this DataConnection dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
 		{
 			var ret = dataConnection.ExecuteProc("[Person_Insert_OutputParameter]",
 				new DataParameter("@FirstName", @FirstName, DataType.NVarChar),
@@ -2131,7 +2131,7 @@ namespace DataModel
 
 		#region PersonSelectByName
 
-		public static List<Person> PersonSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static List<Person> PersonSelectByName(this DataConnection dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.QueryProc<Person>("[Person_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -2142,7 +2142,7 @@ namespace DataModel
 
 		#region PersonSelectListByName
 
-		public static List<Person> PersonSelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static List<Person> PersonSelectListByName(this DataConnection dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.QueryProc<Person>("[Person_SelectListByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -2153,7 +2153,7 @@ namespace DataModel
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this DataConnection dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
+		public static int PersonUpdate(this DataConnection dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			return dataConnection.ExecuteProc("[Person_Update]",
 				new DataParameter("@PersonID",   @PersonID,   DataType.Int32),
@@ -2188,7 +2188,7 @@ namespace DataModel
 
 		#region TableTypeTestProc
 
-		public static List<TableTypeTestProcResult> TableTypeTestProc(this DataConnection dataConnection, DataTable @table)
+		public static List<TableTypeTestProcResult> TableTypeTestProc(this DataConnection dataConnection, DataTable? @table)
 		{
 			return dataConnection.QueryProc<TableTypeTestProcResult>("[TableTypeTestProc]",
 				new DataParameter("@table", @table, DataType.Structured){ DbType = "[dbo].[TestTableType]" }).ToList();

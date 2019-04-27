@@ -841,6 +841,8 @@ public class Parameter
 	public bool     IsNullable    { get; set; }
 	public Type     SystemType    { get; set; }
 	public string   DataType      { get; set; }
+
+	public ModelType Type => new ModelType(ParameterType, !IsValueType(ParameterType), IsNullable);
 }
 
 private int _counter = 0;
