@@ -18,6 +18,8 @@ using Tests.T4.Model;
 
 namespace Tests.T4.Model
 {
+	[CustomValidation(typeof(TestClass1.CustomValidator), "ValidateEditableString1")]
+	[CustomValidation(typeof(TestClass1.CustomValidator), "ValidateEditableString2")]
 	[CustomValidation(typeof(TestClass1.CustomValidator), "ValidateEditableLong1")]
 	[CustomValidation(typeof(TestClass1.CustomValidator), "ValidateEditableInt1")]
 	public partial class TestClass1 : IEditableObject, INotifyPropertyChanged, INotifyPropertyChanging
@@ -27,10 +29,150 @@ namespace Tests.T4.Model
 			AcceptChanges();
 		}
 
+		#region EditableString1 : String
+
+		private String  _currentEditableString1 = "12345";
+		private String _originalEditableString1 = "12345";
+		public  String          EditableString1
+		{
+			get { return _currentEditableString1; }
+			set
+			{
+				if (_currentEditableString1 != value)
+				{
+					OnEditableString1Changing();
+
+					BeforeEditableString1Changed(value);
+					_currentEditableString1 = value;
+					AfterEditableString1Changed();
+
+					OnEditableString1Changed();
+				}
+			}
+		}
+
+		#region EditableObject support
+
+		public void AcceptEditableString1Changes()
+		{
+			_originalEditableString1 = _currentEditableString1;
+		}
+
+		public void RejectEditableString1Changes()
+		{
+			EditableString1 = _originalEditableString1;
+		}
+
+		public bool IsEditableString1Dirty
+		{
+			get { return _currentEditableString1 != _originalEditableString1; }
+		}
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeEditableString1Changed(String newValue);
+		partial void AfterEditableString1Changed ();
+
+		public const string NameOfEditableString1 = "EditableString1";
+
+		private static readonly PropertyChangedEventArgs _editableString1ChangedEventArgs = new PropertyChangedEventArgs(NameOfEditableString1);
+
+		private void OnEditableString1Changed()
+		{
+			OnPropertyChanged(_editableString1ChangedEventArgs);
+		}
+
+		#endregion
+
+		#region INotifyPropertyChanging support
+
+		private static readonly PropertyChangingEventArgs _editableString1ChangingEventArgs = new PropertyChangingEventArgs(NameOfEditableString1);
+
+		private void OnEditableString1Changing()
+		{
+			OnPropertyChanging(_editableString1ChangingEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region EditableString2 : String?
+
+		private String?  _currentEditableString2 = null;
+		private String? _originalEditableString2 = null;
+		public  String?          EditableString2
+		{
+			get { return _currentEditableString2; }
+			set
+			{
+				if (_currentEditableString2 != value)
+				{
+					OnEditableString2Changing();
+
+					BeforeEditableString2Changed(value);
+					_currentEditableString2 = value;
+					AfterEditableString2Changed();
+
+					OnEditableString2Changed();
+				}
+			}
+		}
+
+		#region EditableObject support
+
+		public void AcceptEditableString2Changes()
+		{
+			_originalEditableString2 = _currentEditableString2;
+		}
+
+		public void RejectEditableString2Changes()
+		{
+			EditableString2 = _originalEditableString2;
+		}
+
+		public bool IsEditableString2Dirty
+		{
+			get { return _currentEditableString2 != _originalEditableString2; }
+		}
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeEditableString2Changed(String? newValue);
+		partial void AfterEditableString2Changed ();
+
+		public const string NameOfEditableString2 = "EditableString2";
+
+		private static readonly PropertyChangedEventArgs _editableString2ChangedEventArgs = new PropertyChangedEventArgs(NameOfEditableString2);
+
+		private void OnEditableString2Changed()
+		{
+			OnPropertyChanged(_editableString2ChangedEventArgs);
+		}
+
+		#endregion
+
+		#region INotifyPropertyChanging support
+
+		private static readonly PropertyChangingEventArgs _editableString2ChangingEventArgs = new PropertyChangingEventArgs(NameOfEditableString2);
+
+		private void OnEditableString2Changing()
+		{
+			OnPropertyChanging(_editableString2ChangingEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
 		#region EditableLong1 : long
 
 		private long  _currentEditableLong1 = 12345;
-		private long _originalEditableLong1;
+		private long _originalEditableLong1 = 12345;
 		public  long          EditableLong1
 		{
 			get { return _currentEditableLong1; }
@@ -494,6 +636,56 @@ namespace Tests.T4.Model
 
 		#endregion
 
+		#region IDProp4 : String
+
+		private String _idProp4 = string.Empty;
+		public  String  IDProp4
+		{
+			get { return _idProp4; }
+			set
+			{
+				if (_idProp4 != value)
+				{
+					OnIDProp4Changing();
+
+					BeforeIDProp4Changed(value);
+					_idProp4 = value;
+					AfterIDProp4Changed();
+
+					OnIDProp4Changed();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeIDProp4Changed(String newValue);
+		partial void AfterIDProp4Changed ();
+
+		public const string NameOfIDProp4 = "IDProp4";
+
+		private static readonly PropertyChangedEventArgs _idProp4ChangedEventArgs = new PropertyChangedEventArgs(NameOfIDProp4);
+
+		private void OnIDProp4Changed()
+		{
+			OnPropertyChanged(_idProp4ChangedEventArgs);
+		}
+
+		#endregion
+
+		#region INotifyPropertyChanging support
+
+		private static readonly PropertyChangingEventArgs _idProp4ChangingEventArgs = new PropertyChangingEventArgs(NameOfIDProp4);
+
+		private void OnIDProp4Changing()
+		{
+			OnPropertyChanging(_idProp4ChangingEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
 		#region Test Region
 
 		/// <summary>
@@ -503,6 +695,7 @@ namespace Tests.T4.Model
 #if AAA
 		[                                            XmlArray("Name1")                             ] public String? Field2;
 #endif
+		[                                            XmlArray("Name3")                             ] public String  Field22 = string.Empty;
 		[XmlArrayItem(typeof(int), DataType="List"), XmlArray("Name21"), XmlArrayItem(typeof(char))] public String? Field21;
 		[XmlAttribute("Name1", typeof(int)),         XmlArray("N2")                                ] public String? Field221  { get; set; }
 		                                                                                             public String? Field2212;
@@ -516,6 +709,7 @@ namespace Tests.T4.Model
 		public int     Field12;                                                         // Field3 comnt
 		public String? Field22_____;
 		public String? PField121    { get; set; }
+		public String  PField122    { get { return "not null"; } }
 		public String? PField221    { get { var a = 1; return null; } }
 		public String? PField222    { get { return null; } }                            // Field3 comment
 		public String? PField23     { get { return null; } set { value?.ToString(); } } // Fieomment
@@ -581,6 +775,8 @@ namespace Tests.T4.Model
 		{
 			BeforeAcceptChanges();
 
+			AcceptEditableString1Changes();
+			AcceptEditableString2Changes();
 			AcceptEditableLong1Changes();
 			AcceptEditableInt1Changes();
 			AcceptEditableInt3Changes();
@@ -596,6 +792,8 @@ namespace Tests.T4.Model
 		{
 			BeforeRejectChanges();
 
+			RejectEditableString1Changes();
+			RejectEditableString2Changes();
 			RejectEditableLong1Changes();
 			RejectEditableInt1Changes();
 			RejectEditableInt3Changes();
@@ -609,6 +807,8 @@ namespace Tests.T4.Model
 			get
 			{
 				return
+					IsEditableString1Dirty ||
+					IsEditableString2Dirty ||
 					IsEditableLong1Dirty   ||
 					IsEditableInt1Dirty    ||
 					IsEditableInt3Dirty    ||
@@ -754,15 +954,65 @@ namespace Tests.T4.Model
 				{
 					obj._isValidCounter++;
 
-					var flag0 = ValidationResult.Success == ValidateEditableLong1(obj, obj.EditableLong1);
-					var flag1 = ValidationResult.Success == ValidateEditableInt1(obj, obj.EditableInt1);
+					var flag0 = ValidationResult.Success == ValidateEditableString1(obj, obj.EditableString1);
+					var flag1 = ValidationResult.Success == ValidateEditableString2(obj, obj.EditableString2);
+					var flag2 = ValidationResult.Success == ValidateEditableLong1(obj, obj.EditableLong1);
+					var flag3 = ValidationResult.Success == ValidateEditableInt1(obj, obj.EditableInt1);
 
-					return flag0 || flag1;
+					return flag0 || flag1 || flag2 || flag3;
 				}
 				finally
 				{
 					obj._isValidCounter--;
 				}
+			}
+
+			public static ValidationResult ValidateEditableString1(TestClass1 obj, String value)
+			{
+				var list = new List<ValidationResult>();
+
+				Validator.TryValidateProperty(
+					value,
+					new ValidationContext(obj, null, null) { MemberName = NameOfEditableString1 }, list);
+
+				obj.ValidateEditableString1(value, list);
+
+				if (list.Count > 0)
+				{
+					foreach (var result in list)
+						foreach (var name in result.MemberNames)
+							obj.AddError(name, result.ErrorMessage);
+
+					return list[0];
+				}
+
+				obj.RemoveError(NameOfEditableString1);
+
+				return ValidationResult.Success;
+			}
+
+			public static ValidationResult ValidateEditableString2(TestClass1 obj, String? value)
+			{
+				var list = new List<ValidationResult>();
+
+				Validator.TryValidateProperty(
+					value,
+					new ValidationContext(obj, null, null) { MemberName = NameOfEditableString2 }, list);
+
+				obj.ValidateEditableString2(value, list);
+
+				if (list.Count > 0)
+				{
+					foreach (var result in list)
+						foreach (var name in result.MemberNames)
+							obj.AddError(name, result.ErrorMessage);
+
+					return list[0];
+				}
+
+				obj.RemoveError(NameOfEditableString2);
+
+				return ValidationResult.Success;
 			}
 
 			public static ValidationResult ValidateEditableLong1(TestClass1 obj, long value)
@@ -814,8 +1064,10 @@ namespace Tests.T4.Model
 			}
 		}
 
-		partial void ValidateEditableLong1(long value, List<ValidationResult> validationResults);
-		partial void ValidateEditableInt1 (int value, List<ValidationResult> validationResults);
+		partial void ValidateEditableString1(String value, List<ValidationResult> validationResults);
+		partial void ValidateEditableString2(String? value, List<ValidationResult> validationResults);
+		partial void ValidateEditableLong1  (long value, List<ValidationResult> validationResults);
+		partial void ValidateEditableInt1   (int value, List<ValidationResult> validationResults);
 
 		#endregion
 	}
