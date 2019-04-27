@@ -23,7 +23,10 @@
 			new EditableProperty("int",    "EditableInt1")    { },
 			new EditableProperty("int",    "EditableInt3")    { },
 			new EditableProperty("double", "EditableDouble1") { IsDirtyText = "Math.Abs({0} - {1}) <= 16 * Double.Epsilon * Math.Max(Math.Abs({0}), Math.Abs({1}))" },
-			new Field(typeof(List<>), "Field4", true, ModelType.Create<string>(true)),
+			new Field(new ModelType(typeof(List<>), true,  ModelType.Create<string>(true)),  "Field4"),
+			new Field(new ModelType(typeof(List<>), true,  ModelType.Create<string>(false)), "Field5"),
+			new Field(new ModelType(typeof(List<>), false, ModelType.Create<string>(true)),  "Field6") { InitValue = $"new {new ModelType(typeof(List<>), false, ModelType.Create<string>(true)).ToTypeName()}()" },
+			new Field(new ModelType(typeof(List<>), false, ModelType.Create<string>(false)), "Field7") { InitValue = "new List<string>()" }
 		}
 	});
 

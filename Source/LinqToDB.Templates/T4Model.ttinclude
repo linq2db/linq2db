@@ -879,18 +879,6 @@ public partial class Field : MemberBase
 		Name = name;
 	}
 
-	public Field(Type type, string name, bool referenceNullable, params ModelType[] typeArguments)
-	{
-		TypeBuilder = () => new ModelType(type, referenceNullable, typeArguments).ToTypeName();
-		Name = name;
-	}
-
-	public Field(string type, string name, bool referenceType, bool nullable, params ModelType[] typeArguments)
-	{
-		TypeBuilder = () => new ModelType(type, referenceType, nullable, typeArguments).ToTypeName();
-		Name = name;
-	}
-
 	public Field(Func<string> typeBuilder, string name)
 	{
 		TypeBuilder = typeBuilder;

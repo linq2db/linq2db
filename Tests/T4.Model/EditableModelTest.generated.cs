@@ -27,7 +27,7 @@ namespace Tests.T4.Model
 		#region EditableLong1 : long
 
 		private long  _currentEditableLong1 = 12345;
-		private long _originalEditableLong1;
+		private long _originalEditableLong1 = 12345;
 		public  long          EditableLong1
 		{
 			get { return _currentEditableLong1; }
@@ -149,6 +149,12 @@ namespace Tests.T4.Model
 		#endregion
 
 		public List<String?>? Field4;
+
+		public List<String>? Field5;
+
+		public List<String?> Field6 = new List<String?>();
+
+		public List<String> Field7 = new List<string>();
 
 		#region EditableObject support
 
