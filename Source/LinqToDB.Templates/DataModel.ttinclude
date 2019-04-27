@@ -26,6 +26,7 @@ string   BaseDataContextClass          = null;
 string   BaseEntityClass               = null;
 string   OneToManyAssociationType      = "IEnumerable<{0}>";
 
+bool     GenerateDatabaseInfo          = true;
 bool     GenerateDatabaseName          = false;
 bool     GenerateConstructors          = true;
 string   DefaultConfiguration          = null;
@@ -109,11 +110,14 @@ void LoadServerMetadata(DataConnection dataConnection)
 	if (DataContextName == null)
 		DataContextObject.Name = DataContextName = ToValidName(db.Database, true) + "DB";
 
-	DataContextObject.Comment.Add("/ <summary>");
-	DataContextObject.Comment.Add("/ Database       : " + db.Database);
-	DataContextObject.Comment.Add("/ Data Source    : " + db.DataSource);
-	DataContextObject.Comment.Add("/ Server Version : " + db.ServerVersion);
-	DataContextObject.Comment.Add("/ </summary>");
+	if (GenerateDatabaseInfo)
+	{
+		DataContextObject.Comment.Add("/ <summary>");
+		DataContextObject.Comment.Add("/ Database       : " + db.Database);
+		DataContextObject.Comment.Add("/ Data Source    : " + db.DataSource);
+		DataContextObject.Comment.Add("/ Server Version : " + db.ServerVersion);
+		DataContextObject.Comment.Add("/ </summary>");
+	}
 
 	var tables = db.Tables
 		.Where(t => !t.IsProviderSpecific)
@@ -312,6 +316,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 						ParameterType = pr.ParameterType,
 						SystemType    = pr.SystemType,
 						DataType      = pr.DataType.ToString(),
+						IsNullable    = pr.IsNullable
 					})
 					.ToList(),
 			}
@@ -803,23 +808,7 @@ public partial class ForeignKey : Property
 		}
 	}
 
-	private bool DisableNullable => EnableNullableReferenceTypes && EnforceModelNullability && (!CanBeNull || AssociationType == AssociationType.OneToMany);
-
-	public override void BeginConditional(GeneratedTextTransformation tt, bool isCompact)
-	{
-		base.BeginConditional(tt, isCompact);
-
-		if (DisableNullable)
-			tt.WriteLine("#nullable disable");
-	}
-
-	public override void EndConditional(GeneratedTextTransformation tt, bool isCompact)
-	{
-		if (DisableNullable)
-			tt.WriteLine("#nullable enable");
-
-		base.EndConditional(tt, isCompact);
-	}
+	protected override bool DisableNullable => EnableNullableReferenceTypes && EnforceModelNullability && (!CanBeNull || AssociationType == AssociationType.OneToMany);
 }
 
 public partial class Procedure : Method
@@ -849,6 +838,7 @@ public class Parameter
 
 	public string   ParameterName { get; set; }
 	public string   ParameterType { get; set; }
+	public bool     IsNullable    { get; set; }
 	public Type     SystemType    { get; set; }
 	public string   DataType      { get; set; }
 }

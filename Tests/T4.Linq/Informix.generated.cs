@@ -17,11 +17,6 @@ using LinqToDB.Mapping;
 
 namespace InformixDataContext
 {
-	/// <summary>
-	/// Database       : linq2db
-	/// Data Source    : ol_informix1210
-	/// Server Version : 12.10.0000 FC8DE
-	/// </summary>
 	public partial class Linq2dbDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }

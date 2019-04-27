@@ -735,7 +735,11 @@ void GenerateTypesFromMetadata()
 			else if (p.IsAggregateFunction)
 			{
 				p.IsStatic = true;
-				p.TypeBuilder = () => p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
+				p.TypeBuilder = () =>
+				{
+					var resultParam = p.ProcParameters.Single(pr => pr.IsResult);
+					return new ModelType(resultParam.ParameterType, !IsValueType(resultParam.ParameterType), resultParam.IsNullable).ToTypeName();
+				};
 				var paramCount = p.ProcParameters.Count(pr => !pr.IsResult);
 				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + ToStringLiteral((p.Schema != null ? p.Schema + "." : null) + p.ProcedureName), "ServerSideOnly=true, IsAggregate = true" + (paramCount > 0 ? (", ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }") : null)));
 

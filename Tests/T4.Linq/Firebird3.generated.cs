@@ -20,11 +20,6 @@ using LinqToDB.Mapping;
 
 namespace Firebird3DataContext
 {
-	/// <summary>
-	/// Database       : TESTDB30
-	/// Data Source    : localhost
-	/// Server Version : WI-V3.0.3.32900 Firebird 3.0/tcp (---)/P13
-	/// </summary>
 	public partial class TESTDB30DB : LinqToDB.Data.DataConnection
 	{
 		public ITable<ALLTYPE>                  ALLTYPES                 { get { return this.GetTable<ALLTYPE>(); } }

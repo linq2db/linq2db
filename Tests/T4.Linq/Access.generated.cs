@@ -20,11 +20,6 @@ using LinqToDB.Mapping;
 
 namespace AccessDataContext
 {
-	/// <summary>
-	/// Database       : TestData
-	/// Data Source    : C:\GitHub\linq2db\\Data\TestData.mdb
-	/// Server Version : 04.00.0000
-	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>             AllTypes             { get { return this.GetTable<AllType>(); } }

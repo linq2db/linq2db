@@ -20,11 +20,6 @@ using LinqToDB.Mapping;
 
 namespace OracleDataContext
 {
-	/// <summary>
-	/// Database       : XE
-	/// Data Source    : dbhost2
-	/// Server Version : 11.2.0.2.0
-	/// </summary>
 	public partial class XEDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<ALLTYPE>             ALLTYPES            { get { return this.GetTable<ALLTYPE>(); } }

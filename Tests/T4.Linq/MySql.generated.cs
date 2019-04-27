@@ -20,11 +20,6 @@ using LinqToDB.Mapping;
 
 namespace MySqlDataContext
 {
-	/// <summary>
-	/// Database       : testdb55
-	/// Data Source    : localhost
-	/// Server Version : 5.5.55-log
-	/// </summary>
 	public partial class Testdb55DB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }

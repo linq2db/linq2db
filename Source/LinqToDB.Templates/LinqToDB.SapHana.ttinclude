@@ -65,6 +65,7 @@
 					ParameterType = pr.ParameterType,
 					SystemType    = pr.SystemType,
 					DataType      = pr.DataType.ToString(),
+					IsNullable    = pr.IsNullable
 				})
 				.ToList()
 			};

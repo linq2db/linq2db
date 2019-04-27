@@ -4,6 +4,7 @@
 <#
 	AddNullablePragma = true;
 	EnableNullableReferenceTypes = true;
+	GenerateDatabaseInfo = false;
 
 	string GetConnectionString(string config)
 	{

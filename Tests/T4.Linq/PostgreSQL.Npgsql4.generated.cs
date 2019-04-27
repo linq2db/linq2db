@@ -26,11 +26,6 @@ using NpgsqlTypes;
 
 namespace PostreSQLEDGEDataContext
 {
-	/// <summary>
-	/// Database       : testdb_npgsql4
-	/// Data Source    : tcp://localhost:5411
-	/// Server Version : 11.1
-	/// </summary>
 	public partial class TestdbNpgsql4DB : LinqToDB.Data.DataConnection
 	{
 		public ITable<_testsamename>                  _testsamename             { get { return this.GetTable<_testsamename>(); } }
@@ -62,23 +57,23 @@ namespace PostreSQLEDGEDataContext
 
 		partial void InitMappingSchema()
 		{
-			MappingSchema.SetConvertExpression<object[], pg_control_checkpointResult>(tuple => new pg_control_checkpointResult() { checkpoint_lsn = (object)tuple[0], redo_lsn = (object)tuple[1], redo_wal_file = (string)tuple[2], timeline_id = (int?)tuple[3], prev_timeline_id = (int?)tuple[4], full_page_writes = (bool?)tuple[5], next_xid = (string)tuple[6], next_oid = (int?)tuple[7], next_multixact_id = (int?)tuple[8], next_multi_offset = (int?)tuple[9], oldest_xid = (int?)tuple[10], oldest_xid_dbid = (int?)tuple[11], oldest_active_xid = (int?)tuple[12], oldest_multi_xid = (int?)tuple[13], oldest_multi_dbid = (int?)tuple[14], oldest_commit_ts_xid = (int?)tuple[15], newest_commit_ts_xid = (int?)tuple[16], checkpoint_time = (DateTimeOffset?)tuple[17] });
+			MappingSchema.SetConvertExpression<object[], pg_control_checkpointResult>(tuple => new pg_control_checkpointResult() { checkpoint_lsn = (object?)tuple[0], redo_lsn = (object?)tuple[1], redo_wal_file = (string?)tuple[2], timeline_id = (int?)tuple[3], prev_timeline_id = (int?)tuple[4], full_page_writes = (bool?)tuple[5], next_xid = (string?)tuple[6], next_oid = (int?)tuple[7], next_multixact_id = (int?)tuple[8], next_multi_offset = (int?)tuple[9], oldest_xid = (int?)tuple[10], oldest_xid_dbid = (int?)tuple[11], oldest_active_xid = (int?)tuple[12], oldest_multi_xid = (int?)tuple[13], oldest_multi_dbid = (int?)tuple[14], oldest_commit_ts_xid = (int?)tuple[15], newest_commit_ts_xid = (int?)tuple[16], checkpoint_time = (DateTimeOffset?)tuple[17] });
 			MappingSchema.SetConvertExpression<object[], pg_control_initResult>(tuple => new pg_control_initResult() { max_data_alignment = (int?)tuple[0], database_block_size = (int?)tuple[1], blocks_per_segment = (int?)tuple[2], wal_block_size = (int?)tuple[3], bytes_per_wal_segment = (int?)tuple[4], max_identifier_length = (int?)tuple[5], max_index_columns = (int?)tuple[6], max_toast_chunk_size = (int?)tuple[7], large_object_chunk_size = (int?)tuple[8], float4_pass_by_value = (bool?)tuple[9], float8_pass_by_value = (bool?)tuple[10], data_page_checksum_version = (int?)tuple[11] });
-			MappingSchema.SetConvertExpression<object[], pg_control_recoveryResult>(tuple => new pg_control_recoveryResult() { min_recovery_end_lsn = (object)tuple[0], min_recovery_end_timeline = (int?)tuple[1], backup_start_lsn = (object)tuple[2], backup_end_lsn = (object)tuple[3], end_of_backup_record_required = (bool?)tuple[4] });
+			MappingSchema.SetConvertExpression<object[], pg_control_recoveryResult>(tuple => new pg_control_recoveryResult() { min_recovery_end_lsn = (object?)tuple[0], min_recovery_end_timeline = (int?)tuple[1], backup_start_lsn = (object?)tuple[2], backup_end_lsn = (object?)tuple[3], end_of_backup_record_required = (bool?)tuple[4] });
 			MappingSchema.SetConvertExpression<object[], pg_control_systemResult>(tuple => new pg_control_systemResult() { pg_control_version = (int?)tuple[0], catalog_version_no = (int?)tuple[1], system_identifier = (long?)tuple[2], pg_control_last_modified = (DateTimeOffset?)tuple[3] });
-			MappingSchema.SetConvertExpression<object[], pg_create_logical_replication_slotResult>(tuple => new pg_create_logical_replication_slotResult() { slot_name = (string)tuple[0], lsn = (object)tuple[1] });
-			MappingSchema.SetConvertExpression<object[], pg_create_physical_replication_slotResult>(tuple => new pg_create_physical_replication_slotResult() { slot_name = (string)tuple[0], lsn = (object)tuple[1] });
+			MappingSchema.SetConvertExpression<object[], pg_create_logical_replication_slotResult>(tuple => new pg_create_logical_replication_slotResult() { slot_name = (string?)tuple[0], lsn = (object?)tuple[1] });
+			MappingSchema.SetConvertExpression<object[], pg_create_physical_replication_slotResult>(tuple => new pg_create_physical_replication_slotResult() { slot_name = (string?)tuple[0], lsn = (object?)tuple[1] });
 			MappingSchema.SetConvertExpression<object[], pg_get_object_addressResult>(tuple => new pg_get_object_addressResult() { classid = (int?)tuple[0], objid = (int?)tuple[1], objsubid = (int?)tuple[2] });
-			MappingSchema.SetConvertExpression<object[], pg_identify_objectResult>(tuple => new pg_identify_objectResult() { type = (string)tuple[0], schema = (string)tuple[1], name = (string)tuple[2], identity = (string)tuple[3] });
-			MappingSchema.SetConvertExpression<object[], pg_identify_object_as_addressResult>(tuple => new pg_identify_object_as_addressResult() { type = (string)tuple[0], object_names = (object)tuple[1], object_args = (object)tuple[2] });
+			MappingSchema.SetConvertExpression<object[], pg_identify_objectResult>(tuple => new pg_identify_objectResult() { type = (string?)tuple[0], schema = (string?)tuple[1], name = (string?)tuple[2], identity = (string?)tuple[3] });
+			MappingSchema.SetConvertExpression<object[], pg_identify_object_as_addressResult>(tuple => new pg_identify_object_as_addressResult() { type = (string?)tuple[0], object_names = (object?)tuple[1], object_args = (object?)tuple[2] });
 			MappingSchema.SetConvertExpression<object[], pg_last_committed_xactResult>(tuple => new pg_last_committed_xactResult() { xid = (int?)tuple[0], timestamp = (DateTimeOffset?)tuple[1] });
-			MappingSchema.SetConvertExpression<object[], pg_replication_slot_advanceResult>(tuple => new pg_replication_slot_advanceResult() { slot_name = (string)tuple[0], end_lsn = (object)tuple[1] });
+			MappingSchema.SetConvertExpression<object[], pg_replication_slot_advanceResult>(tuple => new pg_replication_slot_advanceResult() { slot_name = (string?)tuple[0], end_lsn = (object?)tuple[1] });
 			MappingSchema.SetConvertExpression<object[], pg_sequence_parametersResult>(tuple => new pg_sequence_parametersResult() { start_value = (long?)tuple[0], minimum_value = (long?)tuple[1], maximum_value = (long?)tuple[2], increment = (long?)tuple[3], cycle_option = (bool?)tuple[4], cache_size = (long?)tuple[5], data_type = (int?)tuple[6] });
 			MappingSchema.SetConvertExpression<object[], pg_stat_fileResult>(tuple => new pg_stat_fileResult() { size = (long?)tuple[0], access = (DateTimeOffset?)tuple[1], modification = (DateTimeOffset?)tuple[2], change = (DateTimeOffset?)tuple[3], creation = (DateTimeOffset?)tuple[4], isdir = (bool?)tuple[5] });
-			MappingSchema.SetConvertExpression<object[], pg_stat_get_archiverResult>(tuple => new pg_stat_get_archiverResult() { archived_count = (long?)tuple[0], last_archived_wal = (string)tuple[1], last_archived_time = (DateTimeOffset?)tuple[2], failed_count = (long?)tuple[3], last_failed_wal = (string)tuple[4], last_failed_time = (DateTimeOffset?)tuple[5], stats_reset = (DateTimeOffset?)tuple[6] });
-			MappingSchema.SetConvertExpression<object[], pg_stat_get_subscriptionResult>(tuple => new pg_stat_get_subscriptionResult() { subid = (int?)tuple[0], relid = (int?)tuple[1], pid = (int?)tuple[2], received_lsn = (object)tuple[3], last_msg_send_time = (DateTimeOffset?)tuple[4], last_msg_receipt_time = (DateTimeOffset?)tuple[5], latest_end_lsn = (object)tuple[6], latest_end_time = (DateTimeOffset?)tuple[7] });
-			MappingSchema.SetConvertExpression<object[], pg_stat_get_wal_receiverResult>(tuple => new pg_stat_get_wal_receiverResult() { pid = (int?)tuple[0], status = (string)tuple[1], receive_start_lsn = (object)tuple[2], receive_start_tli = (int?)tuple[3], received_lsn = (object)tuple[4], received_tli = (int?)tuple[5], last_msg_send_time = (DateTimeOffset?)tuple[6], last_msg_receipt_time = (DateTimeOffset?)tuple[7], latest_end_lsn = (object)tuple[8], latest_end_time = (DateTimeOffset?)tuple[9], slot_name = (string)tuple[10], sender_host = (string)tuple[11], sender_port = (int?)tuple[12], conninfo = (string)tuple[13] });
-			MappingSchema.SetConvertExpression<object[], pg_walfile_name_offsetResult>(tuple => new pg_walfile_name_offsetResult() { file_name = (string)tuple[0], file_offset = (int?)tuple[1] });
+			MappingSchema.SetConvertExpression<object[], pg_stat_get_archiverResult>(tuple => new pg_stat_get_archiverResult() { archived_count = (long?)tuple[0], last_archived_wal = (string?)tuple[1], last_archived_time = (DateTimeOffset?)tuple[2], failed_count = (long?)tuple[3], last_failed_wal = (string?)tuple[4], last_failed_time = (DateTimeOffset?)tuple[5], stats_reset = (DateTimeOffset?)tuple[6] });
+			MappingSchema.SetConvertExpression<object[], pg_stat_get_subscriptionResult>(tuple => new pg_stat_get_subscriptionResult() { subid = (int?)tuple[0], relid = (int?)tuple[1], pid = (int?)tuple[2], received_lsn = (object?)tuple[3], last_msg_send_time = (DateTimeOffset?)tuple[4], last_msg_receipt_time = (DateTimeOffset?)tuple[5], latest_end_lsn = (object?)tuple[6], latest_end_time = (DateTimeOffset?)tuple[7] });
+			MappingSchema.SetConvertExpression<object[], pg_stat_get_wal_receiverResult>(tuple => new pg_stat_get_wal_receiverResult() { pid = (int?)tuple[0], status = (string?)tuple[1], receive_start_lsn = (object?)tuple[2], receive_start_tli = (int?)tuple[3], received_lsn = (object?)tuple[4], received_tli = (int?)tuple[5], last_msg_send_time = (DateTimeOffset?)tuple[6], last_msg_receipt_time = (DateTimeOffset?)tuple[7], latest_end_lsn = (object?)tuple[8], latest_end_time = (DateTimeOffset?)tuple[9], slot_name = (string?)tuple[10], sender_host = (string?)tuple[11], sender_port = (int?)tuple[12], conninfo = (string?)tuple[13] });
+			MappingSchema.SetConvertExpression<object[], pg_walfile_name_offsetResult>(tuple => new pg_walfile_name_offsetResult() { file_name = (string?)tuple[0], file_offset = (int?)tuple[1] });
 			MappingSchema.SetConvertExpression<object[], TestFunctionParametersResult>(tuple => new TestFunctionParametersResult() { param2 = (int?)tuple[0], param3 = (int?)tuple[1] });
 		}
 
@@ -1339,11 +1334,11 @@ namespace PostreSQLEDGEDataContext
 
 	public partial class pg_control_checkpointResult
 	{
-		public object checkpoint_lsn { get; set; }
+		public object? checkpoint_lsn { get; set; }
 
-		public object redo_lsn { get; set; }
+		public object? redo_lsn { get; set; }
 
-		public string redo_wal_file { get; set; }
+		public string? redo_wal_file { get; set; }
 
 		public int? timeline_id { get; set; }
 
@@ -1351,7 +1346,7 @@ namespace PostreSQLEDGEDataContext
 
 		public bool? full_page_writes { get; set; }
 
-		public string next_xid { get; set; }
+		public string? next_xid { get; set; }
 
 		public int? next_oid { get; set; }
 
@@ -1405,13 +1400,13 @@ namespace PostreSQLEDGEDataContext
 
 	public partial class pg_control_recoveryResult
 	{
-		public object min_recovery_end_lsn { get; set; }
+		public object? min_recovery_end_lsn { get; set; }
 
 		public int? min_recovery_end_timeline { get; set; }
 
-		public object backup_start_lsn { get; set; }
+		public object? backup_start_lsn { get; set; }
 
-		public object backup_end_lsn { get; set; }
+		public object? backup_end_lsn { get; set; }
 
 		public bool? end_of_backup_record_required { get; set; }
 	}
@@ -1429,16 +1424,16 @@ namespace PostreSQLEDGEDataContext
 
 	public partial class pg_create_logical_replication_slotResult
 	{
-		public string slot_name { get; set; }
+		public string? slot_name { get; set; }
 
-		public object lsn { get; set; }
+		public object? lsn { get; set; }
 	}
 
 	public partial class pg_create_physical_replication_slotResult
 	{
-		public string slot_name { get; set; }
+		public string? slot_name { get; set; }
 
-		public object lsn { get; set; }
+		public object? lsn { get; set; }
 	}
 
 	public partial class pg_get_object_addressResult
@@ -1452,22 +1447,22 @@ namespace PostreSQLEDGEDataContext
 
 	public partial class pg_identify_objectResult
 	{
-		public string type { get; set; }
+		public string? type { get; set; }
 
-		public string schema { get; set; }
+		public string? schema { get; set; }
 
-		public string name { get; set; }
+		public string? name { get; set; }
 
-		public string identity { get; set; }
+		public string? identity { get; set; }
 	}
 
 	public partial class pg_identify_object_as_addressResult
 	{
-		public string type { get; set; }
+		public string? type { get; set; }
 
-		public object object_names { get; set; }
+		public object? object_names { get; set; }
 
-		public object object_args { get; set; }
+		public object? object_args { get; set; }
 	}
 
 	public partial class pg_last_committed_xactResult
@@ -1479,9 +1474,9 @@ namespace PostreSQLEDGEDataContext
 
 	public partial class pg_replication_slot_advanceResult
 	{
-		public string slot_name { get; set; }
+		public string? slot_name { get; set; }
 
-		public object end_lsn { get; set; }
+		public object? end_lsn { get; set; }
 	}
 
 	public partial class pg_sequence_parametersResult
@@ -1520,13 +1515,13 @@ namespace PostreSQLEDGEDataContext
 	{
 		public long? archived_count { get; set; }
 
-		public string last_archived_wal { get; set; }
+		public string? last_archived_wal { get; set; }
 
 		public DateTimeOffset? last_archived_time { get; set; }
 
 		public long? failed_count { get; set; }
 
-		public string last_failed_wal { get; set; }
+		public string? last_failed_wal { get; set; }
 
 		public DateTimeOffset? last_failed_time { get; set; }
 
@@ -1541,13 +1536,13 @@ namespace PostreSQLEDGEDataContext
 
 		public int? pid { get; set; }
 
-		public object received_lsn { get; set; }
+		public object? received_lsn { get; set; }
 
 		public DateTimeOffset? last_msg_send_time { get; set; }
 
 		public DateTimeOffset? last_msg_receipt_time { get; set; }
 
-		public object latest_end_lsn { get; set; }
+		public object? latest_end_lsn { get; set; }
 
 		public DateTimeOffset? latest_end_time { get; set; }
 	}
@@ -1556,13 +1551,13 @@ namespace PostreSQLEDGEDataContext
 	{
 		public int? pid { get; set; }
 
-		public string status { get; set; }
+		public string? status { get; set; }
 
-		public object receive_start_lsn { get; set; }
+		public object? receive_start_lsn { get; set; }
 
 		public int? receive_start_tli { get; set; }
 
-		public object received_lsn { get; set; }
+		public object? received_lsn { get; set; }
 
 		public int? received_tli { get; set; }
 
@@ -1570,22 +1565,22 @@ namespace PostreSQLEDGEDataContext
 
 		public DateTimeOffset? last_msg_receipt_time { get; set; }
 
-		public object latest_end_lsn { get; set; }
+		public object? latest_end_lsn { get; set; }
 
 		public DateTimeOffset? latest_end_time { get; set; }
 
-		public string slot_name { get; set; }
+		public string? slot_name { get; set; }
 
-		public string sender_host { get; set; }
+		public string? sender_host { get; set; }
 
 		public int? sender_port { get; set; }
 
-		public string conninfo { get; set; }
+		public string? conninfo { get; set; }
 	}
 
 	public partial class pg_walfile_name_offsetResult
 	{
-		public string file_name { get; set; }
+		public string? file_name { get; set; }
 
 		public int? file_offset { get; set; }
 	}
@@ -2459,7 +2454,7 @@ namespace PostreSQLEDGEDataContext
 		#region ArrayAgg
 
 		[Sql.Function(Name="pg_catalog.array_agg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static object ArrayAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par157)
+		public static object? ArrayAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par157)
 		{
 			throw new InvalidOperationException();
 		}
@@ -3109,7 +3104,7 @@ namespace PostreSQLEDGEDataContext
 		#region BitAnd
 
 		[Sql.Function(Name="pg_catalog.bit_and", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static BitArray BitAnd<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, BitArray>> par381)
+		public static BitArray? BitAnd<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, BitArray>> par381)
 		{
 			throw new InvalidOperationException();
 		}
@@ -3139,7 +3134,7 @@ namespace PostreSQLEDGEDataContext
 		#region BitOr
 
 		[Sql.Function(Name="pg_catalog.bit_or", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static BitArray BitOr<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, BitArray>> par399)
+		public static BitArray? BitOr<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, BitArray>> par399)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12169,7 +12164,7 @@ namespace PostreSQLEDGEDataContext
 		#region JsonAgg
 
 		[Sql.Function(Name="pg_catalog.json_agg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static string JsonAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3604)
+		public static string? JsonAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3604)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12289,7 +12284,7 @@ namespace PostreSQLEDGEDataContext
 		#region JsonObjectAgg
 
 		[Sql.Function(Name="pg_catalog.json_object_agg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static string JsonObjectAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3630, Expression<Func<TSource, object>> par3631)
+		public static string? JsonObjectAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3630, Expression<Func<TSource, object>> par3631)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12419,7 +12414,7 @@ namespace PostreSQLEDGEDataContext
 		#region JsonbAgg
 
 		[Sql.Function(Name="pg_catalog.jsonb_agg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static string JsonbAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3662)
+		public static string? JsonbAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3662)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12719,7 +12714,7 @@ namespace PostreSQLEDGEDataContext
 		#region JsonbObjectAgg
 
 		[Sql.Function(Name="pg_catalog.jsonb_object_agg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static string JsonbObjectAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3743, Expression<Func<TSource, object>> par3744)
+		public static string? JsonbObjectAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3743, Expression<Func<TSource, object>> par3744)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14309,7 +14304,7 @@ namespace PostreSQLEDGEDataContext
 		#region Mode
 
 		[Sql.Function(Name="pg_catalog.mode", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static object Mode<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par4364)
+		public static object? Mode<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par4364)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16089,7 +16084,7 @@ namespace PostreSQLEDGEDataContext
 		#region PercentileCont
 
 		[Sql.Function(Name="pg_catalog.percentile_cont", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static object PercentileCont<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par4980, Expression<Func<TSource, NpgsqlTimeSpan?>> par4981)
+		public static object? PercentileCont<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par4980, Expression<Func<TSource, NpgsqlTimeSpan?>> par4981)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16139,7 +16134,7 @@ namespace PostreSQLEDGEDataContext
 		#region PercentileDisc
 
 		[Sql.Function(Name="pg_catalog.percentile_disc", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static object PercentileDisc<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par4998, Expression<Func<TSource, object>> par4999)
+		public static object? PercentileDisc<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par4998, Expression<Func<TSource, object>> par4999)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21659,7 +21654,7 @@ namespace PostreSQLEDGEDataContext
 		#region StringAgg
 
 		[Sql.Function(Name="pg_catalog.string_agg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static byte[] StringAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, byte[]>> par6461, Expression<Func<TSource, byte[]>> par6462)
+		public static byte[]? StringAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, byte[]>> par6461, Expression<Func<TSource, byte[]>> par6462)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25599,7 +25594,7 @@ namespace PostreSQLEDGEDataContext
 		#region Xmlagg
 
 		[Sql.Function(Name="pg_catalog.xmlagg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static string Xmlagg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, string>> par7865)
+		public static string? Xmlagg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, string>> par7865)
 		{
 			throw new InvalidOperationException();
 		}

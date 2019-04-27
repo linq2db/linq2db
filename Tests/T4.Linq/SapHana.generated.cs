@@ -22,11 +22,6 @@ using LinqToDB.Mapping;
 
 namespace SapHanaDataContext
 {
-	/// <summary>
-	/// Database       : SYSTEMDB
-	/// Data Source    : hxehost
-	/// Server Version : 02.00.010.00.1491294693
-	/// </summary>
 	public partial class SYSTEMDBDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>                                            AllTypes                               { get { return this.GetTable<AllType>(); } }

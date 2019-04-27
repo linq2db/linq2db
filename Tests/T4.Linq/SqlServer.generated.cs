@@ -23,11 +23,6 @@ using Microsoft.SqlServer.Types;
 
 namespace DataModel
 {
-	/// <summary>
-	/// Database       : Northwind
-	/// Data Source    : .
-	/// Server Version : 13.00.5292
-	/// </summary>
 	public partial class NorthwindDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   { get { return this.GetTable<AlphabeticalListOfProduct>(); } }
@@ -1389,11 +1384,6 @@ namespace DataModel
 		#endregion
 	}
 
-	/// <summary>
-	/// Database       : TestData2014
-	/// Data Source    : .
-	/// Server Version : 13.00.5292
-	/// </summary>
 	public partial class TestData2014DB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }

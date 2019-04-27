@@ -20,11 +20,6 @@ using LinqToDB.Mapping;
 
 namespace MariaDBDataContext
 {
-	/// <summary>
-	/// Database       : testmariadb
-	/// Data Source    : localhost
-	/// Server Version : 5.5.5-10.3.0-MariaDB
-	/// </summary>
 	public partial class TestmariadbDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }

@@ -131,6 +131,8 @@ DataContextName                = null;
 GenerateConstructors          = true;               // Enforce generating DataContext constructors.
 // (string) Defines name of default configuration to use with default data context constructor
 DefaultConfiguration          = null;
+// Enables generation of data context comment with database name, data source and database version
+GenerateDatabaseInfo          = true;
 
 /* Schemas configuration */
 // Enables generation of mappings for each schema in separate type

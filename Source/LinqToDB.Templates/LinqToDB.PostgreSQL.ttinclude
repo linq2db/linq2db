@@ -45,8 +45,9 @@ void FixRecordResultFunctions()
 			var mappings = new List<string>();
 			foreach (var outParam in proc.ProcParameters.Where(_ => _.IsOut))
 			{
-				result.Members.Add(new Property(() => outParam.ParameterType, outParam.ParameterName, null, null));
-				mappings.Add($"{outParam.ParameterName} = ({outParam.ParameterType})tuple[{mappings.Count}]");
+				var type = new ModelType(outParam.ParameterType, !IsValueType(outParam.ParameterType), outParam.IsNullable);
+				result.Members.Add(new Property(type, outParam.ParameterName, null, null));
+				mappings.Add($"{outParam.ParameterName} = ({type.ToTypeName()})tuple[{mappings.Count}]");
 
 				if (outParam.IsIn)
 					outParam.IsOut = false;

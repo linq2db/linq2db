@@ -20,11 +20,6 @@ using LinqToDB.Mapping;
 
 namespace SybaseDataActionDataContext
 {
-	/// <summary>
-	/// Database       : TestDataCore
-	/// Data Source    : dbhost2,5000
-	/// Server Version : 16.0.2
-	/// </summary>
 	public partial class TestDataCoreDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }

@@ -20,11 +20,6 @@ using LinqToDB.Mapping;
 
 namespace DB2DataContext
 {
-	/// <summary>
-	/// Database       : TESTDB2
-	/// Data Source    : localhost:50000
-	/// Server Version : 11.01.0101
-	/// </summary>
 	public partial class TESTDB2DB : LinqToDB.Data.DataConnection
 	{
 		public ITable<DB2ADMIN_ALLTYPE>           ALLTYPES            { get { return this.GetTable<DB2ADMIN_ALLTYPE>(); } }

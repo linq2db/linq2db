@@ -17,11 +17,6 @@ using LinqToDB.Mapping;
 
 namespace SqlCeDataContext
 {
-	/// <summary>
-	/// Database       : TestData
-	/// Data Source    : C:\GitHub\linq2db\\Data\TestData.sdf
-	/// Server Version : 4.0.8876.1
-	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
