@@ -127,7 +127,7 @@ void GenerateTypesFromMetadata()
 
 		foreach (var schema in schemas.Values)
 		{
-			schemaMembers.Members.Add(new Property(() => schema.TypeName + "." + SchemaDataContextTypeName, schema.PropertyName));
+			schemaMembers.Members.Add(new Property(true, () => schema.TypeName + "." + SchemaDataContextTypeName, schema.PropertyName));
 			body.Add(() => new string[] {
 				schema.PropertyName + LenDiff(maxLen1, schema.PropertyName) +
 				" = new " + schema.TypeName + "." + LenDiff(maxLen2, schema.TypeName) +
@@ -462,7 +462,7 @@ void GenerateTypesFromMetadata()
 					if (key.AssociationType == AssociationType.OneToMany)
 						key.TypeBuilder = () => string.Format(OneToManyAssociationType, key.OtherTable.TypePrefix + key.OtherTable.TypeName);
 					else
-						key.TypeBuilder = () => key.OtherTable.TypePrefix + key.OtherTable.TypeName;
+						key.TypeBuilder = () => new ModelType(key.OtherTable.TypePrefix + key.OtherTable.TypeName, true, key.CanBeNull).ToTypeName();
 
 					var aa = new Attribute("Association");
 

@@ -4,6 +4,10 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,13 +73,13 @@ namespace SqlCeDataContext
 		[Column("floatDataType"),               Nullable         ] public double?   FloatDataType            { get; set; } // float
 		[Column("realDataType"),                Nullable         ] public float?    RealDataType             { get; set; } // real
 		[Column("datetimeDataType"),            Nullable         ] public DateTime? DatetimeDataType         { get; set; } // datetime
-		[Column("ncharDataType"),               Nullable         ] public string    NcharDataType            { get; set; } // nchar(20)
-		[Column("nvarcharDataType"),            Nullable         ] public string    NvarcharDataType         { get; set; } // nvarchar(20)
-		[Column("ntextDataType"),               Nullable         ] public string    NtextDataType            { get; set; } // ntext
-		[Column("binaryDataType"),              Nullable         ] public byte[]    BinaryDataType           { get; set; } // binary(1)
-		[Column("varbinaryDataType"),           Nullable         ] public byte[]    VarbinaryDataType        { get; set; } // varbinary(1)
-		[Column("imageDataType"),               Nullable         ] public byte[]    ImageDataType            { get; set; } // image
-		[Column("timestampDataType"),           Nullable         ] public byte[]    TimestampDataType        { get; set; } // rowversion
+		[Column("ncharDataType"),               Nullable         ] public string?   NcharDataType            { get; set; } // nchar(20)
+		[Column("nvarcharDataType"),            Nullable         ] public string?   NvarcharDataType         { get; set; } // nvarchar(20)
+		[Column("ntextDataType"),               Nullable         ] public string?   NtextDataType            { get; set; } // ntext
+		[Column("binaryDataType"),              Nullable         ] public byte[]?   BinaryDataType           { get; set; } // binary(1)
+		[Column("varbinaryDataType"),           Nullable         ] public byte[]?   VarbinaryDataType        { get; set; } // varbinary(1)
+		[Column("imageDataType"),               Nullable         ] public byte[]?   ImageDataType            { get; set; } // image
+		[Column("timestampDataType"),           Nullable         ] public byte[]?   TimestampDataType        { get; set; } // rowversion
 		[Column("uniqueidentifierDataType"),    Nullable         ] public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
 	}
 
@@ -97,15 +101,20 @@ namespace SqlCeDataContext
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
+		#nullable disable
 		[Column,     NotNull] public string Taxonomy { get; set; } // nvarchar(50)
+		#nullable enable
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
 		public Person Person { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -121,18 +130,18 @@ namespace SqlCeDataContext
 	[Table("InheritanceChild")]
 	public partial class InheritanceChild
 	{
-		[PrimaryKey, NotNull    ] public int    InheritanceChildId  { get; set; } // int
-		[Column,     NotNull    ] public int    InheritanceParentId { get; set; } // int
-		[Column,        Nullable] public int?   TypeDiscriminator   { get; set; } // int
-		[Column,        Nullable] public string Name                { get; set; } // nvarchar(50)
+		[PrimaryKey, NotNull    ] public int     InheritanceChildId  { get; set; } // int
+		[Column,     NotNull    ] public int     InheritanceParentId { get; set; } // int
+		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
+		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
 	}
 
 	[Table("InheritanceParent")]
 	public partial class InheritanceParent
 	{
-		[PrimaryKey, NotNull    ] public int    InheritanceParentId { get; set; } // int
-		[Column,        Nullable] public int?   TypeDiscriminator   { get; set; } // int
-		[Column,        Nullable] public string Name                { get; set; } // nvarchar(50)
+		[PrimaryKey, NotNull    ] public int     InheritanceParentId { get; set; } // int
+		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
+		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
 	}
 
 	[Table("Issue695")]
@@ -143,11 +152,14 @@ namespace SqlCeDataContext
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_Issue695_Parent
 		/// </summary>
 		[Association(ThisKey="ID, ID", OtherKey="ID, ID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Issue695_Parent", BackReferenceName="FKIssue695ParentBackReferences")]
 		public Issue695Parent Parent { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -159,11 +171,14 @@ namespace SqlCeDataContext
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_Issue695_Parent_BackReference
 		/// </summary>
 		[Association(ThisKey="ID, ID", OtherKey="ID, ID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<Issue695> FKIssue695ParentBackReferences { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -177,11 +192,11 @@ namespace SqlCeDataContext
 		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // datetime
 		[Column, Nullable] public bool?     BoolValue      { get; set; } // bit
 		[Column, Nullable] public Guid?     GuidValue      { get; set; } // uniqueidentifier
-		[Column, Nullable] public byte[]    BinaryValue    { get; set; } // varbinary(5000)
+		[Column, Nullable] public byte[]?   BinaryValue    { get; set; } // varbinary(5000)
 		[Column, Nullable] public short?    SmallIntValue  { get; set; } // smallint
 		[Column, Nullable] public int?      IntValue       { get; set; } // int
 		[Column, Nullable] public long?     BigIntValue    { get; set; } // bigint
-		[Column, Nullable] public string    StringValue    { get; set; } // nvarchar(50)
+		[Column, Nullable] public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 
 	[Table("Parent")]
@@ -195,15 +210,20 @@ namespace SqlCeDataContext
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
+		#nullable disable
 		[Column,     NotNull] public string Diagnosis { get; set; } // nvarchar(256)
+		#nullable enable
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
 		public Person Person { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -211,11 +231,15 @@ namespace SqlCeDataContext
 	[Table("Person")]
 	public partial class Person
 	{
-		[PrimaryKey, NotNull    ] public int    PersonID   { get; set; } // int
-		[Column,     NotNull    ] public string FirstName  { get; set; } // nvarchar(50)
-		[Column,     NotNull    ] public string LastName   { get; set; } // nvarchar(50)
-		[Column,        Nullable] public string MiddleName { get; set; } // nvarchar(50)
-		[Column,     NotNull    ] public char   Gender     { get; set; } // nchar(1)
+		[PrimaryKey, NotNull    ] public int     PersonID   { get; set; } // int
+		#nullable disable
+		[Column,     NotNull    ] public string  FirstName  { get; set; } // nvarchar(50)
+		#nullable enable
+		#nullable disable
+		[Column,     NotNull    ] public string  LastName   { get; set; } // nvarchar(50)
+		#nullable enable
+		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(50)
+		[Column,     NotNull    ] public char    Gender     { get; set; } // nchar(1)
 
 		#region Associations
 
@@ -223,13 +247,13 @@ namespace SqlCeDataContext
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Doctor Doctor { get; set; }
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Patient Patient { get; set; }
+		public Patient? Patient { get; set; }
 
 		#endregion
 	}
@@ -251,17 +275,17 @@ namespace SqlCeDataContext
 		[Column,        Nullable] public int?      Field5          { get; set; } // int
 		[Column,        Nullable] public long?     FieldInt64      { get; set; } // bigint
 		[Column,        Nullable] public bool?     FieldBoolean    { get; set; } // bit
-		[Column,        Nullable] public string    FieldString     { get; set; } // nvarchar(20)
-		[Column,        Nullable] public string    FieldNString    { get; set; } // nvarchar(20)
+		[Column,        Nullable] public string?   FieldString     { get; set; } // nvarchar(20)
+		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(20)
 		[Column,        Nullable] public char?     FieldChar       { get; set; } // nchar(1)
 		[Column,        Nullable] public char?     FieldNChar      { get; set; } // nchar(1)
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
-		[Column,        Nullable] public byte[]    FieldBinary     { get; set; } // varbinary(20)
+		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public Guid?     FieldGuid       { get; set; } // uniqueidentifier
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // numeric(24, 10)
-		[Column,        Nullable] public string    FieldEnumString { get; set; } // nvarchar(20)
+		[Column,        Nullable] public string?   FieldEnumString { get; set; } // nvarchar(20)
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // int
 	}
 
@@ -276,17 +300,17 @@ namespace SqlCeDataContext
 		[Column,        Nullable] public int?      Field5          { get; set; } // int
 		[Column,        Nullable] public long?     FieldInt64      { get; set; } // bigint
 		[Column,        Nullable] public bool?     FieldBoolean    { get; set; } // bit
-		[Column,        Nullable] public string    FieldString     { get; set; } // nvarchar(20)
-		[Column,        Nullable] public string    FieldNString    { get; set; } // nvarchar(20)
+		[Column,        Nullable] public string?   FieldString     { get; set; } // nvarchar(20)
+		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(20)
 		[Column,        Nullable] public char?     FieldChar       { get; set; } // nchar(1)
 		[Column,        Nullable] public char?     FieldNChar      { get; set; } // nchar(1)
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
-		[Column,        Nullable] public byte[]    FieldBinary     { get; set; } // varbinary(20)
+		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public Guid?     FieldGuid       { get; set; } // uniqueidentifier
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // numeric(24, 10)
-		[Column,        Nullable] public string    FieldEnumString { get; set; } // nvarchar(20)
+		[Column,        Nullable] public string?   FieldEnumString { get; set; } // nvarchar(20)
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // int
 	}
 
@@ -482,3 +506,6 @@ namespace SqlCeDataContext
 		#endregion
 	}
 }
+
+#nullable restore
+#pragma warning restore 1591

@@ -96,6 +96,17 @@ Use the following initialization **before** you call the `LoadMetadata()` method
 /* Global/generic options */
 // Namespace to use for generated model
 NamespaceName                  = "DataModels";
+// Generate #nullable pragma:
+// "#nullable enable" if EnableNullableReferenceTypes is true
+// "#nullable disable" if EnableNullableReferenceTypes is false
+AddNullablePragma              = false;
+// Enables generation of nullable reference type annotations
+EnableNullableReferenceTypes   = false;
+// Disable CS8618 for uninitialized model columns and references of non-nullable reference type
+EnforceModelNullability        = true;
+// Defines method to distinguish value types from reference types by type name
+// used by nullable reference types feature to detect reference types, when only type name available
+Func<string, boolean> IsValueType = IsValueTypeDefault;
 
 /* Data context configuration */
 // (string) Name of base class for generated data context class.

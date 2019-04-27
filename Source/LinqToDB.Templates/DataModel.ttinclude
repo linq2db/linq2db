@@ -43,6 +43,7 @@ bool PluralizeDataContextPropertyNames   = true;
 bool SingularizeDataContextPropertyNames = false;
 
 bool NormalizeNames                      = true;
+static bool EnforceModelNullability      = true;
 
 private Func<string, bool, string> _toValidName;
 Func<string, bool, string> ToValidName
@@ -134,7 +135,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 				Description             = t.Description,
 				Columns                 = t.Columns.ToDictionary(
 					c => c.ColumnName,
-					c => new Column
+					c => new Column(new ModelType(ConvertTableColumnMemberType(t, c), !IsValueType(ConvertTableColumnMemberType(t, c)), c.IsNullable))
 					{
 						ColumnName      = c.ColumnName,
 						ColumnType      = c.ColumnType,
@@ -147,7 +148,6 @@ void LoadServerMetadata(DataConnection dataConnection)
 						IsPrimaryKey    = c.IsPrimaryKey,
 						PrimaryKeyOrder = c.PrimaryKeyOrder,
 						MemberName      = CheckType(c.SystemType, c.MemberName),
-						TypeBuilder     = () => ConvertTableColumnMemberType(t, c),
 						SkipOnInsert    = c.SkipOnInsert,
 						SkipOnUpdate    = c.SkipOnUpdate,
 						Description     = c.Description,
@@ -275,7 +275,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 						Columns  = ToDictionary(
 							p.ResultTable.Columns,
 							c => c.ColumnName,
-							c => new Column
+							c => new Column(new ModelType(ConvertProcedureColumnMemberType(p, c), !IsValueType(ConvertProcedureColumnMemberType(p, c)), c.IsNullable))
 							{
 								ColumnName      = c.ColumnName,
 								ColumnType      = c.ColumnType,
@@ -284,7 +284,6 @@ void LoadServerMetadata(DataConnection dataConnection)
 								IsPrimaryKey    = c.IsPrimaryKey,
 								PrimaryKeyOrder = c.PrimaryKeyOrder,
 								MemberName      = CheckColumnName(CheckType(c.SystemType, c.MemberName)),
-								TypeBuilder     = () => ConvertProcedureColumnMemberType(p, c),
 								SkipOnInsert    = c.SkipOnInsert,
 								SkipOnUpdate    = c.SkipOnUpdate,
 								Description     = c.Description,
@@ -721,6 +720,16 @@ public partial class Table : Class
 
 public partial class Column : Property
 {
+	public Column()
+	{
+	}
+
+	public Column(ModelType type)
+	{
+		ModelType = type;
+		TypeBuilder = () => ModelType.ToTypeName();
+	}
+
 	public string    ColumnName; // Column name in database
 	public bool      IsNullable;
 	public bool      IsIdentity;
@@ -744,6 +753,10 @@ public partial class Column : Property
 		get { return Name;  }
 		set { Name = value; }
 	}
+
+	public ModelType ModelType { get; }
+
+	protected override bool DisableNullable => EnableNullableReferenceTypes && EnforceModelNullability && ModelType != null && ModelType.IsReference && !ModelType.IsNullable;
 }
 
 public enum AssociationType
@@ -788,6 +801,24 @@ public partial class ForeignKey : Property
 				}
 			}
 		}
+	}
+
+	private bool DisableNullable => EnableNullableReferenceTypes && EnforceModelNullability && (!CanBeNull || AssociationType == AssociationType.OneToMany);
+
+	public override void BeginConditional(GeneratedTextTransformation tt, bool isCompact)
+	{
+		base.BeginConditional(tt, isCompact);
+
+		if (DisableNullable)
+			tt.WriteLine("#nullable disable");
+	}
+
+	public override void EndConditional(GeneratedTextTransformation tt, bool isCompact)
+	{
+		if (DisableNullable)
+			tt.WriteLine("#nullable enable");
+
+		base.EndConditional(tt, isCompact);
 	}
 }
 

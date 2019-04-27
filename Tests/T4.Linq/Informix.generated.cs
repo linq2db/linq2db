@@ -4,6 +4,10 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +28,7 @@ namespace InformixDataContext
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
+		public ITable<Informix>          Informixes         { get { return this.GetTable<Informix>(); } }
 		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
 		public ITable<Inheritanceparent> Inheritanceparents { get { return this.GetTable<Inheritanceparent>(); } }
 		public ITable<Linqdatatype>      Linqdatatypes      { get { return this.GetTable<Linqdatatype>(); } }
@@ -68,16 +73,16 @@ namespace InformixDataContext
 		[Column("floatdatatype"),    Nullable            ] public double?   Floatdatatype    { get; set; } // FLOAT
 		[Column("booldatatype"),     Nullable            ] public bool?     Booldatatype     { get; set; } // BOOLEAN
 		[Column("chardatatype"),     Nullable            ] public char?     Chardatatype     { get; set; } // CHAR(1)
-		[Column("char20datatype"),   Nullable            ] public string    Char20datatype   { get; set; } // CHAR(20)
-		[Column("varchardatatype"),  Nullable            ] public string    Varchardatatype  { get; set; } // VARCHAR(10)
-		[Column("nchardatatype"),    Nullable            ] public string    Nchardatatype    { get; set; } // NCHAR(10)
-		[Column("nvarchardatatype"), Nullable            ] public string    Nvarchardatatype { get; set; } // NVARCHAR(10)
-		[Column("lvarchardatatype"), Nullable            ] public string    Lvarchardatatype { get; set; } // LVARCHAR(10)
-		[Column("textdatatype"),     Nullable            ] public string    Textdatatype     { get; set; } // TEXT
+		[Column("char20datatype"),   Nullable            ] public string?   Char20datatype   { get; set; } // CHAR(20)
+		[Column("varchardatatype"),  Nullable            ] public string?   Varchardatatype  { get; set; } // VARCHAR(10)
+		[Column("nchardatatype"),    Nullable            ] public string?   Nchardatatype    { get; set; } // NCHAR(10)
+		[Column("nvarchardatatype"), Nullable            ] public string?   Nvarchardatatype { get; set; } // NVARCHAR(10)
+		[Column("lvarchardatatype"), Nullable            ] public string?   Lvarchardatatype { get; set; } // LVARCHAR(10)
+		[Column("textdatatype"),     Nullable            ] public string?   Textdatatype     { get; set; } // TEXT
 		[Column("datedatatype"),     Nullable            ] public DateTime? Datedatatype     { get; set; } // DATE
 		[Column("datetimedatatype"), Nullable            ] public DateTime? Datetimedatatype { get; set; } // DATETIME YEAR TO SECOND
 		[Column("intervaldatatype"), Nullable            ] public TimeSpan? Intervaldatatype { get; set; } // INTERVAL HOUR TO SECOND
-		[Column("bytedatatype"),     Nullable            ] public byte[]    Bytedatatype     { get; set; } // BYTE
+		[Column("bytedatatype"),     Nullable            ] public byte[]?   Bytedatatype     { get; set; } // BYTE
 	}
 
 	[Table(Schema="informix", Name="child")]
@@ -91,15 +96,20 @@ namespace InformixDataContext
 	public partial class Doctor
 	{
 		[Column("personid"), PrimaryKey, NotNull] public int    Personid { get; set; } // INTEGER
+		#nullable disable
 		[Column("taxonomy"),             NotNull] public string Taxonomy { get; set; } // NVARCHAR(50)
+		#nullable enable
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_doctor_person
 		/// </summary>
 		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_doctor_person", BackReferenceName="Doctor")]
 		public Person Person { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -112,21 +122,30 @@ namespace InformixDataContext
 		[Column("grandchildid"), Nullable] public int? Grandchildid { get; set; } // INTEGER
 	}
 
+	[Table(Schema="informix", Name="informix")]
+	public partial class Informix
+	{
+		[Column("id"),            PrimaryKey,  NotNull] public int     Id            { get; set; } // INTEGER
+		[Column("duplicatedata"),    Nullable         ] public string? Duplicatedata { get; set; } // NVARCHAR(255)
+		[Column("orderdata1"),                 NotNull] public int     Orderdata1    { get; set; } // INTEGER
+		[Column("orderdata2"),                 NotNull] public int     Orderdata2    { get; set; } // INTEGER
+	}
+
 	[Table(Schema="informix", Name="inheritancechild")]
 	public partial class Inheritancechild
 	{
-		[Column("inheritancechildid"),  PrimaryKey,  NotNull] public int    Inheritancechildid  { get; set; } // INTEGER
-		[Column("inheritanceparentid"),              NotNull] public int    Inheritanceparentid { get; set; } // INTEGER
-		[Column("typediscriminator"),      Nullable         ] public int?   Typediscriminator   { get; set; } // INTEGER
-		[Column("name"),                   Nullable         ] public string Name                { get; set; } // NVARCHAR(50)
+		[Column("inheritancechildid"),  PrimaryKey,  NotNull] public int     Inheritancechildid  { get; set; } // INTEGER
+		[Column("inheritanceparentid"),              NotNull] public int     Inheritanceparentid { get; set; } // INTEGER
+		[Column("typediscriminator"),      Nullable         ] public int?    Typediscriminator   { get; set; } // INTEGER
+		[Column("name"),                   Nullable         ] public string? Name                { get; set; } // NVARCHAR(50)
 	}
 
 	[Table(Schema="informix", Name="inheritanceparent")]
 	public partial class Inheritanceparent
 	{
-		[Column("inheritanceparentid"), PrimaryKey,  NotNull] public int    Inheritanceparentid { get; set; } // INTEGER
-		[Column("typediscriminator"),      Nullable         ] public int?   Typediscriminator   { get; set; } // INTEGER
-		[Column("name"),                   Nullable         ] public string Name                { get; set; } // NVARCHAR(50)
+		[Column("inheritanceparentid"), PrimaryKey,  NotNull] public int     Inheritanceparentid { get; set; } // INTEGER
+		[Column("typediscriminator"),      Nullable         ] public int?    Typediscriminator   { get; set; } // INTEGER
+		[Column("name"),                   Nullable         ] public string? Name                { get; set; } // NVARCHAR(50)
 	}
 
 	[Table(Schema="informix", Name="linqdatatypes")]
@@ -137,12 +156,12 @@ namespace InformixDataContext
 		[Column("datetimevalue"),  Nullable] public DateTime? Datetimevalue  { get; set; } // DATETIME YEAR TO FRACTION(3)
 		[Column("datetimevalue2"), Nullable] public DateTime? Datetimevalue2 { get; set; } // DATETIME YEAR TO FRACTION(3)
 		[Column("boolvalue"),      Nullable] public bool?     Boolvalue      { get; set; } // BOOLEAN
-		[Column("guidvalue"),      Nullable] public string    Guidvalue      { get; set; } // CHAR(36)
-		[Column("binaryvalue"),    Nullable] public byte[]    Binaryvalue    { get; set; } // BYTE
+		[Column("guidvalue"),      Nullable] public string?   Guidvalue      { get; set; } // CHAR(36)
+		[Column("binaryvalue"),    Nullable] public byte[]?   Binaryvalue    { get; set; } // BYTE
 		[Column("smallintvalue"),  Nullable] public short?    Smallintvalue  { get; set; } // SMALLINT
 		[Column("intvalue"),       Nullable] public int?      Intvalue       { get; set; } // INTEGER
 		[Column("bigintvalue"),    Nullable] public long?     Bigintvalue    { get; set; } // BIGINT
-		[Column("stringvalue"),    Nullable] public string    Stringvalue    { get; set; } // NVARCHAR(50)
+		[Column("stringvalue"),    Nullable] public string?   Stringvalue    { get; set; } // NVARCHAR(50)
 	}
 
 	[Table(Schema="informix", Name="parent")]
@@ -156,15 +175,20 @@ namespace InformixDataContext
 	public partial class Patient
 	{
 		[Column("personid"),  PrimaryKey, NotNull] public int    Personid  { get; set; } // INTEGER
+		#nullable disable
 		[Column("diagnosis"),             NotNull] public string Diagnosis { get; set; } // NVARCHAR(100)
+		#nullable enable
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_patient_person
 		/// </summary>
 		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_patient_person", BackReferenceName="Patient")]
 		public Person Person { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -172,11 +196,15 @@ namespace InformixDataContext
 	[Table(Schema="informix", Name="person")]
 	public partial class Person
 	{
-		[Column("personid"),   PrimaryKey,  Identity] public int    Personid   { get; set; } // SERIAL
-		[Column("firstname"),  NotNull              ] public string Firstname  { get; set; } // NVARCHAR(50)
-		[Column("lastname"),   NotNull              ] public string Lastname   { get; set; } // NVARCHAR(50)
-		[Column("middlename"),    Nullable          ] public string Middlename { get; set; } // NVARCHAR(50)
-		[Column("gender"),     NotNull              ] public char   Gender     { get; set; } // CHAR(1)
+		[Column("personid"),   PrimaryKey,  Identity] public int     Personid   { get; set; } // SERIAL
+		#nullable disable
+		[Column("firstname"),  NotNull              ] public string  Firstname  { get; set; } // NVARCHAR(50)
+		#nullable enable
+		#nullable disable
+		[Column("lastname"),   NotNull              ] public string  Lastname   { get; set; } // NVARCHAR(50)
+		#nullable enable
+		[Column("middlename"),    Nullable          ] public string? Middlename { get; set; } // NVARCHAR(50)
+		[Column("gender"),     NotNull              ] public char    Gender     { get; set; } // CHAR(1)
 
 		#region Associations
 
@@ -184,13 +212,13 @@ namespace InformixDataContext
 		/// FK_doctor_person_BackReference
 		/// </summary>
 		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Doctor Doctor { get; set; }
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_patient_person_BackReference
 		/// </summary>
 		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Patient Patient { get; set; }
+		public Patient? Patient { get; set; }
 
 		#endregion
 	}
@@ -198,11 +226,15 @@ namespace InformixDataContext
 	[Table(Schema="informix", Name="personview", IsView=true)]
 	public partial class Personview
 	{
-		[Column("personid"),   Identity   ] public int    Personid   { get; set; } // SERIAL
-		[Column("firstname"),  NotNull    ] public string Firstname  { get; set; } // NVARCHAR(50)
-		[Column("lastname"),   NotNull    ] public string Lastname   { get; set; } // NVARCHAR(50)
-		[Column("middlename"),    Nullable] public string Middlename { get; set; } // NVARCHAR(50)
-		[Column("gender"),     NotNull    ] public char   Gender     { get; set; } // CHAR(1)
+		[Column("personid"),   Identity   ] public int     Personid   { get; set; } // SERIAL
+		#nullable disable
+		[Column("firstname"),  NotNull    ] public string  Firstname  { get; set; } // NVARCHAR(50)
+		#nullable enable
+		#nullable disable
+		[Column("lastname"),   NotNull    ] public string  Lastname   { get; set; } // NVARCHAR(50)
+		#nullable enable
+		[Column("middlename"),    Nullable] public string? Middlename { get; set; } // NVARCHAR(50)
+		[Column("gender"),     NotNull    ] public char    Gender     { get; set; } // CHAR(1)
 	}
 
 	[Table(Schema="informix", Name="testfkunique")]
@@ -215,17 +247,22 @@ namespace InformixDataContext
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_testfkunique_testunique_1
 		/// </summary>
 		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_testfkunique_testunique_1", BackReferenceName="FkTestfkuniqueTestunique1BackReferences")]
 		public Testunique FkTestfkuniqueTestunique1 { get; set; }
 
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// FK_testfkunique_testunique
 		/// </summary>
 		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_testfkunique_testunique", BackReferenceName="Testfkuniques")]
 		public Testunique Testunique { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -247,16 +284,16 @@ namespace InformixDataContext
 		[Column("field5"),             Nullable         ] public int?      Field5          { get; set; } // INTEGER
 		[Column("fieldint64"),         Nullable         ] public long?     Fieldint64      { get; set; } // BIGINT
 		[Column("fieldboolean"),       Nullable         ] public bool?     Fieldboolean    { get; set; } // BOOLEAN
-		[Column("fieldstring"),        Nullable         ] public string    Fieldstring     { get; set; } // VARCHAR(20)
+		[Column("fieldstring"),        Nullable         ] public string?   Fieldstring     { get; set; } // VARCHAR(20)
 		[Column("fieldchar"),          Nullable         ] public char?     Fieldchar       { get; set; } // CHAR(1)
 		[Column("fieldfloat"),         Nullable         ] public float?    Fieldfloat      { get; set; } // SMALLFLOAT
 		[Column("fielddouble"),        Nullable         ] public double?   Fielddouble     { get; set; } // FLOAT
 		[Column("fielddatetime"),      Nullable         ] public DateTime? Fielddatetime   { get; set; } // DATETIME YEAR TO FRACTION(3)
-		[Column("fieldbinary"),        Nullable         ] public byte[]    Fieldbinary     { get; set; } // BYTE
+		[Column("fieldbinary"),        Nullable         ] public byte[]?   Fieldbinary     { get; set; } // BYTE
 		[Column("fielddecimal"),       Nullable         ] public decimal?  Fielddecimal    { get; set; } // DECIMAL(24,10)
 		[Column("fielddate"),          Nullable         ] public DateTime? Fielddate       { get; set; } // DATE
 		[Column("fieldtime"),          Nullable         ] public TimeSpan? Fieldtime       { get; set; } // INTERVAL HOUR TO FRACTION(5)
-		[Column("fieldenumstring"),    Nullable         ] public string    Fieldenumstring { get; set; } // VARCHAR(20)
+		[Column("fieldenumstring"),    Nullable         ] public string?   Fieldenumstring { get; set; } // VARCHAR(20)
 		[Column("fieldenumnumber"),    Nullable         ] public int?      Fieldenumnumber { get; set; } // INTEGER
 	}
 
@@ -271,16 +308,16 @@ namespace InformixDataContext
 		[Column("field5"),             Nullable         ] public int?      Field5          { get; set; } // INTEGER
 		[Column("fieldint64"),         Nullable         ] public long?     Fieldint64      { get; set; } // BIGINT
 		[Column("fieldboolean"),       Nullable         ] public bool?     Fieldboolean    { get; set; } // BOOLEAN
-		[Column("fieldstring"),        Nullable         ] public string    Fieldstring     { get; set; } // VARCHAR(20)
+		[Column("fieldstring"),        Nullable         ] public string?   Fieldstring     { get; set; } // VARCHAR(20)
 		[Column("fieldchar"),          Nullable         ] public char?     Fieldchar       { get; set; } // CHAR(1)
 		[Column("fieldfloat"),         Nullable         ] public float?    Fieldfloat      { get; set; } // SMALLFLOAT
 		[Column("fielddouble"),        Nullable         ] public double?   Fielddouble     { get; set; } // FLOAT
 		[Column("fielddatetime"),      Nullable         ] public DateTime? Fielddatetime   { get; set; } // DATETIME YEAR TO FRACTION(3)
-		[Column("fieldbinary"),        Nullable         ] public byte[]    Fieldbinary     { get; set; } // BYTE
+		[Column("fieldbinary"),        Nullable         ] public byte[]?   Fieldbinary     { get; set; } // BYTE
 		[Column("fielddecimal"),       Nullable         ] public decimal?  Fielddecimal    { get; set; } // DECIMAL(24,10)
 		[Column("fielddate"),          Nullable         ] public DateTime? Fielddate       { get; set; } // DATE
 		[Column("fieldtime"),          Nullable         ] public TimeSpan? Fieldtime       { get; set; } // INTERVAL HOUR TO FRACTION(5)
-		[Column("fieldenumstring"),    Nullable         ] public string    Fieldenumstring { get; set; } // VARCHAR(20)
+		[Column("fieldenumstring"),    Nullable         ] public string?   Fieldenumstring { get; set; } // VARCHAR(20)
 		[Column("fieldenumnumber"),    Nullable         ] public int?      Fieldenumnumber { get; set; } // INTEGER
 	}
 
@@ -294,17 +331,22 @@ namespace InformixDataContext
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_testfkunique_testunique_1_BackReference
 		/// </summary>
 		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<Testfkunique> FkTestfkuniqueTestunique1BackReferences { get; set; }
 
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// FK_testfkunique_testunique_BackReference
 		/// </summary>
 		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<Testfkunique> Testfkuniques { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -321,6 +363,12 @@ namespace InformixDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.Personid == Personid);
+		}
+
+		public static Informix Find(this ITable<Informix> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
 		}
 
 		public static Inheritancechild Find(this ITable<Inheritancechild> table, int Inheritancechildid)
@@ -373,3 +421,6 @@ namespace InformixDataContext
 		}
 	}
 }
+
+#nullable restore
+#pragma warning restore 1591

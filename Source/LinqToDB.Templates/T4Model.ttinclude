@@ -8,7 +8,11 @@ static Action<GeneratedTextTransformation,string> WriteComment    = (tt,s) => tt
 
 Action BeforeGenerateModel = () => {};
 
-bool GenerateProcedureErrors = true;
+bool GenerateProcedureErrors             = true;
+
+static bool EnableNullableReferenceTypes = false;
+static bool AddNullablePragma            = false;
+static Func<string, bool> IsValueType    = IsValueTypeDefault;
 
 void GenerateModel()
 {
@@ -26,13 +30,18 @@ void GenerateModel()
 
 	WriteLine("");
 	WriteLine("#pragma warning disable 1591");
+	if (AddNullablePragma)
+		WriteLine($"#nullable {(EnableNullableReferenceTypes ? "enable" : "disable")}");
 	WriteLine("");
+
 
 	BeforeGenerateModel();
 
 	Model.Render(this);
 
 	WriteLine("");
+	if (AddNullablePragma)
+		WriteLine($"#nullable restore");
 	WriteLine("#pragma warning restore 1591");
 
 }
@@ -864,6 +873,24 @@ public partial class Field : MemberBase
 	{
 	}
 
+	public Field(ModelType type, string name)
+	{
+		TypeBuilder = () => type.ToTypeName();
+		Name = name;
+	}
+
+	public Field(Type type, string name, bool referenceNullable, params ModelType[] typeArguments)
+	{
+		TypeBuilder = () => new ModelType(type, referenceNullable, typeArguments).ToTypeName();
+		Name = name;
+	}
+
+	public Field(string type, string name, bool referenceType, bool nullable, params ModelType[] typeArguments)
+	{
+		TypeBuilder = () => new ModelType(type, referenceType, nullable, typeArguments).ToTypeName();
+		Name = name;
+	}
+
 	public Field(Func<string> typeBuilder, string name)
 	{
 		TypeBuilder = typeBuilder;
@@ -916,6 +943,18 @@ public partial class Event : MemberBase
 
 	public Event()
 	{
+	}
+
+	public Event(Type eventType, string name, bool nullable)
+	{
+		TypeBuilder = () => new ModelType(eventType, nullable).ToTypeName();
+		Name = name;
+	}
+
+	public Event(string eventType, string name, bool nullable)
+	{
+		TypeBuilder = () => new ModelType(eventType, true, nullable).ToTypeName();
+		Name = name;
 	}
 
 	public Event(Func<string> typeBuilder, string name)
@@ -1096,6 +1135,20 @@ public partial class Property : MemberBase
 	{
 	}
 
+	public Property(ModelType type, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
+	{
+		TypeBuilder = () => type.ToTypeName();
+		Name        = name;
+
+		InitBody(getBodyBuilder, setBodyBuilder);
+	}
+
+	public Property(bool disableNullable, Func<string> typeBuilder, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
+		: this(typeBuilder, name, getBodyBuilder, setBodyBuilder)
+	{
+		DisableNullable = disableNullable;
+	}
+
 	public Property(Func<string> typeBuilder, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
 	{
 		TypeBuilder = typeBuilder;
@@ -1191,6 +1244,24 @@ public partial class Property : MemberBase
 	public IEnumerable<string> BuildSetBody()
 	{
 		return SetBodyBuilders.SelectMany(builder => builder?.Invoke() ?? Array.Empty<string>());
+	}
+	
+	protected virtual bool DisableNullable { get; }
+
+	public override void BeginConditional(GeneratedTextTransformation tt, bool isCompact)
+	{
+		base.BeginConditional(tt, isCompact);
+
+		if (DisableNullable)
+			tt.WriteLine("#nullable disable");
+	}
+
+	public override void EndConditional(GeneratedTextTransformation tt, bool isCompact)
+	{
+		if (DisableNullable)
+			tt.WriteLine("#nullable enable");
+
+		base.EndConditional(tt, isCompact);
 	}
 }
 
@@ -1559,6 +1630,148 @@ static string ToStringLiteral(string value)
 	sb.Append('"');
 
 	return sb.ToString();
+}
+
+public class ModelType
+{
+	private readonly IList<ModelType> _arguments = new List<ModelType>();
+
+	public static ModelType Create<TType>(bool referenceNullable)
+	{
+		return new ModelType(typeof(TType), referenceNullable);
+	}
+
+	public ModelType(Type type, bool nullable, params ModelType[] typeArguments)
+	{
+		if (type.IsConstructedGenericType)
+		{
+			if (typeArguments != null && typeArguments.Length > 0)
+				throw new ArgumentException($"{type} must be open generic type or {typeArguments} should be empty");
+
+			_arguments = new List<ModelType>(type.GetGenericArguments().Select(a => new ModelType(a, /* we don't have type info here */ false)));
+		}
+
+		Type        = type;
+		IsReference = !type.IsValueType;
+		IsNullable  = nullable || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>));
+		if (typeArguments != null && typeArguments.Length > 0)
+			_arguments = new List<ModelType>(typeArguments);
+	}
+
+	public ModelType(string type, bool referenceType, bool isNullable, params ModelType[] typeArguments)
+	{
+		TypeName    = type;
+		IsReference = referenceType;
+		IsNullable  = isNullable;
+
+		if (typeArguments != null && typeArguments.Length > 0)
+			_arguments = new List<ModelType>(typeArguments);
+	}
+
+	public Type   Type        { get; }
+	public string TypeName    { get; }
+	public bool   IsReference { get; }
+	public bool   IsNullable  { get; }
+
+	public IEnumerable<ModelType> Arguments => _arguments ?? Array.Empty<ModelType>();
+
+	public string ToTypeName()
+	{
+		var sb = new StringBuilder();
+
+		if (TypeName != null)
+			sb.Append(TypeName);
+		else
+			sb.Append(Type.Name.Substring(0, Type.Name.IndexOf('`') < 0 ? Type.Name.Length : Type.Name.IndexOf('`')));
+
+		if (_arguments != null && _arguments.Count > 0)
+		{
+			sb.Append("<");
+			sb.Append(string.Join(", ", _arguments.Select(a => a.ToTypeName())));
+			sb.Append(">");
+		}
+
+		if (EnableNullableReferenceTypes && IsReference && IsNullable)
+			sb.Append("?");
+		
+		return sb.ToString();
+	}
+}
+
+static bool IsValueTypeDefault(string typeName)
+{
+	switch (typeName)
+	{
+		case "bool":
+		case "bool?":
+		case "char":
+		case "char?":
+		case "decimal":
+		case "decimal?":
+		case "int":
+		case "int?":
+		case "uint":
+		case "uint?":
+		case "byte":
+		case "byte?":
+		case "sbyte":
+		case "sbyte?":
+		case "long":
+		case "long?":
+		case "ulong":
+		case "ulong?":
+		case "short":
+		case "short?":
+		case "float":
+		case "float?":
+		case "double":
+		case "double?":
+		case "DateTime":
+		case "DateTime?":
+		case "DateTimeOffset":
+		case "DateTimeOffset?":
+		case "TimeSpan":
+		case "TimeSpan?":
+		case "Guid":
+		case "Guid?":
+		case "SqlHierarchyId":
+		case "SqlHierarchyId?":
+		case "NpgsqlDate":
+		case "NpgsqlDate?":
+		case "NpgsqlTimeSpan":
+		case "NpgsqlTimeSpan?":
+		case "NpgsqlPoint":
+		case "NpgsqlPoint?":
+		case "NpgsqlLSeg":
+		case "NpgsqlLSeg?":
+		case "NpgsqlBox":
+		case "NpgsqlBox?":
+		case "NpgsqlPath":
+		case "NpgsqlPath?":
+		case "NpgsqlPolygon":
+		case "NpgsqlPolygon?":
+		case "NpgsqlCircle":
+		case "NpgsqlCircle?":
+		case "NpgsqlLine":
+		case "NpgsqlLine?":
+		case "NpgsqlInet":
+		case "NpgsqlInet?":
+			return true;
+		case "object":
+		case "string":
+		case "byte[]":
+		case "BitArray":
+		case "SqlGeography":
+		case "SqlGeometry":
+		case "PhysicalAddress":
+		case "Array":
+			return false;
+	}
+
+	if (EnableNullableReferenceTypes)
+		throw new InvalidOperationException($"Cannot resolve type name: {typeName}");
+
+	return false;
 }
 
 #>

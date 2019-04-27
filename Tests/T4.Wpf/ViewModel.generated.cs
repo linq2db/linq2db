@@ -4,6 +4,10 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+#nullable enable
+
 using System;
 using System.ComponentModel;
 using System.Windows.Media;
@@ -115,7 +119,7 @@ namespace Tests.T4.Wpf
 #if !SILVERLIGHT
 		[field : NonSerialized]
 #endif
-		public virtual event PropertyChangedEventHandler PropertyChanged;
+		public virtual event PropertyChangedEventHandler? PropertyChanged;
 
 		protected void OnPropertyChanged(string propertyName)
 		{
@@ -166,3 +170,6 @@ namespace Tests.T4.Wpf
 		#endregion
 	}
 }
+
+#nullable restore
+#pragma warning restore 1591

@@ -35,7 +35,7 @@ void NotifyDataErrorInfoImpl()
 					Region  = "INotifyDataErrorInfo support",
 					Members =
 					{
-						new Event(() => "EventHandler<DataErrorsChangedEventArgs>", "ErrorsChanged")
+						new Event("EventHandler<DataErrorsChangedEventArgs>", "ErrorsChanged", true)
 						{
 							IsVirtual  = true,
 							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }

@@ -40,7 +40,7 @@
 				Description             = t.Description,
 				Columns                 = t.Columns.ToDictionary(
 				c => c.ColumnName,
-				c => new Column
+				c => new Column(new ModelType(c.MemberType, !IsValueType(c.MemberType), c.IsNullable))
 				{
 					ColumnName      = c.ColumnName,
 					ColumnType      = c.ColumnType,
@@ -49,7 +49,6 @@
 					IsPrimaryKey    = c.IsPrimaryKey,
 					PrimaryKeyOrder = c.PrimaryKeyOrder,
 					MemberName      = CheckType(c.SystemType, c.MemberName),
-					TypeBuilder     = () => c.MemberType,
 					SkipOnInsert    = c.SkipOnInsert,
 					SkipOnUpdate    = c.SkipOnUpdate,
 					Description     = c.Description,

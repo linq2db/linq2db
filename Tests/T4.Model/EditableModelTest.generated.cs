@@ -4,6 +4,10 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -144,7 +148,7 @@ namespace Tests.T4.Model
 
 		#endregion
 
-		public List<string> Field4;
+		public List<String?>? Field4;
 
 		#region EditableObject support
 
@@ -204,3 +208,6 @@ namespace Tests.T4.Model
 		#endregion
 	}
 }
+
+#nullable restore
+#pragma warning restore 1591
