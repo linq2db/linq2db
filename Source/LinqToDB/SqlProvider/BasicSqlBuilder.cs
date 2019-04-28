@@ -3211,7 +3211,8 @@ namespace LinqToDB.SqlProvider
 					sb.Append("SET     ");
 					PrintParameterName(sb, p);
 					sb.Append(" = ");
-					ValueToSqlConverter.Convert(sb, p.Value);
+					if (!ValueToSqlConverter.TryConvert(sb, p.Value))
+						sb.Append(p.Value);
 					sb.AppendLine();
 				}
 

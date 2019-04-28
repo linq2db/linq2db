@@ -36,6 +36,35 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
+		public void TargetAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareAssociationsData(db);
+
+				var rows = db.GetTable<TestJoinPerson>()
+					.Merge()
+					.Using(db.GetTable<TestJoinPerson>())
+					.On((t, s) => t.ID == s.ID + 10)
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient.Diagnosis.Contains("very"))
+					.Merge();
+
+				var result = db.Person.OrderBy(_ => _.ID).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertPerson(AssociationPersons[0], result[0]);
+				AssertPerson(AssociationPersons[1], result[1]);
+				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(AssociationPersons[4], result[3]);
+				AssertPerson(AssociationPersons[5], result[4]);
+			}
+		}
+
+		[Test, Parallelizable(ParallelScope.None)]
 		public void TargetQueryAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))

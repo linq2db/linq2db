@@ -218,14 +218,16 @@ namespace LinqToDB.SqlProvider
 		public StringBuilder Convert(StringBuilder stringBuilder, object value)
 		{
 			if (!TryConvert(stringBuilder, value))
-				stringBuilder.Append(value);
+				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
+				//stringBuilder.Append(value);
 			return stringBuilder;
 		}
 
 		public StringBuilder Convert(StringBuilder stringBuilder, SqlDataType dataType, object value)
 		{
 			if (!TryConvert(stringBuilder, dataType, value))
-				stringBuilder.Append(value);
+				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
+				//stringBuilder.Append(value);
 			return stringBuilder;
 		}
 

@@ -203,28 +203,20 @@ namespace Tests.xUpdate
 
 				var table = GetTarget(db);
 
-				try
-				{
-					var rows = table
-						.Merge()
-						.Using(GetSource2(db)
-							.ToList()
-							.Select(_ => new
-							{
-								Id = _.OtherId,
-								Field = parameterValues.val
-							}))
-						.On((t, s) => t.Id == s.Id || t.Id == 2)
-						.DeleteWhenNotMatchedBySourceAnd(t => t.Field3 != 1)
-						.Merge();
+				var rows = table
+					.Merge()
+					.Using(GetSource2(db)
+						.ToList()
+						.Select(_ => new
+						{
+							Id = _.OtherId,
+							Field = parameterValues.val
+						}))
+					.On((t, s) => t.Id == s.Id || t.Id == 2 || s.Field != null)
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Field3 != 1)
+					.Merge();
 
-					Assert.Fail();
-				}
-				catch (SqlException ex)
-				{
-					Assert.AreEqual(4, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
-					Assert.AreEqual(8011, ex.Number);
-				}
+				Assert.AreEqual(4, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
