@@ -34,7 +34,6 @@ void GenerateModel()
 		WriteLine($"#nullable {(EnableNullableReferenceTypes ? "enable" : "disable")}");
 	WriteLine("");
 
-
 	BeforeGenerateModel();
 
 	Model.Render(this);
@@ -43,7 +42,6 @@ void GenerateModel()
 	if (AddNullablePragma)
 		WriteLine($"#nullable restore");
 	WriteLine("#pragma warning restore 1591");
-
 }
 
 void Trim()
