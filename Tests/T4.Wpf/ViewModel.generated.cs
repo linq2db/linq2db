@@ -119,10 +119,10 @@ namespace Tests.T4.Wpf
 
 		#endregion
 
-		#region NotifiedProp3 : String
+		#region NotifiedProp3 : string
 
-		private String _notifiedProp3 = string.Empty;
-		public  String  NotifiedProp3
+		private string _notifiedProp3 = string.Empty;
+		public  string  NotifiedProp3
 		{
 			get { return _notifiedProp3; }
 			set
@@ -140,7 +140,7 @@ namespace Tests.T4.Wpf
 
 		#region INotifyPropertyChanged support
 
-		partial void BeforeNotifiedProp3Changed(String newValue);
+		partial void BeforeNotifiedProp3Changed(string newValue);
 		partial void AfterNotifiedProp3Changed ();
 
 		public const string NameOfNotifiedProp3 = "NotifiedProp3";
@@ -236,7 +236,7 @@ namespace Tests.T4.Wpf
 				}
 			}
 
-			public static ValidationResult ValidateNotifiedProp3(ViewModel obj, String value)
+			public static ValidationResult ValidateNotifiedProp3(ViewModel obj, string value)
 			{
 				var list = new List<ValidationResult>();
 
@@ -261,7 +261,7 @@ namespace Tests.T4.Wpf
 			}
 		}
 
-		partial void ValidateNotifiedProp3(String value, List<ValidationResult> validationResults);
+		partial void ValidateNotifiedProp3(string value, List<ValidationResult> validationResults);
 
 		#endregion
 
@@ -318,7 +318,7 @@ namespace Tests.T4.Wpf
 			}
 		}
 
-		public IEnumerable? GetErrors(String? propertyName)
+		public IEnumerable? GetErrors(string? propertyName)
 		{
 			List<string> errors;
 			return propertyName != null && _validationErrors.TryGetValue(propertyName, out errors) ? errors : null;

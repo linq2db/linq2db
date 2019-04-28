@@ -148,13 +148,13 @@ namespace Tests.T4.Model
 
 		#endregion
 
-		public List<String?>? Field4;
+		public List<string?>? Field4;
 
-		public List<String>? Field5;
+		public List<string>? Field5;
 
-		public List<String?> Field6 = new List<String?>();
+		public List<string?> Field6 = new List<string?>();
 
-		public List<String> Field7 = new List<string>();
+		public List<string> Field7 = new List<string>();
 
 		#region EditableObject support
 

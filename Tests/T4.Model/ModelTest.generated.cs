@@ -29,11 +29,11 @@ namespace Tests.T4.Model
 			AcceptChanges();
 		}
 
-		#region EditableString1 : String
+		#region EditableString1 : string
 
-		private String  _currentEditableString1 = "12345";
-		private String _originalEditableString1 = "12345";
-		public  String          EditableString1
+		private string  _currentEditableString1 = "12345";
+		private string _originalEditableString1 = "12345";
+		public  string          EditableString1
 		{
 			get { return _currentEditableString1; }
 			set
@@ -72,7 +72,7 @@ namespace Tests.T4.Model
 
 		#region INotifyPropertyChanged support
 
-		partial void BeforeEditableString1Changed(String newValue);
+		partial void BeforeEditableString1Changed(string newValue);
 		partial void AfterEditableString1Changed ();
 
 		public const string NameOfEditableString1 = "EditableString1";
@@ -99,11 +99,11 @@ namespace Tests.T4.Model
 
 		#endregion
 
-		#region EditableString2 : String?
+		#region EditableString2 : string?
 
-		private String?  _currentEditableString2 = null;
-		private String? _originalEditableString2 = null;
-		public  String?          EditableString2
+		private string?  _currentEditableString2 = null;
+		private string? _originalEditableString2 = null;
+		public  string?          EditableString2
 		{
 			get { return _currentEditableString2; }
 			set
@@ -142,7 +142,7 @@ namespace Tests.T4.Model
 
 		#region INotifyPropertyChanged support
 
-		partial void BeforeEditableString2Changed(String? newValue);
+		partial void BeforeEditableString2Changed(string? newValue);
 		partial void AfterEditableString2Changed ();
 
 		public const string NameOfEditableString2 = "EditableString2";
@@ -451,10 +451,10 @@ namespace Tests.T4.Model
 
 		#endregion
 
-		#region NotifiedProp1 : String?
+		#region NotifiedProp1 : string?
 
-		private String? _notifiedProp1;
-		public  String?  NotifiedProp1
+		private string? _notifiedProp1;
+		public  string?  NotifiedProp1
 		{
 			get { return _notifiedProp1; }
 			set
@@ -476,7 +476,7 @@ namespace Tests.T4.Model
 
 		#region INotifyPropertyChanged support
 
-		partial void BeforeNotifiedProp1Changed(String? newValue);
+		partial void BeforeNotifiedProp1Changed(string? newValue);
 		partial void AfterNotifiedProp1Changed ();
 
 		public const string NameOfNotifiedProp1 = "NotifiedProp1";
@@ -586,10 +586,10 @@ namespace Tests.T4.Model
 
 		#endregion
 
-		#region IDProp3 : String?
+		#region IDProp3 : string?
 
-		private String? _idProp3;
-		public  String?  IDProp3
+		private string? _idProp3;
+		public  string?  IDProp3
 		{
 			get { return _idProp3; }
 			set
@@ -609,7 +609,7 @@ namespace Tests.T4.Model
 
 		#region INotifyPropertyChanged support
 
-		partial void BeforeIDProp3Changed(String? newValue);
+		partial void BeforeIDProp3Changed(string? newValue);
 		partial void AfterIDProp3Changed ();
 
 		public const string NameOfIDProp3 = "IDProp3";
@@ -636,10 +636,10 @@ namespace Tests.T4.Model
 
 		#endregion
 
-		#region IDProp4 : String
+		#region IDProp4 : string
 
-		private String _idProp4 = string.Empty;
-		public  String  IDProp4
+		private string _idProp4 = string.Empty;
+		public  string  IDProp4
 		{
 			get { return _idProp4; }
 			set
@@ -659,7 +659,7 @@ namespace Tests.T4.Model
 
 		#region INotifyPropertyChanged support
 
-		partial void BeforeIDProp4Changed(String newValue);
+		partial void BeforeIDProp4Changed(string newValue);
 		partial void AfterIDProp4Changed ();
 
 		public const string NameOfIDProp4 = "IDProp4";
@@ -693,26 +693,26 @@ namespace Tests.T4.Model
 		/// </summary>
 		[XmlArrayItem(typeof(int), DataType="List")                                                ] public int     Field1;
 #if AAA
-		[                                            XmlArray("Name1")                             ] public String? Field2;
+		[                                            XmlArray("Name1")                             ] public string? Field2;
 #endif
-		[                                            XmlArray("Name3")                             ] public String  Field22 = string.Empty;
-		[XmlArrayItem(typeof(int), DataType="List"), XmlArray("Name21"), XmlArrayItem(typeof(char))] public String? Field21;
-		[XmlAttribute("Name1", typeof(int)),         XmlArray("N2")                                ] public String? Field221  { get; set; }
-		                                                                                             public String? Field2212;
-		[XmlAttribute("Nm1", typeof(int))                                                          ] public String? Field23;
-		[XmlElement("Nm1", typeof(int)),             XmlElement                                    ] public String? Field23a;
+		[                                            XmlArray("Name3")                             ] public string  Field22 = string.Empty;
+		[XmlArrayItem(typeof(int), DataType="List"), XmlArray("Name21"), XmlArrayItem(typeof(char))] public string? Field21;
+		[XmlAttribute("Name1", typeof(int)),         XmlArray("N2")                                ] public string? Field221  { get; set; }
+		                                                                                             public string? Field2212;
+		[XmlAttribute("Nm1", typeof(int))                                                          ] public string? Field23;
+		[XmlElement("Nm1", typeof(int)),             XmlElement                                    ] public string? Field23a;
 
 		#endregion
 
 		#region Test Region 2
 
 		public int     Field12;                                                         // Field3 comnt
-		public String? Field22_____;
-		public String? PField121    { get; set; }
-		public String  PField122    { get { return "not null"; } }
-		public String? PField221    { get { var a = 1; return null; } }
-		public String? PField222    { get { return null; } }                            // Field3 comment
-		public String? PField23     { get { return null; } set { value?.ToString(); } } // Fieomment
+		public string? Field22_____;
+		public string? PField121    { get; set; }
+		public string  PField122    { get { return "not null"; } }
+		public string? PField221    { get { var a = 1; return null; } }
+		public string? PField222    { get { return null; } }                            // Field3 comment
+		public string? PField23     { get { return null; } set { value?.ToString(); } } // Fieomment
 
 		#endregion
 
@@ -722,7 +722,7 @@ namespace Tests.T4.Model
 		/// 456
 		/// </summary>
 		[XmlArrayItem(typeof(int), DataType="List")]
-		public List<Int32>? Field3; // Field3 comment
+		public List<int>? Field3; // Field3 comment
 
 #endif
 
@@ -751,20 +751,20 @@ namespace Tests.T4.Model
 			set { var a = value; }
 		}
 
-		public List<Int32>? Field31;
+		public List<int>? Field31;
 
 		public double Field5;
 
-		public List<Int32>? Field6;
+		public List<int>? Field6;
 
-		public double                 Fld7;                               // Fld7
-		public List<Int32>?           Field8;
-		public DateTime               FieldLongName;                      // field long name
-		public List<String?>?         Property2     { get;         set; } // Property2
-		public List<Nullable<Int32>>? Property3     { get; private set; } // Property3
-		public int?                   Prop1         { get;         set; } // Prop1
+		public double         Fld7;                               // Fld7
+		public List<int>?     Field8;
+		public DateTime       FieldLongName;                      // field long name
+		public List<string?>? Property2     { get;         set; } // Property2
+		public List<int?>?    Property3     { get; private set; } // Property3
+		public int?           Prop1         { get;         set; } // Prop1
 
-		public List<String?>? Field4;
+		public List<string?>? Field4;
 
 		#region EditableObject support
 
@@ -967,7 +967,7 @@ namespace Tests.T4.Model
 				}
 			}
 
-			public static ValidationResult ValidateEditableString1(TestClass1 obj, String value)
+			public static ValidationResult ValidateEditableString1(TestClass1 obj, string value)
 			{
 				var list = new List<ValidationResult>();
 
@@ -991,7 +991,7 @@ namespace Tests.T4.Model
 				return ValidationResult.Success;
 			}
 
-			public static ValidationResult ValidateEditableString2(TestClass1 obj, String? value)
+			public static ValidationResult ValidateEditableString2(TestClass1 obj, string? value)
 			{
 				var list = new List<ValidationResult>();
 
@@ -1064,8 +1064,8 @@ namespace Tests.T4.Model
 			}
 		}
 
-		partial void ValidateEditableString1(String value, List<ValidationResult> validationResults);
-		partial void ValidateEditableString2(String? value, List<ValidationResult> validationResults);
+		partial void ValidateEditableString1(string value, List<ValidationResult> validationResults);
+		partial void ValidateEditableString2(string? value, List<ValidationResult> validationResults);
 		partial void ValidateEditableLong1  (long value, List<ValidationResult> validationResults);
 		partial void ValidateEditableInt1   (int value, List<ValidationResult> validationResults);
 

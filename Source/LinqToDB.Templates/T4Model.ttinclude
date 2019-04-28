@@ -1648,7 +1648,8 @@ public class ModelType
 			if (typeArguments != null && typeArguments.Length > 0)
 				throw new ArgumentException($"{type} must be open generic type or {typeArguments} should be empty");
 
-			_arguments = new List<ModelType>(type.GetGenericArguments().Select(a => new ModelType(a, /* we don't have type info here */ false)));
+			if (!_aliasedTypes.ContainsKey(type))
+				_arguments = new List<ModelType>(type.GetGenericArguments().Select(a => new ModelType(a, /* we don't have type info here */ false)));
 		}
 
 		Type        = type;
@@ -1686,6 +1687,38 @@ public class ModelType
 
 	public IEnumerable<ModelType> Arguments => _arguments ?? System.Array.Empty<ModelType>();
 
+	private static readonly IDictionary<Type, string> _aliasedTypes = new Dictionary<Type, string>()
+	{
+		{ typeof(bool),     "bool" },
+		{ typeof(byte),     "byte" },
+		{ typeof(sbyte),    "sbyte" },
+		{ typeof(char),     "char" },
+		{ typeof(decimal),  "decimal" },
+		{ typeof(double),   "double" },
+		{ typeof(float),    "float" },
+		{ typeof(int),      "int" },
+		{ typeof(uint),     "uint" },
+		{ typeof(long),     "long" },
+		{ typeof(ulong),    "ulong" },
+		{ typeof(object),   "object" },
+		{ typeof(short),    "short" },
+		{ typeof(ushort),   "ushort" },
+		{ typeof(string),   "string" },
+		{ typeof(bool?),    "bool?" },
+		{ typeof(byte?),    "byte?" },
+		{ typeof(sbyte?),   "sbyte?" },
+		{ typeof(char?),    "char?" },
+		{ typeof(decimal?), "decimal?" },
+		{ typeof(double?),  "double?" },
+		{ typeof(float?),   "float?" },
+		{ typeof(int?),     "int?" },
+		{ typeof(uint?),    "uint?" },
+		{ typeof(long?),    "long?" },
+		{ typeof(ulong?),   "ulong?" },
+		{ typeof(short?),   "short?" },
+		{ typeof(ushort?),  "ushort?" }
+	};
+
 	public string ToTypeName()
 	{
 		var sb = new StringBuilder();
@@ -1693,7 +1726,7 @@ public class ModelType
 		if (TypeName != null)
 			sb.Append(TypeName);
 		else if (Type != null)
-			sb.Append(Type.Name.Substring(0, Type.Name.IndexOf('`') < 0 ? Type.Name.Length : Type.Name.IndexOf('`')));
+			sb.Append(_aliasedTypes.ContainsKey(Type) ? _aliasedTypes[Type] : (Type.Name.Substring(0, Type.Name.IndexOf('`') < 0 ? Type.Name.Length : Type.Name.IndexOf('`'))));
 		else
 			sb.Append(ElementType.ToTypeName());
 

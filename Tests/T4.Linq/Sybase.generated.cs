@@ -224,30 +224,30 @@ namespace SybaseDataContext
 	public partial class SysObject
 	{
 		#nullable disable
-		[Column, NotNull    ] public String          name      { get; set; } // varchar
+		[Column, NotNull    ] public string   name      { get; set; } // varchar
 		#nullable enable
-		[Column, NotNull    ] public Int32           id        { get; set; } // int
-		[Column, NotNull    ] public Int32           uid       { get; set; } // int
+		[Column, NotNull    ] public int      id        { get; set; } // int
+		[Column, NotNull    ] public int      uid       { get; set; } // int
 		#nullable disable
-		[Column, NotNull    ] public String          type      { get; set; } // char
+		[Column, NotNull    ] public string   type      { get; set; } // char
 		#nullable enable
-		[Column, NotNull    ] public Int16           userstat  { get; set; } // smallint
-		[Column, NotNull    ] public Int16           sysstat   { get; set; } // smallint
-		[Column, NotNull    ] public Int16           indexdel  { get; set; } // smallint
-		[Column, NotNull    ] public Int16           schemacnt { get; set; } // smallint
-		[Column, NotNull    ] public Int32           sysstat2  { get; set; } // int
-		[Column, NotNull    ] public DateTime        crdate    { get; set; } // datetime
-		[Column, NotNull    ] public DateTime        expdate   { get; set; } // datetime
-		[Column, NotNull    ] public Int32           deltrig   { get; set; } // int
-		[Column, NotNull    ] public Int32           instrig   { get; set; } // int
-		[Column, NotNull    ] public Int32           updtrig   { get; set; } // int
-		[Column, NotNull    ] public Int32           seltrig   { get; set; } // int
-		[Column, NotNull    ] public Int32           ckfirst   { get; set; } // int
-		[Column, NotNull    ] public Int16           cache     { get; set; } // smallint
-		[Column,    Nullable] public Nullable<Int32> audflags  { get; set; } // int
-		[Column, NotNull    ] public Int32           objspare  { get; set; } // int
-		[Column,    Nullable] public Byte[]?         versionts { get; set; } // binary
-		[Column,    Nullable] public String?         loginame  { get; set; } // varchar
+		[Column, NotNull    ] public short    userstat  { get; set; } // smallint
+		[Column, NotNull    ] public short    sysstat   { get; set; } // smallint
+		[Column, NotNull    ] public short    indexdel  { get; set; } // smallint
+		[Column, NotNull    ] public short    schemacnt { get; set; } // smallint
+		[Column, NotNull    ] public int      sysstat2  { get; set; } // int
+		[Column, NotNull    ] public DateTime crdate    { get; set; } // datetime
+		[Column, NotNull    ] public DateTime expdate   { get; set; } // datetime
+		[Column, NotNull    ] public int      deltrig   { get; set; } // int
+		[Column, NotNull    ] public int      instrig   { get; set; } // int
+		[Column, NotNull    ] public int      updtrig   { get; set; } // int
+		[Column, NotNull    ] public int      seltrig   { get; set; } // int
+		[Column, NotNull    ] public int      ckfirst   { get; set; } // int
+		[Column, NotNull    ] public short    cache     { get; set; } // smallint
+		[Column,    Nullable] public int?     audflags  { get; set; } // int
+		[Column, NotNull    ] public int      objspare  { get; set; } // int
+		[Column,    Nullable] public Byte[]?  versionts { get; set; } // binary
+		[Column,    Nullable] public string?  loginame  { get; set; } // varchar
 	}
 
 	[Table(Schema="dbo", Name="sysquerymetrics", IsView=true)]
