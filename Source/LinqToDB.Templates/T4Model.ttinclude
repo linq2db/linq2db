@@ -1629,6 +1629,11 @@ public class ModelType
 		return new ModelType(typeof(TType), referenceNullable);
 	}
 
+	public static ModelType Array(ModelType elementType, bool referenceNullable)
+	{
+		return new ModelType(elementType, referenceNullable);
+	}
+
 	public ModelType(Type type, bool nullable, params ModelType[] typeArguments)
 	{
 		if (type.IsConstructedGenericType)
@@ -1656,12 +1661,23 @@ public class ModelType
 			_arguments = new List<ModelType>(typeArguments);
 	}
 
-	public Type   Type        { get; }
-	public string TypeName    { get; }
-	public bool   IsReference { get; }
-	public bool   IsNullable  { get; }
+	// array constructor
+	public ModelType(ModelType elementType, bool isNullable)
+	{
+		ElementType = elementType;
+		IsReference = true;
+		IsNullable  = isNullable;
+		IsArray     = true;
+	}
 
-	public IEnumerable<ModelType> Arguments => _arguments ?? Array.Empty<ModelType>();
+	public Type      Type        { get; }
+	public string    TypeName    { get; }
+	public ModelType ElementType { get; }
+	public bool      IsReference { get; }
+	public bool      IsNullable  { get; }
+	public bool      IsArray     { get; }
+
+	public IEnumerable<ModelType> Arguments => _arguments ?? System.Array.Empty<ModelType>();
 
 	public string ToTypeName()
 	{
@@ -1669,8 +1685,10 @@ public class ModelType
 
 		if (TypeName != null)
 			sb.Append(TypeName);
-		else
+		else if (Type != null)
 			sb.Append(Type.Name.Substring(0, Type.Name.IndexOf('`') < 0 ? Type.Name.Length : Type.Name.IndexOf('`')));
+		else
+			sb.Append(ElementType.ToTypeName());
 
 		if (_arguments != null && _arguments.Count > 0)
 		{
@@ -1678,6 +1696,9 @@ public class ModelType
 			sb.Append(string.Join(", ", _arguments.Select(a => a.ToTypeName())));
 			sb.Append(">");
 		}
+
+		if (IsArray)
+			sb.Append("[]");
 
 		if (EnableNullableReferenceTypes && IsReference && IsNullable)
 			sb.Append("?");
