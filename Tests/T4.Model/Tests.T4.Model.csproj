@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net45</TargetFramework>
 		<NoWarn>1701;1702;1705;0219</NoWarn>
-		<LangVersion>preview</LangVersion>
+		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
