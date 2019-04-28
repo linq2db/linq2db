@@ -953,7 +953,7 @@ void GenerateTypesFromMetadata()
 		MakeTypeMembersNamesUnique(DataContextObject, "InitDataContext", "InitMappingSchema");
 		MakeMembersNamesUnique(Model.Types, "Table");
 		foreach (var type in Model.Types.OfType<Class>())
-			MakeTypeMembersNamesUnique(type, exceptMethods: new [] { "Find", "InitDataContext", "InitMappingSchema" });
+			MakeTypeMembersNamesUnique(type, exceptMethods: new [] { "FreeTextTable", "Find", "InitDataContext", "InitMappingSchema" });
 
 		foreach (var schema in schemas.Values)
 		{
@@ -977,7 +977,7 @@ void GenerateTypesFromMetadata()
 		Model.Usings.Add("System.Linq");
 		var tableExtensions = new Class("TableExtensions", defTableExtensions) { IsStatic = true };
 		Model.Types.Add(tableExtensions);
-		MakeTypeMembersNamesUnique(tableExtensions, exceptMethods: new [] { "Find" });
+		MakeTypeMembersNamesUnique(tableExtensions, exceptMethods: new [] { "Find", "FreeTextTable" });
 	}
 
 	foreach (var schema in schemas.Values)

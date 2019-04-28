@@ -253,6 +253,7 @@ public partial class Class : TypeBase
 	public bool               IsStatic         = false;
 	public List<string>       Interfaces       = new List<string>();
 	public List<IClassMember> Members          = new List<IClassMember>();
+	public bool               DisableNullable  = false;
 
 	public Class()
 	{
@@ -267,6 +268,9 @@ public partial class Class : TypeBase
 	public override void Render(GeneratedTextTransformation tt)
 	{
 		BeginConditional(tt);
+
+		if (DisableNullable && EnableNullableReferenceTypes)
+			tt.WriteLine("#nullable disable");
 
 		foreach (var c in Comment)
 			tt.WriteLine("//" + c);
@@ -367,6 +371,9 @@ public partial class Class : TypeBase
 
 		tt.PopIndent();
 		WriteEndClass(tt);
+
+		if (DisableNullable && EnableNullableReferenceTypes)
+			tt.WriteLine("#nullable enable");
 
 		EndConditional(tt);
 	}
@@ -1240,13 +1247,13 @@ public partial class Property : MemberBase
 	{
 		base.BeginConditional(tt, isCompact);
 
-		if (DisableNullable)
+		if (DisableNullable && EnableNullableReferenceTypes)
 			tt.WriteLine("#nullable disable");
 	}
 
 	public override void EndConditional(GeneratedTextTransformation tt, bool isCompact)
 	{
-		if (DisableNullable)
+		if (DisableNullable && EnableNullableReferenceTypes)
 			tt.WriteLine("#nullable enable");
 
 		base.EndConditional(tt, isCompact);
