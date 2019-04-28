@@ -9,12 +9,17 @@
 #nullable enable
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Windows.Media;
 
 namespace Tests.T4.Wpf
 {
-	public partial class ViewModel : INotifyPropertyChanged
+	[CustomValidation(typeof(ViewModel.CustomValidator), "ValidateNotifiedProp3")]
+	public partial class ViewModel : INotifyPropertyChanged, INotifyDataErrorInfo
 	{
 		#region NotifiedProp1 : double
 
@@ -114,6 +119,43 @@ namespace Tests.T4.Wpf
 
 		#endregion
 
+		#region NotifiedProp3 : String
+
+		private String _notifiedProp3 = string.Empty;
+		public  String  NotifiedProp3
+		{
+			get { return _notifiedProp3; }
+			set
+			{
+				if (_notifiedProp3 != value)
+				{
+					BeforeNotifiedProp3Changed(value);
+					_notifiedProp3 = value;
+					AfterNotifiedProp3Changed();
+
+					OnNotifiedProp3Changed();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeNotifiedProp3Changed(String newValue);
+		partial void AfterNotifiedProp3Changed ();
+
+		public const string NameOfNotifiedProp3 = "NotifiedProp3";
+
+		private static readonly PropertyChangedEventArgs _notifiedProp3ChangedEventArgs = new PropertyChangedEventArgs(NameOfNotifiedProp3);
+
+		private void OnNotifiedProp3Changed()
+		{
+			OnPropertyChanged(_notifiedProp3ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
 		#region INotifyPropertyChanged support
 
 #if !SILVERLIGHT
@@ -165,6 +207,126 @@ namespace Tests.T4.Wpf
 				propertyChanged(this, arg);
 #endif
 			}
+		}
+
+		#endregion
+
+		#region Validation
+
+#if !SILVERLIGHT
+		[field : NonSerialized]
+#endif
+		public int _isValidCounter;
+
+		public static partial class CustomValidator
+		{
+			public static bool IsValid(ViewModel obj)
+			{
+				try
+				{
+					obj._isValidCounter++;
+
+					var flag0 = ValidationResult.Success == ValidateNotifiedProp3(obj, obj.NotifiedProp3);
+
+					return flag0;
+				}
+				finally
+				{
+					obj._isValidCounter--;
+				}
+			}
+
+			public static ValidationResult ValidateNotifiedProp3(ViewModel obj, String value)
+			{
+				var list = new List<ValidationResult>();
+
+				Validator.TryValidateProperty(
+					value,
+					new ValidationContext(obj, null, null) { MemberName = NameOfNotifiedProp3 }, list);
+
+				obj.ValidateNotifiedProp3(value, list);
+
+				if (list.Count > 0)
+				{
+					foreach (var result in list)
+						foreach (var name in result.MemberNames)
+							obj.AddError(name, result.ErrorMessage);
+
+					return list[0];
+				}
+
+				obj.RemoveError(NameOfNotifiedProp3);
+
+				return ValidationResult.Success;
+			}
+		}
+
+		partial void ValidateNotifiedProp3(String value, List<ValidationResult> validationResults);
+
+		#endregion
+
+		#region INotifyDataErrorInfo support
+
+#if !SILVERLIGHT
+		[field : NonSerialized]
+#endif
+		public virtual event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
+
+#if !SILVERLIGHT
+		[field : NonSerialized]
+#endif
+		private readonly Dictionary<string,List<string>> _validationErrors = new Dictionary<string,List<string>>();
+
+		public void AddError(string propertyName, string error)
+		{
+			List<string> errors;
+
+			if (!_validationErrors.TryGetValue(propertyName, out errors))
+			{
+				_validationErrors[propertyName] = new List<string> { error };
+			}
+			else if (!errors.Contains(error))
+			{
+				errors.Add(error);
+			}
+			else
+				return;
+
+			OnErrorsChanged(propertyName);
+		}
+
+		public void RemoveError(string propertyName)
+		{
+			List<string> errors;
+
+			if (_validationErrors.TryGetValue(propertyName, out errors) && errors.Count > 0)
+			{
+				_validationErrors.Clear();
+				OnErrorsChanged(propertyName);
+			}
+		}
+
+		protected void OnErrorsChanged(string propertyName)
+		{
+			if (ErrorsChanged != null)
+			{
+				if (System.Windows.Application.Current.Dispatcher.CheckAccess())
+					ErrorsChanged(this, new DataErrorsChangedEventArgs(propertyName));
+				else
+					System.Windows.Application.Current.Dispatcher.BeginInvoke(
+						(Action)(() => ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName))));
+			}
+		}
+
+		public IEnumerable? GetErrors(String? propertyName)
+		{
+			List<string> errors;
+			return propertyName != null && _validationErrors.TryGetValue(propertyName, out errors) ? errors : null;
+		}
+
+		public bool HasErrors
+		{
+			get { return _validationErrors.Values.Any(e => e.Count > 0); }
 		}
 
 		#endregion

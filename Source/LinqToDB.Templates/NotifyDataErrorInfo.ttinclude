@@ -100,20 +100,20 @@ void NotifyDataErrorInfoImpl()
 							{
 								"if (ErrorsChanged != null)",
 								"{",
-									"\tif (System.Windows.Deployment.Current.Dispatcher.CheckAccess())",
+									"\tif (System.Windows.Application.Current.Dispatcher.CheckAccess())",
 										"\t\tErrorsChanged(this, new DataErrorsChangedEventArgs(propertyName));",
 									"\telse",
-										"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
-											"\t\t\t() => ErrorsChanged(this, new DataErrorsChangedEventArgs(propertyName)));",
+										"\t\tSystem.Windows.Application.Current.Dispatcher.BeginInvoke(",
+											"\t\t\t(Action)(() => ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName))));",
 								"}",
 							})
 						{
 							AccessModifier = AccessModifier.Protected
 						},
-						new Method(() => "IEnumerable", "GetErrors",
+						new Method(() => ModelType.Create<System.Collections.IEnumerable>(true).ToTypeName(), "GetErrors",
 							new Func<string>[]
 							{
-								() => "string propertyName",
+								() => $"{ModelType.Create<string>(true).ToTypeName()} propertyName",
 							},
 							() => new[]
 							{
