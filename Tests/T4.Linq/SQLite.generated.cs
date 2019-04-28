@@ -6,7 +6,6 @@
 //---------------------------------------------------------------------------------------------------
 
 #pragma warning disable 1591
-#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -71,17 +70,17 @@ namespace SQLiteDataContext
 		[Column("realDataType"),             Nullable            ] public double?   RealDataType             { get; set; } // real
 		[Column("datetimeDataType"),         Nullable            ] public DateTime? DatetimeDataType         { get; set; } // datetime
 		[Column("charDataType"),             Nullable            ] public char?     CharDataType             { get; set; } // char(1)
-		[Column("char20DataType"),           Nullable            ] public string?   Char20DataType           { get; set; } // char(20)
-		[Column("varcharDataType"),          Nullable            ] public string?   VarcharDataType          { get; set; } // varchar(20)
-		[Column("textDataType"),             Nullable            ] public string?   TextDataType             { get; set; } // text(max)
-		[Column("ncharDataType"),            Nullable            ] public string?   NcharDataType            { get; set; } // char(20)
-		[Column("nvarcharDataType"),         Nullable            ] public string?   NvarcharDataType         { get; set; } // nvarchar(20)
-		[Column("ntextDataType"),            Nullable            ] public string?   NtextDataType            { get; set; } // ntext(max)
-		[Column("binaryDataType"),           Nullable            ] public byte[]?   BinaryDataType           { get; set; } // binary
-		[Column("varbinaryDataType"),        Nullable            ] public byte[]?   VarbinaryDataType        { get; set; } // varbinary
-		[Column("imageDataType"),            Nullable            ] public byte[]?   ImageDataType            { get; set; } // image
+		[Column("char20DataType"),           Nullable            ] public string    Char20DataType           { get; set; } // char(20)
+		[Column("varcharDataType"),          Nullable            ] public string    VarcharDataType          { get; set; } // varchar(20)
+		[Column("textDataType"),             Nullable            ] public string    TextDataType             { get; set; } // text(max)
+		[Column("ncharDataType"),            Nullable            ] public string    NcharDataType            { get; set; } // char(20)
+		[Column("nvarcharDataType"),         Nullable            ] public string    NvarcharDataType         { get; set; } // nvarchar(20)
+		[Column("ntextDataType"),            Nullable            ] public string    NtextDataType            { get; set; } // ntext(max)
+		[Column("binaryDataType"),           Nullable            ] public byte[]    BinaryDataType           { get; set; } // binary
+		[Column("varbinaryDataType"),        Nullable            ] public byte[]    VarbinaryDataType        { get; set; } // varbinary
+		[Column("imageDataType"),            Nullable            ] public byte[]    ImageDataType            { get; set; } // image
 		[Column("uniqueidentifierDataType"), Nullable            ] public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column("objectDataType"),           Nullable            ] public object?   ObjectDataType           { get; set; } // object
+		[Column("objectDataType"),           Nullable            ] public object    ObjectDataType           { get; set; } // object
 	}
 
 	[Table("Child")]
@@ -95,20 +94,15 @@ namespace SQLiteDataContext
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public long   PersonID { get; set; } // integer
-		#nullable disable
 		[Column,     NotNull] public string Taxonomy { get; set; } // nvarchar(50)
-		#nullable enable
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Doctor_0_0
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor")]
 		public Person Person { get; set; }
-
-		#nullable enable
 
 		#endregion
 	}
@@ -116,7 +110,7 @@ namespace SQLiteDataContext
 	[Table("Dual")]
 	public partial class Dual
 	{
-		[Column, Nullable] public string? Dummy { get; set; } // varchar(10)
+		[Column, Nullable] public string Dummy { get; set; } // varchar(10)
 	}
 
 	[Table("FKTestPosition")]
@@ -125,29 +119,22 @@ namespace SQLiteDataContext
 		[PrimaryKey(0), NotNull] public long   Company    { get; set; } // integer
 		[PrimaryKey(1), NotNull] public long   Department { get; set; } // integer
 		[PrimaryKey(2), NotNull] public long   PositionID { get; set; } // integer
-		#nullable disable
 		[Column,        NotNull] public string Name       { get; set; } // nvarchar(50)
-		#nullable enable
 	}
 
 	[Table("ForeignKeyTable")]
 	public partial class ForeignKeyTable
 	{
 		[Column, NotNull] public long   PrimaryKeyTableID { get; set; } // integer
-		#nullable disable
 		[Column, NotNull] public string Name              { get; set; } // nvarchar(50)
-		#nullable enable
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0
 		/// </summary>
 		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_ForeignKeyTable_0_0", BackReferenceName="ForeignKeyTables")]
 		public PrimaryKeyTable PrimaryKeyTable { get; set; }
-
-		#nullable enable
 
 		#endregion
 	}
@@ -163,18 +150,18 @@ namespace SQLiteDataContext
 	[Table("InheritanceChild")]
 	public partial class InheritanceChild
 	{
-		[Column, NotNull    ] public long    InheritanceChildId  { get; set; } // integer
-		[Column, NotNull    ] public long    InheritanceParentId { get; set; } // integer
-		[Column,    Nullable] public long?   TypeDiscriminator   { get; set; } // integer
-		[Column,    Nullable] public string? Name                { get; set; } // nvarchar(50)
+		[Column, NotNull    ] public long   InheritanceChildId  { get; set; } // integer
+		[Column, NotNull    ] public long   InheritanceParentId { get; set; } // integer
+		[Column,    Nullable] public long?  TypeDiscriminator   { get; set; } // integer
+		[Column,    Nullable] public string Name                { get; set; } // nvarchar(50)
 	}
 
 	[Table("InheritanceParent")]
 	public partial class InheritanceParent
 	{
-		[Column, NotNull    ] public long    InheritanceParentId { get; set; } // integer
-		[Column,    Nullable] public long?   TypeDiscriminator   { get; set; } // integer
-		[Column,    Nullable] public string? Name                { get; set; } // nvarchar(50)
+		[Column, NotNull    ] public long   InheritanceParentId { get; set; } // integer
+		[Column,    Nullable] public long?  TypeDiscriminator   { get; set; } // integer
+		[Column,    Nullable] public string Name                { get; set; } // nvarchar(50)
 	}
 
 	[Table("LinqDataTypes")]
@@ -186,11 +173,11 @@ namespace SQLiteDataContext
 		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // datetime2
 		[Column, Nullable] public bool?     BoolValue      { get; set; } // boolean
 		[Column, Nullable] public Guid?     GuidValue      { get; set; } // uniqueidentifier
-		[Column, Nullable] public byte[]?   BinaryValue    { get; set; } // binary
+		[Column, Nullable] public byte[]    BinaryValue    { get; set; } // binary
 		[Column, Nullable] public short?    SmallIntValue  { get; set; } // smallint
 		[Column, Nullable] public int?      IntValue       { get; set; } // int
 		[Column, Nullable] public long?     BigIntValue    { get; set; } // bigint
-		[Column, Nullable] public string?   StringValue    { get; set; } // nvarchar(50)
+		[Column, Nullable] public string    StringValue    { get; set; } // nvarchar(50)
 	}
 
 	[Table("Parent")]
@@ -204,20 +191,15 @@ namespace SQLiteDataContext
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public long   PersonID  { get; set; } // integer
-		#nullable disable
 		[Column,     NotNull] public string Diagnosis { get; set; } // nvarchar(256)
-		#nullable enable
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_Patient_0_0
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_0_0", BackReferenceName="Patient")]
 		public Person Person { get; set; }
-
-		#nullable enable
 
 		#endregion
 	}
@@ -225,15 +207,11 @@ namespace SQLiteDataContext
 	[Table("Person")]
 	public partial class Person
 	{
-		[PrimaryKey, Identity   ] public long    PersonID   { get; set; } // integer
-		#nullable disable
-		[Column,     NotNull    ] public string  FirstName  { get; set; } // nvarchar(50)
-		#nullable enable
-		#nullable disable
-		[Column,     NotNull    ] public string  LastName   { get; set; } // nvarchar(50)
-		#nullable enable
-		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(50)
-		[Column,     NotNull    ] public char    Gender     { get; set; } // char(1)
+		[PrimaryKey, Identity   ] public long   PersonID   { get; set; } // integer
+		[Column,     NotNull    ] public string FirstName  { get; set; } // nvarchar(50)
+		[Column,     NotNull    ] public string LastName   { get; set; } // nvarchar(50)
+		[Column,        Nullable] public string MiddleName { get; set; } // nvarchar(50)
+		[Column,     NotNull    ] public char   Gender     { get; set; } // char(1)
 
 		#region Associations
 
@@ -241,13 +219,13 @@ namespace SQLiteDataContext
 		/// FK_Doctor_0_0_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Doctor? Doctor { get; set; }
+		public Doctor Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_0_0_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Patient? Patient { get; set; }
+		public Patient Patient { get; set; }
 
 		#endregion
 	}
@@ -256,20 +234,15 @@ namespace SQLiteDataContext
 	public partial class PrimaryKeyTable
 	{
 		[PrimaryKey, NotNull] public long   ID   { get; set; } // integer
-		#nullable disable
 		[Column,     NotNull] public string Name { get; set; } // nvarchar(50)
-		#nullable enable
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0_BackReference
 		/// </summary>
 		[Association(ThisKey="ID", OtherKey="PrimaryKeyTableID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; }
-
-		#nullable enable
 
 		#endregion
 	}
@@ -291,17 +264,17 @@ namespace SQLiteDataContext
 		[Column,    Nullable] public long?     Field5          { get; set; } // integer
 		[Column,    Nullable] public long?     FieldInt64      { get; set; } // bigint
 		[Column,    Nullable] public bool?     FieldBoolean    { get; set; } // bit
-		[Column,    Nullable] public string?   FieldString     { get; set; } // varchar(20)
-		[Column,    Nullable] public string?   FieldNString    { get; set; } // nvarchar(20)
+		[Column,    Nullable] public string    FieldString     { get; set; } // varchar(20)
+		[Column,    Nullable] public string    FieldNString    { get; set; } // nvarchar(20)
 		[Column,    Nullable] public char?     FieldChar       { get; set; } // char(1)
 		[Column,    Nullable] public char?     FieldNChar      { get; set; } // char(1)
 		[Column,    Nullable] public double?   FieldFloat      { get; set; } // float
 		[Column,    Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,    Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
-		[Column,    Nullable] public byte[]?   FieldBinary     { get; set; } // varbinary
+		[Column,    Nullable] public byte[]    FieldBinary     { get; set; } // varbinary
 		[Column,    Nullable] public Guid?     FieldGuid       { get; set; } // uniqueidentifier
 		[Column,    Nullable] public DateTime? FieldDate       { get; set; } // date
-		[Column,    Nullable] public string?   FieldEnumString { get; set; } // varchar(20)
+		[Column,    Nullable] public string    FieldEnumString { get; set; } // varchar(20)
 		[Column,    Nullable] public int?      FieldEnumNumber { get; set; } // int
 	}
 
@@ -316,17 +289,17 @@ namespace SQLiteDataContext
 		[Column,    Nullable] public long?     Field5          { get; set; } // integer
 		[Column,    Nullable] public long?     FieldInt64      { get; set; } // bigint
 		[Column,    Nullable] public bool?     FieldBoolean    { get; set; } // bit
-		[Column,    Nullable] public string?   FieldString     { get; set; } // varchar(20)
-		[Column,    Nullable] public string?   FieldNString    { get; set; } // nvarchar(20)
+		[Column,    Nullable] public string    FieldString     { get; set; } // varchar(20)
+		[Column,    Nullable] public string    FieldNString    { get; set; } // nvarchar(20)
 		[Column,    Nullable] public char?     FieldChar       { get; set; } // char(1)
 		[Column,    Nullable] public char?     FieldNChar      { get; set; } // char(1)
 		[Column,    Nullable] public double?   FieldFloat      { get; set; } // float
 		[Column,    Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,    Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
-		[Column,    Nullable] public byte[]?   FieldBinary     { get; set; } // varbinary
+		[Column,    Nullable] public byte[]    FieldBinary     { get; set; } // varbinary
 		[Column,    Nullable] public Guid?     FieldGuid       { get; set; } // uniqueidentifier
 		[Column,    Nullable] public DateTime? FieldDate       { get; set; } // date
-		[Column,    Nullable] public string?   FieldEnumString { get; set; } // varchar(20)
+		[Column,    Nullable] public string    FieldEnumString { get; set; } // varchar(20)
 		[Column,    Nullable] public int?      FieldEnumNumber { get; set; } // int
 	}
 
@@ -513,5 +486,4 @@ namespace SQLiteDataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

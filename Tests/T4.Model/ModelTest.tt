@@ -5,8 +5,8 @@
 <#@ include file="..\..\Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude" #>
 <#@ include file="..\..\Source\LinqToDB.Templates\Validation.ttinclude"            #>
 <#
-	AddNullablePragma = true;
-	EnableNullableReferenceTypes = true;
+	//AddNullablePragma = true;
+	//EnableNullableReferenceTypes = true;
 
 	Model.Namespaces[0].Name = "Tests.T4.Model";
 

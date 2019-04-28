@@ -6,7 +6,6 @@
 //---------------------------------------------------------------------------------------------------
 
 #pragma warning disable 1591
-#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -152,506 +151,350 @@ namespace Firebird3DataContext
 		[Column(DbType="float",           DataType=DataType.Single,   Length=4, Precision=0, Scale=0),               Nullable         ] public float?    REALDATATYPE      { get; set; } // float
 		[Column(DbType="timestamp",       DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),               Nullable         ] public DateTime? TIMESTAMPDATATYPE { get; set; } // timestamp
 		[Column(DbType="char(1)",         DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     CHARDATATYPE      { get; set; } // char(1)
-		[Column(DbType="char(20)",        DataType=DataType.NChar,    Length=20, Precision=0, Scale=0),              Nullable         ] public string?   CHAR20DATATYPE    { get; set; } // char(20)
-		[Column(DbType="varchar(20)",     DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string?   VARCHARDATATYPE   { get; set; } // varchar(20)
-		[Column(DbType="blob sub_type 1", DataType=DataType.Text,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public string?   TEXTDATATYPE      { get; set; } // blob sub_type 1
-		[Column(DbType="char(20)",        DataType=DataType.NChar,    Length=20, Precision=0, Scale=0),              Nullable         ] public string?   NCHARDATATYPE     { get; set; } // char(20)
-		[Column(DbType="varchar(20)",     DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string?   NVARCHARDATATYPE  { get; set; } // varchar(20)
-		[Column(DbType="blob",            DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]?   BLOBDATATYPE      { get; set; } // blob
+		[Column(DbType="char(20)",        DataType=DataType.NChar,    Length=20, Precision=0, Scale=0),              Nullable         ] public string    CHAR20DATATYPE    { get; set; } // char(20)
+		[Column(DbType="varchar(20)",     DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string    VARCHARDATATYPE   { get; set; } // varchar(20)
+		[Column(DbType="blob sub_type 1", DataType=DataType.Text,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public string    TEXTDATATYPE      { get; set; } // blob sub_type 1
+		[Column(DbType="char(20)",        DataType=DataType.NChar,    Length=20, Precision=0, Scale=0),              Nullable         ] public string    NCHARDATATYPE     { get; set; } // char(20)
+		[Column(DbType="varchar(20)",     DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string    NVARCHARDATATYPE  { get; set; } // varchar(20)
+		[Column(DbType="blob",            DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    BLOBDATATYPE      { get; set; } // blob
 	}
 
 	[Table("ANIMALS118")]
 	public partial class ANIMALS118
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS12")]
 	public partial class ANIMALS12
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS122")]
 	public partial class ANIMALS122
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS323")]
 	public partial class ANIMALS323
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS340")]
 	public partial class ANIMALS340
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS342")]
 	public partial class ANIMALS342
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS360")]
 	public partial class ANIMALS360
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS373")]
 	public partial class ANIMALS373
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS377")]
 	public partial class ANIMALS377
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS395")]
 	public partial class ANIMALS395
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS506")]
 	public partial class ANIMALS506
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS51")]
 	public partial class ANIMALS51
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS523")]
 	public partial class ANIMALS523
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS536")]
 	public partial class ANIMALS536
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS54")]
 	public partial class ANIMALS54
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS554")]
 	public partial class ANIMALS554
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS57")]
 	public partial class ANIMALS57
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS60")]
 	public partial class ANIMALS60
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS65")]
 	public partial class ANIMALS65
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS76")]
 	public partial class ANIMALS76
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS80")]
 	public partial class ANIMALS80
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS83")]
 	public partial class ANIMALS83
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS87")]
 	public partial class ANIMALS87
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS89")]
 	public partial class ANIMALS89
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS9")]
 	public partial class ANIMALS9
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ANIMALS92")]
 	public partial class ANIMALS92
 	{
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE    { get; set; } // varchar(40)
-		#nullable enable
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  ANIMALTYPE2   { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     ID            { get; set; } // integer
-		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? NAME          { get; set; } // varchar(255)
-		#nullable disable
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string  DISCRIMINATOR { get; set; } // varchar(40)
-		#nullable enable
-		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?    EYEID         { get; set; } // integer
-		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string? FIRST         { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE    { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string ANIMALTYPE2   { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID            { get; set; } // integer
+		[Column(              DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string NAME          { get; set; } // varchar(255)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),               NotNull] public string DISCRIMINATOR { get; set; } // varchar(40)
+		[Column(              DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   EYEID         { get; set; } // integer
+		[Column("\"Second\"", DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string Second        { get; set; } // varchar(40)
+		[Column(              DbType="varchar(40)",  DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),     Nullable         ] public string FIRST         { get; set; } // varchar(40)
 	}
 
 	[Table("ASYNCDATATABLE_F3LS_LCPA_70")]
@@ -663,12 +506,12 @@ namespace Firebird3DataContext
 	[Table("\"CamelCaseName\"")]
 	public partial class CamelCaseName
 	{
-		[Column("\"Id\"",     DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     Id    { get; set; } // integer
-		[Column(              DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string? NAME1 { get; set; } // varchar(20)
-		[Column("\"Name2\"",  DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string? Name2 { get; set; } // varchar(20)
-		[Column(              DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string? NAME3 { get; set; } // varchar(20)
-		[Column("\"_NAME4\"", DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string? NAME4 { get; set; } // varchar(20)
-		[Column("\"NAME 5\"", DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string? NAME5 { get; set; } // varchar(20)
+		[Column("\"Id\"",     DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    Id    { get; set; } // integer
+		[Column(              DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME1 { get; set; } // varchar(20)
+		[Column("\"Name2\"",  DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string Name2 { get; set; } // varchar(20)
+		[Column(              DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME3 { get; set; } // varchar(20)
+		[Column("\"_NAME4\"", DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME4 { get; set; } // varchar(20)
+		[Column("\"NAME 5\"", DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME5 { get; set; } // varchar(20)
 	}
 
 	[Table("CHILD")]
@@ -682,47 +525,42 @@ namespace Firebird3DataContext
 	public partial class DATATYPETEST
 	{
 		[Column(             DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),            PrimaryKey,  NotNull] public int       DATATYPEID { get; set; } // integer
-		[Column("BINARY_",   DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]?   Binary     { get; set; } // blob
+		[Column("BINARY_",   DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    Binary     { get; set; } // blob
 		[Column("BOOLEAN_",  DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     Boolean    { get; set; } // char(1)
 		[Column("BYTE_",     DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    Byte       { get; set; } // smallint
-		[Column("BYTES_",    DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]?   Bytes      { get; set; } // blob
+		[Column("BYTES_",    DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    Bytes      { get; set; } // blob
 		[Column("CHAR_",     DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     Char       { get; set; } // char(1)
 		[Column("DATETIME_", DbType="timestamp",        DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),               Nullable         ] public DateTime? Datetime   { get; set; } // timestamp
 		[Column("DECIMAL_",  DbType="decimal(10,2)",    DataType=DataType.Decimal,  Length=8, Precision=10, Scale=2),              Nullable         ] public decimal?  Decimal    { get; set; } // decimal(10,2)
 		[Column("DOUBLE_",   DbType="double precision", DataType=DataType.Double,   Length=8, Precision=0, Scale=0),               Nullable         ] public double?   Double     { get; set; } // double precision
-		[Column("GUID_",     DbType="char(38)",         DataType=DataType.NChar,    Length=38, Precision=0, Scale=0),              Nullable         ] public string?   Guid       { get; set; } // char(38)
+		[Column("GUID_",     DbType="char(38)",         DataType=DataType.NChar,    Length=38, Precision=0, Scale=0),              Nullable         ] public string    Guid       { get; set; } // char(38)
 		[Column("INT16_",    DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    INT16      { get; set; } // smallint
 		[Column("INT32_",    DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      INT32      { get; set; } // integer
 		[Column("INT64_",    DbType="numeric(11,0)",    DataType=DataType.Decimal,  Length=8, Precision=11, Scale=0),              Nullable         ] public decimal?  INT64      { get; set; } // numeric(11,0)
 		[Column("MONEY_",    DbType="decimal(18,4)",    DataType=DataType.Decimal,  Length=8, Precision=18, Scale=4),              Nullable         ] public decimal?  Money      { get; set; } // decimal(18,4)
 		[Column("SBYTE_",    DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    Sbyte      { get; set; } // smallint
 		[Column("SINGLE_",   DbType="float",            DataType=DataType.Single,   Length=4, Precision=0, Scale=0),               Nullable         ] public float?    Single     { get; set; } // float
-		[Column("STREAM_",   DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]?   Stream     { get; set; } // blob
-		[Column("STRING_",   DbType="varchar(50)",      DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              Nullable         ] public string?   String     { get; set; } // varchar(50)
+		[Column("STREAM_",   DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    Stream     { get; set; } // blob
+		[Column("STRING_",   DbType="varchar(50)",      DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              Nullable         ] public string    String     { get; set; } // varchar(50)
 		[Column("UINT16_",   DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    UINT16     { get; set; } // smallint
 		[Column("UINT32_",   DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      UINT32     { get; set; } // integer
 		[Column("UINT64_",   DbType="numeric(11,0)",    DataType=DataType.Decimal,  Length=8, Precision=11, Scale=0),              Nullable         ] public decimal?  UINT64     { get; set; } // numeric(11,0)
-		[Column("XML_",      DbType="char(1000)",       DataType=DataType.NChar,    Length=1000, Precision=0, Scale=0),            Nullable         ] public string?   Xml        { get; set; } // char(1000)
+		[Column("XML_",      DbType="char(1000)",       DataType=DataType.NChar,    Length=1000, Precision=0, Scale=0),            Nullable         ] public string    Xml        { get; set; } // char(1000)
 	}
 
 	[Table("DOCTOR")]
 	public partial class DOCTOR
 	{
 		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey, NotNull] public int    PERSONID { get; set; } // integer
-		#nullable disable
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),             NotNull] public string TAXONOMY { get; set; } // varchar(50)
-		#nullable enable
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// FK_DOCTOR_PERSON
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_DOCTOR_PERSON", BackReferenceName="DOCTOR")]
 		public PERSON PERSON { get; set; }
-
-		#nullable enable
 
 		#endregion
 	}
@@ -730,98 +568,98 @@ namespace Firebird3DataContext
 	[Table("DUAL")]
 	public partial class DUAL
 	{
-		[Column(DbType="varchar(10)", DataType=DataType.NVarChar, Length=10, Precision=0, Scale=0), Nullable] public string? DUMMY { get; set; } // varchar(10)
+		[Column(DbType="varchar(10)", DataType=DataType.NVarChar, Length=10, Precision=0, Scale=0), Nullable] public string DUMMY { get; set; } // varchar(10)
 	}
 
 	[Table("EYES133")]
 	public partial class EYES133
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     ID { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string? XY { get; set; } // varchar(40)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    ID { get; set; } // integer
+		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string XY { get; set; } // varchar(40)
 	}
 
 	[Table("EYES140")]
 	public partial class EYES140
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     ID { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string? XY { get; set; } // varchar(40)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    ID { get; set; } // integer
+		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string XY { get; set; } // varchar(40)
 	}
 
 	[Table("EYES146")]
 	public partial class EYES146
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     ID { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string? XY { get; set; } // varchar(40)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    ID { get; set; } // integer
+		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string XY { get; set; } // varchar(40)
 	}
 
 	[Table("EYES152")]
 	public partial class EYES152
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     ID { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string? XY { get; set; } // varchar(40)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    ID { get; set; } // integer
+		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string XY { get; set; } // varchar(40)
 	}
 
 	[Table("EYES153")]
 	public partial class EYES153
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     ID { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string? XY { get; set; } // varchar(40)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    ID { get; set; } // integer
+		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string XY { get; set; } // varchar(40)
 	}
 
 	[Table("EYES160")]
 	public partial class EYES160
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     ID { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string? XY { get; set; } // varchar(40)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    ID { get; set; } // integer
+		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string XY { get; set; } // varchar(40)
 	}
 
 	[Table("EYES167")]
 	public partial class EYES167
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     ID { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string? XY { get; set; } // varchar(40)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    ID { get; set; } // integer
+		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string XY { get; set; } // varchar(40)
 	}
 
 	[Table("EYES175")]
 	public partial class EYES175
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     ID { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string? XY { get; set; } // varchar(40)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    ID { get; set; } // integer
+		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string XY { get; set; } // varchar(40)
 	}
 
 	[Table("EYES207")]
 	public partial class EYES207
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     ID { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string? XY { get; set; } // varchar(40)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    ID { get; set; } // integer
+		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string XY { get; set; } // varchar(40)
 	}
 
 	[Table("EYES214")]
 	public partial class EYES214
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     ID { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string? XY { get; set; } // varchar(40)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    ID { get; set; } // integer
+		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string XY { get; set; } // varchar(40)
 	}
 
 	[Table("EYES236")]
 	public partial class EYES236
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     ID { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string? XY { get; set; } // varchar(40)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    ID { get; set; } // integer
+		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string XY { get; set; } // varchar(40)
 	}
 
 	[Table("EYES24")]
 	public partial class EYES24
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     ID { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string? XY { get; set; } // varchar(40)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    ID { get; set; } // integer
+		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string XY { get; set; } // varchar(40)
 	}
 
 	[Table("EYES244")]
 	public partial class EYES244
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     ID { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string? XY { get; set; } // varchar(40)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    ID { get; set; } // integer
+		[Column(DbType="varchar(40)", DataType=DataType.NVarChar, Length=40, Precision=0, Scale=0),    Nullable         ] public string XY { get; set; } // varchar(40)
 	}
 
 	[Table("GRANDCHILD")]
@@ -835,18 +673,18 @@ namespace Firebird3DataContext
 	[Table("INHERITANCECHILD")]
 	public partial class INHERITANCECHILD
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     INHERITANCECHILDID  { get; set; } // integer
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               NotNull] public int     INHERITANCEPARENTID { get; set; } // integer
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),     Nullable         ] public int?    TYPEDISCRIMINATOR   { get; set; } // integer
-		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),    Nullable         ] public string? NAME                { get; set; } // varchar(50)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    INHERITANCECHILDID  { get; set; } // integer
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               NotNull] public int    INHERITANCEPARENTID { get; set; } // integer
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),     Nullable         ] public int?   TYPEDISCRIMINATOR   { get; set; } // integer
+		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),    Nullable         ] public string NAME                { get; set; } // varchar(50)
 	}
 
 	[Table("INHERITANCEPARENT")]
 	public partial class INHERITANCEPARENT
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     INHERITANCEPARENTID { get; set; } // integer
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),     Nullable         ] public int?    TYPEDISCRIMINATOR   { get; set; } // integer
-		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),    Nullable         ] public string? NAME                { get; set; } // varchar(50)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    INHERITANCEPARENTID { get; set; } // integer
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),     Nullable         ] public int?   TYPEDISCRIMINATOR   { get; set; } // integer
+		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),    Nullable         ] public string NAME                { get; set; } // varchar(50)
 	}
 
 	[Table("LINQDATATYPES")]
@@ -857,12 +695,12 @@ namespace Firebird3DataContext
 		[Column(DbType="timestamp",     DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),            Nullable] public DateTime? DATETIMEVALUE  { get; set; } // timestamp
 		[Column(DbType="timestamp",     DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),            Nullable] public DateTime? DATETIMEVALUE2 { get; set; } // timestamp
 		[Column(DbType="char(1)",       DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),            Nullable] public char?     BOOLVALUE      { get; set; } // char(1)
-		[Column(DbType="char(38)",      DataType=DataType.NChar,    Length=38, Precision=0, Scale=0),           Nullable] public string?   GUIDVALUE      { get; set; } // char(38)
-		[Column(DbType="blob",          DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0), Nullable] public byte[]?   BINARYVALUE    { get; set; } // blob
+		[Column(DbType="char(38)",      DataType=DataType.NChar,    Length=38, Precision=0, Scale=0),           Nullable] public string    GUIDVALUE      { get; set; } // char(38)
+		[Column(DbType="blob",          DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0), Nullable] public byte[]    BINARYVALUE    { get; set; } // blob
 		[Column(DbType="smallint",      DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),            Nullable] public short?    SMALLINTVALUE  { get; set; } // smallint
 		[Column(DbType="integer",       DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),            Nullable] public int?      INTVALUE       { get; set; } // integer
 		[Column(DbType="bigint",        DataType=DataType.Int64,    Length=8, Precision=0, Scale=0),            Nullable] public long?     BIGINTVALUE    { get; set; } // bigint
-		[Column(DbType="varchar(50)",   DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),           Nullable] public string?   STRINGVALUE    { get; set; } // varchar(50)
+		[Column(DbType="varchar(50)",   DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),           Nullable] public string    STRINGVALUE    { get; set; } // varchar(50)
 	}
 
 	[Table("PARENT")]
@@ -876,20 +714,15 @@ namespace Firebird3DataContext
 	public partial class PATIENT
 	{
 		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey, NotNull] public int    PERSONID  { get; set; } // integer
-		#nullable disable
 		[Column(DbType="varchar(256)", DataType=DataType.NVarChar, Length=256, Precision=0, Scale=0),             NotNull] public string DIAGNOSIS { get; set; } // varchar(256)
-		#nullable enable
 
 		#region Associations
 
-		#nullable disable
 		/// <summary>
 		/// INTEG_13459
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_13459", BackReferenceName="INTEG")]
 		public PERSON PERSON { get; set; }
-
-		#nullable enable
 
 		#endregion
 	}
@@ -897,15 +730,11 @@ namespace Firebird3DataContext
 	[Table("PERSON")]
 	public partial class PERSON
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int     PERSONID   { get; set; } // integer
-		#nullable disable
-		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              NotNull] public string  FIRSTNAME  { get; set; } // varchar(50)
-		#nullable enable
-		#nullable disable
-		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              NotNull] public string  LASTNAME   { get; set; } // varchar(50)
-		#nullable enable
-		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),    Nullable         ] public string? MIDDLENAME { get; set; } // varchar(50)
-		[Column(DbType="char(1)",     DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               NotNull] public char    GENDER     { get; set; } // char(1)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    PERSONID   { get; set; } // integer
+		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              NotNull] public string FIRSTNAME  { get; set; } // varchar(50)
+		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              NotNull] public string LASTNAME   { get; set; } // varchar(50)
+		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),    Nullable         ] public string MIDDLENAME { get; set; } // varchar(50)
+		[Column(DbType="char(1)",     DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               NotNull] public char   GENDER     { get; set; } // char(1)
 
 		#region Associations
 
@@ -913,13 +742,13 @@ namespace Firebird3DataContext
 		/// FK_DOCTOR_PERSON_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public DOCTOR? DOCTOR { get; set; }
+		public DOCTOR DOCTOR { get; set; }
 
 		/// <summary>
 		/// INTEG_13459_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public PATIENT? INTEG { get; set; }
+		public PATIENT INTEG { get; set; }
 
 		#endregion
 	}
@@ -927,27 +756,25 @@ namespace Firebird3DataContext
 	[Table("PERSONVIEW", IsView=true)]
 	public partial class PERSONVIEW
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  Nullable] public int?    PERSONID   { get; set; } // integer
-		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0), Nullable] public string? FIRSTNAME  { get; set; } // varchar(50)
-		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0), Nullable] public string? LASTNAME   { get; set; } // varchar(50)
-		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0), Nullable] public string? MIDDLENAME { get; set; } // varchar(50)
-		[Column(DbType="char(1)",     DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),  Nullable] public char?   GENDER     { get; set; } // char(1)
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  Nullable] public int?   PERSONID   { get; set; } // integer
+		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0), Nullable] public string FIRSTNAME  { get; set; } // varchar(50)
+		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0), Nullable] public string LASTNAME   { get; set; } // varchar(50)
+		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0), Nullable] public string MIDDLENAME { get; set; } // varchar(50)
+		[Column(DbType="char(1)",     DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),  Nullable] public char?  GENDER     { get; set; } // char(1)
 	}
 
 	[Table("SAMPLECLASS_F3LS_15_15_564")]
 	public partial class SampleclassF3LS1515564
 	{
-		[Column(             DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  NotNull    ] public int     ID    { get; set; } // integer
-		[Column("\"value\"", DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),    Nullable] public string? Value { get; set; } // varchar(50)
+		[Column(             DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  NotNull    ] public int    ID    { get; set; } // integer
+		[Column("\"value\"", DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),    Nullable] public string Value { get; set; } // varchar(50)
 	}
 
 	[Table("SEQUENCETEST")]
 	public partial class SEQUENCETEST
 	{
 		[Column(          DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey, NotNull] public int    ID    { get; set; } // integer
-		#nullable disable
 		[Column("VALUE_", DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),             NotNull] public string Value { get; set; } // varchar(50)
-		#nullable enable
 	}
 
 	[Table("TESTIDENTITY")]
@@ -967,19 +794,19 @@ namespace Firebird3DataContext
 		[Column(DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      FIELD5          { get; set; } // integer
 		[Column(DbType="bigint",           DataType=DataType.Int64,    Length=8, Precision=0, Scale=0),               Nullable         ] public long?     FIELDINT64      { get; set; } // bigint
 		[Column(DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     FIELDBOOLEAN    { get; set; } // char(1)
-		[Column(DbType="varchar(20)",      DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string?   FIELDSTRING     { get; set; } // varchar(20)
-		[Column(DbType="varchar(20)",      DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string?   FIELDNSTRING    { get; set; } // varchar(20)
+		[Column(DbType="varchar(20)",      DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string    FIELDSTRING     { get; set; } // varchar(20)
+		[Column(DbType="varchar(20)",      DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string    FIELDNSTRING    { get; set; } // varchar(20)
 		[Column(DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     FIELDCHAR       { get; set; } // char(1)
 		[Column(DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     FIELDNCHAR      { get; set; } // char(1)
 		[Column(DbType="float",            DataType=DataType.Single,   Length=4, Precision=0, Scale=0),               Nullable         ] public float?    FIELDFLOAT      { get; set; } // float
 		[Column(DbType="double precision", DataType=DataType.Double,   Length=8, Precision=0, Scale=0),               Nullable         ] public double?   FIELDDOUBLE     { get; set; } // double precision
 		[Column(DbType="timestamp",        DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),               Nullable         ] public DateTime? FIELDDATETIME   { get; set; } // timestamp
-		[Column(DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]?   FIELDBINARY     { get; set; } // blob
-		[Column(DbType="char(38)",         DataType=DataType.NChar,    Length=38, Precision=0, Scale=0),              Nullable         ] public string?   FIELDGUID       { get; set; } // char(38)
+		[Column(DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    FIELDBINARY     { get; set; } // blob
+		[Column(DbType="char(38)",         DataType=DataType.NChar,    Length=38, Precision=0, Scale=0),              Nullable         ] public string    FIELDGUID       { get; set; } // char(38)
 		[Column(DbType="decimal(18,10)",   DataType=DataType.Decimal,  Length=8, Precision=18, Scale=10),             Nullable         ] public decimal?  FIELDDECIMAL    { get; set; } // decimal(18,10)
 		[Column(DbType="date",             DataType=DataType.Date,     Length=4, Precision=0, Scale=0),               Nullable         ] public DateTime? FIELDDATE       { get; set; } // date
 		[Column(DbType="timestamp",        DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),               Nullable         ] public DateTime? FIELDTIME       { get; set; } // timestamp
-		[Column(DbType="varchar(20)",      DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string?   FIELDENUMSTRING { get; set; } // varchar(20)
+		[Column(DbType="varchar(20)",      DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string    FIELDENUMSTRING { get; set; } // varchar(20)
 		[Column(DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      FIELDENUMNUMBER { get; set; } // integer
 	}
 
@@ -994,314 +821,310 @@ namespace Firebird3DataContext
 		[Column(DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      FIELD5          { get; set; } // integer
 		[Column(DbType="bigint",           DataType=DataType.Int64,    Length=8, Precision=0, Scale=0),               Nullable         ] public long?     FIELDINT64      { get; set; } // bigint
 		[Column(DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     FIELDBOOLEAN    { get; set; } // char(1)
-		[Column(DbType="varchar(20)",      DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string?   FIELDSTRING     { get; set; } // varchar(20)
-		[Column(DbType="varchar(20)",      DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string?   FIELDNSTRING    { get; set; } // varchar(20)
+		[Column(DbType="varchar(20)",      DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string    FIELDSTRING     { get; set; } // varchar(20)
+		[Column(DbType="varchar(20)",      DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string    FIELDNSTRING    { get; set; } // varchar(20)
 		[Column(DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     FIELDCHAR       { get; set; } // char(1)
 		[Column(DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     FIELDNCHAR      { get; set; } // char(1)
 		[Column(DbType="float",            DataType=DataType.Single,   Length=4, Precision=0, Scale=0),               Nullable         ] public float?    FIELDFLOAT      { get; set; } // float
 		[Column(DbType="double precision", DataType=DataType.Double,   Length=8, Precision=0, Scale=0),               Nullable         ] public double?   FIELDDOUBLE     { get; set; } // double precision
 		[Column(DbType="timestamp",        DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),               Nullable         ] public DateTime? FIELDDATETIME   { get; set; } // timestamp
-		[Column(DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]?   FIELDBINARY     { get; set; } // blob
-		[Column(DbType="char(38)",         DataType=DataType.NChar,    Length=38, Precision=0, Scale=0),              Nullable         ] public string?   FIELDGUID       { get; set; } // char(38)
+		[Column(DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    FIELDBINARY     { get; set; } // blob
+		[Column(DbType="char(38)",         DataType=DataType.NChar,    Length=38, Precision=0, Scale=0),              Nullable         ] public string    FIELDGUID       { get; set; } // char(38)
 		[Column(DbType="decimal(18,10)",   DataType=DataType.Decimal,  Length=8, Precision=18, Scale=10),             Nullable         ] public decimal?  FIELDDECIMAL    { get; set; } // decimal(18,10)
 		[Column(DbType="date",             DataType=DataType.Date,     Length=4, Precision=0, Scale=0),               Nullable         ] public DateTime? FIELDDATE       { get; set; } // date
 		[Column(DbType="timestamp",        DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),               Nullable         ] public DateTime? FIELDTIME       { get; set; } // timestamp
-		[Column(DbType="varchar(20)",      DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string?   FIELDENUMSTRING { get; set; } // varchar(20)
+		[Column(DbType="varchar(20)",      DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string    FIELDENUMSTRING { get; set; } // varchar(20)
 		[Column(DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      FIELDENUMNUMBER { get; set; } // integer
 	}
 
 	[Table("XXPATIENT167")]
 	public partial class XXPATIENT167
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT170")]
 	public partial class XXPATIENT170
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT173")]
 	public partial class XXPATIENT173
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT176")]
 	public partial class XXPATIENT176
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT187")]
 	public partial class XXPATIENT187
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT190")]
 	public partial class XXPATIENT190
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT193")]
 	public partial class XXPATIENT193
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT196")]
 	public partial class XXPATIENT196
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT420")]
 	public partial class XXPATIENT420
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT440")]
 	public partial class XXPATIENT440
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT460")]
 	public partial class XXPATIENT460
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT461")]
 	public partial class XXPATIENT461
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT480")]
 	public partial class XXPATIENT480
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT483")]
 	public partial class XXPATIENT483
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT503")]
 	public partial class XXPATIENT503
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT505")]
 	public partial class XXPATIENT505
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT522")]
 	public partial class XXPATIENT522
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT527")]
 	public partial class XXPATIENT527
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT541")]
 	public partial class XXPATIENT541
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT544")]
 	public partial class XXPATIENT544
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT560")]
 	public partial class XXPATIENT560
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT565")]
 	public partial class XXPATIENT565
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT586")]
 	public partial class XXPATIENT586
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT607")]
 	public partial class XXPATIENT607
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT626")]
 	public partial class XXPATIENT626
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT63")]
 	public partial class XXPATIENT63
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT647")]
 	public partial class XXPATIENT647
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT656")]
 	public partial class XXPATIENT656
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT66")]
 	public partial class XXPATIENT66
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT678")]
 	public partial class XXPATIENT678
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT686")]
 	public partial class XXPATIENT686
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT69")]
 	public partial class XXPATIENT69
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT709")]
 	public partial class XXPATIENT709
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT716")]
 	public partial class XXPATIENT716
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT72")]
 	public partial class XXPATIENT72
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT730")]
 	public partial class XXPATIENT730
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT740")]
 	public partial class XXPATIENT740
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT760")]
 	public partial class XXPATIENT760
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT790")]
 	public partial class XXPATIENT790
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPATIENT820")]
 	public partial class XXPATIENT820
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? DIAGNOSIS { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
 	}
 
 	[Table("XXPERSON_F3L_32")]
 	public partial class XxpersonF3L32
 	{
-		#nullable disable
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),              NotNull] public string  FIRSTNAME  { get; set; } // varchar(255)
-		#nullable enable
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int     PERSONID   { get; set; } // integer
-		#nullable disable
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),              NotNull] public string  LASTNAME   { get; set; } // varchar(255)
-		#nullable enable
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string? MIDDLENAME { get; set; } // varchar(255)
-		[Column(DbType="char(1)",      DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),                NotNull] public char    GENDER     { get; set; } // char(1)
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),              NotNull] public string FIRSTNAME  { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID   { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),              NotNull] public string LASTNAME   { get; set; } // varchar(255)
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string MIDDLENAME { get; set; } // varchar(255)
+		[Column(DbType="char(1)",      DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),                NotNull] public char   GENDER     { get; set; } // char(1)
 	}
 
 	public static partial class TESTDB30DBStoredProcedures
@@ -1317,7 +1140,7 @@ namespace Firebird3DataContext
 
 		#region OUTREFENUMTEST
 
-		public static IEnumerable<OUTREFENUMTESTResult> OUTREFENUMTEST(this DataConnection dataConnection, string? STR, string? IN_INPUTOUTPUTSTR, out string? INPUTOUTPUTSTR, out string? OUTPUTSTR)
+		public static IEnumerable<OUTREFENUMTESTResult> OUTREFENUMTEST(this DataConnection dataConnection, string STR, string IN_INPUTOUTPUTSTR, out string INPUTOUTPUTSTR, out string OUTPUTSTR)
 		{
 			var ret = dataConnection.QueryProc<OUTREFENUMTESTResult>("OUTREFENUMTEST",
 				new DataParameter("STR",            STR,            DataType.NVarChar),
@@ -1325,23 +1148,23 @@ namespace Firebird3DataContext
 				new DataParameter("INPUTOUTPUTSTR", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("OUTPUTSTR", null,      DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
 
 			return ret;
 		}
 
 		public partial class OUTREFENUMTESTResult
 		{
-			public string? INPUTOUTPUTSTR { get; set; }
-			public string? OUTPUTSTR      { get; set; }
+			public string INPUTOUTPUTSTR { get; set; }
+			public string OUTPUTSTR      { get; set; }
 		}
 
 		#endregion
 
 		#region OUTREFTEST
 
-		public static IEnumerable<OUTREFTESTResult> OUTREFTEST(this DataConnection dataConnection, int? ID, int? IN_INPUTOUTPUTID, string? STR, string? IN_INPUTOUTPUTSTR, out int? INPUTOUTPUTID, out string? INPUTOUTPUTSTR, out int? OUTPUTID, out string? OUTPUTSTR)
+		public static IEnumerable<OUTREFTESTResult> OUTREFTEST(this DataConnection dataConnection, int? ID, int? IN_INPUTOUTPUTID, string STR, string IN_INPUTOUTPUTSTR, out int? INPUTOUTPUTID, out string INPUTOUTPUTSTR, out int? OUTPUTID, out string OUTPUTSTR)
 		{
 			var ret = dataConnection.QueryProc<OUTREFTESTResult>("OUTREFTEST",
 				new DataParameter("ID",             ID,             DataType.Int32),
@@ -1353,27 +1176,27 @@ namespace Firebird3DataContext
 				new DataParameter("OUTPUTID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
 				new DataParameter("OUTPUTSTR", null,      DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
-			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
 
 			return ret;
 		}
 
 		public partial class OUTREFTESTResult
 		{
-			public int?    INPUTOUTPUTID  { get; set; }
-			public string? INPUTOUTPUTSTR { get; set; }
-			public int?    OUTPUTID       { get; set; }
-			public string? OUTPUTSTR      { get; set; }
+			public int?   INPUTOUTPUTID  { get; set; }
+			public string INPUTOUTPUTSTR { get; set; }
+			public int?   OUTPUTID       { get; set; }
+			public string OUTPUTSTR      { get; set; }
 		}
 
 		#endregion
 
 		#region PatientSelectall
 
-		public static IEnumerable<PatientSELECTALLResult> PatientSelectall(this DataConnection dataConnection, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER, out string? DIAGNOSIS)
+		public static IEnumerable<PatientSELECTALLResult> PatientSelectall(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
 		{
 			var ret = dataConnection.QueryProc<PatientSELECTALLResult>("PATIENT_SELECTALL",
 				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
@@ -1383,31 +1206,31 @@ namespace Firebird3DataContext
 				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 },
 				new DataParameter("DIAGNOSIS", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 256 }).ToList();
 
-			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
-			DIAGNOSIS  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
+			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			DIAGNOSIS  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
 
 			return ret;
 		}
 
 		public partial class PatientSELECTALLResult
 		{
-			public int?    PERSONID   { get; set; }
-			public string? FIRSTNAME  { get; set; }
-			public string? LASTNAME   { get; set; }
-			public string? MIDDLENAME { get; set; }
-			public string? GENDER     { get; set; }
-			public string? DIAGNOSIS  { get; set; }
+			public int?   PERSONID   { get; set; }
+			public string FIRSTNAME  { get; set; }
+			public string LASTNAME   { get; set; }
+			public string MIDDLENAME { get; set; }
+			public string GENDER     { get; set; }
+			public string DIAGNOSIS  { get; set; }
 		}
 
 		#endregion
 
 		#region PatientSelectbyname
 
-		public static IEnumerable<PatientSELECTBYNAMEResult> PatientSelectbyname(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME, out int? PERSONID, out string? MIDDLENAME, out char? GENDER, out string? DIAGNOSIS)
+		public static IEnumerable<PatientSELECTBYNAMEResult> PatientSelectbyname(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, out int? PERSONID, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
 		{
 			var ret = dataConnection.QueryProc<PatientSELECTBYNAMEResult>("PATIENT_SELECTBYNAME",
 				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
@@ -1417,20 +1240,20 @@ namespace Firebird3DataContext
 				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 },
 				new DataParameter("DIAGNOSIS", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 256 }).ToList();
 
-			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
-			DIAGNOSIS  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			DIAGNOSIS  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
 
 			return ret;
 		}
 
 		public partial class PatientSELECTBYNAMEResult
 		{
-			public int?    PERSONID   { get; set; }
-			public string? MIDDLENAME { get; set; }
-			public string? GENDER     { get; set; }
-			public string? DIAGNOSIS  { get; set; }
+			public int?   PERSONID   { get; set; }
+			public string MIDDLENAME { get; set; }
+			public string GENDER     { get; set; }
+			public string DIAGNOSIS  { get; set; }
 		}
 
 		#endregion
@@ -1447,7 +1270,7 @@ namespace Firebird3DataContext
 
 		#region PersonInsert
 
-		public static IEnumerable<PersonINSERTResult> PersonInsert(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static IEnumerable<PersonINSERTResult> PersonInsert(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var ret = dataConnection.QueryProc<PersonINSERTResult>("PERSON_INSERT",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
@@ -1470,7 +1293,7 @@ namespace Firebird3DataContext
 
 		#region PersonInsertOutputparameter
 
-		public static IEnumerable<PersonInsertOUTPUTPARAMETERResult> PersonInsertOutputparameter(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static IEnumerable<PersonInsertOUTPUTPARAMETERResult> PersonInsertOutputparameter(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var ret = dataConnection.QueryProc<PersonInsertOUTPUTPARAMETERResult>("PERSON_INSERT_OUTPUTPARAMETER",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
@@ -1493,7 +1316,7 @@ namespace Firebird3DataContext
 
 		#region PersonSelectall
 
-		public static IEnumerable<PersonSELECTALLResult> PersonSelectall(this DataConnection dataConnection, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER)
+		public static IEnumerable<PersonSELECTALLResult> PersonSelectall(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
 		{
 			var ret = dataConnection.QueryProc<PersonSELECTALLResult>("PERSON_SELECTALL",
 				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
@@ -1502,29 +1325,29 @@ namespace Firebird3DataContext
 				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
 
-			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
+			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 
 			return ret;
 		}
 
 		public partial class PersonSELECTALLResult
 		{
-			public int?    PERSONID   { get; set; }
-			public string? FIRSTNAME  { get; set; }
-			public string? LASTNAME   { get; set; }
-			public string? MIDDLENAME { get; set; }
-			public string? GENDER     { get; set; }
+			public int?   PERSONID   { get; set; }
+			public string FIRSTNAME  { get; set; }
+			public string LASTNAME   { get; set; }
+			public string MIDDLENAME { get; set; }
+			public string GENDER     { get; set; }
 		}
 
 		#endregion
 
 		#region PersonSelectbykey
 
-		public static IEnumerable<PersonSELECTBYKEYResult> PersonSelectbykey(this DataConnection dataConnection, int? ID, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER)
+		public static IEnumerable<PersonSELECTBYKEYResult> PersonSelectbykey(this DataConnection dataConnection, int? ID, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
 		{
 			var ret = dataConnection.QueryProc<PersonSELECTBYKEYResult>("PERSON_SELECTBYKEY",
 				new DataParameter("ID",         ID,         DataType.Int32),
@@ -1534,29 +1357,29 @@ namespace Firebird3DataContext
 				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
 
-			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
+			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 
 			return ret;
 		}
 
 		public partial class PersonSELECTBYKEYResult
 		{
-			public int?    PERSONID   { get; set; }
-			public string? FIRSTNAME  { get; set; }
-			public string? LASTNAME   { get; set; }
-			public string? MIDDLENAME { get; set; }
-			public string? GENDER     { get; set; }
+			public int?   PERSONID   { get; set; }
+			public string FIRSTNAME  { get; set; }
+			public string LASTNAME   { get; set; }
+			public string MIDDLENAME { get; set; }
+			public string GENDER     { get; set; }
 		}
 
 		#endregion
 
 		#region PersonSelectbyname
 
-		public static IEnumerable<PersonSELECTBYNAMEResult> PersonSelectbyname(this DataConnection dataConnection, string? IN_FIRSTNAME, string? IN_LASTNAME, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER)
+		public static IEnumerable<PersonSELECTBYNAMEResult> PersonSelectbyname(this DataConnection dataConnection, string IN_FIRSTNAME, string IN_LASTNAME, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
 		{
 			var ret = dataConnection.QueryProc<PersonSELECTBYNAMEResult>("PERSON_SELECTBYNAME",
 				new DataParameter("IN_FIRSTNAME", IN_FIRSTNAME, DataType.NVarChar),
@@ -1567,29 +1390,29 @@ namespace Firebird3DataContext
 				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
 
-			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
+			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 
 			return ret;
 		}
 
 		public partial class PersonSELECTBYNAMEResult
 		{
-			public int?    PERSONID   { get; set; }
-			public string? FIRSTNAME  { get; set; }
-			public string? LASTNAME   { get; set; }
-			public string? MIDDLENAME { get; set; }
-			public string? GENDER     { get; set; }
+			public int?   PERSONID   { get; set; }
+			public string FIRSTNAME  { get; set; }
+			public string LASTNAME   { get; set; }
+			public string MIDDLENAME { get; set; }
+			public string GENDER     { get; set; }
 		}
 
 		#endregion
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this DataConnection dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		public static int PersonUpdate(this DataConnection dataConnection, int? PERSONID, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
 		{
 			return dataConnection.ExecuteProc("PERSON_UPDATE",
 				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
@@ -1603,44 +1426,44 @@ namespace Firebird3DataContext
 
 		#region ScalarDatareader
 
-		public static IEnumerable<ScalarDATAREADERResult> ScalarDatareader(this DataConnection dataConnection, out int? INTFIELD, out string? STRINGFIELD)
+		public static IEnumerable<ScalarDATAREADERResult> ScalarDatareader(this DataConnection dataConnection, out int? INTFIELD, out string STRINGFIELD)
 		{
 			var ret = dataConnection.QueryProc<ScalarDATAREADERResult>("SCALAR_DATAREADER",
 				new DataParameter("INTFIELD", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
 				new DataParameter("STRINGFIELD", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
-			INTFIELD    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INTFIELD"]).   Value);
-			STRINGFIELD = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["STRINGFIELD"]).Value);
+			INTFIELD    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["INTFIELD"]).   Value);
+			STRINGFIELD = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["STRINGFIELD"]).Value);
 
 			return ret;
 		}
 
 		public partial class ScalarDATAREADERResult
 		{
-			public int?    INTFIELD    { get; set; }
-			public string? STRINGFIELD { get; set; }
+			public int?   INTFIELD    { get; set; }
+			public string STRINGFIELD { get; set; }
 		}
 
 		#endregion
 
 		#region ScalarOutputparameter
 
-		public static IEnumerable<ScalarOUTPUTPARAMETERResult> ScalarOutputparameter(this DataConnection dataConnection, out int? OUTPUTINT, out string? OUTPUTSTRING)
+		public static IEnumerable<ScalarOUTPUTPARAMETERResult> ScalarOutputparameter(this DataConnection dataConnection, out int? OUTPUTINT, out string OUTPUTSTRING)
 		{
 			var ret = dataConnection.QueryProc<ScalarOUTPUTPARAMETERResult>("SCALAR_OUTPUTPARAMETER",
 				new DataParameter("OUTPUTINT", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
 				new DataParameter("OUTPUTSTRING", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
-			OUTPUTINT    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTINT"]).   Value);
-			OUTPUTSTRING = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTRING"]).Value);
+			OUTPUTINT    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTINT"]).   Value);
+			OUTPUTSTRING = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTRING"]).Value);
 
 			return ret;
 		}
 
 		public partial class ScalarOUTPUTPARAMETERResult
 		{
-			public int?    OUTPUTINT    { get; set; }
-			public string? OUTPUTSTRING { get; set; }
+			public int?   OUTPUTINT    { get; set; }
+			public string OUTPUTSTRING { get; set; }
 		}
 
 		#endregion
@@ -2227,5 +2050,4 @@ namespace Firebird3DataContext
 	}
 }
 
-#nullable restore
 #pragma warning restore 1591

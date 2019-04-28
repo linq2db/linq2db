@@ -3,8 +3,8 @@
 <#@ include file="..\..\Source\LinqToDB.Templates\T4Model.ttinclude"        #>
 <#@ include file="..\..\Source\LinqToDB.Templates\EditableObject.ttinclude" #>
 <#
-	AddNullablePragma = true;
-	EnableNullableReferenceTypes = true;
+	//AddNullablePragma = true;
+	//EnableNullableReferenceTypes = true;
 
 	Model.Namespaces[0].Name = "Tests.T4.Model";
 
