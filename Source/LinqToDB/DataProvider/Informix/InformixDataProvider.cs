@@ -181,7 +181,7 @@ namespace LinqToDB.DataProvider.Informix
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		static Action<IDbDataParameter> _setText;
+		Action<IDbDataParameter> _setText;
 
 		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{

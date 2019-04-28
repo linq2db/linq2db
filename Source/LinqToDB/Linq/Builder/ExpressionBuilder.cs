@@ -39,6 +39,7 @@ namespace LinqToDB.Linq.Builder
 			new DistinctBuilder            (),
 			new FirstSingleBuilder         (),
 			new AggregationBuilder         (),
+			new MethodChainBuilder         (),
 			new ScalarSelectBuilder        (),
 			new CountBuilder               (),
 			new PassThroughBuilder         (),

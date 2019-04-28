@@ -26,6 +26,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					case "2005" : return new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005);
 					case "2012" : return new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012);
 					case "2014" : return new SqlServerDataProvider(ProviderName.SqlServer2014, SqlServerVersion.v2012);
+					case "2017" : return new SqlServerDataProvider(ProviderName.SqlServer2017, SqlServerVersion.v2017);
 				}
 			}
 

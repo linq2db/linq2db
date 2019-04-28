@@ -128,7 +128,7 @@ namespace LinqToDB.DataProvider.SQLite
 			base.SetParameterType(parameter, dataType);
 		}
 
-		static Action<string> _createDatabase;
+		Action<string> _createDatabase;
 
 		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool deleteIfExists = false)
 		{

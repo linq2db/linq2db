@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider.DB2
 			base.InitCommand(dataConnection, commandType, commandText, parameters);
 		}
 
-		static Action<IDbDataParameter> _setBlob;
+		Action<IDbDataParameter> _setBlob;
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{

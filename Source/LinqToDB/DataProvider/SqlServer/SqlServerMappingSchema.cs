@@ -287,4 +287,18 @@ namespace LinqToDB.DataProvider.SqlServer
 			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
 		}
 	}
+
+	public class SqlServer2017MappingSchema : MappingSchema
+	{
+		public SqlServer2017MappingSchema()
+			: base(ProviderName.SqlServer2017, SqlServerMappingSchema.Instance)
+		{
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+		}
+
+		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		{
+			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+		}
+	}
 }

@@ -12,7 +12,7 @@ $net46Tests = {
 $netcore2Tests = {
 	param($dir, $logFileName)
 	Set-Location $dir
-	$output = dotnet test Tests\Linq\ -f netcoreapp2.0 --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor
+	$output = dotnet test Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor
 	$result = "" | Select-Object -Property output,status,name
 	$result.output = $output
 	$result.status = $LastExitCode
@@ -23,7 +23,7 @@ $netcore2Tests = {
 $netcore1Tests = {
 	param($dir, $logFileName)
 	Set-Location $dir
-	$output = dotnet test Tests\Linq\ -f netcoreapp1.0 --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor
+	$output = dotnet test Tests\Linq\ -f netcoreapp1.0 --no-build --logger "trx;LogFileName=$logFileName" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c AppVeyor
 	$result = "" | Select-Object -Property output,status,name
 	$result.output = $output
 	$result.status = $LastExitCode
