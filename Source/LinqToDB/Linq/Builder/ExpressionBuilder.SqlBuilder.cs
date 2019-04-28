@@ -669,6 +669,42 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(context, expr);
 		}
 
+		public ISqlExpression ConvertToExtensionSql(IBuildContext context, Expression expression)
+		{
+			expression = expression.Unwrap();
+
+			if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(expression.Type))
+			{
+				Expression preparedExpression;
+				if (expression.NodeType == ExpressionType.Call)
+					preparedExpression = ((MethodCallExpression)expression).Arguments[0];
+				else 
+					preparedExpression = ((Sql.IQueryableContainer)expression.EvaluateExpression()).Query.Expression;
+				return ConvertToExtensionSql(context, preparedExpression);
+			}
+
+			if (expression is LambdaExpression lambda)
+			{
+				var saveParent = context.Parent;
+				ExpressionContext exprCtx;
+				if (context is SelectContext sc)
+					exprCtx = new ExpressionContext(context, sc.Sequence, lambda);
+				else
+					exprCtx = new ExpressionContext(context.Parent, context, lambda);
+				var result = ConvertToSql(exprCtx, lambda.Body);
+				ReplaceParent(context.Parent, saveParent);
+				if (!(result is SqlField field) || field.Table.All != field)
+					return result;
+				result = context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
+				return result;
+			}
+
+			if (!MappingSchema.IsScalarType(expression.Type) && typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
+				return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
+
+			return ConvertToSql(context, expression);
+		}
+
 		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression, bool unwrap = false)
 		{
 			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
@@ -848,7 +884,7 @@ namespace LinqToDB.Linq.Builder
 						if (attr != null)
 						{
 							var converted = attr.GetExpression(DataContext, context.SelectQuery, ma,
-								e => ConvertToSql(context, e));
+								e => ConvertToExtensionSql(context, e));
 
 							if (converted == null)
 							{
@@ -945,7 +981,7 @@ namespace LinqToDB.Linq.Builder
 							if (attr.InlineParameters)
 								DataContext.InlineParameters = true;
 
-							var sqlExpression = attr.GetExpression(DataContext, context.SelectQuery, e, _ => ConvertToSql(context, _));
+							var sqlExpression = attr.GetExpression(DataContext, context.SelectQuery, e, _ => ConvertToExtensionSql(context, _));
 							if (sqlExpression != null)
 								return Convert(context, sqlExpression);
 

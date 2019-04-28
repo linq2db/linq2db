@@ -99,6 +99,7 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case ProviderName.SqlServer2017:
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
 			}
@@ -181,6 +182,7 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case ProviderName.SqlServer2017:
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
 				case ProviderName.Informix:

@@ -53,10 +53,10 @@ namespace LinqToDB.DataProvider.SapHana
 		public override string DbFactoryProviderName => "Sap.Data.Hana";
 #endif
 
-		static Action<IDbDataParameter> _setText;
-		static Action<IDbDataParameter> _setNText;
-		static Action<IDbDataParameter> _setBlob;
-		static Action<IDbDataParameter> _setVarBinary;
+		Action<IDbDataParameter> _setText;
+		Action<IDbDataParameter> _setNText;
+		Action<IDbDataParameter> _setBlob;
+		Action<IDbDataParameter> _setVarBinary;
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{

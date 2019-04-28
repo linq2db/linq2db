@@ -1,6 +1,6 @@
 language: csharp
 sudo: required
-dist: trusty
+dist: xenial
 
 branches:
   only:
@@ -8,6 +8,9 @@ branches:
     - /version.*/
     - /release.*/
     - /dev.*/
+
+services:
+    - mysql
 
 addons:
   postgresql: "9.6"

@@ -71,6 +71,11 @@ namespace LinqToDB
 		/// </summary>
 		public const string SqlServer2014 = "SqlServer.2014";
 		/// <summary>
+		/// Microsoft SQL Server 2017 provider.
+		/// Used as configuration name for SQL Server 2017 mapping schema <see cref="DataProvider.SqlServer.SqlServer2017MappingSchema"/>.
+		/// </summary>
+		public const string SqlServer2017 = "SqlServer.2017";
+		/// <summary>
 		/// MySql provider.
 		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
 		/// </summary>
