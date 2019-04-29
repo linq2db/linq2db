@@ -19,7 +19,7 @@ using LinqToDB.Mapping;
 
 namespace DB2DataContext
 {
-	public partial class TESTDB2DB : LinqToDB.Data.DataConnection
+	public partial class TESTDATADB : LinqToDB.Data.DataConnection
 	{
 		public ITable<DB2ADMIN_ALLTYPE>           ALLTYPES            { get { return this.GetTable<DB2ADMIN_ALLTYPE>(); } }
 		public ITable<DB2ADMIN_Child>             Children            { get { return this.GetTable<DB2ADMIN_Child>(); } }
@@ -42,13 +42,13 @@ namespace DB2DataContext
 		public ITable<DB2ADMIN_Testmerge2>        Testmerge2          { get { return this.GetTable<DB2ADMIN_Testmerge2>(); } }
 		public ITable<DB2ADMIN_TestMerge2>        TestMerge2          { get { return this.GetTable<DB2ADMIN_TestMerge2>(); } }
 
-		public TESTDB2DB()
+		public TESTDATADB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TESTDB2DB(string configuration)
+		public TESTDATADB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
@@ -341,7 +341,7 @@ namespace DB2DataContext
 		[Column(DbType="INTEGER",                   DataType=DataType.Int32),                                Nullable         ] public int?      FieldEnumNumber { get; set; } // INTEGER
 	}
 
-	public static partial class TESTDB2DBStoredProcedures
+	public static partial class TESTDATADBStoredProcedures
 	{
 		#region PersonSelectbykey
 

@@ -1631,7 +1631,15 @@ public class ModelType
 
 	public static ModelType Create<TType>(bool referenceNullable)
 	{
-		return new ModelType(typeof(TType), referenceNullable);
+		return Create(typeof(TType), referenceNullable);
+	}
+
+	public static ModelType Create(Type type, bool referenceNullable)
+	{
+		if (type.IsArray)
+			return Array(Create(type.GetElementType(), false), referenceNullable);
+
+		return new ModelType(type, referenceNullable);
 	}
 
 	public static ModelType Array(ModelType elementType, bool referenceNullable)

@@ -227,7 +227,7 @@ namespace SybaseDataActionDataContext
 		[Column, NotNull    ] public short    cache     { get; set; } // smallint
 		[Column,    Nullable] public int?     audflags  { get; set; } // int
 		[Column, NotNull    ] public int      objspare  { get; set; } // int
-		[Column,    Nullable] public Byte[]   versionts { get; set; } // binary
+		[Column,    Nullable] public byte[]   versionts { get; set; } // binary
 		[Column,    Nullable] public string   loginame  { get; set; } // varchar
 	}
 
