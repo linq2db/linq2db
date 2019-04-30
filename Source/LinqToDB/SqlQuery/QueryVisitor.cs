@@ -72,14 +72,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.OutputClause:
 					{
-						Visit1X(((SqlOutputClause)element).SourceTable);
-						Visit1X(((SqlOutputClause)element).DeletedTable);
-						Visit1X(((SqlOutputClause)element).InsertedTable);
-						Visit1X(((SqlOutputClause)element).OutputTable);
-
-						if (((SqlOutputClause)element).HasOutputItems)
-							Visit1X(((SqlOutputClause)element).OutputItems);
-
+						Visit1X((SqlOutputClause)element);
 						break;
 					}
 
@@ -216,6 +209,7 @@ namespace LinqToDB.SqlQuery
 					{
 						Visit1(((SqlInsertStatement)element).With);
 						Visit1(((SqlInsertStatement)element).Insert);
+						Visit1(((SqlInsertStatement)element).Output);
 						Visit1(((SqlInsertStatement)element).SelectQuery);
 						break;
 					}
@@ -419,11 +413,31 @@ namespace LinqToDB.SqlQuery
 
 		void Visit1X(SqlTable table)
 		{
+			if (table == null)
+				return;
+
 			Visit1(table.All);
 			foreach (var field in table.Fields.Values) Visit1(field);
 
 			if (table.TableArguments != null)
 				foreach (var a in table.TableArguments) Visit1(a);
+		}
+
+		void Visit1X(SqlOutputClause outputClause)
+		{
+			if (outputClause == null)
+				return;
+
+			Visit1X(outputClause.SourceTable);
+			Visit1X(outputClause.DeletedTable);
+			Visit1X(outputClause.InsertedTable);
+			Visit1X(outputClause.OutputTable);
+			if (outputClause.OutputQuery != null)
+				Visit1X(outputClause.OutputQuery);
+
+			if (outputClause.HasOutputItems)
+				foreach (var item in outputClause.OutputItems)
+					Visit1(item);
 		}
 
 		void Visit1X(SqlWithClause element)
@@ -527,14 +541,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.OutputClause:
 					{
-						Visit2X(((SqlOutputClause)element).SourceTable);
-						Visit2X(((SqlOutputClause)element).DeletedTable);
-						Visit2X(((SqlOutputClause)element).InsertedTable);
-						Visit2X(((SqlOutputClause)element).OutputTable);
-
-						if (((SqlOutputClause)element).HasOutputItems)
-							Visit2X(((SqlOutputClause)element).OutputItems);
-
+						Visit2X((SqlOutputClause)element);
 						break;
 					}
 
@@ -671,6 +678,7 @@ namespace LinqToDB.SqlQuery
 					{
 						Visit2(((SqlInsertStatement)element).With);
 						Visit2(((SqlInsertStatement)element).Insert);
+						Visit2(((SqlInsertStatement)element).Output);
 						Visit2(((SqlInsertStatement)element).SelectQuery);
 						break;
 					}
@@ -908,6 +916,9 @@ namespace LinqToDB.SqlQuery
 
 		void Visit2X(SqlTable table)
 		{
+			if (table == null)
+				return;
+
 			Visit2(table.All);
 			foreach (var field in table.Fields.Values) Visit2(field);
 
@@ -939,6 +950,23 @@ namespace LinqToDB.SqlQuery
 
 			// do not visit it may fail by stack overflow
 			//Visit2(table.CTE);
+		}
+
+		void Visit2X(SqlOutputClause outputClause)
+		{
+			if (outputClause == null)
+				return;
+
+			Visit2X(outputClause.SourceTable);
+			Visit2X(outputClause.DeletedTable);
+			Visit2X(outputClause.InsertedTable);
+			Visit2X(outputClause.OutputTable);
+			if (outputClause.OutputQuery != null)
+				Visit2X(outputClause.OutputQuery);
+
+			if (outputClause.HasOutputItems)
+				foreach (var item in outputClause.OutputItems)
+					Visit2(item);
 		}
 
 		void Visit2X(SqlExpression element)

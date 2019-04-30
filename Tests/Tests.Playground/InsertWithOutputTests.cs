@@ -35,7 +35,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData = GetSourceData();
 			using (var db = GetDataContext(context))
@@ -48,7 +48,7 @@ namespace Tests.Playground
 						target,
 						s => new DestinationTable
 						{
-							Id = s.Id + 100,
+							Id = s.Id + 100 + param,
 							Value = s.Value + 100,
 							ValueStr = s.ValueStr + 100
 						},
@@ -70,7 +70,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputFromQueryTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void InsertWithOutputFromQueryTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData = GetSourceData();
 			using (var db = GetDataContext(context))
@@ -83,24 +83,24 @@ namespace Tests.Playground
 						target,
 						s => new DestinationTable
 						{
-							Id = s.Id + 100,
-							Value = s.Value + 100,
-							ValueStr = s.ValueStr + 100
+							Id = s.Id + param,
+							Value = s.Value + param,
+							ValueStr = s.ValueStr + param
 						})
 					.ToArray();
 
 				AreEqual(source.Where(s => s.Id > 3).Select(s => new DestinationTable
 					{
-						Id = s.Id + 100,
-						Value = s.Value + 100,
-						ValueStr = s.ValueStr + 100,
+						Id = s.Id + param,
+						Value = s.Value + param,
+						ValueStr = s.ValueStr + param,
 					}),
 					output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}
 
 		[Test]
-		public void InsertWithOutputTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void InsertWithOutputTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -121,13 +121,13 @@ namespace Tests.Playground
 							},
 							inserted => new
 							{
-								ID = inserted.ChildID + inserted.ParentID
+								ID = inserted.ChildID + inserted.ParentID + param
 							})
 						.ToArray();
 
 					AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new
 						{
-							ID = c.ChildID + c.ParentID
+							ID = c.ChildID + c.ParentID + param
 						}),
 						output);
 				}
@@ -139,7 +139,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputTest4([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void InsertWithOutputTest4([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -158,12 +158,12 @@ namespace Tests.Playground
 								ParentID = c.ParentID,
 								ChildID  = id
 							},
-							inserted => Sql.AsSql(inserted.ChildID + inserted.ParentID))
+							inserted => Sql.AsSql(inserted.ChildID + inserted.ParentID + param))
 						.ToArray();
 
 					AreEqual(
 						db.Child.Where(c => c.ChildID > idsLimit)
-							.Select(c => c.ChildID + c.ParentID),
+							.Select(c => c.ChildID + c.ParentID + param),
 						output);
 				}
 				finally
@@ -216,7 +216,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputIntoTest1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void InsertWithOutputIntoTest1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -243,7 +243,7 @@ namespace Tests.Playground
 										new Child
 										{
 											ChildID = inserted.ChildID,
-											ParentID = inserted.ParentID + 1
+											ParentID = inserted.ParentID + param
 										}
 								);
 
@@ -256,7 +256,7 @@ namespace Tests.Playground
 							}),
 							t.Table.Select(c => new Child
 								{
-									ParentID = c.ParentID - 1,
+									ParentID = c.ParentID - param,
 									ChildID = c.ChildID
 								}
 							)
@@ -272,7 +272,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputIntoTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void InsertWithOutputIntoTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -293,7 +293,7 @@ namespace Tests.Playground
 								.InsertWithOutputInto(db.Child, c => new Child
 									{
 										ParentID = c.ParentID,
-										ChildID = id
+										ChildID = id + Sql.AsSql(param)
 									},
 									t.Table);
 
