@@ -53,6 +53,46 @@ namespace Tests.T4.Model
 
 		#endregion
 	}
+
+	public partial class TestComparerClass2 : IEqualityComparer<TestComparerClass2>
+	{
+		public int Field1 { get; set; }
+
+		public DateTime Field2 { get; set; }
+
+		#region IEqualityComparer support
+
+		public bool Equals(TestComparerClass2 x, TestComparerClass2 y)
+		{
+			return ComparerBuilder.GetEqualityComparer<TestComparerClass2>().Equals(x, y);
+		}
+
+		public int GetHashCode(TestComparerClass2 obj)
+		{
+			return ComparerBuilder.GetEqualityComparer<TestComparerClass2>().GetHashCode(obj);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (!(obj is TestComparerClass2))
+			{
+				return false;
+			}
+
+			var other = (TestComparerClass2)obj;
+
+			// use IEqualityComparer implementation
+			return Equals(this, other);
+		}
+
+		public override int GetHashCode()
+		{
+			// use IEqualityComparer implementation
+			return GetHashCode(this);
+		}
+
+		#endregion
+	}
 }
 
 #pragma warning restore 1591
