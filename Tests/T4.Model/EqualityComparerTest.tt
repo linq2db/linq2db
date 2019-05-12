@@ -1,0 +1,29 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                    #>
+<#@ output extension=".generated.cs"                                           #>
+<#@ include file="..\..\Source\LinqToDB.Templates\T4Model.ttinclude"           #>
+<#@ include file="..\..\Source\LinqToDB.Templates\EqualityComparers.ttinclude" #>
+<#
+	Model.Namespaces[0].Name = "Tests.T4.Model";
+
+	Model.Usings.Add("System.Collections.Generic");
+
+	Model.Namespaces[0].Types.Add(new Class
+	{
+		Name    = "TestComparerClass1",
+		Members =
+		{
+			new Property
+			{
+				TypeBuilder = () => "string",
+				Name        = "Field1"
+			},
+			new Property
+			{
+				TypeBuilder = () => "long",
+				Name        = "Field2"
+			}
+		}
+	});
+
+	GenerateModel();
+#>

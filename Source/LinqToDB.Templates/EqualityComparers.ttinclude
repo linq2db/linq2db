@@ -13,7 +13,7 @@ void AddEqualityComparers()
 {
 	foreach (Class cl in GetTreeNodes(Model).OfType<Class>())
 	{
-		var props = GetTreeNodes(cl).OfType<Property>().Where(p => p.IsEditable).ToList();
+		var props = GetTreeNodes(cl).OfType<Property>().ToList();
 		if (props.Count > 0)
 		{
 			var className = cl.Name;
