@@ -1,0 +1,94 @@
+<#
+	{
+		var beforeGenerateModel = BeforeGenerateModel;
+		BeforeGenerateModel = () =>
+		{
+			beforeGenerateModel();
+			AddEqualityComparers();
+		};
+	}
+#>
+<#+
+void AddEqualityComparers()
+{
+	foreach (Class cl in GetTreeNodes(Model).OfType<Class>())
+	{
+		var props = GetTreeNodes(cl).OfType<Property>().Where(p => p.IsEditable).ToList();
+		if (props.Count > 0)
+		{
+			var className = cl.Name;
+
+			if (!cl.Interfaces.Contains($"IEqualityComparer<{className}>"))
+			{
+				if (!Model.Usings.Contains("LinqToDB.Tools.Comparers"))
+					Model.Usings.Add("LinqToDB.Tools.Comparers");
+
+				cl.Interfaces.Add($"IEqualityComparer<{className}>");
+
+				cl.Members.Add(new MemberGroup
+				{
+					Region  = "IEqualityComparer support",
+					Members =
+					{
+						new MemberGroup
+						{
+							IsCompact = false,
+							Members   =
+							{
+								new Method(() => "bool", "Equals",
+									new Func<string>[]
+									{
+										() => $"{className} x",
+										() => $"{className} y"
+									},
+									() => new[]
+									{
+										$"return ComparerBuilder.GetEqualityComparer<{className}>().Equals(x, y);"
+									}),
+
+								new Method(() => "int", "GetHashCode",
+									new Func<string>[]
+									{
+										() => $"{className} obj",
+									},
+									() => new[]
+									{
+										$"return ComparerBuilder.GetEqualityComparer<{className}>().GetHashCode(obj);"
+									}),
+
+								new Method(() => "bool", "Equals",
+									new Func<string>[]
+									{
+										() => $"object obj",
+									},
+									() => new[]
+									{
+										$"if (!(obj is {className}))", "{", "\treturn false;", "}", string.Empty,
+										$"var other = ({className})obj;", string.Empty,
+										"// use IEqualityComparer implementation",
+										"return Equals(this, other);"
+									})
+									{
+										IsOverride = true
+									},
+
+								new Method(() => "int", "GetHashCode", null,
+									() => new[]
+									{
+										"// use IEqualityComparer implementation",
+										"return GetHashCode(this);"
+									})
+									{
+										IsOverride = true
+									}
+							}
+						},
+					}
+				});
+			}
+		}
+
+		cl.SetTree();
+	}
+}
+#>
