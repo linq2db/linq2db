@@ -27,11 +27,16 @@
 			<DependentUpon>EditableModelTest.tt</DependentUpon>
 		</Compile>
 
-		<Compile Update="EqualityComparerTest.generated.cs">
+		<Compile Update="EquatableTest.generated.cs">
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
-		  <DependentUpon>EqualityComparerTest.tt</DependentUpon>
+		  <DependentUpon>EquatableTest.tt</DependentUpon>
 		</Compile>
+
+		<None Update="EquatableTest.tt">
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>EquatableTest.generated.cs</LastGenOutput>
+		</None>
 
 		<None Update="ModelTest.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>

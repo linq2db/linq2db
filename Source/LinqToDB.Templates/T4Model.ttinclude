@@ -1523,6 +1523,14 @@ string ToCamelCase(string name)
 	return name.Substring(0, n).ToLower() + name.Substring(n);
 }
 
+event Action<Class,string,object> SetClassValueAction;
+
+void SetClassValue(Class classObject, string propertyName, object value)
+{
+	if (SetClassValueAction != null)
+		SetClassValueAction(classObject, propertyName, value);
+}
+
 event Action<Property,string,object> SetPropertyValueAction;
 
 void SetPropertyValue(Property propertyObject, string propertyName, object value)

@@ -1,0 +1,101 @@
+<#
+	{
+		var beforeGenerateModel = BeforeGenerateModel;
+		BeforeGenerateModel = () =>
+		{
+			beforeGenerateModel();
+			EquatableImpl();
+		};
+
+		SetClassValueAction += (obj,prop,val) =>
+		{
+			if (prop == "IsEquatable")
+				obj.IsEquatable = (bool)val;
+		};
+	}
+#>
+<#+
+void EquatableImpl()
+{
+	foreach (Class cl in GetTreeNodes(Model).OfType<Class>().Where(c => c.IsEquatable))
+	{
+		var props = GetTreeNodes(cl).OfType<Property>().ToList();
+		if (props.Count > 0)
+		{
+			var className = cl.Name;
+
+			if (!cl.Interfaces.Contains($"IEquatable<{className}>"))
+			{
+				if (!Model.Usings.Contains("LinqToDB.Tools.Comparers"))
+					Model.Usings.Add("LinqToDB.Tools.Comparers");
+
+				cl.Interfaces.Add($"IEquatable<{className}>");
+
+				cl.Members.Add(new MemberGroup
+				{
+					Region  = "IEquatable support",
+					Members =
+					{
+						new MemberGroup
+						{
+							IsCompact = false,
+							Members   =
+							{
+								new Method(() => "bool", "Equals",
+									new Func<string>[]
+									{
+										() => $"{className} other"
+									},
+									() => new[]
+									{
+										$"return ComparerBuilder.GetEqualityComparer<{className}>().Equals(this, other);"
+									}),
+
+								new Method(() => "int", "GetHashCode", null,
+									() => new[]
+									{
+										$"return ComparerBuilder.GetEqualityComparer<{className}>().GetHashCode(this);"
+									})
+									{
+										IsOverride = true
+									},
+
+								new Method(() => "bool", "Equals",
+									new Func<string>[]
+									{
+										() => $"object obj",
+									},
+									() => new[]
+									{
+										$"if (!(obj is {className}))", "{", "\treturn false;", "}", string.Empty,
+										$"var other = ({className})obj;", string.Empty,
+										"// use IEquatable implementation",
+										"return Equals(other);"
+									})
+									{
+										IsOverride = true
+									}
+							}
+						},
+					}
+				});
+			}
+		}
+
+		cl.SetTree();
+	}
+}
+
+partial class Class
+{
+	public bool IsEquatable;
+}
+
+class EquatableClass : Class
+{
+	public EquatableClass()
+	{
+		IsEquatable = true;
+	}
+}
+#>
