@@ -7,7 +7,7 @@
 
 	Model.Usings.Add("System.Collections.Generic");
 
-	Model.Namespaces[0].Types.Add(new EquatableClass
+	Model.Namespaces[0].Types.Add(new Class
 	{
 		Name    = "TestComparerClass1",
 		Members =
@@ -25,7 +25,7 @@
 		}
 	});
 
-	Model.Namespaces[0].Types.Add(new EquatableClass
+	Model.Namespaces[0].Types.Add(new Class
 	{
 		Name    = "TestComparerClass2",
 		Members =

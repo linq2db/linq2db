@@ -269,8 +269,6 @@ void GenerateTypesFromMetadata()
 				aProp.Comment.AddRange(comments);
 		}
 
-		SetClassValue(t, "IsEquatable", true);
-
 		var columns        = new MemberGroup { IsCompact = IsCompactColumns };
 		var columnAliases  = new MemberGroup { IsCompact = IsCompactColumnAliases, Region = "Alias members" };
 		var nPKs           = t.Columns.Values.Count(c => c.IsPrimaryKey);

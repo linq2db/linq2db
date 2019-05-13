@@ -34,12 +34,8 @@ namespace Tests.T4.Model
 
 		public override bool Equals(object obj)
 		{
-			if (!(obj is TestComparerClass1))
-			{
+			if (!(obj is TestComparerClass1 other))
 				return false;
-			}
-
-			var other = (TestComparerClass1)obj;
 
 			// use IEquatable implementation
 			return Equals(other);
@@ -68,12 +64,8 @@ namespace Tests.T4.Model
 
 		public override bool Equals(object obj)
 		{
-			if (!(obj is TestComparerClass2))
-			{
+			if (!(obj is TestComparerClass2 other))
 				return false;
-			}
-
-			var other = (TestComparerClass2)obj;
 
 			// use IEquatable implementation
 			return Equals(other);

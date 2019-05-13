@@ -6,15 +6,10 @@
 			beforeGenerateModel();
 			EquatableImpl();
 		};
-
-		SetClassValueAction += (obj,prop,val) =>
-		{
-			if (prop == "IsEquatable")
-				obj.IsEquatable = (bool)val;
-		};
 	}
-#>
-<#+
+#><#+
+public static bool DefaultEquatable = true;
+
 void EquatableImpl()
 {
 	foreach (Class cl in GetTreeNodes(Model).OfType<Class>().Where(c => c.IsEquatable))
@@ -67,8 +62,7 @@ void EquatableImpl()
 									},
 									() => new[]
 									{
-										$"if (!(obj is {className}))", "{", "\treturn false;", "}", string.Empty,
-										$"var other = ({className})obj;", string.Empty,
+										$"if (!(obj is {className} other))", "\treturn false;", string.Empty,
 										"// use IEquatable implementation",
 										"return Equals(other);"
 									})
@@ -88,14 +82,6 @@ void EquatableImpl()
 
 partial class Class
 {
-	public bool IsEquatable;
-}
-
-class EquatableClass : Class
-{
-	public EquatableClass()
-	{
-		IsEquatable = true;
-	}
+	public bool IsEquatable = DefaultEquatable;
 }
 #>
