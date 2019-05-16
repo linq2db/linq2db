@@ -33,20 +33,5 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			get { return ProviderName.SqlServer2008; }
 		}
-
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
-		{
-			switch (type.DataType)
-			{
-				case DataType.DateTime2:
-					if (type.Precision > 0)
-					{
-						StringBuilder.Append(type.DataType).Append('(').Append(type.Precision).Append(')');
-						return;
-					}
-					break;
-			}
-			base.BuildDataType(type, createDbType);
-		}
 	}
 }

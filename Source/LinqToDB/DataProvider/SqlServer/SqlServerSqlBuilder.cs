@@ -319,6 +319,17 @@ namespace LinqToDB.DataProvider.SqlServer
 					}
 
 					break;
+
+				case DataType.DateTime2 :
+					if (type.Precision > 0)
+					{
+						StringBuilder
+							.Append(type.DataType)
+							.Append('(').Append(type.Precision).Append(')');
+						return;
+					}
+
+					break;
 			}
 
 			base.BuildDataType(type, createDbType);
