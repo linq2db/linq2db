@@ -42,7 +42,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (type.Precision > 0)
 					{
 						StringBuilder.Append(type.DataType).Append('(').Append(type.Precision).Append(')');
-						return;;
+						return;
 					}
 					break;
 			}
