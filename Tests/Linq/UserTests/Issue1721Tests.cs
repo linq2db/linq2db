@@ -14,7 +14,6 @@ namespace Tests.UserTests
 			public DateTime BadField { get; set; }
 		}
 
-		[ActiveIssue(1721, Configuration = ProviderName.SqlServer2008)]
 		[Test]
 		public void Issue1721Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
