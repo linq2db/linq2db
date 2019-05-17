@@ -320,7 +320,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					break;
 
-				case DataType.DateTime2 :
+				case DataType.DateTime2:
+				case DataType.DateTimeOffset:
+				case DataType.Time:
 					if (type.Precision > 0)
 					{
 						StringBuilder

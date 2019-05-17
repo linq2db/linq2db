@@ -11,7 +11,13 @@ namespace Tests.UserTests
 		public class I1721Model
 		{
 			[Column(DataType = DataType.DateTime2, Precision = 7), NotNull]
-			public DateTime BadField { get; set; }
+			public DateTime TestDateTime2 { get; set; }
+
+			[Column(DataType = DataType.DateTimeOffset, Precision = 7), NotNull]
+			public DateTimeOffset TestDateTimeOffset { get; set; }
+
+			[Column(DataType = DataType.Time, Precision = 7), NotNull]
+			public TimeSpan TestTime { get; set; }
 		}
 
 		[Test]
