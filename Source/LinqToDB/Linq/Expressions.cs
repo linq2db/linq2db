@@ -103,6 +103,47 @@ namespace LinqToDB.Linq
 
 		#endregion
 
+		#region MapBinary
+
+		static BinaryExpression GetBinaryNode(Expression expr)
+		{
+			while (expr.NodeType == ExpressionType.Convert || expr.NodeType == ExpressionType.ConvertChecked || expr.NodeType == ExpressionType.TypeAs)
+				expr = ((UnaryExpression)expr).Operand;
+
+			return (BinaryExpression)expr;
+		}
+
+		public static void MapBinary(string providerName, ExpressionType nodeType, Type leftType, Type rightType, LambdaExpression expression)
+		{
+			if (!_binaries.Value.TryGetValue(providerName, out var dic))
+				_binaries.Value.Add(providerName, dic = new Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>());
+
+			var expr = new LazyExpressionInfo();
+
+			expr.SetExpression(expression);
+
+			dic[Tuple.Create(nodeType, leftType, rightType)] = expr;
+
+			_checkUserNamespace = false;
+		}
+
+		public static void MapBinary(ExpressionType nodeType, Type leftType, Type rightType, LambdaExpression expression)
+		{
+			MapBinary("", nodeType, leftType, rightType, expression);
+		}
+
+		public static void MapBinary<TLeft, TRight, TR>(string providerName, Expression<Func<TLeft, TRight, TR>> binaryExpression, Expression<Func<TLeft, TRight, TR>> expression)
+		{
+			MapBinary(providerName, GetBinaryNode(binaryExpression.Body).NodeType, typeof(TLeft), typeof(TRight), expression);
+		}
+
+		public static void MapBinary<TLeft, TRight, TR>(Expression<Func<TLeft, TRight, TR>> binaryExpression, Expression<Func<TLeft, TRight, TR>> expression)
+		{
+			MapBinary("", binaryExpression, expression);
+		}
+
+		#endregion
+
 		#region IGenericInfoProvider
 
 		static volatile Dictionary<Type,List<Type[]>> _genericConvertProviders = new Dictionary<Type,List<Type[]>>();
@@ -246,6 +287,34 @@ namespace LinqToDB.Linq
 			return expr?.GetExpression(mappingSchema);
 		}
 
+		public static LambdaExpression ConvertBinary(MappingSchema mappingSchema, BinaryExpression binaryExpression)
+		{
+			if (!_binaries.IsValueCreated)
+				return null;
+
+			IExpressionInfo expr;
+
+			var binaries = _binaries.Value;
+			var key      = Tuple.Create(binaryExpression.NodeType, binaryExpression.Left.Type, binaryExpression.Right.Type);
+
+			foreach (var configuration in mappingSchema.ConfigurationList)
+			{
+				if (binaries.TryGetValue(configuration, out var dic))
+				{
+					if (dic.TryGetValue(key, out expr))
+						return expr.GetExpression(mappingSchema);
+				}
+			}
+
+			if (binaries.TryGetValue("", out var dic2))
+			{
+				if (dic2.TryGetValue(key, out expr))
+					return expr.GetExpression(mappingSchema);
+			}
+
+			return null;
+		}
+
 		#endregion
 
 		#region Function Mapping
@@ -365,6 +434,9 @@ namespace LinqToDB.Linq
 
 		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>> _members;
 		static readonly object                                           _memberSync = new object();
+
+		static Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries = 
+			new Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>>(() => new Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>());
 
 		#region Common
 
