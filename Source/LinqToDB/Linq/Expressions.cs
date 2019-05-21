@@ -110,11 +110,33 @@ namespace LinqToDB.Linq
 			while (expr.NodeType == ExpressionType.Convert || expr.NodeType == ExpressionType.ConvertChecked || expr.NodeType == ExpressionType.TypeAs)
 				expr = ((UnaryExpression)expr).Operand;
 
-			return (BinaryExpression)expr;
+			if (expr is BinaryExpression binary)
+				return binary;
+
+			throw new ArgumentException($"Expression '{expr}' is not BinaryExpression node.");
 		}
 
-		public static void MapBinary(string providerName, ExpressionType nodeType, Type leftType, Type rightType, LambdaExpression expression)
+		/// <summary>
+		/// Maps specific BinaryExpression to another Lambda expression during SQL generation.
+		/// </summary>
+		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
+		/// <param name="nodeType">NodeType of BinaryExpression <see cref="ExpressionType"/> which needs mapping.</param>
+		/// <param name="leftType">Exact type of <see cref="BinaryExpression.Left"/> member.</param>
+		/// <param name="rightType">Exact type of  <see cref="BinaryExpression.Right"/> member.</param>
+		/// <param name="expression">Lambda expression which has to replace <see cref="BinaryExpression"/></param>
+		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
+		public static void MapBinary(
+			[JetBrains.Annotations.NotNull] string           providerName, 
+			                                ExpressionType   nodeType,
+			[JetBrains.Annotations.NotNull] Type             leftType, 
+			[JetBrains.Annotations.NotNull] Type             rightType,
+			[JetBrains.Annotations.NotNull] LambdaExpression expression)
 		{
+			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
+			if (leftType     == null) throw new ArgumentNullException(nameof(leftType));
+			if (rightType    == null) throw new ArgumentNullException(nameof(rightType));
+			if (expression   == null) throw new ArgumentNullException(nameof(expression));
+
 			if (!_binaries.Value.TryGetValue(providerName, out var dic))
 				_binaries.Value.Add(providerName, dic = new Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>());
 
@@ -127,17 +149,53 @@ namespace LinqToDB.Linq
 			_checkUserNamespace = false;
 		}
 
-		public static void MapBinary(ExpressionType nodeType, Type leftType, Type rightType, LambdaExpression expression)
+		/// <summary>
+		/// Maps specific <see cref="BinaryExpression"/> to another <see cref="LambdaExpression"/> during SQL generation.
+		/// </summary>
+		/// <param name="nodeType">NodeType of BinaryExpression <see cref="ExpressionType"/> which needs mapping.</param>
+		/// <param name="leftType">Exact type of <see cref="BinaryExpression.Left"/> member.</param>
+		/// <param name="rightType">Exact type of  <see cref="BinaryExpression.Right"/> member.</param>
+		/// <param name="expression">Lambda expression which has to replace <see cref="BinaryExpression"/>.</param>
+		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
+		public static void MapBinary(
+			                                ExpressionType   nodeType, 
+			[JetBrains.Annotations.NotNull] Type             leftType, 
+			[JetBrains.Annotations.NotNull] Type             rightType, 
+			[JetBrains.Annotations.NotNull] LambdaExpression expression)
 		{
 			MapBinary("", nodeType, leftType, rightType, expression);
 		}
 
-		public static void MapBinary<TLeft, TRight, TR>(string providerName, Expression<Func<TLeft, TRight, TR>> binaryExpression, Expression<Func<TLeft, TRight, TR>> expression)
+		/// <summary>
+		/// Maps specific <see cref="BinaryExpression"/> to another <see cref="LambdaExpression"/> during SQL generation.
+		/// </summary>
+		/// <typeparam name="TLeft">Exact type of  <see cref="BinaryExpression.Left"/> member.</typeparam>
+		/// <typeparam name="TRight">Exact type of  <see cref="BinaryExpression.Right"/> member.</typeparam>
+		/// <typeparam name="TR">Result type of <paramref name="binaryExpression"/>.</typeparam>
+		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
+		/// <param name="binaryExpression">Expression which has to be replaced.</param>
+		/// <param name="expression">Lambda expression which has to replace <paramref name="binaryExpression"/>.</param>
+		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
+		public static void MapBinary<TLeft,TRight,TR>(
+			[JetBrains.Annotations.NotNull] string                            providerName, 
+			[JetBrains.Annotations.NotNull] Expression<Func<TLeft,TRight,TR>> binaryExpression, 
+			[JetBrains.Annotations.NotNull] Expression<Func<TLeft,TRight,TR>> expression)
 		{
 			MapBinary(providerName, GetBinaryNode(binaryExpression.Body).NodeType, typeof(TLeft), typeof(TRight), expression);
 		}
 
-		public static void MapBinary<TLeft, TRight, TR>(Expression<Func<TLeft, TRight, TR>> binaryExpression, Expression<Func<TLeft, TRight, TR>> expression)
+		/// <summary>
+		/// Maps specific <see cref="BinaryExpression"/> to another <see cref="LambdaExpression"/> during SQL generation.
+		/// </summary>
+		/// <typeparam name="TLeft">Exact type of  <see cref="BinaryExpression.Left"/> member.</typeparam>
+		/// <typeparam name="TRight">Exact type of  <see cref="BinaryExpression.Right"/> member.</typeparam>
+		/// <typeparam name="TR">Result type of <paramref name="binaryExpression"/>.</typeparam>
+		/// <param name="binaryExpression">Expression which has to be replaced.</param>
+		/// <param name="expression">Lambda expression which has to replace <paramref name="binaryExpression"/>.</param>
+		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
+		public static void MapBinary<TLeft,TRight,TR>(
+			[JetBrains.Annotations.NotNull] Expression<Func<TLeft,TRight,TR>> binaryExpression, 
+			[JetBrains.Annotations.NotNull] Expression<Func<TLeft,TRight,TR>> expression)
 		{
 			MapBinary("", binaryExpression, expression);
 		}
@@ -287,28 +345,35 @@ namespace LinqToDB.Linq
 			return expr?.GetExpression(mappingSchema);
 		}
 
+		/// <summary>
+		/// Searches for registered BinaryExpression mapping and returns LambdaExpression which has to replace this expression.
+		/// </summary>
+		/// <param name="mappingSchema">Current mapping schema.</param>
+		/// <param name="binaryExpression">Expression which has to be replaced.</param>
+		/// <returns>Returns registered LambdaExpression or <see langword="null"/>.</returns>
 		public static LambdaExpression ConvertBinary(MappingSchema mappingSchema, BinaryExpression binaryExpression)
 		{
 			if (!_binaries.IsValueCreated)
 				return null;
 
 			IExpressionInfo expr;
+			Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo> dic;
 
 			var binaries = _binaries.Value;
 			var key      = Tuple.Create(binaryExpression.NodeType, binaryExpression.Left.Type, binaryExpression.Right.Type);
 
 			foreach (var configuration in mappingSchema.ConfigurationList)
 			{
-				if (binaries.TryGetValue(configuration, out var dic))
+				if (binaries.TryGetValue(configuration, out dic))
 				{
 					if (dic.TryGetValue(key, out expr))
 						return expr.GetExpression(mappingSchema);
 				}
 			}
 
-			if (binaries.TryGetValue("", out var dic2))
+			if (binaries.TryGetValue("", out dic))
 			{
-				if (dic2.TryGetValue(key, out expr))
+				if (dic.TryGetValue(key, out expr))
 					return expr.GetExpression(mappingSchema);
 			}
 
