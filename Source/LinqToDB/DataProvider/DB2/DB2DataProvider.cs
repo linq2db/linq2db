@@ -116,7 +116,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		static object GetNullValue(Type type)
 		{
-			var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
+//			var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
+			var getValue = GeneratedExpressions.GetNullField(type);
 			return getValue.Compile()();
 		}
 

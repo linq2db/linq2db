@@ -99,13 +99,16 @@ namespace LinqToDB.DataProvider.Informix
 				SetProviderField(_ifxTimeSpan, typeof(TimeSpan), "GetIfxTimeSpan", false);
 			}
 
-			var p = Expression.Parameter(typeof(TimeSpan));
+//			var p = Expression.Parameter(typeof(TimeSpan));
+//
+//			_newIfxTimeSpan = Expression.Lambda<Func<TimeSpan,object>>(
+//				Expression.Convert(
+//					Expression.New(_ifxTimeSpan.GetConstructorEx(new[] { typeof(TimeSpan) }), p),
+//					typeof(object)),
+//				p).Compile();
 
-			_newIfxTimeSpan = Expression.Lambda<Func<TimeSpan,object>>(
-				Expression.Convert(
-					Expression.New(_ifxTimeSpan.GetConstructorEx(new[] { typeof(TimeSpan) }), p),
-					typeof(object)),
-				p).Compile();
+
+			_newIfxTimeSpan = GeneratedExpressions.Informix_NewIfxTimeSpan(_ifxTimeSpan).Compile();
 
 			_setText = GetSetParameter(connectionType, "IfxParameter", "IfxType", "IfxType", "Clob");
 
@@ -121,7 +124,8 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			try
 			{
-				var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
+				//var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
+				var getValue = GeneratedExpressions.GetNullField(type);
 				return getValue.Compile()();
 			}
 			catch (SecurityException)

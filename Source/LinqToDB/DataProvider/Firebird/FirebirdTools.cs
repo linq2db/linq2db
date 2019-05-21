@@ -86,12 +86,13 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (_clearAllPools == null)
 				_clearAllPools =
-					Expression.Lambda<Action>(
-						Expression.Call(
-							_firebirdDataProvider.GetConnectionType(),
-							"ClearAllPools",
-							new Type[0]))
-						.Compile();
+					GeneratedExpressions.Firebird_ClearAllPools(_firebirdDataProvider.GetConnectionType()).Compile();
+//					Expression.Lambda<Action>(
+//						Expression.Call(
+//							_firebirdDataProvider.GetConnectionType(),
+//							"ClearAllPools",
+//							new Type[0]))
+//						.Compile();
 			_clearAllPools();
 		}
 

@@ -16,6 +16,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
 		<EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
 		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
@@ -28,6 +30,12 @@
 
 		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
 
+		<None Include="GeneratedExpressions.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>GeneratedExpressions.tt</DependentUpon>
+		</None>
+
 		<Compile Update="AsyncExtensions.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
@@ -37,6 +45,11 @@
 		<None Update="AsyncExtensions.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
+		</None>
+
+		<None Update="GeneratedExpressions.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>GeneratedExpressions.generated.cs</LastGenOutput>
 		</None>
 	</ItemGroup>
 
