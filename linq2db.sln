@@ -54,7 +54,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LinqToDB.Templates", "LinqT
 		Source\LinqToDB.Templates\PluralizationService.ttinclude = Source\LinqToDB.Templates\PluralizationService.ttinclude
 		Source\LinqToDB.Templates\README.md = Source\LinqToDB.Templates\README.md
 		Source\LinqToDB.Templates\T4Model.ttinclude = Source\LinqToDB.Templates\T4Model.ttinclude
-		Source\LinqToDB.Templates\ToExpression.ttinclude = Source\LinqToDB.Templates\ToExpression.ttinclude
 		Source\LinqToDB.Templates\Validation.ttinclude = Source\LinqToDB.Templates\Validation.ttinclude
 	EndProjectSection
 EndProject

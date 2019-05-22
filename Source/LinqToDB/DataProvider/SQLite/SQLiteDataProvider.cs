@@ -140,11 +140,10 @@ namespace LinqToDB.DataProvider.SQLite
 				{
 					if (_createDatabase == null)
 					{
-//						var p = Expression.Parameter(typeof(string));
-//						var l = Expression.Lambda<Action<string>>(
-//							Expression.Call(GetConnectionType(), "CreateFile", null, p),
-//							p);
-						var l = GeneratedExpressions.SQLite_CreateFile(GetConnectionType());
+						var p = Expression.Parameter(typeof(string));
+						var l = Expression.Lambda<Action<string>>(
+							Expression.Call(GetConnectionType(), "CreateFile", null, p),
+							p);
 						_createDatabase = l.Compile();
 					}
 

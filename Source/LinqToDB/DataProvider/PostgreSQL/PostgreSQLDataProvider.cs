@@ -238,7 +238,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				// SetProviderField2<NpgsqlDataReader,DateTimeOffset,NpgsqlTimeStampTZ>((r,i) => (NpgsqlTimeStampTZ)r.GetProviderSpecificValue(i));
 
 				var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-				var indexParameter      = Expression.Parameter(typeof(int), "i");
+				var indexParameter = Expression.Parameter(typeof(int), "i");
 
 				ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = _npgsqlTimeStampTZ }] =
 					Expression.Lambda(
@@ -346,27 +346,26 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						Expression.New(
 							MemberHelper.ConstructorOf(() => new DateTimeOffset(new DateTime())),
 							expr), p));
-			}
-
+			}			
+			
 			if (NpgsqlRange != null)
 			{
 				void SetRangeConversion<T>(string dbType = null)
 				{
 					var rangeType = NpgsqlRange.MakeGenericType(typeof(T));
-//					var rangeParam = Expression.Parameter(rangeType, "p");
+					var rangeParam = Expression.Parameter(rangeType, "p");
 
 					MappingSchema.SetConvertExpression(rangeType, typeof(DataParameter),
-						GeneratedExpressions.PostgeSQL_GetProviderSpecificValue(rangeType, dbType)
-//						Expression.Lambda(
-//							Expression.New(
-//								MemberHelper.ConstructorOf(
-//									() => new DataParameter("", null, DataType.Undefined, dbType)),
-//								Expression.Constant(""),
-//								Expression.Convert(rangeParam, typeof(object)),
-//								Expression.Constant(DataType.Undefined),
-//								Expression.Constant(dbType, typeof(string))
-//							)
-//							, rangeParam)
+						Expression.Lambda(
+							Expression.New(
+								MemberHelper.ConstructorOf(
+									() => new DataParameter("", null, DataType.Undefined, dbType)),
+								Expression.Constant(""),
+								Expression.Convert(rangeParam, typeof(object)),
+								Expression.Constant(DataType.Undefined),
+								Expression.Constant(dbType, typeof(string))
+							)
+							, rangeParam)
 					);
 				}
 

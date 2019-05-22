@@ -14,22 +14,16 @@
 
 		<None Remove="bbb.txt" />
 		<Content Include="bbb.txt" />
-		<None Update="ToExpression.tt">
-		  <LastGenOutput>ToExpression.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
-		</None>
 
 		<None Update="EditableModelTest.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
-			<LastGenOutput>ToExpression.generated.cs</LastGenOutput>
+			<LastGenOutput>EditableModelTest.generated.cs</LastGenOutput>
 		</None>
 
 		<Compile Update="EditableModelTest.generated.cs">
-
-		<Compile Update="ToExpression.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
-			<DependentUpon>ToExpression.tt</DependentUpon>
+			<DependentUpon>EditableModelTest.tt</DependentUpon>
 		</Compile>
 
 		<None Update="ModelTest.tt">
