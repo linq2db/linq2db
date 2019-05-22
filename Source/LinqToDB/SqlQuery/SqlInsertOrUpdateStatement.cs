@@ -56,6 +56,9 @@ namespace LinqToDB.SqlQuery
 			if (_update != null)
 				clone._update = (SqlUpdateClause)_update.Clone(objectTree, doClone);
 
+			if (With != null)
+				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
+
 			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 
 			objectTree.Add(this, clone);
