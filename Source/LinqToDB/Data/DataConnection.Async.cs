@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Data.DbCommandProcessor;
 
 namespace LinqToDB.Data
 {
@@ -213,7 +214,7 @@ namespace LinqToDB.Data
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return await ((DbCommand)Command).ExecuteNonQueryAsync(cancellationToken);
+				return await ((DbCommand)Command).ExecuteNonQueryExtAsync(cancellationToken);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -232,7 +233,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = await ((DbCommand)Command).ExecuteNonQueryAsync(cancellationToken);
+				var ret = await ((DbCommand)Command).ExecuteNonQueryExtAsync(cancellationToken);
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -273,7 +274,7 @@ namespace LinqToDB.Data
 		internal async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return await ((DbCommand)Command).ExecuteScalarAsync(cancellationToken);
+				return await ((DbCommand)Command).ExecuteScalarExtAsync(cancellationToken);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -292,7 +293,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = await ((DbCommand)Command).ExecuteScalarAsync(cancellationToken);
+				var ret = await ((DbCommand)Command).ExecuteScalarExtAsync(cancellationToken);
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -334,7 +335,7 @@ namespace LinqToDB.Data
 			CancellationToken cancellationToken)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return await ((DbCommand)Command).ExecuteReaderAsync(commandBehavior, cancellationToken);
+				return await ((DbCommand)Command).ExecuteReaderExtAsync(commandBehavior, cancellationToken);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -353,7 +354,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = await ((DbCommand)Command).ExecuteReaderAsync(commandBehavior, cancellationToken);
+				var ret = await ((DbCommand)Command).ExecuteReaderExtAsync(commandBehavior, cancellationToken);
 
 				if (TraceSwitch.TraceInfo)
 				{
