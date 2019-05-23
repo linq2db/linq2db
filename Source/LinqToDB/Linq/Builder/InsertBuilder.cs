@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Builder
@@ -40,7 +41,6 @@ namespace LinqToDB.Linq.Builder
 				case "Insert"                : insertType = InsertContext.InsertType.Insert;             break;
 				case "InsertWithIdentity"    : insertType = InsertContext.InsertType.InsertWithIdentity; break;
 				case "InsertWithOutput"      : insertType = InsertContext.InsertType.InsertOutput;       break;
-				case "InsertWithOutputAsync" : insertType = InsertContext.InsertType.InsertOutput;       break;
 				case "InsertWithOutputInto"  : insertType = InsertContext.InsertType.InsertOutputInto;   break;
 			}
 

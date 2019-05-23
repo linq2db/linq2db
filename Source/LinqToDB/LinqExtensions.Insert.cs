@@ -87,11 +87,11 @@ namespace LinqToDB
 
 			IQueryable<TTarget> query = target;
 
-			return query.Provider.CreateQuery<TTarget>(
+			return query.Provider.Execute<TTarget>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
-					new[] { query.Expression, Expression.Constant(obj) })).AsEnumerable().First();
+					new[] { query.Expression, Expression.Constant(obj) }));
 		}
 
 		/// <summary>
@@ -112,17 +112,16 @@ namespace LinqToDB
 
 			IQueryable<TTarget> query = target;
 
+			var expr =
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
+					new[] { query.Expression, Expression.Constant(obj) });
+
 			if (query.Provider is IQueryProviderAsync provider)
-			{
-				return provider.ExecuteAsync<TTarget>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
-						new[] { query.Expression, Expression.Constant(obj) })).FirstAsync(token);
-			}
+				return provider.ExecuteAsync<TTarget>(expr, token);
 
-			return AsyncExtensions.GetTask(() => target.InsertWithOutput(obj));
-
+			return TaskEx.Run(() => query.Provider.Execute<TTarget>(expr), token);
 		}
 
 		/// <summary>
@@ -150,7 +149,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, setter, outputExpression),
-					new[] { query.Expression, Expression.Quote(setter) }));
+					new[] { query.Expression, Expression.Quote(setter), Expression.Quote(outputExpression) }));
 
 		}
 

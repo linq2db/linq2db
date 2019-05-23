@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -174,7 +176,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InsertWithOutputObjTest1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		public void InsertWithOutputObjTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
@@ -195,7 +197,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public async Task InsertWithOutputObjAsyncTest1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		public async Task InsertWithOutputObjAsyncTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
@@ -208,6 +210,73 @@ namespace Tests.Playground
 				};
 
 				var output = await source.InsertWithOutputAsync(data);
+
+				Assert.AreEqual(data.Id,       output.Id);
+				Assert.AreEqual(data.Value,    output.Value);
+				Assert.AreEqual(data.ValueStr, output.ValueStr);
+			}
+		}
+
+		[Test]
+		public void InsertWithOutputObjWithSetterTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		{
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable<TableWithData>())
+			{
+				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
+				{
+					Value = value * 100,
+					Id = value,
+					ValueStr = "SomeStr" + value
+				};
+
+				var output = source.InsertWithOutput(dataFunc);
+				var data = dataFunc.Compile()();
+
+				Assert.AreEqual(data.Id,       output.Id);
+				Assert.AreEqual(data.Value,    output.Value);
+				Assert.AreEqual(data.ValueStr, output.ValueStr);
+			}
+		}
+
+		[Test]
+		public async Task InsertWithOutputObjWithSetterAsyncTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		{
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable<TableWithData>())
+			{
+				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
+				{
+					Value = value * 100,
+					Id = value,
+					ValueStr = "SomeStr" + value
+				};
+
+				var output = await source.InsertWithOutputAsync(dataFunc);
+				var data = dataFunc.Compile()();
+
+				Assert.AreEqual(data.Id,       output.Id);
+				Assert.AreEqual(data.Value,    output.Value);
+				Assert.AreEqual(data.ValueStr, output.ValueStr);
+			}
+		}
+
+		[Test]
+		public void InsertWithOutputDynamicWithSetterTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		{
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable<TableWithData>())
+			{
+				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
+				{
+					Value = value * 100,
+					Id = value,
+					ValueStr = "SomeStr" + value
+				};
+
+				var output = source.InsertWithOutput(dataFunc,
+					inserted => new { inserted.Id, inserted.Value, inserted.ValueStr });
+				var data = dataFunc.Compile()();
 
 				Assert.AreEqual(data.Id,       output.Id);
 				Assert.AreEqual(data.Value,    output.Value);
