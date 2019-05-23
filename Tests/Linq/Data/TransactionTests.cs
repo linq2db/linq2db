@@ -70,7 +70,7 @@ namespace Tests.Data
 				}
 				finally
 				{
-					// perform synchonously to not mess with CommitTransactionAsync testing
+					// perform synchronously to not mess with CommitTransactionAsync testing
 					db.GetTable<Parent>().Where(_ => _.ParentID == 1010).Delete();
 				}
 

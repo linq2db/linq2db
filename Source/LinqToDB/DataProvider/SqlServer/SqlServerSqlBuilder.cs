@@ -394,6 +394,18 @@ namespace LinqToDB.DataProvider.SqlServer
 					}
 
 					break;
+
+				case DataType.DateTime2:
+				case DataType.DateTimeOffset:
+				case DataType.Time:
+					StringBuilder.Append(type.DataType);
+					// Default precision for all three types is 7.
+					// For all other non-null values (including 0) precision must be specified.
+					if (type.Precision != null && type.Precision != 7)
+					{
+						StringBuilder.Append('(').Append(type.Precision).Append(')');
+					}
+					return;
 			}
 
 			base.BuildDataType(type, createDbType);

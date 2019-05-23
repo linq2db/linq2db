@@ -473,6 +473,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TestCondition([CteContextSource(true)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				int? var3 = 1;
+				var cte = db.GetTable<Child>().AsCte();
+
+				var query = cte.Where(t => t.ChildID == var3 || var3 == null);
+				var str = query.ToString();
+				Assert.That(str.Contains("WITH"), Is.EqualTo(true));
+			}
+		}
+
+		[Test]
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))

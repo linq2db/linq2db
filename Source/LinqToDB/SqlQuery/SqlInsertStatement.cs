@@ -62,6 +62,9 @@ namespace LinqToDB.SqlQuery
 			if (_insert != null)
 				clone._insert = (SqlInsertClause)_insert.Clone(objectTree, doClone);
 
+			if (With != null)
+				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
+
 			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 
 			objectTree.Add(this, clone);
