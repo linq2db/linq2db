@@ -1014,7 +1014,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void TestCoalesceInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
@@ -1057,6 +1057,38 @@ namespace Tests.Linq
 				Assert.NotNull(result[1].Child4);
 				Assert.AreEqual(0,    result[1].Child4.Id);
 				Assert.AreEqual(null, result[1].Child4.Value);
+			}
+		}
+
+		[Test]
+		public void TestConditionalInProjectionSubquery([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new []
+			{
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+			}))
+			using (db.CreateLocalTable(new []
+			{
+				new ChildEntityObject{Id = 1, Value = "Value 1"}
+			}))
+			{
+				var query = 
+					(from m in db.GetTable<MainEntityObject>()
+					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
+					select new 
+					{
+						c.Id,
+						Value = (c != null) ? c.Value : (m.MainValue != null ? m.MainValue : "")
+					}).Distinct();
+
+				var query2 = from q in query
+					where q.Id % 2 == 0
+					select q;
+
+				var result = query2.ToArray();
+
 			}
 		}
 
