@@ -639,7 +639,8 @@ namespace LinqToDB.SqlQuery
 			bool allColumns,
 			bool isApplySupported,
 			bool optimizeValues,
-			bool optimizeColumns)
+			bool optimizeColumns,
+			JoinType parentJoin)
 		{
 			foreach (var jt in source.Joins)
 			{
@@ -649,7 +650,8 @@ namespace LinqToDB.SqlQuery
 					false,
 					isApplySupported,
 					jt.JoinType == JoinType.Inner || jt.JoinType == JoinType.CrossApply,
-					optimizeColumns);
+					optimizeColumns,
+					jt.JoinType);
 
 				if (table != jt.Table)
 				{
@@ -677,7 +679,7 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 				if (canRemove)
-					return RemoveSubQuery(source, optimizeWhere, allColumns && !isApplySupported, optimizeValues, optimizeColumns);
+					return RemoveSubQuery(source, optimizeWhere, allColumns && !isApplySupported, optimizeValues, optimizeColumns, parentJoin);
 			}
 
 			return source;
@@ -790,7 +792,8 @@ namespace LinqToDB.SqlQuery
 			bool concatWhere,
 			bool allColumns,
 			bool optimizeValues,
-			bool optimizeColumns)
+			bool optimizeColumns,
+			JoinType parentJoin)
 		{
 			var query = (SelectQuery)childSource.Source;
 
@@ -799,6 +802,9 @@ namespace LinqToDB.SqlQuery
 			isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
 			isQueryOK = isQueryOK && !query.HasUnion && query.GroupBy.IsEmpty && !query.Select.HasModifier;
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
+
+			if (isQueryOK && parentJoin != JoinType.Inner)
+				isQueryOK = query.From.Tables[0].Joins.Count == 0;
 
 			if (!isQueryOK)
 				return childSource;
@@ -949,7 +955,8 @@ namespace LinqToDB.SqlQuery
 						joinTable.JoinType == JoinType.CrossApply,
 						isApplySupported,
 						joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply,
-						optimizeColumns);
+						optimizeColumns,
+						joinTable.JoinType);
 
 					if (table != joinTable.Table)
 					{
@@ -1007,7 +1014,7 @@ namespace LinqToDB.SqlQuery
 
 			for (var i = 0; i < _selectQuery.From.Tables.Count; i++)
 			{
-				var table = OptimizeSubQuery(_selectQuery.From.Tables[i], true, false, isApplySupported, true, optimizeColumns);
+				var table = OptimizeSubQuery(_selectQuery.From.Tables[i], true, false, isApplySupported, true, optimizeColumns, JoinType.Inner);
 
 				if (table != _selectQuery.From.Tables[i])
 				{

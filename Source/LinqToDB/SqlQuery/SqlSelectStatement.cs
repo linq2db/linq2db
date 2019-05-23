@@ -39,6 +39,9 @@ namespace LinqToDB.SqlQuery
 			if (SelectQuery != null)
 				clone.SelectQuery = (SelectQuery)SelectQuery.Clone(objectTree, doClone);
 
+			if (With != null)
+				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
+
 			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 
 			objectTree.Add(this, clone);
