@@ -1,4 +1,4 @@
-# Supported databases
+# Supported Databases
 
 * DB2 (LUW, z/OS)
 * Firebird
