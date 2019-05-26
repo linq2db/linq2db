@@ -1092,5 +1092,52 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		[ActiveIssue(1734, Details = "Fails for all providers for null value. Informix also expected to fail due to lack of type hint for NULL value when initial issue fixed")]
+		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value.Value));
+
+				Assert.AreEqual(value, result);
+			}
+		}
+
+		[Test]
+		[ActiveIssue(1734, Details = "Fails for all providers for null value. Informix also expected to fail due to lack of type hint for NULL value when initial issue fixed")]
+		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value.Value) : (int?)null);
+
+				Assert.AreEqual(value, result);
+			}
+		}
+
+		[Test]
+		[ActiveIssue(1734, Details = "Fails for all providers for null value. Informix also expected to fail due to lack of type hint for NULL value when initial issue fixed")]
+		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
+
+				Assert.AreEqual(value, result);
+			}
+		}
+
+		[Test]
+		[ActiveIssue(1734, Details = "Fails for all providers for null value. Informix also expected to fail due to lack of type hint for NULL value when initial issue fixed")]
+		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
+
+				Assert.AreEqual(value, result);
+			}
+		}
 	}
 }
