@@ -14,7 +14,7 @@ namespace Tests.UserTests
 			{
 				IQueryable<ClassTypeOfResult> query = null;
 
-				foreach (var tipoDeDocumento in Enumerable.Range(1, 2))
+				foreach (var tipoDeDocumento in Enumerable.Range(1, 3))
 				{
 					var innerQuery =
 						from doSap in db.GetTable<ClassTypeOne>()
@@ -29,10 +29,7 @@ namespace Tests.UserTests
 					query = query?.Union(innerQuery) ?? innerQuery;
 				}
 
-				var resultado = query?.ToString();
-				Console.WriteLine(resultado);
-			
-				Assert.IsNotEmpty(resultado);
+				Assert.DoesNotThrow(() => Console.WriteLine(query?.ToString()));
 			}
 
 		}
