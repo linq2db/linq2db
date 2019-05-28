@@ -85,6 +85,7 @@ namespace LinqToDB.SqlQuery
 
 				if (statement != this)
 				{
+					var alreadyAdded = new HashSet<SqlParameter>();
 					statement.Parameters.Clear();
 
 					new QueryVisitor().VisitAll(statement, expr =>
@@ -94,7 +95,7 @@ namespace LinqToDB.SqlQuery
 							case QueryElementType.SqlParameter :
 								{
 									var p = (SqlParameter)expr;
-									if (p.IsQueryParameter)
+									if (p.IsQueryParameter && alreadyAdded.Add(p))
 										statement.Parameters.Add(p);
 
 									break;

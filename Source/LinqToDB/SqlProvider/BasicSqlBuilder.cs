@@ -2433,6 +2433,18 @@ namespace LinqToDB.SqlProvider
 		{
 			if (func.Name == "CASE")
 			{
+				if (func.Parameters.Length == 3)
+				{
+					// simple case handling
+					// TODO: move logic to optimizer
+					var expr = SqlOptimizer.ConvertExpression(func.Parameters[0]);
+					if (expr is SqlSearchCondition searchCondition && searchCondition.Conditions.Count == 0)
+					{
+						BuildExpression(func.Parameters[1]);
+						return;
+					}
+				}
+
 				StringBuilder.Append(func.Name).AppendLine();
 
 				Indent++;
@@ -2445,12 +2457,19 @@ namespace LinqToDB.SqlProvider
 
 					var len = StringBuilder.Length;
 
-					BuildExpression(func.Parameters[i]);
-
-					if (SqlExpression.NeedsEqual(func.Parameters[i]))
+					// TODO: move logic to optimizer
+					var expr = SqlOptimizer.ConvertExpression(func.Parameters[i]);
+					if (expr is SqlSearchCondition searchCondition && searchCondition.Conditions.Count == 0)
+						StringBuilder.Append("1 = 1");
+					else 
 					{
-						StringBuilder.Append(" = ");
-						BuildValue(null, true);
+						BuildExpression(expr);
+
+						if (SqlExpression.NeedsEqual(expr))
+						{
+							StringBuilder.Append(" = ");
+							BuildValue(null, true);
+						}
 					}
 
 					if (StringBuilder.Length - len > 20)
