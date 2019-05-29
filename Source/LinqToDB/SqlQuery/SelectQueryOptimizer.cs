@@ -424,6 +424,30 @@ namespace LinqToDB.SqlQuery
 			OptimizeDistinctOrderBy();
 		}
 
+		internal static ISqlExpression ReduceSearchCondition(SqlSearchCondition searchCondition)
+		{
+			SelectQueryOptimizer.OptimizeSearchCondition(searchCondition);
+			
+			if (searchCondition.Conditions.Count == 0)
+				return new SqlValue(typeof(bool), true);
+
+			if (searchCondition.Conditions.Count == 1)
+			{
+				var cond = searchCondition.Conditions[0];
+				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
+				{
+					var expr = (SqlPredicate.Expr)cond.Predicate;
+
+					if (expr.Expr1 is SqlValue value && value.Value is bool b)
+					{
+						return new SqlValue(typeof(bool), cond.IsNot ? !b : b);
+					}
+				}
+			}
+
+			return searchCondition;
+		}
+
 		internal static void OptimizeSearchCondition(SqlSearchCondition searchCondition)
 		{
 			// This 'if' could be replaced by one simple match:
