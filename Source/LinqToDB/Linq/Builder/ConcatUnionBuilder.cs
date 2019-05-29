@@ -422,6 +422,8 @@ namespace LinqToDB.Linq.Builder
 
 									return new[] { member.SqlQueryInfo };
 								}
+
+								return base.ConvertToSql(expression, level, flags);
 							}
 
 							break;
