@@ -381,7 +381,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithPercent([IncludeDataSources(ProviderName.Access, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TakeWithPercent([IncludeDataSources(true, ProviderName.Access, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

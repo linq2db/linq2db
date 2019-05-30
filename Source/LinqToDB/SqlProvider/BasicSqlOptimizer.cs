@@ -9,6 +9,7 @@ namespace LinqToDB.SqlProvider
 	using Common;
 	using Extensions;
 	using SqlQuery;
+	using Mapping;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -1475,6 +1476,23 @@ namespace LinqToDB.SqlProvider
 					new JoinOptimizer().OptimizeJoins(statement, query);
 				return element;
 			});
+		}
+
+		#endregion
+
+		#region Optimizing Statement
+
+		public virtual SqlStatement OptimizeStatement(SqlStatement statement)
+		{
+			statement = new QueryVisitor().Convert(statement, e =>
+			{
+				if (e is ISqlExpression sqlExpression)
+					e = ConvertExpression(sqlExpression);
+
+				return e;
+			});
+
+			return statement;
 		}
 
 		#endregion
