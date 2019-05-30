@@ -9,6 +9,13 @@ namespace LinqToDB.DataProvider.Informix
 		// parameters in source select list not supported
 		protected override bool MergeSupportsParametersInSource => false;
 
+		// VALUES(...) syntax not supported in MERGE source
+		protected override bool MergeSupportsSourceDirectValues => false;
+
+		// or also we can use
+		// sysmaster:'informix'.sysdual
+		protected override string FakeTable => "table(set{1})";
+
 		protected override void BuildMergeInto(SqlMergeStatement merge)
 		{
 			StringBuilder.Append("MERGE ");
@@ -23,6 +30,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			StringBuilder.Append("INTO ");
 			BuildTableName(merge.Target, true, true);
+			StringBuilder.AppendLine();
 		}
 	}
 }

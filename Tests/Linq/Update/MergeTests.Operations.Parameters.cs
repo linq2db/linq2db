@@ -242,7 +242,7 @@ namespace Tests.xUpdate
 				AssertRowCount(1, rows, context);
 
 				var paramcount = 1;
-				if (context == ProviderName.DB2 || context == ProviderName.Informix)
+				if (context == ProviderName.DB2)
 					paramcount = 0;
 
 				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));

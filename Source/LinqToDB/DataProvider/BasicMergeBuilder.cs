@@ -307,12 +307,12 @@ namespace LinqToDB.DataProvider
 			else
 			{
 				var source = Merge.EnumerableSource ?? Merge.QueryableSource;
-				if (SupportsSourceDirectValues)
-				{
+				//if (SupportsSourceDirectValues)
+				//{
 					//BuildSourceDirectValues(source);
-				}
-				else
-					BuildSourceSubQueryValues(source);
+				//}
+				//else
+					//BuildSourceSubQueryValues(source);
 			}
 		}
 
@@ -447,31 +447,31 @@ namespace LinqToDB.DataProvider
 		//	BuildAsSourceClause(null);
 		//}
 
-		private void BuildSourceSubQueryValues(IEnumerable<TSource> source)
-		{
-			var hasData        = false;
-			var columnTypes    = GetSourceColumnTypes();
-			var valueConverter = DataContext.MappingSchema.ValueToSqlConverter;
+		//private void BuildSourceSubQueryValues(IEnumerable<TSource> source)
+		//{
+		//	var hasData        = false;
+		//	var columnTypes    = GetSourceColumnTypes();
+		//	var valueConverter = DataContext.MappingSchema.ValueToSqlConverter;
 
-			TSource next = null;
-			foreach (var item in source)
-			{
-				if (next != null)
-					BuildValuesAsSelect(ref hasData, columnTypes, valueConverter, next, false);
+		//	TSource next = null;
+		//	foreach (var item in source)
+		//	{
+		//		if (next != null)
+		//			BuildValuesAsSelect(ref hasData, columnTypes, valueConverter, next, false);
 
-				next = item;
-			}
+		//		next = item;
+		//	}
 
-			if (next != null)
-				BuildValuesAsSelect(ref hasData, columnTypes, valueConverter, next, true);
+		//	if (next != null)
+		//		BuildValuesAsSelect(ref hasData, columnTypes, valueConverter, next, true);
 
-			if (hasData)
-				BuildAsSourceClause(_sourceDescriptor.Columns.Select(_ => _.ColumnName));
-			//else if (EmptySourceSupported)
-			//	BuildEmptySource();
-			else
-				NoopCommand = true;
-		}
+		//	if (hasData)
+		//		BuildAsSourceClause(_sourceDescriptor.Columns.Select(_ => _.ColumnName));
+		//	//else if (EmptySourceSupported)
+		//	//	BuildEmptySource();
+		//	else
+		//		NoopCommand = true;
+		//}
 
 		private void BuildValuesAsSelect(ref bool hasData, SqlDataType[] columnTypes, ValueToSqlConverter valueConverter, TSource item, bool lastItem)
 		{
@@ -552,7 +552,7 @@ namespace LinqToDB.DataProvider
 		private SqlDataType[] GetSourceColumnTypes()
 		{
 			return _sourceDescriptor.Columns
-				.Select(c => new SqlDataType(c.DataType, c.MemberType, c.Length, c.Precision, c.Scale))
+				.Select(c => new SqlDataType(c.DataType, c.MemberType, c.Length, c.Precision, c.Scale, c.DbType))
 				.ToArray();
 		}
 		#endregion

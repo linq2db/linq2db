@@ -12,6 +12,14 @@
 		// It doesn't make sense to fix empty source generation as it will take too much effort for nothing
 		protected override bool MergeEmptySourceSupported => false;
 
+		// VALUES(...) syntax not supported in MERGE source
+		protected override bool MergeSupportsSourceDirectValues => false;
+
+		// bad thing that user can change this table, but broken merge will be minor issue in this case
+		protected override string FakeTable => "dual";
+
+		// dual table owner
+		protected override string FakeTableSchema => "sys";
 
 		protected override void BuildMergeInto(SqlMergeStatement merge)
 		{
@@ -27,6 +35,7 @@
 
 			StringBuilder.Append("INTO ");
 			BuildTableName(merge.Target, true, true);
+			StringBuilder.AppendLine();
 		}
 
 		protected override void BuildMergeOperationInsert(SqlMergeOperationClause operation)

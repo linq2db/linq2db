@@ -17,23 +17,23 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		protected override bool SupportsSourceDirectValues
-		{
-			get
-			{
-				// VALUES (...) syntax not supported by firebird
-				return false;
-			}
-		}
+		//protected override bool SupportsSourceDirectValues
+		//{
+		//	get
+		//	{
+		//		// VALUES (...) syntax not supported by firebird
+		//		return false;
+		//	}
+		//}
 
-		protected override string FakeSourceTable
-		{
-			get
-			{
-				// table with exactly one record to replace VALUES for enumerable source
-				return "rdb$database";
-			}
-		}
+		//protected override string FakeSourceTable
+		//{
+		//	get
+		//	{
+		//		// table with exactly one record to replace VALUES for enumerable source
+		//		return "rdb$database";
+		//	}
+		//}
 
 		protected override bool ProviderUsesAlternativeUpdate
 		{

@@ -1198,7 +1198,8 @@ namespace LinqToDB.SqlProvider
 				field.SystemType,
 				field.Length,
 				field.Precision,
-				field.Scale),
+				field.Scale,
+				field.DbType),
 				true);
 		}
 
@@ -1917,7 +1918,8 @@ namespace LinqToDB.SqlProvider
 												field.SystemType,
 												field.Length,
 												field.Precision,
-												field.Scale),
+												field.Scale,
+												field.DbType),
 											value);
 
 									StringBuilder.Append(", ");
@@ -1956,7 +1958,8 @@ namespace LinqToDB.SqlProvider
 													field.SystemType,
 													field.Length,
 													field.Precision,
-													field.Scale),
+													field.Scale,
+													field.DbType),
 												value);
 										}
 
@@ -2051,14 +2054,15 @@ namespace LinqToDB.SqlProvider
 									field.SystemType,
 									field.Length,
 									field.Precision,
-									field.Scale);
+									field.Scale,
+									field.DbType);
 							}
 							break;
 
 						case QueryElementType.SqlParameter:
 							{
 								var p = (SqlParameter)predicate.Expr1;
-								sqlDataType = new SqlDataType(p.DataType, p.SystemType, 0, 0, 0);
+								sqlDataType = new SqlDataType(p.DataType, p.SystemType, 0, 0, 0, p.DbType);
 							}
 
 							break;

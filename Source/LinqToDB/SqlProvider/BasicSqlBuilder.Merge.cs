@@ -302,7 +302,7 @@
 				}
 				else
 				{
-					throw new LinqToDBException($"{this.Name} doesn't support merge with empty source");
+					throw new LinqToDBException($"{Name} doesn't support merge with empty source");
 				}
 				//if (hasData)
 				BuildMergeAsSourceClause(mergeSource);
@@ -312,8 +312,71 @@
 				//	NoopCommand = true;
 				return;
 			}
+			else
+			{
+				if (mergeSource.SourceEnumerable.Rows.Count > 0)
+				{
+					StringBuilder.Append("(");
+					BuildValuesAsSelectsUnion(mergeSource.SourceFields, mergeSource.SourceEnumerable);
+					StringBuilder.Append(")");
 
-			throw new NotImplementedException("BuildMergeSourceEnumerable");
+					BuildMergeAsSourceClause(mergeSource);
+				}
+				else
+				{
+					////else if (EmptySourceSupported)
+					////	BuildEmptySource();
+					//else
+					//	NoopCommand = true;
+
+					throw new NotImplementedException("BuildMergeSourceEnumerable");
+				}
+			}
+		}
+
+		private void BuildValuesAsSelectsUnion(IList<SqlField> fields, SqlValuesTable sourceEnumerable)
+		{
+			for (var i = 0; i < sourceEnumerable.Rows.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder
+						.AppendLine()
+						.AppendLine("\tUNION ALL");
+
+				// build record select
+				StringBuilder.Append("\tSELECT ");
+
+				var row = sourceEnumerable.Rows[i];
+				for (var j = 0; j < row.Count; j++)
+				{
+					var field = fields[j];
+					var value = row[j];
+					if (j > 0)
+						StringBuilder.Append(",");
+
+					BuildValue(
+						new SqlDataType(
+							field.DataType,
+							field.SystemType,
+							field.Length,
+							field.Precision,
+							field.Scale,
+							field.DbType),
+						value.Value);
+					//if (!ValueToSqlConverter.TryConvert(StringBuilder, columnType, sqlValues[i].Value))
+					//{
+					//	AddSourceValueAsParameter(column.DataType, column.DbType, value);
+					//}
+
+					//AddSourceValue(valueConverter, column, columnTypes[i], value, !hasData, lastRecord);
+				}
+
+				if (FakeTable != null)
+				{
+					StringBuilder.Append(" FROM ");
+					BuildFakeTableName();
+				}
+			}
 		}
 
 		private void BuildMergeEmptySource(SqlMergeSourceTable mergeSource)
@@ -338,7 +401,8 @@
 						field.SystemType,
 						field.Length,
 						field.Precision,
-						field.Scale),
+						field.Scale,
+						field.DbType),
 					null);
 
 				//AddSourceValue(
@@ -414,7 +478,8 @@
 						field.SystemType,
 						field.Length,
 						field.Precision,
-						field.Scale),
+						field.Scale,
+						field.DbType),
 					value.Value);
 				//if (!ValueToSqlConverter.TryConvert(StringBuilder, columnType, sqlValues[i].Value))
 				//{

@@ -39,24 +39,24 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override bool SupportsSourceDirectValues
-		{
-			get
-			{
-				// VALUES(...) syntax in MERGE source not supported
-				return false;
-			}
-		}
+		//protected override bool SupportsSourceDirectValues
+		//{
+		//	get
+		//	{
+		//		// VALUES(...) syntax in MERGE source not supported
+		//		return false;
+		//	}
+		//}
 
-		protected override string FakeSourceTable
-		{
-			get
-			{
-				// predefined table with 1 record
-				// unfortunatelly, user could change this table
-				return "DUMMY";
-			}
-		}
+		//protected override string FakeSourceTable
+		//{
+		//	get
+		//	{
+		//		// predefined table with 1 record
+		//		// unfortunatelly, user could change this table
+		//		return "DUMMY";
+		//	}
+		//}
 
 		public override void Validate()
 		{

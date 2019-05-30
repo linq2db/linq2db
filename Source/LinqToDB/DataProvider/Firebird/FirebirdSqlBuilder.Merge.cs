@@ -11,5 +11,10 @@
 		// SQL error code = -804
 		//Data type unknown
 		protected override bool MergeSupportsParametersInSource => false;
+
+		// VALUES(...) syntax not supported in MERGE source
+		protected override bool MergeSupportsSourceDirectValues => false;
+
+		protected override string FakeTable => "rdb$database";
 	}
 }

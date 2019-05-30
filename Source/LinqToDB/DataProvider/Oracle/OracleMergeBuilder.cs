@@ -28,14 +28,14 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override bool SameTypeOperationsAllowed => false;
 
 		// VALUES(...) clause is not supported in MERGE source
-		protected override bool SupportsSourceDirectValues => false;
+		//protected override bool SupportsSourceDirectValues => false;
 
 		// table with exactly one record for client-side source generation
 		// bad thing that user can change this table, but broken merge will be minor issue in this case
-		protected override string FakeSourceTable => "dual";
+		//protected override string FakeSourceTable => "dual";
 
-		// dual table owner
-		protected override string FakeSourceTableSchema => "sys";
+		//// dual table owner
+		//protected override string FakeSourceTableSchema => "sys";
 
 		// oracle doesn't support INSERT FROM
 		protected override bool ProviderUsesAlternativeUpdate => true;

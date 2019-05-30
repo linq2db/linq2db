@@ -30,14 +30,14 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		protected override bool SupportsSourceDirectValues
-		{
-			get
-			{
-				// Doesn't support VALUES(...) syntax in MERGE source
-				return false;
-			}
-		}
+		//protected override bool SupportsSourceDirectValues
+		//{
+		//	get
+		//	{
+		//		// Doesn't support VALUES(...) syntax in MERGE source
+		//		return false;
+		//	}
+		//}
 
 		protected override void OnInsertWithIdentity()
 		{

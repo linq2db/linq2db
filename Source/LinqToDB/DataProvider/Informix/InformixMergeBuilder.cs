@@ -24,11 +24,11 @@ namespace LinqToDB.DataProvider.Informix
 		protected override bool OperationPredicateSupported => false;
 
 		// VALUES(...) syntax not supported in MERGE source
-		protected override bool SupportsSourceDirectValues => false;
+		//protected override bool SupportsSourceDirectValues => false;
 
 		// or
 		// sysmaster:'informix'.sysdual
-		protected override string FakeSourceTable => "table(set{1})";
+		//protected override string FakeSourceTable => "table(set{1})";
 
 		protected override void AddFakeSourceTableName()
 		{
@@ -72,7 +72,7 @@ namespace LinqToDB.DataProvider.Informix
 						var scale = BitConverter.GetBytes(decimal.GetBits(decValue)[3])[2];
 						precision += scale;
 
-						columnType = new SqlDataType(DataType.Decimal, columnType.Type, null, precision, scale);
+						columnType = new SqlDataType(DataType.Decimal, columnType.Type, null, precision, scale, columnType.DbType);
 					}
 
 					// this is the only place where hint is not required for some types but it doesn't make sense to
