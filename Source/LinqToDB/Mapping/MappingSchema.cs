@@ -1324,8 +1324,9 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Returns <c>true</c>, if <paramref name="type"/> type is enum with mapping to <c>null</c> value.
 		/// Initial parameter value, passed to this method is not used.</param>
 		/// <returns>Scalar database type information.</returns>
-		public SqlDataType GetUnderlyingDataType(Type type, ref bool canBeNull)
+		public SqlDataType GetUnderlyingDataType(Type type, out bool canBeNull)
 		{
+			canBeNull   = false;
 			int? length = null;
 
 			var underlyingType = type.ToNullableUnderlying();

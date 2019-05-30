@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return new SybaseSqlBuilder(_isSelect, SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -90,7 +90,7 @@ namespace LinqToDB.DataProvider.Sybase
 					break;
 			}
 
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)

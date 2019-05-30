@@ -552,7 +552,7 @@ namespace LinqToDB.DataProvider
 		private SqlDataType[] GetSourceColumnTypes()
 		{
 			return _sourceDescriptor.Columns
-				.Select(c => new SqlDataType(c.DataType, c.MemberType, c.Length, c.Precision, c.Scale, c.DbType))
+				.Select(c => new SqlDataType(c))
 				.ToArray();
 		}
 		#endregion
@@ -1198,11 +1198,7 @@ namespace LinqToDB.DataProvider
 					columnType = DataContext.MappingSchema.GetDataType(column.StorageType);
 
 					if (columnType.DataType == DataType.Undefined)
-					{
-						var canBeNull = column.CanBeNull;
-
-						columnType = DataContext.MappingSchema.GetUnderlyingDataType(column.StorageType, ref canBeNull);
-					}
+						columnType = DataContext.MappingSchema.GetUnderlyingDataType(column.StorageType, out var _);
 				}
 
 				SqlBuilder.BuildTypeName(Command, columnType);

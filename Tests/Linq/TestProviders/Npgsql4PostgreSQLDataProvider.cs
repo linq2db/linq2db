@@ -445,7 +445,7 @@ namespace Tests
 			return new Npgsql4PostgreSQLSqlBuilder(_provider, SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			if (type.Type != null)
 			{
@@ -471,7 +471,7 @@ namespace Tests
 				}
 			}
 
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 	}
 }

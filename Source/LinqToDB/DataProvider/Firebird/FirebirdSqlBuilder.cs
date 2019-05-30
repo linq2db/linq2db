@@ -84,12 +84,12 @@ namespace LinqToDB.DataProvider.Firebird
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
 				case DataType.Decimal       :
-					base.BuildDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, null, 18, type.Scale, type.DbType) : type, createDbType);
+					base.BuildDataTypeFromDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, null, 18, type.Scale, type.DbType) : type, forCreateTable);
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");        break;
@@ -113,7 +113,7 @@ namespace LinqToDB.DataProvider.Firebird
 				// BOOLEAN type available since FB 3.0, but FirebirdDataProvider.SetParameter converts boolean to '1'/'0'
 				// so for now we will use type, compatible with SetParameter by default
 				case DataType.Boolean       : StringBuilder.Append("CHAR");            break;
-				default: base.BuildDataType(type, createDbType); break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable);         break;
 			}
 		}
 

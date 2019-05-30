@@ -110,12 +110,12 @@ namespace LinqToDB.DataProvider.SQLite
 			return value;
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
-				case DataType.Int32 : StringBuilder.Append("INTEGER");               break;
-				default             : base.BuildDataType(type, createDbType);        break;
+				case DataType.Int32 : StringBuilder.Append("INTEGER");                      break;
+				default             : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 			}
 		}
 

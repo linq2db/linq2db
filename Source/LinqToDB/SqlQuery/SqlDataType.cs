@@ -9,6 +9,7 @@ namespace LinqToDB.SqlQuery
 {
 	using Common;
 	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
 
 	public class SqlDataType : ISqlExpression
 	{
@@ -111,6 +112,39 @@ namespace LinqToDB.SqlQuery
 			Type      = type ?? throw new ArgumentNullException(nameof(type));
 			Precision = precision;
 			Scale     = scale;
+		}
+
+		internal SqlDataType(SqlParameter parameter)
+			: this(
+				  parameter.DataType,
+				  parameter.SystemType,
+				  parameter.DbSize,
+				  0,
+				  0,
+				  parameter.DbType)
+		{
+		}
+
+		internal SqlDataType(ColumnDescriptor column)
+			: this(
+				  column.DataType,
+				  column.MemberType,
+				  column.Length,
+				  column.Precision,
+				  column.Scale,
+				  column.DbType)
+		{
+		}
+
+		internal SqlDataType(SqlField field)
+			: this(
+				  field.DataType,
+				  field.SystemType,
+				  field.Length,
+				  field.Precision,
+				  field.Scale,
+				  field.DbType)
+		{
 		}
 
 		#endregion

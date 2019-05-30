@@ -331,7 +331,7 @@ namespace LinqToDB.DataProvider
 
 			var hasData     = false;
 			var columnTypes = table.Columns
-				.Select(c => new SqlDataType(c.DataType, c.MemberType, c.Length, c.Precision, c.Scale, c.DbType))
+				.Select(c => new SqlDataType(c))
 				.ToArray();
 
 			foreach (var item in source)
@@ -413,7 +413,7 @@ namespace LinqToDB.DataProvider
 
 			var hasData     = false;
 			var columnTypes = table.Columns
-				.Select(c => new SqlDataType(c.DataType, c.MemberType, c.Length, c.Precision, c.Scale, c.DbType))
+				.Select(c => new SqlDataType(c))
 				.ToArray();
 
 			foreach (var item in source)

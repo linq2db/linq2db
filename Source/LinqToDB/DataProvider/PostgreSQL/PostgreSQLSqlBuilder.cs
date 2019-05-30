@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return "OFFSET {0} ";
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -111,14 +111,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						else if (udtType == typeof(IPAddress))            StringBuilder.Append("inet");
 						else if (udtType == typeof(PhysicalAddress)
 							&& !_provider.HasMacAddr8)                    StringBuilder.Append("macaddr");
-						else                                              base.BuildDataType(type, createDbType);
+						else                                              base.BuildDataTypeFromDataType(type, forCreateTable);
 					}
 					else
-						base.BuildDataType(type, createDbType);
+						base.BuildDataTypeFromDataType(type, forCreateTable);
 
 					break;
 
-				default                      : base.BuildDataType(type, createDbType); break;
+				default                      : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 			}
 		}
 

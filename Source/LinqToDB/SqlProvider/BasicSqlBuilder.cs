@@ -1193,14 +1193,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCreateTableFieldType(SqlField field)
 		{
-			BuildDataType(new SqlDataType(
-				field.DataType,
-				field.SystemType,
-				field.Length,
-				field.Precision,
-				field.Scale,
-				field.DbType),
-				true);
+			BuildDataType(new SqlDataType(field), true);
 		}
 
 		protected virtual void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
@@ -1912,15 +1905,7 @@ namespace LinqToDB.SqlProvider
 									if (value is ISqlExpression expression)
 										BuildExpression(expression);
 									else
-										BuildValue(
-											new SqlDataType(
-												field.DataType,
-												field.SystemType,
-												field.Length,
-												field.Precision,
-												field.Scale,
-												field.DbType),
-											value);
+										BuildValue(new SqlDataType(field), value);
 
 									StringBuilder.Append(", ");
 								}
@@ -1952,15 +1937,7 @@ namespace LinqToDB.SqlProvider
 										else
 										{
 											StringBuilder.Append(" = ");
-											BuildValue(
-												new SqlDataType(
-													field.DataType,
-													field.SystemType,
-													field.Length,
-													field.Precision,
-													field.Scale,
-													field.DbType),
-												value);
+											BuildValue(new SqlDataType(field), value);
 										}
 
 										StringBuilder.Append(" AND ");
@@ -2049,20 +2026,14 @@ namespace LinqToDB.SqlProvider
 							{
 								var field = (SqlField)predicate.Expr1;
 
-								sqlDataType = new SqlDataType(
-									field.DataType,
-									field.SystemType,
-									field.Length,
-									field.Precision,
-									field.Scale,
-									field.DbType);
+								sqlDataType = new SqlDataType(field);
 							}
 							break;
 
 						case QueryElementType.SqlParameter:
 							{
 								var p = (SqlParameter)predicate.Expr1;
-								sqlDataType = new SqlDataType(p.DataType, p.SystemType, 0, 0, 0, p.DbType);
+								sqlDataType = new SqlDataType(p);
 							}
 
 							break;
@@ -2293,7 +2264,7 @@ namespace LinqToDB.SqlProvider
 						}
 						else
 						{
-							BuildValue(new SqlDataType(parm.DataType, parm.SystemType, parm.DbSize, 0, 0, parm.DbType), parm.Value);
+							BuildValue(new SqlDataType(parm), parm.Value);
 						}
 					}
 
@@ -2508,8 +2479,21 @@ namespace LinqToDB.SqlProvider
 		#endregion
 
 		#region BuildDataType
+		protected void BuildDataType(SqlDataType type, bool forCreateTable)
+		{
+			if (!string.IsNullOrEmpty(type.DbType))
+				StringBuilder.Append(type.DbType);
+			else
+			{
+				if (type.DataType == DataType.Undefined)
+					// give some hint to user that it is expected situation and he need to fix something on his side
+					throw new LinqToDBException("Database type cannot be determined automatically and must be specified explicitly");
 
-		protected virtual void BuildDataType(SqlDataType type, bool createDbType)
+				BuildDataTypeFromDataType(type, forCreateTable);
+			}
+		}
+
+		protected virtual void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -2524,15 +2508,9 @@ namespace LinqToDB.SqlProvider
 				case DataType.Int32  : StringBuilder.Append("Int");      return;
 				case DataType.Int64  : StringBuilder.Append("BigInt");   return;
 				case DataType.Boolean: StringBuilder.Append("Bit");      return;
-				case DataType.Undefined:
-					// give some hint to user that it is expected situation and he need to fix something on his side
-					throw new LinqToDBException("Database type cannot be determined automatically and must be specified explicitly");
 			}
 
-			if (!string.IsNullOrEmpty(type.DbType))
-				StringBuilder.Append(type.DbType);
-			else
-				StringBuilder.Append(type.DataType);
+			StringBuilder.Append(type.DataType);
 
 			if (type.Length > 0)
 				StringBuilder.Append('(').Append(type.Length).Append(')');

@@ -46,6 +46,11 @@
 		/// </summary>
 		protected virtual string FakeTableSchema => null;
 
+		/// <summary>
+		/// If true, generated source SQL should contain type hint information for values.
+		/// </summary>
+		protected virtual bool MergeSourceTypesRequired => false;
+
 		protected virtual void BuildMergeStatement(SqlMergeStatement merge)
 		{
 			BuildMergeInto(merge);
@@ -319,23 +324,25 @@
 					StringBuilder.Append("(");
 					BuildValuesAsSelectsUnion(mergeSource.SourceFields, mergeSource.SourceEnumerable);
 					StringBuilder.Append(")");
-
-					BuildMergeAsSourceClause(mergeSource);
 				}
 				else
 				{
 					////else if (EmptySourceSupported)
-					////	BuildEmptySource();
+					BuildMergeEmptySource(mergeSource);
 					//else
 					//	NoopCommand = true;
-
-					throw new NotImplementedException("BuildMergeSourceEnumerable");
 				}
+
+				BuildMergeAsSourceClause(mergeSource);
 			}
 		}
 
-		private void BuildValuesAsSelectsUnion(IList<SqlField> fields, SqlValuesTable sourceEnumerable)
+		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable sourceEnumerable)
 		{
+			var columnTypes = new SqlDataType[sourceFields.Count];
+			for (var i = 0; i < sourceFields.Count; i++)
+				columnTypes[i] = new SqlDataType(sourceFields[i]);
+
 			for (var i = 0; i < sourceEnumerable.Rows.Count; i++)
 			{
 				if (i > 0)
@@ -349,20 +356,14 @@
 				var row = sourceEnumerable.Rows[i];
 				for (var j = 0; j < row.Count; j++)
 				{
-					var field = fields[j];
 					var value = row[j];
 					if (j > 0)
 						StringBuilder.Append(",");
 
-					BuildValue(
-						new SqlDataType(
-							field.DataType,
-							field.SystemType,
-							field.Length,
-							field.Precision,
-							field.Scale,
-							field.DbType),
-						value.Value);
+					if (MergeSourceTypesRequired)
+						BuildTypedValue(columnTypes[j], value.Value);
+					else
+						BuildValue(columnTypes[j], value.Value);
 					//if (!ValueToSqlConverter.TryConvert(StringBuilder, columnType, sqlValues[i].Value))
 					//{
 					//	AddSourceValueAsParameter(column.DataType, column.DbType, value);
@@ -377,6 +378,11 @@
 					BuildFakeTableName();
 				}
 			}
+		}
+
+		protected virtual void BuildTypedValue(SqlDataType dataType, object value)
+		{
+			BuildValue(dataType, value);
 		}
 
 		private void BuildMergeEmptySource(SqlMergeSourceTable mergeSource)
@@ -395,21 +401,10 @@
 				if (i > 0)
 					StringBuilder.Append(", ");
 
-				BuildValue(
-					new SqlDataType(
-						field.DataType,
-						field.SystemType,
-						field.Length,
-						field.Precision,
-						field.Scale,
-						field.DbType),
-					null);
-
-				//AddSourceValue(
-				//	DataContext.MappingSchema.ValueToSqlConverter,
-				//	_sourceDescriptor.Columns[i],
-				//	columnTypes[i],
-				//	null, true, true);
+				if (MergeSourceTypesRequired)
+					BuildTypedValue(new SqlDataType(field), null);
+				else
+					BuildValue(new SqlDataType(field), null);
 
 				//StringBuilder
 				//	.Append(" ")
@@ -472,15 +467,7 @@
 				if (i > 0)
 					StringBuilder.Append(",");
 
-				BuildValue(
-					new SqlDataType(
-						field.DataType,
-						field.SystemType,
-						field.Length,
-						field.Precision,
-						field.Scale,
-						field.DbType),
-					value.Value);
+				BuildValue(new SqlDataType(field), value.Value);
 				//if (!ValueToSqlConverter.TryConvert(StringBuilder, columnType, sqlValues[i].Value))
 				//{
 				//	AddSourceValueAsParameter(column.DataType, column.DbType, value);

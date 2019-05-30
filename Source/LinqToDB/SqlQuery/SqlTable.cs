@@ -84,11 +84,10 @@ namespace LinqToDB.SqlQuery
 
 					if (dataType.DataType == DataType.Undefined)
 					{
-						var  canBeNull = field.CanBeNull;
+						dataType = mappingSchema.GetUnderlyingDataType(field.SystemType, out var canBeNull);
 
-						dataType = mappingSchema.GetUnderlyingDataType(field.SystemType, ref canBeNull);
-
-						field.CanBeNull = canBeNull;
+						if (canBeNull)
+							field.CanBeNull = true;
 					}
 
 					field.DataType = dataType.DataType;

@@ -154,7 +154,7 @@ namespace LinqToDB.DataProvider.DB2
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -174,7 +174,7 @@ namespace LinqToDB.DataProvider.DB2
 					break;
 			}
 
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;
