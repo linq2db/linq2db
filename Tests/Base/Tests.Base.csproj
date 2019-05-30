@@ -30,6 +30,6 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
-		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
+		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 	</ItemGroup>
 </Project>

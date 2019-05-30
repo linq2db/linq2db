@@ -1014,7 +1014,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void TestCoalesceInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
@@ -1060,5 +1060,84 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void TestConditionalInProjectionSubquery([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new []
+			{
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+			}))
+			using (db.CreateLocalTable(new []
+			{
+				new ChildEntityObject{Id = 1, Value = "Value 1"}
+			}))
+			{
+				var query = 
+					(from m in db.GetTable<MainEntityObject>()
+					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
+					select new 
+					{
+						c.Id,
+						Value = (c != null) ? c.Value : (m.MainValue != null ? m.MainValue : "")
+					}).Distinct();
+
+				var query2 = from q in query
+					where q.Id % 2 == 0
+					select q;
+
+				var result = query2.ToArray();
+
+			}
+		}
+
+		[Test]
+		[ActiveIssue(1734, Details = "Fails for all providers for null value. Informix also expected to fail due to lack of type hint for NULL value when initial issue fixed")]
+		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value.Value));
+
+				Assert.AreEqual(value, result);
+			}
+		}
+
+		[Test]
+		[ActiveIssue(1734, Details = "Fails for all providers for null value. Informix also expected to fail due to lack of type hint for NULL value when initial issue fixed")]
+		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value.Value) : (int?)null);
+
+				Assert.AreEqual(value, result);
+			}
+		}
+
+		[Test]
+		[ActiveIssue(1734, Details = "Fails for all providers for null value. Informix also expected to fail due to lack of type hint for NULL value when initial issue fixed")]
+		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
+
+				Assert.AreEqual(value, result);
+			}
+		}
+
+		[Test]
+		[ActiveIssue(1734, Details = "Fails for all providers for null value. Informix also expected to fail due to lack of type hint for NULL value when initial issue fixed")]
+		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
+
+				Assert.AreEqual(value, result);
+			}
+		}
 	}
 }
