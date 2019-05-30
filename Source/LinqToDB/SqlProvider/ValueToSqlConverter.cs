@@ -219,7 +219,7 @@ namespace LinqToDB.SqlProvider
 		{
 			if (!TryConvert(stringBuilder, value))
 				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
-				//stringBuilder.Append(value);
+
 			return stringBuilder;
 		}
 
@@ -227,7 +227,7 @@ namespace LinqToDB.SqlProvider
 		{
 			if (!TryConvert(stringBuilder, dataType, value))
 				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
-				//stringBuilder.Append(value);
+
 			return stringBuilder;
 		}
 

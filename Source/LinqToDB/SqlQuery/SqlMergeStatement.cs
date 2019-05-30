@@ -1,10 +1,7 @@
-﻿using LinqToDB.Common;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
-using LinqToDB.Mapping;
+using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -19,6 +16,8 @@ namespace LinqToDB.SqlQuery
 		{
 			Target = new SqlTableSource(target, TargetAlias);
 		}
+
+		public bool HasIdentityInsert => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField field && field.IsIdentity));
 
 		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{

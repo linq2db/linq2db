@@ -1,8 +1,10 @@
-﻿namespace LinqToDB.DataProvider.Sybase
+﻿using LinqToDB.SqlQuery;
+
+namespace LinqToDB.DataProvider.Sybase
 {
 	partial class SybaseSqlBuilder
 	{
-		protected override void BuildMergeTerminator()
+		protected override void BuildMergeTerminator(SqlMergeStatement merge)
 		{
 			// TODO: move to extra query
 			//if (_hasIdentityInsert)

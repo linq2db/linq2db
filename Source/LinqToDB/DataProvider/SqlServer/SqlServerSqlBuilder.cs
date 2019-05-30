@@ -360,5 +360,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 				StringBuilder.Append("DELETE FROM ");
 		}
+
+		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
+		{
+			StringBuilder.Append($"SET IDENTITY_INSERT ");
+			BuildTableName(table, true, false);
+			StringBuilder.AppendLine(enable ? " ON" : " OFF");
+		}
 	}
 }

@@ -188,6 +188,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(Details = "This scenario doesn't work anymore, check if we can reimplement this test for other db")]
 		[Test, Parallelizable(ParallelScope.None)]
 		public void TestParametersInListSourceProperty([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{

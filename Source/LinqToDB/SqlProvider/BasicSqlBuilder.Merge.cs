@@ -29,39 +29,39 @@
 		protected virtual bool MergeEmptySourceSupported => true;
 
 		/// <summary>
-		/// If <see cref="SupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
+		/// If <see cref="MergeSupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property should contain name of table with single record.
 		/// </summary>
 		protected virtual string FakeTable => null;
 
 		/// <summary>
-		/// If <see cref="SupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
+		/// If <see cref="MergeSupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property could contain name of database for table with single record.
 		/// </summary>
 		protected virtual string FakeTableDatabase => null;
 
 		/// <summary>
-		/// If <see cref="SupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
+		/// If <see cref="MergeSupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property could contain name of schema for table with single record.
 		/// </summary>
 		protected virtual string FakeTableSchema => null;
 
-		protected virtual void BuildMergeStatement(SqlMergeStatement mergeStatement)
+		protected virtual void BuildMergeStatement(SqlMergeStatement merge)
 		{
-			BuildMergeInto(mergeStatement);
-			BuildMergeSource(mergeStatement.Source);
-			BuildMergeOn(mergeStatement);
+			BuildMergeInto(merge);
+			BuildMergeSource(merge.Source);
+			BuildMergeOn(merge);
 
-			foreach (var operation in mergeStatement.Operations)
+			foreach (var operation in merge.Operations)
 				BuildMergeOperation(operation);
 
-			BuildMergeTerminator();
+			BuildMergeTerminator(merge);
 		}
 
 		/// <summary>
 		/// Allows to add text after generated merge command. E.g. to specify command terminator if provider requires it.
 		/// </summary>
-		protected virtual void BuildMergeTerminator()
+		protected virtual void BuildMergeTerminator(SqlMergeStatement merge)
 		{
 		}
 

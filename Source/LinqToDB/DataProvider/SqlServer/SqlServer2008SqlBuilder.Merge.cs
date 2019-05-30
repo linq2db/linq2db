@@ -39,14 +39,14 @@
 			StringBuilder.AppendLine(" THEN DELETE");
 		}
 
-		protected override void BuildMergeTerminator()
+		protected override void BuildMergeTerminator(SqlMergeStatement merge)
 		{
 			// merge command must be terminated with semicolon
 			StringBuilder.AppendLine(";");
 
-			// disable explicit identity insert
-			//if (_hasIdentityInsert)
-			//	StringBuilder.AppendFormat("SET IDENTITY_INSERT {0} OFF", TargetTableName).AppendLine();
+			// for identity column insert - disable explicit insert support
+			if (merge.HasIdentityInsert)
+				BuildIdentityInsert(merge.Target, false);
 		}
 
 		protected override void BuildMergeOperationUpdateBySource(SqlMergeOperationClause operation)
@@ -66,6 +66,15 @@
 			var update = new SqlUpdateClause();
 			update.Items.AddRange(operation.Items);
 			BuildUpdateSet(null, update);
+		}
+
+		protected override void BuildMergeStatement(SqlMergeStatement merge)
+		{
+			// for identity column insert - enable explicit insert support
+			if (merge.HasIdentityInsert)
+				BuildIdentityInsert(merge.Target, true);
+
+			base.BuildMergeStatement(merge);
 		}
 	}
 }
