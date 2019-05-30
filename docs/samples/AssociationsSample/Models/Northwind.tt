@@ -1,0 +1,15 @@
+<#@ template language="C#" debug="True" hostSpecific="True"                        #>
+<#@ output extension=".generated.cs"                                               #>
+<#@ include file="$(LinqToDBT4SQLiteTemplatesDirectory)LinqToDB.SQLite.Tools.ttinclude" #>
+<#@ include file="$(LinqToDBT4SQLiteTemplatesDirectory)PluralizationService.ttinclude"  #>
+<#
+
+	// Follow the link to examine more options: https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB.Templates#t4-models
+
+	NamespaceName = "AssociationsSample.Models";
+
+	var path = Host.ResolvePath(@"..\Data");
+	LoadSQLiteMetadata(path, "Northwind.sqlite");
+	
+	GenerateModel();
+#>
