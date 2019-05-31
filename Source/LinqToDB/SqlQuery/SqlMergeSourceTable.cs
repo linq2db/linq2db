@@ -1,10 +1,9 @@
 ﻿using LinqToDB.Common;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
 using LinqToDB.Mapping;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -24,7 +23,7 @@ namespace LinqToDB.SqlQuery
 
 		//public string SourceName { get; set; } = "Source";
 
-		private IDictionary<SqlField, Tuple<SqlField, int>>         SourceFieldsByBase { get; } = new Dictionary<SqlField, Tuple<SqlField, int>>();
+		private IDictionary<SqlField, Tuple<SqlField, int>>         SourceFieldsByBase     { get; } = new Dictionary<SqlField, Tuple<SqlField, int>>();
 		private IDictionary<ISqlExpression, Tuple<SqlField, int>> SourceFieldsByExpression { get; } = new Dictionary<ISqlExpression, Tuple<SqlField, int>>();
 
 		public SqlValuesTable SourceEnumerable { get; internal set; }
@@ -67,7 +66,8 @@ namespace LinqToDB.SqlQuery
 
 			set
 			{
-				SourceQuery.IsParameterDependent = value;
+				if (SourceQuery != null)
+					SourceQuery.IsParameterDependent = value;
 			}
 		}
 

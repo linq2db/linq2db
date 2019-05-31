@@ -36,9 +36,9 @@ namespace LinqToDB.DataProvider.Informix
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildTypedValue(SqlDataType dataType, object value)
+		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
 		{
-			BuildValue(dataType, value);
+			BuildExpression(value);
 			StringBuilder.Append("::");
 			BuildDataType(dataType, true);
 		}

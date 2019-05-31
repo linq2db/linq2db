@@ -26,7 +26,7 @@ namespace LinqToDB.SqlQuery
 
 		QueryElementType IQueryElement.ElementType => QueryElementType.SqlValuesTable;
 
-		public List<List<SqlValue>> Rows { get; } = new List<List<SqlValue>>();
+		public List<List<ISqlExpression>> Rows { get; } = new List<List<ISqlExpression>>();
 
 		public void Add(SqlField field)
 		{

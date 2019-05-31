@@ -361,9 +361,9 @@
 						StringBuilder.Append(",");
 
 					if (MergeSourceTypesRequired)
-						BuildTypedValue(columnTypes[j], value.Value);
+						BuildTypedExpression(columnTypes[j], value);
 					else
-						BuildValue(columnTypes[j], value.Value);
+						BuildExpression(value);
 					//if (!ValueToSqlConverter.TryConvert(StringBuilder, columnType, sqlValues[i].Value))
 					//{
 					//	AddSourceValueAsParameter(column.DataType, column.DbType, value);
@@ -380,10 +380,15 @@
 			}
 		}
 
-		protected virtual void BuildTypedValue(SqlDataType dataType, object value)
+		protected virtual void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
 		{
-			BuildValue(dataType, value);
+			BuildExpression(value);
 		}
+
+		//protected virtual void BuildTypedValue(SqlDataType dataType, object value)
+		//{
+		//	BuildValue(dataType, value);
+		//}
 
 		private void BuildMergeEmptySource(SqlMergeSourceTable mergeSource)
 		{
@@ -402,9 +407,9 @@
 					StringBuilder.Append(", ");
 
 				if (MergeSourceTypesRequired)
-					BuildTypedValue(new SqlDataType(field), null);
+					BuildTypedExpression(new SqlDataType(field), new SqlValue(null));
 				else
-					BuildValue(new SqlDataType(field), null);
+					BuildExpression(new SqlValue(null));
 
 				//StringBuilder
 				//	.Append(" ")
@@ -451,7 +456,7 @@
 			}
 		}
 
-		private void BuildValuesRow(IList<SqlField> fields, IList<SqlValue> sqlValues, bool first)
+		private void BuildValuesRow(IList<SqlField> fields, IList<ISqlExpression> sqlValues, bool first)
 		{
 			if (!first)
 				StringBuilder.AppendLine(",");
@@ -467,7 +472,7 @@
 				if (i > 0)
 					StringBuilder.Append(",");
 
-				BuildValue(new SqlDataType(field), value.Value);
+				BuildExpression(value);
 				//if (!ValueToSqlConverter.TryConvert(StringBuilder, columnType, sqlValues[i].Value))
 				//{
 				//	AddSourceValueAsParameter(column.DataType, column.DbType, value);

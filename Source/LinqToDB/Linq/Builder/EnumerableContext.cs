@@ -15,14 +15,14 @@ namespace LinqToDB.Linq.Builder
 		readonly Type _elementType;
 
 #if DEBUG
-		public string _sqlQueryText { get; }
+		public string                _sqlQueryText { get; }
 #endif
-		public ExpressionBuilder Builder { get; }
-		public Expression Expression { get; }
-		public SelectQuery SelectQuery { get; set; }
-		public SqlStatement Statement { get; set; }
-		public IBuildContext Parent { get; set; }
-		private EntityDescriptor _entityDescriptor;
+		public  ExpressionBuilder    Builder       { get; }
+		public  Expression           Expression    { get; }
+		public  SelectQuery          SelectQuery   { get; set; }
+		public  SqlStatement         Statement     { get; set; }
+		public  IBuildContext        Parent        { get; set; }
+		private EntityDescriptor     _entityDescriptor;
 
 		public SqlValuesTable Table = new SqlValuesTable();
 		private readonly IList<SqlValue> _records;
@@ -30,16 +30,16 @@ namespace LinqToDB.Linq.Builder
 		public EnumerableContext(ExpressionBuilder builder, BuildInfo buildInfo, SelectQuery query, Type elementType,
 			IList<SqlValue> records)
 		{
-			_records = records;
-			Parent = buildInfo.Parent;
-			Builder = builder;
-			Expression = buildInfo.Expression;
-			SelectQuery = query;
-			_elementType = elementType;
+			_records          = records;
+			Parent            = buildInfo.Parent;
+			Builder           = builder;
+			Expression        = buildInfo.Expression;
+			SelectQuery       = query;
+			_elementType      = elementType;
 			_entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(elementType);
-			for (var i = 0; i < _records.Count; i++)
+			for (var i        = 0; i < _records.Count; i++)
 			{
-				Table.Rows.Add(new List<SqlValue>());
+				Table.Rows.Add(new List<ISqlExpression>());
 			}
 		}
 
@@ -101,7 +101,21 @@ namespace LinqToDB.Linq.Builder
 												throw new InvalidOperationException();
 											}
 
-											Table.Rows[i].Add(Builder.MappingSchema.GetSqlValue(column.MemberType, value));
+											var valueExpr = Expression.Constant(value, column.MemberType);
+											var expr      = Builder.ConvertToSql(Parent, valueExpr);
+
+											// avoid parameters is source, because their number is limited
+											if (expr is SqlParameter p)
+												p.IsQueryParameter = false;
+											//var parameter = new SqlParameter(column.MemberType, null, value)
+											//{
+											//	IsQueryParameter = false,
+											//	DataType         = column.DataType,
+											//	DbSize           = column.Length,
+											//	DbType           = column.DbType
+											//};
+
+											Table.Rows[i].Add(expr);
 										}
 									}
 									return new[]

@@ -188,9 +188,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(Details = "This scenario doesn't work anymore, check if we can reimplement this test for other db")]
+		// TODO: update test to work with DB2 (was sql server)
 		[Test, Parallelizable(ParallelScope.None)]
-		public void TestParametersInListSourceProperty([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestParametersInListSourceProperty([IncludeDataSources(ProviderName.DB2)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -198,8 +198,9 @@ namespace Tests.xUpdate
 
 				var parameterValues = new
 				{
-					// TODO: find type that cannot be converted to literal but will be accepted by server
-					val = new object()
+					// must be type that cannot be converted to literal but will be accepted by server
+					// DB2 provider doesn't generate TIME literals
+					val = TimeSpan.FromMinutes(12)
 				};
 
 				var table = GetTarget(db);

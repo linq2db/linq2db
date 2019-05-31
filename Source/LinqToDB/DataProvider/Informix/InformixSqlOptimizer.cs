@@ -20,14 +20,8 @@ namespace LinqToDB.DataProvider.Informix
 				var p = (SqlParameter)element;
 				if (p.SystemType == null || p.SystemType.IsScalar(false))
 					p.IsQueryParameter = false;
-			}
-		}
 
-		static void EnforceBinaryParameters(IQueryElement element)
-		{
-			if (element.ElementType == QueryElementType.SqlParameter)
-			{
-				var p = (SqlParameter)element;
+				// enforce binary as parameter
 				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary))
 					p.IsQueryParameter = true;
 			}
@@ -37,13 +31,12 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement.WalkQueries(selectQuery =>
-			{
-				new QueryVisitor().Visit(selectQuery, SetQueryParameter);
-				return selectQuery;
-			});
-
-			new QueryVisitor().VisitAll(statement, EnforceBinaryParameters);
+			//statement.WalkQueries(selectQuery =>
+			//{
+			//	new QueryVisitor().Visit(selectQuery, SetQueryParameter);
+			//	return selectQuery;
+			//});
+			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
 			statement = base.Finalize(statement);
 
