@@ -9,6 +9,8 @@
 		<PackageId>linq2db</PackageId>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
+		<!--https://github.com/dotnet/project-system/issues/1358-->
+		<TargetFrameworks>$(TargetFrameworks)</TargetFrameworks>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
