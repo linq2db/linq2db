@@ -467,7 +467,7 @@ namespace LinqToDB.Mapping
 			DbDataType                      fromType,
 			DbDataType                      toType,
 			[JetBrains.Annotations.NotNull] LambdaExpression expr,
-			bool addNullCheck = true)
+			bool                            addNullCheck = true)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
