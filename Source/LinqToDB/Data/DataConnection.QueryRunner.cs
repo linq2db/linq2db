@@ -159,7 +159,10 @@ namespace LinqToDB.Data
 					 };
 				}
 
+				// before processing query we correct parameters
 				var sql    = query.Statement.ProcessParameters(dataConnection.MappingSchema);
+
+				// custom query handling
 				var newSql = dataConnection.ProcessQuery(sql);
 
 				if (!object.ReferenceEquals(sql, newSql))
@@ -169,6 +172,8 @@ namespace LinqToDB.Data
 				}
 
 				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder();
+
+				sql = dataConnection.DataProvider.GetSqlOptimizer().OptimizeStatement(sql, dataConnection.MappingSchema);
 
 				var cc = sqlProvider.CommandCount(sql);
 				var sb = new StringBuilder();

@@ -1093,7 +1093,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(1734, Details = "Fails for all providers for null value. Informix also expected to fail due to lack of type hint for NULL value when initial issue fixed")]
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1105,7 +1105,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(1734, Details = "Fails for all providers for null value. Informix also expected to fail due to lack of type hint for NULL value when initial issue fixed")]
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1117,7 +1117,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(1734, Details = "Fails for all providers for null value. Informix also expected to fail due to lack of type hint for NULL value when initial issue fixed")]
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1129,7 +1129,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(1734, Details = "Fails for all providers for null value. Informix also expected to fail due to lack of type hint for NULL value when initial issue fixed")]
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
