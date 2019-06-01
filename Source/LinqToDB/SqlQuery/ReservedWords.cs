@@ -30,8 +30,12 @@ namespace LinqToDB.SqlQuery
 			using (var reader = new StreamReader(stream))
 			{
 				string s;
-				while ((s = reader.ReadLine()) != null && !s.StartsWith("#"))
-					_reservedWordsAll.Add(s);
+				while ((s = reader.ReadLine()) != null)
+				{
+					if(!s.StartsWith("#"))
+						_reservedWordsAll.Add(s);
+
+				}
 			}
 
 			name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWordsPostgres.txt"));
@@ -40,10 +44,13 @@ namespace LinqToDB.SqlQuery
 			using (var reader = new StreamReader(stream))
 			{
 				string s;
-				while ((s = reader.ReadLine()) != null && !s.StartsWith("#"))
+				while ((s = reader.ReadLine()) != null)
 				{
-					_reservedWordsPostgres.Add(s);
-					_reservedWordsAll     .Add(s);
+					if (!s.StartsWith("#"))
+					{
+						_reservedWordsPostgres.Add(s);
+						_reservedWordsAll     .Add(s);
+					}
 				}
 			}
 
@@ -53,10 +60,13 @@ namespace LinqToDB.SqlQuery
 			using (var reader = new StreamReader(stream))
 			{
 				string s;
-				while ((s = reader.ReadLine()) != null && !s.StartsWith("#"))
+				while ((s = reader.ReadLine()) != null)
 				{
-					_reservedWordsOracle.Add(s);
-					_reservedWordsAll   .Add(s);
+					if(!s.StartsWith("#"))
+					{
+						_reservedWordsOracle.Add(s);
+						_reservedWordsAll   .Add(s);
+					}
 				}
 			}
 
@@ -66,9 +76,10 @@ namespace LinqToDB.SqlQuery
 			using (var reader = new StreamReader(stream))
 			{
 				string s;
-				while ((s = reader.ReadLine()) != null && !s.StartsWith("#"))
+				while ((s = reader.ReadLine()) != null)
 				{
-					_reservedWordsFirebird.Add(s);
+					if(!s.StartsWith("#"))
+						_reservedWordsFirebird.Add(s);
 				}
 			}
 		}
