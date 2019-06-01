@@ -1093,6 +1093,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1104,6 +1105,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1115,6 +1117,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
@@ -1126,6 +1129,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			using (var db = GetDataContext(context))
