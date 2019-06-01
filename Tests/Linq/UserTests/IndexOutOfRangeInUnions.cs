@@ -11,6 +11,9 @@ namespace Tests.UserTests
 		public void ErrorInUinon([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ClassTypeOne>("O1"))
+			using (db.CreateLocalTable<ClassTypeOne>("O2"))
+			using (db.CreateLocalTable<ClassTypeOne>("O3"))
 			{
 				IQueryable<ClassTypeOfResult> query = null;
 
@@ -30,27 +33,24 @@ namespace Tests.UserTests
 				}
 
 				Assert.DoesNotThrow(() => Console.WriteLine(query?.ToString()));
-			}
 
+				query.ToList();
+			}
 		}
 
 		public class ClassTypeOne
 		{
-			public int DocEntry { get; set; }
-			public int BplId { get; set; }
+			public int    DocEntry    { get; set; }
+			public int    BplId       { get; set; }
 			public string ChaveAcesso { get; set; }
-			public string DocStatus { get; set; }
+			public string DocStatus   { get; set; }
 		}
 
 		public class ClassTypeOfResult
 		{
-			/// <summary>
-			/// DocEntry
-			/// </summary>
-			public int NumeroInterno { get; set; }
-			public string ChaveDeAcesso { get; set; }
-
-			public string StatusValor { get; set; }
+			public int    NumeroInterno   { get; set; }
+			public string ChaveDeAcesso   { get; set; }
+			public string StatusValor     { get; set; }
 			public string DescricaoStatus { get; set; }
 		}
 	}
