@@ -1,5 +1,4 @@
 ﻿# Version 2.5, Source: https://firebirdsql.org/refdocs/langrefupd25-reskeywords-full-reswords.html
-
 ADD
 ADMIN
 ALL
@@ -167,9 +166,7 @@ WHERE
 WHILE
 WITH
 YEAR
-
 # Version 3.0.4, Source: https://firebirdsql.org/file/documentation/release_notes/html/en/3_0/rnfb30-reswords.html#rnfb30-reswords-new
-
 BOOLEAN
 CORR
 COVAR_POP
