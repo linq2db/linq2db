@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.ServiceModel
 {
 	using Linq;
+	using SqlProvider;
 
 	public abstract partial class RemoteDataContextBase
 	{
@@ -124,7 +125,8 @@ namespace LinqToDB.ServiceModel
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q    = queryContext.Statement.ProcessParameters(_dataContext.MappingSchema);
+				var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
+
 				var data = LinqServiceSerializer.Serialize(
 					q,
 					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
@@ -152,7 +154,7 @@ namespace LinqToDB.ServiceModel
 
 				_client = _dataContext.GetClient();
 
-				var q = queryContext.Statement.ProcessParameters(_dataContext.MappingSchema);
+				var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
 
 				return _client.ExecuteScalar(
 					_dataContext.Configuration,
@@ -174,7 +176,7 @@ namespace LinqToDB.ServiceModel
 
 				_client = _dataContext.GetClient();
 
-				var q   = queryContext.Statement.ProcessParameters(_dataContext.MappingSchema);
+				var q   = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
 				var ret = _client.ExecuteReader(
 					_dataContext.Configuration,
 					LinqServiceSerializer.Serialize(
@@ -240,7 +242,7 @@ namespace LinqToDB.ServiceModel
 
 				_client = _dataContext.GetClient();
 
-				var q   = queryContext.Statement.ProcessParameters(_dataContext.MappingSchema);
+				var q   = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
 				var ret = await _client.ExecuteReaderAsync(
 					_dataContext.Configuration,
 					LinqServiceSerializer.Serialize(
@@ -265,7 +267,7 @@ namespace LinqToDB.ServiceModel
 
 				_client = _dataContext.GetClient();
 
-				var q = queryContext.Statement.ProcessParameters(_dataContext.MappingSchema);
+				var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
 
 				return await _client.ExecuteScalarAsync(
 					_dataContext.Configuration,
@@ -280,7 +282,7 @@ namespace LinqToDB.ServiceModel
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q    = queryContext.Statement.ProcessParameters(_dataContext.MappingSchema);
+				var q    = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
 				var data = LinqServiceSerializer.Serialize(
 					q,
 					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),

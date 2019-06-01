@@ -9,6 +9,7 @@ namespace LinqToDB.SqlProvider
 	using Common;
 	using Extensions;
 	using SqlQuery;
+	using Mapping;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -753,7 +754,7 @@ namespace LinqToDB.SqlProvider
 
 						case "CASE"     :
 							{
-								var parms = func.Parameters;
+								var parms = func.Parameters.Select(p => ConvertExpression(p)).ToArray();
 								var len   = parms.Length;
 
 								for (var i = 0; i < parms.Length - 1; i += 2)
@@ -815,8 +816,10 @@ namespace LinqToDB.SqlProvider
 				#endregion
 
 				case QueryElementType.SearchCondition :
-					SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression);
+				{
+					expression = SelectQueryOptimizer.ReduceSearchCondition((SqlSearchCondition)expression);
 					break;
+				}
 
 				case QueryElementType.SqlExpression   :
 				{
@@ -1473,6 +1476,23 @@ namespace LinqToDB.SqlProvider
 					new JoinOptimizer().OptimizeJoins(statement, query);
 				return element;
 			});
+		}
+
+		#endregion
+
+		#region Optimizing Statement
+
+		public virtual SqlStatement OptimizeStatement(SqlStatement statement)
+		{
+			statement = new QueryVisitor().Convert(statement, e =>
+			{
+				if (e is ISqlExpression sqlExpression)
+					e = ConvertExpression(sqlExpression);
+
+				return e;
+			});
+
+			return statement;
 		}
 
 		#endregion
