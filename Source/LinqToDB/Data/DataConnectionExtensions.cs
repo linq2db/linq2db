@@ -97,7 +97,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="connection">Database connection.</param>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns collection of query result records.</returns>
 		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
@@ -386,7 +386,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns collection of query result records.</returns>
 		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -908,7 +908,7 @@ namespace LinqToDB.Data
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns number of affected records.
 		/// </summary>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Number of records, affected by command execution.</returns>
 		public static int ExecuteProc(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -1032,7 +1032,7 @@ namespace LinqToDB.Data
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
 		/// </summary>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public static Task<int> ExecuteProcAsync(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -1044,7 +1044,7 @@ namespace LinqToDB.Data
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
 		/// </summary>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
@@ -1122,7 +1122,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Resulting value.</returns>
 		public static T ExecuteProc<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -1263,7 +1263,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Task with resulting value.</returns>
 		public static Task<T> ExecuteProcAsync<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -1276,7 +1276,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Resulting value.</returns>
