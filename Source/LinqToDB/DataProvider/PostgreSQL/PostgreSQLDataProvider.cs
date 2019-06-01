@@ -378,14 +378,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				SetRangeConversion<decimal>();
 
 				SetRangeConversion<DateTime>(fromDbType: "daterange", toDbType: "daterange");
-				SetRangeConversion<DateTime>(fromDataType: DataType.Date, toDbType: "daterange");
 
 				SetRangeConversion<DateTime>(fromDbType: "tsrange", toDbType: "tsrange");
-				SetRangeConversion<DateTime>(fromDataType: DataType.DateTime, toDbType: "tsrange");
 				SetRangeConversion<DateTime>(toDbType: "tsrange");
 
 				SetRangeConversion<DateTime>(fromDbType: "tstzrange", toDbType: "tstzrange");
-				SetRangeConversion<DateTime>(fromDataType: DataType.DateTimeOffset, toDbType: "tstzrange");
 
 				SetRangeConversion<DateTimeOffset>("tstzrange");
 			}

@@ -78,7 +78,7 @@ namespace LinqToDB.SqlQuery
 
 				Add(field);
 
-				if (field.DbType == null && field.DataType == DataType.Undefined)
+				if (field.DataType == DataType.Undefined)
 				{
 					var dataType = mappingSchema.GetDataType(field.SystemType);
 

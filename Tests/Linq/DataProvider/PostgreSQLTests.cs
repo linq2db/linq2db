@@ -1308,11 +1308,14 @@ namespace Tests.DataProvider
 
 		public class NpgsqlTableWithDateRanges
 		{
+			[Column]
+			public int Id { get; set; }
+
 			[Column(DbType = "daterange")]
 			public NpgsqlRange<DateTime> DateRange { get; set; }
 
 			[Column(DbType = "tsrange")]
-			public NpgsqlRange<DateTime> TSRange { get; set; }
+			public NpgsqlRange<DateTime> TSRange   { get; set; }
 
 			[Column(DbType = "tstzrange")]
 			public NpgsqlRange<DateTime> TSTZRange { get; set; }
@@ -1325,15 +1328,21 @@ namespace Tests.DataProvider
 			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
 			{
 				var date = DateTime.Now;
-				var range1 = new NpgsqlRange<DateTime>(date, date.AddDays(3));
-				var range2 = new NpgsqlRange<DateTime>(date.AddDays(1), date.AddDays(4));
-				var range3 = new NpgsqlRange<DateTime>(date.AddDays(2), date.AddDays(5));
+				var range1 = new NpgsqlRange<DateTime>(date.AddDays(1), date.AddDays(11));
+				var range2 = new NpgsqlRange<DateTime>(date.AddDays(2), date.AddDays(12));
+				var range3 = new NpgsqlRange<DateTime>(date.AddDays(3), date.AddDays(13));
 				db.Insert(new NpgsqlTableWithDateRanges
 				{
-					DateRange = range1,
+					DateRange =  range1,
 					TSRange   = range2,
-					TSTZRange = range3
+					TSTZRange =  range3,
 				});
+
+				var record = table.Single();
+
+				Assert.AreEqual(range1, record.DateRange);
+				Assert.AreEqual(range2, record.TSRange);
+				Assert.AreEqual(range3, record.TSTZRange);
 			}
 		}
 
@@ -1347,20 +1356,33 @@ namespace Tests.DataProvider
 
 				var items = Enumerable.Range(1, 100).Select(i =>
 				{
-					var range1 = new NpgsqlRange<DateTime>(date.AddDays(i), date.AddDays(i + 1));
-					var range2 = new NpgsqlRange<DateTime>(date.AddDays(i + 100), date.AddDays(i + 101));
-					var range3 = new NpgsqlRange<DateTime>(date.AddDays(i + 200), date.AddDays(i + 201));
+					var range1 = new NpgsqlRange<DateTime>(date.AddDays(1 + i), date.AddDays(11 + i));
+					var range2 = new NpgsqlRange<DateTime>(date.AddDays(2 + i), date.AddDays(12 + i));
+					var range3 = new NpgsqlRange<DateTime>(date.AddDays(3 + i), date.AddDays(13 + i));
 					return new NpgsqlTableWithDateRanges
 					{
+						Id        = i,
 						DateRange = range1,
 						TSRange   = range2,
-						TSTZRange = range3
+						TSTZRange = range3,
 					};
 				});
 
 				db.BulkCopy(items);
 
-				var loadedItems = table.ToArray();
+				var records = table.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(100, records.Length);
+
+				var cnt = 1;
+				foreach (var record in records)
+				{
+					Assert.AreEqual(cnt, record.Id);
+					Assert.AreEqual(new NpgsqlRange<DateTime>(date.AddDays(1 + cnt), date.AddDays(11 + cnt)), record.DateRange);
+					Assert.AreEqual(new NpgsqlRange<DateTime>(date.AddDays(2 + cnt), date.AddDays(12 + cnt)), record.TSRange);
+					Assert.AreEqual(new NpgsqlRange<DateTime>(date.AddDays(3 + cnt), date.AddDays(13 + cnt)), record.TSTZRange);
+					cnt++;
+				}
 			}
 		}
 
