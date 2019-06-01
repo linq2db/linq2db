@@ -1328,9 +1328,9 @@ namespace Tests.DataProvider
 			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
 			{
 				var date = DateTime.Now;
-				var range1 = new NpgsqlRange<DateTime>(date.AddDays(1), date.AddDays(11));
-				var range2 = new NpgsqlRange<DateTime>(date.AddDays(2), date.AddDays(12));
-				var range3 = new NpgsqlRange<DateTime>(date.AddDays(3), date.AddDays(13));
+				var range1 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), new DateTime(2000, 3, 3));
+				var range2 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3, 4, 5, 6), new DateTime(2000, 4, 3, 4, 5, 6));
+				var range3 = new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6), new DateTime(2000, 5, 3, 4, 5, 6));
 				db.Insert(new NpgsqlTableWithDateRanges
 				{
 					DateRange =  range1,
@@ -1340,9 +1340,9 @@ namespace Tests.DataProvider
 
 				var record = table.Single();
 
-				Assert.AreEqual(range1, record.DateRange);
+				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 4), false), record.DateRange);
 				Assert.AreEqual(range2, record.TSRange);
-				Assert.AreEqual(range3, record.TSTZRange);
+				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(range3.LowerBound)), new DateTime(2000, 5, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(range3.UpperBound))), record.TSTZRange);
 			}
 		}
 
@@ -1356,9 +1356,9 @@ namespace Tests.DataProvider
 
 				var items = Enumerable.Range(1, 100).Select(i =>
 				{
-					var range1 = new NpgsqlRange<DateTime>(date.AddDays(1 + i), date.AddDays(11 + i));
-					var range2 = new NpgsqlRange<DateTime>(date.AddDays(2 + i), date.AddDays(12 + i));
-					var range3 = new NpgsqlRange<DateTime>(date.AddDays(3 + i), date.AddDays(13 + i));
+					var range1 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3), new DateTime(2000 + i, 3, 3));
+					var range2 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), new DateTime(2000 + i, 4, 3, 4, 5, 6));
+					var range3 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6), new DateTime(2000 + i, 5, 3, 4, 5, 6));
 					return new NpgsqlTableWithDateRanges
 					{
 						Id        = i,
@@ -1378,9 +1378,9 @@ namespace Tests.DataProvider
 				foreach (var record in records)
 				{
 					Assert.AreEqual(cnt, record.Id);
-					Assert.AreEqual(new NpgsqlRange<DateTime>(date.AddDays(1 + cnt), date.AddDays(11 + cnt)), record.DateRange);
-					Assert.AreEqual(new NpgsqlRange<DateTime>(date.AddDays(2 + cnt), date.AddDays(12 + cnt)), record.TSRange);
-					Assert.AreEqual(new NpgsqlRange<DateTime>(date.AddDays(3 + cnt), date.AddDays(13 + cnt)), record.TSTZRange);
+					Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000 + cnt, 2, 3), true, new DateTime(2000 + cnt, 3, 4), false), record.DateRange);
+					Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000 + cnt, 2, 3, 4, 5, 6), new DateTime(2000 + cnt, 4, 3, 4, 5, 6)), record.TSRange);
+					Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000 + cnt, 4, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(new DateTime(2000 + cnt, 5, 3, 4, 5, 6))), new DateTime(2000 + cnt, 5, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(new DateTime(2000 + cnt, 5, 3, 4, 5, 6)))), record.TSTZRange);
 					cnt++;
 				}
 			}
