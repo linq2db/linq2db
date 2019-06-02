@@ -48,26 +48,5 @@ namespace LinqToDB.DataProvider
 #endif
 
 		BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source);
-
-		int Merge<T>(
-			DataConnection           dataConnection,
-			Expression<Func<T,bool>> predicate,
-			bool                     delete,
-			IEnumerable<T>           source,
-			string                   tableName,
-			string                   databaseName,
-			string                   schemaName)
-			where T : class;
-
-		Task<int> MergeAsync<T>(
-			DataConnection           dataConnection,
-			Expression<Func<T,bool>> predicate,
-			bool                     delete,
-			IEnumerable<T>           source,
-			string                   tableName,
-			string                   databaseName,
-			string                   schemaName,
-			CancellationToken        token)
-			where T : class;
 	}
 }

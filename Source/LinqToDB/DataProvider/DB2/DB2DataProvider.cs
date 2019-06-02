@@ -270,27 +270,5 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		#endregion
-
-		#region Merge
-
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
-		{
-			if (delete)
-				throw new LinqToDBException("DB2 MERGE statement does not support DELETE by source.");
-
-			return new DB2Merge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-		}
-
-		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-		{
-			if (delete)
-				throw new LinqToDBException("DB2 MERGE statement does not support DELETE by source.");
-
-			return new DB2Merge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
-		}
-
-		#endregion
 	}
 }
