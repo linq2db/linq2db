@@ -76,7 +76,6 @@ namespace LinqToDB.Linq.Builder
 			new MergeBuilder.Using                       (),
 			new MergeBuilder.UsingTarget                 (),
 			new ContextParser              (),
-			new MergeContextParser         (),
 			new ArrayBuilder               ()
 		};
 

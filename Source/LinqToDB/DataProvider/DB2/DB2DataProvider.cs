@@ -291,13 +291,6 @@ namespace LinqToDB.DataProvider.DB2
 			return new DB2Merge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
 		}
 
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new DB2MergeBuilder<TTarget, TSource>(connection, merge);
-		}
-
 		#endregion
 	}
 }

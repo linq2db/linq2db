@@ -471,61 +471,6 @@ namespace LinqToDB.DataProvider
 			return new BasicMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
 		}
 
-		public int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
-			where TTarget : class
-			where TSource : class
-		{
-			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
-			if (merge          == null) throw new ArgumentNullException(nameof(merge));
-
-			var builder = GetMergeBuilder(dataConnection, merge);
-
-			builder.Validate();
-
-			var cmd = builder.BuildCommand();
-
-			if (builder.NoopCommand)
-				return 0;
-
-			return dataConnection.Execute(cmd, builder.Parameters);
-		}
-
-		public async Task<int> MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
-			where TTarget : class
-			where TSource : class
-		{
-			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
-			if (merge          == null) throw new ArgumentNullException(nameof(merge));
-
-			var builder = GetMergeBuilder(dataConnection, merge);
-
-			builder.Validate();
-
-			var cmd = builder.BuildCommand();
-
-			if (builder.NoopCommand)
-				return 0;
-
-			return await dataConnection.ExecuteAsync(cmd, token, builder.Parameters);
-		}
-
-		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-			where TTarget : class
-			where TSource : class
-		{
-			return new UnsupportedMergeBuilder<TTarget, TSource>(connection, merge);
-		}
-
 		#endregion
-
-		//public virtual TimeSpan? ShouldRetryOn(Exception exception, int retryCount, TimeSpan baseDelay)
-		//{
-		//	return
-		//		retryCount <= MaxRetryCount && exception is TimeoutException
-		//			? baseDelay
-		//			: (TimeSpan?)null;
-		//}
 	}
 }

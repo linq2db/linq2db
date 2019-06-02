@@ -152,13 +152,6 @@ namespace LinqToDB.DataProvider.SapHana
 				source);
 		}
 
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new SapHanaMergeBuilder<TTarget, TSource>(connection, merge);
-		}
-
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
 			// provider fails to set AllowDBNull for some results

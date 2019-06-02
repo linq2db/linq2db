@@ -210,14 +210,5 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		#endregion
-
-		#region Merge
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget,TSource> merge)
-		{
-			return new SybaseMergeBuilder<TTarget, TSource>(connection, merge);
-		}
-		#endregion
 	}
 }

@@ -421,13 +421,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
 		}
 
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection, 
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new SqlServerMergeBuilder<TTarget, TSource>(connection, merge);
-		}
-
 		#endregion
 	}
 }
