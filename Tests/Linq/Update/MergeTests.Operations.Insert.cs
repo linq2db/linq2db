@@ -1307,6 +1307,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.Id == s.OtherId)
 					.InsertWhenNotMatched(s => new TestMapping1()
 					{
+						Id     = s.OtherId,
 						Field1 = s.OtherField1,
 						Field2 = s.OtherField5,
 						Field3 = s.OtherField2,

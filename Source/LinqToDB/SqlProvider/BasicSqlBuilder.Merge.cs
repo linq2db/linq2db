@@ -2,6 +2,7 @@
 {
 	using System;
 	using System.Collections.Generic;
+	using LinqToDB.Extensions;
 	using SqlQuery;
 
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
@@ -325,12 +326,13 @@
 					BuildValuesAsSelectsUnion(mergeSource.SourceFields, mergeSource.SourceEnumerable);
 					StringBuilder.Append(")");
 				}
+				else if (MergeEmptySourceSupported)
+				{
+					BuildMergeEmptySource(mergeSource);
+				}
 				else
 				{
-					////else if (EmptySourceSupported)
-					BuildMergeEmptySource(mergeSource);
-					//else
-					//	NoopCommand = true;
+					throw new LinqToDBException($"{Name} doesn't support merge with empty source");
 				}
 
 				BuildMergeAsSourceClause(mergeSource);

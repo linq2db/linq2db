@@ -33,7 +33,7 @@ namespace Tests.xUpdate
 
 		// ASE: just fails
 		[Test]
-		public void MergeWithEmptySource([MergeDataContextSource(ProviderName.Sybase)] string context)
+		public void MergeWithEmptySource([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
