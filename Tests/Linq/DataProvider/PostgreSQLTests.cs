@@ -1306,6 +1306,169 @@ namespace Tests.DataProvider
 			}
 		}
 
+		public class NpgsqlTableWithDateRanges
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column(DbType = "daterange")]
+			public NpgsqlRange<DateTime> DateRange { get; set; }
+
+			[Column(DbType = "tsrange")]
+			public NpgsqlRange<DateTime> TSRange   { get; set; }
+
+			[Column(DbType = "tstzrange")]
+			public NpgsqlRange<DateTime> TSTZRange { get; set; }
+		}
+
+		[Test]
+		public void TestRange([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
+			{
+				var date = DateTime.Now;
+				var range1 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), new DateTime(2000, 3, 3));
+				var range2 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3, 4, 5, 6), new DateTime(2000, 4, 3, 4, 5, 6));
+				var range3 = new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6), new DateTime(2000, 5, 3, 4, 5, 6));
+				db.Insert(new NpgsqlTableWithDateRanges
+				{
+					DateRange =  range1,
+					TSRange   = range2,
+					TSTZRange =  range3,
+				});
+
+				var record = table.Single();
+
+				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 4), false), record.DateRange);
+				Assert.AreEqual(range2, record.TSRange);
+				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(range3.LowerBound)), new DateTime(2000, 5, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(range3.UpperBound))), record.TSTZRange);
+			}
+		}
+
+		[Test]
+		public void TestRangeBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
+			{
+				var date = DateTime.Now;
+
+				var items = Enumerable.Range(1, 100).Select(i =>
+				{
+					var range1 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3), new DateTime(2000 + i, 3, 3));
+					var range2 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), new DateTime(2000 + i, 4, 3, 4, 5, 6));
+					var range3 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6), new DateTime(2000 + i, 5, 3, 4, 5, 6));
+					return new NpgsqlTableWithDateRanges
+					{
+						Id        = i,
+						DateRange = range1,
+						TSRange   = range2,
+						TSTZRange = range3,
+					};
+				});
+
+				db.BulkCopy(items);
+
+				var records = table.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(100, records.Length);
+
+				var cnt = 1;
+				foreach (var record in records)
+				{
+					Assert.AreEqual(cnt, record.Id);
+					Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000 + cnt, 2, 3), true, new DateTime(2000 + cnt, 3, 4), false), record.DateRange);
+					Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000 + cnt, 2, 3, 4, 5, 6), new DateTime(2000 + cnt, 4, 3, 4, 5, 6)), record.TSRange);
+					Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000 + cnt, 4, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(new DateTime(2000 + cnt, 5, 3, 4, 5, 6))), new DateTime(2000 + cnt, 5, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(new DateTime(2000 + cnt, 5, 3, 4, 5, 6)))), record.TSTZRange);
+					cnt++;
+				}
+			}
+		}
+
+		class ScalarResult<T>
+		{
+			public T Value;
+		}
+
+		public static IEnumerable<DateTime> DateTimeKinds
+		{
+			get
+			{
+				yield return new DateTime(2000, 2, 3, 4, 5, 6, 7, DateTimeKind.Local);
+				yield return new DateTime(2000, 2, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+				yield return new DateTime(2000, 2, 3, 4, 5, 6, 7, DateTimeKind.Unspecified);
+			}
+		}
+
+		[Test]
+		public void Issue1742_Timestamp(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[ValueSource(nameof(DateTimeKinds))] DateTime value,
+			[Values(DataType.Undefined, DataType.Date)] DataType dataType,
+			[Values(null, "timestamp")] string dbType)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.FromSql<ScalarResult<int>>($"SELECT issue_1742_ts({new DataParameter { Name = "p1", Value = value, DataType = dataType, DbType = dbType }}) as \"Value\"").Single();
+
+				Assert.AreEqual(44, result.Value);
+			}
+		}
+
+		public static IEnumerable<(DataType, string)> TSTZTypes
+		{
+			get
+			{
+				yield return (DataType.DateTimeOffset, null);
+				yield return (DataType.Undefined, "timestamptz");
+				yield return (DataType.DateTimeOffset, "timestamptz");
+			}
+		}
+
+		public static IEnumerable<(DataType, string)> DateTypes
+		{
+			get
+			{
+				yield return (DataType.Date, null);
+				// right now we don't infer DataType from dbtype
+				//yield return (DataType.Undefined, "date");
+				yield return (DataType.Date, "date");
+			}
+		}
+
+		[Test]
+		public void Issue1742_Date(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[ValueSource(nameof(DateTimeKinds))] DateTime value,
+			[ValueSource(nameof(DateTypes))] (DataType dataType, string dbType) type)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var uspecified = new DateTime(DateTime.Now.Ticks, DateTimeKind.Unspecified);
+
+				var result = db.FromSql<ScalarResult<int>>($"SELECT issue_1742_date({new DataParameter { Name = "p1", Value = value, DataType = type.dataType, DbType = type.dbType }}) as \"Value\"").Single();
+
+				Assert.AreEqual(42, result.Value);
+			}
+		}
+
+		[Test]
+		public void Issue1742_TimestampTZ(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[ValueSource(nameof(DateTimeKinds))] DateTime value,
+			[ValueSource(nameof(TSTZTypes))] (DataType dataType, string dbType) type)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var uspecified = new DateTime(DateTime.Now.Ticks, DateTimeKind.Unspecified);
+
+				var result = db.FromSql<ScalarResult<int>>($"SELECT issue_1742_tstz({new DataParameter { Name = "p1", Value = value, DataType = type.dataType, DbType = type.dbType }}) as \"Value\"").Single();
+
+				Assert.AreEqual(43, result.Value);
+			}
+		}
+
 	}
 
 	public static class TestPgAggregates

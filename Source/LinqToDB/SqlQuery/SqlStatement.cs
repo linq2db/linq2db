@@ -83,34 +83,15 @@ namespace LinqToDB.SqlQuery
 					return null;
 				});
 
-				if (statement != this)
-				{
-					statement.Parameters.Clear();
-
-					new QueryVisitor().VisitAll(statement, expr =>
-					{
-						switch (expr.ElementType)
-						{
-							case QueryElementType.SqlParameter :
-								{
-									var p = (SqlParameter)expr;
-									if (p.IsQueryParameter)
-										statement.Parameters.Add(p);
-
-									break;
-								}
-						}
-					});
-				}
-
 				return statement;
 			}
 
 			return this;
 		}
 
-		protected void CollectParameters()
+		public void CollectParameters()
 		{
+			var alreadyAdded = new HashSet<SqlParameter>();
 			Parameters.Clear();
 
 			new QueryVisitor().VisitAll(this, expr =>
@@ -120,7 +101,7 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlParameter :
 						{
 							var p = (SqlParameter)expr;
-							if (p.IsQueryParameter)
+							if (p.IsQueryParameter && alreadyAdded.Add(p))
 								Parameters.Add(p);
 
 							break;
