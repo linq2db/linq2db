@@ -7,7 +7,7 @@
 
 
 		// It doesn't make sense to fix empty source generation as it will take too much effort for nothing
-		protected override bool MergeEmptySourceSupported => false;
+		//protected override bool MergeEmptySourceSupported => false;
 
 		// VALUES(...) syntax not supported in MERGE source
 		protected override bool MergeSupportsSourceDirectValues => false;

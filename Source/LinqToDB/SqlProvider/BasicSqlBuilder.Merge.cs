@@ -372,6 +372,10 @@
 					//}
 
 					//AddSourceValue(valueConverter, column, columnTypes[i], value, !hasData, lastRecord);
+
+					// add aliases only for first row
+					if (!MergeSupportsColumnAliasesInSource && i == 0)
+						StringBuilder.Append(" ").Append(Convert(sourceFields[j].PhysicalName, ConvertType.NameToQueryField));
 				}
 
 				if (FakeTable != null)
@@ -412,6 +416,9 @@
 					BuildTypedExpression(new SqlDataType(field), new SqlValue(null));
 				else
 					BuildExpression(new SqlValue(null));
+
+				if (!MergeSupportsColumnAliasesInSource)
+					StringBuilder.Append(" ").Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
 
 				//StringBuilder
 				//	.Append(" ")

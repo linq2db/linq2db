@@ -36,10 +36,10 @@ namespace LinqToDB.SqlQuery
 			SourceQuery = sourceQuery;
 
 			foreach (var field in sourceFields)
-				Add(field);
+				AddField(field);
 		}
 
-		private void Add(SqlField field)
+		private void AddField(SqlField field)
 		{
 			field.Table = this;
 			SourceFields.Add(field);

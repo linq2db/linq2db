@@ -21,23 +21,23 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override bool DeleteOperationSupported
-		{
-			get
-			{
-				// delete operations not supported
-				return false;
-			}
-		}
+		//protected override bool DeleteOperationSupported
+		//{
+		//	get
+		//	{
+		//		// delete operations not supported
+		//		return false;
+		//	}
+		//}
 
-		protected override bool OperationPredicateSupported
-		{
-			get
-			{
-				// operation conditions not supported
-				return false;
-			}
-		}
+		//protected override bool OperationPredicateSupported
+		//{
+		//	get
+		//	{
+		//		// operation conditions not supported
+		//		return false;
+		//	}
+		//}
 
 		//protected override bool SupportsSourceDirectValues
 		//{
@@ -58,13 +58,13 @@ namespace LinqToDB.DataProvider.SapHana
 		//	}
 		//}
 
-		public override void Validate()
-		{
-			base.Validate();
+		//public override void Validate()
+		//{
+		//	base.Validate();
 
-			// it is not documented, but Update should go first
-			if (Merge.Operations.Length == 2 && Merge.Operations[0].Type == MergeOperationType.Insert)
-				throw new LinqToDBException(string.Format("Merge Insert operation must be placed after Update operation for {0} provider.", ProviderName));
-		}
+		//	// it is not documented, but Update should go first
+		//	if (Merge.Operations.Length == 2 && Merge.Operations[0].Type == MergeOperationType.Insert)
+		//		throw new LinqToDBException(string.Format("Merge Insert operation must be placed after Update operation for {0} provider.", ProviderName));
+		//}
 	}
 }

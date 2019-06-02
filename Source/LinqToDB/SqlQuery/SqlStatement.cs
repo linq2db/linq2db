@@ -358,6 +358,11 @@ namespace LinqToDB.SqlQuery
 								},
 								StringComparer.OrdinalIgnoreCase);
 
+							// copy aliases to source query fields
+							if (source.SourceQuery != null)
+								for (var i = 0; i < source.SourceFields.Count; i++)
+									source.SourceQuery.Select.Columns[i].Alias = source.SourceFields[i].PhysicalName;
+
 							break;
 						}
 					case QueryElementType.SqlQuery:
