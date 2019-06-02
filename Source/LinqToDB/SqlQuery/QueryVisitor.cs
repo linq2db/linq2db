@@ -1985,7 +1985,7 @@ namespace LinqToDB.SqlQuery
 
 						var target     = (SqlTableSource)ConvertInternal(merge.Target, action);
 						var source     = (SqlMergeSourceTable)ConvertInternal(merge.Source, action);
-						var on         = (SqlSearchCondition)ConvertInternal(merge.On, action);
+						var on         = Convert(merge.On, action);
 						var operations = Convert(merge.Operations, action);
 
 						if (target     != null && !ReferenceEquals(merge.Target, target) ||
@@ -2020,8 +2020,8 @@ namespace LinqToDB.SqlQuery
 					{
 						var operation = (SqlMergeOperationClause)element;
 
-						var where       = (SqlSearchCondition)ConvertInternal(operation.Where, action);
-						var whereDelete = (SqlSearchCondition)ConvertInternal(operation.WhereDelete, action);
+						var where       = Convert(operation.Where, action);
+						var whereDelete = Convert(operation.WhereDelete, action);
 						var items       = Convert(operation.Items, action);
 
 						if (where != null       && !ReferenceEquals(operation.Where, where)             ||
