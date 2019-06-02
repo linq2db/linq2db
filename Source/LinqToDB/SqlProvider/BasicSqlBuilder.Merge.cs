@@ -298,7 +298,7 @@
 				if (mergeSource.SourceEnumerable.Rows.Count > 0)
 				{
 					StringBuilder.Append("(");
-					BuildValues(mergeSource.SourceFields, mergeSource.SourceEnumerable, true);
+					BuildValues(mergeSource.SourceEnumerable, true);
 					StringBuilder.Append(")");
 				}
 				else if (MergeEmptySourceSupported)
@@ -441,7 +441,7 @@
 			return false;
 		}
 
-		private void BuildValues(IList<SqlField> fields, SqlValuesTable sourceEnumerable, bool typed)
+		private void BuildValues(SqlValuesTable sourceEnumerable, bool typed)
 		{
 			//var hasData = false;
 			//var columnTypes = GetSourceColumnTypes();
@@ -451,12 +451,12 @@
 			{
 				var last = sourceEnumerable.Rows.Count == i - 1;
 
-				BuildValuesRow(fields, sourceEnumerable.Rows[i]//, typed && last
+				BuildValuesRow(sourceEnumerable.Rows[i]//, typed && last
 					, i == 0);
 			}
 		}
 
-		private void BuildValuesRow(IList<SqlField> fields, IList<ISqlExpression> sqlValues, bool first)
+		private void BuildValuesRow(IList<ISqlExpression> sqlValues, bool first)
 		{
 			if (!first)
 				StringBuilder.AppendLine(",");
@@ -467,7 +467,6 @@
 			StringBuilder.Append("\t\t(");
 			for (var i = 0; i < sqlValues.Count; i++)
 			{
-				var field = fields[i];
 				var value = sqlValues[i];
 				if (i > 0)
 					StringBuilder.Append(",");

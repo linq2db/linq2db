@@ -102,18 +102,16 @@ namespace LinqToDB.Linq.Builder
 											}
 
 											var valueExpr = Expression.Constant(value, column.MemberType);
-											var expr      = Builder.ConvertToSql(Parent, valueExpr);
+											var expr = Builder.ConvertToSqlExpression(Parent, valueExpr);
 
-											// avoid parameters is source, because their number is limited
 											if (expr is SqlParameter p)
+											{
+												// avoid parameters is source, because their number is limited
 												p.IsQueryParameter = false;
-											//var parameter = new SqlParameter(column.MemberType, null, value)
-											//{
-											//	IsQueryParameter = false,
-											//	DataType         = column.DataType,
-											//	DbSize           = column.Length,
-											//	DbType           = column.DbType
-											//};
+												p.DataType         = column.DataType;
+												p.DbSize           = column.Length;
+												p.DbType           = column.DbType;
+											}
 
 											Table.Rows[i].Add(expr);
 										}

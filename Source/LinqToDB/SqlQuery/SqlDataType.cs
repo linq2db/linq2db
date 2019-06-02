@@ -119,8 +119,8 @@ namespace LinqToDB.SqlQuery
 				  parameter.DataType,
 				  parameter.SystemType,
 				  parameter.DbSize,
-				  0,
-				  0,
+				  null,
+				  null,
 				  parameter.DbType)
 		{
 		}
