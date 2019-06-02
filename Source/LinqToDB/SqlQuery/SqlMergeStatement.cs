@@ -17,6 +17,22 @@ namespace LinqToDB.SqlQuery
 			Target = new SqlTableSource(target, TargetAlias);
 		}
 
+		internal SqlMergeStatement(
+			string hint,
+			SqlTableSource target,
+			SqlMergeSourceTable source,
+			SqlSearchCondition on,
+			IEnumerable<SqlMergeOperationClause> operations)
+		{
+			Hint   = hint;
+			Target = target;
+			Source = source;
+			On     = on;
+
+			foreach (var operation in operations)
+				Operations.Add(operation);
+		}
+
 		public bool HasIdentityInsert => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField field && field.IsIdentity));
 
 		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -68,14 +84,9 @@ namespace LinqToDB.SqlQuery
 
 		public string Hint { get; internal set; }
 
-
 		public SqlTableSource Target { get; }
 
 		public SqlMergeSourceTable Source { get; internal set; }
-
-		public void SetSourceQuery(SelectQuery source)
-		{
-		}
 
 		public SqlSearchCondition On { get; private set; } = new SqlSearchCondition();
 

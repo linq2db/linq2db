@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 					var condition = (LambdaExpression)predicate.Unwrap();
 					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
 
-					//mergeContext.AddSourceParameter(condition.Parameters[0]);
+					operation.Where = new SqlSearchCondition();
 
 					builder.BuildSearchCondition(
 						new ExpressionContext(null, new[] { mergeContext.SourceContext }, condition),

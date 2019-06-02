@@ -11,11 +11,25 @@ namespace LinqToDB.SqlQuery
 			OperationType = type;
 		}
 
+		internal SqlMergeOperationClause(
+			MergeOperationType type,
+			SqlSearchCondition where,
+			SqlSearchCondition whereDelete,
+			IEnumerable<SqlSetExpression> items)
+		{
+			OperationType = type;
+			Where         = where;
+			WhereDelete   = whereDelete;
+
+			foreach (var item in items)
+				Items.Add(item);
+		}
+
 		public List<SqlSetExpression> Items { get; } = new List<SqlSetExpression>();
 
-		public SqlSearchCondition Where { get; } = new SqlSearchCondition();
+		public SqlSearchCondition Where { get; internal set; }
 
-		public SqlSearchCondition WhereDelete { get; } = new SqlSearchCondition();
+		public SqlSearchCondition WhereDelete { get; internal set; }
 
 		public MergeOperationType OperationType { get; }
 

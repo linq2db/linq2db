@@ -103,7 +103,7 @@
 				.AppendLine()
 				.Append("WHEN MATCHED");
 
-			if (operation.Where.Conditions.Count != 0)
+			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
 				BuildSearchCondition(Precedence.Unknown, operation.Where);
@@ -125,7 +125,7 @@
 			StringBuilder
 				.Append("WHEN MATCHED");
 
-			if (operation.Where.Conditions.Count != 0)
+			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
 				BuildSearchCondition(Precedence.Unknown, operation.Where);
@@ -140,7 +140,7 @@
 				.AppendLine()
 				.Append("WHEN NOT MATCHED");
 
-			if (operation.Where.Conditions.Count != 0)
+			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
 				BuildSearchCondition(Precedence.Unknown, operation.Where);

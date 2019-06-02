@@ -12,16 +12,42 @@ namespace LinqToDB.SqlQuery
 		public SqlMergeStatement Merge { get; }
 
 		public SqlMergeSourceTable(
-			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema,
-			[JetBrains.Annotations.NotNull] SqlMergeStatement merge,
+			MappingSchema mappingSchema,
+			SqlMergeStatement merge,
 			Type sourceType)
 			 : base(mappingSchema, sourceType, "Source")
 		{
-			Name = "Source";
+			MappingSchema = mappingSchema;
 			Merge = merge;
 		}
 
-		//public string SourceName { get; set; } = "Source";
+		internal SqlMergeSourceTable(
+			MappingSchema mappingSchema,
+			SqlMergeStatement merge,
+			Type sourceType,
+			SqlValuesTable sourceEnumerable,
+			SelectQuery sourceQuery,
+			IEnumerable<SqlField> sourceFields)
+			: base(mappingSchema, sourceType, "Source")
+		{
+			MappingSchema = mappingSchema;
+			Merge = merge;
+			SourceEnumerable = sourceEnumerable;
+			SourceQuery = sourceQuery;
+
+			foreach (var field in sourceFields)
+				Add(field);
+		}
+
+		private void Add(SqlField field)
+		{
+			field.Table = this;
+			SourceFields.Add(field);
+		}
+
+		internal MappingSchema MappingSchema { get; }
+
+		public override string Name { get => "Source"; set { } }
 
 		private IDictionary<SqlField, Tuple<SqlField, int>>         SourceFieldsByBase     { get; } = new Dictionary<SqlField, Tuple<SqlField, int>>();
 		private IDictionary<ISqlExpression, Tuple<SqlField, int>> SourceFieldsByExpression { get; } = new Dictionary<ISqlExpression, Tuple<SqlField, int>>();

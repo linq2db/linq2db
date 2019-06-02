@@ -1,15 +1,24 @@
-﻿using LinqToDB.Common;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Linq;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
 	public class SqlValuesTable : ISqlTableSource
 	{
+		public SqlValuesTable()
+		{
+		}
+
+		internal SqlValuesTable(SqlField[] fields, List<List<ISqlExpression>> rows)
+		{
+			if (fields != null)
+				foreach (var field in fields)
+					Add(field);
+
+			Rows = rows;
+		}
+
 		public Dictionary<string, SqlField> Fields { get; } = new Dictionary<string, SqlField>();
 
 		SqlField ISqlTableSource.All => throw new NotImplementedException();

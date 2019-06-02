@@ -1,7 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
-	using System.Linq;
 
 	partial class SqlServer2012SqlBuilder
 	{
@@ -33,7 +32,7 @@
 			StringBuilder
 				.Append("WHEN NOT MATCHED BY SOURCE");
 
-			if (operation.Where.Conditions.Count != 0)
+			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
 				BuildSearchCondition(Precedence.Unknown, operation.Where);
@@ -58,7 +57,7 @@
 				.AppendLine()
 				.Append("WHEN NOT MATCHED By Source");
 
-			if (operation.Where.Conditions.Count != 0)
+			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
 				BuildSearchCondition(Precedence.Unknown, operation.Where);

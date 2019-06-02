@@ -1979,8 +1979,101 @@ namespace LinqToDB.SqlQuery
 						return nq;
 					}
 
-				case QueryElementType.SqlParameter:
+				case QueryElementType.MergeStatement:
+					{
+						var merge = (SqlMergeStatement)element;
+
+						var target     = (SqlTableSource)ConvertInternal(merge.Target, action);
+						var source     = (SqlMergeSourceTable)ConvertInternal(merge.Source, action);
+						var on         = (SqlSearchCondition)ConvertInternal(merge.On, action);
+						var operations = Convert(merge.Operations, action);
+
+						if (target     != null && !ReferenceEquals(merge.Target, target) ||
+							source     != null && !ReferenceEquals(merge.Source, source) ||
+							on         != null && !ReferenceEquals(merge.On, on)         ||
+							operations != null && !ReferenceEquals(merge.Operations, operations))
+							newElement = new SqlMergeStatement(merge.Hint, target ?? merge.Target, source ?? merge.Source, on ?? merge.On, operations ?? merge.Operations);
+
+						break;
+					}
+
+				case QueryElementType.MergeSourceTable:
+					{
+						var source = (SqlMergeSourceTable)element;
+
+						var enumerableSource = (SqlValuesTable)ConvertInternal(source.SourceEnumerable, action);
+						var querySource      = (SelectQuery)ConvertInternal(source.SourceQuery, action);
+						var fields           = Convert(source.SourceFields, action);
+
+						_visitedElements.TryGetValue(source.Merge, out parent);
+
+						if (parent           != null ||
+							enumerableSource != null && !ReferenceEquals(source.SourceEnumerable, enumerableSource) ||
+							querySource      != null && !ReferenceEquals(source.SourceQuery, querySource)           ||
+							fields           != null && !ReferenceEquals(source.SourceFields, fields))
+							newElement = new SqlMergeSourceTable(source.MappingSchema, ((SqlMergeStatement)parent) ?? source.Merge, source.ObjectType, enumerableSource ?? source.SourceEnumerable, querySource ?? source.SourceQuery, fields ?? source.SourceFields);
+
+						break;
+					}
+
+				case QueryElementType.MergeOperationClause:
+					{
+						var operation = (SqlMergeOperationClause)element;
+
+						var where       = (SqlSearchCondition)ConvertInternal(operation.Where, action);
+						var whereDelete = (SqlSearchCondition)ConvertInternal(operation.WhereDelete, action);
+						var items       = Convert(operation.Items, action);
+
+						if (where != null       && !ReferenceEquals(operation.Where, where)             ||
+							whereDelete != null && !ReferenceEquals(operation.WhereDelete, whereDelete) ||
+							items != null       && !ReferenceEquals(operation.Items, items))
+							newElement = new SqlMergeOperationClause(operation.OperationType, where ?? operation.Where, whereDelete ?? operation.WhereDelete, items ?? operation.Items);
+
+						break;
+					}
+
+				case QueryElementType.SqlValuesTable:
+					{
+						var table = (SqlValuesTable)element;
+
+						var covertedRows = new List<List<ISqlExpression>>();
+						var rowsConverted = false;
+						foreach (var row in table.Rows)
+						{
+							var convertedRow = Convert(row, action);
+							rowsConverted    = rowsConverted || (row != null && !ReferenceEquals(convertedRow, row));
+
+							covertedRows.Add(convertedRow ?? row);
+						}
+
+						var fields1 = ToArray(table.Fields);
+						var fields2 = Convert(fields1, action, f => new SqlField(f));
+
+						var fieldsConverted = fields2 != null && !ReferenceEquals(fields1, fields2);
+
+						if (fieldsConverted || rowsConverted)
+							if (!fieldsConverted)
+							{
+								fields2 = fields1;
+
+								for (var i = 0; i < fields2.Length; i++)
+								{
+									var field = fields2[i];
+
+									fields2[i] = new SqlField(field);
+
+									_visitedElements[field] = fields2[i];
+								}
+							}
+
+							newElement = new SqlValuesTable(fields2, rowsConverted ? covertedRows : table.Rows);
+
+						break;
+					}
+
+
 				case QueryElementType.SqlField:
+				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:
 					break;
 
@@ -2098,13 +2191,13 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		List<T> Convert<T>(List<T> list, Func<IQueryElement, IQueryElement> action)
+		List<T> Convert<T>(IList<T> list, Func<IQueryElement, IQueryElement> action)
 			where T : class, IQueryElement
 		{
 			return Convert(list, action, null);
 		}
 
-		List<T> Convert<T>(List<T> list1, Func<IQueryElement, IQueryElement> action, Clone<T> clone)
+		List<T> Convert<T>(IList<T> list1, Func<IQueryElement, IQueryElement> action, Clone<T> clone)
 			where T : class, IQueryElement
 		{
 			List<T> list2 = null;
