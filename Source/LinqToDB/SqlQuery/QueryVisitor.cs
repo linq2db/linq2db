@@ -317,10 +317,9 @@ namespace LinqToDB.SqlQuery
 					Visit1X((SqlMergeSourceTable)element);
 					break;
 
-					// TODO: no tests hit this case for some reason
-				//case QueryElementType.SqlValuesTable:
-				//	Visit1X((SqlValuesTable)element);
-				//	break;
+				case QueryElementType.SqlValuesTable:
+					Visit1X((SqlValuesTable)element);
+					break;
 
 				case QueryElementType.MergeOperationClause:
 					Visit1X((SqlMergeOperationClause)element);
@@ -492,12 +491,15 @@ namespace LinqToDB.SqlQuery
 				Visit1(field);
 		}
 
-		//void Visit1X(SqlValuesTable element)
-		//{
-		//	foreach (var row in element.Rows)
-		//		foreach (var value in row)
-		//			Visit1(value);
-		//}
+		void Visit1X(SqlValuesTable element)
+		{
+			foreach (var field in element.Fields.Values)
+				Visit1(field);
+
+			foreach (var row in element.Rows)
+				foreach (var value in row)
+					Visit1(value);
+		}
 
 		void Visit1X(SqlMergeOperationClause element)
 		{

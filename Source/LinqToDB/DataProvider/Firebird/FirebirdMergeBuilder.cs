@@ -35,38 +35,38 @@ namespace LinqToDB.DataProvider.Firebird
 		//	}
 		//}
 
-		protected override bool ProviderUsesAlternativeUpdate
-		{
-			get
-			{
-				// Firebird doesn't support INSERT FROM
-				return true;
-			}
-		}
+		//protected override bool ProviderUsesAlternativeUpdate
+		//{
+		//	get
+		//	{
+		//		// Firebird doesn't support INSERT FROM
+		//		return true;
+		//	}
+		//}
 
-		protected override void AddSourceValue(
-			ValueToSqlConverter valueConverter,
-			ColumnDescriptor    column,
-			SqlDataType         columnType,
-			object              value,
-			bool                isFirstRow,
-			bool                isLastRow)
-		{
-			if (value is string)
-			{
-				// without it firebird will convert it to CHAR(LENGTH_OF_BIGGEST_VALUE) and pad all values with spaces
-				Command.Append("CAST(");
-				valueConverter.TryConvert(Command, columnType, value);
+		//protected override void AddSourceValue(
+		//	ValueToSqlConverter valueConverter,
+		//	ColumnDescriptor    column,
+		//	SqlDataType         columnType,
+		//	object              value,
+		//	bool                isFirstRow,
+		//	bool                isLastRow)
+		//{
+		//	if (value is string)
+		//	{
+		//		// without it firebird will convert it to CHAR(LENGTH_OF_BIGGEST_VALUE) and pad all values with spaces
+		//		Command.Append("CAST(");
+		//		valueConverter.TryConvert(Command, columnType, value);
 
-				var stringValue = (string)value;
-				var length = Encoding.UTF8.GetByteCount(stringValue);
-				if (length == 0)
-					length = 1;
+		//		var stringValue = (string)value;
+		//		var length = Encoding.UTF8.GetByteCount(stringValue);
+		//		if (length == 0)
+		//			length = 1;
 
-				Command.AppendFormat(" AS VARCHAR({0}))", length.ToString(CultureInfo.InvariantCulture));
-			}
-			else
-				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow, isLastRow);
-		}
+		//		Command.AppendFormat(" AS VARCHAR({0}))", length.ToString(CultureInfo.InvariantCulture));
+		//	}
+		//	else
+		//		base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow, isLastRow);
+		//}
 	}
 }
