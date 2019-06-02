@@ -1,6 +1,6 @@
 ﻿using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
-using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -29,18 +29,40 @@ namespace LinqToDB.Linq.Builder
 				var deletePredicate = methodCall.Arguments[3];
 
 				if (!(setter is ConstantExpression constSetter) || constSetter.Value != null)
-					UpdateBuilder.BuildSetter(
+				{
+					var setterExpression = (LambdaExpression)setter.Unwrap();
+					UpdateBuilder.BuildSetterWithContext(
 						builder,
 						buildInfo,
-						(LambdaExpression)setter.Unwrap(),
-						mergeContext,
+						setterExpression,
+						mergeContext.TargetContext,
 						operation.Items,
-						mergeContext);
+						new ExpressionContext(buildInfo.Parent, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, setterExpression));
+				}
+				else
+				{
+					// build setters like QueryRunner.Update
+					var targetType = methodCall.Method.GetGenericArguments()[0];
+					var sqlTable = new SqlTable(builder.MappingSchema, targetType);
+
+					var param = Expression.Parameter(targetType, "s");
+
+					var keys = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
+					foreach (var field in sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys))
+					{
+						var expression = Expression.PropertyOrField(param, field.Name);
+						var expr = mergeContext.SourceContext.ConvertToSql(expression, 1, ConvertFlags.Field)[0].Sql;
+
+						operation.Items.Add(new SqlSetExpression(field, expr));
+					}
+				}
 
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{
 					var predicateCondition = (LambdaExpression)predicate.Unwrap();
 					var predicateConditionExpr = builder.ConvertExpression(predicateCondition.Body.Unwrap());
+
+					operation.Where = new SqlSearchCondition();
 
 					builder.BuildSearchCondition(
 						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, predicateCondition),
@@ -49,14 +71,19 @@ namespace LinqToDB.Linq.Builder
 						false);
 				}
 
-				var deleteCondition = (LambdaExpression)predicate.Unwrap();
-				var deleteConditionExpr = builder.ConvertExpression(deleteCondition.Body.Unwrap());
+				if (!(deletePredicate is ConstantExpression constDeletePredicate) || constDeletePredicate.Value != null)
+				{
+					var deleteCondition = (LambdaExpression)deletePredicate.Unwrap();
+					var deleteConditionExpr = builder.ConvertExpression(deleteCondition.Body.Unwrap());
 
-				builder.BuildSearchCondition(
-					new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, deleteCondition),
-					deleteConditionExpr,
-					operation.WhereDelete.Conditions,
-					false);
+					operation.WhereDelete = new SqlSearchCondition();
+
+					builder.BuildSearchCondition(
+						new ExpressionContext(null, new[] { mergeContext.TargetContext, mergeContext.SourceContext }, deleteCondition),
+						deleteConditionExpr,
+						operation.WhereDelete.Conditions,
+						false);
+				}
 
 				return mergeContext;
 			}

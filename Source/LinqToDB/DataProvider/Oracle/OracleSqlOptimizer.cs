@@ -12,23 +12,23 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
+		static void SetQueryParameter(IQueryElement element)
+		{
+			if (element.ElementType == QueryElementType.SqlParameter)
+			{
+				var p = (SqlParameter)element;
+
+				// enforce DateTimeOffset as parameter
+				if (p.SystemType.ToNullableUnderlying() == typeof(DateTimeOffset))
+					p.IsQueryParameter = true;
+			}
+		}
+
 		public override SqlStatement Finalize(SqlStatement statement)
 		{
 			CheckAliases(statement, 30);
 
-			var selectQuery = statement.SelectQuery;
-			if (selectQuery != null)
-			{
-				new QueryVisitor().Visit(selectQuery.Select, element =>
-				{
-					if (element.ElementType == QueryElementType.SqlParameter)
-					{
-						var p = (SqlParameter) element;
-						if (p.SystemType == null || p.SystemType.IsScalar(false))
-							p.IsQueryParameter = false;
-					}
-				});
-			}
+			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
 			statement = base.Finalize(statement);
 

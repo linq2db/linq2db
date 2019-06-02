@@ -1,6 +1,5 @@
 ﻿namespace LinqToDB.DataProvider.Oracle
 {
-	using SqlProvider;
 	using SqlQuery;
 	using System.Text;
 
@@ -9,7 +8,8 @@
 		// Oracle doesn't support TABLE_ALIAS(COLUMN_ALIAS, ...) syntax
 		protected override bool MergeSupportsColumnAliasesInSource => false;
 
-		// It doesn't make sense to fix empty source generation as it will take too much effort for nothing
+		// NULL value in sort leads to "cannot insert NULL into (TARGET.NON_NULL_COLUMN)" error in insert command
+		// TODO: find a way to workaround it
 		protected override bool MergeEmptySourceSupported => false;
 
 		// VALUES(...) syntax not supported in MERGE source
@@ -51,7 +51,7 @@
 
 			BuildInsertClause(new SqlInsertOrUpdateStatement(null), insertClause, null, false, false);
 
-			if (operation.Where.Conditions.Count != 0)
+			if (operation.Where != null)
 			{
 				StringBuilder.Append(" WHERE ");
 				BuildSearchCondition(Precedence.Unknown, operation.Where);
@@ -63,21 +63,31 @@
 			StringBuilder
 				.AppendLine()
 				.AppendLine("WHEN MATCHED THEN")
-				.AppendLine("UPDATE")
-				;
+				.AppendLine("UPDATE");
 
 			var update = new SqlUpdateClause();
 			update.Items.AddRange(operation.Items);
 			BuildUpdateSet(null, update);
 
-			if (operation.Where.Conditions.Count != 0)
+			if (operation.Where != null)
 			{
 				StringBuilder
 					.AppendLine("WHERE")
-					.Append("\t")
-					;
+					.Append("\t");
+
 				BuildSearchCondition(Precedence.Unknown, operation.Where);
 			}
+		}
+
+		protected override void BuildMergeOperationUpdateWithDelete(SqlMergeOperationClause operation)
+		{
+			BuildMergeOperationUpdate(operation);
+
+			StringBuilder
+				.AppendLine()
+				.AppendLine("DELETE WHERE")
+				.Append("\t");
+			BuildSearchCondition(Precedence.Unknown, operation.WhereDelete);
 		}
 	}
 }

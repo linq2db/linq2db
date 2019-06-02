@@ -558,7 +558,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget)),
+					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
 					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, bool>>)), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)), Expression.Quote(deleteCondition) }));
 
 			return new MergeQuery<TTarget, TTarget>(query);
@@ -591,7 +591,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget)),
+					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
 					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)), Expression.Quote(deleteCondition) }));
 
 			return new MergeQuery<TTarget, TTarget>(query);

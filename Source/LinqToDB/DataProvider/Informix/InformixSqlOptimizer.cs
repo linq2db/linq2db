@@ -18,8 +18,6 @@ namespace LinqToDB.DataProvider.Informix
 			if (element.ElementType == QueryElementType.SqlParameter)
 			{
 				var p = (SqlParameter)element;
-				if (p.SystemType == null || p.SystemType.IsScalar(false))
-					p.IsQueryParameter = false;
 
 				// enforce binary and timespan as parameters
 				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary)
