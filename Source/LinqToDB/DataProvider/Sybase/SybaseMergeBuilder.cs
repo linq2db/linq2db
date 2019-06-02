@@ -21,14 +21,14 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 		}
 
-		protected override bool IsIdentityInsertSupported
-		{
-			get
-			{
-				// Sybase supports implicit identify insert
-				return true;
-			}
-		}
+		//protected override bool IsIdentityInsertSupported
+		//{
+		//	get
+		//	{
+		//		// Sybase supports implicit identify insert
+		//		return true;
+		//	}
+		//}
 
 		//protected override bool SupportsSourceDirectValues
 		//{
@@ -39,16 +39,16 @@ namespace LinqToDB.DataProvider.Sybase
 		//	}
 		//}
 
-		protected override void OnInsertWithIdentity()
-		{
-			if (!_hasIdentityInsert)
-			{
-				_hasIdentityInsert = true;
+		//protected override void OnInsertWithIdentity()
+		//{
+		//	if (!_hasIdentityInsert)
+		//	{
+		//		_hasIdentityInsert = true;
 
-				// this code should be added before MERGE and command already partially generated at this stage
-				Command.Insert(0, string.Format("SET IDENTITY_INSERT {0} ON{1}", TargetTableName, Environment.NewLine));
-			}
-		}
+		//		// this code should be added before MERGE and command already partially generated at this stage
+		//		Command.Insert(0, string.Format("SET IDENTITY_INSERT {0} ON{1}", TargetTableName, Environment.NewLine));
+		//	}
+		//}
 
 		public override void Validate()
 		{

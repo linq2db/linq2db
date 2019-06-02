@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override bool BySourceOperationsSupported => true;
 
 		// SQL Server supports explicit identity insert
-		protected override bool IsIdentityInsertSupported => true;
+		//protected override bool IsIdentityInsertSupported => true;
 
 		// Only 3 operations per command supported
 		protected override int MaxOperationsCount => 3;

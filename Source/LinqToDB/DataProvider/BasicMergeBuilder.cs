@@ -1121,7 +1121,7 @@ namespace LinqToDB.DataProvider
 		/// <summary>
 		/// If true, provider allows to set values of identity columns on insert operation.
 		/// </summary>
-		protected virtual bool IsIdentityInsertSupported => false;
+		//protected virtual bool IsIdentityInsertSupported => false;
 
 		///// <summary>
 		///// If true, builder will generate command for empty enumerable source;

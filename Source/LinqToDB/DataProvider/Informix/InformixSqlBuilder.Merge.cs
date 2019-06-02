@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			BuildExpression(value);
 			StringBuilder.Append("::");
-			BuildDataType(dataType, true);
+			BuildDataType(dataType, false);
 		}
 	}
 }
