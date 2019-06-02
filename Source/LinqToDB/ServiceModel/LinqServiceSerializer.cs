@@ -1062,6 +1062,8 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsDistinct);
 							Append(elem.SkipValue);
 							Append(elem.TakeValue);
+							Append((int?)elem.TakeHints);
+
 							Append(elem.Columns);
 
 							break;
@@ -1750,9 +1752,10 @@ namespace LinqToDB.ServiceModel
 							var isDistinct = ReadBool();
 							var skipValue  = Read<ISqlExpression>();
 							var takeValue  = Read<ISqlExpression>();
+							var takeHints  = (TakeHints?)ReadNullableInt();
 							var columns    = ReadArray<SqlColumn>();
 
-							obj = new SqlSelectClause(isDistinct, takeValue, skipValue, columns);
+							obj = new SqlSelectClause(isDistinct, takeValue, takeHints, skipValue, columns);
 
 							break;
 						}

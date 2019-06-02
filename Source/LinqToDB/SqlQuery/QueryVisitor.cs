@@ -1462,8 +1462,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.JoinedTable:
 					{
 						var join  = (SqlJoinedTable)element;
-						var table = (SqlTableSource)    ConvertInternal(join.Table,     action);
-						var cond  = (SqlSearchCondition)ConvertInternal(join.Condition, action);
+						var table = (SqlTableSource)ConvertInternal(join.Table,     action);
+						var cond  =                 Convert        (join.Condition, action);
 
 						if (table != null && !ReferenceEquals(table, join.Table) ||
 							cond  != null && !ReferenceEquals(cond,  join.Condition))
@@ -1823,7 +1823,7 @@ namespace LinqToDB.SqlQuery
 							take != null && !ReferenceEquals(sc.TakeValue, take) ||
 							skip != null && !ReferenceEquals(sc.SkipValue, skip))
 						{
-							newElement = new SqlSelectClause(sc.IsDistinct, take ?? sc.TakeValue, skip ?? sc.SkipValue, cols ?? sc.Columns);
+							newElement = new SqlSelectClause(sc.IsDistinct, take ?? sc.TakeValue, sc.TakeHints, skip ?? sc.SkipValue, cols ?? sc.Columns);
 							((SqlSelectClause)newElement).SetSqlQuery((SelectQuery)parent);
 						}
 
@@ -1849,7 +1849,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.WhereClause:
 					{
 						var wc   = (SqlWhereClause)element;
-						var cond = (SqlSearchCondition)ConvertInternal(wc.SearchCondition, action);
+						var cond = Convert(wc.SearchCondition, action);
 
 						_visitedElements.TryGetValue(wc.SelectQuery, out parent);
 
@@ -2076,6 +2076,26 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return list2;
+		}
+
+		SqlSearchCondition Convert(SqlSearchCondition searchCondition, Func<IQueryElement, IQueryElement> action)
+		{
+			if (searchCondition == null || searchCondition.Conditions.Count == 0)
+				return null;
+
+			var condExpr = ConvertInternal(searchCondition, action);
+			if (condExpr == null)
+				return null;
+
+			if (condExpr is SqlSearchCondition newCondition)
+				return newCondition;
+
+			if (condExpr is SqlValue value)
+			{
+				return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(value)));
+			}
+
+			return null;
 		}
 
 		List<T> Convert<T>(List<T> list, Func<IQueryElement, IQueryElement> action)
