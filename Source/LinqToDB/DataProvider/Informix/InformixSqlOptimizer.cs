@@ -21,8 +21,9 @@ namespace LinqToDB.DataProvider.Informix
 				if (p.SystemType == null || p.SystemType.IsScalar(false))
 					p.IsQueryParameter = false;
 
-				// enforce binary as parameter
-				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary))
+				// enforce binary and timespan as parameters
+				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary)
+					|| p.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
 					p.IsQueryParameter = true;
 			}
 		}
