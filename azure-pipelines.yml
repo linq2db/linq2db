@@ -1,29 +1,41 @@
-# Build and test ASP.NET projects.
-# Add steps that publish symbols, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
 
 trigger:
 - master
 
 pool:
-  vmImage: 'ubuntu-16.04'
+  vmImage: 'vs2017-win2016'
 
 variables:
-  solution: '**/*.sln'
+  solution: 'linq2db.sln'
   buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  buildConfiguration: 'Azure'
 
 steps:
-- task: NuGetToolInstaller@0
+- task: NuGetToolInstaller@1
+  inputs:
+    versionSpec: '4.4.1'
+    checkLatest: true
+
+- powershell: |
+      $filename1 = "SSCERuntime_x86-ENU.msi"
+      $filename2 = "SSCERuntime_x64-ENU.msi"
+      $downloadUrl = "https://download.microsoft.com/download/6/9/5/695ED23C-F40F-420C-98D1-0F752B8D4E2B/1033/"
+
+      (New-Object Net.WebClient).DownloadFile($downloadUrl+"/x86/"+$filename1, $filename1)
+      (New-Object Net.WebClient).DownloadFile($downloadUrl+"/x64/"+$filename2, $filename2)
+
+      $job = Start-Job { msiexec /i $filename1 /qn }
+      Wait-Job $job
+      Receive-Job $job
+
+      $job = Start-Job { msiexec /i $filename2 /qn }
+      Wait-Job $job
+      Receive-Job $job
+  displayName: 'Install SqlCe 4.0 runtime'
 
 - task: NuGetCommand@2
   inputs:
-    restoreSolution: '$(solution)'
-
-# do this before all your .NET Core tasks
-- task: DotNetCoreInstaller@0
-  inputs:
-    version: '1.0.0' # replace this value with the version that you need for your project
+    command: 'restore'
 
 - task: MSBuild@1
   inputs:
@@ -31,7 +43,17 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-#- task: VSTest@2
-#  inputs:
-#    platform: '$(buildPlatform)'
-#    configuration: '$(buildConfiguration)'
+- script: dotnet test Tests\Linq\ -f net45 --no-build --logger "trx;LogFileName=net45_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+  displayName: 'Run tests net45' 
+
+- script: dotnet test Tests\Linq\ -f netcoreapp1.0 --no-build --logger "trx;LogFileName=core1_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+  displayName: 'Run tests core1.0'
+
+- script: dotnet test Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=core2_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+  displayName: 'Run tests core2.0'
+
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+  inputs:
+    testRunner: NUnit
+    testResultsFiles: '**/Tests/Linq/TestResults/*.trx'
