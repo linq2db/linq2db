@@ -47,10 +47,10 @@ steps:
   displayName: 'Run tests net45' 
 
 - script: dotnet test Tests\Linq\ -f netcoreapp1.0 --no-build --logger "trx;LogFileName=core1_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
-  displayName: 'Run tests core1.0'
+  displayName: 'Run tests NETSTANDARD1_6'
 
 - script: dotnet test Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=core2_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
-  displayName: 'Run tests core2.0'
+  displayName: 'Run tests NETSTANDARD2_0'
 
 - task: PublishTestResults@2
   condition: succeededOrFailed()
