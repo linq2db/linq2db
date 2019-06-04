@@ -21,14 +21,14 @@
 	<!-- .NET Framework -->
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net46' ">
-		<Reference Include="IBM.Data.DB2" Condition="'$(Configuration)' != 'AppVeyor' AND '$(Configuration)' != 'Travis'">
+		<Reference Include="IBM.Data.DB2" Condition="'$(Configuration)' != 'AppVeyor' AND '$(Configuration)' != 'Travis' AND '$(Configuration)' != 'Azure'">
 			<HintPath>..\..\Redist\IBM\IBM.Data.DB2.dll</HintPath>
 		</Reference>
-		<Reference Include="IBM.Data.Informix" Condition="'$(Configuration)' != 'AppVeyor' AND '$(Configuration)' != 'Travis'">
+		<Reference Include="IBM.Data.Informix" Condition="'$(Configuration)' != 'AppVeyor' AND '$(Configuration)' != 'Travis' AND '$(Configuration)' != 'Azure'">
 			<HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
 		</Reference>
 
-		<Reference Include="Oracle.DataAccess" Condition="'$(Configuration)' != 'AppVeyor' AND '$(Configuration)' != 'Travis'">
+		<Reference Include="Oracle.DataAccess" Condition="'$(Configuration)' != 'AppVeyor' AND '$(Configuration)' != 'Travis' AND '$(Configuration)' != 'Azure'">
 			<HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
 		</Reference>
 
