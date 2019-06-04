@@ -5,6 +5,7 @@ resources:
     image: jacobalberty/firebird:3.0
     env:
       ISC_PASSWORD: masterkey
+      FIREBIRD_DATABASE: 'C://Data//TestData.fdb'
 
 trigger:
 - master
