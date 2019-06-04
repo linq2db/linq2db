@@ -1,19 +1,33 @@
 trigger:
-- master
-
-pool:
-  vmImage: 'vs2017-win2016'
+  - master
 
 variables:
   solution: 'linq2db.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Azure'
 
-steps:
-- task: NuGetToolInstaller@1
-  inputs:
-    versionSpec: '4.4.1'
-    checkLatest: true
+jobs:
+- job: Linux
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  - script: dotnet test ./Tests/Linq/Tests.csproj -c Travis -f netcoreapp2.0 --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
+
+- job: macOS
+  pool:
+    vmImage: 'macOS-10.14'
+  steps:
+  - script: echo hello from macOS
+
+- job: Windows
+  pool:
+    vmImage: 'vs2017-win2016'
+
+  steps:
+  - task: NuGetToolInstaller@1
+    inputs:
+      versionSpec: '4.4.1'
+      checkLatest: true
 
 #- powershell: |
 #      $filename1 = "SSCERuntime_x86-ENU.msi"
@@ -32,27 +46,28 @@ steps:
 #      Receive-Job $job
 #  displayName: 'Install SqlCe 4.0 runtime'
 
-- task: NuGetCommand@2
-  inputs:
-    command: 'restore'
+  - task: NuGetCommand@2
+    inputs:
+      command: 'restore'
 
-- task: MSBuild@1
-  inputs:
-    solution: '$(solution)'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+  - task: MSBuild@1
+    inputs:
+      solution: '$(solution)'
+      platform: '$(buildPlatform)'
+      configuration: '$(buildConfiguration)'
 
-- script: dotnet test Tests\Linq\ -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
-  displayName: 'Run tests NET46' 
+#  - script: dotnet test Tests\Linq\ -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+#    displayName: 'Run tests NET46' 
 
-- script: dotnet test Tests\Linq\ -f netcoreapp1.0 --no-build --logger "trx;LogFileName=core1_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
-  displayName: 'Run tests NETSTANDARD1_6'
+#  - script: dotnet test Tests\Linq\ -f netcoreapp1.0 --no-build --logger "trx;LogFileName=core1_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+#    displayName: 'Run tests NETSTANDARD1_6'
 
-- script: dotnet test Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=core2_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
-  displayName: 'Run tests NETSTANDARD2_0'
+#  - script: dotnet test Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=core2_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+#    displayName: 'Run tests NETSTANDARD2_0'
 
-- task: PublishTestResults@2
-  condition: succeededOrFailed()
-  inputs:
-    testRunner: NUnit
-    testResultsFiles: 'Tests/Linq/TestResults/*.trx'
+#  - task: PublishTestResults@2
+#    condition: succeededOrFailed()
+#    inputs:
+#      testRunner: NUnit
+#      testResultsFiles: 'Tests/Linq/TestResults/*.trx'
+
