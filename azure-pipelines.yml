@@ -17,7 +17,7 @@ jobs:
   pool:
     vmImage: 'macOS-10.14'
   steps:
-  - script: echo hello from macOS
+  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
 
 - job: Windows
   pool:
