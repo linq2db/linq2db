@@ -11,7 +11,7 @@ trigger:
 - master
 
 pool:
-  vmImage: 'windows-2019'
+  vmImage: 'vs2017-win2016'
 
 services:
   firebird: firebird
