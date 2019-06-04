@@ -170,7 +170,7 @@
 		[
 			"Access",
 			//"SqlCe",
-			"SQLite.Classic",
+			//"SQLite.Classic",
 			"SQLite.MS",
 			"Northwind.SQLite",
 			"Northwind.SQLite.MS",
