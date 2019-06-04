@@ -1,9 +1,21 @@
 
+resources:
+  containers:
+  - container: firebird
+    image: jacobalberty/firebird:3.0
+    env:
+      ISC_PASSWORD: masterkey
+      FIREBIRD_DATABASE: 'C://Data//TestData.fdb'
+
 trigger:
 - master
 
 pool:
   vmImage: 'vs2017-win2016'
+container: my_container
+
+services:
+  firebird: firebird
 
 variables:
   solution: 'linq2db.sln'
@@ -16,22 +28,22 @@ steps:
     versionSpec: '4.4.1'
     checkLatest: true
 
-- powershell: |
-      $filename1 = "SSCERuntime_x86-ENU.msi"
-      $filename2 = "SSCERuntime_x64-ENU.msi"
-      $downloadUrl = "https://download.microsoft.com/download/6/9/5/695ED23C-F40F-420C-98D1-0F752B8D4E2B/1033/"
+#- powershell: |
+#      $filename1 = "SSCERuntime_x86-ENU.msi"
+#      $filename2 = "SSCERuntime_x64-ENU.msi"
+#      $downloadUrl = "https://download.microsoft.com/download/6/9/5/695ED23C-F40F-420C-98D1-0F752B8D4E2B/1033/"
 
-      (New-Object Net.WebClient).DownloadFile($downloadUrl+"/x86/"+$filename1, $filename1)
-      (New-Object Net.WebClient).DownloadFile($downloadUrl+"/x64/"+$filename2, $filename2)
+#      (New-Object Net.WebClient).DownloadFile($downloadUrl+"/x86/"+$filename1, $filename1)
+#      (New-Object Net.WebClient).DownloadFile($downloadUrl+"/x64/"+$filename2, $filename2)
 
-      $job = Start-Job { msiexec /i $filename1 /qn }
-      Wait-Job $job
-      Receive-Job $job
+#      $job = Start-Job { msiexec /i $filename1 /qn }
+#      Wait-Job $job
+#      Receive-Job $job
 
-      $job = Start-Job { msiexec /i $filename2 /qn }
-      Wait-Job $job
-      Receive-Job $job
-  displayName: 'Install SqlCe 4.0 runtime'
+#      $job = Start-Job { msiexec /i $filename2 /qn }
+#      Wait-Job $job
+#      Receive-Job $job
+#  displayName: 'Install SqlCe 4.0 runtime'
 
 - task: NuGetCommand@2
   inputs:
