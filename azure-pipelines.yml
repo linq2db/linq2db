@@ -11,7 +11,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
-  - script: dotnet test ./Tests/Linq/Tests.csproj -c Travis -f netcoreapp2.0 --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
+  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
 
 - job: macOS
   pool:
