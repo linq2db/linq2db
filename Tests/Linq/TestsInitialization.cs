@@ -16,7 +16,7 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !APPVEYOR && !TRAVIS
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !APPVEYOR && !TRAVIS && !AZURE
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
 		// but loaded from GAC assembly has other version
