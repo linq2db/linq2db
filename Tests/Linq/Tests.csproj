@@ -21,9 +21,9 @@
 	<ItemGroup>
 		<Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
 
-		<Compile Remove="DataProvider\DB2Tests.cs" Condition="'$(Configuration)' == 'AppVeyor' OR '$(Configuration)' == 'Travis'" />
-		<Compile Remove="DataProvider\InformixTests.cs" Condition="'$(Configuration)' == 'AppVeyor' OR '$(Configuration)' == 'Travis'" />
-		<Compile Remove="DataProvider\OracleTests.cs" Condition="'$(Configuration)' == 'AppVeyor' OR '$(Configuration)' == 'Travis'" />
+		<Compile Remove="DataProvider\DB2Tests.cs" Condition="'$(Configuration)' == 'AppVeyor' OR '$(Configuration)' == 'Travis' OR '$(Configuration)' == 'Azure'" />
+		<Compile Remove="DataProvider\InformixTests.cs" Condition="'$(Configuration)' == 'AppVeyor' OR '$(Configuration)' == 'Travis' OR '$(Configuration)' == 'Azure'" />
+		<Compile Remove="DataProvider\OracleTests.cs" Condition="'$(Configuration)' == 'AppVeyor' OR '$(Configuration)' == 'Travis' OR '$(Configuration)' == 'Azure'" />
 
 		<None Include="..\..\Data\*">
 			<Link>Database/%(FileName)%(Extension)</Link>
