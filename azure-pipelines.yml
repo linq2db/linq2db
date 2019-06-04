@@ -43,7 +43,7 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-- script: dotnet test Tests\Linq\ -f net45 --no-build --logger "trx;LogFileName=net45_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+- script: dotnet test Tests\Linq\ -f net46 --no-build --logger "trx;LogFileName=net45_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
   displayName: 'Run tests net45' 
 
 - script: dotnet test Tests\Linq\ -f netcoreapp1.0 --no-build --logger "trx;LogFileName=core1_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
