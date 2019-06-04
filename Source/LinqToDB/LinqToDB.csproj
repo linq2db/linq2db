@@ -11,6 +11,7 @@
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
 		<!--https://github.com/dotnet/project-system/issues/1358-->
 		<TargetFrameworks>$(TargetFrameworks)</TargetFrameworks>
+		<Configurations>Debug;Release;Azure</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -94,6 +95,6 @@
 		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
-		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0"/>
+		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 	</ItemGroup>
 </Project>

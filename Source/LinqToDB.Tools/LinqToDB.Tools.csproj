@@ -13,6 +13,7 @@
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.Tools.xml</DocumentationFile>
 		<!--https://github.com/dotnet/project-system/issues/1358-->
 		<TargetFrameworks>$(TargetFrameworks)</TargetFrameworks>
+		<Configurations>Debug;Release;Azure</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>

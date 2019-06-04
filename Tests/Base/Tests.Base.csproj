@@ -5,6 +5,7 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.Base</AssemblyName>
 		<RootNamespace>Tests</RootNamespace>
+		<Configurations>Debug;Release;AppVeyor;Travis;Azure</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>

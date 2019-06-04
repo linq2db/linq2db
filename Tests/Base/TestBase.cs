@@ -122,6 +122,12 @@ namespace Tests
 			Console.WriteLine("Travis configuration detected.");
 			configName += ".Travis";
 #endif
+#if AZURE
+#warning "Azure configuration detected."
+
+			Console.WriteLine("Azure configuration detected.");
+			configName += ".Azure";
+#endif
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
 			var databasePath = Path.GetFullPath(Path.Combine("Database"));
 			var dataPath     = Path.Combine(databasePath, "Data");

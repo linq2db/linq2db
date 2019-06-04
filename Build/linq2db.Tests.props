@@ -19,6 +19,12 @@
 		<Optimize>true</Optimize>
 	</PropertyGroup>
 
+	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' ">
+		<DefineConstants>RELEASE;AZURE</DefineConstants>
+		<DebugSymbols>false</DebugSymbols>
+		<Optimize>true</Optimize>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
