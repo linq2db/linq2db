@@ -2,7 +2,7 @@
 resources:
   containers:
   - container: firebird
-    image: jacobalberty/firebird:lasted
+    image: jacobalberty/firebird:latest
     env:
       ISC_PASSWORD: masterkey
       FIREBIRD_DATABASE: 'C://Data//TestData.fdb'
