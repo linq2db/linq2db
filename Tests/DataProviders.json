@@ -164,7 +164,7 @@
 	"NET45.Azure" :
 	{
 		"BasedOn"              : "AzureConnectionStrings",
-		"DefaultConfiguration" : "SQLite.Classic",
+		"DefaultConfiguration" : "SQLite.MS",
 		"TraceLevel"           : "Error",
 		"Providers"            :
 		[
