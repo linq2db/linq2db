@@ -1,20 +1,8 @@
-
-resources:
-  containers:
-  - container: firebird
-    image: jacobalberty/firebird:latest
-    env:
-      ISC_PASSWORD: masterkey
-      FIREBIRD_DATABASE: 'C://Data//TestData.fdb'
-
 trigger:
 - master
 
 pool:
-  vmImage: 'win1803'
-
-services:
-  firebird: firebird
+  vmImage: 'vs2017-win2016'
 
 variables:
   solution: 'linq2db.sln'
