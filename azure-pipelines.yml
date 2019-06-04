@@ -19,7 +19,12 @@ jobs:
   pool:
     vmImage: 'macOS-10.14'
   steps:
-  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
+  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx;LogFileName=macos_test_results.trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testRunner: NUnit
+      testResultsFiles: '**/macos_test_results.trx'
 
 - job: Windows
   timeoutInMinutes: 240
