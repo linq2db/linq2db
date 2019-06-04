@@ -23,7 +23,7 @@ jobs:
   - task: PublishTestResults@2
     condition: succeededOrFailed()
     inputs:
-      testRunner: NUnit
+      testRunner: VsTest
       testResultsFiles: '**/macos_test_results.trx'
 
 - job: Windows
