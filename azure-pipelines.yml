@@ -42,7 +42,7 @@ jobs:
       versionSpec: '4.4.1'
       checkLatest: true
 
-  - script: nuget install NUnit --version 3.12.0
+  - script: nuget install NUnit
 
 #- powershell: |
 #      $filename1 = "SSCERuntime_x86-ENU.msi"
