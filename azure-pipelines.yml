@@ -133,8 +133,8 @@ jobs:
       artifactName: '$(buildConfiguration)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - script: dotnet add package NUnit --version 3.12.0
-  
+  - script: dotnet add $(buildConfiguration)/Tests/Linq/Tests.csproj package NUnit --version 3.12.0
+
   - task: VSTest@2
     inputs:
       testAssemblyVer2: |
