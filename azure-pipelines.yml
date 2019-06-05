@@ -14,7 +14,7 @@ jobs:
       testRunner: VsTest
       testResultsFiles: '**/linux_test_results.trx'
 
-- job: macOS
+- job: MacOS
   timeoutInMinutes: 240
   pool:
     vmImage: 'macOS-10.14'
@@ -70,7 +70,11 @@ jobs:
       configuration: '$(buildConfiguration)'
 
   - powershell: gci env:* | sort-object name | Format-Table -AutoSize | Out-File $env:BUILD_ARTIFACTSTAGINGDIRECTORY/environment-variables.txt
-
+  - task: CopyFiles@2
+    inputs:
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+      sourceFolder: '$(Build.SourcesDirectory)'
+      contents: '**/$(BuildConfiguration)/**/?(*.exe|*.dll|*.pdb)'
   - task: PublishBuildArtifacts@1
     inputs:
       pathtoPublish: '$(Build.ArtifactStagingDirectory)'
