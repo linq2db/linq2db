@@ -154,7 +154,7 @@ jobs:
        **\$(BuildConfiguration)\netcoreapp2.0\linq2db.Tests.Core2.dll
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
-      otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0 /TestCaseFilter:"TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI"'
+      otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0 /TestCaseFilter:"TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" /TestAdapterPath:$(BuildConfiguration)/netcoreapp2.0/'
     displayName: 'Run tests Core2.0' 
 
   - task: PublishTestResults@2
