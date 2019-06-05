@@ -35,13 +35,14 @@ jobs:
   pool:
     vmImage: 'vs2017-win2016'
   displayName: 'Windows (build)'
-  strategy:
-    parallel: 5
+
   steps:
   - task: NuGetToolInstaller@1
     inputs:
       versionSpec: '4.4.1'
       checkLatest: true
+
+  - script: nuget install NUnit --version 3.12.0
 
 #- powershell: |
 #      $filename1 = "SSCERuntime_x86-ENU.msi"
@@ -71,36 +72,36 @@ jobs:
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
 
-#  - task: CopyFiles@2
-#    inputs:
-#      TargetFolder: '$(build.ArtifactStagingDirectory)'
-#      sourceFolder: '$(Build.SourcesDirectory)'
-#      contents: |
-#        **/Tests/Linq/bin/$(buildConfiguration)/**
-#        **/DataProviders.json
-#        **/Tests/Linq/Tests.csproj
+  - task: CopyFiles@2
+    inputs:
+      TargetFolder: '$(build.ArtifactStagingDirectory)'
+      sourceFolder: '$(Build.SourcesDirectory)'
+      contents: |
+        **/Tests/Linq/bin/$(buildConfiguration)/**
+        **/DataProviders.json
+        **/Tests/Linq/Tests.csproj
 
   - task: PublishBuildArtifacts@1
     inputs:
       pathtoPublish: '$(build.ArtifactStagingDirectory)'
       artifactName: '$(buildConfiguration)'
 
-#- job: Windows_testfx
-#  dependsOn: Windows_build
-#  condition: succeeded()
-#  pool:
-#    vmImage: 'vs2017-win2016'
-#  displayName: 'Windows (netfx tests job1)'
+- job: Windows_testfx
+  dependsOn: Windows_build
+  condition: succeeded()
+  pool:
+    vmImage: 'vs2017-win2016'
+  displayName: 'Windows (netfx tests job1)'
 
-#  steps:
-#  - checkout: none 
+  steps:
+  - checkout: none 
 
-#  - task: DownloadBuildArtifacts@0
-#    inputs:
-#      buildType: 'current'
-#      downloadType: 'single'
-#      artifactName: '$(buildConfiguration)'
-#      downloadPath: '$(System.DefaultWorkingDirectory)'
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: '$(buildConfiguration)'
+      downloadPath: '$(System.DefaultWorkingDirectory)'
 
   - task: VSTest@2
     inputs:
@@ -117,36 +118,34 @@ jobs:
       testRunner: VsTest
       testResultsFiles: '**/*.trx'
 
-#- job: Windows_testcore
-#  dependsOn: Windows_build
-#  condition: succeeded()
-#  pool:
-#    vmImage: 'vs2017-win2016'
-#  displayName: 'Windows (netcore2 tests job1)'
+- job: Windows_testcore
+  dependsOn: Windows_build
+  condition: succeeded()
+  pool:
+    vmImage: 'vs2017-win2016'
+  displayName: 'Windows (netcore2 tests job1)'
 
-#  steps:
-#  - checkout: none 
+  steps:
+  - checkout: none 
 
-#  - task: DownloadBuildArtifacts@0
-#    inputs:
-#      buildType: 'current'
-#      downloadType: 'single'
-#      artifactName: '$(buildConfiguration)'
-#      downloadPath: '$(System.DefaultWorkingDirectory)'
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: '$(buildConfiguration)'
+      downloadPath: '$(System.DefaultWorkingDirectory)'
 
-#  - script: dotnet add $(buildConfiguration)/Tests/Linq/Tests.csproj package NUnit --version 3.12.0
+  - task: VSTest@2
+    inputs:
+      testAssemblyVer2: |
+       **\$(BuildConfiguration)\netcoreapp2.0\linq2db.Tests.Core2.dll
+      platform: '$(buildPlatform)'
+      configuration: '$(buildConfiguration)'
+      otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0 /TestCaseFilter:"TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI"'
+    displayName: 'Run tests Core2.0' 
 
-#  - task: VSTest@2
-#    inputs:
-#      testAssemblyVer2: |
-#       **\$(BuildConfiguration)\netcoreapp2.0\linq2db.Tests.Core2.dll
-#      platform: '$(buildPlatform)'
-#      configuration: '$(buildConfiguration)'
-#      otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0 /TestCaseFilter:"TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI"'
-#    displayName: 'Run tests Core2.0' 
-
-#  - task: PublishTestResults@2
-#    condition: succeededOrFailed()
-#    inputs:
-#      testRunner: VsTest
-#      testResultsFiles: '**/*.trx'
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testRunner: VsTest
+      testResultsFiles: '**/*.trx'
