@@ -72,13 +72,9 @@ jobs:
 
   - task: PublishBuildArtifacts@1
     inputs:
-      pathtoPublish: '$(System.DefaultWorkingDirectory)/Tests/Linq'
-      artifactName: 'Linq'
+      pathtoPublish: '$(System.DefaultWorkingDirectory)/Tests/Linq/bin/Azure'
+      artifactName: 'Azure'
 
-  - task: PublishBuildArtifacts@1
-    inputs:
-      pathtoPublish: '$(System.DefaultWorkingDirectory)/Build/'
-      artifactName: Build
 
 - job: Windows_testfx
   dependsOn: Windows_build
@@ -94,14 +90,7 @@ jobs:
     inputs:
       buildType: 'current'
       downloadType: 'single'
-      artifactName: 'Linq'
-      downloadPath: '$(System.DefaultWorkingDirectory)/Tests/'
-
-  - task: DownloadBuildArtifacts@0
-    inputs:
-      buildType: 'current'
-      downloadType: 'single'
-      artifactName: 'Build'
+      artifactName: 'Azure'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
 #  - task: DotNetCoreCLI@2
@@ -110,7 +99,7 @@ jobs:
 #      projects: '**/Tests/Linq/Tests.csproj'
 #      arguments: '-c Azure --collect "Code coverage" -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI"'
 
-  - script: dotnet vstest Tests\Linq\bin\Azure\net46\*.dll -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+  - script: dotnet vstest .\Azure\net46\*.dll -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
     displayName: 'Run tests NET46' 
 #--collect "Code coverage"
 
