@@ -8,7 +8,6 @@ trigger:
 
 jobs:
 - job: Linux
-  timeoutInMinutes: 240
   pool:
     vmImage: 'ubuntu-16.04'
 
@@ -21,7 +20,6 @@ jobs:
       testResultsFiles: '**/linux_test_results.trx'
 
 - job: MacOS
-  timeoutInMinutes: 240
   pool:
     vmImage: 'macOS-10.14'
 
@@ -34,7 +32,6 @@ jobs:
       testResultsFiles: '**/macos_test_results.trx'
 
 - job: Windows_build
-  timeoutInMinutes: 240
   pool:
     vmImage: 'vs2017-win2016'
   displayName: 'Windows (build)'
@@ -86,11 +83,9 @@ jobs:
 - job: Windows_testfx
   dependsOn: Windows_build
   condition: succeeded()
-  timeoutInMinutes: 240
-  displayName: 'Windows (netfx tests job1)'
-
   pool:
     vmImage: 'vs2017-win2016'
+  displayName: 'Windows (netfx tests job1)'
 
   steps:
   - checkout: none 
@@ -115,7 +110,7 @@ jobs:
 #      projects: '**/Tests/Linq/Tests.csproj'
 #      arguments: '-c Azure --collect "Code coverage" -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI"'
 
-  - script: dotnet test /Tests/Linq/ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+  - script: dotnet test Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
     displayName: 'Run tests NET46' 
 #--collect "Code coverage"
 
