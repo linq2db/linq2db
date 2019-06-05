@@ -94,7 +94,7 @@ jobs:
       artifactName: 'drop'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - script: dotnet test \drop\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+  - script: dotnet test \drop\Tests.csproj -f netcoreapp2.0 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
     displayName: 'Run tests NET46' 
 #--collect "Code coverage"
 
