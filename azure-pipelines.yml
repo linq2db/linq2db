@@ -26,7 +26,7 @@ jobs:
       testRunner: VsTest
       testResultsFiles: '**/macos_test_results.trx'
 
-- job: Windows_NET46
+- job: Windows_build
   timeoutInMinutes: 240
   pool:
     vmImage: 'vs2017-win2016'
@@ -69,43 +69,32 @@ jobs:
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
 
-  - script: dotnet test Tests\Linq\ -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
-    displayName: 'Run tests NET46' 
+  - powershell: gci env:* | sort-object name | Format-Table -AutoSize | Out-File $env:BUILD_ARTIFACTSTAGINGDIRECTORY/environment-variables.txt
 
-  - task: PublishTestResults@2
-    condition: succeededOrFailed()
+  - task: PublishBuildArtifacts@1
     inputs:
-      testRunner: VsTest
-      testResultsFiles: '**/*test_results.trx'
+      pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      artifactName: drop
 
-- job: Windows_CORE
+- job: Windows_testfx
+  dependsOn: Windows_build
+  condition: succeeded()
   timeoutInMinutes: 240
   pool:
     vmImage: 'vs2017-win2016'
 
-  variables:
-    solution: 'linq2db.sln'
-    buildPlatform: 'Any CPU'
-    buildConfiguration: 'Azure'
-
   steps:
-  - task: NuGetToolInstaller@1
-    inputs:
-      versionSpec: '4.4.1'
-      checkLatest: true
+  - powershell: gci env:* | sort-object name | Format-Table -AutoSize | Out-File $env:BUILD_ARTIFACTSTAGINGDIRECTORY/environment-variables.txt
 
-  - task: NuGetCommand@2
+  - task: DownloadBuildArtifacts@0
     inputs:
-      command: 'restore'
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'drop'
+      downloadPath: '$(System.ArtifactsDirectory)'
 
-  - task: MSBuild@1
-    inputs:
-      solution: '$(solution)'
-      platform: '$(buildPlatform)'
-      configuration: '$(buildConfiguration)'
-
-  - script: dotnet test Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=core2_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
-    displayName: 'Run tests NETSTANDARD2_0'
+  - script: dotnet test Tests\Linq\ -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+    displayName: 'Run tests NET46' 
 
   - task: PublishTestResults@2
     condition: succeededOrFailed()
