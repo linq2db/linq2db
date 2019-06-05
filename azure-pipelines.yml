@@ -1,11 +1,6 @@
 trigger:
   - master
 
-variables:
-  solution: 'linq2db.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Azure'
-
 jobs:
 - job: Linux
   timeoutInMinutes: 240
@@ -35,6 +30,11 @@ jobs:
   timeoutInMinutes: 240
   pool:
     vmImage: 'vs2017-win2016'
+
+  variables:
+    solution: 'linq2db.sln'
+    buildPlatform: 'Any CPU'
+    buildConfiguration: 'Azure'
 
   steps:
   - task: NuGetToolInstaller@1
@@ -69,14 +69,24 @@ jobs:
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
 
-  - script: dotnet test Tests\Linq\ -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
-    displayName: 'Run tests NET46' 
+  - powershell: |
+      Start-Job { dotnet test Tests\Linq\ -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure }
+      Start-Job { dotnet test Tests\Linq\ -f netcoreapp1.0 --no-build --logger "trx;LogFileName=core1_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure }
+      Start-Job { dotnet test Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=core2_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure }
 
-  - script: dotnet test Tests\Linq\ -f netcoreapp1.0 --no-build --logger "trx;LogFileName=core1_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
-    displayName: 'Run tests NETSTANDARD1_6'
+      While (Get-Job -State "Running")
+      {
+        Start-Sleep 1
+      }
 
-  - script: dotnet test Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=core2_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
-    displayName: 'Run tests NETSTANDARD2_0'
+#- script: dotnet test Tests\Linq\ -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+#    displayName: 'Run tests NET46' 
+
+#  - script: dotnet test Tests\Linq\ -f netcoreapp1.0 --no-build --logger "trx;LogFileName=core1_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+#    displayName: 'Run tests NETSTANDARD1_6'
+
+#  - script: dotnet test Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=core2_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+#    displayName: 'Run tests NETSTANDARD2_0'
 
   - task: PublishTestResults@2
     condition: succeededOrFailed()
