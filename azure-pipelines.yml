@@ -26,7 +26,7 @@ jobs:
       testRunner: VsTest
       testResultsFiles: '**/macos_test_results.trx'
 
-- job: Windows
+- job: Windows_NET46
   timeoutInMinutes: 240
   pool:
     vmImage: 'vs2017-win2016'
@@ -72,6 +72,38 @@ jobs:
   - script: dotnet test Tests\Linq\ -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
     displayName: 'Run tests NET46' 
 
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testRunner: VsTest
+      testResultsFiles: '**/*test_results.trx'
+
+- job: Windows_CORE
+  timeoutInMinutes: 240
+  pool:
+    vmImage: 'vs2017-win2016'
+
+  variables:
+    solution: 'linq2db.sln'
+    buildPlatform: 'Any CPU'
+    buildConfiguration: 'Azure'
+
+  steps:
+  - task: NuGetToolInstaller@1
+    inputs:
+      versionSpec: '4.4.1'
+      checkLatest: true
+
+  - task: NuGetCommand@2
+    inputs:
+      command: 'restore'
+
+  - task: MSBuild@1
+    inputs:
+      solution: '$(solution)'
+      platform: '$(buildPlatform)'
+      configuration: '$(buildConfiguration)'
+
   - script: dotnet test Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=core2_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
     displayName: 'Run tests NETSTANDARD2_0'
 
@@ -80,4 +112,3 @@ jobs:
     inputs:
       testRunner: VsTest
       testResultsFiles: '**/*test_results.trx'
-
