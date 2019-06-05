@@ -74,13 +74,14 @@ jobs:
     inputs:
       TargetFolder: '$(build.ArtifactStagingDirectory)'
       sourceFolder: '$(Build.SourcesDirectory)'
-      contents: '**/Tests/Linq/bin/$(buildConfiguration)/**'
-      '**/DataProviders.json'
+      contents: |
+        '**/Tests/Linq/bin/$(buildConfiguration)/**'
+        '**/DataProviders.json'
+
   - task: PublishBuildArtifacts@1
     inputs:
       pathtoPublish: '$(build.ArtifactStagingDirectory)'
       artifactName: '$(buildConfiguration)'
-
 
 - job: Windows_testfx
   dependsOn: Windows_build
