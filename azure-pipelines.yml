@@ -74,8 +74,8 @@ jobs:
 
   - task: PublishBuildArtifacts@1
     inputs:
-      pathtoPublish: '$(System.DefaultWorkingDirectory)/Tests/'
-      artifactName: Tests
+      pathtoPublish: '$(System.DefaultWorkingDirectory)/Tests/Linq'
+      artifactName: 'Linq'
 
   - task: PublishBuildArtifacts@1
     inputs:
@@ -98,8 +98,8 @@ jobs:
     inputs:
       buildType: 'current'
       downloadType: 'single'
-      artifactName: 'Tests'
-      downloadPath: '$(System.DefaultWorkingDirectory)'
+      artifactName: 'Linq'
+      downloadPath: '$(System.DefaultWorkingDirectory)/Tests/'
 
   - task: DownloadBuildArtifacts@0
     inputs:
@@ -108,13 +108,13 @@ jobs:
       artifactName: 'Build'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: test
-      projects: '**/Tests/Linq/Tests.csproj'
-      arguments: '-c Azure --collect "Code coverage" -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI"'
+#  - task: DotNetCoreCLI@2
+#    inputs:
+#      command: test
+#      projects: '**/Tests/Linq/Tests.csproj'
+#      arguments: '-c Azure --collect "Code coverage" -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI"'
 
-#  - script: dotnet test "**/Tests.csproj" -f netcoreapp2.0 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+  - script: dotnet test ./Tests/Linq/Tests.csproj -f netcoreapp2.0 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
     displayName: 'Run tests NET46' 
 #--collect "Code coverage"
 
