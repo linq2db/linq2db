@@ -53,7 +53,7 @@ jobs:
     inputs:
       command: 'restore'
       projects: '**/*.csproj'
-      verbosityRestore: 'detailed' # Options: quiet, minimal, normal, detailed, diagnostic
+      verbosityRestore: 'quiet' # Options: quiet, minimal, normal, detailed, diagnostic
 
 #- powershell: |
 #      $filename1 = "SSCERuntime_x86-ENU.msi"
@@ -145,7 +145,7 @@ jobs:
     inputs:
       versionSpec: '4.4.1'
       checkLatest: true
-      
+
   - script: nuget install NUnit
 
   - task: VSTest@2
