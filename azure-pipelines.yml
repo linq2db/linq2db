@@ -1,3 +1,8 @@
+variables:
+  solution: 'linq2db.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Azure'
+
 trigger:
   - master
 
@@ -32,11 +37,7 @@ jobs:
   timeoutInMinutes: 240
   pool:
     vmImage: 'vs2017-win2016'
-
-  variables:
-    solution: 'linq2db.sln'
-    buildPlatform: 'Any CPU'
-    buildConfiguration: 'Azure'
+  displayName: 'Windows (build)'
 
   steps:
   - task: NuGetToolInstaller@1
@@ -73,7 +74,7 @@ jobs:
 
   - task: PublishBuildArtifacts@1
     inputs:
-      pathtoPublish: '$(System.DefaultWorkingDirectory)/Tests/'
+      pathtoPublish: '$(System.DefaultWorkingDirectory)/Tests/!*.cs'
       artifactName: Tests
 
   - task: PublishBuildArtifacts@1
@@ -85,6 +86,7 @@ jobs:
   dependsOn: Windows_build
   condition: succeeded()
   timeoutInMinutes: 240
+  displayName: 'Windows (netfx tests job1)'
 
   pool:
     vmImage: 'vs2017-win2016'
@@ -109,7 +111,7 @@ jobs:
   - task: DotNetCoreCLI@2
     inputs:
       command: test
-      projects: '**/*.csproj'
+      projects: '**/Tests/Linq/Tests.csproj'
       arguments: '-c Azure --collect "Code coverage" -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI"'
 
 #  - script: dotnet test "**/Tests.csproj" -f netcoreapp2.0 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
