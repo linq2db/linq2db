@@ -12,24 +12,24 @@ jobs:
     vmImage: 'ubuntu-16.04'
 
   steps:
-  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx;LogFileName=linux_test_results.trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
+  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
   - task: PublishTestResults@2
     condition: succeededOrFailed()
     inputs:
       testRunner: VsTest
-      testResultsFiles: '**/linux_test_results.trx'
+      testResultsFiles: '**/*.trx'
 
 - job: MacOS
   pool:
     vmImage: 'macOS-10.14'
 
   steps:
-  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx;LogFileName=macos_test_results.trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
+  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
   - task: PublishTestResults@2
     condition: succeededOrFailed()
     inputs:
       testRunner: VsTest
-      testResultsFiles: '**/macos_test_results.trx'
+      testResultsFiles: '**/*.trx'
 
 - job: Windows_build
   pool:
@@ -113,7 +113,7 @@ jobs:
     condition: succeededOrFailed()
     inputs:
       testRunner: VsTest
-      testResultsFiles: '**/*test_results.trx'
+      testResultsFiles: '**/*.trx'
 
 - job: Windows_testcore
   dependsOn: Windows_build
@@ -132,6 +132,16 @@ jobs:
       artifactName: '$(buildConfiguration)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
+  - task: NuGetToolInstaller@1
+    inputs:
+      versionSpec: '4.4.1'
+      checkLatest: true
+
+  - task: NuGetCommand@2
+    inputs:
+      restoreSolution: '**/Tests.csproj'
+      command: 'restore'
+
   - task: VSTest@2
     inputs:
       testAssemblyVer2: |
@@ -145,4 +155,4 @@ jobs:
     condition: succeededOrFailed()
     inputs:
       testRunner: VsTest
-      testResultsFiles: '**/*test_results.trx'
+      testResultsFiles: '**/*.trx'
