@@ -71,7 +71,7 @@ jobs:
 
   - task: PublishBuildArtifacts@1
     inputs:
-      pathtoPublish: '$(Build.BuildDirectory)'
+      pathtoPublish: '$(Build.SourcesDirectory)/Tests/'
       artifactName: drop
 
 - job: Windows_testfx
@@ -88,9 +88,9 @@ jobs:
       buildType: 'current'
       downloadType: 'single'
       artifactName: 'drop'
-      downloadPath: '$(Build.BuildDirectory)'
+      downloadPath: '$(Build.SourcesDirectory)'
 
-  - script: dotnet test drop\Tests\Linq\ -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+  - script: dotnet test drop\Linq\ -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
     displayName: 'Run tests NET46' 
 
   - task: PublishTestResults@2
