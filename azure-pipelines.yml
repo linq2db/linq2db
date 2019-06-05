@@ -42,7 +42,18 @@ jobs:
       versionSpec: '4.4.1'
       checkLatest: true
 
-  - script: nuget install NUnit
+#  - task: NuGetCommand@2
+#    inputs:
+#      restoreSolution: '$(solution)'
+#      command: 'restore'
+
+# .NET Core
+# Restore NuGet packages.
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'restore'
+      projects: '**/*.csproj'
+      verbosityRestore: 'detailed' # Options: quiet, minimal, normal, detailed, diagnostic
 
 #- powershell: |
 #      $filename1 = "SSCERuntime_x86-ENU.msi"
@@ -60,11 +71,6 @@ jobs:
 #      Wait-Job $job
 #      Receive-Job $job
 #  displayName: 'Install SqlCe 4.0 runtime'
-
-  - task: NuGetCommand@2
-    inputs:
-      restoreSolution: '$(solution)'
-      command: 'restore'
 
   - task: MSBuild@1
     inputs:
@@ -134,6 +140,8 @@ jobs:
       downloadType: 'single'
       artifactName: '$(buildConfiguration)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
+
+  - script: nuget install NUnit
 
   - task: VSTest@2
     inputs:
