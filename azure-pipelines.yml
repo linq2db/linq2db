@@ -70,10 +70,16 @@ jobs:
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
 
+  - task: CopyFiles@2
+    inputs:
+      TargetFolder: '$(build.ArtifactStagingDirectory)'
+      sourceFolder: '$(Build.SourcesDirectory)'
+      contents: '**/Tests/Linq/bin/$(buildConfiguration)/**'
+      '**/DataProviders.json'
   - task: PublishBuildArtifacts@1
     inputs:
-      pathtoPublish: '$(System.DefaultWorkingDirectory)/Tests/Linq/bin/Azure'
-      artifactName: 'Azure'
+      pathtoPublish: '$(build.ArtifactStagingDirectory)'
+      artifactName: '$(buildConfiguration)'
 
 
 - job: Windows_testfx
@@ -90,7 +96,7 @@ jobs:
     inputs:
       buildType: 'current'
       downloadType: 'single'
-      artifactName: 'Azure'
+      artifactName: '$(buildConfiguration)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
 #  - task: DotNetCoreCLI@2
@@ -102,11 +108,7 @@ jobs:
   - task: VSTest@2
     inputs:
       testAssemblyVer2: |
-       **\$(BuildConfiguration)\net46*\*test*.dll
-       **\$(BuildConfiguration)\**\net46*\*test*.dll
-       !**\*Microsoft.VisualStudio.TestPlatform*
-       !**\obj\**
-       !**\*TestAdapter.dll
+       **\$(BuildConfiguration)\net46*\linq2db.Tests.dll
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
       otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6 /TestCaseFilter:"TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI"'
