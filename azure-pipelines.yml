@@ -132,15 +132,10 @@ jobs:
       artifactName: '$(buildConfiguration)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - task: NuGetToolInstaller@1
+  - task: DotNetCoreCLI@2
     inputs:
-      versionSpec: '4.4.1'
-      checkLatest: true
-
-  - task: NuGetCommand@2
-    inputs:
-      restoreSolution: '**/Tests.csproj'
       command: 'restore'
+      projects: '**/Tests.csproj'
 
   - task: VSTest@2
     inputs:
