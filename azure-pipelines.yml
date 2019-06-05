@@ -99,7 +99,19 @@ jobs:
 #      projects: '**/Tests/Linq/Tests.csproj'
 #      arguments: '-c Azure --collect "Code coverage" -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI"'
 
-  - script: dotnet vstest .\Azure\net46\*.dll -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+  - task: VSTest@2
+    inputs:
+      testAssemblyVer2: |
+       **\$(BuildConfiguration)\net46*\*test*.dll
+       **\$(BuildConfiguration)\**\net46*\*test*.dll
+       !**\*Microsoft.VisualStudio.TestPlatform*
+       !**\obj\**
+       !**\*TestAdapter.dll
+      platform: '$(buildPlatform)'
+      configuration: '$(buildConfiguration)'
+      otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6 /TestCaseFilter:"TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI"'
+
+#  - script: dotnet vstest Azure\net46\linq2db.Tests.dll -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
     displayName: 'Run tests NET46' 
 #--collect "Code coverage"
 
