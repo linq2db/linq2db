@@ -133,11 +133,8 @@ jobs:
       artifactName: '$(buildConfiguration)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: 'restore'
-      projects: '**/Tests.csproj'
-
+  - script: dotnet add package NUnit --version 3.12.0
+  
   - task: VSTest@2
     inputs:
       testAssemblyVer2: |
