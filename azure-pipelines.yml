@@ -21,7 +21,7 @@ jobs:
     vmImage: 'macOS-10.14'
 
   steps:
-  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx;LogFileName=macos_test_results.trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
+  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx;LogFileName=macos_test_results.trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" --collect "Code coverage"
   - task: PublishTestResults@2
     condition: succeededOrFailed()
     inputs:
@@ -71,34 +71,30 @@ jobs:
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
 
-  - task: CopyFiles@2
-    inputs:
-      TargetFolder: '$(Build.ArtifactStagingDirectory)'
-      sourceFolder: '$(Build.SourcesDirectory)'
-      contents: '**/$(BuildConfiguration)/**/?(*.exe|*.dll|*.pdb)'
-
   - task: PublishBuildArtifacts@1
     inputs:
-      pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      pathtoPublish: '$(System.DefaultWorkingDirectory)'
       artifactName: drop
 
 - job: Windows_testfx
   dependsOn: Windows_build
   condition: succeeded()
   timeoutInMinutes: 240
+
   pool:
     vmImage: 'vs2017-win2016'
 
   steps:
+  - checkout: none 
 
   - task: DownloadBuildArtifacts@0
     inputs:
       buildType: 'current'
       downloadType: 'single'
       artifactName: 'drop'
-      downloadPath: '$(Build.ArtifactStagingDirectory)'
+      downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - script: dotnet test drop\Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+  - script: dotnet test \Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
     displayName: 'Run tests NET46' 
 
   - task: PublishTestResults@2
