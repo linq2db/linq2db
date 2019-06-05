@@ -70,15 +70,15 @@ jobs:
       configuration: '$(buildConfiguration)'
 
   - powershell: |
-      Start-Job { dotnet test Tests\Linq\ -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure }
-      Start-Job { dotnet test Tests\Linq\ -f netcoreapp1.0 --no-build --logger "trx;LogFileName=core1_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure }
-      Start-Job { dotnet test Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=core2_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure }
-
+      Start-Job -Name "Run tests NET46" -ScriptBlock { dotnet test Tests\Linq\ -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure }
+      Start-Job -Name "Run tests CORE1" -ScriptBlock { dotnet test Tests\Linq\ -f netcoreapp1.0 --no-build --logger "trx;LogFileName=core1_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure }
+      Start-Job -Name "Run tests CORE2" -ScriptBlock { dotnet test Tests\Linq\ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=core2_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure }
       While (Get-Job -State "Running")
       {
         Start-Sleep 1
       }
-
+      $results = Get-Job | Receive-Job
+    displayName: 'Run tests...'
 #- script: dotnet test Tests\Linq\ -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
 #    displayName: 'Run tests NET46' 
 
