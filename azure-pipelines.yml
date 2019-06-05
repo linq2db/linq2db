@@ -64,6 +64,7 @@ jobs:
 
   - task: NuGetCommand@2
     inputs:
+      restoreSolution: '$(solution)'
       command: 'restore'
 
   - task: MSBuild@1
@@ -114,7 +115,7 @@ jobs:
 #      projects: '**/Tests/Linq/Tests.csproj'
 #      arguments: '-c Azure --collect "Code coverage" -f net46 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI"'
 
-  - script: dotnet test ./Tests/Linq/Tests.csproj -f netcoreapp2.0 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
+  - script: dotnet test /Tests/Linq/ -f netcoreapp2.0 --no-build --logger "trx;LogFileName=net46_test_results.trx" --filter "TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" -c Azure
     displayName: 'Run tests NET46' 
 #--collect "Code coverage"
 
