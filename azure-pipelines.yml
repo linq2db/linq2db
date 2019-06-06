@@ -164,10 +164,10 @@ jobs:
       versionSpec: '4.4.1'
       checkLatest: true
 
-  - script: nuget install Microsoft.NET.Test.Sdk
-  - script: nuget install NUnit
-  - script: nuget install NUnit3TestAdapter
-  - script: nuget install Microsoft.AspNetCore.TestHost
+#  - script: nuget install Microsoft.NET.Test.Sdk
+#  - script: nuget install NUnit
+#  - script: nuget install NUnit3TestAdapter
+#  - script: nuget install Microsoft.AspNetCore.TestHost
 
   - task: VSTest@2
     inputs:
