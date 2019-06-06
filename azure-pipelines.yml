@@ -40,7 +40,7 @@ jobs:
       projects: '**/Tests/Linq/Tests.csproj'
       publishWebProjects: false
       zipAfterPublish: false
-      arguments: -f netcoreapp2.0  -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/publish/
+      arguments: -f netcoreapp2.0  -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/Tests/publish/
 
   - task: CopyFiles@2
     inputs:
@@ -88,7 +88,7 @@ jobs:
 #    displayName: 'Run tests Core2.0' 
 
 #  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
-  - script: dotnet vstest $(System.DefaultWorkingDirectory)/$(BuildConfiguration)/publish/Linq/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
+  - script: dotnet vstest $(System.DefaultWorkingDirectory)/$(BuildConfiguration)/Tests/publish/Linq/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
 
   - task: PublishTestResults@2
     condition: succeededOrFailed()
@@ -152,7 +152,7 @@ jobs:
   - task: VSTest@2
     inputs:
       testAssemblyVer2: |
-       $(System.DefaultWorkingDirectory)/$(BuildConfiguration)/net46/linq2db.Tests.dll
+       **\$(BuildConfiguration)\net46\linq2db.Tests.dll
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
       testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
@@ -185,23 +185,13 @@ jobs:
       artifactName: '$(buildConfiguration)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - task: NuGetToolInstaller@1
-    inputs:
-      versionSpec: '4.4.1'
-      checkLatest: true
-
-#  - script: nuget install Microsoft.NET.Test.Sdk
-#  - script: nuget install NUnit
-#  - script: nuget install NUnit3TestAdapter
-#  - script: nuget install Microsoft.AspNetCore.TestHost
-
   - task: VSTest@2
     inputs:
       testAssemblyVer2: |
-       $(System.DefaultWorkingDirectory)/$(BuildConfiguration)/publish/Linq/linq2db.Tests.Core2.dll
+       **\$(BuildConfiguration)\Tests\publish\Linq\linq2db.Tests.Core2.dll
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
-      pathtoCustomTestAdapters: $(System.DefaultWorkingDirectory)/$(BuildConfiguration)/publish/Linq/
+      pathtoCustomTestAdapters: $(System.DefaultWorkingDirectory)\$(BuildConfiguration)\Tests\publish\Linq
       testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
       otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
     displayName: 'Run tests Core2.0' 
