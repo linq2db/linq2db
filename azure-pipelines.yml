@@ -160,16 +160,19 @@ jobs:
   - script: nuget install NUnit
   - script: nuget install NUnit3TestAdapter
 
-  - task: VSTest@2
-    inputs:
-      testAssemblyVer2: |
-       **\$(BuildConfiguration)\netcoreapp2.0\linq2db.Tests.Core2.dll
-      platform: '$(buildPlatform)'
-      configuration: '$(buildConfiguration)'
-      pathtoCustomTestAdapters: $(System.DefaultWorkingDirectory)\$(BuildConfiguration)\Tests\Linq\bin\$(BuildConfiguration)\netcoreapp2.0\
-      testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
-      otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
-    displayName: 'Run tests Core2.0' 
+#  - task: VSTest@2
+#    inputs:
+#      testAssemblyVer2: |
+#       **\$(BuildConfiguration)\netcoreapp2.0\linq2db.Tests.Core2.dll
+#      platform: '$(buildPlatform)'
+#      configuration: '$(buildConfiguration)'
+#      pathtoCustomTestAdapters: $(System.DefaultWorkingDirectory)\$(BuildConfiguration)\Tests\Linq\bin\$(BuildConfiguration)\netcoreapp2.0\
+#      testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
+#      otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
+#    displayName: 'Run tests Core2.0' 
+  - powershell: |
+      cd $(System.DefaultWorkingDirectory)\$(BuildConfiguration)\Tests\Linq\bin\$(BuildConfiguration)\netcoreapp2.0\
+      dotnet vstest linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0
 
   - task: PublishTestResults@2
     condition: succeededOrFailed()
