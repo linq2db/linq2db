@@ -57,7 +57,7 @@ jobs:
       artifactName: '$(buildConfiguration)'
 
 ##############################
-#  Linux build & tests
+#  Linux tests
 ##############################
 - job: Linux
   pool:
@@ -77,19 +77,8 @@ jobs:
       artifactName: '$(buildConfiguration)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
-#  - task: VSTest@2
-#    inputs:
-#      testAssemblyVer2: |
-#       $(System.DefaultWorkingDirectory)/$(BuildConfiguration)/publish/Linq/linq2db.Tests.Core2.dll
-#      platform: '$(buildPlatform)'
-#      configuration: '$(buildConfiguration)'
-#      pathtoCustomTestAdapters: $(System.DefaultWorkingDirectory)/$(BuildConfiguration)/Linq/publish/
-#      testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
-#      otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
-#    displayName: 'Run tests Core2.0' 
-
 #  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
-  - script: dotnet vstest $(System.DefaultWorkingDirectory)/$(BuildConfiguration)/Tests/publish/Linq/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
+  - script: dotnet vstest ./$(BuildConfiguration)/Tests/publish/Linq/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
 
   - task: PublishTestResults@2
     condition: succeededOrFailed()
@@ -98,15 +87,28 @@ jobs:
       testResultsFiles: '**/*.trx'
 
 ##############################
-#  OSX build & tests
+#  OSX Tests
 ##############################
 - job: MacOS
   pool:
     vmImage: 'macOS-10.14'
+  dependsOn: build
+  condition: succeeded()
   displayName: 'MacOS'
 
   steps:
-  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
+  - checkout: none 
+
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: '$(buildConfiguration)'
+      downloadPath: '$(System.DefaultWorkingDirectory)'
+
+  #- script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
+  - script: dotnet vstest $(System.DefaultWorkingDirectory)/$(BuildConfiguration)/Tests/publish/Linq/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
+
   - task: PublishTestResults@2
     condition: succeededOrFailed()
     inputs:
