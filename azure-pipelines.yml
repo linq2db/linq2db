@@ -40,7 +40,8 @@ jobs:
       projects: '**/Tests/Linq/Tests.csproj'
       publishWebProjects: false
       zipAfterPublish: false
-      arguments: -f netcoreapp2.0  -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/Tests/publish/
+      arguments: -f netcoreapp2.0  -c $(buildConfiguration) 
+      #-o $(Build.ArtifactStagingDirectory)/Tests/publish/
 
   - task: CopyFiles@2
     inputs:
