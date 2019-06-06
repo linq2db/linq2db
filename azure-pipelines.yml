@@ -46,7 +46,7 @@ jobs:
   - task: CopyFiles@2
     inputs:
       TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)'
-      sourceFolder: '$(Build.SourcesDirectory)'
+      sourceFolder: '$(Build.SourcesDirectory)/Tests/'
       contents: |
         **/DataProviders.json
 
