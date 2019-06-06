@@ -58,17 +58,17 @@ jobs:
       restoreSolution: '$(solution)'
       command: 'restore'
 
-  - task: MSBuild@1
+  - task: VSBuild@1
     inputs:
       solution: '$(solution)'
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
-      msbuildArguments: /m
+      #msbuildArguments: /m
 
   - task: DotNetCoreCLI@2
     inputs:
       command: publish
-      projects: '**/*Tests*.csproj'
+      projects: '**/Tests/Linq/Tests.csproj'
       publishWebProjects: false
 #      arguments: --output $(Build.ArtifactStagingDirectory)
       zipAfterPublish: false
