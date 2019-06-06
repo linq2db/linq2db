@@ -45,15 +45,14 @@ jobs:
 
   - task: CopyFiles@2
     inputs:
-      TargetFolder: '$(build.ArtifactStagingDirectory)'
+      TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)'
       sourceFolder: '$(Build.SourcesDirectory)'
       contents: |
-        **/Tests/Linq/bin/$(buildConfiguration)/**
         **/DataProviders.json
 
   - task: PublishBuildArtifacts@1
     inputs:
-      pathtoPublish: '$(build.ArtifactStagingDirectory)'
+      pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)'
       artifactName: '$(buildConfiguration)'
 
 ##############################
@@ -78,7 +77,7 @@ jobs:
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
 #  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
-  - script: dotnet vstest ./$(BuildConfiguration)/Tests/publish/Linq/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
+  - script: dotnet vstest ./$(BuildConfiguration)/netcoreapp2.0/publish/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
 
   - task: PublishTestResults@2
     condition: succeededOrFailed()
@@ -155,7 +154,7 @@ jobs:
   - task: VSTest@2
     inputs:
       testAssemblyVer2: |
-       **\$(BuildConfiguration)\net46\linq2db.Tests.dll
+       **/$(BuildConfiguration)/net46/linq2db.Tests.dll
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
       testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
@@ -191,10 +190,10 @@ jobs:
   - task: VSTest@2
     inputs:
       testAssemblyVer2: |
-       **\$(BuildConfiguration)\Tests\publish\Linq\linq2db.Tests.Core2.dll
+       **\$(BuildConfiguration)\netcoreapp2.0\publish\linq2db.Tests.Core2.dll
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
-      pathtoCustomTestAdapters: $(System.DefaultWorkingDirectory)\$(BuildConfiguration)\Tests\publish\Linq
+      #pathtoCustomTestAdapters: '$(System.DefaultWorkingDirectory)\$(BuildConfiguration)\Tests\publish\Linq
       testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
       otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
     displayName: 'Run tests Core2.0' 
