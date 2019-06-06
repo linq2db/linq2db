@@ -65,6 +65,13 @@ jobs:
       configuration: '$(buildConfiguration)'
       #msbuildArgs: /m
 
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: publish
+      projects: '**/Tests/Linq/Tests.csproj'
+      publishWebProjects: false
+      zipAfterPublish: false
+
   - task: CopyFiles@2
     inputs:
       TargetFolder: '$(build.ArtifactStagingDirectory)'
