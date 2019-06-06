@@ -63,15 +63,15 @@ jobs:
       solution: '$(solution)'
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
-      #msbuildArgs: /m
+      msbuildArgs: /m
 
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: publish
-      projects: '**/Tests/Linq/Tests.csproj'
-      publishWebProjects: false
-      zipAfterPublish: false
-      arguments: -f netcoreapp2.0  -c $(buildConfiguration)
+#  - task: DotNetCoreCLI@2
+#    inputs:
+#      command: publish
+#      projects: '**/Tests/Linq/Tests.csproj'
+#      publishWebProjects: false
+#      zipAfterPublish: false
+#      arguments: -f netcoreapp2.0  -c $(buildConfiguration)
 
   - task: CopyFiles@2
     inputs:
@@ -177,7 +177,7 @@ jobs:
       configuration: '$(buildConfiguration)'
       pathtoCustomTestAdapters: $(System.DefaultWorkingDirectory)\$(BuildConfiguration)\Tests\Linq\bin\$(BuildConfiguration)\netcoreapp2.0\
       testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
-      otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
+      otherConsoleOptions: '/Framework:.NETStandard,Version=v2.0'
     displayName: 'Run tests Core2.0' 
 #  - powershell: |
 #      cd $(System.DefaultWorkingDirectory)\$(BuildConfiguration)\Tests\Linq\bin\$(BuildConfiguration)\netcoreapp2.0\
