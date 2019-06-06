@@ -6,10 +6,14 @@ variables:
 trigger:
   - master
 
+##############################
+#  Linux build & tests
+##############################
 jobs:
 - job: Linux
   pool:
     vmImage: 'ubuntu-16.04'
+  displayName: 'Linux'
 
   steps:
   - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
@@ -19,9 +23,13 @@ jobs:
       testRunner: VsTest
       testResultsFiles: '**/*.trx'
 
+##############################
+#  OSX build & tests
+##############################
 - job: MacOS
   pool:
     vmImage: 'macOS-10.14'
+  displayName: 'MacOS'
 
   steps:
   - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
@@ -31,6 +39,9 @@ jobs:
       testRunner: VsTest
       testResultsFiles: '**/*.trx'
 
+##############################
+#  Windows build
+##############################
 - job: Windows_build
   pool:
     vmImage: 'vs2017-win2016'
@@ -42,35 +53,10 @@ jobs:
       versionSpec: '4.4.1'
       checkLatest: true
 
-#  - task: NuGetCommand@2
-#    inputs:
-#      restoreSolution: '$(solution)'
-#      command: 'restore'
-
-# .NET Core
-# Restore NuGet packages.
-  - task: DotNetCoreCLI@2
+  - task: NuGetCommand@2
     inputs:
+      restoreSolution: '$(solution)'
       command: 'restore'
-      projects: '**/*.csproj'
-      verbosityRestore: 'quiet' # Options: quiet, minimal, normal, detailed, diagnostic
-
-#- powershell: |
-#      $filename1 = "SSCERuntime_x86-ENU.msi"
-#      $filename2 = "SSCERuntime_x64-ENU.msi"
-#      $downloadUrl = "https://download.microsoft.com/download/6/9/5/695ED23C-F40F-420C-98D1-0F752B8D4E2B/1033/"
-
-#      (New-Object Net.WebClient).DownloadFile($downloadUrl+"/x86/"+$filename1, $filename1)
-#      (New-Object Net.WebClient).DownloadFile($downloadUrl+"/x64/"+$filename2, $filename2)
-
-#      $job = Start-Job { msiexec /i $filename1 /qn }
-#      Wait-Job $job
-#      Receive-Job $job
-
-#      $job = Start-Job { msiexec /i $filename2 /qn }
-#      Wait-Job $job
-#      Receive-Job $job
-#  displayName: 'Install SqlCe 4.0 runtime'
 
   - task: MSBuild@1
     inputs:
@@ -93,12 +79,15 @@ jobs:
       pathtoPublish: '$(build.ArtifactStagingDirectory)'
       artifactName: '$(buildConfiguration)'
 
+##############################
+#  Windows NETFX tests job1
+##############################
 - job: Windows_testfx
   dependsOn: Windows_build
   condition: succeeded()
   pool:
     vmImage: 'vs2017-win2016'
-  displayName: 'Windows (netfx tests job1)'
+  displayName: 'Windows tests NETFX-1'
 
   steps:
   - checkout: none 
@@ -110,13 +99,31 @@ jobs:
       artifactName: '$(buildConfiguration)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
+#- powershell: |
+#      $filename1 = "SSCERuntime_x86-ENU.msi"
+#      $filename2 = "SSCERuntime_x64-ENU.msi"
+#      $downloadUrl = "https://download.microsoft.com/download/6/9/5/695ED23C-F40F-420C-98D1-0F752B8D4E2B/1033/"
+
+#      (New-Object Net.WebClient).DownloadFile($downloadUrl+"/x86/"+$filename1, $filename1)
+#      (New-Object Net.WebClient).DownloadFile($downloadUrl+"/x64/"+$filename2, $filename2)
+
+#      $job = Start-Job { msiexec /i $filename1 /qn }
+#      Wait-Job $job
+#      Receive-Job $job
+
+#      $job = Start-Job { msiexec /i $filename2 /qn }
+#      Wait-Job $job
+#      Receive-Job $job
+#  displayName: 'Install SqlCe 4.0 runtime'
+
   - task: VSTest@2
     inputs:
       testAssemblyVer2: |
        **\$(BuildConfiguration)\net46*\linq2db.Tests.dll
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
-      otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6 /TestCaseFilter:"TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI"'
+      testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
+      otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6'
     displayName: 'Run tests NET46' 
 
   - task: PublishTestResults@2
@@ -125,12 +132,15 @@ jobs:
       testRunner: VsTest
       testResultsFiles: '**/*.trx'
 
+##############################
+#  Windows CORE tests job1
+##############################
 - job: Windows_testcore
   dependsOn: Windows_build
   condition: succeeded()
   pool:
     vmImage: 'vs2017-win2016'
-  displayName: 'Windows (netcore2 tests job1)'
+  displayName: 'Windows tests CORE-1'
 
   steps:
   - checkout: none 
@@ -148,6 +158,7 @@ jobs:
       checkLatest: true
 
   - script: nuget install NUnit
+  - script: nuget install NUnit3TestAdapter
 
   - task: VSTest@2
     inputs:
@@ -156,7 +167,7 @@ jobs:
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
       pathtoCustomTestAdapters: $(System.DefaultWorkingDirectory)\$(BuildConfiguration)\Tests\Linq\bin\$(BuildConfiguration)\netcoreapp2.0\
-      testFiltercriteria: TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI
+      testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
       otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
     displayName: 'Run tests Core2.0' 
 
