@@ -759,7 +759,23 @@ namespace LinqToDB.Linq.Builder
 		static readonly MethodInfo _queryableMethodInfo =
 			MemberHelper.MethodOf<IQueryable<bool>>(n => n.Where(a => a)).GetGenericMethodDefinition();
 
-		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappingSchema, Expression expression, HashSet<ParameterExpression> parameters)
+		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappingSchema,
+			Expression expression, HashSet<ParameterExpression> parameters)
+		{
+			var masterElementType = EagerLoading.GetEnumerableElementType(context.Builder.Expression.Type);
+			var detailElementType = EagerLoading.GetEnumerableElementType(expression.Type);
+
+			var queryType = typeof(Query<>).MakeGenericType(detailElementType);
+			var method = queryType.GetMethod("GetQuery", BindingFlags.Static | BindingFlags.Public);
+//			var detailQuery = method.Invoke(null, new object[] { context.Builder.DataContext, expression });
+
+			var mainObjParam = Expression.Parameter(masterElementType, "master");
+			var valueExpression = EagerLoading.GenerateDetailsExpression(context, context.Builder.Expression, expression);
+
+			return valueExpression;
+		}
+
+		static Expression GetMultipleQueryExpressionOld(IBuildContext context, MappingSchema mappingSchema, Expression expression, HashSet<ParameterExpression> parameters)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
 				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
@@ -875,6 +891,8 @@ namespace LinqToDB.Linq.Builder
 			var parameters = new HashSet<ParameterExpression>();
 
 			expression = GetMultipleQueryExpression(context, MappingSchema, expression, parameters);
+
+			return expression;
 
 			var paramex = Expression.Parameter(typeof(object[]), "ps");
 			var parms   = new List<Expression>();

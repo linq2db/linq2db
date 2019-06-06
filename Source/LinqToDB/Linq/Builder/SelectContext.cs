@@ -313,7 +313,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var q =
 							from m in Members
-							where !(m.Key is MethodInfo)
+							where !(m.Key is MethodInfo || EagerLoading.IsDetailsMember(m.Key))
 							select ConvertMember(m.Key, m.Value, flags) into mm
 							from m in mm
 							select m;
@@ -513,7 +513,7 @@ namespace LinqToDB.Linq.Builder
 								var p = Expression.Parameter(Body.Type, "p");
 								var q =
 									from m in Members.Keys
-									where !(m is MethodInfo)
+									where !(m is MethodInfo || EagerLoading.IsDetailsMember(m))
 									select new SqlData
 									{
 										Sql    = ConvertToIndex(Expression.MakeMemberAccess(p, m), 1, flags),
