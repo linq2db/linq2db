@@ -5,10 +5,6 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests</AssemblyName>
-		<ApplicationIcon />
-		<OutputType>Library</OutputType>
-		<StartupObject />
-		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'AppVeyor' ">
