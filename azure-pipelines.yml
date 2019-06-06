@@ -63,7 +63,7 @@ jobs:
       solution: '$(solution)'
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
-      msbuildArgs: /m
+      #msbuildArgs: /m
 
   - task: CopyFiles@2
     inputs:
