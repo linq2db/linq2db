@@ -159,6 +159,7 @@ jobs:
   - script: nuget install Microsoft.NET.Test.Sdk
   - script: nuget install NUnit
   - script: nuget install NUnit3TestAdapter
+  - script: nuget install Microsoft.TestPlatform.TestHost
 
   - task: VSTest@2
     inputs:
