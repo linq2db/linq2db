@@ -88,7 +88,7 @@ jobs:
 #    displayName: 'Run tests Core2.0' 
 
 #  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
-  - script: dotnet vstest $(System.DefaultWorkingDirectory)/$(BuildConfiguration)/publish/Linq/linq2db.Tests.Core2.dll /TestFiltercriteria:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
+  - script: dotnet vstest $(System.DefaultWorkingDirectory)/$(BuildConfiguration)/publish/Linq/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
 
   - task: PublishTestResults@2
     condition: succeededOrFailed()
