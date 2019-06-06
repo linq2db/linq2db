@@ -65,6 +65,11 @@ jobs:
       configuration: '$(buildConfiguration)'
       msbuildArguments: /m
 
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: publish
+      projects: '**/*Tests*.csproj'
+
   - task: CopyFiles@2
     inputs:
       TargetFolder: '$(build.ArtifactStagingDirectory)'
