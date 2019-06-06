@@ -3,7 +3,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net46;netcoreapp1.0;netcoreapp2.0</TargetFrameworks>
-		<Configurations>Debug;Release;Azure</Configurations>
+		<Configurations>Debug;Release</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>

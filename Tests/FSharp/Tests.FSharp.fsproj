@@ -6,7 +6,6 @@
 	<PropertyGroup>
 		<NoWarn>$(NoWarn);FS0988</NoWarn>
 		<AssemblyName>linq2db.Tests.FSharp</AssemblyName>
-		<Configurations>Debug;Release;AppVeyor;Travis;Azure</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>

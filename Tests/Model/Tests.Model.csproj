@@ -5,7 +5,6 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Model</AssemblyName>
-		<Configurations>Debug;Release;AppVeyor;Travis;Azure</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' OR '$(TargetFramework)' == 'netcoreapp1.0' ">
