@@ -63,14 +63,14 @@ jobs:
       solution: '$(solution)'
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
-      msbuildArguments: /m
+      msbuildArgs: /m
 
   - task: DotNetCoreCLI@2
     inputs:
       command: publish
       projects: '**/Tests/Linq/Tests.csproj'
       publishWebProjects: false
-#      arguments: --output $(Build.ArtifactStagingDirectory)
+      arguments: -f netstandard2.0
       zipAfterPublish: false
 
   - task: CopyFiles@2
