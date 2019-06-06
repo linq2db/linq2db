@@ -14,7 +14,7 @@ jobs:
 - job: build
   pool:
     vmImage: 'vs2017-win2016'
-  displayName: 'Windows (build)'
+  displayName: 'Build (Windows)'
 
   steps:
   - task: NuGetToolInstaller@1
@@ -63,7 +63,7 @@ jobs:
     vmImage: 'ubuntu-16.04'
   dependsOn: build
   condition: succeeded()
-  displayName: 'Linux'
+  displayName: 'NETCORE Tests (Linux)'
 
   steps:
 
@@ -92,7 +92,7 @@ jobs:
     vmImage: 'macOS-10.14'
   dependsOn: build
   condition: succeeded()
-  displayName: 'MacOS'
+  displayName: 'NETCORE Tests (MacOS)'
 
   steps:
   - checkout: none 
@@ -115,12 +115,12 @@ jobs:
 ##############################
 #  Windows NETFX tests job1
 ##############################
-- job: Windows_testfx
+- job: 
   dependsOn: build
   condition: succeeded()
   pool:
     vmImage: 'vs2017-win2016'
-  displayName: 'Windows tests NETFX-1'
+  displayName: 'NETFX Tests (Windows)'
 
   steps:
   - checkout: none 
@@ -168,12 +168,12 @@ jobs:
 ##############################
 #  Windows CORE tests job1
 ##############################
-- job: Windows_testcore
+- job:
   dependsOn: build
   condition: succeeded()
   pool:
     vmImage: 'vs2017-win2016'
-  displayName: 'Windows tests CORE-1'
+  displayName: 'NETCORE Tests (Windows)'
 
   steps:
   - checkout: none 
