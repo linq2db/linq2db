@@ -140,7 +140,7 @@ stages:
         job1: 
           file: 'win_netfx_job1.ps1'
         job2:
-          file: 'win_netfx_job1.ps1'
+          file: 'win_netfx_job2.ps1'
 
     steps:
     - checkout: none 
