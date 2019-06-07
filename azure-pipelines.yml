@@ -138,14 +138,12 @@ stages:
       maxParallel: 2
       matrix:
         job1: 
-          file: 'ci/win_netfx_job1.yml'
+          file: 'win_netfx_job1.ps1'
         job2:
-          file: 'ci/win_netfx_job1.yml'
+          file: 'win_netfx_job1.ps1'
 
     steps:
     - checkout: none 
-
-    - template: '$(file)'
 
     - task: DownloadBuildArtifacts@0
       inputs:
@@ -153,6 +151,8 @@ stages:
         downloadType: 'single'
         artifactName: '$(netfxtests)'
         downloadPath: '$(System.DefaultWorkingDirectory)'
+
+    - powershell: '$(file)'
 
     - task: VSTest@2
       inputs:
