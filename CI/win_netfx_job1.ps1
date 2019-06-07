@@ -1,1 +1,0 @@
-Rename-Item -Path "win_netfx_job1.json" -NewName "DataProviders.json" -Force
