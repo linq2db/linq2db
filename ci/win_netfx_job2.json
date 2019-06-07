@@ -6,10 +6,10 @@
 		"TraceLevel"           : "Error",
 		"Providers"            :
 		[
-			"Access",
+			//"Access",
 			//"SqlCe",
 			//"SQLite.Classic",
-			//"SQLite.MS",
+			"SQLite.MS",
 			//"Northwind.SQLite",
 			//"Northwind.SQLite.MS",
 			//"MySqlConnector",
@@ -18,7 +18,7 @@
 			//"Northwind",
 			//"SqlServer",
 			//"SqlServer.2014",
-			//"TestNoopProvider"
+			"TestNoopProvider"
 		],
 		"Connections"          :
 		{
