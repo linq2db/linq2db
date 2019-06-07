@@ -6,46 +6,15 @@ variables:
 trigger:
   - master
 
-##############################
-#  Linux build & tests
-##############################
 jobs:
-- job: Linux
-  pool:
-    vmImage: 'ubuntu-16.04'
-  displayName: 'Linux'
-
-  steps:
-  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
-  - task: PublishTestResults@2
-    condition: succeededOrFailed()
-    inputs:
-      testRunner: VsTest
-      testResultsFiles: '**/*.trx'
-
-##############################
-#  OSX build & tests
-##############################
-- job: MacOS
-  pool:
-    vmImage: 'macOS-10.14'
-  displayName: 'MacOS'
-
-  steps:
-  - script: dotnet test ./Tests/Linq/Tests.csproj -c Azure -f netcoreapp2.0 --logger "trx" --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
-  - task: PublishTestResults@2
-    condition: succeededOrFailed()
-    inputs:
-      testRunner: VsTest
-      testResultsFiles: '**/*.trx'
 
 ##############################
 #  Windows build
 ##############################
-- job: Windows_build
+- job: build
   pool:
     vmImage: 'vs2017-win2016'
-  displayName: 'Windows (build)'
+  displayName: 'Build (Windows)'
 
   steps:
   - task: NuGetToolInstaller@1
@@ -65,36 +34,93 @@ jobs:
       configuration: '$(buildConfiguration)'
       msbuildArgs: /m
 
-#  - task: DotNetCoreCLI@2
-#    inputs:
-#      command: publish
-#      projects: '**/Tests/Linq/Tests.csproj'
-#      publishWebProjects: false
-#      zipAfterPublish: false
-#      arguments: -f netcoreapp2.0  -c $(buildConfiguration)
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: publish
+      projects: '**/Tests/Linq/Tests.csproj'
+      publishWebProjects: false
+      zipAfterPublish: false
+      arguments: -f netcoreapp2.0  -c $(buildConfiguration) 
+      #-o $(Build.ArtifactStagingDirectory)/Tests/publish/
 
   - task: CopyFiles@2
     inputs:
-      TargetFolder: '$(build.ArtifactStagingDirectory)'
-      sourceFolder: '$(Build.SourcesDirectory)'
+      TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)'
+      sourceFolder: '$(Build.SourcesDirectory)/Tests/'
       contents: |
-        **/Tests/Linq/bin/$(buildConfiguration)/**
         **/DataProviders.json
 
   - task: PublishBuildArtifacts@1
     inputs:
-      pathtoPublish: '$(build.ArtifactStagingDirectory)'
+      pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)'
       artifactName: '$(buildConfiguration)'
+
+##############################
+#  Linux tests
+##############################
+- job: Linux
+  pool:
+    vmImage: 'ubuntu-16.04'
+  dependsOn: build
+  condition: succeeded()
+  displayName: 'NETCORE Tests (Linux)'
+
+  steps:
+
+  - checkout: none 
+
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: '$(buildConfiguration)'
+      downloadPath: '$(System.DefaultWorkingDirectory)'
+
+  - script: dotnet vstest ./$(BuildConfiguration)/netcoreapp2.0/publish/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testRunner: VsTest
+      testResultsFiles: '**/*.trx'
+
+##############################
+#  OSX Tests
+##############################
+- job: MacOS
+  pool:
+    vmImage: 'macOS-10.14'
+  dependsOn: build
+  condition: succeeded()
+  displayName: 'NETCORE Tests (MacOS)'
+
+  steps:
+  - checkout: none 
+
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: '$(buildConfiguration)'
+      downloadPath: '$(System.DefaultWorkingDirectory)'
+
+  - script: dotnet vstest ./$(BuildConfiguration)/netcoreapp2.0/publish/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testRunner: VsTest
+      testResultsFiles: '**/*.trx'
 
 ##############################
 #  Windows NETFX tests job1
 ##############################
-- job: Windows_testfx
-  dependsOn: Windows_build
+- job: 
+  dependsOn: build
   condition: succeeded()
   pool:
     vmImage: 'vs2017-win2016'
-  displayName: 'Windows tests NETFX-1'
+  displayName: 'NETFX Tests (Windows)'
 
   steps:
   - checkout: none 
@@ -126,7 +152,7 @@ jobs:
   - task: VSTest@2
     inputs:
       testAssemblyVer2: |
-       **\$(BuildConfiguration)\net46*\linq2db.Tests.dll
+       **/$(BuildConfiguration)/net46/linq2db.Tests.dll
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
       testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
@@ -142,12 +168,12 @@ jobs:
 ##############################
 #  Windows CORE tests job1
 ##############################
-- job: Windows_testcore
-  dependsOn: Windows_build
+- job:
+  dependsOn: build
   condition: succeeded()
   pool:
-    vmImage: 'windows-2019'
-  displayName: 'Windows tests CORE-1'
+    vmImage: 'vs2017-win2016'
+  displayName: 'NETCORE Tests (Windows)'
 
   steps:
   - checkout: none 
@@ -159,29 +185,15 @@ jobs:
       artifactName: '$(buildConfiguration)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - task: NuGetToolInstaller@1
-    inputs:
-      versionSpec: '4.4.1'
-      checkLatest: true
-
-  - script: nuget install Microsoft.NET.Test.Sdk
-  - script: nuget install NUnit
-  - script: nuget install NUnit3TestAdapter
-  - script: nuget install Microsoft.AspNetCore.TestHost
-
   - task: VSTest@2
     inputs:
       testAssemblyVer2: |
-       **\$(BuildConfiguration)\netcoreapp2.0\linq2db.Tests.Core2.dll
+       **\$(BuildConfiguration)\netcoreapp2.0\publish\linq2db.Tests.Core2.dll
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
-      pathtoCustomTestAdapters: $(System.DefaultWorkingDirectory)\$(BuildConfiguration)\Tests\Linq\bin\$(BuildConfiguration)\netcoreapp2.0\
       testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
-      otherConsoleOptions: '/Framework:.NETStandard,Version=v2.0'
+      otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
     displayName: 'Run tests Core2.0' 
-#  - powershell: |
-#      cd $(System.DefaultWorkingDirectory)\$(BuildConfiguration)\Tests\Linq\bin\$(BuildConfiguration)\netcoreapp2.0\
-#      dotnet vstest linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0
 
   - task: PublishTestResults@2
     condition: succeededOrFailed()
