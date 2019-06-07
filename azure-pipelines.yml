@@ -154,7 +154,8 @@ stages:
 
     - task: PowerShell@2
       inputs:
-        filePath: '$(netfxtests)/$(file)'
+        filePath: '$(file)'
+        workingDirectory: '$(netfxtests)'
 
     - task: VSTest@2
       inputs:
