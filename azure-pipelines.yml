@@ -82,7 +82,6 @@ stages:
     displayName: 'NETCORE Tests (Linux)'
 
     steps:
-
     - checkout: none 
 
     - task: DownloadBuildArtifacts@0
@@ -138,9 +137,9 @@ stages:
       maxParallel: 2
       matrix:
         job1: 
-          template: win_netfx_job1.yml
+          template: '**/CI/win_netfx_job1.yml'
         job2:
-          template: win_netfx_job1.yml
+          template: '**/CI/win_netfx_job1.yml'
 
     steps:
     - checkout: none 
