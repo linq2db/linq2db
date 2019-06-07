@@ -7,18 +7,8 @@
 		"Providers"            :
 		[
 			"Access",
-			//"SqlCe",
-			//"SQLite.Classic",
 			"SQLite.MS",
-			"Northwind.SQLite",
-			"Northwind.SQLite.MS",
-			//"MySqlConnector",
-			//"MySql57",
-			//"PostgreSQL",
-			//"Northwind",
-			//"SqlServer",
-			//"SqlServer.2014",
-			//"TestNoopProvider"
+			"Northwind.SQLite.MS"
 		],
 		"Connections"          :
 		{

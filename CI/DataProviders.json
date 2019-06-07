@@ -1,165 +1,4 @@
-﻿//
-// This file defines data providers and connection strings used by default for all users.
-// Copy this file as UserDataProviders.json and specify providers and connection strings you need to work on.
-// UserDataProviders.json is in .gitignore and it is not committed to the repository.
-//
-// For example:
-//
-//		{
-//			"LocalConnectionStrings":
-//			{
-//				"Connections" :
-//				{
-//					"SqlAzure.2012" :
-//					{
-//						"Provider"         : "System.Data.SqlClient",
-//						"ConnectionString" : "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=xxx;Trusted_Connection=False;Encrypt=True;"
-//					},
-//				}
-//			}
-//		}
-//
-
-{
-	"NET45" :
-	{
-		"BasedOn"              : "LocalConnectionStrings",
-		"DefaultConfiguration" : "SQLite.Classic",
-		"Providers"            :
-		[
-			"Access",
-			"SqlCe",
-			"SQLite.Classic",
-			"SQLite.MS",
-			"Northwind.SQLite",
-			"Northwind.SQLite.MS",
-			"TestNoopProvider"
-		]
-	},
-
-	"CORE1" :
-	{
-		"BasedOn"              : "LocalConnectionStrings",
-		"DefaultConfiguration" : "SQLite.MS",
-		"Providers"            :
-		[
-			"SQLite.MS",
-			"Northwind.SQLite.MS",
-			"TestNoopProvider"
-		]
-	},
-
-	"CORE2" :
-	{
-		"BasedOn"              : "LocalConnectionStrings",
-		"DefaultConfiguration" : "SQLite.MS",
-		"Providers"            :
-		[
-			"SQLite.MS",
-			"Northwind.SQLite.MS",
-			"TestNoopProvider"
-		]
-	},
-
-	"NET45.AppVeyor" :
-	{
-		"BasedOn"              : "AppveyorConnectionStrings",
-		"DefaultConfiguration" : "SQLite.Classic",
-		"TraceLevel"           : "Error",
-		"Providers"            :
-		[
-			"Access",
-			"SqlCe",
-			"SQLite.Classic",
-			"SQLite.MS",
-			"Northwind.SQLite",
-			"Northwind.SQLite.MS",
-			"MySqlConnector",
-			"MySql57",
-			"PostgreSQL",
-			"Northwind",
-			"SqlServer",
-			"SqlServer.2014",
-			"TestNoopProvider"
-		],
-		"Connections"          :
-		{
-			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=testdatanet45;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;" },
-			"MySqlConnector"      : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=testdatanet45;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;Treat Tiny As Boolean=False;Use Affected Rows=False" },
-			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=localhost;Port=5432;Database=TestDatanet45;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
-			"SqlServer"           : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestDatanet45;User Id=sa;Password=Password12!;" },
-			"SqlServer.2014"      : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestDatanet45;User Id=sa;Password=Password12!;" }
-		}
-	},
-
-	"CORE1.AppVeyor" :
-	{
-		"BasedOn"              : "AppveyorConnectionStrings",
-		"DefaultConfiguration" : "SQLite.MS",
-		"TraceLevel"           : "Error",
-		"Providers"            :
-		[
-			"SQLite.MS",
-			"Northwind.SQLite.MS",
-			"MySqlConnector",
-			"MySql57",
-			"PostgreSQL",
-			"Northwind",
-			"SqlServer",
-			"SqlServer.2014",
-			"TestNoopProvider"
-		],
-		"Connections"          :
-		{
-			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=testdatacore1;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;" },
-			"MySqlConnector"      : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=testdatacore1;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;Treat Tiny As Boolean=False;Use Affected Rows=False" },
-			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=localhost;Port=5432;Database=TestDatacore1;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
-			"SqlServer"           : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestDatacore1;User Id=sa;Password=Password12!;" },
-			"SqlServer.2014"      : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestDatacore1;User Id=sa;Password=Password12!;" }
-		}
-	},
-
-	"CORE2.AppVeyor" :
-	{
-		"BasedOn"              : "AppveyorConnectionStrings",
-		"DefaultConfiguration" : "SQLite.MS",
-		"TraceLevel"           : "Error",
-		"Providers"            :
-		[
-			"SQLite.MS",
-			"Northwind.SQLite.MS",
-			"MySqlConnector",
-			"MySql57",
-			"PostgreSQL",
-			"Northwind",
-			"SqlServer",
-			"SqlServer.2014",
-			"TestNoopProvider"
-		],
-		"Connections"          :
-		{
-			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=testdatacore2;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;" },
-			"MySqlConnector"      : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=testdatacore2;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;Treat Tiny As Boolean=False;Use Affected Rows=False" },
-			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=localhost;Port=5432;Database=TestDatacore2;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
-			"SqlServer"           : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestDatacore2;User Id=sa;Password=Password12!;" },
-			"SqlServer.2014"      : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestDatacore2;User Id=sa;Password=Password12!;" }
-		}
-	},
-
-	"CORE2.Travis" :
-	{
-		"BasedOn"              : "TravisConnectionStrings",
-		"DefaultConfiguration" : "SQLite.MS",
-		"TraceLevel"           : "Error",
-		"Providers"            :
-		[
-			"SQLite.MS",
-			"Northwind.SQLite.MS",
-			"MySqlConnector",
-			"MySql57",
-			"PostgreSQL"
-		]
-	},
+﻿{
 
 	"NET45.Azure" :
 	{
@@ -170,10 +9,10 @@
 		[
 			"Access",
 			//"SqlCe",
-			//"SQLite.Classic",
+			"SQLite.Classic",
 			"SQLite.MS",
-			//"Northwind.SQLite",
-			//"Northwind.SQLite.MS",
+			"Northwind.SQLite",
+			"Northwind.SQLite.MS",
 			//"MySqlConnector",
 			//"MySql57",
 			//"PostgreSQL",
@@ -192,32 +31,7 @@
 		}
 	},
 
-	"CORE1.Azure" :
-	{
-		"BasedOn"              : "AzureConnectionStrings",
-		"DefaultConfiguration" : "SQLite.MS",
-		"TraceLevel"           : "Error",
-		"Providers"            :
-		[
-			"SQLite.MS",
-			//"Northwind.SQLite.MS",
-			//"MySqlConnector",
-			//"MySql57",
-			//"PostgreSQL",
-			//"Northwind",
-			//"SqlServer",
-			//"SqlServer.2014",
-			"TestNoopProvider"
-		],
-		"Connections"          :
-		{
-			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=testdatacore1;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;" },
-			"MySqlConnector"      : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=testdatacore1;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;Treat Tiny As Boolean=False;Use Affected Rows=False" },
-			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=localhost;Port=5432;Database=TestDatacore1;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
-			"SqlServer"           : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestDatacore1;User Id=sa;Password=Password12!;" },
-			"SqlServer.2014"      : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestDatacore1;User Id=sa;Password=Password12!;" }
-		}
-	},
+
 
 	"CORE2.Azure" :
 	{
@@ -227,7 +41,7 @@
 		"Providers"            :
 		[
 			"SQLite.MS",
-			//"Northwind.SQLite.MS",
+			"Northwind.SQLite.MS",
 			//"MySqlConnector",
 			//"MySql57",
 			//"PostgreSQL",
@@ -295,34 +109,6 @@
 		}
 	},
 
-	"AppveyorConnectionStrings":
-	{
-		"BasedOn"     : "CommonConnectionStrings",
-		"Connections" :
-		{
-			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;" },
-			"MySqlConnector"      : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;Treat Tiny As Boolean=False;Use Affected Rows=False" },
-			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=localhost;Port=5432;Database=TestData;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
-			"Northwind"           : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=Northwind;User Id=sa;Password=Password12!;" },
-			"SqlServer"           : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestData;User Id=sa;Password=Password12!;" },
-			"SqlServer.2014"      : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestData;User Id=sa;Password=Password12!;" }
-		}
-	},
-
-	"TravisConnectionStrings":
-	{
-		"BasedOn"     : "CommonConnectionStrings",
-		"Connections" :
-		{
-			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Database=TestData;Uid=root;Pwd=;charset=utf8;Allow User Variables=True;" },
-			"MySqlConnector"      : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Database=TestData;Uid=root;Pwd=;charset=utf8;Allow User Variables=True;Treat Tiny As Boolean=False;Use Affected Rows=False" },
-			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=localhost;Database=testdata;User Id=postgres;Password=;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
-			"SQLite.MS"           : { "Provider" : "SQLite.MS",              "ConnectionString" : "Data Source=Database/TestData.MS.sqlite" },
-			"SQLite.MS.Data"      : { "Provider" : "Microsoft.Data.Sqlite",  "ConnectionString" : "Data Source=Database/Data/TestData.MS.sqlite" },
-			"Northwind.SQLite"    : { "Provider" : "System.Data.SQLite",     "ConnectionString" : "Data Source=Database/Northwind.sqlite" },
-			"Northwind.SQLite.MS" : { "Provider" : "SQLite.Microsoft",       "ConnectionString" : "Data Source=Database/Northwind.MS.sqlite" }
-		}
-	},
 	"AzureConnectionStrings":
 	{
 		"BasedOn"     : "CommonConnectionStrings",
@@ -373,67 +159,5 @@
 			"Northwind",
 			"TestNoopProvider"
 		]
-	},
-
-	"Example Configuration" :
-	{
-		// Base configuration. All the configuration properties are replaced,
-		// except for the Connection property that adds new and replaces existing values.
-		"BasedOn"     : "Base Example Configuration",
-
-		// Specifies what messages to output for the System.Diagnostics.TraceSwitch class.
-		// Possible values: Off, Error, Warning, Info, Verbose.
-		"TraceLevel"  : "Error",
-
-		// List of tested providers.
-		"Providers"   :
-		[
-			"Access",
-			"SQLite.Classic",
-			"SqlServer.2014"
-		],
-
-		// List of connection strings.
-		"Connections" :
-		{
-			"SqlServer.2014" : { "Provider" : "System.Data.SqlClient", "ConnectionString" : "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;" }
-		}
-	},
-
-	"Base Example Configuration" :
-	{
-		// Default configuration is used to load etalon data to compare.
-		"DefaultConfiguration" : "SQLite.Classic",
-		"Providers"            :
-		[
-			"Access",
-			"SQLite.Classic",
-			"SQLite.MS"
-		],
-		"Connections"          :
-		{
-			"Access"         : {                           "ConnectionString" : "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
-			"SQLite.Classic" : { "Provider" : "SQLite",    "ConnectionString" : "Data Source=Database\\TestData.sqlite"     },
-			"SQLite.MS"      : { "Provider" : "SQLite.MS", "ConnectionString" : "Data Source=Database\\TestData..MS.sqlite" }
-		}
-	},
-
-	"Result Example Configuration" :
-	{
-		"TraceLevel"           : "Error",
-		"DefaultConfiguration" : "SQLite.Classic",
-		"Providers"            :
-		[
-			"Access",
-			"SQLite.Classic",
-			"SqlServer.2014"
-		],
-		"Connections"          :
-		{
-			"Access"         : {                           "ConnectionString" : "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
-			"SQLite.Classic" : { "Provider" : "SQLite",    "ConnectionString" : "Data Source=Database\\TestData.sqlite"     },
-			"SQLite.MS"      : { "Provider" : "SQLite.MS", "ConnectionString" : "Data Source=Database\\TestData..MS.sqlite" },
-			"SqlServer.2014" : { "Provider" : "System.Data.SqlClient", "ConnectionString" : "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;" }
-		}
 	}
 }

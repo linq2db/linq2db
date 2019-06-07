@@ -2,22 +2,12 @@
 	"NET45.Azure" :
 	{
 		"BasedOn"              : "AzureConnectionStrings",
-		"DefaultConfiguration" : "SQLite.MS",
+		"DefaultConfiguration" : "SQLite.Classic",
 		"TraceLevel"           : "Error",
 		"Providers"            :
 		[
-			//"Access",
-			//"SqlCe",
 			"SQLite.Classic",
-			"SQLite.MS",
-			//"Northwind.SQLite",
-			//"Northwind.SQLite.MS",
-			//"MySqlConnector",
-			//"MySql57",
-			//"PostgreSQL",
-			//"Northwind",
-			//"SqlServer",
-			//"SqlServer.2014",
+			"Northwind.SQLite",
 			"TestNoopProvider"
 		],
 		"Connections"          :
