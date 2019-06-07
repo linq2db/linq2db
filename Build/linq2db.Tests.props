@@ -61,6 +61,9 @@
 
 	<!-- .NET Core -->
 
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
+		<DefineConstants>$(DefineConstants);NETSTANDARD1_6</DefineConstants>
+	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
