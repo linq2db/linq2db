@@ -138,14 +138,14 @@ stages:
       maxParallel: 2
       matrix:
         job1: 
-          template: 'ci/win_netfx_job1.yml'
+          file: 'ci/win_netfx_job1.yml'
         job2:
-          template: 'ci/win_netfx_job1.yml'
+          file: 'ci/win_netfx_job1.yml'
 
     steps:
     - checkout: none 
 
-    - template: '$(template)'
+    - template: '$(file)'
 
     - task: DownloadBuildArtifacts@0
       inputs:
