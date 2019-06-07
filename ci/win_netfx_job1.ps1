@@ -1,1 +1,1 @@
-Move-Item -Path "win_netfx_job1.json" -NewName "DataProviders.json" -Force
+Move-Item -Path "win_netfx_job1.json" -Destination "DataProviders.json" -Force
