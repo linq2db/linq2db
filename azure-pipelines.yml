@@ -14,11 +14,12 @@ stages:
 #  Build
 ##############################
 - stage: Build
-  displayName: 'Build (Windows)'
+  displayName: 'Build'
   jobs:
   - job:
     pool:
       vmImage: 'vs2017-win2016'
+    displayName: 'Build (Windows)'
 
     steps:
     - task: NuGetToolInstaller@1
@@ -137,9 +138,9 @@ stages:
       maxParallel: 2
       matrix:
         job1: 
-          template: '**/CI/win_netfx_job1.ps1'
+          template: 'win_netfx_job1.ps1'
         job2:
-          template: '**/CI/win_netfx_job1.ps1'
+          template: 'win_netfx_job1.ps1'
 
     steps:
     - checkout: none 
