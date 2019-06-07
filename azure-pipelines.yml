@@ -144,7 +144,6 @@ jobs:
   steps:
   - checkout: none 
 
- steps:
   - template: $(template)
 
   - task: DownloadBuildArtifacts@0
