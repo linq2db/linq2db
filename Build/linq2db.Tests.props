@@ -2,9 +2,9 @@
 	<PropertyGroup>
 	<!-- because VS doesn't support multi-targeting for tests (works for r# test runner): https://github.com/Microsoft/vstest/issues/298
 			 just put required test target framework to first position - VS always use first one only -->
-		<TargetFrameworks>net46;netcoreapp1.0;netcoreapp2.0</TargetFrameworks>
+		<TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
 		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
-		<Configurations>Debug;Release;AppVeyor;Travis</Configurations>
+		<Configurations>Debug;Release;AppVeyor;Travis;Azure</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'AppVeyor' ">
@@ -61,15 +61,12 @@
 
 	<!-- .NET Core -->
 
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
-		<DefineConstants>$(DefineConstants);NETSTANDARD1_6</DefineConstants>
-	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
 	</PropertyGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
 		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.1.0" />
