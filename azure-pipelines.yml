@@ -8,15 +8,16 @@ variables:
 trigger:
   - master
 
-jobs:
+stages: 
 
 ##############################
-#  Windows build
+#  Build
 ##############################
-- job: build
+- stage: Build
+  displayName: 'Build (Windows)'
+
   pool:
     vmImage: 'vs2017-win2016'
-  displayName: 'Build (Windows)'
 
   steps:
   - task: NuGetToolInstaller@1
@@ -65,14 +66,18 @@ jobs:
       artifactName: '$(core2tests)'
 
 
+- stage: Tests
+  dependsOn: Build
+  condition: succeeded()
+
+jobs:
+
 ##############################
 #  Linux tests
 ##############################
 - job: Linux
   pool:
     vmImage: 'ubuntu-16.04'
-  dependsOn: build
-  condition: succeeded()
   displayName: 'NETCORE Tests (Linux)'
 
   steps:
@@ -100,8 +105,6 @@ jobs:
 - job: MacOS
   pool:
     vmImage: 'macOS-10.14'
-  dependsOn: build
-  condition: succeeded()
   displayName: 'NETCORE Tests (MacOS)'
 
   steps:
@@ -123,17 +126,26 @@ jobs:
       testResultsFiles: '**/*.trx'
 
 ##############################
-#  Windows NETFX tests job1
+#  Windows NETFX tests
 ##############################
 - job: 
-  dependsOn: build
-  condition: succeeded()
   pool:
     vmImage: 'vs2017-win2016'
   displayName: 'NETFX Tests (Windows)'
 
+  strategy:
+    maxParallel: 2
+    matrix:
+      job1: 
+        template: win_netfx_job1.yml
+      job2:
+        template: win_netfx_job1.yml
+
   steps:
   - checkout: none 
+
+ steps:
+  - template: $(template)
 
   - task: DownloadBuildArtifacts@0
     inputs:
@@ -162,8 +174,6 @@ jobs:
 #  Windows CORE tests job1
 ##############################
 - job:
-  dependsOn: build
-  condition: succeeded()
   pool:
     vmImage: 'vs2017-win2016'
   displayName: 'NETCORE Tests (Windows)'
