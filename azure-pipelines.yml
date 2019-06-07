@@ -2,6 +2,8 @@ variables:
   solution: 'linq2db.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Azure'
+  netfxtests: 'netfxtests'
+  core2tests: 'core2tests'
 
 trigger:
   - master
@@ -36,24 +38,32 @@ jobs:
 
   - task: DotNetCoreCLI@2
     inputs:
-      command: publish
+      command: 'publish'
       projects: '**/Tests/Linq/Tests.csproj'
       publishWebProjects: false
       zipAfterPublish: false
       arguments: -f netcoreapp2.0  -c $(buildConfiguration) 
-      #-o $(Build.ArtifactStagingDirectory)/Tests/publish/
 
   - task: CopyFiles@2
     inputs:
-      TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)'
-      sourceFolder: '$(Build.SourcesDirectory)/Tests/'
-      contents: |
-        **/DataProviders.json
+      TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)/net46'
+      sourceFolder: '$(Build.SourcesDirectory)/CI/'
+
+  - task: CopyFiles@2
+    inputs:
+      TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)/netcoreapp2.0/publish'
+      sourceFolder: '$(Build.SourcesDirectory)/CI/'
 
   - task: PublishBuildArtifacts@1
     inputs:
-      pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)'
-      artifactName: '$(buildConfiguration)'
+      pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)/net46'
+      artifactName: '$(netfxtests)'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)/netcoreapp2.0/publish'
+      artifactName: '$(core2tests)'
+
 
 ##############################
 #  Linux tests
@@ -73,10 +83,10 @@ jobs:
     inputs:
       buildType: 'current'
       downloadType: 'single'
-      artifactName: '$(buildConfiguration)'
+      artifactName: '$(core2tests)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - script: dotnet vstest ./$(BuildConfiguration)/netcoreapp2.0/publish/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
+  - script: dotnet vstest ./$(core2tests)/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0 /Configuration:'$(BuildConfiguration)'
 
   - task: PublishTestResults@2
     condition: succeededOrFailed()
@@ -101,10 +111,10 @@ jobs:
     inputs:
       buildType: 'current'
       downloadType: 'single'
-      artifactName: '$(buildConfiguration)'
+      artifactName: '$(core2tests)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - script: dotnet vstest ./$(BuildConfiguration)/netcoreapp2.0/publish/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
+  - script: dotnet vstest ./$(core2tests)/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0 /Configuration:'$(BuildConfiguration)'
 
   - task: PublishTestResults@2
     condition: succeededOrFailed()
@@ -129,30 +139,13 @@ jobs:
     inputs:
       buildType: 'current'
       downloadType: 'single'
-      artifactName: '$(buildConfiguration)'
+      artifactName: '$(netfxtests)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
-
-#- powershell: |
-#      $filename1 = "SSCERuntime_x86-ENU.msi"
-#      $filename2 = "SSCERuntime_x64-ENU.msi"
-#      $downloadUrl = "https://download.microsoft.com/download/6/9/5/695ED23C-F40F-420C-98D1-0F752B8D4E2B/1033/"
-
-#      (New-Object Net.WebClient).DownloadFile($downloadUrl+"/x86/"+$filename1, $filename1)
-#      (New-Object Net.WebClient).DownloadFile($downloadUrl+"/x64/"+$filename2, $filename2)
-
-#      $job = Start-Job { msiexec /i $filename1 /qn }
-#      Wait-Job $job
-#      Receive-Job $job
-
-#      $job = Start-Job { msiexec /i $filename2 /qn }
-#      Wait-Job $job
-#      Receive-Job $job
-#  displayName: 'Install SqlCe 4.0 runtime'
 
   - task: VSTest@2
     inputs:
       testAssemblyVer2: |
-       **/$(BuildConfiguration)/net46/linq2db.Tests.dll
+       **/$(netfxtests)/linq2db.Tests.dll
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
       testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
@@ -182,13 +175,13 @@ jobs:
     inputs:
       buildType: 'current'
       downloadType: 'single'
-      artifactName: '$(buildConfiguration)'
+      artifactName: '$(core2tests)'
       downloadPath: '$(System.DefaultWorkingDirectory)'
 
   - task: VSTest@2
     inputs:
       testAssemblyVer2: |
-       **\$(BuildConfiguration)\netcoreapp2.0\publish\linq2db.Tests.Core2.dll
+       **/$(core2tests)/linq2db.Tests.Core2.dll
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
       testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
