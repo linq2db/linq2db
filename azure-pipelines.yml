@@ -70,135 +70,135 @@ stages:
   dependsOn: Build
   condition: succeeded()
 
-jobs:
+  jobs:
 
 ##############################
 #  Linux tests
 ##############################
-- job: Linux
-  pool:
-    vmImage: 'ubuntu-16.04'
-  displayName: 'NETCORE Tests (Linux)'
+  - job: Linux
+    pool:
+      vmImage: 'ubuntu-16.04'
+    displayName: 'NETCORE Tests (Linux)'
 
-  steps:
+    steps:
 
-  - checkout: none 
+    - checkout: none 
 
-  - task: DownloadBuildArtifacts@0
-    inputs:
-      buildType: 'current'
-      downloadType: 'single'
-      artifactName: '$(core2tests)'
-      downloadPath: '$(System.DefaultWorkingDirectory)'
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: '$(core2tests)'
+        downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - script: dotnet vstest ./$(core2tests)/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
+    - script: dotnet vstest ./$(core2tests)/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
 
-  - task: PublishTestResults@2
-    condition: succeededOrFailed()
-    inputs:
-      testRunner: VsTest
-      testResultsFiles: '**/*.trx'
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
 
 ##############################
 #  OSX Tests
 ##############################
-- job: MacOS
-  pool:
-    vmImage: 'macOS-10.14'
-  displayName: 'NETCORE Tests (MacOS)'
+  - job: MacOS
+    pool:
+      vmImage: 'macOS-10.14'
+    displayName: 'NETCORE Tests (MacOS)'
 
-  steps:
-  - checkout: none 
+    steps:
+    - checkout: none 
 
-  - task: DownloadBuildArtifacts@0
-    inputs:
-      buildType: 'current'
-      downloadType: 'single'
-      artifactName: '$(core2tests)'
-      downloadPath: '$(System.DefaultWorkingDirectory)'
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: '$(core2tests)'
+        downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - script: dotnet vstest ./$(core2tests)/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
+    - script: dotnet vstest ./$(core2tests)/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
 
-  - task: PublishTestResults@2
-    condition: succeededOrFailed()
-    inputs:
-      testRunner: VsTest
-      testResultsFiles: '**/*.trx'
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
 
 ##############################
 #  Windows NETFX tests
 ##############################
-- job: 
-  pool:
-    vmImage: 'vs2017-win2016'
-  displayName: 'NETFX Tests (Windows)'
+  - job: 
+    pool:
+      vmImage: 'vs2017-win2016'
+    displayName: 'NETFX Tests (Windows)'
 
-  strategy:
-    maxParallel: 2
-    matrix:
-      job1: 
-        template: win_netfx_job1.yml
-      job2:
-        template: win_netfx_job1.yml
+    strategy:
+      maxParallel: 2
+      matrix:
+        job1: 
+          template: win_netfx_job1.yml
+        job2:
+          template: win_netfx_job1.yml
 
-  steps:
-  - checkout: none 
+    steps:
+    - checkout: none 
 
-  - template: $(template)
+    - template: $(template)
 
-  - task: DownloadBuildArtifacts@0
-    inputs:
-      buildType: 'current'
-      downloadType: 'single'
-      artifactName: '$(netfxtests)'
-      downloadPath: '$(System.DefaultWorkingDirectory)'
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: '$(netfxtests)'
+        downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - task: VSTest@2
-    inputs:
-      testAssemblyVer2: |
-       **/$(netfxtests)/linq2db.Tests.dll
-      platform: '$(buildPlatform)'
-      configuration: '$(buildConfiguration)'
-      testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
-      otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6'
-    displayName: 'Run tests NET46' 
+    - task: VSTest@2
+      inputs:
+        testAssemblyVer2: |
+         **/$(netfxtests)/linq2db.Tests.dll
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
+        otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6'
+      displayName: 'Run tests NET46' 
 
-  - task: PublishTestResults@2
-    condition: succeededOrFailed()
-    inputs:
-      testRunner: VsTest
-      testResultsFiles: '**/*.trx'
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
 
 ##############################
 #  Windows CORE tests job1
 ##############################
-- job:
-  pool:
-    vmImage: 'vs2017-win2016'
-  displayName: 'NETCORE Tests (Windows)'
+  - job:
+    pool:
+      vmImage: 'vs2017-win2016'
+    displayName: 'NETCORE Tests (Windows)'
 
-  steps:
-  - checkout: none 
+    steps:
+    - checkout: none 
 
-  - task: DownloadBuildArtifacts@0
-    inputs:
-      buildType: 'current'
-      downloadType: 'single'
-      artifactName: '$(core2tests)'
-      downloadPath: '$(System.DefaultWorkingDirectory)'
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: '$(core2tests)'
+        downloadPath: '$(System.DefaultWorkingDirectory)'
 
-  - task: VSTest@2
-    inputs:
-      testAssemblyVer2: |
-       **/$(core2tests)/linq2db.Tests.Core2.dll
-      platform: '$(buildPlatform)'
-      configuration: '$(buildConfiguration)'
-      testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
-      otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
-    displayName: 'Run tests Core2.0' 
+    - task: VSTest@2
+      inputs:
+        testAssemblyVer2: |
+          **/$(core2tests)/linq2db.Tests.Core2.dll
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        testFiltercriteria: 'TestCategory != Ignored & TestCategory != ActiveIssue & TestCategory != SkipCI'
+        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
+      displayName: 'Run tests Core2.0' 
 
-  - task: PublishTestResults@2
-    condition: succeededOrFailed()
-    inputs:
-      testRunner: VsTest
-      testResultsFiles: '**/*.trx'
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
