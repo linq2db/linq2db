@@ -15,55 +15,56 @@ stages:
 ##############################
 - stage: Build
   displayName: 'Build (Windows)'
+  jobs:
+  - job:
+    pool:
+      vmImage: 'vs2017-win2016'
 
-  pool:
-    vmImage: 'vs2017-win2016'
+    steps:
+    - task: NuGetToolInstaller@1
+      inputs:
+        versionSpec: '4.4.1'
+        checkLatest: true
 
-  steps:
-  - task: NuGetToolInstaller@1
-    inputs:
-      versionSpec: '4.4.1'
-      checkLatest: true
+    - task: NuGetCommand@2
+      inputs:
+        restoreSolution: '$(solution)'
+        command: 'restore'
 
-  - task: NuGetCommand@2
-    inputs:
-      restoreSolution: '$(solution)'
-      command: 'restore'
+    - task: VSBuild@1
+      inputs:
+        solution: '$(solution)'
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        msbuildArgs: /m
 
-  - task: VSBuild@1
-    inputs:
-      solution: '$(solution)'
-      platform: '$(buildPlatform)'
-      configuration: '$(buildConfiguration)'
-      msbuildArgs: /m
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'publish'
+        projects: '**/Tests/Linq/Tests.csproj'
+        publishWebProjects: false
+        zipAfterPublish: false
+        arguments: -f netcoreapp2.0  -c $(buildConfiguration) 
 
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: 'publish'
-      projects: '**/Tests/Linq/Tests.csproj'
-      publishWebProjects: false
-      zipAfterPublish: false
-      arguments: -f netcoreapp2.0  -c $(buildConfiguration) 
+    - task: CopyFiles@2
+      inputs:
+        TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)/net46'
+        sourceFolder: '$(Build.SourcesDirectory)/CI/'
 
-  - task: CopyFiles@2
-    inputs:
-      TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)/net46'
-      sourceFolder: '$(Build.SourcesDirectory)/CI/'
+    - task: CopyFiles@2
+      inputs:
+        TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)/netcoreapp2.0/publish'
+        sourceFolder: '$(Build.SourcesDirectory)/CI/'
 
-  - task: CopyFiles@2
-    inputs:
-      TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)/netcoreapp2.0/publish'
-      sourceFolder: '$(Build.SourcesDirectory)/CI/'
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)/net46'
+        artifactName: '$(netfxtests)'
 
-  - task: PublishBuildArtifacts@1
-    inputs:
-      pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)/net46'
-      artifactName: '$(netfxtests)'
-
-  - task: PublishBuildArtifacts@1
-    inputs:
-      pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)/netcoreapp2.0/publish'
-      artifactName: '$(core2tests)'
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(buildConfiguration)/netcoreapp2.0/publish'
+        artifactName: '$(core2tests)'
 
 
 - stage: Tests
