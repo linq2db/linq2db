@@ -152,7 +152,9 @@ stages:
         artifactName: '$(netfxtests)'
         downloadPath: '$(System.DefaultWorkingDirectory)'
 
-    - powershell: '$(file)'
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(file)'
 
     - task: VSTest@2
       inputs:
