@@ -145,7 +145,7 @@ stages:
     steps:
     - checkout: none 
 
-    - powershell: $(template)
+    - script: $(template)
 
     - task: DownloadBuildArtifacts@0
       inputs:
