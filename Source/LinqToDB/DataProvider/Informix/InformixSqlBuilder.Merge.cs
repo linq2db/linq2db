@@ -6,9 +6,6 @@ namespace LinqToDB.DataProvider.Informix
 
 	partial class InformixSqlBuilder
 	{
-		// parameters in source select list not supported
-		protected override bool MergeSupportsParametersInSource => false;
-
 		// VALUES(...) syntax not supported in MERGE source
 		protected override bool MergeSupportsSourceDirectValues => false;
 

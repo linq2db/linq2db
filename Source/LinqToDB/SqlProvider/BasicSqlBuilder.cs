@@ -63,11 +63,6 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
-		internal void BuildSqlWithAliases(int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0)
-		{
-			BuildSql(commandNumber, statement, sb, startIndent, false);
-		}
-
 		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0)
 		{
 			BuildSql(commandNumber, statement, sb, startIndent, CanSkipRootAliases(statement));
@@ -517,13 +512,6 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		internal virtual void BuildUpdateSetHelper(SqlUpdateStatement updateStatement, StringBuilder sb)
-		{
-			Statement     = updateStatement;
-			StringBuilder = sb;
-			BuildUpdateSet(updateStatement.SelectQuery, updateStatement.Update);
-		}
-
 		protected virtual void BuildUpdateSet(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
 			AppendIndent()
@@ -570,13 +558,6 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOutputSubclause(SqlStatement statement, SqlInsertClause insertClause)
 		{
-		}
-
-		internal virtual void BuildInsertClauseHelper(SqlStatement statement, StringBuilder sb)
-		{
-			Statement     = statement;
-			StringBuilder = sb;
-			BuildInsertClause(statement, statement.RequireInsertClause(), null, false, false);
 		}
 
 		protected virtual void BuildInsertClause(SqlStatement statement, SqlInsertClause insertClause, string insertText, bool appendTableName, bool addAlias)
@@ -1645,12 +1626,6 @@ namespace LinqToDB.SqlProvider
 		#region Builders
 
 		#region BuildSearchCondition
-		internal virtual void BuildSearchCondition(SqlStatement statement, SqlSearchCondition condition, StringBuilder sb)
-		{
-			Statement     = statement;
-			StringBuilder = sb;
-			BuildWhereSearchCondition(statement.EnsureQuery(), condition);
-		}
 
 		protected virtual void BuildWhereSearchCondition(SelectQuery selectQuery, SqlSearchCondition condition)
 		{

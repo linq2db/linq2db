@@ -43,8 +43,7 @@
 			StringBuilder
 				.AppendLine()
 				.AppendLine("WHEN NOT MATCHED THEN")
-				.Append("INSERT")
-				;
+				.Append("INSERT");
 
 			var insertClause = new SqlInsertClause();
 			insertClause.Items.AddRange(operation.Items);
@@ -87,6 +86,7 @@
 				.AppendLine()
 				.AppendLine("DELETE WHERE")
 				.Append("\t");
+
 			BuildSearchCondition(Precedence.Unknown, operation.WhereDelete);
 		}
 	}

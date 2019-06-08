@@ -12,7 +12,6 @@
 		// FirebirdSql.Data.Common.IscException : Dynamic SQL Error
 		// SQL error code = -804
 		//Data type unknown
-		protected override bool MergeSupportsParametersInSource => false;
 
 		// VALUES(...) syntax not supported in MERGE source
 		protected override bool MergeSupportsSourceDirectValues => false;

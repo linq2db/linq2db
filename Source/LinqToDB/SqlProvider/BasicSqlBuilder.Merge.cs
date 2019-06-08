@@ -1,17 +1,12 @@
-﻿namespace LinqToDB.SqlProvider
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.SqlProvider
 {
-	using System;
-	using System.Collections.Generic;
-	using LinqToDB.Extensions;
 	using SqlQuery;
 
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
 	{
-		/// <summary>
-		/// If <c>false</c>, merge source subquery must inline parameters.
-		/// </summary>
-		protected virtual bool MergeSupportsParametersInSource => true;
-
 		/// <summary>
 		/// If true, provider supports column aliases specification after table alias.
 		/// E.g. as table_alias (column_alias1, column_alias2).
@@ -110,9 +105,6 @@
 				BuildSearchCondition(Precedence.Unknown, operation.Where);
 			}
 
-			//while (StringBuilder[Command.Length - 1] == ' ')
-			//	StringBuilder.Length--;
-
 			StringBuilder.AppendLine(" THEN");
 			StringBuilder.AppendLine("UPDATE");
 
@@ -149,22 +141,13 @@
 
 			StringBuilder
 				.AppendLine(" THEN")
-				.Append("INSERT")
-				;
+				.Append("INSERT");
 
 
 			var insertClause = new SqlInsertClause();
 			insertClause.Items.AddRange(operation.Items);
 
-			// TODO: refactor BuildInsertClause?
 			BuildInsertClause(new SqlInsertOrUpdateStatement(null), insertClause, null, false, false);
-			//if (create != null)
-			//	BuildCustomInsert(create);
-			//else
-			//{
-			//	StringBuilder.AppendLine();
-			//	BuildDefaultInsert();
-			//}
 		}
 
 		protected virtual void BuildMergeOperationUpdateWithDelete(SqlMergeOperationClause operation)
@@ -189,92 +172,26 @@
 		{
 			StringBuilder.Append("ON (");
 
-			//if (Merge.KeyType != null)
-			//	BuildPredicateByKeys(Merge.KeyType, Merge.TargetKey, Merge.SourceKey);
-			//else
-			//BuildPredicateByTargetAndSource(Merge.MatchPredicate ?? MakeDefaultMatchPredicate());
-
 			BuildSearchCondition(Precedence.Unknown, mergeStatement.On);
-
-			//while (Command[Command.Length - 1] == ' ')
-			//	Command.Length--;
 
 			StringBuilder.AppendLine(")");
 		}
 
 		protected virtual void BuildMergeSourceQuery(SqlMergeSourceTable mergeSource)
 		{
-			//var inlineParameters = _connection.InlineParameters;
-			try
-			{
-				//_connection.InlineParameters = !MergeSupportsParametersInSource;
-
-				//var ctx = queryableSource.GetMergeContext();
-
-				//ctx.UpdateParameters();
-
-				//var statement = ctx.GetResultStatement();
-
-				//foreach (var columnInfo in ctx.Columns)
-				//{
-				//	var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == columnInfo.Members[0]);
-				//	var column = statement.SelectQuery.Select.Columns[columnInfo.Index];
-
-				//	SetColumnAlias(column.Alias, columnDescriptor.ColumnName);
-				//}
-
-				//// bind parameters
-				//statement.Parameters.Clear();
-				//new QueryVisitor().VisitAll(ctx.SelectQuery, expr =>
-				//{
-				//	switch (expr.ElementType)
-				//	{
-				//		case QueryElementType.SqlParameter:
-				//			{
-				//				var p = (SqlParameter)expr;
-				//				if (p.IsQueryParameter)
-				//					statement.Parameters.Add(p);
-
-				//				break;
-				//			}
-				//	}
-				//});
-
-				//ctx.SetParameters();
-
-				//SaveParameters(statement.Parameters);
-
-				// TODO: add extra parameter to skip aliases?
-				BuildPhysicalTable(mergeSource.Source, null);
-
-				//var cs = new[] { ' ', '\t', '\r', '\n' };
-
-				//while (cs.Contains(Command[Command.Length - 1]))
-				//	Command.Length--;
-			}
-			finally
-			{
-				//_connection.InlineParameters = inlineParameters;
-			}
+			BuildPhysicalTable(mergeSource.Source, null);
 
 			BuildMergeAsSourceClause(mergeSource);
 		}
 
 		private void BuildMergeAsSourceClause(SqlMergeSourceTable mergeSource)
 		{
-			//StringBuilder
-			//	.AppendLine()
-			//	.Append(")");
-
 			StringBuilder.Append(" ");
 
 			ConvertTableName(StringBuilder, null, null, mergeSource.Name);
 
 			if (MergeSupportsColumnAliasesInSource)
 			{
-				//if (mergeStatement.SourceFields.Count == 0)
-				//	throw new LinqToDBException("Merge source doesn't have any columns.");
-
 				StringBuilder.Append(" (");
 
 				var first = true;
@@ -282,61 +199,36 @@
 				{
 					if (!first)
 						StringBuilder.AppendLine(", ");
+
 					first = false;
 					AppendIndent();
 					StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
 				}
 
-				StringBuilder
-					.Append(")");
+				StringBuilder.Append(")");
 			}
 		}
 
 		private void BuildMergeSourceEnumerable(SqlMergeSourceTable mergeSource)
 		{
-			if (MergeSupportsSourceDirectValues)
-			{
-				if (mergeSource.SourceEnumerable.Rows.Count > 0)
-				{
-					StringBuilder.Append("(");
-					BuildValues(mergeSource.SourceEnumerable, true);
-					StringBuilder.Append(")");
-				}
-				else if (MergeEmptySourceSupported)
-				{
-					BuildMergeEmptySource(mergeSource);
-				}
-				else
-				{
-					throw new LinqToDBException($"{Name} doesn't support merge with empty source");
-				}
-				//if (hasData)
-				BuildMergeAsSourceClause(mergeSource);
-				//else if (EmptySourceSupported)
-				//	BuildEmptySource();
-				//else
-				//	NoopCommand = true;
-				return;
-			}
-			else
-			{
-				if (mergeSource.SourceEnumerable.Rows.Count > 0)
-				{
-					StringBuilder.Append("(");
-					BuildValuesAsSelectsUnion(mergeSource.SourceFields, mergeSource.SourceEnumerable);
-					StringBuilder.Append(")");
-				}
-				else if (MergeEmptySourceSupported)
-				{
-					BuildMergeEmptySource(mergeSource);
-				}
-				else
-				{
-					throw new LinqToDBException($"{Name} doesn't support merge with empty source");
-				}
 
-				BuildMergeAsSourceClause(mergeSource);
+			if (mergeSource.SourceEnumerable.Rows.Count > 0)
+			{
+				StringBuilder.Append("(");
+
+				if (MergeSupportsSourceDirectValues)
+					BuildValues(mergeSource.SourceEnumerable, true);
+				else
+					BuildValuesAsSelectsUnion(mergeSource.SourceFields, mergeSource.SourceEnumerable);
+
+				StringBuilder.Append(")");
 			}
+			else if (MergeEmptySourceSupported)
+				BuildMergeEmptySource(mergeSource);
+			else
+				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
+
+			BuildMergeAsSourceClause(mergeSource);
 		}
 
 		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable sourceEnumerable)
@@ -366,16 +258,12 @@
 						BuildTypedExpression(columnTypes[j], value);
 					else
 						BuildExpression(value);
-					//if (!ValueToSqlConverter.TryConvert(StringBuilder, columnType, sqlValues[i].Value))
-					//{
-					//	AddSourceValueAsParameter(column.DataType, column.DbType, value);
-					//}
-
-					//AddSourceValue(valueConverter, column, columnTypes[i], value, !hasData, lastRecord);
 
 					// add aliases only for first row
 					if (!MergeSupportsColumnAliasesInSource && i == 0)
-						StringBuilder.Append(" ").Append(Convert(sourceFields[j].PhysicalName, ConvertType.NameToQueryField));
+						StringBuilder
+							.Append(" ")
+							.Append(Convert(sourceFields[j].PhysicalName, ConvertType.NameToQueryField));
 				}
 
 				if (FakeTable != null)
@@ -391,19 +279,12 @@
 			BuildExpression(value);
 		}
 
-		//protected virtual void BuildTypedValue(SqlDataType dataType, object value)
-		//{
-		//	BuildValue(dataType, value);
-		//}
-
 		private void BuildMergeEmptySource(SqlMergeSourceTable mergeSource)
 		{
 			StringBuilder
 				.AppendLine("(")
 				.Append("\tSELECT ")
 				;
-
-			//var columnTypes = GetSourceColumnTypes();
 
 			for (var i = 0; i < mergeSource.SourceFields.Count; i++)
 			{
@@ -419,10 +300,6 @@
 
 				if (!MergeSupportsColumnAliasesInSource)
 					StringBuilder.Append(" ").Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
-
-				//StringBuilder
-				//	.Append(" ")
-				//	.Append(CreateSourceColumnAlias(_sourceDescriptor.Columns[i].ColumnName, true));
 			}
 
 			StringBuilder
@@ -436,32 +313,24 @@
 			StringBuilder
 				.AppendLine("\tWHERE 1 = 0")
 				.AppendLine(")");
-				//.AppendLine((string)SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias));
 		}
 
 		protected virtual bool BuildFakeTableName()
 		{
-			if (FakeTable != null)
-			{
-				BuildTableName(StringBuilder, FakeTableDatabase, FakeTableSchema, FakeTable);
-				return true;
-			}
+			if (FakeTable == null)
+				return false;
 
-			return false;
+			BuildTableName(StringBuilder, FakeTableDatabase, FakeTableSchema, FakeTable);
+			return true;
 		}
 
 		private void BuildValues(SqlValuesTable sourceEnumerable, bool typed)
 		{
-			//var hasData = false;
-			//var columnTypes = GetSourceColumnTypes();
-			//var valueConverter = DataContext.MappingSchema.ValueToSqlConverter;
-
 			for (var i = 0; i < sourceEnumerable.Rows.Count; i++)
 			{
 				var last = sourceEnumerable.Rows.Count == i - 1;
 
-				BuildValuesRow(sourceEnumerable.Rows[i]//, typed && last
-					, i == 0);
+				BuildValuesRow(sourceEnumerable.Rows[i], i == 0);
 			}
 		}
 
@@ -470,8 +339,7 @@
 			if (!first)
 				StringBuilder.AppendLine(",");
 			else
-				StringBuilder
-					.AppendLine("\tVALUES");
+				StringBuilder.AppendLine("\tVALUES");
 
 			StringBuilder.Append("\t\t(");
 			for (var i = 0; i < sqlValues.Count; i++)
@@ -481,12 +349,6 @@
 					StringBuilder.Append(",");
 
 				BuildExpression(value);
-				//if (!ValueToSqlConverter.TryConvert(StringBuilder, columnType, sqlValues[i].Value))
-				//{
-				//	AddSourceValueAsParameter(column.DataType, column.DbType, value);
-				//}
-
-				//AddSourceValue(valueConverter, column, columnTypes[i], value, !hasData, lastRecord);
 			}
 
 			StringBuilder.Append(")");
@@ -494,20 +356,14 @@
 
 		private void BuildMergeSource(SqlMergeSourceTable mergeSource)
 		{
-			StringBuilder
-				.Append("USING ");
+			StringBuilder.Append("USING ");
 
 			if (mergeSource.SourceQuery != null)
-			{
 				BuildMergeSourceQuery(mergeSource);
-			}
 			else
-			{
 				BuildMergeSourceEnumerable(mergeSource);
-			}
 
-			StringBuilder
-				.AppendLine();
+			StringBuilder.AppendLine();
 		}
 
 		protected virtual void BuildMergeInto(SqlMergeStatement merge)
