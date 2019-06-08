@@ -263,5 +263,12 @@ namespace LinqToDB.DataProvider.Informix
 			dynamic p = parameter;
 			return p.IfxType.ToString();
 		}
+
+		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
+		{
+			BuildExpression(value);
+			StringBuilder.Append("::");
+			BuildDataType(dataType, false);
+		}
 	}
 }

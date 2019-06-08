@@ -2339,6 +2339,15 @@ namespace LinqToDB.SqlProvider
 			BuildExpression(precedence, expr, null, ref dummy);
 		}
 
+		protected virtual void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
+		{
+			StringBuilder.Append("CAST(");
+			BuildExpression(value);
+			StringBuilder.Append(" AS ");
+			BuildDataType(dataType, false);
+			StringBuilder.Append(")");
+		}
+
 		#endregion
 
 		#region BuildValue

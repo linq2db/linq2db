@@ -1,6 +1,9 @@
 ﻿namespace LinqToDB.DataProvider.Firebird
 {
 	using LinqToDB.SqlQuery;
+	using System;
+	using System.Linq;
+	using System.Collections.Generic;
 	using System.Globalization;
 	using System.Text;
 
@@ -18,30 +21,51 @@
 
 		protected override string FakeTable => "rdb$database";
 
-		// we need to specify type for string literals
-		protected override bool MergeSourceTypesRequired => true;
+		private readonly ISet<Tuple<SqlValuesTable, int>> _typedColumns = new HashSet<Tuple<SqlValuesTable, int>>();
+
+		protected override bool MergeSourceValueTypeRequired(SqlValuesTable sourceEnumerable, int row, int column)
+		{
+			if (row == 0)
+			{
+				// without type Firebird with convert string values in column to CHAR(LENGTH_OF_BIGGEST_VALUE_IN_COLUMN) with
+				// padding shorter values with spaces
+				if (sourceEnumerable.Rows.Any(r => r[column] is SqlValue value && value.Value is string))
+				{
+					_typedColumns.Add(Tuple.Create(sourceEnumerable, column));
+					return sourceEnumerable.Rows[0][column] is SqlValue val && val.Value != null;
+				}
+
+				return false;
+			}
+
+			return _typedColumns.Contains(Tuple.Create(sourceEnumerable, column))
+				&& sourceEnumerable.Rows[row][column] is SqlValue sqlValue && sqlValue.Value != null;
+		}
 
 		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
 		{
-			// without type case firebird will convert string to CHAR(LENGTH_OF_BIGGEST_VALUE_IN_COLUMN) and pad
-			// all shorter values with spaces
-			var length = 0;
-			var typeRequired = false;
-			if (value is SqlValue sqlValue && sqlValue.Value is string stringValue)
+			if (dataType.DbType == null && dataType.DataType == DataType.NVarChar)
 			{
-				typeRequired = true;
-				length = Encoding.UTF8.GetByteCount(stringValue);
-				if (length == 0)
-					length = 1;
+				var length = 0;
+				var typeRequired = false;
+				if (value is SqlValue sqlValue && sqlValue.Value is string stringValue)
+				{
+					typeRequired = true;
+					length = Encoding.UTF8.GetByteCount(stringValue);
+					if (length == 0)
+						length = 1;
+				}
+
+				if (typeRequired)
+					StringBuilder.Append("CAST(");
+
+				BuildExpression(value);
+
+				if (typeRequired)
+					StringBuilder.Append($" AS VARCHAR({length.ToString(CultureInfo.InvariantCulture)}))");
 			}
-
-			if (typeRequired)
-				StringBuilder.Append("CAST(");
-
-			base.BuildTypedExpression(dataType, value);
-
-			if (typeRequired)
-				StringBuilder.Append($" AS VARCHAR({length.ToString(CultureInfo.InvariantCulture)}))");
+			else
+				base.BuildTypedExpression(dataType, value);
 		}
 	}
 }

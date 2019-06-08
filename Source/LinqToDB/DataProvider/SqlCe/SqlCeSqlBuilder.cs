@@ -185,5 +185,10 @@ namespace LinqToDB.DataProvider.SqlCe
 			dynamic p = parameter;
 			return p.SqlDbType.ToString();
 		}
+
+		protected override void BuildMergeStatement(SqlMergeStatement merge)
+		{
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+		}
 	}
 }

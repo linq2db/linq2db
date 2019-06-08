@@ -193,5 +193,10 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			BuildDropTableStatementIfExists(dropTable);
 		}
+
+		protected override void BuildMergeStatement(SqlMergeStatement merge)
+		{
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+		}
 	}
 }

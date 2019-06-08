@@ -42,11 +42,6 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		protected virtual string FakeTableSchema => null;
 
-		/// <summary>
-		/// If true, generated source SQL should contain type hint information for values.
-		/// </summary>
-		protected virtual bool MergeSourceTypesRequired => false;
-
 		protected virtual void BuildMergeStatement(SqlMergeStatement merge)
 		{
 			BuildMergeInto(merge);
@@ -217,7 +212,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append("(");
 
 				if (MergeSupportsSourceDirectValues)
-					BuildValues(mergeSource.SourceEnumerable, true);
+					BuildValues(mergeSource, true);
 				else
 					BuildValuesAsSelectsUnion(mergeSource.SourceFields, mergeSource.SourceEnumerable);
 
@@ -230,6 +225,15 @@ namespace LinqToDB.SqlProvider
 
 			BuildMergeAsSourceClause(mergeSource);
 		}
+
+		/// <summary>
+		/// Checks that value in specific row and column in enumerable source requires type information generation.
+		/// </summary>
+		/// <param name="sourceEnumerable">Merge source data.</param>
+		/// <param name="row">Index of data row to check. Could contain -1 to indicate that this is a check for empty source NULL value.</param>
+		/// <param name="column">Index of data column to check in row.</param>
+		/// <returns>Returns <c>true</c>, if generated SQL should include type information for value at specified position, otherwise <c>false</c> returned.</returns>
+		protected virtual bool MergeSourceValueTypeRequired(SqlValuesTable sourceEnumerable, int row, int column) => false;
 
 		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable sourceEnumerable)
 		{
@@ -254,7 +258,7 @@ namespace LinqToDB.SqlProvider
 					if (j > 0)
 						StringBuilder.Append(",");
 
-					if (MergeSourceTypesRequired)
+					if (MergeSourceValueTypeRequired(sourceEnumerable, i, j))
 						BuildTypedExpression(columnTypes[j], value);
 					else
 						BuildExpression(value);
@@ -274,11 +278,6 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected virtual void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
-		{
-			BuildExpression(value);
-		}
-
 		private void BuildMergeEmptySource(SqlMergeSourceTable mergeSource)
 		{
 			StringBuilder
@@ -293,7 +292,7 @@ namespace LinqToDB.SqlProvider
 				if (i > 0)
 					StringBuilder.Append(", ");
 
-				if (MergeSourceTypesRequired)
+				if (MergeSourceValueTypeRequired(mergeSource.SourceEnumerable, -1, i))
 					BuildTypedExpression(new SqlDataType(field), new SqlValue(null));
 				else
 					BuildExpression(new SqlValue(null));
@@ -324,34 +323,36 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		private void BuildValues(SqlValuesTable sourceEnumerable, bool typed)
+		private void BuildValues(SqlMergeSourceTable mergeSource, bool typed)
 		{
-			for (var i = 0; i < sourceEnumerable.Rows.Count; i++)
+			var columnTypes = new SqlDataType[mergeSource.SourceFields.Count];
+			for (var i = 0; i < mergeSource.SourceFields.Count; i++)
+				columnTypes[i] = new SqlDataType(mergeSource.SourceFields[i]);
+
+			for (var i = 0; i < mergeSource.SourceEnumerable.Rows.Count; i++)
 			{
-				var last = sourceEnumerable.Rows.Count == i - 1;
+				var row = mergeSource.SourceEnumerable.Rows[i];
 
-				BuildValuesRow(sourceEnumerable.Rows[i], i == 0);
+				if (i != 0)
+					StringBuilder.AppendLine(",");
+				else
+					StringBuilder.AppendLine("\tVALUES");
+
+				StringBuilder.Append("\t\t(");
+				for (var j = 0; j < row.Count; j++)
+				{
+					var value = row[j];
+					if (j > 0)
+						StringBuilder.Append(",");
+
+					if (MergeSourceValueTypeRequired(mergeSource.SourceEnumerable, i, j))
+						BuildTypedExpression(columnTypes[j], value);
+					else
+						BuildExpression(value);
+				}
+
+				StringBuilder.Append(")");
 			}
-		}
-
-		private void BuildValuesRow(IList<ISqlExpression> sqlValues, bool first)
-		{
-			if (!first)
-				StringBuilder.AppendLine(",");
-			else
-				StringBuilder.AppendLine("\tVALUES");
-
-			StringBuilder.Append("\t\t(");
-			for (var i = 0; i < sqlValues.Count; i++)
-			{
-				var value = sqlValues[i];
-				if (i > 0)
-					StringBuilder.Append(",");
-
-				BuildExpression(value);
-			}
-
-			StringBuilder.Append(")");
 		}
 
 		private void BuildMergeSource(SqlMergeSourceTable mergeSource)

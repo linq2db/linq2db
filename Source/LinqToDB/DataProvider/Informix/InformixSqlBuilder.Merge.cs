@@ -9,12 +9,12 @@ namespace LinqToDB.DataProvider.Informix
 		// VALUES(...) syntax not supported in MERGE source
 		protected override bool MergeSupportsSourceDirectValues => false;
 
-		// Informix is too lazy to infer types itself from context
-		protected override bool MergeSourceTypesRequired => true;
-
 		// or also we can use
 		// sysmaster:'informix'.sysdual
 		protected override string FakeTable => "table(set{1})";
+
+		// Informix is too lazy to infer types itself from context
+		protected override bool MergeSourceValueTypeRequired(SqlValuesTable sourceEnumerable, int row, int column) => true;
 
 		protected override void BuildMergeInto(SqlMergeStatement merge)
 		{
@@ -31,13 +31,6 @@ namespace LinqToDB.DataProvider.Informix
 			StringBuilder.Append("INTO ");
 			BuildTableName(merge.Target, true, true);
 			StringBuilder.AppendLine();
-		}
-
-		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
-		{
-			BuildExpression(value);
-			StringBuilder.Append("::");
-			BuildDataType(dataType, false);
 		}
 	}
 }

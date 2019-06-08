@@ -69,10 +69,8 @@ namespace Tests.xUpdate
 
 				var parametersCount = 8;
 
-				if (context == ProviderName.DB2)
-					parametersCount = 0;
-				else if (context == ProviderName.Firebird || context == TestProvName.Firebird3)
-					parametersCount = 4;
+				if (context == ProviderName.Firebird || context == TestProvName.Firebird3)
+					parametersCount = 7;
 
 				Assert.AreEqual(parametersCount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
@@ -134,10 +132,8 @@ namespace Tests.xUpdate
 
 				var parametersCount = 7;
 
-				if (context == ProviderName.DB2)
-					parametersCount = 0;
-				else if (context == ProviderName.Firebird || context == TestProvName.Firebird3)
-					parametersCount = 3;
+				if (context == ProviderName.Firebird || context == TestProvName.Firebird3)
+					parametersCount = 6;
 
 				Assert.AreEqual(parametersCount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
@@ -242,11 +238,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				var paramcount = 1;
-				if (context == ProviderName.DB2)
-					paramcount = 0;
-
-				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -288,11 +280,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				var paramcount = 1;
-				if (context == ProviderName.DB2)
-					paramcount = 0;
-
-				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -318,11 +306,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				var paramcount = 1;
-				if (context == ProviderName.DB2)
-					paramcount = 0;
-
-				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -350,11 +334,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				var paramcount = 1;
-				if (context == ProviderName.DB2)
-					paramcount = 0;
-
-				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -549,11 +529,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				var paramcount = 1;
-				if (context == ProviderName.DB2)
-					paramcount = 0;
-
-				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -584,11 +560,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				var paramcount = 1;
-				if (context == ProviderName.DB2)
-					paramcount = 0;
-
-				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
 

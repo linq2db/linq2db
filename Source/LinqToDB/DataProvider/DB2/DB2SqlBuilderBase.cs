@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.DB2
 	using SqlQuery;
 	using SqlProvider;
 
-	abstract class DB2SqlBuilderBase : BasicSqlBuilder
+	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
 	{
 		protected DB2SqlBuilderBase(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
