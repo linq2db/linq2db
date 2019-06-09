@@ -71,7 +71,34 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			throw new NotImplementedException();
+			sb.Append("\n\t");
+			for (var i = 0; i < Rows.Count; i++)
+			{
+				// limit number of printed records
+				if (i == 10)
+				{
+					sb.Append($"-- skipping... total rows: {Rows.Count}");
+					break;
+				}
+
+				if (i > 0)
+					sb.Append(",\n\t)");
+
+				sb.Append("(");
+				for (var j = 0; j < Fields.Count; j++)
+				{
+					if (j > 0)
+						sb.Append(", ");
+
+					sb = Rows[i][j].ToString(sb, dic);
+				}
+
+				sb.Append(")");
+			}
+
+			sb.Append("\n");
+
+			return sb;
 		}
 		#endregion
 

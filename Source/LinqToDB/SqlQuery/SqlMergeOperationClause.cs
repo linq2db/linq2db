@@ -67,7 +67,7 @@ namespace LinqToDB.SqlQuery
 						((IQueryElement)Where).ToString(sb, dic);
 					}
 
-					sb.AppendLine("THEN DELETE");
+					sb.AppendLine(" THEN DELETE");
 
 					break;
 
@@ -80,7 +80,7 @@ namespace LinqToDB.SqlQuery
 						((IQueryElement)Where).ToString(sb, dic);
 					}
 
-					sb.AppendLine("THEN DELETE");
+					sb.AppendLine(" THEN DELETE");
 
 					break;
 
@@ -93,7 +93,7 @@ namespace LinqToDB.SqlQuery
 						((IQueryElement)Where).ToString(sb, dic);
 					}
 
-					sb.AppendLine("THEN INSERT");
+					sb.AppendLine(" THEN INSERT");
 
 					foreach (var item in Items)
 					{
@@ -113,7 +113,7 @@ namespace LinqToDB.SqlQuery
 						((IQueryElement)Where).ToString(sb, dic);
 					}
 
-					sb.AppendLine("THEN UPDATE");
+					sb.AppendLine(" THEN UPDATE");
 
 					foreach (var item in Items)
 					{
@@ -133,7 +133,7 @@ namespace LinqToDB.SqlQuery
 						((IQueryElement)Where).ToString(sb, dic);
 					}
 
-					sb.AppendLine("THEN UPDATE");
+					sb.AppendLine(" THEN UPDATE");
 
 					foreach (var item in Items)
 					{
