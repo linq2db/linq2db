@@ -12,6 +12,7 @@ namespace LinqToDB.ServiceModel
 	using Linq;
 	using Extensions;
 	using SqlQuery;
+	using LinqToDB.Expressions;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	[WebService       (Namespace  = "http://tempuri.org/")]
@@ -167,18 +168,28 @@ namespace LinqToDB.ServiceModel
 							names.Add(name);
 
 							ret.FieldNames[i] = name;
-							ret.FieldTypes[i] = rd.GetFieldType(i);
+							// ugh...
+							ret.FieldTypes[i] = query.Statement.SelectQuery.Select.Columns[i].SystemType;
+						}
+
+						var columnTypes = new Type[ret.FieldCount];
+						var codes       = new TypeCode[rd.FieldCount];
+
+						for (var i = 0; i < ret.FieldCount; i++)
+						{
+							columnTypes[i] = ret.FieldTypes[i].ToNullableUnderlying();
+							codes[i]       = Type.GetTypeCode(columnTypes[i]);
 						}
 
 						var varyingTypes = new List<Type>();
 
+						var columnReaders = new ConvertFromDataReaderExpression.ColumnReader[rd.FieldCount];
+						for (var i = 0; i < ret.FieldCount; i++)
+							columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema, ret.FieldTypes[i], i);
+
 						while (rd.Read())
 						{
 							var data  = new string  [rd.FieldCount];
-							var codes = new TypeCode[rd.FieldCount];
-
-							for (var i = 0; i < ret.FieldCount; i++)
-								codes[i] = Type.GetTypeCode(ret.FieldTypes[i].ToNullableUnderlying());
 
 							ret.RowCount++;
 
@@ -186,11 +197,13 @@ namespace LinqToDB.ServiceModel
 							{
 								if (!rd.IsDBNull(i))
 								{
-									var code = codes[i];
-									var type = rd.GetFieldType(i);
-									var idx  = -1;
+									var value = columnReaders[i].GetValue(rd);
+									var type  = value.GetType();
+									var code  = codes[i];
 
-									if (type != ret.FieldTypes[i])
+									var idx   = -1;
+
+									if (type != columnTypes[i])
 									{
 										code = Type.GetTypeCode(type);
 										idx  = varyingTypes.IndexOf(type);
@@ -204,27 +217,27 @@ namespace LinqToDB.ServiceModel
 
 									switch (code)
 									{
-										case TypeCode.Decimal  : data[i] = rd.GetDecimal (i).ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.Double   : data[i] = rd.GetDouble  (i).ToString("G17", CultureInfo.InvariantCulture); break;
-										case TypeCode.Single   : data[i] = rd.GetFloat   (i).ToString("G9" , CultureInfo.InvariantCulture); break;
-										case TypeCode.DateTime : data[i] = rd.GetDateTime(i).ToBinary().ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.Char     : data[i] = ((char)value)               .ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.Byte     : data[i] = ((byte)value)               .ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.SByte    : data[i] = ((sbyte)value)              .ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.Int16    : data[i] = ((short)value)              .ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.UInt16   : data[i] = ((ushort)value)             .ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.Int32    : data[i] = ((int)value)                .ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.UInt32   : data[i] = ((uint)value)               .ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.Int64    : data[i] = ((long)value)               .ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.UInt64   : data[i] = ((ulong)value)              .ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.Decimal  : data[i] = ((decimal)value)            .ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.Double   : data[i] = ((double)value)             .ToString("G17", CultureInfo.InvariantCulture); break;
+										case TypeCode.Single   : data[i] = ((float)value)              .ToString("G9" , CultureInfo.InvariantCulture); break;
+										case TypeCode.DateTime : data[i] = ((DateTime)value).ToBinary().ToString(CultureInfo.InvariantCulture); break;
 										default                :
 											{
-												if (type == typeof(DateTimeOffset))
-												{
-													var dt = rd.GetValue(i);
-
-													if (dt is DateTime)
-														data[i] = ((DateTime)dt).ToBinary().ToString(CultureInfo.InvariantCulture);
-													else if (dt is DateTimeOffset)
-														data[i] = ((DateTimeOffset)dt).UtcTicks.ToString(CultureInfo.InvariantCulture);
-													else
-														data[i] = rd.GetValue(i).ToString();
-												}
-												else if (type == typeof(byte[]))
-													data[i] = ConvertTo<string>.From((byte[])rd.GetValue(i));
+												if (value is DateTimeOffset dto)
+													data[i] = dto.UtcTicks.ToString(CultureInfo.InvariantCulture);
+												else if (value is byte[] bytea)
+													data[i] = ConvertTo<string>.From(bytea);
 												else
-													data[i] = (rd.GetValue(i) ?? "").ToString();
+													data[i] = (value ?? "").ToString();
 
 												break;
 											}

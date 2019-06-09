@@ -66,8 +66,18 @@ namespace LinqToDB.ServiceModel
 
 			static string ConvertToString(Type type, object value)
 			{
-				switch (type.ToNullableUnderlying().GetTypeCodeEx())
+				type = type.ToNullableUnderlying();
+				switch (type.GetTypeCodeEx())
 				{
+					case TypeCode.Char     : return ((char)    value).ToString(CultureInfo.InvariantCulture);
+					case TypeCode.Byte     : return ((byte)    value).ToString(CultureInfo.InvariantCulture);
+					case TypeCode.SByte    : return ((sbyte)   value).ToString(CultureInfo.InvariantCulture);
+					case TypeCode.Int16    : return ((short)   value).ToString(CultureInfo.InvariantCulture);
+					case TypeCode.UInt16   : return ((ushort)  value).ToString(CultureInfo.InvariantCulture);
+					case TypeCode.Int32    : return ((int)     value).ToString(CultureInfo.InvariantCulture);
+					case TypeCode.UInt32   : return ((uint)    value).ToString(CultureInfo.InvariantCulture);
+					case TypeCode.Int64    : return ((long)    value).ToString(CultureInfo.InvariantCulture);
+					case TypeCode.UInt64   : return ((ulong)   value).ToString(CultureInfo.InvariantCulture);
 					case TypeCode.Decimal  : return ((decimal) value).ToString(CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return ((double)  value).ToString("G17", CultureInfo.InvariantCulture);
 					case TypeCode.Single   : return ((float)   value).ToString("G9" , CultureInfo.InvariantCulture);
@@ -76,6 +86,8 @@ namespace LinqToDB.ServiceModel
 
 				if (type == typeof(DateTimeOffset))
 					return  ((DateTimeOffset)value).UtcTicks.ToString(CultureInfo.InvariantCulture);
+				if (type == typeof(TimeSpan))
+					return ((TimeSpan)value).Ticks.ToString(CultureInfo.InvariantCulture);
 
 				return Converter.ChangeTypeTo<string>(value);
 			}
@@ -495,16 +507,28 @@ namespace LinqToDB.ServiceModel
 				if (str == null)
 					return null;
 
-				switch (type.ToNullableUnderlying().GetTypeCodeEx())
+				var underlyingType = type.ToNullableUnderlying();
+				switch (underlyingType.GetTypeCodeEx())
 				{
+					case TypeCode.Char     : return str[0];
+					case TypeCode.Byte     : return byte.    Parse(str, CultureInfo.InvariantCulture);
+					case TypeCode.SByte    : return sbyte.   Parse(str, CultureInfo.InvariantCulture);
+					case TypeCode.Int16    : return short.   Parse(str, CultureInfo.InvariantCulture);
+					case TypeCode.UInt16   : return ushort.  Parse(str, CultureInfo.InvariantCulture);
+					case TypeCode.Int32    : return int.     Parse(str, CultureInfo.InvariantCulture);
+					case TypeCode.UInt32   : return uint.    Parse(str, CultureInfo.InvariantCulture);
+					case TypeCode.Int64    : return long.    Parse(str, CultureInfo.InvariantCulture);
+					case TypeCode.UInt64   : return ulong.   Parse(str, CultureInfo.InvariantCulture);
 					case TypeCode.Decimal  : return decimal. Parse(str, CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return double.  Parse(str, CultureInfo.InvariantCulture);
 					case TypeCode.Single   : return float.   Parse(str, CultureInfo.InvariantCulture);
 					case TypeCode.DateTime : return DateTime.FromBinary(long.Parse(str, CultureInfo.InvariantCulture));
 				}
 
-				if (type == typeof(DateTimeOffset))
+				if (underlyingType == typeof(DateTimeOffset))
 					return new DateTimeOffset(long.Parse(str, CultureInfo.InvariantCulture), TimeSpan.Zero);
+				if (underlyingType == typeof(TimeSpan))
+					return TimeSpan.FromTicks(long.Parse(str, CultureInfo.InvariantCulture));
 
 				return Converter.ChangeType(str, type);
 			}
