@@ -754,14 +754,15 @@ namespace LinqToDB.SqlProvider
 
 						case "CASE"     :
 							{
-								var parms = func.Parameters.Select(p => ConvertExpression(p)).ToArray();
+								var parms = func.Parameters;
 								var len   = parms.Length;
 
 								for (var i = 0; i < parms.Length - 1; i += 2)
 								{
-									if (parms[i] is SqlValue value)
+									var boolValue = SelectQueryOptimizer.GetBoolValue(parms[i]);
+									if (boolValue != null)
 									{
-										if ((bool)value.Value == false)
+										if (boolValue == false)
 										{
 											var newParms = new ISqlExpression[parms.Length - 2];
 
@@ -817,7 +818,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SearchCondition :
 				{
-					expression = SelectQueryOptimizer.ReduceSearchCondition((SqlSearchCondition)expression);
+					SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression);
 					break;
 				}
 

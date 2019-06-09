@@ -424,28 +424,30 @@ namespace LinqToDB.SqlQuery
 			OptimizeDistinctOrderBy();
 		}
 
-		internal static ISqlExpression ReduceSearchCondition(SqlSearchCondition searchCondition)
+		public static bool? GetBoolValue(ISqlExpression expression)
 		{
-			SelectQueryOptimizer.OptimizeSearchCondition(searchCondition);
-			
-			if (searchCondition.Conditions.Count == 0)
-				return new SqlValue(typeof(bool), true);
-
-			if (searchCondition.Conditions.Count == 1)
+			if (expression is SqlValue value)
 			{
-				var cond = searchCondition.Conditions[0];
-				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
+				if (value.Value is bool b)
+					return b;
+			}
+			else if (expression is SqlSearchCondition searchCondition)
+			{
+				if (searchCondition.Conditions.Count == 0)
+					return true;
+				if (searchCondition.Conditions.Count == 1)
 				{
-					var expr = (SqlPredicate.Expr)cond.Predicate;
-
-					if (expr.Expr1 is SqlValue value && value.Value is bool b)
+					var cond = searchCondition.Conditions[0];
+					if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 					{
-						return new SqlValue(typeof(bool), cond.IsNot ? !b : b);
+						var boolValue = GetBoolValue(((SqlPredicate.Expr)cond.Predicate).Expr1);
+						if (boolValue.HasValue)
+							return cond.IsNot ? !boolValue : boolValue;
 					}
 				}
 			}
 
-			return searchCondition;
+			return null;
 		}
 
 		internal static void OptimizeSearchCondition(SqlSearchCondition searchCondition)
@@ -465,93 +467,101 @@ namespace LinqToDB.SqlQuery
 			//     searchCondition.Conditions = []
 			// }
 			//
-			// One day I am going to rewrite all this crap in Nemerle.
-			//
-			if (searchCondition.Conditions.Count == 1)
-			{
-				var cond = searchCondition.Conditions[0];
-
-				if (cond.Predicate is SqlSearchCondition sc)
-				{
-					if (!cond.IsNot)
-					{
-						searchCondition.Conditions.Clear();
-						searchCondition.Conditions.AddRange(sc.Conditions);
-
-						OptimizeSearchCondition(searchCondition);
-						return;
-					}
-
-					if (sc.Conditions.Count == 1)
-					{
-						var c1 = sc.Conditions[0];
-
-						if (!c1.IsNot && c1.Predicate is SqlPredicate.ExprExpr)
-						{
-							var ee = (SqlPredicate.ExprExpr)c1.Predicate;
-							SqlPredicate.Operator op;
-
-							switch (ee.Operator)
-							{
-								case SqlPredicate.Operator.Equal          : op = SqlPredicate.Operator.NotEqual;       break;
-								case SqlPredicate.Operator.NotEqual       : op = SqlPredicate.Operator.Equal;          break;
-								case SqlPredicate.Operator.Greater        : op = SqlPredicate.Operator.LessOrEqual;    break;
-								case SqlPredicate.Operator.NotLess        :
-								case SqlPredicate.Operator.GreaterOrEqual : op = SqlPredicate.Operator.Less;           break;
-								case SqlPredicate.Operator.Less           : op = SqlPredicate.Operator.GreaterOrEqual; break;
-								case SqlPredicate.Operator.NotGreater     :
-								case SqlPredicate.Operator.LessOrEqual    : op = SqlPredicate.Operator.Greater;        break;
-								default: throw new InvalidOperationException();
-							}
-
-							c1.Predicate = new SqlPredicate.ExprExpr(ee.Expr1, op, ee.Expr2);
-
-							searchCondition.Conditions.Clear();
-							searchCondition.Conditions.AddRange(sc.Conditions);
-
-							OptimizeSearchCondition(searchCondition);
-							return;
-						}
-					}
-				}
-
-				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
-				{
-					var expr = (SqlPredicate.Expr)cond.Predicate;
-
-					if (expr.Expr1 is SqlValue value)
-						if (value.Value is bool b)
-							if (cond.IsNot ? !b : b)
-								searchCondition.Conditions.Clear();
-				}
-			}
-
+			// One day I am going to rewrite all this crap using right statements.
+			
 			for (var i = 0; i < searchCondition.Conditions.Count; i++)
 			{
 				var cond = searchCondition.Conditions[i];
+				if (cond.Predicate.ElementType == QueryElementType.ExprExprPredicate)
+				{
+					var exprExpr = (SqlPredicate.ExprExpr)cond.Predicate;
+
+					if (cond.IsNot)
+					{
+						SqlPredicate.Operator op;
+
+						switch (exprExpr.Operator)
+						{
+							case SqlPredicate.Operator.Equal          : op = SqlPredicate.Operator.NotEqual;       break;
+							case SqlPredicate.Operator.NotEqual       : op = SqlPredicate.Operator.Equal;          break;
+							case SqlPredicate.Operator.Greater        : op = SqlPredicate.Operator.LessOrEqual;    break;
+							case SqlPredicate.Operator.NotLess        :
+							case SqlPredicate.Operator.GreaterOrEqual : op = SqlPredicate.Operator.Less;           break;
+							case SqlPredicate.Operator.Less           : op = SqlPredicate.Operator.GreaterOrEqual; break;
+							case SqlPredicate.Operator.NotGreater     :
+							case SqlPredicate.Operator.LessOrEqual    : op = SqlPredicate.Operator.Greater;        break;
+							default: throw new InvalidOperationException();
+						}
+
+						cond.Predicate = new SqlPredicate.ExprExpr(exprExpr.Expr1, op, exprExpr.Expr2);
+						cond.IsNot = false;
+					}
+
+					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
+					     exprExpr.Operator == SqlPredicate.Operator.NotEqual)
+					    && exprExpr.Expr1 is SqlValue value1 && value1.Value != null 
+					    && exprExpr.Expr2 is SqlValue value2 && value2.Value != null)
+					{
+						cond.Predicate = new SqlPredicate.Expr(new SqlValue(
+							(value1.Value.Equals(value2.Value) == (exprExpr.Operator == SqlPredicate.Operator.Equal))));
+					}
+				}
 
 				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 				{
 					var expr = (SqlPredicate.Expr)cond.Predicate;
 
-					if (expr.Expr1 is SqlValue value)
+					if (cond.IsNot && expr.Expr1 is SqlValue sqlValue && sqlValue.Value is bool b)
 					{
-						if (value.Value is bool b)
-						{
-							if (cond.IsNot ? !b : b)
-							{
-								if (i > 0)
-								{
-									if (searchCondition.Conditions[i-1].IsOr)
-									{
-										searchCondition.Conditions.RemoveRange(0, i);
-										OptimizeSearchCondition(searchCondition);
+						expr.Expr1 = new SqlValue(!b);
+						cond.IsNot = false;
+					}
 
-										break;
-									}
+					var boolValue = GetBoolValue(expr.Expr1);
+
+					if (boolValue != null)
+					{
+						var isTrue = cond.IsNot ? !boolValue.Value : boolValue.Value;
+						bool? leftIsOr  = i > 0 ? searchCondition.Conditions[i - 1].IsOr : (bool?)null;
+						bool? rightIsOr = i + 1 < searchCondition.Conditions.Count ? cond.IsOr : (bool?)null;
+
+						if (isTrue)
+						{
+							if ((leftIsOr == true || leftIsOr == null) && (rightIsOr == true || rightIsOr == null))
+							{
+								searchCondition.Conditions.Clear();
+								break;
+							}
+
+							searchCondition.Conditions.RemoveAt(i);
+							if (leftIsOr== false && rightIsOr != null)
+								searchCondition.Conditions[i - 1].IsOr = rightIsOr.Value;
+							--i;
+						}
+						else
+						{
+							if (leftIsOr == false)
+							{
+								searchCondition.Conditions.RemoveAt(i - 1);
+								--i;
+							}
+							else if (rightIsOr == false)
+							{
+								cond.IsOr = searchCondition.Conditions[i + 1].IsOr;
+								searchCondition.Conditions.RemoveAt(i + 1);
+								--i;
+							}
+							else
+							{
+								if (rightIsOr != null || leftIsOr != null)
+								{
+									searchCondition.Conditions.RemoveAt(i);
+									if (leftIsOr != null && rightIsOr != null)
+										searchCondition.Conditions[i - 1].IsOr = rightIsOr.Value;
 								}
 							}
 						}
+
 					}
 				}
 				else if (cond.Predicate is SqlSearchCondition sc)
@@ -559,12 +569,22 @@ namespace LinqToDB.SqlQuery
 					OptimizeSearchCondition(sc);
 					if (sc.Conditions.Count == 0)
 					{
-						if (cond.IsOr)
-						{
-							searchCondition.Conditions.Clear();
-							break;
-						}
-						searchCondition.Conditions.RemoveAt(i);
+						var inlinePredicate = new SqlPredicate.Expr(new SqlValue(!cond.IsNot));
+						searchCondition.Conditions[i] =
+							new SqlCondition(false, inlinePredicate, searchCondition.Conditions[i].IsOr);
+						--i;
+					}
+					else if (sc.Conditions.Count == 1)
+					{
+						// reduce nesting
+						var inlineCondition = sc.Conditions[0];
+						inlineCondition.IsOr = searchCondition.Conditions[i].IsOr;
+						var isNot = searchCondition.Conditions[i].IsNot;
+						if (inlineCondition.IsNot)
+							isNot = !isNot;
+						inlineCondition.IsNot = isNot;
+						searchCondition.Conditions[i] = inlineCondition;
+
 						--i;
 					}
 				}
@@ -1151,6 +1171,5 @@ namespace LinqToDB.SqlQuery
 			}
 
 		}
-
 	}
 }
