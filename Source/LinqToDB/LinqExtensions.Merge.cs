@@ -184,8 +184,8 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source and target set.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
-			[NotNull] this IMergeableUsing<TTarget> merge,
-			[NotNull]      IEnumerable<TSource>     source)
+			[NotNull]                    this IMergeableUsing<TTarget> merge,
+			[NotNull, SqlQueryDependent] IEnumerable<TSource>          source)
 		{
 			if (merge  == null) throw new ArgumentNullException(nameof(merge));
 			if (source == null) throw new ArgumentNullException(nameof(source));

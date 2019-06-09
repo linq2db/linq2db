@@ -20,8 +20,6 @@ namespace Tests.xUpdate
 			{
 				var table = GetTarget(db);
 
-				table.Delete();
-
 				var source = new[]
 				{
 					new TestMapping1()
@@ -35,12 +33,35 @@ namespace Tests.xUpdate
 
 				TestQuery(table, source);
 
-				source[0] = new TestMapping1()
+				source = new[]
 				{
-					Id     = 10,
-					Field1 = 11,
-					Field2 = 12,
-					Field4 = 14
+					new TestMapping1()
+					{
+						Id     = 10,
+						Field1 = 11,
+						Field2 = 12,
+						Field4 = 14
+					}
+				};
+
+				TestQuery(table, source);
+
+				source = new[]
+				{
+					new TestMapping1()
+					{
+						Id     = 20,
+						Field1 = 21,
+						Field2 = 22,
+						Field4 = 24
+					},
+					new TestMapping1()
+					{
+						Id     = 30,
+						Field1 = 31,
+						Field2 = 32,
+						Field4 = 34
+					}
 				};
 
 				TestQuery(table, source);
@@ -48,6 +69,8 @@ namespace Tests.xUpdate
 
 			void TestQuery(ITable<TestMapping1> table, TestMapping1[] source)
 			{
+				table.Delete();
+
 				var rows = table
 							.Merge()
 							.Using(source)
@@ -55,12 +78,17 @@ namespace Tests.xUpdate
 							.InsertWhenNotMatched()
 							.Merge();
 
-				var result = table.Single();
-				AssertRowCount(1, rows, context);
-				Assert.AreEqual(source[0].Id,     result.Id);
-				Assert.AreEqual(source[0].Field1, result.Field1);
-				Assert.AreEqual(source[0].Field2, result.Field2);
-				Assert.AreEqual(source[0].Field4, result.Field4);
+				var result = table.OrderBy(_ => _.Id).ToArray();
+				AssertRowCount(source.Length, rows, context);
+				Assert.AreEqual(source.Length,     result.Length);
+
+				for (var i = 0; i < source.Length; i++)
+				{
+					Assert.AreEqual(source[i].Id,     result[i].Id);
+					Assert.AreEqual(source[i].Field1, result[i].Field1);
+					Assert.AreEqual(source[i].Field2, result[i].Field2);
+					Assert.AreEqual(source[i].Field4, result[i].Field4);
+				}
 			}
 		}
 	}
