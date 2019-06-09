@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 				var predicate = methodCall.Arguments[1];
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{
-					var condition = (LambdaExpression)predicate.Unwrap();
+					var condition     = (LambdaExpression)predicate.Unwrap();
 					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
 
 					operation.Where = new SqlSearchCondition();

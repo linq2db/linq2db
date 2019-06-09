@@ -43,10 +43,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					// build setters like QueryRunner.Insert
 					var targetType = methodCall.Method.GetGenericArguments()[0];
-					//var sqlTable = new SqlTable(builder.MappingSchema, targetType);
-					var sqlTable = (SqlTable)statement.Target.Source;
+					var sqlTable   = (SqlTable)statement.Target.Source;
+					var param      = Expression.Parameter(targetType, "s");
 
-					var param = Expression.Parameter(targetType, "s");
 					foreach (var field in sqlTable.Fields.Values)
 					{
 						if (field.IsInsertable)
@@ -68,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{
-					var condition = (LambdaExpression)predicate.Unwrap();
+					var condition     = (LambdaExpression)predicate.Unwrap();
 					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
 
 					operation.Where = new SqlSearchCondition();

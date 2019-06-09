@@ -43,16 +43,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					// build setters like QueryRunner.Update
 					var targetType = methodCall.Method.GetGenericArguments()[0];
-					//var sqlTable = new SqlTable(builder.MappingSchema, targetType);
-					var sqlTable = (SqlTable)statement.Target.Source;
-
-					var param = Expression.Parameter(targetType, "s");
-
-					var keys = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
+					var sqlTable   = (SqlTable)statement.Target.Source;
+					var param      = Expression.Parameter(targetType, "s");
+					var keys       = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
 					foreach (var field in sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys))
 					{
 						var expression = Expression.PropertyOrField(param, field.Name);
-						var expr = mergeContext.SourceContext.ConvertToSql(expression, 1, ConvertFlags.Field)[0].Sql;
+						var expr       = mergeContext.SourceContext.ConvertToSql(expression, 1, ConvertFlags.Field)[0].Sql;
 
 						operation.Items.Add(new SqlSetExpression(field, expr));
 					}
@@ -60,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{
-					var condition = (LambdaExpression)predicate.Unwrap();
+					var condition     = (LambdaExpression)predicate.Unwrap();
 					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
 
 					operation.Where = new SqlSearchCondition();

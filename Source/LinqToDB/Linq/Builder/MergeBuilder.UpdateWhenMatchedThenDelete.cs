@@ -43,12 +43,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					// build setters like QueryRunner.Update
 					var targetType = methodCall.Method.GetGenericArguments()[0];
-					//var sqlTable = new SqlTable(builder.MappingSchema, targetType);
-					var sqlTable = (SqlTable)statement.Target.Source;
+					var sqlTable   = (SqlTable)statement.Target.Source;
+					var param      = Expression.Parameter(targetType, "s");
+					var keys       = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
 
-					var param = Expression.Parameter(targetType, "s");
-
-					var keys = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
 					foreach (var field in sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys))
 					{
 						var expression = Expression.PropertyOrField(param, field.Name);
@@ -60,7 +58,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{
-					var predicateCondition = (LambdaExpression)predicate.Unwrap();
+					var predicateCondition     = (LambdaExpression)predicate.Unwrap();
 					var predicateConditionExpr = builder.ConvertExpression(predicateCondition.Body.Unwrap());
 
 					operation.Where = new SqlSearchCondition();
@@ -74,7 +72,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!(deletePredicate is ConstantExpression constDeletePredicate) || constDeletePredicate.Value != null)
 				{
-					var deleteCondition = (LambdaExpression)deletePredicate.Unwrap();
+					var deleteCondition     = (LambdaExpression)deletePredicate.Unwrap();
 					var deleteConditionExpr = builder.ConvertExpression(deleteCondition.Body.Unwrap());
 
 					operation.WhereDelete = new SqlSearchCondition();

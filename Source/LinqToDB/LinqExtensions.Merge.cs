@@ -16,6 +16,7 @@ namespace LinqToDB
 	public static partial class LinqExtensions
 	{
 		#region MethodInfo
+
 		internal static readonly MethodInfo MergeMethodInfo                           = MemberHelper.MethodOf(() => Merge<int>(null, null))                                          .GetGenericMethodDefinition();
 		internal static readonly MethodInfo MergeIntoMethodInfo                       = MemberHelper.MethodOf(() => MergeInto<int, int>(null, null, null))                           .GetGenericMethodDefinition();
 		internal static readonly MethodInfo UsingMethodInfo1                          = MemberHelper.MethodOf(() => Using<int, int>(null, (IQueryable<int>)null))                    .GetGenericMethodDefinition();

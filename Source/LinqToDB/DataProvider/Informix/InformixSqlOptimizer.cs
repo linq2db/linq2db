@@ -30,11 +30,6 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			//statement.WalkQueries(selectQuery =>
-			//{
-			//	new QueryVisitor().Visit(selectQuery, SetQueryParameter);
-			//	return selectQuery;
-			//});
 			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
 			statement = base.Finalize(statement);

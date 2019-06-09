@@ -377,7 +377,6 @@ namespace Tests.xUpdate
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
-				//Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
 			}
 		}
 
@@ -760,7 +759,6 @@ namespace Tests.xUpdate
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
-				//Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
 			}
 		}
 
@@ -787,7 +785,6 @@ namespace Tests.xUpdate
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
-				//Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
 			}
 		}
 	}

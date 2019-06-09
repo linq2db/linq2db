@@ -18,18 +18,15 @@ namespace LinqToDB.Linq.Builder
 			{
 				// MergeInto<TTarget, TSource>(IQueryable<TSource> source, ITable<TTarget> target, string hint)
 				var sourceContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
-				var target = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1]) { AssociationsAsSubQueries = true });
+				var target        = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1]) { AssociationsAsSubQueries = true });
+				var targetTable   = ((TableBuilder.TableContext)target).SqlTable;
 
-				var targetTable = ((TableBuilder.TableContext)target).SqlTable;
-
-				var merge = new SqlMergeStatement(targetTable)
+				var merge         = new SqlMergeStatement(targetTable)
 				{
 					Hint = (string)methodCall.Arguments[2].EvaluateExpression()
 				};
 
 				target.SetAlias(merge.Target.Alias);
-				target.Statement = merge;
-
 				target.Statement = merge;
 
 				var source = new MergeSourceQueryContext(
@@ -38,7 +35,7 @@ namespace LinqToDB.Linq.Builder
 					merge,
 					sourceContext,
 					methodCall.Method.GetGenericArguments()[1]);
-				//source.SetAlias("Source");
+
 				return new MergeContext(merge, target, source);
 			}
 

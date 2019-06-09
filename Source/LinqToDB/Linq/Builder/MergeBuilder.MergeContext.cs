@@ -60,8 +60,6 @@ namespace LinqToDB.Linq.Builder
 				switch (flags)
 				{
 					case ConvertFlags.Field:
-					//case ConvertFlags.Key:
-					//case ConvertFlags.All:
 						{
 							var root = expression.GetRootObject(Builder.MappingSchema);
 

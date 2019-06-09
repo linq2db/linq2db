@@ -109,6 +109,7 @@ namespace LinqToDB.SqlQuery
 
 			if (SystemType != null)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
+
 			for (var i = 0; i < Parameters.Length; i++)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
 

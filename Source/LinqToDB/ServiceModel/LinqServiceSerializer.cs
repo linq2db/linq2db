@@ -1244,6 +1244,7 @@ namespace LinqToDB.ServiceModel
 						{
 							var elem = (SqlMergeSourceTable)e;
 
+							Append(elem.SourceID);
 							Append(elem.SourceEnumerable);
 							Append(elem.SourceQuery);
 							Append(elem.SourceFields);
@@ -2016,11 +2017,12 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.MergeSourceTable:
 						{
+							var sourceID         = ReadInt();
 							var enumerableSource = Read<SqlValuesTable>();
 							var querySource      = Read<SelectQuery>();
 							var fields           = ReadArray<SqlField>();
 
-							obj = new SqlMergeSourceTable(enumerableSource, querySource, fields);
+							obj = new SqlMergeSourceTable(sourceID, enumerableSource, querySource, fields);
 
 							break;
 						}

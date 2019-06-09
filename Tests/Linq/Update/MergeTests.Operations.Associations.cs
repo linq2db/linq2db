@@ -1163,10 +1163,7 @@ namespace Tests.xUpdate
 				{
 					person.ID = id++;
 
-					//if (db.ConfigurationString == TestProvName.Firebird3 + "sdf")
-					//	person.ID = Convert.ToInt32(db.Insert(person));
-					//else
-						person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
+					person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
 				}
 
 				AssociationDoctors[0].PersonID = AssociationPersons[4].ID;

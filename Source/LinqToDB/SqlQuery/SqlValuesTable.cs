@@ -22,21 +22,6 @@ namespace LinqToDB.SqlQuery
 
 		public Dictionary<string, SqlField> Fields { get; } = new Dictionary<string, SqlField>();
 
-		private SqlField _all;
-		SqlField ISqlTableSource.All => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
-
-		int ISqlTableSource.SourceID => throw new NotImplementedException();
-
-		SqlTableType ISqlTableSource.SqlTableType => SqlTableType.Values;
-
-		bool ISqlExpression.CanBeNull => throw new NotImplementedException();
-
-		int ISqlExpression.Precedence => throw new NotImplementedException();
-
-		Type ISqlExpression.SystemType => throw new NotImplementedException();
-
-		QueryElementType IQueryElement.ElementType => QueryElementType.SqlValuesTable;
-
 		public IList<IList<ISqlExpression>> Rows { get; }
 
 		public void Add(SqlField field)
@@ -48,34 +33,60 @@ namespace LinqToDB.SqlQuery
 			Fields.Add(field.Name, field);
 		}
 
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			throw new NotImplementedException();
-		}
+		#region ISqlTableSource
+		private SqlField _all;
+		SqlField ISqlTableSource.All => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
+
+		int ISqlTableSource.SourceID => throw new NotImplementedException();
+
+		SqlTableType ISqlTableSource.SqlTableType => SqlTableType.Values;
+
+		IList<ISqlExpression> ISqlTableSource.GetKeys(bool allIfEmpty) => throw new NotImplementedException();
+		#endregion
+
+		#region ISqlExpression
+
+		bool ISqlExpression.CanBeNull => throw new NotImplementedException();
+
+		int ISqlExpression.Precedence => throw new NotImplementedException();
+
+		Type ISqlExpression.SystemType => throw new NotImplementedException();
 
 		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			throw new NotImplementedException();
 		}
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
-		{
-			throw new NotImplementedException();
-		}
+		#endregion
 
-		IList<ISqlExpression> ISqlTableSource.GetKeys(bool allIfEmpty)
+		#region ICloneableElement
+		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			throw new NotImplementedException();
 		}
+		#endregion
+
+		#region IQueryElement
+		QueryElementType IQueryElement.ElementType => QueryElementType.SqlValuesTable;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			throw new NotImplementedException();
 		}
+		#endregion
 
+		#region IEquatable
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		{
+			throw new NotImplementedException();
+		}
+		#endregion
+
+		#region ISqlExpressionWalkable
 		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
 			throw new NotImplementedException();
 		}
+		#endregion
 	}
 }

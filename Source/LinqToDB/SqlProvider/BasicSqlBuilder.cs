@@ -1258,23 +1258,23 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (table.ElementType)
 			{
-				case QueryElementType.SqlTable   :
-				case QueryElementType.TableSource:
+				case QueryElementType.SqlTable        :
+				case QueryElementType.TableSource     :
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
-				case QueryElementType.SqlQuery   :
+				case QueryElementType.SqlQuery        :
 					StringBuilder.Append("(").AppendLine();
 					BuildSqlBuilder((SelectQuery)table, Indent + 1, false);
 					AppendIndent().Append(")");
 					break;
 
-				case QueryElementType.SqlCteTable    :
+				case QueryElementType.SqlCteTable     :
 				case QueryElementType.MergeSourceTable:
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
-				case QueryElementType.SqlRawSqlTable :
+				case QueryElementType.SqlRawSqlTable  :
 
 					var rawSqlTable = (SqlRawSqlTable)table;
 

@@ -88,7 +88,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1()
 					{
-						Id = _.Id,
+						Id     = _.Id,
 						Field1 = _.Field1,
 						Field2 = _.Field2,
 						Field3 = _.Id + _.Id,
@@ -193,7 +193,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1()
 					{
-						Id = _.Id,
+						Id     = _.Id,
 						Field1 = _.Field3,
 						Field2 = _.Field4,
 						Field3 = _.Id + _.Id,
@@ -237,7 +237,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1()
 					{
-						Id = _.Id,
+						Id     = _.Id,
 						Field1 = _.Field3,
 						Field2 = _.Field4,
 						Field3 = _.Id + _.Id,
@@ -433,7 +433,7 @@ namespace Tests.xUpdate
 							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
 							 select new TestMapping1()
 							 {
-								 Id = t1.Id,
+								 Id     = t1.Id,
 								 // this is workaround
 								 //Fake = t2.Fake,
 								 Field1 = t1.Field1,
@@ -466,8 +466,8 @@ namespace Tests.xUpdate
 							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
 							 select new TestMapping1()
 							 {
-								 Id = t1.Id,
-								 Fake = t2.Fake,
+								 Id     = t1.Id,
+								 Fake   = t2.Fake,
 								 Field1 = t1.Field1,
 								 Field2 = t2.Field2,
 								 Field3 = t1.Field3,
@@ -532,8 +532,8 @@ namespace Tests.xUpdate
 							 from t2 in db.GetTable<CrossJoinRight>()
 							 select new
 							 {
-								 LeftId = t1.Id,
-								 RightId = t2.Id,
+								 LeftId   = t1.Id,
+								 RightId  = t2.Id,
 								 ResultId = t1.Id + t2.Id
 							 };
 
@@ -543,8 +543,8 @@ namespace Tests.xUpdate
 					.On((t, s) => t.Id == s.ResultId)
 					.InsertWhenNotMatched(s => new CrossJoinResult()
 					{
-						Id = s.ResultId,
-						LeftId = s.LeftId,
+						Id      = s.ResultId,
+						LeftId  = s.LeftId,
 						RightId = s.RightId
 					})
 					.Merge();
@@ -588,8 +588,8 @@ namespace Tests.xUpdate
 							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
 							 select new TestMapping1()
 							 {
-								 Id = t1.Id,
-								 Fake = t2.Fake,
+								 Id     = t1.Id,
+								 Fake   = t2.Fake,
 								 Field1 = t1.Field1,
 								 Field2 = t2.Field2,
 								 Field3 = t1.Field3,
@@ -621,10 +621,10 @@ namespace Tests.xUpdate
 				db.GetTable<CrossJoinRight>().Delete();
 				db.GetTable<CrossJoinResult>().Delete();
 
-				db.Insert(new CrossJoinLeft() { Id = 1 });
-				db.Insert(new CrossJoinLeft() { Id = 2 });
-				db.Insert(new CrossJoinRight() { Id = 10 });
-				db.Insert(new CrossJoinRight() { Id = 20 });
+				db.Insert(new CrossJoinLeft()   { Id = 1 });
+				db.Insert(new CrossJoinLeft()   { Id = 2 });
+				db.Insert(new CrossJoinRight()  { Id = 10 });
+				db.Insert(new CrossJoinRight()  { Id = 20 });
 				db.Insert(new CrossJoinResult() { Id = 11, LeftId = 100, RightId = 200 });
 
 				var source = db.GetTable<CrossJoinLeft>()
@@ -633,8 +633,8 @@ namespace Tests.xUpdate
 						(t1, t2) =>
 						 new
 							 {
-								 LeftId = t1.Id,
-								 RightId = t2.Id,
+								 LeftId   = t1.Id,
+								 RightId  = t2.Id,
 								 ResultId = t1.Id + t2.Id
 							 });
 
@@ -644,8 +644,8 @@ namespace Tests.xUpdate
 					.On((t, s) => t.Id == s.ResultId)
 					.InsertWhenNotMatched(s => new CrossJoinResult()
 					{
-						Id = s.ResultId,
-						LeftId = s.LeftId,
+						Id      = s.ResultId,
+						LeftId  = s.LeftId,
 						RightId = s.RightId
 					})
 					.Merge();
@@ -693,7 +693,6 @@ namespace Tests.xUpdate
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
-				//Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
 			}
 		}
 
@@ -713,7 +712,7 @@ namespace Tests.xUpdate
 						.OnTargetKey()
 						.InsertWhenNotMatched(s => new TestMapping1()
 						{
-							Id = s.Id,
+							Id     = s.Id,
 							Field1 = s.Field3
 						})
 						.Merge());
@@ -741,7 +740,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1()
 					{
-						Id = _.Id,
+						Id     = _.Id,
 						Field1 = _.Field3,
 						Field2 = _.Field4,
 						Field3 = _.Id,
@@ -789,7 +788,7 @@ namespace Tests.xUpdate
 					.OnTargetKey()
 					.InsertWhenNotMatched(_ => new TestMapping1()
 					{
-						Id = 10 + _.Id,
+						Id     = 10 + _.Id,
 						Field1 = 123,
 						Field2 = _.Field1,
 						Field3 = _.Field2,
@@ -841,7 +840,7 @@ namespace Tests.xUpdate
 					.OnTargetKey()
 					.InsertWhenNotMatched(_ => new TestMapping1()
 					{
-						Id = 10 + _.Id,
+						Id     = 10 + _.Id,
 						Field1 = 123,
 						Field2 = _.Field1,
 						Field3 = _.Field2,
@@ -892,7 +891,7 @@ namespace Tests.xUpdate
 					.OnTargetKey()
 					.InsertWhenNotMatched(_ => new TestMapping1
 					{
-						Id = 10 + _.Id,
+						Id     = 10 + _.Id,
 						Field1 = 123,
 						Field2 = _.Field1,
 						Field3 = _.Field2,
@@ -949,7 +948,7 @@ namespace Tests.xUpdate
 						_ => _.Field2 != null,
 						_ => new TestMapping1()
 						{
-							Id = 10 + _.Id,
+							Id     = 10 + _.Id,
 							Field1 = 123,
 							Field2 = _.Field1,
 							Field3 = _.Field2,
@@ -1001,7 +1000,7 @@ namespace Tests.xUpdate
 						_ => _.Field2 != null,
 						_ => new TestMapping1()
 						{
-							Id = 10 + _.Id,
+							Id     = 10 + _.Id,
 							Field1 = 123,
 							Field2 = _.Field1,
 							Field3 = _.Field2,
@@ -1053,7 +1052,7 @@ namespace Tests.xUpdate
 						_ => _.Field2 != null,
 						_ => new TestMapping1()
 						{
-							Id = 10 + _.Id,
+							Id     = 10 + _.Id,
 							Field1 = 123,
 							Field2 = _.Field1,
 							Field4 = 999,
@@ -1063,7 +1062,6 @@ namespace Tests.xUpdate
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'_.Field2' cannot be converted to SQL.", exception.Message);
-				//Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
 			}
 		}
 		#endregion
@@ -1084,7 +1082,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.Id == s.OtherId)
 					.InsertWhenNotMatched(s => new TestMapping1()
 					{
-						Id = s.OtherId,
+						Id     = s.OtherId,
 						Field1 = s.OtherField1,
 						Field2 = s.OtherField2,
 						Field3 = s.OtherField3,
@@ -1123,7 +1121,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.Id == s.OtherId && s.OtherField3 != null)
 					.InsertWhenNotMatched(s => new TestMapping1()
 					{
-						Id = s.OtherId,
+						Id     = s.OtherId,
 						Field1 = s.OtherField5,
 						Field2 = s.OtherField4,
 						Field3 = s.OtherField3,
@@ -1165,7 +1163,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource2(db).Select(_ => new TestMapping2()
 					{
-						OtherId = _.OtherId,
+						OtherId     = _.OtherId,
 						OtherField1 = _.OtherField1,
 						OtherField2 = _.OtherField2,
 						OtherField3 = _.OtherId + _.OtherId,
@@ -1175,7 +1173,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.Id == s.OtherId)
 					.InsertWhenNotMatched(s => new TestMapping1()
 					{
-						Id = s.OtherId,
+						Id     = s.OtherId,
 						Field1 = s.OtherField3,
 						Field2 = s.OtherField2,
 						Field3 = s.OtherField1,
@@ -1226,7 +1224,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.Id == s.OtherId)
 					.InsertWhenNotMatched(s => new TestMapping1()
 					{
-						Id = s.OtherId,
+						Id     = s.OtherId,
 						Field1 = s.OtherField1,
 						Field2 = s.OtherField5,
 						Field3 = s.OtherField2,
@@ -1320,7 +1318,7 @@ namespace Tests.xUpdate
 						s => s.OtherField4 == 216,
 						s => new TestMapping1()
 						{
-							Id = s.OtherId,
+							Id     = s.OtherId,
 							Field1 = s.OtherField1,
 							Field2 = s.OtherField2,
 							Field3 = s.OtherField3,
@@ -1358,19 +1356,19 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource2(db).Select(_ => new
 					{
-						Key = _.OtherId,
+						Key     = _.OtherId,
 						Field01 = _.OtherField1,
 						Field02 = _.OtherField2,
 						Field03 = _.OtherField3,
 						Field04 = _.OtherField4,
 						Field05 = _.OtherField5,
 					}))
-					.On((t, s) => t.Id == s.Key)
+					.On((t, s)  => t.Id == s.Key)
 					.InsertWhenNotMatchedAnd(
-						s => s.Field04 == 216,
-						s => new TestMapping1()
+						s       => s.Field04 == 216,
+						s       => new TestMapping1()
 						{
-							Id = s.Key,
+							Id     = s.Key,
 							Field1 = s.Field01,
 							Field2 = s.Field02,
 							Field3 = s.Field03,
@@ -1408,19 +1406,19 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource2(db).ToList().Select(_ => new
 					{
-						Key = _.OtherId,
+						Key     = _.OtherId,
 						Field01 = _.OtherField1,
 						Field02 = _.OtherField2,
 						Field03 = _.OtherField3,
 						Field04 = _.OtherField4,
 						Field05 = _.OtherField5,
 					}))
-					.On((t, s) => t.Id == s.Key)
+					.On((t, s)  => t.Id == s.Key)
 					.InsertWhenNotMatchedAnd(
-						s => s.Field04 == 216,
-						s => new TestMapping1()
+						s       => s.Field04 == 216,
+						s       => new TestMapping1()
 						{
-							Id = s.Key,
+							Id     = s.Key,
 							Field1 = s.Field01,
 							Field2 = s.Field02,
 							Field3 = s.Field03,
@@ -1459,19 +1457,19 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource2(db).Select(_ => new
 					{
-						field = _.OtherId,
-						Field = _.OtherField1,
-						and = _.OtherField2,
+						field  = _.OtherId,
+						Field  = _.OtherField1,
+						and    = _.OtherField2,
 						Target = _.OtherField3,
 						Source = _.OtherField4,
-						@case = _.OtherField5
+						@case  = _.OtherField5
 					}))
 					.On((t, s) => t.Id == s.field)
 					.InsertWhenNotMatchedAnd(
-						s => s.Source == 216,
-						s => new TestMapping1()
+						s      => s.Source == 216,
+						s      => new TestMapping1()
 						{
-							Id = s.field,
+							Id     = s.field,
 							Field1 = s.Field,
 							Field2 = s.and,
 							Field3 = s.Target,
@@ -1509,19 +1507,19 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource2(db).ToList().Select(_ => new
 					{
-						@as = _.OtherId,
-						take = _.OtherField1,
-						skip = _.OtherField2,
-						Skip = _.OtherField3,
+						@as    = _.OtherId,
+						take   = _.OtherField1,
+						skip   = _.OtherField2,
+						Skip   = _.OtherField3,
 						insert = _.OtherField4,
 						SELECT = _.OtherField5
 					}))
 					.On((t, s) => t.Id == s.@as)
 					.InsertWhenNotMatchedAnd(
-						s => s.insert == 216,
-						s => new TestMapping1()
+						s      => s.insert == 216,
+						s      => new TestMapping1()
 						{
-							Id = s.@as,
+							Id     = s.@as,
 							Field1 = s.take,
 							Field2 = s.skip,
 							Field3 = s.Skip,

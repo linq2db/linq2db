@@ -16,8 +16,8 @@ namespace LinqToDB.Linq.Builder
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				return methodCall.Method.IsGenericMethod
-					&& (LinqExtensions.UsingMethodInfo1            .GetGenericMethodDefinition() == methodCall.Method.GetGenericMethodDefinition()
-					 || LinqExtensions.UsingMethodInfo2            .GetGenericMethodDefinition() == methodCall.Method.GetGenericMethodDefinition());
+					&& (LinqExtensions.UsingMethodInfo1.GetGenericMethodDefinition() == methodCall.Method.GetGenericMethodDefinition()
+					 || LinqExtensions.UsingMethodInfo2.GetGenericMethodDefinition() == methodCall.Method.GetGenericMethodDefinition());
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -44,22 +44,13 @@ namespace LinqToDB.Linq.Builder
 						var query = enumerableBuildInfo.SelectQuery;
 						var innerQuery = new SelectQuery { ParentSelect = query };
 
-						//var valuesTable = new SqlValuesTable();
-						//query.Select.From.Table(valuesTable);
-
 						IList<SqlValue> elements;
 
 						switch (index)
 						{
-							//case 1:
-							//case 2:
 							case 4:
 								elements = BuildElements(type, (IEnumerable)((ConstantExpression)enumerableBuildInfo.Expression).Value);
 								break;
-							//case 3:
-							//	//						enumerableBuildInfo.JoinType = JoinType.CrossApply;
-							//	elements = BuildElements(builder, enumerableBuildInfo, ((NewArrayExpression)enumerableBuildInfo.Expression).Expressions);
-							//	break;
 							default:
 								throw new InvalidOperationException();
 						}
@@ -127,44 +118,10 @@ namespace LinqToDB.Linq.Builder
 						{
 							break;
 						}
-
-					//case ExpressionType.Call:
-					//	{
-					//		var call = (MethodCallExpression)expression;
-
-					//		if (call.Type.IsGenericTypeEx())
-					//		{
-					//			if (call.Type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-					//			{
-					//				var type = call.Type.GetGenericArgumentsEx()[0];
-					//				return action(4, type);
-					//			}
-					//		}
-
-					//		break;
-					//	}
 				}
 
 				throw new InvalidOperationException();
-				//return action(0, null);
 			}
-
-			//static IEnumerable<SqlValue[]> BuildElements(ExpressionBuilder builder, BuildInfo buildInfo, IEnumerable<Expression> elements)
-			//{
-			//	return elements.Select(e =>
-			//	{
-			//		var res = builder.ConvertToSql(buildInfo.Parent, e);
-			//		if (res != null)
-			//		throw new InvalidOperationException();
-			//		return new SqlValue[0];
-			//		//new[] { builder.ConvertToSql(buildInfo.Parent, e) }
-			//	});
-			//}
-
-			//static IEnumerable<SqlValue[]> BuildElements(Type type, IEnumerable elements)
-			//{
-			//	return elements.OfType<object>().Select(o => new[] { new SqlValue(type, o) });
-			//}
 
 			static IList<SqlValue> BuildElements(Type type, IEnumerable elements)
 			{

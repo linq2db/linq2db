@@ -18,27 +18,41 @@ namespace LinqToDB.SqlQuery
 			IEnumerable<SqlSetExpression> items)
 		{
 			OperationType = type;
-			Where         = where;
-			WhereDelete   = whereDelete;
+			Where = where;
+			WhereDelete = whereDelete;
 
 			foreach (var item in items)
 				Items.Add(item);
 		}
 
-		public List<SqlSetExpression> Items { get; } = new List<SqlSetExpression>();
+		public MergeOperationType     OperationType { get; }
 
-		public SqlSearchCondition Where { get; internal set; }
+		public SqlSearchCondition     Where         { get; internal set; }
 
-		public SqlSearchCondition WhereDelete { get; internal set; }
+		public SqlSearchCondition     WhereDelete   { get; internal set; }
 
-		public MergeOperationType OperationType { get; }
+		public List<SqlSetExpression> Items         { get; } = new List<SqlSetExpression>();
+
+
+		#region ISqlExpressionWalkable
+
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		{
+			((ISqlExpressionWalkable)Where)?.Walk(options, func);
+
+			foreach (var t in Items)
+				((ISqlExpressionWalkable)t).Walk(options, func);
+
+			((ISqlExpressionWalkable)WhereDelete)?.Walk(options, func);
+
+			return null;
+		}
+
+		#endregion
+
+		#region IQueryElement
 
 		QueryElementType IQueryElement.ElementType => QueryElementType.MergeOperationClause;
-
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			throw new NotImplementedException();
-		}
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
@@ -46,6 +60,7 @@ namespace LinqToDB.SqlQuery
 			{
 				case MergeOperationType.Delete:
 					sb.Append("WHEN MATCHED");
+
 					if (Where != null)
 					{
 						sb.Append(" AND ");
@@ -55,8 +70,10 @@ namespace LinqToDB.SqlQuery
 					sb.AppendLine("THEN DELETE");
 
 					break;
+
 				case MergeOperationType.DeleteBySource:
 					sb.Append("WHEN NOT MATCHED BY SOURCE");
+
 					if (Where != null)
 					{
 						sb.Append(" AND ");
@@ -66,8 +83,10 @@ namespace LinqToDB.SqlQuery
 					sb.AppendLine("THEN DELETE");
 
 					break;
+
 				case MergeOperationType.Insert:
 					sb.Append("WHEN NOT MATCHED");
+
 					if (Where != null)
 					{
 						sb.Append(" AND ");
@@ -75,6 +94,7 @@ namespace LinqToDB.SqlQuery
 					}
 
 					sb.AppendLine("THEN INSERT");
+
 					foreach (var item in Items)
 					{
 						sb.Append("\t");
@@ -83,8 +103,10 @@ namespace LinqToDB.SqlQuery
 					}
 
 					break;
+
 				case MergeOperationType.Update:
 					sb.Append("WHEN MATCHED");
+
 					if (Where != null)
 					{
 						sb.Append(" AND ");
@@ -92,6 +114,7 @@ namespace LinqToDB.SqlQuery
 					}
 
 					sb.AppendLine("THEN UPDATE");
+
 					foreach (var item in Items)
 					{
 						sb.Append("\t");
@@ -100,8 +123,10 @@ namespace LinqToDB.SqlQuery
 					}
 
 					break;
+
 				case MergeOperationType.UpdateBySource:
 					sb.Append("WHEN NOT MATCHED BY SOURCE");
+
 					if (Where != null)
 					{
 						sb.Append(" AND ");
@@ -109,6 +134,7 @@ namespace LinqToDB.SqlQuery
 					}
 
 					sb.AppendLine("THEN UPDATE");
+
 					foreach (var item in Items)
 					{
 						sb.Append("\t");
@@ -117,8 +143,10 @@ namespace LinqToDB.SqlQuery
 					}
 
 					break;
+
 				case MergeOperationType.UpdateWithDelete:
 					sb.Append("WHEN MATCHED THEN UPDATE");
+
 					if (Where != null)
 					{
 						sb.Append(" WHERE ");
@@ -137,16 +165,15 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		#endregion
+
+		#region ICloneableElement
+
+		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
-			((ISqlExpressionWalkable)Where)?.Walk(options, func);
-
-			foreach (var t in Items)
-				((ISqlExpressionWalkable)t).Walk(options, func);
-
-			((ISqlExpressionWalkable)WhereDelete)?.Walk(options, func);
-
-			return null;
+			throw new NotImplementedException();
 		}
+
+		#endregion
 	}
 }

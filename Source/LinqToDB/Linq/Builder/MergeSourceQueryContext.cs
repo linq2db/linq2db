@@ -1,7 +1,6 @@
 ﻿using JetBrains.Annotations;
 using LinqToDB.SqlQuery;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -21,16 +20,14 @@ namespace LinqToDB.Linq.Builder
 			:base(sourceContext, new SelectQuery { ParentSelect = sourceContext.SelectQuery }, true)
 		{
 			_merge = merge;
-			//_merge.Source = new SqlMergeSourceTable(builder.MappingSchema, _merge, sourceType)
+
 			_merge.Source = new SqlMergeSourceTable()
 			{
 				SourceQuery = sourceContext.SelectQuery
 			};
 
 			if (SubQuery is SelectContext select)
-			{
 				select.AllowAddDefault = false;
-			}
 		}
 
 		public MergeSourceQueryContext(
@@ -50,9 +47,7 @@ namespace LinqToDB.Linq.Builder
 			};
 
 			if (SubQuery is SelectContext select)
-			{
 				select.AllowAddDefault = false;
-			}
 		}
 
 		public void MatchBuilt()
@@ -61,9 +56,7 @@ namespace LinqToDB.Linq.Builder
 			// number of records, returned by source, if association had inner join configured
 			// associations, used in match, should use their original join type
 			if (SubQuery is TableBuilder.TableContext table)
-			{
 				table.ForceLeftJoinAssociations = true;
-			}
 		}
 
 		public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
@@ -72,9 +65,9 @@ namespace LinqToDB.Linq.Builder
 				.ConvertToIndex(expression, level, flags)
 				.Select(info =>
 				{
-					var expr = (info.Sql is SqlColumn column) ? column.Expression : info.Sql;
-					//var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info))?.Sql;
+					var expr  = (info.Sql is SqlColumn column) ? column.Expression : info.Sql;
 					var field = RegisterSourceField(expr, expr, info.Index, info.MemberChain.LastOrDefault());
+
 					return new SqlInfo(info.MemberChain)
 					{
 						Sql = field
@@ -92,19 +85,13 @@ namespace LinqToDB.Linq.Builder
 				var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
 
 				var newField = f == null
-					? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull, Name = member?.Name }
+					? new SqlField()  { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull, Name = member?.Name }
 					: new SqlField(f) { Name = member?.Name ?? f.Name};
 
 				newField.PhysicalName = newField.Name;
-				newField.Table = _merge.Source;
+				newField.Table        = _merge.Source;
 				return newField;
 			});
-
-			//if (!SqlTable.Fields.TryGetValue(sourceField.Name, out var field))
-			//{
-			//	field = new SqlField(sourceField);
-			//	SqlTable.Add(field);
-			//}
 
 			return sourceField;
 		}

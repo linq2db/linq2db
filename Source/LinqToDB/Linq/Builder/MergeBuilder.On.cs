@@ -27,9 +27,8 @@ namespace LinqToDB.Linq.Builder
 				if (methodCall.Arguments.Count == 2)
 				{
 					// On<TTarget, TSource>(IMergeableOn<TTarget, TSource> merge, Expression<Func<TTarget, TSource, bool>> matchCondition)
-					var predicate = methodCall.Arguments[1];
-
-					var condition = (LambdaExpression)predicate.Unwrap();
+					var predicate     = methodCall.Arguments[1];
+					var condition     = (LambdaExpression)predicate.Unwrap();
 					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
 
 					mergeContext.AddTargetParameter(condition.Parameters[0]);
@@ -94,9 +93,9 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					// OnTargetKey<TTarget>(IMergeableOn<TTarget, TTarget> merge)
-					var targetType = methodCall.Method.GetGenericArguments()[0];
-					var pTarget = Expression.Parameter(targetType, "t");
-					var pSource = Expression.Parameter(targetType, "s");
+					var targetType       = methodCall.Method.GetGenericArguments()[0];
+					var pTarget          = Expression.Parameter(targetType, "t");
+					var pSource          = Expression.Parameter(targetType, "s");
 					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType);
 
 					Expression ex = null;

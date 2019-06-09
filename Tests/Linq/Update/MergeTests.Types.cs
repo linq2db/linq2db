@@ -394,7 +394,7 @@ namespace Tests.xUpdate
 
 			Assert.AreEqual(expected.FieldFloat, actual.FieldFloat);
 
-			if (provider != ProviderName.Firebird
+			if (   provider != ProviderName.Firebird
 				&& provider != TestProvName.Firebird3)
 				Assert.AreEqual(expected.FieldDouble, actual.FieldDouble);
 
@@ -410,7 +410,7 @@ namespace Tests.xUpdate
 			if (provider != ProviderName.SQLiteClassic && provider != ProviderName.SQLiteMS)
 				Assert.AreEqual(expected.FieldDecimal, actual.FieldDecimal);
 
-			if (provider != ProviderName.SqlServer2000
+			if (   provider != ProviderName.SqlServer2000
 				&& provider != ProviderName.SqlServer2005
 				&& provider != ProviderName.SqlCe
 				&& provider != ProviderName.OracleManaged
@@ -509,7 +509,7 @@ namespace Tests.xUpdate
 			{
 				if (expected == ' '
 					&& (   provider == ProviderName.MySql
-					    || provider == ProviderName.MySqlConnector
+						|| provider == ProviderName.MySqlConnector
 						|| provider == TestProvName.MariaDB
 						|| provider == TestProvName.MySql57))
 					expected = '\0';
@@ -524,7 +524,7 @@ namespace Tests.xUpdate
 			{
 				if (expected == ' '
 					&& (provider == ProviderName.MySql
-					    || provider == ProviderName.MySqlConnector
+						|| provider == ProviderName.MySqlConnector
 						|| provider == TestProvName.MariaDB
 						|| provider == TestProvName.MySql57))
 					expected = '\0';
@@ -561,7 +561,7 @@ namespace Tests.xUpdate
 				}
 
 				if (   provider == ProviderName.MySql
-				    || provider == ProviderName.MySqlConnector
+					|| provider == ProviderName.MySqlConnector
 					|| provider == TestProvName.MariaDB
 					|| provider == TestProvName.MySql57
 					|| provider == ProviderName.OracleManaged

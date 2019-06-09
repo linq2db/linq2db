@@ -487,8 +487,6 @@ namespace LinqToDB.SqlQuery
 		{
 			Visit1(element.Source);
 
-			//foreach (var field in element.Fields.Values)
-			//	Visit1(field);
 			foreach (var field in element.SourceFields)
 				Visit1(field);
 		}
@@ -1027,9 +1025,6 @@ namespace LinqToDB.SqlQuery
 		void Visit2X(SqlMergeSourceTable element)
 		{
 			Visit2(element.Source);
-
-			//foreach (var field in element.Fields.Values)
-			//	Visit2(field);
 
 			foreach (var field in element.SourceFields)
 				Visit2(field);
@@ -2015,14 +2010,11 @@ namespace LinqToDB.SqlQuery
 						var querySource      = (SelectQuery)ConvertInternal(source.SourceQuery, action);
 						var fields           = Convert(source.SourceFields, action);
 
-						//_visitedElements.TryGetValue(source.Merge, out parent);
-
-						if (//parent           != null ||
-							enumerableSource != null && !ReferenceEquals(source.SourceEnumerable, enumerableSource) ||
+						if (enumerableSource != null && !ReferenceEquals(source.SourceEnumerable, enumerableSource) ||
 							querySource      != null && !ReferenceEquals(source.SourceQuery, querySource)           ||
 							fields           != null && !ReferenceEquals(source.SourceFields, fields))
 							newElement = new SqlMergeSourceTable(
-								//source.MappingSchema, ((SqlMergeStatement)parent) ?? source.Merge, source.ObjectType, 
+								source.SourceID,
 								enumerableSource ?? source.SourceEnumerable, querySource ?? source.SourceQuery, fields ?? source.SourceFields);
 
 						break;
@@ -2036,9 +2028,9 @@ namespace LinqToDB.SqlQuery
 						var whereDelete = Convert(operation.WhereDelete, action);
 						var items       = Convert(operation.Items, action);
 
-						if (where != null       && !ReferenceEquals(operation.Where, where)             ||
+						if (where       != null && !ReferenceEquals(operation.Where, where)             ||
 							whereDelete != null && !ReferenceEquals(operation.WhereDelete, whereDelete) ||
-							items != null       && !ReferenceEquals(operation.Items, items))
+							items       != null && !ReferenceEquals(operation.Items, items))
 							newElement = new SqlMergeOperationClause(operation.OperationType, where ?? operation.Where, whereDelete ?? operation.WhereDelete, items ?? operation.Items);
 
 						break;
@@ -2048,8 +2040,9 @@ namespace LinqToDB.SqlQuery
 					{
 						var table = (SqlValuesTable)element;
 
-						var covertedRows = new List<IList<ISqlExpression>>();
+						var covertedRows  = new List<IList<ISqlExpression>>();
 						var rowsConverted = false;
+
 						foreach (var row in table.Rows)
 						{
 							var convertedRow = Convert(row, action);
@@ -2082,7 +2075,6 @@ namespace LinqToDB.SqlQuery
 
 						break;
 					}
-
 
 				case QueryElementType.SqlField:
 				case QueryElementType.SqlParameter:
