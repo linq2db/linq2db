@@ -8,8 +8,6 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	public partial class MergeTests
 	{
 		[Test]
@@ -17,7 +15,7 @@ namespace Tests.xUpdate
 		{
 			var batchSize = 2500;
 
-			switch (context)
+			switch (GetProviderName(context, out var _))
 			{
 				// ASE: you may need to increase memory procedure cache sizes like that:
 				// exec sp_configure 'max memory', NEW_MEMORY_SIZE
@@ -38,7 +36,6 @@ namespace Tests.xUpdate
 				// big query makes Oracle to heavy eat memory
 				// this will affect other servers
 				case ProviderName.OracleManaged:
-				case ProviderName.Oracle       :
 				case ProviderName.OracleNative : batchSize = 100; break;
 			}
 
@@ -47,7 +44,7 @@ namespace Tests.xUpdate
 
 		private void RunTest(string context, int size)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 

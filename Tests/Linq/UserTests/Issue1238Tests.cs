@@ -95,7 +95,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestMerge([MergeTests.MergeDataContextSource] string context)
+		public void TestMerge([MergeTests.MergeDataContextSource(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -132,7 +132,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestMergeOnExplicit([MergeTests.MergeDataContextSource] string context)
+		public void TestMergeOnExplicit([MergeTests.MergeDataContextSource(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())

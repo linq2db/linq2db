@@ -193,7 +193,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void OtherSourceAssociationInDeletePredicate([MergeDataContextSource(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			false,
+			ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
 			ProviderName.SapHana, ProviderName.Firebird)]
 			string context)
@@ -225,7 +226,8 @@ namespace Tests.xUpdate
 		// Oracle: associations in insert setter
 		[Test]
 		public void OtherSourceAssociationInInsertCreate([MergeDataContextSource(
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			false,
+			ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
 			ProviderName.SapHana, ProviderName.Firebird)]
 			string context)
@@ -274,7 +276,8 @@ namespace Tests.xUpdate
 		// SAP: associations doesn't work right now
 		[Test]
 		public void OtherSourceAssociationInInsertCreate2([MergeDataContextSource(
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			false,
+			ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
 			string context)
 		{
@@ -319,6 +322,7 @@ namespace Tests.xUpdate
 		// ASE: server dies
 		[Test]
 		public void OtherSourceAssociationInInsertPredicate([MergeDataContextSource(
+			false,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
 			ProviderName.SapHana, ProviderName.Firebird)]
 			string context)
@@ -365,6 +369,7 @@ namespace Tests.xUpdate
 		// Informix: associations doesn't work right now
 		[Test]
 		public void OtherSourceAssociationInMatch([MergeDataContextSource(
+			false,
 			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 			string context)
 		{
@@ -410,6 +415,7 @@ namespace Tests.xUpdate
 		// Informix: associations doesn't work right now
 		[Test]
 		public void OtherSourceAssociationInUpdate([MergeDataContextSource(
+			false,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 			string context)
 		{
@@ -535,6 +541,7 @@ namespace Tests.xUpdate
 		// ASE: server dies
 		[Test]
 		public void OtherSourceAssociationInUpdatePredicate([MergeDataContextSource(
+			false,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
 			ProviderName.SapHana, ProviderName.Firebird)]
 			string context)
@@ -609,7 +616,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceAssociationInDeletePredicate([MergeDataContextSource(
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			false,
+			ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
 			ProviderName.SapHana, ProviderName.Firebird)]
 			string context)
@@ -641,7 +649,8 @@ namespace Tests.xUpdate
 		// Oracle: associations in instert setters
 		[Test]
 		public void SameSourceAssociationInInsertCreate([MergeDataContextSource(
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			false,
+			ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
 			ProviderName.SapHana, ProviderName.Firebird)]
 			string context)
@@ -692,7 +701,8 @@ namespace Tests.xUpdate
 		// SAP: associations doesn't work right now
 		[Test]
 		public void SameSourceAssociationInInsertCreate2([MergeDataContextSource(
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			false,
+			ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
 			string context)
 		{
@@ -737,6 +747,7 @@ namespace Tests.xUpdate
 		// ASE: server dies
 		[Test]
 		public void SameSourceAssociationInInsertPredicate([MergeDataContextSource(
+			false,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
 			ProviderName.SapHana, ProviderName.Firebird)]
 			string context)
@@ -785,6 +796,7 @@ namespace Tests.xUpdate
 		// Informix: associations doesn't work right now
 		[Test]
 		public void SameSourceAssociationInMatch([MergeDataContextSource(
+			false,
 			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 			string context)
 		{
@@ -830,6 +842,7 @@ namespace Tests.xUpdate
 		// Informix: associations doesn't work right now
 		[Test]
 		public void SameSourceAssociationInUpdate([MergeDataContextSource(
+			false,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 			string context)
 		{
@@ -957,6 +970,7 @@ namespace Tests.xUpdate
 		// ASE: server dies
 		[Test]
 		public void SameSourceAssociationInUpdatePredicate([MergeDataContextSource(
+			false,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
 			ProviderName.SapHana, ProviderName.Firebird)]
 			string context)
@@ -1136,7 +1150,7 @@ namespace Tests.xUpdate
 			Assert.AreEqual(expected.MiddleName, actual.MiddleName);
 		}
 
-		private void PrepareAssociationsData(TestDataConnection db)
+		private void PrepareAssociationsData(ITestDataContext db)
 		{
 			using (new DisableLogging())
 			{
@@ -1149,9 +1163,9 @@ namespace Tests.xUpdate
 				{
 					person.ID = id++;
 
-					if (db.ConfigurationString == TestProvName.Firebird3 + "sdf")
-						person.ID = Convert.ToInt32(db.Insert(person));
-					else
+					//if (db.ConfigurationString == TestProvName.Firebird3 + "sdf")
+					//	person.ID = Convert.ToInt32(db.Insert(person));
+					//else
 						person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
 				}
 

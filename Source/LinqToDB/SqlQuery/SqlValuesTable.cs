@@ -8,9 +8,10 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlValuesTable()
 		{
+			Rows = new List<IList<ISqlExpression>>();
 		}
 
-		internal SqlValuesTable(SqlField[] fields, List<List<ISqlExpression>> rows)
+		internal SqlValuesTable(SqlField[] fields, IList<IList<ISqlExpression>> rows)
 		{
 			if (fields != null)
 				foreach (var field in fields)
@@ -21,7 +22,8 @@ namespace LinqToDB.SqlQuery
 
 		public Dictionary<string, SqlField> Fields { get; } = new Dictionary<string, SqlField>();
 
-		SqlField ISqlTableSource.All => throw new NotImplementedException();
+		private SqlField _all;
+		SqlField ISqlTableSource.All => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
 
 		int ISqlTableSource.SourceID => throw new NotImplementedException();
 
@@ -35,7 +37,7 @@ namespace LinqToDB.SqlQuery
 
 		QueryElementType IQueryElement.ElementType => QueryElementType.SqlValuesTable;
 
-		public List<List<ISqlExpression>> Rows { get; } = new List<List<ISqlExpression>>();
+		public IList<IList<ISqlExpression>> Rows { get; }
 
 		public void Add(SqlField field)
 		{

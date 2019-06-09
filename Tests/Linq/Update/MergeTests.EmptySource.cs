@@ -16,10 +16,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeEmptyLocalSourceSameType([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
-
 				PrepareData(db);
 
 				var table = GetTarget(db);
@@ -47,8 +45,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeEmptyLocalSourceDifferentTypes([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 
 				PrepareData(db);

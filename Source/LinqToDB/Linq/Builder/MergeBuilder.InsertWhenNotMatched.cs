@@ -43,7 +43,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					// build setters like QueryRunner.Insert
 					var targetType = methodCall.Method.GetGenericArguments()[0];
-					var sqlTable = new SqlTable(builder.MappingSchema, targetType);
+					//var sqlTable = new SqlTable(builder.MappingSchema, targetType);
+					var sqlTable = (SqlTable)statement.Target.Source;
 
 					var param = Expression.Parameter(targetType, "s");
 					foreach (var field in sqlTable.Fields.Values)

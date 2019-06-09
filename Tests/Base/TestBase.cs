@@ -1045,6 +1045,12 @@ namespace Tests
 		{
 			return DataCache<LinqDataTypes>.Get(context);
 		}
+
+		protected string GetProviderName(string context, out bool isLinqService)
+		{
+			isLinqService = context.EndsWith(".LinqService");
+			return context.Replace(".LinqService", "");
+		}
 	}
 
 	static class DataCache<T>

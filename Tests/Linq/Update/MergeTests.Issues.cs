@@ -310,8 +310,7 @@ namespace Tests.xUpdate
 		[Test, Parallelizable(ParallelScope.None)]
 		public void Issue1007OnNewAPI([IdentityInsertMergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				var table = db.GetTable<TestMappingWithIdentity>();
 				table.Delete();
@@ -351,10 +350,9 @@ namespace Tests.xUpdate
 		#endregion
 
 		[Test]
-		public void TestDB2NullsInSource([IncludeDataSources(ProviderName.DB2)] string context)
+		public void TestDB2NullsInSource([IncludeDataSources(true, ProviderName.DB2)] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<MergeTypes>()
 					.TableName("TestMerge1")

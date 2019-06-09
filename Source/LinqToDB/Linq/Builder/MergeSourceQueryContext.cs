@@ -21,7 +21,8 @@ namespace LinqToDB.Linq.Builder
 			:base(sourceContext, new SelectQuery { ParentSelect = sourceContext.SelectQuery }, true)
 		{
 			_merge = merge;
-			_merge.Source = new SqlMergeSourceTable(builder.MappingSchema, _merge, sourceType)
+			//_merge.Source = new SqlMergeSourceTable(builder.MappingSchema, _merge, sourceType)
+			_merge.Source = new SqlMergeSourceTable()
 			{
 				SourceQuery = sourceContext.SelectQuery
 			};
@@ -42,7 +43,8 @@ namespace LinqToDB.Linq.Builder
 			: base(sourceContext, new SelectQuery { ParentSelect = sourceContext.SelectQuery }, true)
 		{
 			_merge = merge;
-			_merge.Source = new SqlMergeSourceTable(builder.MappingSchema, _merge, sourceType)
+			//_merge.Source = new SqlMergeSourceTable(builder.MappingSchema, _merge, sourceType)
+			_merge.Source = new SqlMergeSourceTable()
 			{
 				SourceEnumerable = sourceContext.Table
 			};

@@ -97,7 +97,7 @@ namespace Tests.UserTests
 			var mammals = new[] { "Elephant", "Cat" };
 			var reptiles = new[] { "Snake", "Lizard" };
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<AnimalUpdate>())
 			{
@@ -154,7 +154,7 @@ namespace Tests.UserTests
 
 		private void Update(string context, Data data, int iteration)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				foreach (var record in data.Updates)
 					db.Insert(record);

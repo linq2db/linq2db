@@ -2912,8 +2912,9 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlTable        :
 				case QueryElementType.SqlCteTable     :
-				case QueryElementType.MergeSourceTable:
 					return ((SqlTable)table).Alias;
+				case QueryElementType.MergeSourceTable:
+					return null;
 
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
@@ -3009,9 +3010,11 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.TableSource:
 					return GetPhysicalTableName(((SqlTableSource)table).Source, alias);
 
-				case QueryElementType.SqlCteTable     :
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlCteTable:
 					return GetTablePhysicalName((SqlTable)table);
+
+				case QueryElementType.MergeSourceTable:
+					return Convert(((SqlMergeSourceTable)table).Name, ConvertType.NameToQueryTable).ToString();
 
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");

@@ -205,8 +205,8 @@ namespace LinqToDB.ServiceModel
 									switch (code)
 									{
 										case TypeCode.Decimal  : data[i] = rd.GetDecimal (i).ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.Double   : data[i] = rd.GetDouble  (i).ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.Single   : data[i] = rd.GetFloat   (i).ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.Double   : data[i] = rd.GetDouble  (i).ToString("G17", CultureInfo.InvariantCulture); break;
+										case TypeCode.Single   : data[i] = rd.GetFloat   (i).ToString("G9" , CultureInfo.InvariantCulture); break;
 										case TypeCode.DateTime : data[i] = rd.GetDateTime(i).ToBinary().ToString(CultureInfo.InvariantCulture); break;
 										default                :
 											{

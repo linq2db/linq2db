@@ -487,7 +487,9 @@ namespace LinqToDB.SqlQuery
 		{
 			Visit1(element.Source);
 
-			foreach (var field in element.Fields.Values)
+			//foreach (var field in element.Fields.Values)
+			//	Visit1(field);
+			foreach (var field in element.SourceFields)
 				Visit1(field);
 		}
 
@@ -1026,12 +1028,18 @@ namespace LinqToDB.SqlQuery
 		{
 			Visit2(element.Source);
 
-			foreach (var field in element.Fields.Values)
+			//foreach (var field in element.Fields.Values)
+			//	Visit2(field);
+
+			foreach (var field in element.SourceFields)
 				Visit2(field);
 		}
 
 		void Visit2X(SqlValuesTable element)
 		{
+			foreach (var field in element.Fields.Values)
+				Visit2(field);
+
 			foreach (var row in element.Rows)
 				foreach (var value in row)
 					Visit2(value);
@@ -2007,13 +2015,15 @@ namespace LinqToDB.SqlQuery
 						var querySource      = (SelectQuery)ConvertInternal(source.SourceQuery, action);
 						var fields           = Convert(source.SourceFields, action);
 
-						_visitedElements.TryGetValue(source.Merge, out parent);
+						//_visitedElements.TryGetValue(source.Merge, out parent);
 
-						if (parent           != null ||
+						if (//parent           != null ||
 							enumerableSource != null && !ReferenceEquals(source.SourceEnumerable, enumerableSource) ||
 							querySource      != null && !ReferenceEquals(source.SourceQuery, querySource)           ||
 							fields           != null && !ReferenceEquals(source.SourceFields, fields))
-							newElement = new SqlMergeSourceTable(source.MappingSchema, ((SqlMergeStatement)parent) ?? source.Merge, source.ObjectType, enumerableSource ?? source.SourceEnumerable, querySource ?? source.SourceQuery, fields ?? source.SourceFields);
+							newElement = new SqlMergeSourceTable(
+								//source.MappingSchema, ((SqlMergeStatement)parent) ?? source.Merge, source.ObjectType, 
+								enumerableSource ?? source.SourceEnumerable, querySource ?? source.SourceQuery, fields ?? source.SourceFields);
 
 						break;
 					}
@@ -2038,7 +2048,7 @@ namespace LinqToDB.SqlQuery
 					{
 						var table = (SqlValuesTable)element;
 
-						var covertedRows = new List<List<ISqlExpression>>();
+						var covertedRows = new List<IList<ISqlExpression>>();
 						var rowsConverted = false;
 						foreach (var row in table.Rows)
 						{

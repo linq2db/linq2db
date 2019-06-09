@@ -23,7 +23,7 @@ namespace Tests.Linq
 			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
 			ProviderName.DB2,
 			ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative
+			ProviderName.OracleManaged, ProviderName.OracleNative
 			//ProviderName.Informix,
 			// Will be supported in SQL 8.0 - ProviderName.MySql
 		};
@@ -540,7 +540,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestUpdate(
-			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

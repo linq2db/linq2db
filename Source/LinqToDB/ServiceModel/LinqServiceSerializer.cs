@@ -69,8 +69,8 @@ namespace LinqToDB.ServiceModel
 				switch (type.ToNullableUnderlying().GetTypeCodeEx())
 				{
 					case TypeCode.Decimal  : return ((decimal) value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.Double   : return ((double)  value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.Single   : return ((float)   value).ToString(CultureInfo.InvariantCulture);
+					case TypeCode.Double   : return ((double)  value).ToString("G17", CultureInfo.InvariantCulture);
+					case TypeCode.Single   : return ((float)   value).ToString("G9" , CultureInfo.InvariantCulture);
 					case TypeCode.DateTime : return ((DateTime)value).ToBinary().ToString(CultureInfo.InvariantCulture);
 				}
 
@@ -1240,6 +1240,56 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
+					case QueryElementType.MergeSourceTable:
+						{
+							var elem = (SqlMergeSourceTable)e;
+
+							Append(elem.SourceEnumerable);
+							Append(elem.SourceQuery);
+							Append(elem.SourceFields);
+
+							break;
+						}
+
+					case QueryElementType.MergeOperationClause:
+						{
+							var elem = (SqlMergeOperationClause)e;
+
+							Append((int)elem.OperationType);
+							Append(elem.Where);
+							Append(elem.WhereDelete);
+							Append(elem.Items);
+
+							break;
+						}
+
+					case QueryElementType.MergeStatement:
+						{
+							var elem = (SqlMergeStatement)e;
+
+							Append(elem.Hint);
+							Append(elem.Target);
+							Append(elem.Source);
+							Append(elem.On);
+							Append(elem.Operations);
+							Append(elem.Parameters);
+
+							break;
+						}
+
+					case QueryElementType.SqlValuesTable:
+						{
+							var elem = (SqlValuesTable)e;
+
+							Append(elem.Fields.Values);
+							Append(elem.Rows.Count);
+
+							foreach (var row in elem.Rows)
+								Append(row);
+
+							break;
+						}
+
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
 				}
@@ -1964,8 +2014,61 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
+					case QueryElementType.MergeSourceTable:
+						{
+							var enumerableSource = Read<SqlValuesTable>();
+							var querySource      = Read<SelectQuery>();
+							var fields           = ReadArray<SqlField>();
+
+							obj = new SqlMergeSourceTable(enumerableSource, querySource, fields);
+
+							break;
+						}
+
+					case QueryElementType.MergeOperationClause:
+						{
+							var operationType = (MergeOperationType)ReadInt();
+							var where         = Read<SqlSearchCondition>();
+							var whereDelete   = Read<SqlSearchCondition>();
+							var items         = ReadArray<SqlSetExpression>();
+
+							obj = new SqlMergeOperationClause(operationType, where, whereDelete, items);
+
+							break;
+						}
+
+					case QueryElementType.MergeStatement:
+						{
+							var hint       = ReadString();
+							var target     = Read<SqlTableSource>();
+							var source     = Read<SqlMergeSourceTable>();
+							var on         = Read<SqlSearchCondition>();
+							var operations = ReadArray<SqlMergeOperationClause>();
+							var parameters = ReadArray<SqlParameter>();
+
+							obj = _statement = new SqlMergeStatement(hint, target, source, on, operations);
+							_statement.Parameters.AddRange(parameters);
+
+							break;
+						}
+
+					case QueryElementType.SqlValuesTable:
+						{
+							var fields    = ReadArray<SqlField>();
+
+							var rowsCount = ReadInt();
+							var rows      = new IList<ISqlExpression>[rowsCount];
+
+							for (var i = 0; i < rowsCount; i++)
+								rows[i] = ReadArray<ISqlExpression>();
+
+							obj = new SqlValuesTable(fields, rows);
+
+							break;
+						}
+
 					default:
-						throw new InvalidOperationException($"Parse not implemented for element {type}");
+						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
 				}
 
 				ObjectIndices.Add(idx, obj);

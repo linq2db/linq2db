@@ -7,31 +7,40 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlMergeSourceTable : SqlTable
+	public class SqlMergeSourceTable : ISqlTableSource
 	{
-		public SqlMergeStatement Merge { get; }
+		//public SqlMergeStatement Merge { get; }
 
-		public SqlMergeSourceTable(
-			MappingSchema mappingSchema,
-			SqlMergeStatement merge,
-			Type sourceType)
-			 : base(mappingSchema, sourceType, "Source")
+		public SqlMergeSourceTable()
 		{
-			MappingSchema = mappingSchema;
-			Merge = merge;
 		}
 
+		//SqlMergeSourceTable(
+		//   int id, string name, string alias, string database, string schema, string physicalName, Type objectType,
+		//   SequenceNameAttribute[] sequenceAttributes,
+		//   SqlField[] fields,
+		//   SqlTableType sqlTableType,
+		//   ISqlExpression[] tableArguments,
+
+		//   SqlMergeStatement merge,
+		//   SqlValuesTable sourceEnumerable,
+		//   SelectQuery sourceQuery,
+		//   IEnumerable<SqlField> sourceFields)
+		//	: base(id, name, alias, database, schema, physicalName, objectType, sequenceAttributes, fields, sqlTableType, tableArguments)
+		//{
+		//	Merge = merge;
+		//	SourceEnumerable = sourceEnumerable;
+		//	SourceQuery = sourceQuery;
+
+		//	foreach (var field in sourceFields)
+		//		AddField(field);
+		//}
+
 		internal SqlMergeSourceTable(
-			MappingSchema mappingSchema,
-			SqlMergeStatement merge,
-			Type sourceType,
 			SqlValuesTable sourceEnumerable,
 			SelectQuery sourceQuery,
 			IEnumerable<SqlField> sourceFields)
-			: base(mappingSchema, sourceType, "Source")
 		{
-			MappingSchema = mappingSchema;
-			Merge = merge;
 			SourceEnumerable = sourceEnumerable;
 			SourceQuery = sourceQuery;
 
@@ -45,11 +54,11 @@ namespace LinqToDB.SqlQuery
 			SourceFields.Add(field);
 		}
 
-		internal MappingSchema MappingSchema { get; }
+		//internal MappingSchema MappingSchema { get; }
 
-		public override string Name { get => "Source"; set { } }
+		public string Name => "Source";
 
-		private IDictionary<SqlField, Tuple<SqlField, int>>         SourceFieldsByBase     { get; } = new Dictionary<SqlField, Tuple<SqlField, int>>();
+		private IDictionary<SqlField, Tuple<SqlField, int>> SourceFieldsByBase { get; } = new Dictionary<SqlField, Tuple<SqlField, int>>();
 		private IDictionary<ISqlExpression, Tuple<SqlField, int>> SourceFieldsByExpression { get; } = new Dictionary<ISqlExpression, Tuple<SqlField, int>>();
 
 		public SqlValuesTable SourceEnumerable { get; internal set; }
@@ -59,10 +68,11 @@ namespace LinqToDB.SqlQuery
 
 		public List<SqlField> SourceFields { get; } = new List<SqlField>();
 
-		public override QueryElementType ElementType => QueryElementType.MergeSourceTable;
-		public override SqlTableType SqlTableType => SqlTableType.MergeSource;
+		public QueryElementType ElementType => QueryElementType.MergeSourceTable;
 
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public SqlTableType SqlTableType => SqlTableType.MergeSource;
+
+		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
 			return SourceQuery?.Walk(options, func);
 		}
@@ -78,11 +88,12 @@ namespace LinqToDB.SqlQuery
 			if (SourceQuery != null)
 				((IQueryElement)SourceQuery).ToString(sb, dic);
 			else
-				sb.Append("<TODO:List>");
+				sb.Append("(collection)");
 
 			return sb;
 		}
 
+		// ???
 		public bool IsParameterDependent
 		{
 			get
@@ -121,16 +132,193 @@ namespace LinqToDB.SqlQuery
 			if (baseField != null)
 				SourceFieldsByBase.Add(baseField, Tuple.Create(newField, index));
 			return newField;
-
 		}
 
-		#region IQueryElement Members
+		//#region IQueryElement Members
 
-		public string SqlText =>
-			((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
+		//public string SqlText =>
+		//	((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
+		//	.ToString();
 
 
-		#endregion
+		//#endregion
+		private SqlField _all;
+		public SqlField All => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
+
+		public int SourceID => throw new NotImplementedException();
+
+		public bool CanBeNull => throw new NotImplementedException();
+
+		public int Precedence => throw new NotImplementedException();
+
+		public Type SystemType => throw new NotImplementedException();
+
+		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool Equals(ISqlExpression other)
+		{
+			throw new NotImplementedException();
+		}
+
+		public IList<ISqlExpression> GetKeys(bool allIfEmpty)
+		{
+			throw new NotImplementedException();
+		}
 	}
+
+	//public class SqlMergeSourceTable : SqlTable
+	//{
+	//	public SqlMergeStatement Merge { get; }
+
+	//	public SqlMergeSourceTable(
+	//		MappingSchema mappingSchema,
+	//		SqlMergeStatement merge,
+	//		Type sourceType)
+	//		 : base(mappingSchema, sourceType, "Source")
+	//	{
+	//		MappingSchema = mappingSchema;
+	//		Merge = merge;
+	//	}
+
+	//	SqlMergeSourceTable(
+	//	   int id, string name, string alias, string database, string schema, string physicalName, Type objectType,
+	//	   SequenceNameAttribute[] sequenceAttributes,
+	//	   SqlField[] fields,
+	//	   SqlTableType sqlTableType,
+	//	   ISqlExpression[] tableArguments,
+
+	//	   SqlMergeStatement merge,
+	//	   SqlValuesTable sourceEnumerable,
+	//	   SelectQuery sourceQuery,
+	//	   IEnumerable<SqlField> sourceFields)
+	//		: base(id, name, alias, database, schema, physicalName, objectType, sequenceAttributes, fields, sqlTableType, tableArguments)
+	//	{
+	//		Merge = merge;
+	//		SourceEnumerable = sourceEnumerable;
+	//		SourceQuery = sourceQuery;
+
+	//		foreach (var field in sourceFields)
+	//			AddField(field);
+	//	}
+
+	//	internal SqlMergeSourceTable(
+	//		MappingSchema mappingSchema,
+	//		SqlMergeStatement merge,
+	//		Type sourceType,
+	//		SqlValuesTable sourceEnumerable,
+	//		SelectQuery sourceQuery,
+	//		IEnumerable<SqlField> sourceFields)
+	//		: base(mappingSchema, sourceType, "Source")
+	//	{
+	//		MappingSchema = mappingSchema;
+	//		Merge = merge;
+	//		SourceEnumerable = sourceEnumerable;
+	//		SourceQuery = sourceQuery;
+
+	//		foreach (var field in sourceFields)
+	//			AddField(field);
+	//	}
+
+	//	private void AddField(SqlField field)
+	//	{
+	//		field.Table = this;
+	//		SourceFields.Add(field);
+	//	}
+
+	//	internal MappingSchema MappingSchema { get; }
+
+	//	public override string Name { get => "Source"; set { } }
+
+	//	private IDictionary<SqlField, Tuple<SqlField, int>>         SourceFieldsByBase     { get; } = new Dictionary<SqlField, Tuple<SqlField, int>>();
+	//	private IDictionary<ISqlExpression, Tuple<SqlField, int>> SourceFieldsByExpression { get; } = new Dictionary<ISqlExpression, Tuple<SqlField, int>>();
+
+	//	public SqlValuesTable SourceEnumerable { get; internal set; }
+	//	public SelectQuery SourceQuery { get; internal set; }
+
+	//	public ISqlTableSource Source => (ISqlTableSource)SourceQuery ?? SourceEnumerable;
+
+	//	public List<SqlField> SourceFields { get; } = new List<SqlField>();
+
+	//	public override QueryElementType ElementType => QueryElementType.MergeSourceTable;
+	//	public override SqlTableType SqlTableType => SqlTableType.MergeSource;
+
+	//	public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+	//	{
+	//		return SourceQuery?.Walk(options, func);
+	//	}
+
+	//	public void WalkQueries(Func<SelectQuery, SelectQuery> func)
+	//	{
+	//		if (SourceQuery != null)
+	//			SourceQuery = func(SourceQuery);
+	//	}
+
+	//	public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+	//	{
+	//		if (SourceQuery != null)
+	//			((IQueryElement)SourceQuery).ToString(sb, dic);
+	//		else
+	//			sb.Append("<TODO:List>");
+
+	//		return sb;
+	//	}
+
+	//	public bool IsParameterDependent
+	//	{
+	//		get
+	//		{
+	//			return SourceQuery?.IsParameterDependent ?? false;
+	//		}
+
+	//		set
+	//		{
+	//			if (SourceQuery != null)
+	//				SourceQuery.IsParameterDependent = value;
+	//		}
+	//	}
+
+	//	internal SqlField RegisterSourceField(ISqlExpression baseExpression, ISqlExpression expression, int index, Func<SqlField> fieldFactory)
+	//	{
+	//		var baseField = baseExpression as SqlField;
+	//		if (baseField != null && SourceFieldsByBase.TryGetValue(baseField, out var value))
+	//			return value.Item1;
+
+	//		if (baseField == null && expression != null && SourceFieldsByExpression.TryGetValue(expression, out value))
+	//			return value.Item1;
+
+	//		var newField = fieldFactory();
+
+	//		Utils.MakeUniqueNames(new[] { newField }, SourceFieldsByExpression.Values.Select(t => t.Item1.Name), f => f.Name, (f, n) =>
+	//		{
+	//			f.Name = n;
+	//			f.PhysicalName = n;
+	//		}, f => "source_field");
+
+	//		SourceFields.Insert(index, newField);
+
+	//		if (expression != null && !SourceFieldsByExpression.ContainsKey(expression))
+	//			SourceFieldsByExpression.Add(expression, Tuple.Create(newField, index));
+	//		if (baseField != null)
+	//			SourceFieldsByBase.Add(baseField, Tuple.Create(newField, index));
+	//		return newField;
+
+	//	}
+
+	//	#region IQueryElement Members
+
+	//	public string SqlText =>
+	//		((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
+	//		.ToString();
+
+
+	//	#endregion
+	//}
 }

@@ -11,9 +11,9 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test]
-		public void SameSourceUpdateWithDelete([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void SameSourceUpdateWithDelete([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -57,9 +57,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithDeletePartialSourceProjection_KnownFieldsInDefaultSetter(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -110,9 +110,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceUpdateWithDeleteWithPredicate(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -145,9 +145,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceUpdateWithDeleteWithUpdate(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -189,9 +189,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceUpdateWithDeleteWithPredicateAndUpdate(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -234,9 +234,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithDeletePartialSourceProjection_KnownFieldInUpdateCondition(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -280,9 +280,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceUpdateWithDelete([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void OtherSourceUpdateWithDelete([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -324,9 +324,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithDeletePartialSourceProjection_KnownFieldInDeleteCondition(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -371,9 +371,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void OtherSourceUpdateWithDeleteWithPredicate(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -416,9 +416,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void AnonymousSourceUpdateWithDeleteWithPredicate(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -469,9 +469,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void AnonymousListSourceUpdateWithDeleteWithPredicate(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -522,9 +522,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithDeleteReservedAndCaseNames(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -575,9 +575,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithDeleteReservedAndCaseNamesFromList(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -628,9 +628,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithDeleteDeleteByConditionOnUpdatedField(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -662,9 +662,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateThenDeleteFromPartialSourceProjection_UnknownFieldInDeleteCondition(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -691,9 +691,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateThenDeleteFromPartialSourceProjection_UnknownFieldInSetter(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -720,9 +720,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateThenDeleteFromPartialSourceProjection_UnknownFieldInDefaultSetter(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -743,9 +743,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateThenDeleteFromPartialSourceProjection_UnknownFieldInSearchCondition(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 

@@ -45,7 +45,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildMergeStatement(SqlMergeStatement merge)
 		{
 			BuildMergeInto(merge);
-			BuildMergeSource(merge.Source);
+			BuildMergeSource(merge);
 			BuildMergeOn(merge);
 
 			foreach (var operation in merge.Operations)
@@ -204,26 +204,26 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		private void BuildMergeSourceEnumerable(SqlMergeSourceTable mergeSource)
+		private void BuildMergeSourceEnumerable(SqlMergeStatement merge)
 		{
 
-			if (mergeSource.SourceEnumerable.Rows.Count > 0)
+			if (merge.Source.SourceEnumerable.Rows.Count > 0)
 			{
 				StringBuilder.Append("(");
 
 				if (MergeSupportsSourceDirectValues)
-					BuildValues(mergeSource, true);
+					BuildValues(merge.Source, true);
 				else
-					BuildValuesAsSelectsUnion(mergeSource.SourceFields, mergeSource.SourceEnumerable);
+					BuildValuesAsSelectsUnion(merge.Source.SourceFields, merge.Source.SourceEnumerable);
 
 				StringBuilder.Append(")");
 			}
 			else if (MergeEmptySourceSupported)
-				BuildMergeEmptySource(mergeSource);
+				BuildMergeEmptySource(merge);
 			else
 				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
 
-			BuildMergeAsSourceClause(mergeSource);
+			BuildMergeAsSourceClause(merge.Source);
 		}
 
 		/// <summary>
@@ -278,21 +278,21 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		private void BuildMergeEmptySource(SqlMergeSourceTable mergeSource)
+		private void BuildMergeEmptySource(SqlMergeStatement merge)
 		{
 			StringBuilder
 				.AppendLine("(")
 				.Append("\tSELECT ")
 				;
 
-			for (var i = 0; i < mergeSource.SourceFields.Count; i++)
+			for (var i = 0; i < merge.Source.SourceFields.Count; i++)
 			{
-				var field = mergeSource.SourceFields[i];
+				var field = merge.Source.SourceFields[i];
 
 				if (i > 0)
 					StringBuilder.Append(", ");
 
-				if (MergeSourceValueTypeRequired(mergeSource.SourceEnumerable, -1, i))
+				if (MergeSourceValueTypeRequired(merge.Source.SourceEnumerable, -1, i))
 					BuildTypedExpression(new SqlDataType(field), new SqlValue(null));
 				else
 					BuildExpression(new SqlValue(null));
@@ -307,7 +307,7 @@ namespace LinqToDB.SqlProvider
 
 			if (!BuildFakeTableName())
 				// we don't select anything, so it is ok to use target table
-				BuildTableName(mergeSource.Merge.Target, true, false);
+				BuildTableName(merge.Target, true, false);
 
 			StringBuilder
 				.AppendLine("\tWHERE 1 = 0")
@@ -355,14 +355,14 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		private void BuildMergeSource(SqlMergeSourceTable mergeSource)
+		private void BuildMergeSource(SqlMergeStatement merge)
 		{
 			StringBuilder.Append("USING ");
 
-			if (mergeSource.SourceQuery != null)
-				BuildMergeSourceQuery(mergeSource);
+			if (merge.Source.SourceQuery != null)
+				BuildMergeSourceQuery(merge.Source);
 			else
-				BuildMergeSourceEnumerable(mergeSource);
+				BuildMergeSourceEnumerable(merge);
 
 			StringBuilder.AppendLine();
 		}

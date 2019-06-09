@@ -24,7 +24,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OnTargetKeyWithoutKeyFields([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var table = db.GetTable<TableWithoutKey>();
 
@@ -43,7 +43,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeInto([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -73,7 +73,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertPartialSourceProjection_KnownFieldsInDefaultSetter([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -111,7 +111,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void UsingTarget([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -166,7 +166,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OnKeysSingleField([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -212,7 +212,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OnKeysPartialSourceProjection_KnownFieldInKeySelector([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -254,7 +254,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OnKeysMultipleFields([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -306,7 +306,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OnKeysMemberInitFields([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -352,7 +352,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OnKeysFieldAndConstant([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -390,7 +390,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OnKeysFieldAndConstantPartialSourceProjection_UnknownFieldInKey([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 

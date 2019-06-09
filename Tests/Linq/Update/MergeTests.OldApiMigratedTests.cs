@@ -19,7 +19,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Merge([MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<LinqDataTypes2>()
 					.Merge()
@@ -35,7 +35,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithEmptySource([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<Person>()
 					.Merge()
@@ -186,6 +186,7 @@ namespace Tests.xUpdate
 		// Informix: install the latest server
 		[Test]
 		public void MergeChar1([MergeDataContextSource(
+			false,
 			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 			string context)
 		{
@@ -213,6 +214,7 @@ namespace Tests.xUpdate
 		// Informix: install the latest server
 		[Test]
 		public void MergeChar2([MergeDataContextSource(
+			false,
 			ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
 			string context)
 		{
@@ -243,6 +245,7 @@ namespace Tests.xUpdate
 		// Informix, SAP: looks like \0 terminates string
 		[Test]
 		public void MergeString([MergeDataContextSource(
+			false,
 			ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
 			string context)
 		{
