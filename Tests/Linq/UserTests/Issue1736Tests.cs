@@ -158,7 +158,7 @@ namespace Tests.UserTests.Issue1736
 
 
 		[Test]
-		public void Issue1736Tests([DataSources(ProviderName.SQLite)] string context)
+		public void Issue1736Tests([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var orderDTO = new OutfeedTransportOrderDTO();
 
