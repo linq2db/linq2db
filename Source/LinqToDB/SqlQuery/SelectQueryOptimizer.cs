@@ -593,12 +593,12 @@ namespace LinqToDB.SqlQuery
 						// reduce nesting
 						EnsureCopy();
 
-						var inlineCondition = sc.Conditions[0];
-						inlineCondition.IsOr = searchCondition.Conditions[i].IsOr;
 						var isNot = searchCondition.Conditions[i].IsNot;
-						if (inlineCondition.IsNot)
+						if (sc.Conditions[0].IsNot)
 							isNot = !isNot;
-						inlineCondition.IsNot = isNot;
+
+						var inlineCondition = new SqlCondition(isNot, sc.Conditions[0].Predicate, searchCondition.Conditions[i].IsOr);
+
 						searchCondition.Conditions[i] = inlineCondition;
 
 						--i;
