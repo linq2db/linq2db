@@ -552,13 +552,31 @@ namespace LinqToDB.Linq.Builder
 					info = ConvertToSql(null, 0, ConvertFlags.All);
 
 					var table = new SqlTable(Builder.MappingSchema, tableType);
-					var q     =
-						from fld1 in table.Fields.Values.Select((f,i) => new { f, i })
-						join fld2 in info on fld1.f.Name equals ((SqlField)fld2.Sql).Name
-						orderby fld1.i
-						select GetIndex(fld2);
 
-					info = q.ToArray();
+					var matchedFields = new List<SqlInfo>();
+					foreach (var field in table.Fields.Values)
+					{
+						foreach (var sqlInfo in info)
+						{
+							var sqlField = (SqlField)sqlInfo.Sql;
+							var found = sqlField.Name == field.Name;
+
+							if (!found)
+							{
+								found = EntityDescriptor.Aliases != null &&
+								        EntityDescriptor.Aliases.TryGetValue(field.Name, out var alias) &&
+								        alias == sqlField.Name;
+							}
+
+							if (found)
+							{
+								matchedFields.Add(GetIndex(sqlInfo));
+								break;
+							}
+						}
+					}
+
+					info = matchedFields.ToArray();
 				}
 
 				var index = info.Select(idx => ConvertToParentIndex(idx.Index, null)).ToArray();
