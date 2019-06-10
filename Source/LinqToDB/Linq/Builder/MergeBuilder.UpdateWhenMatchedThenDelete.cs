@@ -49,8 +49,8 @@ namespace LinqToDB.Linq.Builder
 
 					foreach (var field in sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys))
 					{
-						var expression = Expression.PropertyOrField(param, field.Name);
-						var expr = mergeContext.SourceContext.ConvertToSql(expression, 1, ConvertFlags.Field)[0].Sql;
+						var expression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, param);
+						var expr       = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
 
 						operation.Items.Add(new SqlSetExpression(field, expr));
 					}
