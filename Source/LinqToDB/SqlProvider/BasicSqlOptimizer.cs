@@ -177,7 +177,7 @@ namespace LinqToDB.SqlProvider
 
 					// Check if subquery where clause does not have ORs.
 					//
-					SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+					subQuery.Where.SearchCondition = SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 					var allAnd = true;
 
@@ -355,7 +355,7 @@ namespace LinqToDB.SqlProvider
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
-						SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+						subQuery.Where.SearchCondition = SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 						var isCount      = false;
 						var isAggregated = false;
@@ -818,7 +818,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SearchCondition :
 				{
-					SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression);
+					expression = SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression);
 					break;
 				}
 

@@ -394,15 +394,6 @@ namespace LinqToDB.SqlQuery
 
 		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns, List<ISqlTableSource> tables)
 		{
-			OptimizeSearchCondition(_selectQuery.Where. SearchCondition);
-			OptimizeSearchCondition(_selectQuery.Having.SearchCondition);
-
-			_selectQuery.ForEachTable(table =>
-			{
-				foreach (var join in table.Joins)
-					OptimizeSearchCondition(join.Condition);
-			}, new HashSet<SelectQuery>());
-
 			new QueryVisitor().Visit(_selectQuery, e =>
 			{
 				if (e is SelectQuery sql && sql != _selectQuery)
@@ -450,28 +441,27 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		internal static void OptimizeSearchCondition(SqlSearchCondition searchCondition)
+		internal static SqlSearchCondition OptimizeSearchCondition(SqlSearchCondition inputCondition)
 		{
-			// This 'if' could be replaced by one simple match:
-			//
-			// match (searchCondition.Conditions)
-			// {
-			// | [SearchCondition(true, _) sc] =>
-			//     searchCondition.Conditions = sc.Conditions;
-			//     OptimizeSearchCondition(searchCodition)
-			//
-			// | [SearchCondition(false, [SearchCondition(true, [ExprExpr]) sc])] => ...
-			//
-			// | [Expr(true,  SqlValue(true))]
-			// | [Expr(false, SqlValue(false))]
-			//     searchCondition.Conditions = []
-			// }
-			//
-			// One day I am going to rewrite all this crap using right statements.
-			
+			var searchCondition = inputCondition;
+
+			void ClearAll()
+			{
+				searchCondition = new SqlSearchCondition();
+			}
+
+			void EnsureCopy()
+			{
+				if (!ReferenceEquals(searchCondition, inputCondition))
+					return;
+
+				searchCondition = new SqlSearchCondition(inputCondition.Conditions.Select(c => new SqlCondition(c.IsNot, c.Predicate, c.IsOr)));
+			}
+
 			for (var i = 0; i < searchCondition.Conditions.Count; i++)
 			{
 				var cond = searchCondition.Conditions[i];
+				var newCond = cond;
 				if (cond.Predicate.ElementType == QueryElementType.ExprExprPredicate)
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)cond.Predicate;
@@ -493,30 +483,41 @@ namespace LinqToDB.SqlQuery
 							default: throw new InvalidOperationException();
 						}
 
-						cond.Predicate = new SqlPredicate.ExprExpr(exprExpr.Expr1, op, exprExpr.Expr2);
-						cond.IsNot = false;
+						exprExpr = new SqlPredicate.ExprExpr(exprExpr.Expr1, op, exprExpr.Expr2);
+						newCond  = new SqlCondition(false, exprExpr);
 					}
 
 					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
 					     exprExpr.Operator == SqlPredicate.Operator.NotEqual)
 					    && exprExpr.Expr1 is SqlValue value1 && value1.Value != null 
-					    && exprExpr.Expr2 is SqlValue value2 && value2.Value != null)
+					    && exprExpr.Expr2 is SqlValue value2 && value2.Value != null
+					    && value1.GetType() == value2.GetType())
 					{
-						cond.Predicate = new SqlPredicate.Expr(new SqlValue(
-							(value1.Value.Equals(value2.Value) == (exprExpr.Operator == SqlPredicate.Operator.Equal))));
+						newCond = new SqlCondition(newCond.IsNot, new SqlPredicate.Expr(new SqlValue(
+							(value1.Value.Equals(value2.Value) == (exprExpr.Operator == SqlPredicate.Operator.Equal)))));
 					}
+				}
+
+				if (newCond.Predicate.ElementType == QueryElementType.ExprPredicate)
+				{
+					var expr = (SqlPredicate.Expr)newCond.Predicate;
+
+					if (cond.IsNot && expr.Expr1 is SqlValue sqlValue && sqlValue.Value is bool b)
+					{
+						newCond = new SqlCondition(false, new SqlPredicate.Expr(new SqlValue(!b)));
+					}
+				}
+
+				if (!ReferenceEquals(cond, newCond))
+				{
+					EnsureCopy();
+					searchCondition.Conditions[i] = newCond;
+					cond = newCond;
 				}
 
 				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 				{
 					var expr = (SqlPredicate.Expr)cond.Predicate;
-
-					if (cond.IsNot && expr.Expr1 is SqlValue sqlValue && sqlValue.Value is bool b)
-					{
-						expr.Expr1 = new SqlValue(!b);
-						cond.IsNot = false;
-					}
-
 					var boolValue = GetBoolValue(expr.Expr1);
 
 					if (boolValue != null)
@@ -529,10 +530,11 @@ namespace LinqToDB.SqlQuery
 						{
 							if ((leftIsOr == true || leftIsOr == null) && (rightIsOr == true || rightIsOr == null))
 							{
-								searchCondition.Conditions.Clear();
+								ClearAll();
 								break;
 							}
 
+							EnsureCopy();
 							searchCondition.Conditions.RemoveAt(i);
 							if (leftIsOr== false && rightIsOr != null)
 								searchCondition.Conditions[i - 1].IsOr = rightIsOr.Value;
@@ -542,12 +544,14 @@ namespace LinqToDB.SqlQuery
 						{
 							if (leftIsOr == false)
 							{
+								EnsureCopy();
 								searchCondition.Conditions.RemoveAt(i - 1);
 								--i;
 							}
 							else if (rightIsOr == false)
 							{
-								cond.IsOr = searchCondition.Conditions[i + 1].IsOr;
+								EnsureCopy();
+								searchCondition.Conditions[i].IsOr = searchCondition.Conditions[i + 1].IsOr;
 								searchCondition.Conditions.RemoveAt(i + 1);
 								--i;
 							}
@@ -555,9 +559,11 @@ namespace LinqToDB.SqlQuery
 							{
 								if (rightIsOr != null || leftIsOr != null)
 								{
+									EnsureCopy();
 									searchCondition.Conditions.RemoveAt(i);
 									if (leftIsOr != null && rightIsOr != null)
 										searchCondition.Conditions[i - 1].IsOr = rightIsOr.Value;
+									--i;
 								}
 							}
 						}
@@ -566,9 +572,17 @@ namespace LinqToDB.SqlQuery
 				}
 				else if (cond.Predicate is SqlSearchCondition sc)
 				{
-					OptimizeSearchCondition(sc);
+					var newSc = OptimizeSearchCondition(sc);
+					if (!ReferenceEquals(newSc, sc))
+					{
+						EnsureCopy();
+						searchCondition.Conditions[i] = new SqlCondition(cond.IsNot, newSc, cond.IsOr);
+						sc = newSc;
+					}
+
 					if (sc.Conditions.Count == 0)
 					{
+						EnsureCopy();
 						var inlinePredicate = new SqlPredicate.Expr(new SqlValue(!cond.IsNot));
 						searchCondition.Conditions[i] =
 							new SqlCondition(false, inlinePredicate, searchCondition.Conditions[i].IsOr);
@@ -577,6 +591,8 @@ namespace LinqToDB.SqlQuery
 					else if (sc.Conditions.Count == 1)
 					{
 						// reduce nesting
+						EnsureCopy();
+
 						var inlineCondition = sc.Conditions[0];
 						inlineCondition.IsOr = searchCondition.Conditions[i].IsOr;
 						var isNot = searchCondition.Conditions[i].IsNot;
@@ -589,6 +605,8 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 			}
+
+			return searchCondition;
 		}
 
 		internal void ResolveWeakJoins(List<ISqlTableSource> tables)
