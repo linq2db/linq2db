@@ -481,6 +481,7 @@ namespace Tests.Linq
 					).Any());
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "Test generates really SQL")]
 		[Test]
 		public void LetTest11([DataSources] string context)
 		{

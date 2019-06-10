@@ -52,6 +52,26 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		internal CteClause(
+			[JetBrains.Annotations.CanBeNull] Type objectType,
+			string name)
+		{
+			Name       = name;
+			ObjectType = objectType;
+		}
+
+		internal void Init(
+			[JetBrains.Annotations.CanBeNull] SelectQuery body,
+			[JetBrains.Annotations.NotNull]   ICollection<SqlField> fields)
+		{
+			Body       = body;
+
+			foreach (var field in fields)
+			{
+				Fields.Add(field);
+			}
+		}
+
 		public QueryElementType ElementType => QueryElementType.CteClause;
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
