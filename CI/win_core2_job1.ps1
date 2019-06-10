@@ -1,0 +1,1 @@
+Move-Item -Path "win_core2_job1.json" -Destination "DataProviders.json" -Force
