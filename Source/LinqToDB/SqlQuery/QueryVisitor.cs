@@ -2079,6 +2079,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlField:
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:
+				case QueryElementType.SqlDataType:
 					break;
 
 				default:
