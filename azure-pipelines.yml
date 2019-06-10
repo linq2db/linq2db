@@ -82,6 +82,9 @@ stages:
       vmImage: 'ubuntu-16.04'
     displayName: 'NETCORE Tests (Linux)'
 
+    variables:
+      file: 'lin_core2_job1.ps1'
+
     steps:
     - checkout: none 
 
@@ -91,6 +94,11 @@ stages:
         downloadType: 'single'
         artifactName: '$(core2tests)'
         downloadPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(core2tests)/$(file)'
+        workingDirectory: '$(core2tests)'
 
     - script: dotnet vstest ./$(core2tests)/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
 
@@ -108,6 +116,9 @@ stages:
       vmImage: 'macOS-10.14'
     displayName: 'NETCORE Tests (MacOS)'
 
+    variables:
+      file: 'osx_core2_job1.ps1'
+
     steps:
     - checkout: none 
 
@@ -117,6 +128,11 @@ stages:
         downloadType: 'single'
         artifactName: '$(core2tests)'
         downloadPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(core2tests)/$(file)'
+        workingDirectory: '$(core2tests)'
 
     - script: dotnet vstest ./$(core2tests)/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
 
@@ -181,6 +197,9 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'NETCORE Tests (Windows)'
 
+    variables:
+      file: 'win_core2_job1.ps1'
+
     steps:
     - checkout: none 
 
@@ -190,6 +209,11 @@ stages:
         downloadType: 'single'
         artifactName: '$(core2tests)'
         downloadPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(core2tests)/$(file)'
+        workingDirectory: '$(core2tests)'
 
     - task: VSTest@2
       inputs:
