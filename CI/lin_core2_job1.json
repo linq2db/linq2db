@@ -8,7 +8,7 @@
 		"Providers"            :
 		[
 			"SQLite.MS",
-			"Northwind.SQLite.MS",
+			//"Northwind.SQLite.MS",
 			//"MySqlConnector",
 			//"MySql57",
 			//"PostgreSQL",
