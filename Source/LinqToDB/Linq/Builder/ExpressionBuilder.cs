@@ -157,6 +157,8 @@ namespace LinqToDB.Linq.Builder
 		internal Query<T> Build<T>()
 		{
 			var sequence = BuildSequence(new BuildInfo((IBuildContext)null, Expression, new SelectQuery()));
+			//todo: call only for top-level select without columns
+			sequence.ConvertToIndex(null, 0, ConvertFlags.All);
 
 			if (_reorder)
 				lock (_sync)
