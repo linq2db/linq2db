@@ -229,7 +229,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-						if (QueryVisitor.Find(cond, CheckTable) == null)
+						if (new QueryVisitor().Find(cond, CheckTable) == null)
 							continue;
 
 						var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -345,7 +345,7 @@ namespace LinqToDB.SqlProvider
 								levelTables.Add(source);
 						});
 
-						if (SqlProviderFlags.IsSubQueryColumnSupported && QueryVisitor.Find(subQuery, CheckTable) == null)
+						if (SqlProviderFlags.IsSubQueryColumnSupported && new QueryVisitor().Find(subQuery, CheckTable) == null)
 							continue;
 
 						// Join should not have ParentSelect, while SubQuery has
@@ -397,7 +397,7 @@ namespace LinqToDB.SqlProvider
 						{
 							var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-							if (QueryVisitor.Find(cond, CheckTable) == null)
+							if (new QueryVisitor().Find(cond, CheckTable) == null)
 								continue;
 
 							var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -1304,8 +1304,8 @@ namespace LinqToDB.SqlProvider
 					var table = updateStatement.Update.Table ?? (SqlTable)updateStatement.SelectQuery.From.Tables[0].Source;
 
 					if (updateStatement.Update.Table != null)
-						if (QueryVisitor.Find(updateStatement.SelectQuery.From, t => t == table) == null)
-							table = (SqlTable)QueryVisitor.Find(updateStatement.SelectQuery.From,
+						if (new QueryVisitor().Find(updateStatement.SelectQuery.From, t => t == table) == null)
+							table = (SqlTable)new QueryVisitor().Find(updateStatement.SelectQuery.From,
 								ex => ex is SqlTable sqlTable && sqlTable.ObjectType == table.ObjectType) ?? table;
 
 					var copy = new SqlTable(table);

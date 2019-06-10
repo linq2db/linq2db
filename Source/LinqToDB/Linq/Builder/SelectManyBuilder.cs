@@ -43,8 +43,8 @@ namespace LinqToDB.Linq.Builder
 			var sql            = collection.SelectQuery;
 
 			var sequenceTables = new HashSet<ISqlTableSource>(sequence.SelectQuery.From.Tables[0].GetTables());
-			var newQuery       = null != QueryVisitor.Find(sql, e => e == collectionInfo.SelectQuery);
-			var crossApply     = null != QueryVisitor.Find(sql, e =>
+			var newQuery       = null != new QueryVisitor().Find(sql, e => e == collectionInfo.SelectQuery);
+			var crossApply     = null != new QueryVisitor().Find(sql, e =>
 				e.ElementType == QueryElementType.TableSource && sequenceTables.Contains((ISqlTableSource)e)  ||
 				e.ElementType == QueryElementType.SqlField    && sequenceTables.Contains(((SqlField)e).Table) ||
 				e.ElementType == QueryElementType.Column      && sequenceTables.Contains(((SqlColumn)e).Parent));
@@ -119,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 
 				bool ContainsTable(ISqlTableSource tbl, IQueryElement qe)
 				{
-					return null != QueryVisitor.Find(qe, e =>
+					return null != new QueryVisitor().Find(qe, e =>
 						e == tbl ||
 						e.ElementType == QueryElementType.SqlField && tbl == ((SqlField) e).Table ||
 						e.ElementType == QueryElementType.Column   && tbl == ((SqlColumn)e).Parent);
@@ -178,7 +178,7 @@ namespace LinqToDB.Linq.Builder
 				if (collection.Parent is TableBuilder.TableContext collectionParent &&
 					collectionInfo.IsAssociationBuilt)
 				{
-					var ts = (SqlTableSource)QueryVisitor.Find(sequence.SelectQuery.From, e =>
+					var ts = (SqlTableSource)new QueryVisitor().Find(sequence.SelectQuery.From, e =>
 					{
 						if (e.ElementType == QueryElementType.TableSource)
 						{

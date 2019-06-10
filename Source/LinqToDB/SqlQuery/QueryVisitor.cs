@@ -7,12 +7,14 @@ namespace LinqToDB.SqlQuery
 	{
 		#region Visit
 
+		readonly ISet<IQueryElement>                     _visitedFind     = new HashSet<IQueryElement>();
 		readonly Dictionary<IQueryElement,IQueryElement> _visitedElements = new Dictionary<IQueryElement, IQueryElement>();
 		public   Dictionary<IQueryElement,IQueryElement>  VisitedElements => _visitedElements;
 
-		bool                     _all;
-		Func<IQueryElement,bool> _action1;
-		Action<IQueryElement>    _action2;
+		bool                      _all;
+		Func<IQueryElement,bool>  _action1;
+		Action<IQueryElement>     _action2;
+		Func<IQueryElement, bool> _find;
 
 		public void VisitParentFirst(IQueryElement element, Func<IQueryElement,bool> action)
 		{
@@ -1053,7 +1055,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Find
 
-		static IQueryElement Find<T>(IEnumerable<T> arr, Func<IQueryElement,bool> find)
+		IQueryElement Find<T>(IEnumerable<T> arr)
 			where T : class, IQueryElement
 		{
 			if (arr == null)
@@ -1061,7 +1063,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var item in arr)
 			{
-				var e = Find(item, find);
+				var e = Find(item);
 				if (e != null)
 					return e;
 			}
@@ -1069,14 +1071,14 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		static IQueryElement FindX(SqlSearchCondition sc, Func<IQueryElement,bool> find)
+		IQueryElement FindX(SqlSearchCondition sc)
 		{
 			if (sc.Conditions == null)
 				return null;
 
 			foreach (var item in sc.Conditions)
 			{
-				var e = Find(item.Predicate, find);
+				var e = Find(item.Predicate);
 				if (e != null)
 					return e;
 			}
@@ -1084,180 +1086,189 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public static IQueryElement Find(IQueryElement element, Func<IQueryElement,bool> find)
+		public IQueryElement Find(IQueryElement element, Func<IQueryElement, bool> find)
 		{
-			if (element == null || find(element))
+			_visitedFind.Clear();
+			_find = find;
+			return Find(element);
+		}
+
+		IQueryElement Find(IQueryElement element)
+		{
+			if (element == null || !_visitedFind.Add(element))
+				return null;
+
+			if (_find(element))
 				return element;
 
 			switch (element.ElementType)
 			{
-				case QueryElementType.SqlFunction       : return Find(((SqlFunction)          element).Parameters,      find);
-				case QueryElementType.SqlExpression     : return Find(((SqlExpression)        element).Parameters,      find);
-				case QueryElementType.Column            : return Find(((SqlColumn)            element).Expression,      find);
-				case QueryElementType.SearchCondition   : return FindX((SqlSearchCondition)   element,                  find);
-				case QueryElementType.Condition         : return Find(((SqlCondition)         element).Predicate,       find);
-				case QueryElementType.ExprPredicate     : return Find(((SqlPredicate.Expr)    element).Expr1,           find);
-				case QueryElementType.NotExprPredicate  : return Find(((SqlPredicate.NotExpr) element).Expr1,           find);
-				case QueryElementType.IsNullPredicate   : return Find(((SqlPredicate.IsNull)  element).Expr1,           find);
-				case QueryElementType.FromClause        : return Find(((SqlFromClause)        element).Tables,          find);
-				case QueryElementType.WhereClause       : return Find(((SqlWhereClause)       element).SearchCondition, find);
-				case QueryElementType.GroupByClause     : return Find(((SqlGroupByClause)     element).Items,           find);
-				case QueryElementType.OrderByClause     : return Find(((SqlOrderByClause)     element).Items,           find);
-				case QueryElementType.OrderByItem       : return Find(((SqlOrderByItem)       element).Expression,      find);
-				case QueryElementType.Union             : return Find(((SqlUnion)             element).SelectQuery,     find);
-				case QueryElementType.FuncLikePredicate : return Find(((SqlPredicate.FuncLike)element).Function,        find);
+				case QueryElementType.SqlFunction       : return Find(((SqlFunction)          element).Parameters     );
+				case QueryElementType.SqlExpression     : return Find(((SqlExpression)        element).Parameters     );
+				case QueryElementType.Column            : return Find(((SqlColumn)            element).Expression     );
+				case QueryElementType.SearchCondition   : return FindX((SqlSearchCondition)   element                 );
+				case QueryElementType.Condition         : return Find(((SqlCondition)         element).Predicate      );
+				case QueryElementType.ExprPredicate     : return Find(((SqlPredicate.Expr)    element).Expr1          );
+				case QueryElementType.NotExprPredicate  : return Find(((SqlPredicate.NotExpr) element).Expr1          );
+				case QueryElementType.IsNullPredicate   : return Find(((SqlPredicate.IsNull)  element).Expr1          );
+				case QueryElementType.FromClause        : return Find(((SqlFromClause)        element).Tables         );
+				case QueryElementType.WhereClause       : return Find(((SqlWhereClause)       element).SearchCondition);
+				case QueryElementType.GroupByClause     : return Find(((SqlGroupByClause)     element).Items          );
+				case QueryElementType.OrderByClause     : return Find(((SqlOrderByClause)     element).Items          );
+				case QueryElementType.OrderByItem       : return Find(((SqlOrderByItem)       element).Expression     );
+				case QueryElementType.Union             : return Find(((SqlUnion)             element).SelectQuery    );
+				case QueryElementType.FuncLikePredicate : return Find(((SqlPredicate.FuncLike)element).Function       );
 
 				case QueryElementType.SqlBinaryExpression:
 					{
 						return
-							Find(((SqlBinaryExpression)element).Expr1, find) ??
-							Find(((SqlBinaryExpression)element).Expr2, find);
+							Find(((SqlBinaryExpression)element).Expr1) ??
+							Find(((SqlBinaryExpression)element).Expr2);
 					}
 
 				case QueryElementType.SqlTable:
 					{
 						return
-							Find(((SqlTable)element).All,            find) ??
-							Find(((SqlTable)element).Fields.Values,  find) ??
-							Find(((SqlTable)element).TableArguments, find);
+							Find(((SqlTable)element).All           ) ??
+							Find(((SqlTable)element).Fields.Values ) ??
+							Find(((SqlTable)element).TableArguments);
 					}
 
 				case QueryElementType.SqlCteTable:
 					{
 						return
-							Find(((SqlCteTable)element).All,            find) ??
-							Find(((SqlCteTable)element).Fields.Values,  find) ??
-							Find(((SqlCteTable)element).TableArguments, find) ??
-							Find(((SqlCteTable)element).Cte, find);
+							Find(((SqlCteTable)element).All           ) ??
+							Find(((SqlCteTable)element).Fields.Values ) ??
+							Find(((SqlCteTable)element).TableArguments) ??
+							Find(((SqlCteTable)element).Cte);
 					}
 
 				case QueryElementType.SqlRawSqlTable:
 					{
 						return
-							Find(((SqlRawSqlTable)element).All,            find) ??
-							Find(((SqlRawSqlTable)element).Fields.Values,  find) ??
-							Find(((SqlRawSqlTable)element).Parameters,     find);
+							Find(((SqlRawSqlTable)element).All          ) ??
+							Find(((SqlRawSqlTable)element).Fields.Values) ??
+							Find(((SqlRawSqlTable)element).Parameters   );
 					}
 
 				case QueryElementType.TableSource:
 					{
 						return
-							Find(((SqlTableSource)element).Source, find) ??
-							Find(((SqlTableSource)element).Joins,  find);
+							Find(((SqlTableSource)element).Source) ??
+							Find(((SqlTableSource)element).Joins );
 					}
 
 				case QueryElementType.JoinedTable:
 					{
 						return
-							Find(((SqlJoinedTable)element).Table,     find) ??
-							Find(((SqlJoinedTable)element).Condition, find);
+							Find(((SqlJoinedTable)element).Table    ) ??
+							Find(((SqlJoinedTable)element).Condition);
 					}
 
 				case QueryElementType.ExprExprPredicate:
 					{
 						return
-							Find(((SqlPredicate.ExprExpr)element).Expr1, find) ??
-							Find(((SqlPredicate.ExprExpr)element).Expr2, find);
+							Find(((SqlPredicate.ExprExpr)element).Expr1) ??
+							Find(((SqlPredicate.ExprExpr)element).Expr2);
 					}
 
 				case QueryElementType.LikePredicate:
 					{
 						return
-							Find(((SqlPredicate.Like)element).Expr1,  find) ??
-							Find(((SqlPredicate.Like)element).Expr2,  find) ??
-							Find(((SqlPredicate.Like)element).Escape, find);
+							Find(((SqlPredicate.Like)element).Expr1 ) ??
+							Find(((SqlPredicate.Like)element).Expr2 ) ??
+							Find(((SqlPredicate.Like)element).Escape);
 					}
 
 				case QueryElementType.BetweenPredicate:
 					{
 						return
-							Find(((SqlPredicate.Between)element).Expr1, find) ??
-							Find(((SqlPredicate.Between)element).Expr2, find) ??
-							Find(((SqlPredicate.Between)element).Expr3, find);
+							Find(((SqlPredicate.Between)element).Expr1) ??
+							Find(((SqlPredicate.Between)element).Expr2) ??
+							Find(((SqlPredicate.Between)element).Expr3);
 					}
 
 				case QueryElementType.InSubQueryPredicate:
 					{
 						return
-							Find(((SqlPredicate.InSubQuery)element).Expr1,    find) ??
-							Find(((SqlPredicate.InSubQuery)element).SubQuery, find);
+							Find(((SqlPredicate.InSubQuery)element).Expr1   ) ??
+							Find(((SqlPredicate.InSubQuery)element).SubQuery);
 					}
 
 				case QueryElementType.InListPredicate:
 					{
 						return
-							Find(((SqlPredicate.InList)element).Expr1,  find) ??
-							Find(((SqlPredicate.InList)element).Values, find);
+							Find(((SqlPredicate.InList)element).Expr1 ) ??
+							Find(((SqlPredicate.InList)element).Values);
 					}
 
 				case QueryElementType.SetExpression:
 					{
 						return
-							Find(((SqlSetExpression)element).Column,     find) ??
-							Find(((SqlSetExpression)element).Expression, find);
+							Find(((SqlSetExpression)element).Column    ) ??
+							Find(((SqlSetExpression)element).Expression);
 					}
 
 				case QueryElementType.InsertClause:
 					{
 						return
-							Find(((SqlInsertClause)element).Into,  find) ??
-							Find(((SqlInsertClause)element).Items, find);
+							Find(((SqlInsertClause)element).Into ) ??
+							Find(((SqlInsertClause)element).Items);
 					}
 
 				case QueryElementType.UpdateClause:
 					{
 						return
-							Find(((SqlUpdateClause)element).Table, find) ??
-							Find(((SqlUpdateClause)element).Items, find) ??
-							Find(((SqlUpdateClause)element).Keys,  find);
+							Find(((SqlUpdateClause)element).Table) ??
+							Find(((SqlUpdateClause)element).Items) ??
+							Find(((SqlUpdateClause)element).Keys );
 					}
 
 				case QueryElementType.DeleteStatement:
 					{
 						return
-							Find(((SqlDeleteStatement)element).Table, find) ??
-							Find(((SqlDeleteStatement)element).Top,   find) ??
-							Find(((SqlDeleteStatement)element).SelectQuery, find);
+							Find(((SqlDeleteStatement)element).Table      ) ??
+							Find(((SqlDeleteStatement)element).Top        ) ??
+							Find(((SqlDeleteStatement)element).SelectQuery);
 					}
 
 				case QueryElementType.CreateTableStatement:
 					{
 						return
-							Find(((SqlCreateTableStatement)element).Table, find);
+							Find(((SqlCreateTableStatement)element).Table);
 					}
 
 				case QueryElementType.DropTableStatement:
 					{
 						return
-							Find(((SqlCreateTableStatement)element).Table, find);
+							Find(((SqlCreateTableStatement)element).Table);
 					}
 
 				case QueryElementType.SelectClause:
 					{
 						return
-							Find(((SqlSelectClause)element).TakeValue, find) ??
-							Find(((SqlSelectClause)element).SkipValue, find) ??
-							Find(((SqlSelectClause)element).Columns,   find);
+							Find(((SqlSelectClause)element).TakeValue) ??
+							Find(((SqlSelectClause)element).SkipValue) ??
+							Find(((SqlSelectClause)element).Columns  );
 					}
 
 				case QueryElementType.SqlQuery:
 					{
 						return
-							Find(((SelectQuery)element).Select,  find) ??
-							Find(((SelectQuery)element).From,    find) ??
-							Find(((SelectQuery)element).Where,   find) ??
-							Find(((SelectQuery)element).GroupBy, find) ??
-							Find(((SelectQuery)element).Having,  find) ??
-							Find(((SelectQuery)element).OrderBy, find) ??
-							(((SelectQuery)element).HasUnion ? Find(((SelectQuery)element).Unions, find) : null);
+							Find(((SelectQuery)element).Select ) ??
+							Find(((SelectQuery)element).From   ) ??
+							Find(((SelectQuery)element).Where  ) ??
+							Find(((SelectQuery)element).GroupBy) ??
+							Find(((SelectQuery)element).Having ) ??
+							Find(((SelectQuery)element).OrderBy) ??
+							(((SelectQuery)element).HasUnion ? Find(((SelectQuery)element).Unions) : null);
 					}
 
 				case QueryElementType.CteClause:
 					{
-						throw new NotImplementedException("TODO: StackOverflowException");
-						//return
-						//	Find(((CteClause)element).Fields, find) ??
-						//	Find(((CteClause)element).Body,   find);
+						return
+							Find(((CteClause)element).Fields) ??
+							Find(((CteClause)element).Body  );
 					}
 
 				case QueryElementType.SqlField:

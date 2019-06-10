@@ -169,6 +169,7 @@ namespace LinqToDB.ServiceModel
 
 							ret.FieldNames[i] = name;
 							// ugh...
+							// still if it fails here due to empty columns - it is a bug in columns generation
 							ret.FieldTypes[i] = query.Statement.SelectQuery.Select.Columns[i].SystemType;
 						}
 
