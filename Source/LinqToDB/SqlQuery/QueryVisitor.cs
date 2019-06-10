@@ -2087,6 +2087,24 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.CteClause:
+					{
+						var cte = (CteClause)element;
+
+						var body   = (SelectQuery)ConvertInternal(cte.Body, action);
+						var fields = Convert(cte.Fields, action);
+
+						if (body   != null && !ReferenceEquals(cte.Body, body)     ||
+							fields != null && !ReferenceEquals(cte.Fields, fields))
+							newElement = new CteClause(
+								body   ?? cte.Body,
+								fields ?? cte.Fields,
+								cte.ObjectType,
+								cte.Name);
+
+						break;
+					}
+
 				case QueryElementType.SqlField:
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:
