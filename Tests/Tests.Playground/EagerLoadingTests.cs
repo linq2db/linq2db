@@ -123,7 +123,7 @@ namespace Tests.Playground
 						MId = m.Id1,
 						MId2 = m.Id2,
 						Details1 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId == m.Id2).ToList(),
-						Details2 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId % 2 == 0).ToList(),
+						Details2 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId % 2 == 0).ToArray(),
 					};
 
 				var result = await query.ToArrayAsync();
