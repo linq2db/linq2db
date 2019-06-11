@@ -506,6 +506,42 @@ namespace Tests.Linq
 				db.Person.Where(p => Wrap<int[]>(new int[] { 1, 2, 3 }).Contains(p.ID)).ToList();
 			}
 		}
+
+		[ActiveIssue(Details = "Trying my best to break linq2db")]
+		[Test]
+		public void CompareWithNullCheck([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.True(db.Parent
+					.Any(p => p.ParentID == 2
+						&& p.Value1 == Func1(Func2(null))
+						));
+			}
+		}
+
+		[Sql.Expression("COALESCE({0}, {0})", ServerSideOnly = true)]
+		public static int? Func1(int? value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		[ExpressionMethod(nameof(Func2Expr))]
+		public static int? Func2(string value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<string, int?>> Func2Expr()
+		{
+			return value => Func3(value);
+		}
+
+		[Sql.Expression("CASE WHEN {0} IS NULL THEN NULL ELSE 1 END", ServerSideOnly = true)]
+		private static int? Func3(string value)
+		{
+			throw new InvalidOperationException();
+		}
 	}
 
 	static class ExpressionTestExtensions
