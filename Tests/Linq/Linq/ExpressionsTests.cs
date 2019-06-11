@@ -509,15 +509,32 @@ namespace Tests.Linq
 
 		[ActiveIssue(Details = "Trying my best to break linq2db")]
 		[Test]
-		public void CompareWithNullCheck([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck1([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				Assert.True(db.Parent
-					.Any(p => p.ParentID == 2
-						&& p.Value1 == Func1(Func2(null))
-						));
+					.Any(p => p.ParentID == 2 && p.Value1 == Func1(Func2(null))));
 			}
+		}
+
+		[ActiveIssue(Details = "Trying my best to break linq2db")]
+		[Test]
+		public void CompareWithNullCheck2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.True(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 1 && p.intDataType == Func1(Func2(p.char20DataType))));
+			}
+		}
+
+		[LinqToDB.Mapping.Table("AllTypes")]
+		class AllTypes
+		{
+			[LinqToDB.Mapping.Column] public int    ID             { get; set; }
+			[LinqToDB.Mapping.Column] public int?   intDataType    { get; set; }
+			[LinqToDB.Mapping.Column] public string char20DataType { get; set; }
 		}
 
 		[Sql.Expression("COALESCE({0}, {0})", ServerSideOnly = true)]
