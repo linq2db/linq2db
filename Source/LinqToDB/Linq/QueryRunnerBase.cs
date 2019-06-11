@@ -11,13 +11,14 @@ namespace LinqToDB.Linq
 
 	abstract class QueryRunnerBase : IQueryRunner
 	{
-		protected QueryRunnerBase(Query query, int queryNumber, IDataContext dataContext, Expression expression, object[] parameters)
+		protected QueryRunnerBase(Query query, int queryNumber, IDataContext dataContext, Expression expression, object[] parameters, object[] preambles)
 		{
 			Query        = query;
 			DataContext  = dataContext;
 			Expression   = expression;
 			QueryNumber  = queryNumber;
 			Parameters   = parameters;
+			Preambles    = preambles;
 		}
 
 		protected readonly Query    Query;
@@ -28,6 +29,7 @@ namespace LinqToDB.Linq
 		public IDataContext         DataContext      { get; set; }
 		public Expression           Expression       { get; set; }
 		public object[]             Parameters       { get; set; }
+		public object[]             Preambles        { get; set; }
 		public abstract Expression  MapperExpression { get; set; }
 
 		public abstract int                    ExecuteNonQuery();

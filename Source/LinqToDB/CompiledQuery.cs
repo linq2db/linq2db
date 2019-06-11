@@ -60,8 +60,8 @@ namespace LinqToDB
 					type == MethodType.Queryable ?
 						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create      (null)) :
 					type == MethodType.Element ?
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute     (null)) :
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.ExecuteAsync(null)),
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute     (null, null)) :
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.ExecuteAsync(null, null)),
 					ps);
 			}
 		}

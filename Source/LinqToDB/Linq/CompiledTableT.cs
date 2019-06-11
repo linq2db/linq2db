@@ -90,20 +90,20 @@ namespace LinqToDB.Linq
 			return new Table<T>(db, _expression) { Info = GetInfo(db), Parameters = parameters };
 		}
 
-		public T Execute(object[] parameters)
+		public T Execute(object[] parameters, object[] preambles)
 		{
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db);
 
-			return (T)query.GetElement(db, _expression, parameters);
+			return (T)query.GetElement(db, _expression, parameters, preambles);
 		}
 
-		public async Task<T> ExecuteAsync(object[] parameters)
+		public async Task<T> ExecuteAsync(object[] parameters, object[] preambles)
 		{
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db);
 
-			return (T)(await query.GetElementAsync(db, _expression, parameters, default));
+			return (T)(await query.GetElementAsync(db, _expression, parameters, preambles, default));
 		}
 	}
 }

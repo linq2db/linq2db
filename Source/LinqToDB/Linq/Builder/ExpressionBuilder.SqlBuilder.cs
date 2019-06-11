@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Linq.Builder
@@ -3214,6 +3215,23 @@ namespace LinqToDB.Linq.Builder
 			if (_ctes.TryGetValue(cteExpression, out var value))
 				return value.Item2;
 			return null;
+		}
+
+		#endregion
+
+		#region Eager Loading
+
+		private List<Tuple<Func<IDataContext, object>, Func<IDataContext, Task<object>>>> _preambles;
+
+		public static readonly ParameterExpression PreambleParam =
+			Expression.Parameter(typeof(object[]), "preamble");
+
+		public int RegisterPreamble<T>(Func<IDataContext, T> func, Func<IDataContext, Task<T>> funcAsync)
+		{
+			if (_preambles == null)
+				_preambles = new List<Tuple<Func<IDataContext,object>,Func<IDataContext,Task<object>>>>();
+			_preambles.Add(Tuple.Create<Func<IDataContext,object>,Func<IDataContext,Task<object>>>(dc => func(dc), async dc => await funcAsync(dc)) );
+			return _preambles.Count - 1;
 		}
 
 		#endregion

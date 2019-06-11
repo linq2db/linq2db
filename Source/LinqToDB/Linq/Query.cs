@@ -21,8 +21,8 @@ namespace LinqToDB.Linq
 
 	public abstract class Query
 	{
-		public Func<IDataContext,Expression,object[],object> GetElement;
-		public Func<IDataContext,Expression,object[],CancellationToken,Task<object>> GetElementAsync;
+		public Func<IDataContext,Expression,object[],object[],object> GetElement;
+		public Func<IDataContext,Expression,object[],object[],CancellationToken,Task<object>> GetElementAsync;
 
 		#region Init
 
@@ -139,6 +139,37 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
+
+		#region Eager Loading
+
+		Tuple<Func<IDataContext, object>, Func<IDataContext, Task<object>>>[] _preambles;
+
+		public void SetPreambles(
+			IEnumerable<Tuple<Func<IDataContext, object>, Func<IDataContext, Task<object>>>> preambles)
+		{
+			_preambles = preambles?.ToArray();
+		}
+
+		public object[] InitPreambles(IDataContext dc)
+		{
+			if (_preambles == null)
+				return null;
+			return _preambles.Select(p => p.Item1(dc)).ToArray();
+		}
+
+		public async Task<object[]> InitPreamblesAsync(IDataContext dc)
+		{
+			if (_preambles == null)
+				return null;
+			var result = new List<object>();
+			foreach (var p in _preambles)
+			{
+				result.Add(await p.Item2(dc));
+			}
+			return result.ToArray();
+		}
+
+		#endregion
 	}
 
 	class Query<T> : Query
@@ -166,9 +197,9 @@ namespace LinqToDB.Linq
 
 		public bool DoNotCache;
 
-		public Func<IDataContext,Expression,object[],IEnumerable<T>>      GetIEnumerable;
-		public Func<IDataContext,Expression,object[],IAsyncEnumerable<T>> GetIAsyncEnumerable;
-		public Func<IDataContext,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
+		public Func<IDataContext,Expression,object[],object[],IEnumerable<T>>      GetIEnumerable;
+		public Func<IDataContext,Expression,object[],object[],IAsyncEnumerable<T>> GetIAsyncEnumerable;
+		public Func<IDataContext,Expression,object[],object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
 
 		#endregion
 

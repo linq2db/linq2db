@@ -30,6 +30,7 @@ namespace LinqToDB.Linq
 
 		internal Query<T> Info;
 		internal object[] Parameters;
+		internal object[] Preambles;
 
 		#endregion
 
@@ -55,7 +56,7 @@ namespace LinqToDB.Linq
 					var expression = Expression;
 					var info       = GetQuery(ref expression, true);
 					Expression     = expression;
-					var sqlText    = QueryRunner.GetSqlText(info, DataContext, Expression, Parameters, 0);
+					var sqlText    = QueryRunner.GetSqlText(info, DataContext, Expression, Parameters, Preambles, 0);
 
 					if (hasQueryHints)
 						return sqlText;
@@ -87,7 +88,7 @@ namespace LinqToDB.Linq
 		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
 		{
 			var value = await GetQuery(ref expression, false).GetElementAsync(
-				DataContext, expression, Parameters, token);
+				DataContext, expression, Parameters, Preambles, token);
 
 			return (TResult)value;
 		}
@@ -95,30 +96,31 @@ namespace LinqToDB.Linq
 		IAsyncEnumerable<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression)
 		{
 			return Query<TResult>.GetQuery(DataContext, ref expression)
-				.GetIAsyncEnumerable(DataContext, expression, Parameters);
+				.GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles);
 		}
 
-		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
+		public async Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
 		{
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true);
 			Expression     = expression;
+			Preambles      = await query.InitPreamblesAsync(DataContext);
 
-			return query
-				.GetForEachAsync(DataContext, Expression, Parameters, r => { action(r); return true; }, cancellationToken);
+			await query
+				.GetForEachAsync(DataContext, Expression, Parameters, Preambles, r => { action(r); return true; }, cancellationToken);
 		}
 
 		public Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
 		{
 			var expression = Expression;
 			return GetQuery(ref expression, true)
-				.GetForEachAsync(DataContext, expression, Parameters, func, cancellationToken);
+				.GetForEachAsync(DataContext, expression, Parameters, Preambles, func, cancellationToken);
 		}
 
 		public IAsyncEnumerable<T> GetAsyncEnumerable()
 		{
 			var expression = Expression;
-			return GetQuery(ref expression, true).GetIAsyncEnumerable(DataContext, expression, Parameters);
+			return GetQuery(ref expression, true).GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles);
 		}
 
 		#endregion
@@ -162,12 +164,12 @@ namespace LinqToDB.Linq
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
-			return (TResult)GetQuery(ref expression, false).GetElement(DataContext, expression, Parameters);
+			return (TResult)GetQuery(ref expression, false).GetElement(DataContext, expression, Parameters, Preambles);
 		}
 
 		object IQueryProvider.Execute(Expression expression)
 		{
-			return GetQuery(ref expression, false).GetElement(DataContext, expression, Parameters);
+			return GetQuery(ref expression, false).GetElement(DataContext, expression, Parameters, Preambles);
 		}
 
 		#endregion
@@ -179,8 +181,9 @@ namespace LinqToDB.Linq
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true);
 			Expression     = expression;
+			Preambles      = query.InitPreambles(DataContext);
 
-			return query.GetIEnumerable(DataContext, Expression, Parameters).GetEnumerator();
+			return query.GetIEnumerable(DataContext, Expression, Parameters, Preambles).GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
@@ -188,10 +191,12 @@ namespace LinqToDB.Linq
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true);
 			Expression     = expression;
+			Preambles      = query.InitPreambles(DataContext);
 
-			return query.GetIEnumerable(DataContext, Expression, Parameters).GetEnumerator();
+			return query.GetIEnumerable(DataContext, Expression, Parameters, Preambles).GetEnumerator();
 		}
 
 		#endregion
+
 	}
 }

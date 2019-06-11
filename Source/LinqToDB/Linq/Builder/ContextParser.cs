@@ -50,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 				SqlOptimizer  = query.SqlOptimizer;
 				SetParameters = () => QueryRunner.SetParameters(query, Builder.DataContext, query.Expression, null, 0);
 
-				query.GetElement = (db, expr, ps) => this;
+				query.GetElement = (db, expr, ps, preambles) => this;
 			}
 		}
 	}

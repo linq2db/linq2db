@@ -113,14 +113,14 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetFirstElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).First();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).First();
 
-				query.GetElementAsync = async (db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
 					var obj   = default(T);
 
-					await query.GetForEachAsync(db, expr, ps,
+					await query.GetForEachAsync(db, expr, ps, preambles,
 						r => { obj = r; count++; return false; }, token);
 
 					return count > 0 ? obj : Array<T>.Empty.First();
@@ -129,14 +129,14 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).FirstOrDefault();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).FirstOrDefault();
 
-				query.GetElementAsync = async (db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
 					var obj   = default(T);
 
-					await query.GetForEachAsync(db, expr, ps, r => { obj = r; count++; return false; }, token);
+					await query.GetForEachAsync(db, expr, ps, preambles, r => { obj = r; count++; return false; }, token);
 
 					return count > 0 ? obj : Array<T>.Empty.FirstOrDefault();
 				};
@@ -144,14 +144,14 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetSingleElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).Single();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).Single();
 
-				query.GetElementAsync = async (db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
 					var obj   = default(T);
 
-					await query.GetForEachAsync(db, expr, ps,
+					await query.GetForEachAsync(db, expr, ps, preambles,
 						r =>
 						{
 							if (count == 0)
@@ -166,14 +166,14 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).SingleOrDefault();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).SingleOrDefault();
 
-				query.GetElementAsync = async (db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 				{
 					var count = 0;
 					var obj   = default(T);
 
-					await query.GetForEachAsync(db, expr, ps,
+					await query.GetForEachAsync(db, expr, ps, preambles,
 						r =>
 						{
 							if (count == 0)

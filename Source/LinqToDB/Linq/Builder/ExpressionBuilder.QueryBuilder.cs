@@ -247,7 +247,7 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Parameter:
 					{
-						if (expr == ParametersParam)
+						if (expr == ParametersParam || expr == PreambleParam)
 							break;
 
 						var ctx = GetContext(context, expr);
@@ -684,21 +684,22 @@ namespace LinqToDB.Linq.Builder
 			return variable;
 		}
 
-		public Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>> BuildMapper<T>(Expression expr)
+		public Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],object[],T>> BuildMapper<T>(Expression expr)
 		{
 			var type = typeof(T);
 
 			if (expr.Type != type)
 				expr = Expression.Convert(expr, type);
 
-			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>>(
+			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],object[],T>>(
 				BuildBlock(expr), new[]
 				{
 					QueryRunnerParam,
 					DataContextParam,
 					DataReaderParam,
 					ExpressionParam,
-					ParametersParam
+					ParametersParam,
+					PreambleParam,
 				});
 
 			return mapper;

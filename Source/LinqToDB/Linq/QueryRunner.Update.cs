@@ -90,7 +90,7 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type);
 						});
 
-				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
+				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null);
 			}
 
 			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, string tableName = null,
@@ -111,7 +111,7 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type);
 						});
 
-				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
+				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token);
 
 				return (int)result;
 			}

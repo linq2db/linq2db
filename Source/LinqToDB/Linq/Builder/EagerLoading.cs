@@ -24,27 +24,49 @@ namespace LinqToDB.Linq.Builder
 		private static readonly MethodInfo _queryWithDetailsInternalMethodInfo = MemberHelper.MethodOf(() =>
 			QueryWithDetailsInternalProbe<int, int, int>((IQueryable<int>)null, null, null, null)).GetGenericMethodDefinition();
 
-		private static readonly MethodInfo _enlistEagerLoadingFunctionality = MemberHelper.MethodOf(() =>
-			EnlistEagerLoadingFunctionality<int, int, int>(null, null, null, null)).GetGenericMethodDefinition();
+		private static readonly MethodInfo EnlistEagerLoadingFunctionalityMethodInfo = MemberHelper.MethodOf(() =>
+			EnlistEagerLoadingFunctionality<int, int, int>(null, null, null, null, null)).GetGenericMethodDefinition();
+
+		//TODO: move to common static class
+		static readonly MethodInfo _whereMethodInfo =
+			MemberHelper.MethodOf(() => LinqExtensions.Where<int,int,object>(null,null)).GetGenericMethodDefinition();
+
+		//TODO: move to common static class
+		static readonly MethodInfo _getTableMethodInfo =
+			MemberHelper.MethodOf(() => DataExtensions.GetTable<object>(null)).GetGenericMethodDefinition();
 
 		class EagerLoadingContext<T, TKey>
 		{
 			private Dictionary<TKey, List<T>> _items;
+			private TKey _prevKey;
+			private List<T> _prevList;
 
 			public void Add(TKey key, T item)
 			{
 				List<T> list;
-				if (_items == null)
+
+				if (_prevList != null && _prevKey.Equals(key))
 				{
-					_items = new Dictionary<TKey, List<T>>();
-					list = new List<T>();
-					_items.Add(key, list);
+					list = _prevList;
 				}
-				else if (!_items.TryGetValue(key, out list))
+				else
 				{
-					list = new List<T>();
-					_items.Add(key, list);
+					if (_items == null)
+					{
+						_items = new Dictionary<TKey, List<T>>();
+						list = new List<T>();
+						_items.Add(key, list);
+					}
+					else if (!_items.TryGetValue(key, out list))
+					{
+						list = new List<T>();
+						_items.Add(key, list);
+					}
+
+					_prevKey = key;
+					_prevList = list;
 				}
+
 				list.Add(item);
 			}
 
@@ -130,6 +152,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				var forProjection = context.Builder.BuildSql(s.Sql.SystemType, s.Index);
 				memberOfProjection.Add(forProjection);
+
+				//TODO: more correct memberchain processing
+
 				Expression forDetail = Expression.MakeMemberAccess(mainObj, s.MemberChain[0]);
 				if (forDetail.Type != forProjection.Type)
 					forDetail = Expression.Convert(forDetail, forProjection.Type);
@@ -170,14 +195,15 @@ namespace LinqToDB.Linq.Builder
 
 		public static Expression GenerateDetailsExpression(IBuildContext context, Expression masterQuery, Expression detailsQuery)
 		{
-			var masterObjType = GetEnumerableElementType(masterQuery.Type);
-			var detailObjType = GetEnumerableElementType(detailsQuery.Type);
+			var builder = context.Builder;
+			var mappingSchema = builder.MappingSchema;
+
+			var masterObjType  = GetEnumerableElementType(masterQuery.Type);
+			var detailObjType  = GetEnumerableElementType(detailsQuery.Type);
 			var masterObjParam = Expression.Parameter(masterObjType, "master");
-			var keys = GenerateKeyExpressions(context, masterObjParam);
+			var keyExpressions = GenerateKeyExpressions(context, masterObjParam);
 
-			var method = _enlistEagerLoadingFunctionality.MakeGenericMethod(masterObjType, detailObjType, keys.Item2.Type);
-
-			var detailsKeyExpression = Expression.Lambda(keys.Item2, masterObjParam);
+			var detailsKeyExpression = Expression.Lambda(keyExpressions.Item2, masterObjParam);
 
 			var parameters = new HashSet<ParameterExpression>();
 			detailsQuery.Visit(e =>
@@ -195,7 +221,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					case ExpressionType.MemberAccess:
 						{
-							var root = e.GetRootObject(context.Builder.MappingSchema);
+							var root = e.GetRootObject(builder.MappingSchema);
 
 							if (root != null &&
 							    root.NodeType == ExpressionType.Parameter &&
@@ -204,6 +230,95 @@ namespace LinqToDB.Linq.Builder
 								if (aliases.TryGetValue(e, out var member) /*&& member.DeclaringType == masterObjType*/)
 								{
 									return Expression.MakeMemberAccess(masterObjParam, member);
+								}
+								else
+								{
+									var res = context.IsExpression(e, 0, RequestFor.Association);
+									if (res.Result)
+									{
+										var table = (TableBuilder.AssociatedTableContext)res.Context;
+
+										if (table.IsList)
+										{
+											var me = (MemberExpression)e;
+											Expression expr;
+
+											var parentType = me.Expression.Type;
+											var childType = table.ObjectType;
+
+											var queryMethod = table.Association.GetQueryMethod(parentType, childType);
+											if (queryMethod != null)
+											{
+												expr = queryMethod.GetBody(me.Expression, ExpressionBuilder.DataContextParam);
+											}
+											else
+											{
+												var ttype = typeof(Table<>).MakeGenericType(childType);
+												var method = e == detailsQuery
+													? MemberHelper.MethodOf<IEnumerable<bool>>(n => n.Where(a => a))
+														.GetGenericMethodDefinition().MakeGenericMethod(childType)
+													: _whereMethodInfo.MakeGenericMethod(e.Type, childType, ttype);
+
+												var op = Expression.Parameter(childType, "t");
+
+												parameters.Add(op);
+
+												Expression ex = null;
+
+												for (var i = 0; i < table.Association.ThisKey.Length; i++)
+												{
+													var field1 =
+														table.ParentAssociation.SqlTable.Fields[
+															table.Association.ThisKey[i]];
+													var field2 = table.SqlTable.Fields[table.Association.OtherKey[i]];
+
+													var ma1 = Expression.MakeMemberAccess(op,
+														field2.ColumnDescriptor.MemberInfo);
+
+													var ma2 = Expression.MakeMemberAccess(me.Expression,
+														field1.ColumnDescriptor.MemberInfo);
+
+													if (aliases.TryGetValue(ma2, out var member2) /*&& member.DeclaringType == masterObjType*/)
+													{
+														ma2 = Expression.MakeMemberAccess(masterObjParam, member2);
+													}
+
+//													var readerExpr = builder.BuildSql(context, ma2, null);
+
+													var ee = ExpressionBuilder.Equal(mappingSchema, ma1, ma2);
+
+													ex = ex == null ? ee : Expression.AndAlso(ex, ee);
+												}
+
+												var predicate = table.Association.GetPredicate(parentType, childType);
+												if (predicate != null)
+												{
+													var body = predicate.GetBody(me.Expression, op);
+													ex = ex == null ? body : Expression.AndAlso(ex, body);
+												}
+
+												if (ex == null)
+													throw new LinqToDBException(
+														$"Invalid association configuration for {table.Association.MemberInfo.DeclaringType}.{table.Association.MemberInfo.Name}");
+
+												var getTableMethod = _getTableMethodInfo.MakeGenericMethod(childType);
+												var tbl = Expression.Call(getTableMethod, ExpressionBuilder.DataContextParam);
+
+												expr = Expression.Call(null, method, tbl,
+													Expression.Lambda(ex, op));
+											}
+
+//											if (e == detailsQuery)
+//											{
+//												expr = Expression.Call(
+//													MemberHelper.MethodOf<IEnumerable<int>>(n => n.ToList())
+//														.GetGenericMethodDefinition().MakeGenericMethod(childType),
+//													expr);
+//											}
+
+											return expr;
+										}
+									}
 								}
 							}
 
@@ -221,37 +336,71 @@ namespace LinqToDB.Linq.Builder
 
 			var detailsQueryLambda = Expression.Lambda(detailsQuery, masterObjParam);
 
-			var eagerContext = method.Invoke(null,
-				new object[] { context.Builder.DataContext, masterQuery, detailsQueryLambda, detailsKeyExpression });
+			var enlistMethod = EnlistEagerLoadingFunctionalityMethodInfo.MakeGenericMethod(masterObjType, detailObjType, keyExpressions.Item2.Type);
 
-			var getListMethod =
-				eagerContext.GetType().GetMethod("GetList", BindingFlags.Instance | BindingFlags.Public);
-
-			var resultExpression = Expression.Call(Expression.Constant(eagerContext), getListMethod, keys.Item1);
+			var resultExpression = (Expression)enlistMethod.Invoke(null,
+				new object[] { builder, masterQuery, detailsQueryLambda, keyExpressions.Item1, detailsKeyExpression });
 
 			return resultExpression;
 		}
 
-
-		private static EagerLoadingContext<TD, TKey> EnlistEagerLoadingFunctionality<T, TD, TKey>(
-			IDataContext dataContext,
+		private static Expression EnlistEagerLoadingFunctionality<T, TD, TKey>(
+			ExpressionBuilder builder,
 			Expression mainQueryExpr, 
 			Expression<Func<T, IEnumerable<TD>>> detailQueryExpression,
+			Expression currentRecordKeyExpression,
 			Expression<Func<T, TKey>> getKeyExpression)
 		{
-			var mainQuery = Internals.CreateExpressionQueryInstance<T>(dataContext, mainQueryExpr);
-			var detailQuery = mainQuery.SelectMany(detailQueryExpression, (m, d) => new { MasterKey = getKeyExpression.Compile()(m), Detail = d});
+			var mainQuery = Internals.CreateExpressionQueryInstance<T>(builder.DataContext, mainQueryExpr);
+			var detailQuery = mainQuery.SelectMany(detailQueryExpression, (m, d) => Tuple.Create(getKeyExpression.Compile()(m), d));
 
 			//TODO: currently we run in separate query
-			var detailsWithKey = detailQuery.ToList();
-			var eagerLoadingContext = new EagerLoadingContext<TD, TKey>();
 
-			foreach (var d in detailsWithKey)
-			{
-				eagerLoadingContext.Add(d.MasterKey, d.Detail);
-			}
+			var idx = RegisterPreambles(builder, detailQuery);
 
-			return eagerLoadingContext;
+			var getListMethod =
+				typeof(EagerLoadingContext<TD, TKey>).GetMethod("GetList", BindingFlags.Instance | BindingFlags.Public);
+
+			var resultExpression =
+				Expression.Call(
+					Expression.Convert(Expression.ArrayIndex(ExpressionBuilder.PreambleParam, Expression.Constant(idx)),
+						typeof(EagerLoadingContext<TD, TKey>)), getListMethod, currentRecordKeyExpression);
+
+			return resultExpression;
+		}
+
+		private static int RegisterPreambles<TD, TKey>(ExpressionBuilder builder, IQueryable<Tuple<TKey, TD>> detailQuery)
+		{
+			var expr = detailQuery.Expression;
+			// Filler code is duplicated for the future usage with IAsyncEnumerable
+			var idx = builder.RegisterPreamble(dc =>
+				{
+					var queryable = new ExpressionQueryImpl<Tuple<TKey, TD>>(dc, expr);
+					var detailsWithKey = queryable.ToList();
+					var eagerLoadingContext = new EagerLoadingContext<TD, TKey>();
+
+					foreach (var d in detailsWithKey)
+					{
+						eagerLoadingContext.Add(d.Item1, d.Item2);
+					}
+
+					return eagerLoadingContext;
+				},
+				async dc =>
+				{
+					var queryable = new ExpressionQueryImpl<Tuple<TKey, TD>>(dc, expr);
+					var detailsWithKey = await queryable.ToListAsync();
+					var eagerLoadingContext = new EagerLoadingContext<TD, TKey>();
+
+					foreach (var d in detailsWithKey)
+					{
+						eagerLoadingContext.Add(d.Item1, d.Item2);
+					}
+
+					return eagerLoadingContext;
+				}
+			);
+			return idx;
 		}
 
 		public static List<T> QueryWithDetailsProbe<T, TD>(

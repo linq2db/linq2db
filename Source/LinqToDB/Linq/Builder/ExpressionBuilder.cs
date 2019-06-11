@@ -160,6 +160,8 @@ namespace LinqToDB.Linq.Builder
 
 			sequence.BuildQuery((Query<T>)_query, param);
 
+			_query.SetPreambles(_preambles);
+
 			return (Query<T>)_query;
 		}
 
