@@ -476,6 +476,89 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => p.GrandChildrenByID(22)));
 			}
 		}
+
+		[ExpressionMethod(nameof(WrapExpression))]
+		public static T Wrap<T>(T value)
+		{
+			return value;
+		}
+
+		private static Expression<Func<T, T>> WrapExpression<T>()
+		{
+			return value => value;
+		}
+
+		[ActiveIssue(Details = "InvalidOperationException : Code supposed to be unreachable")]
+		[Test]
+		public void ExpressionCompilerCrash([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => Wrap<IList<int>>(new int[] { 1, 2, 3 }).Contains(p.ID)).ToList();
+			}
+		}
+
+		[Test]
+		public void ExpressionCompilerNoCrash([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => Wrap<int[]>(new int[] { 1, 2, 3 }).Contains(p.ID)).ToList();
+			}
+		}
+
+		[ActiveIssue(Details = "Trying my best to break linq2db")]
+		[Test]
+		public void CompareWithNullCheck1([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.True(db.Parent
+					.Any(p => p.ParentID == 2 && p.Value1 == Func1(Func2(null))));
+			}
+		}
+
+		[ActiveIssue(Details = "Trying my best to break linq2db")]
+		[Test]
+		public void CompareWithNullCheck2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.True(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 1 && p.intDataType == Func1(Func2(p.char20DataType))));
+			}
+		}
+
+		[LinqToDB.Mapping.Table("AllTypes")]
+		class AllTypes
+		{
+			[LinqToDB.Mapping.Column] public int    ID             { get; set; }
+			[LinqToDB.Mapping.Column] public int?   intDataType    { get; set; }
+			[LinqToDB.Mapping.Column] public string char20DataType { get; set; }
+		}
+
+		[Sql.Expression("COALESCE({0}, {0})", ServerSideOnly = true)]
+		public static int? Func1(int? value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		[ExpressionMethod(nameof(Func2Expr))]
+		public static int? Func2(string value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<string, int?>> Func2Expr()
+		{
+			return value => Func3(value);
+		}
+
+		[Sql.Expression("CASE WHEN {0} IS NULL THEN NULL ELSE 1 END", ServerSideOnly = true)]
+		private static int? Func3(string value)
+		{
+			throw new InvalidOperationException();
+		}
 	}
 
 	static class ExpressionTestExtensions
