@@ -98,7 +98,6 @@ namespace Tests.Playground
 					select new
 					{
 						MId = m.Id1,
-						MId2 = m.Id2,
 						Details1 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId == m.Id2).ToList(),
 						Details2 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId % 2 == 0).ToList()
 					};
@@ -123,9 +122,8 @@ namespace Tests.Playground
 					{
 						MId = m.Id1,
 						MId2 = m.Id2,
-						Association1 = m.Details.ToArray(),
-//						Details1 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId == m.Id2).ToList(),
-//						Details2 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId % 2 == 0).ToList(),
+						Details1 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId == m.Id2).ToList(),
+						Details2 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId % 2 == 0).ToList(),
 					};
 
 				var result = await query.ToArrayAsync();
@@ -148,6 +146,9 @@ namespace Tests.Playground
 					{
 						IdSum = m.Id1 + 100,
 						Association1 = m.Details.ToArray(),
+						Association2 = m.Details.Where(d => d.DetailId % 2 == 0).ToArray(),
+						Association3 = m.Details.Where(d => d.DetailId % 2 == 0).Select(d => d.DetailId).ToArray(),
+						Association4 = m.Details.Where(d => d.DetailId % 2 == 0).ToDictionary(d => d.DetailId),
 					};
 
 				var result = await query.ToArrayAsync();

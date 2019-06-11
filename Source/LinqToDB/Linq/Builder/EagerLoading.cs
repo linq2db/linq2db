@@ -167,6 +167,31 @@ namespace LinqToDB.Linq.Builder
 			return Tuple.Create(exprProjection, expDetail);
 		}
 
+		static Tuple<Expression, Expression> GenerateKeyExpressionsOld(IBuildContext context, ParameterExpression mainObj)
+		{
+			var sql = context.ConvertToIndex(null, 0, ConvertFlags.Key);
+
+			var memberOfProjection = new List<Expression>();
+			var memberOfDetail = new List<Expression>();
+			foreach (var s in sql)
+			{
+				var forProjection = context.Builder.BuildSql(s.Sql.SystemType, s.Index);
+				memberOfProjection.Add(forProjection);
+
+				//TODO: more correct memberchain processing
+
+				Expression forDetail = Expression.MakeMemberAccess(mainObj, s.MemberChain[0]);
+				if (forDetail.Type != forProjection.Type)
+					forDetail = Expression.Convert(forDetail, forProjection.Type);
+				memberOfDetail.Add(forDetail);
+			}
+
+			var exprProjection = GenerateKeyExpression(memberOfProjection.ToArray(), 0);
+			var expDetail = GenerateKeyExpression(memberOfDetail.ToArray(), 0);
+
+			return Tuple.Create(exprProjection, expDetail);
+		}
+
 		private static Dictionary<Expression, MemberInfo> CollectAliases(Expression expr)
 		{
 			var result = new Dictionary<Expression, MemberInfo>(new ExpressionEqualityComparer());
@@ -195,6 +220,20 @@ namespace LinqToDB.Linq.Builder
 
 		public static Expression GenerateDetailsExpression(IBuildContext context, Expression masterQuery, Expression detailsQuery)
 		{
+			ParameterExpression mainParamExpression = null;
+			if (masterQuery.NodeType == ExpressionType.Call && context is SelectContext selectContext)
+			{
+				// mc
+				var mc = (MethodCallExpression)masterQuery;
+				if (mc.IsQueryable("Select"))
+				{
+					// remove projection
+					masterQuery = mc.Arguments[0];
+					mainParamExpression = ((LambdaExpression)mc.Arguments[1].Unwrap()).Parameters[0];
+					context = selectContext.Sequence[0];
+				}
+			}
+
 			var builder = context.Builder;
 			var mappingSchema = builder.MappingSchema;
 
@@ -213,122 +252,7 @@ namespace LinqToDB.Linq.Builder
 						parameters.Add(p);
 			});
 
-			var aliases = CollectAliases(masterQuery);
-
-			detailsQuery = detailsQuery.Transform(e =>
-			{
-				switch (e.NodeType)
-				{
-					case ExpressionType.MemberAccess:
-						{
-							var root = e.GetRootObject(builder.MappingSchema);
-
-							if (root != null &&
-							    root.NodeType == ExpressionType.Parameter &&
-							    !parameters.Contains((ParameterExpression)root))
-							{
-								if (aliases.TryGetValue(e, out var member) /*&& member.DeclaringType == masterObjType*/)
-								{
-									return Expression.MakeMemberAccess(masterObjParam, member);
-								}
-								else
-								{
-									var res = context.IsExpression(e, 0, RequestFor.Association);
-									if (res.Result)
-									{
-										var table = (TableBuilder.AssociatedTableContext)res.Context;
-
-										if (table.IsList)
-										{
-											var me = (MemberExpression)e;
-											Expression expr;
-
-											var parentType = me.Expression.Type;
-											var childType = table.ObjectType;
-
-											var queryMethod = table.Association.GetQueryMethod(parentType, childType);
-											if (queryMethod != null)
-											{
-												expr = queryMethod.GetBody(me.Expression, ExpressionBuilder.DataContextParam);
-											}
-											else
-											{
-												var ttype = typeof(Table<>).MakeGenericType(childType);
-												var method = e == detailsQuery
-													? MemberHelper.MethodOf<IEnumerable<bool>>(n => n.Where(a => a))
-														.GetGenericMethodDefinition().MakeGenericMethod(childType)
-													: _whereMethodInfo.MakeGenericMethod(e.Type, childType, ttype);
-
-												var op = Expression.Parameter(childType, "t");
-
-												parameters.Add(op);
-
-												Expression ex = null;
-
-												for (var i = 0; i < table.Association.ThisKey.Length; i++)
-												{
-													var field1 =
-														table.ParentAssociation.SqlTable.Fields[
-															table.Association.ThisKey[i]];
-													var field2 = table.SqlTable.Fields[table.Association.OtherKey[i]];
-
-													var ma1 = Expression.MakeMemberAccess(op,
-														field2.ColumnDescriptor.MemberInfo);
-
-													var ma2 = Expression.MakeMemberAccess(me.Expression,
-														field1.ColumnDescriptor.MemberInfo);
-
-													if (aliases.TryGetValue(ma2, out var member2) /*&& member.DeclaringType == masterObjType*/)
-													{
-														ma2 = Expression.MakeMemberAccess(masterObjParam, member2);
-													}
-
-//													var readerExpr = builder.BuildSql(context, ma2, null);
-
-													var ee = ExpressionBuilder.Equal(mappingSchema, ma1, ma2);
-
-													ex = ex == null ? ee : Expression.AndAlso(ex, ee);
-												}
-
-												var predicate = table.Association.GetPredicate(parentType, childType);
-												if (predicate != null)
-												{
-													var body = predicate.GetBody(me.Expression, op);
-													ex = ex == null ? body : Expression.AndAlso(ex, body);
-												}
-
-												if (ex == null)
-													throw new LinqToDBException(
-														$"Invalid association configuration for {table.Association.MemberInfo.DeclaringType}.{table.Association.MemberInfo.Name}");
-
-												var getTableMethod = _getTableMethodInfo.MakeGenericMethod(childType);
-												var tbl = Expression.Call(getTableMethod, ExpressionBuilder.DataContextParam);
-
-												expr = Expression.Call(null, method, tbl,
-													Expression.Lambda(ex, op));
-											}
-
-//											if (e == detailsQuery)
-//											{
-//												expr = Expression.Call(
-//													MemberHelper.MethodOf<IEnumerable<int>>(n => n.ToList())
-//														.GetGenericMethodDefinition().MakeGenericMethod(childType),
-//													expr);
-//											}
-
-											return expr;
-										}
-									}
-								}
-							}
-
-							break;
-						}
-				}
-
-				return e;
-			});
-
+			detailsQuery = detailsQuery.Transform(e => e == mainParamExpression ? masterObjParam : e);
 
 			var ienumerableType = typeof(IEnumerable<>).MakeGenericType(detailObjType);
 			if (detailsQuery.Type != ienumerableType)
