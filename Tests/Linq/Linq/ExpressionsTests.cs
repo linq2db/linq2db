@@ -476,6 +476,36 @@ namespace Tests.Linq
 					db.Parent.SelectMany(p => p.GrandChildrenByID(22)));
 			}
 		}
+
+		[ExpressionMethod(nameof(WrapExpression))]
+		public static T Wrap<T>(T value)
+		{
+			return value;
+		}
+
+		private static Expression<Func<T, T>> WrapExpression<T>()
+		{
+			return value => value;
+		}
+
+		[ActiveIssue(Details = "InvalidOperationException : Code supposed to be unreachable")]
+		[Test]
+		public void ExpressionCompilerCrash([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => Wrap<IList<int>>(new int[] { 1, 2, 3 }).Contains(p.ID)).ToList();
+			}
+		}
+
+		[Test]
+		public void ExpressionCompilerNoCrash([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => Wrap<int[]>(new int[] { 1, 2, 3 }).Contains(p.ID)).ToList();
+			}
+		}
 	}
 
 	static class ExpressionTestExtensions
