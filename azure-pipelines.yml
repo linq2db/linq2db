@@ -22,6 +22,17 @@ stages:
     displayName: 'Build (Windows)'
 
     steps:
+
+    - task: SqlDacpacDeploymentOnMachineGroup@0
+      inputs:
+        TaskType: 'sqlInline'
+        InlineSql: 'CREATE DATABASE [TestDatanet45]'
+        ServerName: 'localhost'
+        DatabaseName: 'master'
+        AuthScheme: 'sqlServerAuthentication'
+        SqlUsername: 'sa'
+        SqlPassword: 'Password12!'
+
     - task: NuGetToolInstaller@1
       inputs:
         versionSpec: '4.4.1'
