@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -20,9 +21,6 @@ namespace LinqToDB.Linq.Builder
 			MemberHelper.MethodOf(() => Tuple.Create(0, 0, 0, 0, 0, 0, 0)).GetGenericMethodDefinition(),
 			MemberHelper.MethodOf(() => Tuple.Create(0, 0, 0, 0, 0, 0, 0, 0)).GetGenericMethodDefinition(),
 		};
-
-		private static readonly MethodInfo _queryWithDetailsInternalMethodInfo = MemberHelper.MethodOf(() =>
-			QueryWithDetailsInternalProbe<int, int, int>((IQueryable<int>)null, null, null, null)).GetGenericMethodDefinition();
 
 		private static readonly MethodInfo EnlistEagerLoadingFunctionalityMethodInfo = MemberHelper.MethodOf(() =>
 			EnlistEagerLoadingFunctionality<int, int, int>(null, null, null, null, null)).GetGenericMethodDefinition();
@@ -121,6 +119,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (!typeof(IEnumerable<>).IsSameOrParentOf(type))
 				return type;
+			if (type.IsArray)
+				return type.GetElementType();
 			return type.GetGenericArguments()[0];
 		}
 
@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		static Tuple<Expression, Expression> GenerateKeyExpressions(IBuildContext context, ParameterExpression mainObj)
+		static Tuple<Expression, Expression> GenerateKeyExpressions(IBuildContext context, ParameterExpression mainObj, List<MemberExpression> foundMembers)
 		{
 			var sql = context.ConvertToIndex(null, 0, ConvertFlags.Key);
 
@@ -150,15 +150,59 @@ namespace LinqToDB.Linq.Builder
 			var memberOfDetail = new List<Expression>();
 			foreach (var s in sql)
 			{
+				Expression forDetail = null;
+				if (s.MemberChain.Count == 1 && s.MemberChain[0].DeclaringType == mainObj.Type)
+				{
+					forDetail = Expression.MakeMemberAccess(mainObj, s.MemberChain[0]);
+				}
+
+				if (forDetail == null)
+					continue;
+
 				var forProjection = context.Builder.BuildSql(s.Sql.SystemType, s.Index);
 				memberOfProjection.Add(forProjection);
 
 				//TODO: more correct memberchain processing
 
-				Expression forDetail = Expression.MakeMemberAccess(mainObj, s.MemberChain[0]);
 				if (forDetail.Type != forProjection.Type)
 					forDetail = Expression.Convert(forDetail, forProjection.Type);
 				memberOfDetail.Add(forDetail);
+			}
+
+			if (memberOfDetail.Count == 0)
+			{
+				// try to find fields
+				foreach (var member in foundMembers)
+				{
+					var ctx = context.Builder.GetContext(context, member);
+					if (ctx == null)
+						continue;
+
+					var fieldsSql = ctx.ConvertToIndex(member, 0, ConvertFlags.Field);
+					if (fieldsSql.Length == 1)
+					{
+						var s = fieldsSql[0];
+						if (s.Sql is SqlField field)
+						{
+							var forDetail = (Expression)Expression.MakeMemberAccess(mainObj, member.Member);
+							var forProjection = ctx.Builder.BuildSql(s.Sql.SystemType, s.Index);
+
+							if (forDetail.Type != forProjection.Type)
+								forDetail = Expression.Convert(forDetail, forProjection.Type);
+							memberOfDetail.Add(forDetail);
+
+							memberOfProjection.Add(forProjection);
+						}
+					}
+				}
+			}
+
+			if (memberOfDetail.Count == 0)
+			{
+				// add fake one
+				var zero = Expression.Constant(0);
+				memberOfDetail.Add(zero);
+				memberOfProjection.Add(zero);
 			}
 
 			var exprProjection = GenerateKeyExpression(memberOfProjection.ToArray(), 0);
@@ -218,29 +262,14 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public static Expression GenerateDetailsExpression(IBuildContext context, Expression masterQuery, Expression detailsQuery)
+		public static Expression GenerateDetailsExpression(IBuildContext context, Expression masterQuery,
+			Expression detailsQuery, ParameterExpression masterObjParam, List<MemberExpression> foundMembers)
 		{
-			ParameterExpression mainParamExpression = null;
-			if (masterQuery.NodeType == ExpressionType.Call && context is SelectContext selectContext)
-			{
-				// mc
-				var mc = (MethodCallExpression)masterQuery;
-				if (mc.IsQueryable("Select"))
-				{
-					// remove projection
-					masterQuery = mc.Arguments[0];
-					mainParamExpression = ((LambdaExpression)mc.Arguments[1].Unwrap()).Parameters[0];
-					context = selectContext.Sequence[0];
-				}
-			}
-
 			var builder = context.Builder;
-			var mappingSchema = builder.MappingSchema;
 
 			var masterObjType  = GetEnumerableElementType(masterQuery.Type);
 			var detailObjType  = GetEnumerableElementType(detailsQuery.Type);
-			var masterObjParam = Expression.Parameter(masterObjType, "master");
-			var keyExpressions = GenerateKeyExpressions(context, masterObjParam);
+			var keyExpressions = GenerateKeyExpressions(context, masterObjParam, foundMembers);
 
 			var detailsKeyExpression = Expression.Lambda(keyExpressions.Item2, masterObjParam);
 
@@ -251,8 +280,6 @@ namespace LinqToDB.Linq.Builder
 					foreach (var p in ((LambdaExpression)e).Parameters)
 						parameters.Add(p);
 			});
-
-			detailsQuery = detailsQuery.Transform(e => e == mainParamExpression ? masterObjParam : e);
 
 			var ienumerableType = typeof(IEnumerable<>).MakeGenericType(detailObjType);
 			if (detailsQuery.Type != ienumerableType)
@@ -327,63 +354,84 @@ namespace LinqToDB.Linq.Builder
 			return idx;
 		}
 
-		public static List<T> QueryWithDetailsProbe<T, TD>(
-			IDataContext dc,
-			IQueryable<T> mainQuery,
-			Expression<Func<T, IEnumerable<TD>>> detailQueryExpression,
-			Action<T, List<TD>> detailSetter)
+		public static bool ValidateEagerLoading(IBuildContext context, ParameterExpression masterParam, ref Expression expression)
 		{
-			var ed = dc.MappingSchema.GetEntityDescriptor(typeof(T));
-			var keys = ed.Columns.Where(c => c.IsPrimaryKey).ToArray();
-			if (keys.Length == 0) 
-				keys = ed.Columns.Where(c => dc.MappingSchema.IsScalarType(c.MemberType)).ToArray();
+			if (context is JoinBuilder.GroupJoinContext joinContext)
+				return false;
 
-			if (keys.Length == 0)
-				throw new LinqToDBException($"Can not retrieve key fro type '{typeof(T).Name}'");
+			var elementType = GetEnumerableElementType(expression.Type);
 
-			var objParam = Expression.Parameter(typeof(T), "obj");
-			var properties = keys.Select(k => (Expression)Expression.MakeMemberAccess(objParam, k.MemberInfo))
-				.ToArray();
-			var getKeyExpr = Expression.Lambda(GenerateKeyExpression(properties, 0), objParam);
+			var helperType = typeof(EagerLoadingHelper<,>).MakeGenericType(masterParam.Type, elementType);
+			var helper = (EagerLoadingHelper)Activator.CreateInstance(helperType);
 
-			var method = _queryWithDetailsInternalMethodInfo.MakeGenericMethod(new[] { typeof(T), typeof(TD), getKeyExpr.Body.Type });
+			if (!helper.Validate(context, masterParam, ref expression))
+				return false;
 
-			var result = method.Invoke(null, new object[] { mainQuery, detailQueryExpression, getKeyExpr, detailSetter });
-			return (List<T>)result;
+			return true;
 		}
 
-		private static List<T> QueryWithDetailsInternalProbe<T, TD, TKey>(
-			IQueryable<T> mainQuery, 
-			Expression<Func<T, IEnumerable<TD>>> detailQueryExpression,
-			Expression<Func<T, TKey>> getKeyExpression,
-			Action<T, List<TD>> detailSetter)
+		
+		abstract class EagerLoadingHelper
 		{
-			var detailQuery = mainQuery.SelectMany(detailQueryExpression, (m, d) => new { MasterKey = getKeyExpression.Compile().Invoke(m), Detail = d});
-			var detailsWithKey = detailQuery.ToList();
-			var detailDictionary = new Dictionary<TKey, List<TD>>();
+			public abstract bool Validate(IBuildContext context, ParameterExpression masterParam,
+				ref Expression expression);
+		}
 
-			foreach (var d in detailsWithKey)
+		class EagerLoadingHelper<TMaster, TDetail> : EagerLoadingHelper
+		{
+			private bool IsSelectValid(SelectQuery select)
 			{
-				if (!detailDictionary.TryGetValue(d.MasterKey, out var list))
+				var isInvalid = select.Select.SkipValue != null ||
+				                select.Select.TakeValue != null;
+
+				if (!isInvalid)
 				{
-					list = new List<TD>();
-					detailDictionary.Add(d.MasterKey, list);
+					foreach (var t in select.Select.From.Tables)
+					{
+						if (t.Source is SelectQuery sq)
+							if (!IsSelectValid(sq))
+							{
+								isInvalid = true;
+								break;
+							}
+					}
 				}
-				list.Add(d.Detail);
+
+				return !isInvalid;
 			}
 
-			var mainEntities = mainQuery.ToList();
-			var getKeyFunc = getKeyExpression.Compile();
-
-			foreach (var entity in mainEntities)
+			public override bool Validate(IBuildContext context, ParameterExpression masterParam,
+				ref Expression expression)
 			{
-				var key = getKeyFunc(entity);
-				if (!detailDictionary.TryGetValue(key, out var ds))
-					ds = new List<TD>();
-				detailSetter(entity, ds);
-			}
+				var detailsQuery = expression;
+				var detailObjType = GetEnumerableElementType(detailsQuery.Type);
 
-			return mainEntities;
+				var masterTable = new Table<TMaster>(context.Builder.DataContext);
+
+				var ienumerableType = typeof(IEnumerable<>).MakeGenericType(detailObjType);
+
+				if (detailsQuery.Type != ienumerableType)
+					detailsQuery = Expression.Convert(detailsQuery, ienumerableType);
+
+				var localQueryable = masterTable.SelectMany(Expression.Lambda<Func<TMaster, IEnumerable<TDetail>>>(detailsQuery, masterParam), 
+					(m, d) => d);
+
+				var queryableExpression = localQueryable.Expression;
+				var localQuery = new Query<TDetail>(context.Builder.DataContext, queryableExpression);
+				var localBuilder = new ExpressionBuilder(localQuery, context.Builder.DataContext, queryableExpression, null);
+
+				var buildInfo = new BuildInfo(context, queryableExpression, new SelectQuery());
+				var localSequence = localBuilder.BuildSequence(buildInfo);
+
+				var sqlOptimizer = context.Builder.DataContext.GetSqlOptimizer();
+				var statement = sqlOptimizer.Finalize(localSequence.GetResultStatement());
+
+				if (!(statement is SqlSelectStatement selectStatement))
+					return false;
+
+				var isValid = IsSelectValid(selectStatement.SelectQuery);
+				return isValid;
+			}
 		}
 	}
 }

@@ -194,7 +194,7 @@ namespace LinqToDB.Linq.Builder
 									var table = (TableBuilder.AssociatedTableContext)res.Context;
 									if (table.IsList)
 									{
-										var mexpr = GetMultipleQueryExpression(context, MappingSchema, ma, new HashSet<ParameterExpression>());
+										var mexpr = GetMultipleQueryExpression(context, MappingSchema, ma, new HashSet<ParameterExpression>(), out _);
 										return new TransformInfo(BuildExpression(context, mexpr, enforceServerSide));
 									}
 								}
@@ -269,6 +269,11 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (expr.Type.IsConstantable())
 							break;
+
+						if ((_buildMultipleQueryExpressions == null || !_buildMultipleQueryExpressions.Contains(expr)) && IsSequence(new BuildInfo(context, expr, new SelectQuery())))
+						{
+							return new TransformInfo(BuildMultipleQuery(context, expr, enforceServerSide));
+						}
 
 						if (_expressionAccessors.TryGetValue(expr, out var accessor))
 							return new TransformInfo(Expression.Convert(accessor, expr.Type));
@@ -761,22 +766,54 @@ namespace LinqToDB.Linq.Builder
 			MemberHelper.MethodOf<IQueryable<bool>>(n => n.Where(a => a)).GetGenericMethodDefinition();
 
 		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappingSchema,
-			Expression expression, HashSet<ParameterExpression> parameters)
+			Expression expression, HashSet<ParameterExpression> parameters, out bool isLazy)
 		{
-			var masterElementType = EagerLoading.GetEnumerableElementType(context.Builder.Expression.Type);
+			var masterQuery = context.Builder.Expression;
+			ParameterExpression mainParamExpression = null;
+			if (masterQuery.NodeType == ExpressionType.Call)
+			{
+				var mc = (MethodCallExpression)masterQuery;
+				if (mc.IsQueryable("Select") && context is SelectContext selectContext)
+				{
+					// remove projection
+					masterQuery = mc.Arguments[0];
+					mainParamExpression = ((LambdaExpression)mc.Arguments[1].Unwrap()).Parameters[0];
+					context = selectContext.Sequence[0];
+				}
+			}
+
+			var masterElementType = EagerLoading.GetEnumerableElementType(masterQuery.Type);
 			var detailElementType = EagerLoading.GetEnumerableElementType(expression.Type);
 
-			var queryType = typeof(Query<>).MakeGenericType(detailElementType);
-			var method = queryType.GetMethod("GetQuery", BindingFlags.Static | BindingFlags.Public);
-//			var detailQuery = method.Invoke(null, new object[] { context.Builder.DataContext, expression });
+			var masterObjParam = Expression.Parameter(masterElementType, "master");
+			var detailsQuery = expression.Transform(e => e == mainParamExpression ? masterObjParam : e);
 
-			var mainObjParam = Expression.Parameter(masterElementType, "master");
-			var valueExpression = EagerLoading.GenerateDetailsExpression(context, context.Builder.Expression, expression);
+			var foundMembers = new List<MemberExpression>();
+			expression.Visit(e =>
+			{
+				if (e.NodeType == ExpressionType.MemberAccess)
+				{
+					var ma = (MemberExpression)e;
+					var root = ma.GetRootObject(context.Builder.MappingSchema);
+					if (root == mainParamExpression)
+						foundMembers.Add(ma);
+				}
+			});
 
+			if (!EagerLoading.ValidateEagerLoading(context, masterObjParam, ref detailsQuery))
+			{
+				// TODO: temporary fallback to lazy implementation
+				isLazy = true;
+				return GetMultipleQueryExpressionLazy(context, mappingSchema, expression, parameters);
+			}
+
+			var valueExpression = EagerLoading.GenerateDetailsExpression(context, masterQuery, detailsQuery, masterObjParam, foundMembers);
+
+			isLazy = false;
 			return valueExpression;
 		}
 
-		static Expression GetMultipleQueryExpressionOld(IBuildContext context, MappingSchema mappingSchema, Expression expression, HashSet<ParameterExpression> parameters)
+		static Expression GetMultipleQueryExpressionLazy(IBuildContext context, MappingSchema mappingSchema, Expression expression, HashSet<ParameterExpression> parameters)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
 				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
@@ -891,9 +928,10 @@ namespace LinqToDB.Linq.Builder
 		{
 			var parameters = new HashSet<ParameterExpression>();
 
-			expression = GetMultipleQueryExpression(context, MappingSchema, expression, parameters);
+			expression = GetMultipleQueryExpression(context, MappingSchema, expression, parameters, out var isLazy);
 
-			return expression;
+			if (!isLazy)
+				return expression;
 
 			var paramex = Expression.Parameter(typeof(object[]), "ps");
 			var parms   = new List<Expression>();

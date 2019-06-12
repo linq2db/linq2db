@@ -84,7 +84,7 @@ namespace LinqToDB.Linq
 			return query;
 		}
 
-		public IQueryable<T> Create(object[] parameters)
+		public IQueryable<T> Create(object[] parameters, object[] preambles)
 		{
 			var db = (IDataContext)parameters[0];
 			return new Table<T>(db, _expression) { Info = GetInfo(db), Parameters = parameters };

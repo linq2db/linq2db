@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -19,6 +21,14 @@ namespace Tests.Playground
 
 			[Association(ThisKey = nameof(Id1), OtherKey = nameof(DetailClass.MasterId))]
 			public List<DetailClass> Details { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(DetailsQueryImpl))]
+			public List<DetailClass> DetailsQuery { get; set; }
+
+			static Expression<Func<MasterClass, IDataContext, IQueryable<DetailClass>>> DetailsQueryImpl()
+			{
+				return (m, dc) => dc.GetTable<DetailClass>().Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2);
+			}
 		}
 
 		[Table]
@@ -156,21 +166,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
-		{
-			var (masterRecords, detailRecords) = GenerateData();
-
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable<MasterClass>(masterRecords))
-			using (var detail = db.CreateLocalTable<DetailClass>(detailRecords))
-			{
-				var items = EagerLoadingProbes.QueryWithDetails(db, master, m => detail.Where(d => d.MasterId == m.Id1),
-					(m, d) => m.Details = d);
-			}
-		}
-
-		[Test]
-		public void TestWhenMasterHasNoId([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestWhenMasterConnectedViaExpression([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateDataManyId();
 
@@ -183,13 +179,82 @@ namespace Tests.Playground
 					into g
 					select new
 					{
-						Id = g.Key,
 						Count = g.Count(),
-						Details = new List<DetailClass>()
+						Details1 = detail.Where(d => d.MasterId == g.Key).ToArray(),
+						Details2 = detail.Where(d => d.MasterId > g.Key).ToArray()
 					};
 
-				var items = EagerLoadingProbes.QueryWithDetails(db, masterQuery, m => detail.Where(d => d.MasterId == m.Id),
-					(m, d) => m.Details.AddRange(d));
+				var result = masterQuery.ToArray();
+			}
+		}
+
+		[Test]
+		public void TestQueryableAssociation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var masterQuery = from m in master
+					where m.Id1 > 5
+					select new
+					{
+						m.Id1,
+						Details1 = m.DetailsQuery,
+						Details2 = m.DetailsQuery.Where(d => d.DetailId % 2 == 0).ToArray(),
+						Details3 = m.DetailsQuery.Where(d => d.DetailId % 2 == 0).Select(c => c.DetailValue).ToArray(),
+					};
+
+				var result = masterQuery.ToArray();
+			}
+		}
+
+		[Test]
+		public void TestRecursive([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var masterQuery = from m in master
+					where m.Id1 > 5
+					select new
+					{
+						m.Id1,
+						Details = detail.Select(d => new
+						{
+							Detail = d.DetailId,
+							Masters = master.Where(mm => mm.Id1 == d.MasterId).ToArray()
+						}).ToArray()
+					};
+
+				var result = masterQuery.ToArray();
+			}
+		}
+
+		[Test]
+		public void TestWhenMasterIsNotConnected([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateDataManyId();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var masterQuery = from m in master
+					group m by m.Id1
+					into g
+					select new
+					{
+						Count = g.Count(),
+						Details = detail.ToArray()
+					};
+
+				var result = masterQuery.ToArray();
 			}
 		}
 
