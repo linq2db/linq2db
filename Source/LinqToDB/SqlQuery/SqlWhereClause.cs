@@ -39,7 +39,7 @@ namespace LinqToDB.SqlQuery
 			SearchCondition = searchCondition;
 		}
 
-		public SqlSearchCondition SearchCondition { get; private set; }
+		public SqlSearchCondition SearchCondition { get; internal set; }
 
 		public bool IsEmpty => SearchCondition.Conditions.Count == 0;
 
