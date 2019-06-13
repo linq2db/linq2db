@@ -226,7 +226,7 @@ namespace Tests.Playground
 					select new
 					{
 						m.Id1,
-						Details = detail.Select(d => new
+						Details = detail.Where(d => d.MasterId == m.Id1).Select(d => new
 						{
 							Detail = d.DetailId,
 							Masters = master.Where(mm => mm.Id1 == d.MasterId).ToArray()
@@ -304,6 +304,47 @@ namespace Tests.Playground
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
+
+		[Test]
+		public void TestTupleQueryingFabric([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query1 = from m in master
+						select Tuple.Create(m, m.Id1);
+
+				var query2 = from q in query1
+					where q.Item2 > 5
+					select q.Item1;
+
+				var result = query2.ToArray();
+			}
+		}
+
+		[Test]
+		public void TestTupleQueryingNew([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query1 = from m in master
+					select new Tuple<MasterClass, int>(m, m.Id1);
+
+				var query2 = from q in query1
+					where q.Item2 > 5
+					select q.Item1;
+
+				var result = query2.ToArray();
+			}
+		}
+
 
 	}
 }

@@ -779,7 +779,9 @@ namespace LinqToDB.Linq.Builder
 		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappingSchema,
 			Expression expression, HashSet<ParameterExpression> parameters, out bool isLazy)
 		{
-			var masterQuery = context.Builder.Expression;
+			var masterQuery = context.Builder.Expression.Unwrap();
+			expression = expression.Unwrap();
+
 			ParameterExpression mainParamExpression = null;
 			if (masterQuery.NodeType == ExpressionType.Call)
 			{
