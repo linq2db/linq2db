@@ -8,7 +8,8 @@
 		[
 			"Access",
 			"SQLite.MS",
-			"Northwind.SQLite.MS"
+			"Northwind.SQLite.MS",
+			"PostgreSQL" 
 		],
 		"Connections"          :
 		{
