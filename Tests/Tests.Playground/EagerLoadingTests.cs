@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 namespace Tests.Playground
@@ -245,7 +246,7 @@ namespace Tests.Playground
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
 			{
-				var masterQuery = from m in master
+				var masterQuery = from m in master.Take(11)
 					group m by m.Id1
 					into g
 					select new
@@ -254,7 +255,53 @@ namespace Tests.Playground
 						Details = detail.ToArray()
 					};
 
+				var expectedQuery = from m in masterRecords.Take(11)
+					group m by m.Id1
+					into g
+					select new
+					{
+						Count = g.Count(),
+						Details = detailRecords.ToArray()
+					};
+
 				var result = masterQuery.ToArray();
+				var expected = expectedQuery.ToArray();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
+			}
+		}
+
+		[Test]
+		public void TestSelectMany([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.Take(20)
+					from d in detail
+					where d.MasterId == m.Id1
+					select new
+					{
+						Detail = d,
+						Masters = master.Where(mm => m.Id1 == d.MasterId).ToArray()
+					};
+
+				var expectedQuery = from m in masterRecords.Take(20)
+					from d in detailRecords
+					where d.MasterId == m.Id1
+					select new
+					{
+						Detail = d,
+						Masters = masterRecords.Where(mm => m.Id1 == d.MasterId).ToArray()
+					};
+
+				var result   = query.ToArray();
+				var expected = expectedQuery.ToArray();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
 

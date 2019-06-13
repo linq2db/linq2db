@@ -765,6 +765,17 @@ namespace LinqToDB.Linq.Builder
 		static readonly MethodInfo _queryableMethodInfo =
 			MemberHelper.MethodOf<IQueryable<bool>>(n => n.Where(a => a)).GetGenericMethodDefinition();
 
+		static readonly MethodInfo _selectManyMethodInfo =
+			MemberHelper.MethodOf<IQueryable<object>>(n => n.SelectMany(a => new object[0], (m, d) => d)).GetGenericMethodDefinition();
+
+		static int _masterParamcounter;
+
+		static string GetMasterParamName()
+		{
+			var idx = Interlocked.Increment(ref _masterParamcounter);
+			return "master_" + idx;
+		}
+
 		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappingSchema,
 			Expression expression, HashSet<ParameterExpression> parameters, out bool isLazy)
 		{
@@ -773,20 +784,33 @@ namespace LinqToDB.Linq.Builder
 			if (masterQuery.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)masterQuery;
-				if (mc.IsQueryable("Select") && context is SelectContext selectContext)
+				if (context is SelectContext selectContext)
 				{
-					// remove projection
-					masterQuery = mc.Arguments[0];
-					mainParamExpression = ((LambdaExpression)mc.Arguments[1].Unwrap()).Parameters[0];
-					context = selectContext.Sequence[0];
+					if (mc.IsQueryable("Select"))
+					{
+						// remove projection
+						masterQuery = mc.Arguments[0];
+						mainParamExpression = ((LambdaExpression)mc.Arguments[1].Unwrap()).Parameters[0];
+						context = selectContext.Sequence[0];
+					}
+					else if (mc.IsQueryable("SelectMany"))
+					{
+						var selectManyMethod = _selectManyMethodInfo.MakeGenericMethod(mc.Method.GetGenericArguments()[0],
+							mc.Method.GetGenericArguments()[1], mc.Method.GetGenericArguments()[1]);
+						mainParamExpression = ((LambdaExpression)mc.Arguments[1].Unwrap()).Parameters[0];
+						var detailParam = ((LambdaExpression)mc.Arguments[2].Unwrap()).Parameters[1];
+						masterQuery = Expression.Call(selectManyMethod, mc.Arguments[0].Unwrap(),
+							mc.Arguments[1].Unwrap(), Expression.Lambda(detailParam, mainParamExpression, detailParam));
+					}
 				}
 			}
 
 			var masterElementType = EagerLoading.GetEnumerableElementType(masterQuery.Type);
 			var detailElementType = EagerLoading.GetEnumerableElementType(expression.Type);
 
-			var masterObjParam = Expression.Parameter(masterElementType, "master");
-			var detailsQuery = expression.Transform(e => e == mainParamExpression ? masterObjParam : e);
+			var masterObjParam = Expression.Parameter(masterElementType, GetMasterParamName());
+			var detailsQuery   = expression.Transform(e => e == mainParamExpression ? masterObjParam : e);
+			var hasConnection  = !ReferenceEquals(detailsQuery, expression);
 
 			var foundMembers = new List<MemberExpression>();
 			expression.Visit(e =>
@@ -800,14 +824,14 @@ namespace LinqToDB.Linq.Builder
 				}
 			});
 
-			if (!EagerLoading.ValidateEagerLoading(context, masterObjParam, ref detailsQuery))
+			if (hasConnection && !EagerLoading.ValidateEagerLoading(context, masterObjParam, ref detailsQuery))
 			{
 				// TODO: temporary fallback to lazy implementation
 				isLazy = true;
 				return GetMultipleQueryExpressionLazy(context, mappingSchema, expression, parameters);
 			}
 
-			var valueExpression = EagerLoading.GenerateDetailsExpression(context, masterQuery, detailsQuery, masterObjParam, foundMembers);
+			var valueExpression = EagerLoading.GenerateDetailsExpression(context, masterQuery, detailsQuery, masterObjParam, foundMembers, hasConnection);
 
 			isLazy = false;
 			return valueExpression;
