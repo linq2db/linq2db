@@ -318,7 +318,7 @@ namespace Tests.Playground
 						select Tuple.Create(m, m.Id1);
 
 				var query2 = from q in query1
-					where q.Item2 > 5
+					where q.Item2 > 5 && q.Item1.Id2 > 5
 					select q.Item1;
 
 				var result = query2.ToArray();
@@ -338,7 +338,7 @@ namespace Tests.Playground
 					select new Tuple<MasterClass, int>(m, m.Id1);
 
 				var query2 = from q in query1
-					where q.Item2 > 5
+					where q.Item2 > 5 && q.Item1.Id2 > 5
 					select q.Item1;
 
 				var result = query2.ToArray();

@@ -3120,6 +3120,9 @@ namespace LinqToDB.Linq.Builder
 					if (foundMember == null)
 						continue;
 
+					if (members.ContainsKey(foundMember.MemberInfo))
+						continue;
+
 					var converted = arguments[i].Transform(e => RemoveNullPropagation(e));
 
 					if (!foundMember.MemberInfo.GetMemberType().IsAssignableFrom(converted.Type))
