@@ -1940,7 +1940,6 @@ namespace Tests.Linq
 			throw new InvalidOperationException();
 		}
 
-		[ActiveIssue(Details = "LinqToDB.SqlQuery.SqlException : Table not found for 't34.t35.ParentID")]
 		[Test]
 		public void GroupByExpression2([DataSources] string context)
 		{
