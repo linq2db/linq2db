@@ -11,9 +11,9 @@ namespace LinqToDB.SqlQuery
 		readonly Dictionary<IQueryElement,IQueryElement> _visitedElements = new Dictionary<IQueryElement, IQueryElement>();
 		public   Dictionary<IQueryElement,IQueryElement>  VisitedElements => _visitedElements;
 
-		bool                               _all;
-		Func<IQueryElement,bool>           _action1;
-		Action<IQueryElement>              _action2;
+		bool                     _all;
+		Func<IQueryElement,bool> _action1;
+		Action<IQueryElement>    _action2;
 		Func<IQueryElement, bool>          _find;
 		Func<IQueryElement, IQueryElement> _convert;
 
@@ -1289,7 +1289,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Convert
 
-		public T Convert<T>(T element, Func<IQueryElement, IQueryElement> action)
+		public T Convert<T>(T element, Func<IQueryElement,IQueryElement> action)
 			where T : class, IQueryElement
 		{
 			_visitedElements.Clear();
@@ -1480,8 +1480,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.JoinedTable:
 					{
 						var join  = (SqlJoinedTable)element;
-						var table = (SqlTableSource)ConvertInternal(join.Table    );
-						var cond  =                 Convert        (join.Condition);
+						var table = (SqlTableSource)ConvertInternal    (join.Table    );
+						var cond  = (SqlSearchCondition)ConvertInternal(join.Condition);
 
 						if (table != null && !ReferenceEquals(table, join.Table) ||
 							cond  != null && !ReferenceEquals(cond,  join.Condition))
@@ -1867,7 +1867,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.WhereClause:
 					{
 						var wc   = (SqlWhereClause)element;
-						var cond = Convert(wc.SearchCondition);
+						var cond = (SqlSearchCondition)ConvertInternal(wc.SearchCondition);
 
 						_visitedElements.TryGetValue(wc.SelectQuery, out parent);
 
@@ -1964,6 +1964,7 @@ namespace LinqToDB.SqlQuery
 
 								if (ret != null && !ReferenceEquals(e, ret))
 								{
+									if (ret.ElementType == QueryElementType.Column) 
 									_visitedElements.Add(e, ret);
 									return true;
 								}
@@ -2260,26 +2261,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return list2;
-		}
-
-		SqlSearchCondition Convert(SqlSearchCondition searchCondition)
-		{
-			if (searchCondition == null || searchCondition.Conditions.Count == 0)
-				return null;
-
-			var condExpr = ConvertInternal(searchCondition);
-			if (condExpr == null)
-				return null;
-
-			if (condExpr is SqlSearchCondition newCondition)
-				return newCondition;
-
-			if (condExpr is SqlValue value)
-			{
-				return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(value)));
-			}
-
-			return null;
 		}
 
 		List<T> Convert<T>(IList<T> list)

@@ -177,7 +177,7 @@ namespace LinqToDB.SqlProvider
 
 					// Check if subquery where clause does not have ORs.
 					//
-					SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+					subQuery.Where.SearchCondition = SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 					var allAnd = true;
 
@@ -355,7 +355,7 @@ namespace LinqToDB.SqlProvider
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
-						SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+						subQuery.Where.SearchCondition = SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 						var isCount      = false;
 						var isAggregated = false;
@@ -754,14 +754,15 @@ namespace LinqToDB.SqlProvider
 
 						case "CASE"     :
 							{
-								var parms = func.Parameters.Select(p => ConvertExpression(p)).ToArray();
+								var parms = func.Parameters;
 								var len   = parms.Length;
 
 								for (var i = 0; i < parms.Length - 1; i += 2)
 								{
-									if (parms[i] is SqlValue value)
+									var boolValue = SelectQueryOptimizer.GetBoolValue(parms[i]);
+									if (boolValue != null)
 									{
-										if ((bool)value.Value == false)
+										if (boolValue == false)
 										{
 											var newParms = new ISqlExpression[parms.Length - 2];
 
@@ -817,7 +818,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SearchCondition :
 				{
-					expression = SelectQueryOptimizer.ReduceSearchCondition((SqlSearchCondition)expression);
+					expression = SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression);
 					break;
 				}
 
@@ -918,8 +919,8 @@ namespace LinqToDB.SqlProvider
 										if (expr1 is SqlParameter || expr2 is SqlParameter)
 											selectQuery.IsParameterDependent = true;
 										else
-											if (expr1 is SqlColumn || expr1 is SqlField)
-											if (expr2 is SqlColumn || expr2 is SqlField)
+											if (expr1 is SqlColumn || expr1 is SqlField || expr1 is SqlExpression)
+											if (expr2 is SqlColumn || expr2 is SqlField || expr2 is SqlExpression)
 												predicate = ConvertEqualPredicate(ex);
 									}
 
@@ -970,6 +971,7 @@ namespace LinqToDB.SqlProvider
 			if (expr.Operator == SqlPredicate.Operator.Equal)
 				cond
 					.Expr(expr1).IsNull.    And .Expr(expr2).IsNull. Or
+					// TODO: why it is commented? without it expression will return UNKNOWN instead of FALSE
 					/*.Expr(expr1).IsNotNull. And .Expr(expr2).IsNotNull. And */.Expr(expr1).Equal.Expr(expr2);
 			else
 				cond
