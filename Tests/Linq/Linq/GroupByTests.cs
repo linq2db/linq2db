@@ -1933,5 +1933,27 @@ namespace Tests.Linq
 				});
 			}
 		}
+
+		[Sql.Expression("{0}", ServerSideOnly = true)]
+		private static int Noop(int value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		[Test]
+		public void GroupByExpression2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Child
+					.GroupBy(_ => Noop(_.ChildID))
+					.Select(_ => new
+					{
+						x = _.Key,
+						y = _.Average(r => r.ParentID)
+					})
+					.ToList();
+			}
+		}
 	}
 }
