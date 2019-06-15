@@ -1697,7 +1697,7 @@ namespace LinqToDB.Expressions
 		public static Expression GetMemberGetter(MemberInfo mi, Expression obj)
 		{
 #if !NETSTANDARD1_6
-			if (mi is DynamicColumnInfo dci)
+			if (mi is DynamicColumnInfo)
 			{
 				return Expression.Call(
 					_sqlProperty.MakeGenericMethod(mi.GetMemberType()),

@@ -62,7 +62,7 @@ namespace LinqToDB.ServiceModel
 					else
 					{
 						var type = Type.GetType(info.MappingSchemaType);
-						ms = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type));
+						ms       = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type));
 					}
 
 					_configurationInfo = new ConfigurationInfo
@@ -89,10 +89,20 @@ namespace LinqToDB.ServiceModel
 			_contextID ?? (_contextID = GetConfigurationInfo().MappingSchema.ConfigurationList[0]);
 
 		private MappingSchema _mappingSchema;
-		public  MappingSchema  MappingSchema
+		public MappingSchema MappingSchema
 		{
 			get => _mappingSchema ?? (_mappingSchema = GetConfigurationInfo().MappingSchema);
-			set => _mappingSchema = value;
+			set
+			{
+				_mappingSchema = value;
+				_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema);
+			}
+		}
+
+		private  MappingSchema _serializationMappingSchema;
+		internal MappingSchema SerializationMappingSchema
+		{
+			get => _serializationMappingSchema ?? (_serializationMappingSchema = new SerializationMappingSchema(MappingSchema));
 		}
 
 		public  bool InlineParameters { get; set; }
@@ -276,7 +286,7 @@ namespace LinqToDB.ServiceModel
 
 				try
 				{
-					var data = LinqServiceSerializer.Serialize(_queryBatch.ToArray());
+					var data = LinqServiceSerializer.Serialize(SerializationMappingSchema, _queryBatch.ToArray());
 					client.ExecuteBatch(Configuration, data);
 				}
 				finally
@@ -300,7 +310,7 @@ namespace LinqToDB.ServiceModel
 
 				try
 				{
-					var data = LinqServiceSerializer.Serialize(_queryBatch.ToArray());
+					var data = LinqServiceSerializer.Serialize(SerializationMappingSchema, _queryBatch.ToArray());
 					await client.ExecuteBatchAsync(Configuration, data);
 				}
 				finally

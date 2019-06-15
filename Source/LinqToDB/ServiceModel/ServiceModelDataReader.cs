@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 
 namespace LinqToDB.ServiceModel
 {
-	using Common;
-	using Extensions;
 	using Mapping;
 
 	class ServiceModelDataReader : IDataReader
@@ -14,7 +11,7 @@ namespace LinqToDB.ServiceModel
 		public ServiceModelDataReader(MappingSchema mappingSchema, LinqServiceResult result)
 		{
 			_mappingSchema = mappingSchema;
-			_result        = result;
+			_result = result;
 
 			for (var i = 0; i < result.FieldNames.Length; i++)
 				_ordinal.Add(result.FieldNames[i], i);
@@ -27,127 +24,27 @@ namespace LinqToDB.ServiceModel
 		string[] _data;
 		int      _current = -1;
 
-		string GetFieldValue(int i)
-		{
-			var value = _data[i];
+		#region IDataRecord
 
-			if (_result.VaryingTypes.Length > 0 && !string.IsNullOrEmpty(value) && value[0] == '\0')
-				return value.Substring(2);
+		object IDataRecord.this[int i]       => GetValue(i);
 
-			return value;
-		}
+		object IDataRecord.this[string name] => GetValue(GetOrdinal(name));
 
-		#region IDataReader Members
+		int IDataRecord.FieldCount           => _result.FieldCount;
 
-		public void Close()
-		{
-		}
-
-		public int Depth
-		{
-			get { return 0; }
-		}
-
-		public DataTable GetSchemaTable()
+		long IDataRecord.GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
 		{
 			throw new NotImplementedException();
 		}
 
-		public bool IsClosed
-		{
-			get { throw new NotImplementedException(); }
-		}
-
-		public bool NextResult()
+		long IDataRecord.GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
 		{
 			throw new NotImplementedException();
 		}
 
-		public bool Read()
-		{
-			if (++_current < _result.RowCount)
-			{
-				_data = _result.Data[_current];
+		IDataReader IDataRecord.GetData(int i) => throw new NotImplementedException();
 
-				return true;
-			}
-
-			_data = null;
-
-			return false;
-		}
-
-		public int RecordsAffected
-		{
-			get { throw new NotImplementedException(); }
-		}
-
-		#endregion
-
-		#region IDisposable Members
-
-		public void Dispose()
-		{
-		}
-
-		#endregion
-
-		#region IDataRecord Members
-
-		public int FieldCount
-		{
-			get { return _result.FieldCount; }
-		}
-
-		public bool GetBoolean(int i)
-		{
-			return bool.Parse(GetFieldValue(i));
-		}
-
-		public byte GetByte(int i)
-		{
-			return byte.Parse(GetFieldValue(i));
-		}
-
-		public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
-		{
-			throw new NotImplementedException();
-		}
-
-		public char GetChar(int i)
-		{
-			return GetFieldValue(i)[0];
-		}
-
-		public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
-		{
-			throw new NotImplementedException();
-		}
-
-		public IDataReader GetData(int i)
-		{
-			throw new NotImplementedException();
-		}
-
-		public string GetDataTypeName(int i)
-		{
-			return GetFieldType(i).FullName;
-		}
-
-		public DateTime GetDateTime(int i)
-		{
-			return DateTime.FromBinary(long.Parse(GetFieldValue(i), CultureInfo.InvariantCulture));
-		}
-
-		public decimal GetDecimal(int i)
-		{
-			return decimal.Parse(GetFieldValue(i), CultureInfo.InvariantCulture);
-		}
-
-		public double GetDouble(int i)
-		{
-			return double.Parse(GetFieldValue(i), CultureInfo.InvariantCulture);
-		}
+		string IDataRecord.GetDataTypeName(int i) => GetFieldType(i).FullName;
 
 		public Type GetFieldType(int i)
 		{
@@ -162,98 +59,82 @@ namespace LinqToDB.ServiceModel
 			return _result.FieldTypes[i];
 		}
 
-		public float GetFloat(int i)
-		{
-			return float.Parse(GetFieldValue(i), CultureInfo.InvariantCulture);
-		}
+		bool     IDataRecord.GetBoolean (int i) => (bool)    GetValue(i);
+		byte     IDataRecord.GetByte    (int i) => (byte)    GetValue(i);
+		char     IDataRecord.GetChar    (int i) => (char)    GetValue(i);
+		DateTime IDataRecord.GetDateTime(int i) => (DateTime)GetValue(i);
+		decimal  IDataRecord.GetDecimal (int i) => (decimal) GetValue(i);
+		double   IDataRecord.GetDouble  (int i) => (double)  GetValue(i);
+		float    IDataRecord.GetFloat   (int i) => (float)   GetValue(i);
+		Guid     IDataRecord.GetGuid    (int i) => (Guid)    GetValue(i);
+		short    IDataRecord.GetInt16   (int i) => (short)   GetValue(i);
+		int      IDataRecord.GetInt32   (int i) => (int)     GetValue(i);
+		long     IDataRecord.GetInt64   (int i) => (long)    GetValue(i);
 
-		public Guid GetGuid(int i)
-		{
-			return new Guid(GetFieldValue(i));
-		}
+		string IDataRecord.GetName(int i) => _result.FieldNames[i];
 
-		public short GetInt16(int i)
-		{
-			return short.Parse(GetFieldValue(i));
-		}
+		public int GetOrdinal(string name) => _ordinal[name];
 
-		public int GetInt32(int i)
-		{
-			return int.Parse(GetFieldValue(i));
-		}
-
-		public long GetInt64(int i)
-		{
-			return long.Parse(GetFieldValue(i));
-		}
-
-		public string GetName(int i)
-		{
-			return _result.FieldNames[i];
-		}
-
-		public int GetOrdinal(string name)
-		{
-			return _ordinal[name];
-		}
-
-		public string GetString(int i)
-		{
-			return GetFieldValue(i);
-		}
+		string IDataRecord.GetString(int i) => (string)GetValue(i);
 
 		public object GetValue(int i)
 		{
-			var type  = _result.FieldTypes[i];
+			var type = _result.FieldTypes[i];
 			var value = _data[i];
 
 			if (_result.VaryingTypes.Length > 0 && !string.IsNullOrEmpty(value) && value[0] == '\0')
 			{
-				type  = _result.VaryingTypes[value[1]];
+				type = _result.VaryingTypes[value[1]];
 				value = value.Substring(2);
 			}
 
-			if (value == null)
-				return null;
+			return SerializationConverter.Deserialize(_mappingSchema, type, value);
+		}
 
-			if (type.IsArray && type == typeof(byte[]))
-				return ConvertTo<byte[]>.From(value);
+		int IDataRecord.GetValues(object[] values) => throw new NotImplementedException();
 
-			switch (type.ToNullableUnderlying().GetTypeCodeEx())
+		bool IDataRecord.IsDBNull(int i) => _data[i] == null;
+
+		#endregion
+
+		#region IDataReader
+		bool IDataReader.Read()
+		{
+			if (++_current < _result.RowCount)
 			{
-				case TypeCode.String   : return value;
-				case TypeCode.Double   : return double.  Parse(value, CultureInfo.InvariantCulture);
-				case TypeCode.Decimal  : return decimal. Parse(value, CultureInfo.InvariantCulture);
-				case TypeCode.Single   : return float.   Parse(value, CultureInfo.InvariantCulture);
-				case TypeCode.DateTime : return DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture));
+				_data = _result.Data[_current];
+
+				return true;
 			}
 
-			if (type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?))
-				return new DateTimeOffset(long.Parse(value, CultureInfo.InvariantCulture), TimeSpan.Zero);
+			_data = null;
 
-			return Converter.ChangeType(value, type, _mappingSchema);
+			return false;
 		}
 
-		public int GetValues(object[] values)
+		int IDataReader.Depth => 0;
+
+		void IDataReader.Close()
 		{
-			throw new NotImplementedException();
 		}
 
-		public bool IsDBNull(int i)
-		{
-			return _data[i] == null;
-		}
+		bool IDataReader.IsClosed              => throw new NotImplementedException();
+		int IDataReader.RecordsAffected        => throw new NotImplementedException();
+		DataTable IDataReader.GetSchemaTable() => throw new NotImplementedException();
+		bool IDataReader.NextResult()          => throw new NotImplementedException();
 
-		public object this[string name]
-		{
-			get { return GetValue(GetOrdinal(name)); }
-		}
+		#endregion
 
-		public object this[int i]
+		#region IDisposable
+
+		void IDisposable.Dispose()
 		{
-			get { return GetValue(i); }
 		}
 
 		#endregion
+
+
+
+		
 	}
 }

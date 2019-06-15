@@ -409,7 +409,7 @@ namespace LinqToDB
 				builder.ResultExpression = new SqlField()
 				{
 					Table = sqlField.Table,
-					Name = sqlTable.Name
+					Name  = sqlTable.Name
 				};
 			}
 		}
@@ -429,7 +429,7 @@ namespace LinqToDB
 				builder.ResultExpression = new SqlField()
 				{
 					Table = sqlField.Table,
-					Name = sqlTable.Name
+					Name  = sqlTable.Name
 				};
 			}
 		}

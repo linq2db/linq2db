@@ -549,6 +549,7 @@ namespace Tests.Linq
 			public string FirstName;
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void ObjectFactoryTest([DataSources] string context)
 		{

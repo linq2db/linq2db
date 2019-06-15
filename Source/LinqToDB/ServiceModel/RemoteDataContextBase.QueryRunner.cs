@@ -112,8 +112,7 @@ namespace LinqToDB.ServiceModel
 
 			public override void Dispose()
 			{
-				var disposable = _client as IDisposable;
-				if (disposable != null)
+				if (_client is IDisposable disposable)
 					disposable.Dispose();
 
 				base.Dispose();
@@ -128,6 +127,7 @@ namespace LinqToDB.ServiceModel
 				var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
 
 				var data = LinqServiceSerializer.Serialize(
+					_dataContext.SerializationMappingSchema,
 					q,
 					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
 					QueryHints);
@@ -159,6 +159,7 @@ namespace LinqToDB.ServiceModel
 				return _client.ExecuteScalar(
 					_dataContext.Configuration,
 					LinqServiceSerializer.Serialize(
+						_dataContext.SerializationMappingSchema,
 						q,
 						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), QueryHints));
 			}
@@ -180,13 +181,14 @@ namespace LinqToDB.ServiceModel
 				var ret = _client.ExecuteReader(
 					_dataContext.Configuration,
 					LinqServiceSerializer.Serialize(
+						_dataContext.SerializationMappingSchema,
 						q,
 						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
 						QueryHints));
 
-				var result = LinqServiceSerializer.DeserializeResult(ret);
+				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
 
-				return new ServiceModelDataReader(_dataContext.MappingSchema, result);
+				return new ServiceModelDataReader(_dataContext.SerializationMappingSchema, result);
 			}
 
 			class DataReaderAsync : IDataReaderAsync
@@ -246,12 +248,13 @@ namespace LinqToDB.ServiceModel
 				var ret = await _client.ExecuteReaderAsync(
 					_dataContext.Configuration,
 					LinqServiceSerializer.Serialize(
+						_dataContext.SerializationMappingSchema,
 						q,
 						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
 						QueryHints));
 
-				var result = LinqServiceSerializer.DeserializeResult(ret);
-				var reader = new ServiceModelDataReader(_dataContext.MappingSchema, result);
+				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
+				var reader = new ServiceModelDataReader(_dataContext.SerializationMappingSchema, result);
 
 				return new DataReaderAsync(reader);
 			}
@@ -272,6 +275,7 @@ namespace LinqToDB.ServiceModel
 				return await _client.ExecuteScalarAsync(
 					_dataContext.Configuration,
 					LinqServiceSerializer.Serialize(
+						_dataContext.SerializationMappingSchema,
 						q,
 						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), QueryHints));
 			}
@@ -284,6 +288,7 @@ namespace LinqToDB.ServiceModel
 
 				var q    = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
 				var data = LinqServiceSerializer.Serialize(
+					_dataContext.SerializationMappingSchema,
 					q,
 					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
 					QueryHints);

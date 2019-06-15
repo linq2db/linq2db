@@ -19,34 +19,34 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Public Members
 
-		public static string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
+		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
 		{
-			return new QuerySerializer().Serialize(statement, parameters, queryHints);
+			return new QuerySerializer(serializationSchema).Serialize(statement, parameters, queryHints);
 		}
 
-		public static LinqServiceQuery Deserialize(string str)
+		public static LinqServiceQuery Deserialize(MappingSchema serializationSchema, string str)
 		{
-			return new QueryDeserializer().Deserialize(str);
+			return new QueryDeserializer(serializationSchema).Deserialize(str);
 		}
 
-		public static string Serialize(LinqServiceResult result)
+		public static string Serialize(MappingSchema serializationSchema, LinqServiceResult result)
 		{
-			return new ResultSerializer().Serialize(result);
+			return new ResultSerializer(serializationSchema).Serialize(result);
 		}
 
-		public static LinqServiceResult DeserializeResult(string str)
+		public static LinqServiceResult DeserializeResult(MappingSchema serializationSchema, string str)
 		{
-			return new ResultDeserializer().DeserializeResult(str);
+			return new ResultDeserializer(serializationSchema).DeserializeResult(str);
 		}
 
-		public static string Serialize(string[] data)
+		public static string Serialize(MappingSchema serializationSchema, string[] data)
 		{
-			return new StringArraySerializer().Serialize(data);
+			return new StringArraySerializer(serializationSchema).Serialize(data);
 		}
 
-		public static string[] DeserializeStringArray(string str)
+		public static string[] DeserializeStringArray(MappingSchema serializationSchema, string str)
 		{
-			return new StringArrayDeserializer().Deserialize(str);
+			return new StringArrayDeserializer(serializationSchema).Deserialize(str);
 		}
 
 		#endregion
@@ -59,48 +59,27 @@ namespace LinqToDB.ServiceModel
 
 		class SerializerBase
 		{
-			protected readonly StringBuilder             Builder        = new StringBuilder();
+			private   readonly MappingSchema _ms;
+			protected readonly StringBuilder Builder        = new StringBuilder();
 			protected readonly Dictionary<object,int>    ObjectIndices  = new Dictionary<object,int>();
 			protected readonly Dictionary<object,string> DelayedObjects = new Dictionary<object,string>();
 			protected int                                Index;
 
-			static string ConvertToString(Type type, object value)
+			protected SerializerBase(MappingSchema serializationMappingSchema)
 			{
-				type = type.ToNullableUnderlying();
-				switch (type.GetTypeCodeEx())
-				{
-					case TypeCode.Char     : return ((char)    value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.Byte     : return ((byte)    value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.SByte    : return ((sbyte)   value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.Int16    : return ((short)   value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.UInt16   : return ((ushort)  value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.Int32    : return ((int)     value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.UInt32   : return ((uint)    value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.Int64    : return ((long)    value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.UInt64   : return ((ulong)   value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.Decimal  : return ((decimal) value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.Double   : return ((double)  value).ToString("G17", CultureInfo.InvariantCulture);
-					case TypeCode.Single   : return ((float)   value).ToString("G9" , CultureInfo.InvariantCulture);
-					case TypeCode.DateTime : return ((DateTime)value).ToBinary().ToString(CultureInfo.InvariantCulture);
-				}
-
-				if (type == typeof(DateTimeOffset))
-					return  ((DateTimeOffset)value).UtcTicks.ToString(CultureInfo.InvariantCulture);
-				if (type == typeof(TimeSpan))
-					return ((TimeSpan)value).Ticks.ToString(CultureInfo.InvariantCulture);
-
-				return Converter.ChangeTypeTo<string>(value);
+				_ms = serializationMappingSchema;
 			}
 
 			protected void Append(Type type, object value)
 			{
 				Append(type);
 
-				if (value == null)
+				// TODO: should we preserve DBNull is AST?
+				if (value == null || value is DBNull)
 					Append((string)null);
 				else if (!type.IsArray)
 				{
-					Append(ConvertToString(type, value));
+					Append(SerializationConverter.Serialize(_ms, value));
 				}
 				else
 				{
@@ -123,7 +102,7 @@ namespace LinqToDB.ServiceModel
 							if (val == null)
 								Append(elementType, null);
 							else
-								Append(val.GetType(), val); //Append(ConvertToString(val.GetType(), val));
+								Append(val.GetType(), val);
 							cnt++;
 						}
 
@@ -245,11 +224,17 @@ namespace LinqToDB.ServiceModel
 
 		public class DeserializerBase
 		{
+			private   readonly MappingSchema _ms;
 			protected readonly Dictionary<int,object>         ObjectIndices  = new Dictionary<int,object>();
 			protected readonly Dictionary<int,Action<object>> DelayedObjects = new Dictionary<int,Action<object>>();
 
 			protected string Str;
 			protected int    Pos;
+
+			protected DeserializerBase(MappingSchema serializationMappingSchema)
+			{
+				_ms = serializationMappingSchema;
+			}
 
 			protected char Peek()
 			{
@@ -502,35 +487,8 @@ namespace LinqToDB.ServiceModel
 					return deserializer(this);
 				}
 
-				var str = ReadString();
-
-				if (str == null)
-					return null;
-
-				var underlyingType = type.ToNullableUnderlying();
-				switch (underlyingType.GetTypeCodeEx())
-				{
-					case TypeCode.Char     : return str[0];
-					case TypeCode.Byte     : return byte.    Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.SByte    : return sbyte.   Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.Int16    : return short.   Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.UInt16   : return ushort.  Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.Int32    : return int.     Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.UInt32   : return uint.    Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.Int64    : return long.    Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.UInt64   : return ulong.   Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.Decimal  : return decimal. Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.Double   : return double.  Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.Single   : return float.   Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.DateTime : return DateTime.FromBinary(long.Parse(str, CultureInfo.InvariantCulture));
-				}
-
-				if (underlyingType == typeof(DateTimeOffset))
-					return new DateTimeOffset(long.Parse(str, CultureInfo.InvariantCulture), TimeSpan.Zero);
-				if (underlyingType == typeof(TimeSpan))
-					return TimeSpan.FromTicks(long.Parse(str, CultureInfo.InvariantCulture));
-
-				return Converter.ChangeType(str, type);
+				return SerializationConverter.Deserialize(_ms, type, ReadString());
+				
 			}
 
 			protected readonly List<string> UnresolvedTypes = new List<string>();
@@ -589,6 +547,11 @@ namespace LinqToDB.ServiceModel
 
 		class QuerySerializer : SerializerBase
 		{
+			public QuerySerializer(MappingSchema serializationMappingSchema)
+				: base(serializationMappingSchema)
+			{
+			}
+
 			public string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
 			{
 				var queryHintCount = queryHints?.Count ?? 0;
@@ -1348,6 +1311,11 @@ namespace LinqToDB.ServiceModel
 
 			readonly Dictionary<int,SelectQuery> _queries = new Dictionary<int,SelectQuery>();
 			readonly List<Action>                _actions = new List<Action>();
+
+			public QueryDeserializer(MappingSchema serializationMappingSchema)
+				: base(serializationMappingSchema)
+			{
+			}
 
 			public LinqServiceQuery Deserialize(string str)
 			{
@@ -2118,6 +2086,11 @@ namespace LinqToDB.ServiceModel
 
 		class ResultSerializer : SerializerBase
 		{
+			public ResultSerializer(MappingSchema serializationMappingSchema)
+				: base(serializationMappingSchema)
+			{
+			}
+
 			public string Serialize(LinqServiceResult result)
 			{
 				Append(result.FieldCount);
@@ -2172,6 +2145,11 @@ namespace LinqToDB.ServiceModel
 
 		class ResultDeserializer : DeserializerBase
 		{
+			public ResultDeserializer(MappingSchema serializationMappingSchema)
+				: base(serializationMappingSchema)
+			{
+			}
+
 			public LinqServiceResult DeserializeResult(string str)
 			{
 				Str = str;
@@ -2233,6 +2211,11 @@ namespace LinqToDB.ServiceModel
 
 		class StringArraySerializer : SerializerBase
 		{
+			public StringArraySerializer(MappingSchema serializationMappingSchema)
+				: base(serializationMappingSchema)
+			{
+			}
+
 			public string Serialize(string[] data)
 			{
 				Append(data.Length);
@@ -2252,6 +2235,11 @@ namespace LinqToDB.ServiceModel
 
 		class StringArrayDeserializer : DeserializerBase
 		{
+			public StringArrayDeserializer(MappingSchema serializationMappingSchema)
+				: base(serializationMappingSchema)
+			{
+			}
+
 			public string[] Deserialize(string str)
 			{
 				Str = str;

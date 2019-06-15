@@ -40,6 +40,22 @@ namespace LinqToDB.Mapping
 				MemberType       = propertyInfo.PropertyType;
 			}
 
+			if (columnAttribute == null)
+			{
+				columnAttribute = new ColumnAttribute();
+				var dataType = mappingSchema.GetDataType(MemberType);
+
+				if (dataType.DataType == DataType.Undefined)
+					dataType = mappingSchema.GetUnderlyingDataType(dataType.SystemType, out var _);
+
+				columnAttribute.DataType  = dataType.DataType;
+				columnAttribute.DbType    = dataType.DbType;
+
+				if (dataType.Length    != null) columnAttribute.Length    = dataType.Length.Value;
+				if (dataType.Precision != null) columnAttribute.Precision = dataType.Precision.Value;
+				if (dataType.Scale     != null) columnAttribute.Scale     = dataType.Scale.Value;
+			}
+
 			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;
 			ColumnName      = columnAttribute.Name       ?? MemberInfo.Name;
 			Storage         = columnAttribute.Storage;
@@ -136,11 +152,31 @@ namespace LinqToDB.Mapping
 
 			if (DataType == DataType.Undefined)
 				DataType = mappingSchema.GetDataType(MemberType).DataType;
-			if (DataType == DataType.Undefined)
+
+			if (MemberType.IsEnumEx())
 			{
-				DataType = mappingSchema.GetUnderlyingDataType(MemberType, out var canBeNull).DataType;
-				if (canBeNull)
-					CanBeNull = canBeNull;
+				if (DataType == DataType.Undefined)
+				{
+					var enumtype = mappingSchema.GetDefaultFromEnumType(MemberType);
+
+					if (enumtype != null)
+						DataType = mappingSchema.GetDataType(enumtype).DataType;
+				}
+
+				if (DataType == DataType.Undefined)
+				{
+					var enumtype = mappingSchema.GetDefaultFromEnumType(typeof(Enum));
+
+					if (enumtype != null)
+						DataType = mappingSchema.GetDataType(enumtype).DataType;
+				}
+
+				if (DataType == DataType.Undefined)
+				{
+					DataType = mappingSchema.GetUnderlyingDataType(MemberType, out var canBeNull).DataType;
+					if (canBeNull)
+						CanBeNull = canBeNull;
+				}
 			}
 
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);

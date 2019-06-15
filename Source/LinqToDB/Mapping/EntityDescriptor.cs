@@ -196,7 +196,7 @@ namespace LinqToDB.Mapping
 					mappingSchema.GetAttribute<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null ||
 					mappingSchema.GetAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null)
 				{
-					var cd = new ColumnDescriptor(mappingSchema, new ColumnAttribute(), member);
+					var cd = new ColumnDescriptor(mappingSchema, null, member);
 					AddColumn(cd);
 					_columnNames.Add(member.Name, cd);
 				}

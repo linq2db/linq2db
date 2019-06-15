@@ -111,7 +111,7 @@ namespace Tests.UserTests
 			TestEnumString(context, ms =>
 			{
 				ms.SetConverter<Gender, string>       (obj => obj.ToString() );
-				ms.SetConverter<Gender, DataParameter>(obj => new DataParameter { Value = obj.ToString() });
+				ms.SetConverter<Gender, DataParameter>(obj => new DataParameter { Value = obj.ToString(), DataType = DataType.VarChar });
 				ms.SetConverter<string, Gender>       (txt => (Gender)Enum.Parse(typeof(Gender), txt));
 			});
 		}

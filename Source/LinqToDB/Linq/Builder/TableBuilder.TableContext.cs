@@ -1273,13 +1273,10 @@ namespace LinqToDB.Linq.Builder
 									{
 										if (!SqlTable.Fields.TryGetValue(fieldName, out var newField))
 										{
-											newField = new SqlField
-											{
-												Name             = fieldName,
-												PhysicalName     = fieldName,
-												ColumnDescriptor = new ColumnDescriptor(Builder.MappingSchema, new ColumnAttribute(fieldName),
-													new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member))
-											};
+											newField = new SqlField(new ColumnDescriptor(
+												Builder.MappingSchema,
+												new ColumnAttribute(fieldName),
+												new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member)));
 
 											SqlTable.Add(newField);
 										}
@@ -1287,7 +1284,6 @@ namespace LinqToDB.Linq.Builder
 										return newField;
 									}
 								}
-
 							}
 
 							if (throwException &&

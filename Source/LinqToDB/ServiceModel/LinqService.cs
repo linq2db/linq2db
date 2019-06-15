@@ -13,19 +13,47 @@ namespace LinqToDB.ServiceModel
 	using Extensions;
 	using SqlQuery;
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
+	using System.Threading.Tasks;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	[WebService       (Namespace  = "http://tempuri.org/")]
 	[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
 	public class LinqService : ILinqService
 	{
+		public LinqService()
+		{
+		}
+
+		public LinqService(MappingSchema mappingSchema)
+		{
+			_mappingSchema = mappingSchema;
+		}
+
 		public bool AllowUpdates { get; set; }
+
+		private MappingSchema _mappingSchema;
+		public MappingSchema MappingSchema
+		{
+			get => _mappingSchema;
+			set
+			{
+				_mappingSchema = value;
+				_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema);
+			}
+		}
+
+		private MappingSchema _serializationMappingSchema;
+		internal  MappingSchema SerializationMappingSchema
+		{
+			get => _serializationMappingSchema ?? (_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema));
+		}
 
 		public static Func<string,Type> TypeResolver = _ => null;
 
 		public virtual DataConnection CreateDataContext(string configuration)
 		{
-			return new DataConnection(configuration);
+			return MappingSchema != null ? new DataConnection(configuration, MappingSchema) : new DataConnection(configuration);
 		}
 
 		protected virtual void ValidateQuery(LinqServiceQuery query)
@@ -74,7 +102,7 @@ namespace LinqToDB.ServiceModel
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
 
 				ValidateQuery(query);
 
@@ -101,7 +129,7 @@ namespace LinqToDB.ServiceModel
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
 
 				ValidateQuery(query);
 
@@ -128,7 +156,7 @@ namespace LinqToDB.ServiceModel
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
 
 				ValidateQuery(query);
 
@@ -171,16 +199,16 @@ namespace LinqToDB.ServiceModel
 							// ugh...
 							// still if it fails here due to empty columns - it is a bug in columns generation
 							ret.FieldTypes[i] = query.Statement.SelectQuery.Select.Columns[i].SystemType;
+
+							// async compiled query support
+							if (ret.FieldTypes[i].IsGenericType && ret.FieldTypes[i].GetGenericTypeDefinition() == typeof(Task<>))
+								ret.FieldTypes[i] = ret.FieldTypes[i].GetGenericArgumentsEx()[0];
 						}
 
 						var columnTypes = new Type[ret.FieldCount];
-						var codes       = new TypeCode[rd.FieldCount];
 
 						for (var i = 0; i < ret.FieldCount; i++)
-						{
 							columnTypes[i] = ret.FieldTypes[i].ToNullableUnderlying();
-							codes[i]       = Type.GetTypeCode(columnTypes[i]);
-						}
 
 						var varyingTypes = new List<Type>();
 
@@ -199,53 +227,29 @@ namespace LinqToDB.ServiceModel
 								if (!rd.IsDBNull(i))
 								{
 									var value = columnReaders[i].GetValue(rd);
-									var type  = value.GetType();
-									var code  = codes[i];
-
-									var idx   = -1;
-
-									if (type != columnTypes[i])
+									if (value != null)
 									{
-										code = Type.GetTypeCode(type);
-										idx  = varyingTypes.IndexOf(type);
+										var type = value.GetType();
 
-										if (idx < 0)
+										var idx = -1;
+
+										if (type != columnTypes[i])
 										{
-											varyingTypes.Add(type);
-											idx = varyingTypes.Count - 1;
-										}
-									}
+											idx = varyingTypes.IndexOf(type);
 
-									switch (code)
-									{
-										case TypeCode.Char     : data[i] = ((char)value)               .ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.Byte     : data[i] = ((byte)value)               .ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.SByte    : data[i] = ((sbyte)value)              .ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.Int16    : data[i] = ((short)value)              .ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.UInt16   : data[i] = ((ushort)value)             .ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.Int32    : data[i] = ((int)value)                .ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.UInt32   : data[i] = ((uint)value)               .ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.Int64    : data[i] = ((long)value)               .ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.UInt64   : data[i] = ((ulong)value)              .ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.Decimal  : data[i] = ((decimal)value)            .ToString(CultureInfo.InvariantCulture); break;
-										case TypeCode.Double   : data[i] = ((double)value)             .ToString("G17", CultureInfo.InvariantCulture); break;
-										case TypeCode.Single   : data[i] = ((float)value)              .ToString("G9" , CultureInfo.InvariantCulture); break;
-										case TypeCode.DateTime : data[i] = ((DateTime)value).ToBinary().ToString(CultureInfo.InvariantCulture); break;
-										default                :
+											if (idx < 0)
 											{
-												if (value is DateTimeOffset dto)
-													data[i] = dto.UtcTicks.ToString(CultureInfo.InvariantCulture);
-												else if (value is byte[] bytea)
-													data[i] = ConvertTo<string>.From(bytea);
-												else
-													data[i] = (value ?? "").ToString();
-
-												break;
+												varyingTypes.Add(type);
+												idx = varyingTypes.Count - 1;
+												throw new InvalidOperationException("TODO: remove varyingTypes");
 											}
-									}
+										}
 
-									if (idx >= 0)
-										data[i] = "\0" + (char)idx + data[i];
+										data[i] = SerializationConverter.Serialize(SerializationMappingSchema, value);
+
+										if (idx >= 0)
+											data[i] = "\0" + (char)idx + data[i];
+									}
 								}
 							}
 
@@ -254,7 +258,7 @@ namespace LinqToDB.ServiceModel
 
 						ret.VaryingTypes = varyingTypes.ToArray();
 
-						return LinqServiceSerializer.Serialize(ret);
+						return LinqServiceSerializer.Serialize(SerializationMappingSchema, ret);
 					}
 				}
 			}
@@ -270,8 +274,8 @@ namespace LinqToDB.ServiceModel
 		{
 			try
 			{
-				var data    = LinqServiceSerializer.DeserializeStringArray(queryData);
-				var queries = data.Select(LinqServiceSerializer.Deserialize).ToArray();
+				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, queryData);
+				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, r)).ToArray();
 
 				foreach (var query in queries)
 					ValidateQuery(query);
