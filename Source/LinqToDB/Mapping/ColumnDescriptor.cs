@@ -150,9 +150,6 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			if (DataType == DataType.Undefined)
-				DataType = mappingSchema.GetDataType(MemberType).DataType;
-
 			if (MemberType.ToNullableUnderlying().IsEnumEx())
 			{
 				if (DataType == DataType.Undefined)
@@ -186,6 +183,9 @@ namespace LinqToDB.Mapping
 						CanBeNull = canBeNull;
 				}
 			}
+
+			if (DataType == DataType.Undefined)
+				DataType = mappingSchema.GetDataType(MemberType).DataType;
 
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
 			if (skipValueAttributes != null && skipValueAttributes.Length > 0)
