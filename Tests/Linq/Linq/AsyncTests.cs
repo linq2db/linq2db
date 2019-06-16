@@ -152,6 +152,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public async Task TakeSkipTest([DataSources] string context)
 		{

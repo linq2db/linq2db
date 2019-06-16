@@ -192,6 +192,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void Issue424Test2([DataSources] string context)
 		{
@@ -204,6 +205,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void Issue424Test3([DataSources] string context)
 		{
