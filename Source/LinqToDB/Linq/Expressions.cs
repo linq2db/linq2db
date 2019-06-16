@@ -1589,7 +1589,22 @@ namespace LinqToDB.Linq
 
 		// SqlServer
 		//
-		[Sql.Function]
+
+		class DateAddBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var partStr = Sql.DatePartBuilder.DatePartToStr(part);
+				var number  = builder.GetExpression("number");
+				var days    = builder.GetExpression("days");
+
+				builder.ResultExpression = new SqlQuery.SqlFunction(typeof(DateTime?), builder.Expression,
+					new SqlQuery.SqlExpression(partStr, SqlQuery.Precedence.Primary), number, days);
+			}
+		}
+
+		[Sql.Extension("DateAdd", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilder))]
 		public static DateTime? DateAdd(Sql.DateParts part, int? number, int? days)
 		{
 			return days == null ? null : Sql.DateAdd(part, number, new DateTime(1900, 1, days.Value + 1));

@@ -42,7 +42,7 @@ namespace LinqToDB
 
 		#region DatePart
 
-		class DatePartBuilder : Sql.IExtensionCallBuilder
+		internal class DatePartBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
