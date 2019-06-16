@@ -21,6 +21,7 @@ namespace LinqToDB.SqlQuery
 		{
 			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
 
+			if (systemType == null) throw new ArgumentNullException(nameof(systemType));
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var p in parameters)

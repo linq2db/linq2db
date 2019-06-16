@@ -23,6 +23,9 @@ namespace LinqToDB.DataProvider.Informix
 				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary)
 					|| p.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
 					p.IsQueryParameter = true;
+				else
+					// TODO: Ifx doesn't like parameters for some reason
+					p.IsQueryParameter = false;
 			}
 		}
 

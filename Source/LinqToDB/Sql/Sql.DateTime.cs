@@ -261,14 +261,14 @@ namespace LinqToDB
 							var param = builder.GetExpression("date");
 							builder.ResultExpression = builder.Inc(
 								builder.Sub<int>(
-									new SqlFunction(null, "Mdy",
-										new SqlFunction(null, "Month", param),
-										new SqlFunction(null, "Day", param),
-										new SqlFunction(null, "Year", param)),
-									new SqlFunction(null, "Mdy",
+									new SqlFunction(typeof(DateTime?), "Mdy",
+										new SqlFunction(typeof(int?), "Month", param),
+										new SqlFunction(typeof(int?), "Day",   param),
+										new SqlFunction(typeof(int?), "Year",  param)),
+									new SqlFunction(typeof(DateTime?), "Mdy",
 										new SqlValue(1),
 										new SqlValue(1),
-										new SqlFunction(null, "Year", param)))
+										new SqlFunction(typeof(int?), "Year", param)))
 							);
 							return;
 						}

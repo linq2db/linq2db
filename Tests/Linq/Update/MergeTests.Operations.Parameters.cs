@@ -216,6 +216,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("IFX: Parameters disabled", Configuration = ProviderName.Informix)]
 		[Test]
 		public void TestParametersInMatchCondition([MergeDataContextSource(false)] string context)
 		{
