@@ -222,6 +222,12 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Byte           : StringBuilder.Append("Number(3)");                 break;
 				case DataType.Money          : StringBuilder.Append("Number(19,4)");              break;
 				case DataType.SmallMoney     : StringBuilder.Append("Number(10,4)");              break;
+				case DataType.VarChar        :
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+						StringBuilder.Append("VarChar(4000)");
+					else
+						StringBuilder.Append($"VarChar({type.Length})");
+					break;
 				case DataType.NVarChar       :
 					if (type.Length == null || type.Length > 4000 || type.Length < 1)
 						StringBuilder.Append("VarChar2(4000)");

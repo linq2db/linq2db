@@ -300,7 +300,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceInsertFromEmptyCollection([MergeDataContextSource] string context)
+		public void SameSourceInsertFromEmptyCollection([MergeDataContextSource(ProviderName.OracleManaged, ProviderName.OracleNative)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -392,7 +392,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceInsertFromEmptyCollectionWithMatch([MergeDataContextSource] string context)
+		public void SameSourceInsertFromEmptyCollectionWithMatch([MergeDataContextSource(ProviderName.OracleManaged, ProviderName.OracleNative)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1259,7 +1259,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceInsertFromEmptyList([MergeDataContextSource] string context)
+		public void OtherSourceInsertFromEmptyList([MergeDataContextSource(ProviderName.OracleManaged, ProviderName.OracleNative)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

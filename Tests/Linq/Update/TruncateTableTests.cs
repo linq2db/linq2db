@@ -40,7 +40,7 @@ namespace Tests.xUpdate
 			[Column]                       public decimal Field1;
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		// todo: reenable oracle when fix merged
 		//[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
@@ -73,7 +73,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		// todo: reenable oracle after fix merged
 		//[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
