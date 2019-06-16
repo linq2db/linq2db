@@ -1094,6 +1094,7 @@ namespace Tests.Linq
 
 		#endregion
 
+		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
 		[Test]
 		public void GetDateTest1([DataSources] string context)
 		{
