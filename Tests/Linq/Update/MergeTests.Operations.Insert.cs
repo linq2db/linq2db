@@ -574,7 +574,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromCrossJoinedSourceQuery3([MergeDataContextSource(ProviderName.DB2)] string context)
+		public void InsertFromCrossJoinedSourceQuery3([MergeDataContextSource(ProviderName.DB2, ProviderName.SapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
