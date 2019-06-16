@@ -1960,12 +1960,17 @@ namespace LinqToDB.SqlQuery
 								if (_visitedElements.TryGetValue(e, out var ve) && ve != null && ve != e)
 									return true;
 
+								// we always rewrite recusive CTE now
+								if (e is CteClause cte
+									&& new QueryVisitor().Find(cte.Body, _ => _ == cte) != null)
+									return true;
+
 								var ret = _convert(e);
 
 								if (ret != null && !ReferenceEquals(e, ret))
 								{
-									if (ret.ElementType == QueryElementType.Column) 
-									_visitedElements.Add(e, ret);
+									if (ret.ElementType == QueryElementType.Column)
+										_visitedElements.Add(e, ret);
 									return true;
 								}
 

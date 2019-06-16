@@ -25,7 +25,10 @@
 				return stringValue;
 
 			var from = value.GetType();
-			var key  = new { ms.ConfigurationID, from };
+
+			// don't see much sense to have multiple schema-dependent serialziation logic for same type
+			// otherwise we should care about converters cleanup
+			var key  = from;
 
 			if (!_serializeConverters.TryGetValue(key, out var converter))
 			{
@@ -68,7 +71,9 @@
 
 			to = to.ToNullableUnderlying();
 
-			var key = new { ms.ConfigurationID, to };
+			// don't see much sense to have multiple schema-dependent serialziation logic for same type
+			// otherwise we should care about converters cleanup
+			var key = to;
 
 			if (!_deserializeConverters.TryGetValue(key, out var converter))
 			{
