@@ -101,9 +101,10 @@ namespace LinqToDB.DataProvider.Firebird
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
 
-					// 10921 is implementation  limit for UNICODE_FSS encoding
-					// use 255 as default length, because FB have 64 row-size limits
-					if (type.Length == null || type.Length > 10921 || type.Length < 1)
+					// 10921 is implementation limit for UNICODE_FSS encoding
+					// use 255 as default length, because FB have 64k row-size limits
+					// also it is not good to depend on implementation limits
+					if (type.Length == null || type.Length < 1)
 						StringBuilder.Append("(255)");
 					else
 						StringBuilder.Append($"({type.Length})");

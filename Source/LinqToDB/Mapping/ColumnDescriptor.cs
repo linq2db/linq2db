@@ -153,11 +153,19 @@ namespace LinqToDB.Mapping
 			if (DataType == DataType.Undefined)
 				DataType = mappingSchema.GetDataType(MemberType).DataType;
 
-			if (MemberType.IsEnumEx())
+			if (MemberType.ToNullableUnderlying().IsEnumEx())
 			{
 				if (DataType == DataType.Undefined)
 				{
 					var enumtype = mappingSchema.GetDefaultFromEnumType(MemberType);
+
+					if (enumtype != null)
+						DataType = mappingSchema.GetDataType(enumtype).DataType;
+				}
+
+				if (DataType == DataType.Undefined && MemberType.IsNullable())
+				{
+					var enumtype = mappingSchema.GetDefaultFromEnumType(MemberType.ToNullableUnderlying());
 
 					if (enumtype != null)
 						DataType = mappingSchema.GetDataType(enumtype).DataType;
