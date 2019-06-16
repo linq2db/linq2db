@@ -434,7 +434,9 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
+				if (   provider == ProviderName.Sybase
+					|| provider == ProviderName.SybaseManaged
+					|| provider == ProviderName.SqlCe)
 					expected = expected.TrimEnd(' ');
 			}
 
@@ -580,6 +582,7 @@ namespace Tests.xUpdate
 				{
 					case ProviderName.Sybase:
 					case ProviderName.SybaseManaged:
+					case ProviderName.SqlCe:
 						expected = expected.TrimEnd(' ');
 						break;
 					case ProviderName.Informix:
