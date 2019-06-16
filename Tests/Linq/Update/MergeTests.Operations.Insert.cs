@@ -573,10 +573,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// fixed?
-		//[ActiveIssue(896, Details = "Regression from 1.x: Member 'TestMapping1.Fake' is not a table column.")]
 		[Test]
-		public void InsertFromCrossJoinedSourceQuery3([MergeDataContextSource] string context)
+		public void InsertFromCrossJoinedSourceQuery3([MergeDataContextSource(ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

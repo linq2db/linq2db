@@ -208,8 +208,8 @@ namespace Tests.xUpdate
 							Id = _.OtherId,
 							Field = parameterValues.val
 						}))
-					.On((t, s) => t.Id == s.Id || t.Id == 2 || s.Field != null)
-					.DeleteWhenNotMatchedBySourceAnd(t => t.Field3 != 1)
+					.On((t, s) => t.Id == s.Id)
+					.DeleteWhenMatchedAnd((t, s) => t.Field3 != 1 || s.Field != null)
 					.Merge();
 
 				Assert.AreEqual(4, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
