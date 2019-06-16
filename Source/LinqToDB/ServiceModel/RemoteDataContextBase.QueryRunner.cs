@@ -120,17 +120,23 @@ namespace LinqToDB.ServiceModel
 
 			public override int ExecuteNonQuery()
 			{
-				SetCommand(true);
+				string data;
 
-				var queryContext = Query.Queries[QueryNumber];
+				// locks are bad, m'kay?
+				lock (Query)
+				{
+					SetCommand(true);
 
-				var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
+					var queryContext = Query.Queries[QueryNumber];
 
-				var data = LinqServiceSerializer.Serialize(
-					_dataContext.SerializationMappingSchema,
-					q,
-					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
-					QueryHints);
+					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema);
+
+					data = LinqServiceSerializer.Serialize(
+						_dataContext.SerializationMappingSchema,
+						q,
+						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
+						QueryHints);
+				}
 
 				if (_dataContext._batchCounter > 0)
 				{
