@@ -329,6 +329,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.UInt32        : parameter.DbType = DbType.Int64;   break;
 				case DataType.UInt64        : parameter.DbType = DbType.Decimal; break;
 				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal; break;
+				case DataType.DateTime      :
 				case DataType.DateTime2     :
 					parameter.DbType =
 						Version == SqlServerVersion.v2000 || Version == SqlServerVersion.v2005 ?

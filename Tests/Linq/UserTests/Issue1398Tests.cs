@@ -94,7 +94,7 @@ namespace Tests.UserTests
 			const int repeatsCount = 20;
 			var rnd = new Random();
 
-			var mammals = new[] { "Elephant", "Cat" };
+			var mammals  = new[] { "Elephant", "Cat" };
 			var reptiles = new[] { "Snake", "Lizard" };
 
 			using (var db = GetDataContext(context))
@@ -105,12 +105,12 @@ namespace Tests.UserTests
 				{
 					var mammalsUpdate = new Data()
 					{
-						Color = "Grey",
+						Color   = "Grey",
 						Updates = mammals
 							.Select(name => new AnimalUpdate()
 							{
-								Name = name,
-								Length = rnd.Next(),
+								Name      = name,
+								Length    = rnd.Next(),
 								Iteration = iteration
 							})
 							.ToList()
@@ -118,18 +118,18 @@ namespace Tests.UserTests
 
 					var reptilesUpdate = new Data()
 					{
-						Color = "Green",
+						Color   = "Green",
 						Updates = reptiles
 							.Select(name => new AnimalUpdate()
 							{
-								Name = name,
-								Length = rnd.Next(),
+								Name      = name,
+								Length    = rnd.Next(),
 								Iteration = iteration + repeatsCount
 							})
 							.ToList()
 					};
 
-					var updateMammalsTask = Task.Run(() => Update(context, mammalsUpdate, iteration));
+					var updateMammalsTask  = Task.Run(() => Update(context, mammalsUpdate, iteration));
 
 					var updateReptilesTask = Task.Run(() => Update(context, reptilesUpdate, iteration + repeatsCount));
 
@@ -165,14 +165,14 @@ namespace Tests.UserTests
 					.UpdateWhenMatched(
 						(target, source) => new Animal()
 						{
-							Color = data.Color,
+							Color  = data.Color,
 							Length = source.Length
 						})
 					.InsertWhenNotMatched(
 						source => new Animal()
 						{
-							Name = source.Name,
-							Color = data.Color,
+							Name   = source.Name,
+							Color  = data.Color,
 							Length = source.Length
 						})
 					.Merge();
