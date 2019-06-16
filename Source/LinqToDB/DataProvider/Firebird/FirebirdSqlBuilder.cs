@@ -102,8 +102,9 @@ namespace LinqToDB.DataProvider.Firebird
 					StringBuilder.Append("VarChar");
 
 					// 10921 is implementation  limit for UNICODE_FSS encoding
+					// use 255 as default length, because FB have 64 row-size limits
 					if (type.Length == null || type.Length > 10921 || type.Length < 1)
-						StringBuilder.Append("(10921)");
+						StringBuilder.Append("(255)");
 					else
 						StringBuilder.Append($"({type.Length})");
 
