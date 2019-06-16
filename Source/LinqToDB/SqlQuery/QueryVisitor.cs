@@ -2112,11 +2112,12 @@ namespace LinqToDB.SqlQuery
 									body   ?? cte.Body,
 									fields ?? cte.Fields,
 									cte.ObjectType,
+									cte.IsRecursive,
 									cte.Name);
 						}
 						else
 						{
-							var newCte = new CteClause(cte.ObjectType, cte.Name);
+							var newCte = new CteClause(cte.ObjectType, cte.IsRecursive, cte.Name);
 
 							_visitedElements.Add(cte, newCte);
 

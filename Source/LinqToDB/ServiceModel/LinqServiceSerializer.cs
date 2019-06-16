@@ -1852,7 +1852,7 @@ namespace LinqToDB.ServiceModel
 							var fields      = ReadArray<SqlField>();
 							var isRecursive = ReadBool();
 
-							var c = new CteClause(body, fields, objectType, name) { IsRecursive = isRecursive };
+							var c = new CteClause(body, fields, objectType, isRecursive, name);
 
 							obj = c;
 

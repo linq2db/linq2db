@@ -40,11 +40,13 @@ namespace LinqToDB.SqlQuery
 			[JetBrains.Annotations.CanBeNull] SelectQuery           body,
 			[JetBrains.Annotations.NotNull]   ICollection<SqlField> fields,
 			[JetBrains.Annotations.CanBeNull] Type                  objectType,
+			bool isRecursive,
 			string name)
 		{
-			Body       = body;
-			Name       = name;
-			ObjectType = objectType;
+			Body        = body;
+			Name        = name;
+			ObjectType  = objectType;
+			IsRecursive = isRecursive;
 
 			foreach (var field in fields)
 			{
@@ -54,10 +56,12 @@ namespace LinqToDB.SqlQuery
 
 		internal CteClause(
 			[JetBrains.Annotations.CanBeNull] Type objectType,
+			bool isRecursive,
 			string name)
 		{
-			Name       = name;
-			ObjectType = objectType;
+			Name        = name;
+			ObjectType  = objectType;
+			IsRecursive = isRecursive;
 		}
 
 		internal void Init(
