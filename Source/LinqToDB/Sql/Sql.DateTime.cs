@@ -439,7 +439,7 @@ namespace LinqToDB
 				var partStr = DatePartBuilder.DatePartToStr(part);
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
-				builder.ResultExpression = new SqlFunction(typeof(int), builder.Expression,
+				builder.ResultExpression = new SqlFunction(typeof(DateTime?), builder.Expression,
 					new SqlExpression(partStr, Precedence.Primary), number, date);
 			}
 		}
