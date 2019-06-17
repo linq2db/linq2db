@@ -15,16 +15,21 @@ namespace LinqToDB.Linq.Builder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
-				return methodCall.Method.IsGenericMethod
-					&& (LinqExtensions.UsingMethodInfo1.GetGenericMethodDefinition() == methodCall.Method.GetGenericMethodDefinition()
-					 || LinqExtensions.UsingMethodInfo2.GetGenericMethodDefinition() == methodCall.Method.GetGenericMethodDefinition());
+				if (methodCall.Method.IsGenericMethod)
+				{
+					var genericMethod = methodCall.Method.GetGenericMethodDefinition();
+					return  LinqExtensions.UsingMethodInfo1 == genericMethod
+						 || LinqExtensions.UsingMethodInfo2 == genericMethod;
+				}
+
+				return false;
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-				if (LinqExtensions.UsingMethodInfo1.GetGenericMethodDefinition() == methodCall.Method.GetGenericMethodDefinition())
+				if (LinqExtensions.UsingMethodInfo1 == methodCall.Method.GetGenericMethodDefinition())
 				{
 					var sourceContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 					var source = new MergeSourceQueryContext(

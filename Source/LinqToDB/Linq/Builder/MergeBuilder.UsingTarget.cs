@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				return methodCall.Method.IsGenericMethod
-					&& LinqExtensions.UsingTargetMethodInfo.GetGenericMethodDefinition() == methodCall.Method.GetGenericMethodDefinition();
+					&& LinqExtensions.UsingTargetMethodInfo == methodCall.Method.GetGenericMethodDefinition();
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

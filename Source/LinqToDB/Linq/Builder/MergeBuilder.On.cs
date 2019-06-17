@@ -12,10 +12,15 @@ namespace LinqToDB.Linq.Builder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
-				return methodCall.Method.IsGenericMethod
-					&& (LinqExtensions.OnMethodInfo1        .GetGenericMethodDefinition() == methodCall.Method.GetGenericMethodDefinition()
-					 || LinqExtensions.OnMethodInfo2        .GetGenericMethodDefinition() == methodCall.Method.GetGenericMethodDefinition()
-					 || LinqExtensions.OnTargetKeyMethodInfo.GetGenericMethodDefinition() == methodCall.Method.GetGenericMethodDefinition());
+				if (methodCall.Method.IsGenericMethod)
+				{
+					var genericMethod = methodCall.Method.GetGenericMethodDefinition();
+					return  LinqExtensions.OnMethodInfo1         == genericMethod
+						 || LinqExtensions.OnMethodInfo2         == genericMethod
+						 || LinqExtensions.OnTargetKeyMethodInfo == genericMethod;
+				}
+
+				return false;
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
