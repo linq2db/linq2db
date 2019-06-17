@@ -164,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		static Tuple<Expression, Expression> GenerateKeyExpressions(IBuildContext context, ParameterExpression mainObj, List<MemberExpression> foundMembers)
+		static Tuple<Expression, Expression> GenerateKeyExpressions(IBuildContext context, Dictionary<ParameterExpression, ParameterExpression> mainParamTranformation, List<MemberExpression> foundMembers)
 		{
 			var sql = context.ConvertToIndex(null, 0, ConvertFlags.Key);
 
@@ -174,7 +174,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression forDetail = null;
 
-				forDetail = ConstructMemberPath(s.MemberChain, mainObj);
+				foreach (var transform in mainParamTranformation.Values)
+				{
+					forDetail = ConstructMemberPath(s.MemberChain, transform);
+					if (forDetail != null)
+						break;
+				}
 
 				if (forDetail == null)
 					continue;
@@ -202,16 +207,25 @@ namespace LinqToDB.Linq.Builder
 					if (fieldsSql.Length == 1)
 					{
 						var s = fieldsSql[0];
-						if (s.Sql is SqlField field && mainObj.Type == member.Member.DeclaringType)
+						if (s.Sql is SqlField field)
 						{
-							var forDetail = (Expression)Expression.MakeMemberAccess(mainObj, member.Member);
-							var forProjection = ctx.Builder.BuildSql(s.Sql.SystemType, s.Index);
+							foreach (var transform in mainParamTranformation.Values)
+							{
+								if (transform.Type == member.Member.DeclaringType)
+								{
+									var forDetail =
+										(Expression)Expression.MakeMemberAccess(transform, member.Member);
+									var forProjection = ctx.Builder.BuildSql(s.Sql.SystemType, s.Index);
 
-							if (forDetail.Type != forProjection.Type)
-								forDetail = Expression.Convert(forDetail, forProjection.Type);
-							memberOfDetail.Add(forDetail);
+									if (forDetail.Type != forProjection.Type)
+										forDetail = Expression.Convert(forDetail, forProjection.Type);
+									memberOfDetail.Add(forDetail);
 
-							memberOfProjection.Add(forProjection);
+									memberOfProjection.Add(forProjection);
+
+									break;
+								}
+							}
 						}
 					}
 				}
@@ -283,7 +297,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static Expression GenerateDetailsExpression(IBuildContext context, Expression masterQuery,
-			Expression detailsQuery, ParameterExpression masterObjParam, List<MemberExpression> foundMembers, bool hasConnection)
+			Expression detailsQuery, Dictionary<ParameterExpression, ParameterExpression> mainParamTranformation, List<MemberExpression> foundMembers, bool hasConnection)
 		{
 			var builder = context.Builder;
 
@@ -310,9 +324,9 @@ namespace LinqToDB.Linq.Builder
 			{
 
 				Tuple<Expression, Expression> keyExpressions =
-					GenerateKeyExpressions(context, masterObjParam, foundMembers);
+					GenerateKeyExpressions(context, mainParamTranformation, foundMembers);
 
-				var detailsKeyExpression = Expression.Lambda(keyExpressions.Item2, masterObjParam);
+				var detailsKeyExpression = Expression.Lambda(keyExpressions.Item2, mainParamTranformation.Values.Last());
 
 				var parameters = new HashSet<ParameterExpression>();
 				detailsQuery.Visit(e =>
@@ -322,7 +336,7 @@ namespace LinqToDB.Linq.Builder
 							parameters.Add(p);
 				});
 
-				var detailsQueryLambda = Expression.Lambda(detailsQuery, masterObjParam);
+				var detailsQueryLambda = Expression.Lambda(detailsQuery, mainParamTranformation.Values.Last());
 
 				var enlistMethod =
 					EnlistEagerLoadingFunctionalityMethodInfo.MakeGenericMethod(masterObjType, detailObjType,
@@ -431,17 +445,17 @@ namespace LinqToDB.Linq.Builder
 			return idx;
 		}
 
-		public static bool ValidateEagerLoading(IBuildContext context, ParameterExpression masterParam, ref Expression expression)
+		public static bool ValidateEagerLoading(IBuildContext context, Dictionary<ParameterExpression, ParameterExpression> mainParamTransformation, ref Expression expression)
 		{
 			if (context is JoinBuilder.GroupJoinContext joinContext)
 				return false;
 
 			var elementType = GetEnumerableElementType(expression.Type);
 
-			var helperType = typeof(EagerLoadingHelper<,>).MakeGenericType(masterParam.Type, elementType);
+			var helperType = typeof(EagerLoadingHelper<,>).MakeGenericType(mainParamTransformation.Values.Last().Type, elementType);
 			var helper = (EagerLoadingHelper)Activator.CreateInstance(helperType);
 
-			if (!helper.Validate(context, masterParam, ref expression))
+			if (!helper.Validate(context, mainParamTransformation, ref expression))
 				return false;
 
 			return true;
@@ -450,7 +464,8 @@ namespace LinqToDB.Linq.Builder
 		
 		abstract class EagerLoadingHelper
 		{
-			public abstract bool Validate(IBuildContext context, ParameterExpression masterParam,
+			public abstract bool Validate(IBuildContext context,
+				Dictionary<ParameterExpression, ParameterExpression> masterParam,
 				ref Expression expression);
 		}
 
@@ -477,7 +492,8 @@ namespace LinqToDB.Linq.Builder
 				return !isInvalid;
 			}
 
-			public override bool Validate(IBuildContext context, ParameterExpression masterParam,
+			public override bool Validate(IBuildContext context,
+				Dictionary<ParameterExpression, ParameterExpression> masterParam,
 				ref Expression expression)
 			{
 				var isValid = null == expression.Find(e =>

@@ -233,7 +233,22 @@ namespace Tests.Playground
 						}).ToArray()
 					};
 
+				var expectedQuery = from m in masterRecords
+					where m.Id1 > 5
+					select new
+					{
+						m.Id1,
+						Details = detailRecords.Where(d => d.MasterId == m.Id1).Select(d => new
+						{
+							Detail = d.DetailId,
+							Masters = masterRecords.Where(mm => mm.Id1 == d.MasterId).ToArray()
+						}).ToArray()
+					};
+
 				var result = masterQuery.ToArray();
+				var expected = expectedQuery.ToArray();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
 		}
 
