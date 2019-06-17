@@ -47,7 +47,7 @@ namespace LinqToDB.Mapping
 		public DynamicColumnInfo(Type declaringType, Type columnType, string memberName)
 		{
 			DeclaringType = declaringType ?? throw new ArgumentNullException(nameof(declaringType));
-			PropertyType = columnType     ?? throw new ArgumentNullException(nameof(columnType));
+			PropertyType  = columnType    ?? throw new ArgumentNullException(nameof(columnType));
 
 			Name = !string.IsNullOrEmpty(memberName) ? memberName : throw new ArgumentNullException(nameof(memberName));
 

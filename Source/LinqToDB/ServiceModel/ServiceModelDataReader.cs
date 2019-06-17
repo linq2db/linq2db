@@ -101,10 +101,10 @@ namespace LinqToDB.ServiceModel
 		{
 		}
 
-		bool IDataReader.IsClosed              => throw new NotImplementedException();
-		int IDataReader.RecordsAffected        => throw new NotImplementedException();
+		bool      IDataReader.IsClosed         => throw new NotImplementedException();
+		int       IDataReader.RecordsAffected  => throw new NotImplementedException();
 		DataTable IDataReader.GetSchemaTable() => throw new NotImplementedException();
-		bool IDataReader.NextResult()          => throw new NotImplementedException();
+		bool      IDataReader.NextResult()     => throw new NotImplementedException();
 
 		#endregion
 
@@ -115,9 +115,5 @@ namespace LinqToDB.ServiceModel
 		}
 
 		#endregion
-
-
-
-		
 	}
 }

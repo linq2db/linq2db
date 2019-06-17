@@ -18,8 +18,8 @@ namespace LinqToDB.SqlQuery
 			IEnumerable<SqlSetExpression> items)
 		{
 			OperationType = type;
-			Where = where;
-			WhereDelete = whereDelete;
+			Where         = where;
+			WhereDelete   = whereDelete;
 
 			foreach (var item in items)
 				Items.Add(item);

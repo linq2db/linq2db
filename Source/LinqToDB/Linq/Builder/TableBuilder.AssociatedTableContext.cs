@@ -56,19 +56,19 @@ namespace LinqToDB.Linq.Builder
 				if (typeof(IEnumerable).IsSameOrParentOf(type))
 				{
 					var eTypes = type.GetGenericArguments(typeof(IEnumerable<>));
-					type = eTypes != null && eTypes.Length > 0 ? eTypes[0] : type.GetListItemType();
-					IsList = true;
+					type       = eTypes != null && eTypes.Length > 0 ? eTypes[0] : type.GetListItemType();
+					IsList     = true;
 				}
 
-				OriginalType = type;
-				ObjectType = GetObjectType();
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+				OriginalType       = type;
+				ObjectType         = GetObjectType();
+				EntityDescriptor   = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 				InheritanceMapping = EntityDescriptor.InheritanceMapping;
-				SqlTable = new SqlTable(builder.MappingSchema, ObjectType);
+				SqlTable           = new SqlTable(builder.MappingSchema, ObjectType);
 
-				Association = association;
+				Association       = association;
 				ParentAssociation = parent;
-				IsSubQuery = asSubquery;
+				IsSubQuery        = asSubquery;
 
 				if (asSubquery)
 				{
