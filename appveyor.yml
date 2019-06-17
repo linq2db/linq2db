@@ -48,25 +48,26 @@ before_build:
     $env:MYSQL_PWD="Password12!"
     $env:PGUSER="postgres"
     $env:PGPASSWORD="Password12!"
-    $sqlInstance = "(local)\SQL2014"
+    $sqlPassword = "Password12!"
+    $sqlInstance = "localhost\SQL2014"
 
     # create databases
     $dbName = "TestDatanet45"
-    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    sqlcmd -U sa -P $sqlPassword -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
     $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
     iex "& $cmd"
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
     iex "& $cmd"
 
     $dbName = "TestDatacore1"
-    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    sqlcmd -U sa -P $sqlPassword -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
     $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
     iex "& $cmd"
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
     iex "& $cmd"
 
     $dbName = "TestDatacore2"
-    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    sqlcmd -U sa -P $sqlPassword -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
     $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
     iex "& $cmd"
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
