@@ -191,11 +191,21 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
-			var query = mergeQuery.Provider.CreateQuery<TTarget>(
-				Expression.Call(
-					null,
-					UsingMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Constant(source) }));
+
+			IQueryable<TTarget> query;
+			if (source is IQueryable<TSource> querySource)
+				query = mergeQuery.Provider.CreateQuery<TTarget>(
+					Expression.Call(
+						null,
+						UsingMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+						new[] { mergeQuery.Expression, querySource.Expression }));
+			else
+				query = mergeQuery.Provider.CreateQuery<TTarget>(
+					Expression.Call(
+						null,
+						UsingMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+						new[] { mergeQuery.Expression, Expression.Constant(source) }));
+
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}

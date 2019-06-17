@@ -38,8 +38,8 @@
 			SetConvertExpression<DateTimeOffset, string>(value => $"{value.Ticks.ToString(CultureInfo.InvariantCulture)}:{value.Offset.Ticks.ToString(CultureInfo.InvariantCulture)}");
 			SetConvertExpression<Guid          , string>(value => value.ToString("N"));
 			SetConvertExpression<TimeSpan      , string>(value => value.Ticks.ToString(CultureInfo.InvariantCulture));
-			SetConvertExpression<Binary        , string>(value => BinaryToString(value.ToArray()));
-			SetConvertExpression<byte[]        , string>(value => BinaryToString(value));
+			SetConvertExpression<Binary        , string>(value => Convert.ToBase64String(value.ToArray()));
+			SetConvertExpression<byte[]        , string>(value => Convert.ToBase64String(value));
 
 			SetConvertExpression<string, bool          >(value => value == "1");
 			SetConvertExpression<string, int           >(value => int     .Parse(value, CultureInfo.InvariantCulture));
@@ -58,28 +58,8 @@
 			SetConvertExpression<string, DateTimeOffset>(value => StringToDateTimeOffset(value));
 			SetConvertExpression<string, Guid          >(value => Guid    .Parse(value));
 			SetConvertExpression<string, TimeSpan      >(value => TimeSpan.FromTicks(long.Parse(value, CultureInfo.InvariantCulture)));
-			SetConvertExpression<string, Binary        >(value => new Binary(StringToBinary(value)));
-			SetConvertExpression<string, byte[]        >(value => StringToBinary(value));
-		}
-
-		private static string BinaryToString(byte[] data)
-		{
-			var sb = new StringBuilder();
-
-			for (var i = 0; i < data.Length; i++)
-				sb.Append(data[i].ToString("X2", CultureInfo.InvariantCulture));
-
-			return sb.ToString();
-		}
-
-		private static byte[] StringToBinary(string data)
-		{
-			var result = new byte[data.Length / 2];
-
-			for (var i = 0; i < data.Length / 2; i++)
-				result[i] = byte.Parse(data.Substring(i * 2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-
-			return result;
+			SetConvertExpression<string, Binary        >(value => new Binary(Convert.FromBase64String(value)));
+			SetConvertExpression<string, byte[]        >(value => Convert.FromBase64String(value));
 		}
 
 		// DTO converted as two fields to preserve offset information

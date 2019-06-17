@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,7 +12,7 @@ namespace LinqToDB.Data
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
 	[PublicAPI]
-	public static class DataConnectionExtensions
+	public static partial class DataConnectionExtensions
 	{
 		#region SetCommand
 
