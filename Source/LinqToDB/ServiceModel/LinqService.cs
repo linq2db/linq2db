@@ -205,14 +205,8 @@ namespace LinqToDB.ServiceModel
 								ret.FieldTypes[i] = ret.FieldTypes[i].GetGenericArgumentsEx()[0];
 						}
 
-						var columnTypes = new Type[ret.FieldCount];
-
-						for (var i = 0; i < ret.FieldCount; i++)
-							columnTypes[i] = ret.FieldTypes[i].ToNullableUnderlying();
-
-						var varyingTypes = new List<Type>();
-
 						var columnReaders = new ConvertFromDataReaderExpression.ColumnReader[rd.FieldCount];
+
 						for (var i = 0; i < ret.FieldCount; i++)
 							columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema, ret.FieldTypes[i], i);
 
@@ -227,36 +221,14 @@ namespace LinqToDB.ServiceModel
 								if (!rd.IsDBNull(i))
 								{
 									var value = columnReaders[i].GetValue(rd);
+
 									if (value != null)
-									{
-										var type = value.GetType();
-
-										var idx = -1;
-
-										if (type != columnTypes[i])
-										{
-											idx = varyingTypes.IndexOf(type);
-
-											if (idx < 0)
-											{
-												varyingTypes.Add(type);
-												idx = varyingTypes.Count - 1;
-												throw new InvalidOperationException("TODO: remove varyingTypes");
-											}
-										}
-
 										data[i] = SerializationConverter.Serialize(SerializationMappingSchema, value);
-
-										if (idx >= 0)
-											data[i] = "\0" + (char)idx + data[i];
-									}
 								}
 							}
 
 							ret.Data.Add(data);
 						}
-
-						ret.VaryingTypes = varyingTypes.ToArray();
 
 						return LinqServiceSerializer.Serialize(SerializationMappingSchema, ret);
 					}

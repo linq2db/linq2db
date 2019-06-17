@@ -2094,7 +2094,6 @@ namespace LinqToDB.ServiceModel
 			public string Serialize(LinqServiceResult result)
 			{
 				Append(result.FieldCount);
-				Append(result.VaryingTypes.Length);
 				Append(result.RowCount);
 				Append(result.QueryID.ToString());
 
@@ -2112,25 +2111,10 @@ namespace LinqToDB.ServiceModel
 					Builder.AppendLine();
 				}
 
-				foreach (var type in result.VaryingTypes)
-				{
-					Append(type.FullName);
-					Builder.AppendLine();
-				}
-
 				foreach (var data in result.Data)
 				{
 					foreach (var str in data)
-					{
-						if (result.VaryingTypes.Length > 0 && !string.IsNullOrEmpty(str) && str[0] == '\0')
-						{
-							Builder.Append('*');
-							Append((int)str[1]);
-							Append(str.Substring(2));
-						}
-						else
-							Append(str);
-					}
+						Append(str);
 
 					Builder.AppendLine();
 				}
@@ -2155,13 +2139,11 @@ namespace LinqToDB.ServiceModel
 				Str = str;
 
 				var fieldCount  = ReadInt();
-				var varTypesLen = ReadInt();
 
 				var result = new LinqServiceResult
 				{
 					FieldCount   = fieldCount,
 					RowCount     = ReadInt(),
-					VaryingTypes = new Type[varTypesLen],
 					QueryID      = new Guid(ReadString()),
 					FieldNames   = new string[fieldCount],
 					FieldTypes   = new Type  [fieldCount],
@@ -2172,29 +2154,13 @@ namespace LinqToDB.ServiceModel
 
 				for (var i = 0; i < fieldCount;  i++) { result.FieldNames  [i] = ReadString();              NextLine(); }
 				for (var i = 0; i < fieldCount;  i++) { result.FieldTypes  [i] = ResolveType(ReadString()); NextLine(); }
-				for (var i = 0; i < varTypesLen; i++) { result.VaryingTypes[i] = ResolveType(ReadString()); NextLine(); }
 
 				for (var n = 0; n < result.RowCount; n++)
 				{
 					var data = new string[fieldCount];
 
 					for (var i = 0; i < fieldCount; i++)
-					{
-						if (varTypesLen > 0)
-						{
-							Get(' ');
-
-							if (Get('*'))
-							{
-								var idx = ReadInt();
-								data[i] = "\0" + (char)idx + ReadString();
-							}
-							else
-								data[i] = ReadString();
-						}
-						else
-							data[i] = ReadString();
-					}
+						data[i] = ReadString();
 
 					result.Data.Add(data);
 

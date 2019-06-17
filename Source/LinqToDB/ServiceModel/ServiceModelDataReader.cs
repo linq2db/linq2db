@@ -46,18 +46,7 @@ namespace LinqToDB.ServiceModel
 
 		string IDataRecord.GetDataTypeName(int i) => GetFieldType(i).FullName;
 
-		public Type GetFieldType(int i)
-		{
-			if (_result.VaryingTypes.Length > 0)
-			{
-				var value = _data[i];
-
-				if (!string.IsNullOrEmpty(value) && value[0] == '\0')
-					return _result.VaryingTypes[value[1]];
-			}
-
-			return _result.FieldTypes[i];
-		}
+		public Type GetFieldType(int i) => _result.FieldTypes[i];
 
 		bool     IDataRecord.GetBoolean (int i) => (bool)    GetValue(i);
 		byte     IDataRecord.GetByte    (int i) => (byte)    GetValue(i);
@@ -81,12 +70,6 @@ namespace LinqToDB.ServiceModel
 		{
 			var type = _result.FieldTypes[i];
 			var value = _data[i];
-
-			if (_result.VaryingTypes.Length > 0 && !string.IsNullOrEmpty(value) && value[0] == '\0')
-			{
-				type = _result.VaryingTypes[value[1]];
-				value = value.Substring(2);
-			}
 
 			return SerializationConverter.Deserialize(_mappingSchema, type, value);
 		}
