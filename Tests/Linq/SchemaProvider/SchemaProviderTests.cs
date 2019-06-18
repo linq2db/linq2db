@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 
-	using LinqToDB;
-	using LinqToDB.Data;
-	using LinqToDB.Mapping;
-	using LinqToDB.SchemaProvider;
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
 

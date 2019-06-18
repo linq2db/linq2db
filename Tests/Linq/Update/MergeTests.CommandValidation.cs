@@ -33,17 +33,17 @@ namespace Tests.xUpdate
 			ProviderName.Informix,
 			ProviderName.SapHana)]
 			string context)
-			{
+		{
 			using (var db = GetDataContext(context))
 			{
 				var table = GetTarget(db);
 
 				GetProviderName(context, out var isLinq);
 				if (!isLinq)
-				Assert.Throws<LinqToDBException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
+					Assert.Throws<LinqToDBException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
 #if NET45
-				else
-					Assert.Throws<FaultException<ExceptionDetail>>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
+					else
+						Assert.Throws<FaultException<ExceptionDetail>>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
 #endif
 			}
 		}

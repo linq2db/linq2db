@@ -31,8 +31,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			var arr    = ConvertArgs(member, aargs).ToList();
 			var method = (MethodInfo)member;
 
-				var ttype  = method.GetGenericArguments()[0];
-				var tbl    = new SqlTable(ttype);
+			var ttype  = method.GetGenericArguments()[0];
+			var tbl    = new SqlTable(ttype);
 
 			arr.Add(tbl);
 
@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				var column = ed.Columns.FirstOrDefault(c => c.MemberInfo == memberInfo);
 				if (column != null) 
 					fieldExpression = new SqlField(tbl.Fields[column.MemberName]);
-				}
+			}
 			else if (field is string fieldName)
 				fieldExpression = new SqlExpression(fieldName, Precedence.Primary);
 

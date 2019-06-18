@@ -209,7 +209,7 @@ namespace LinqToDB.DataProvider.DB2
 					{
 						     if (value is Guid g) value = g.ToString();
 						else if (value is bool b) value = ConvertTo<char>.From(b);
-					break;
+						break;
 					}
 				case DataType.Boolean    :
 				case DataType.Int16      :
@@ -227,22 +227,22 @@ namespace LinqToDB.DataProvider.DB2
 						{
 							value    = g.ToByteArray();
 							dataType = dataType.WithDataType(DataType.VarBinary);
-					}
-					if (value == null)
+						}
+						if (value == null)
 							dataType = dataType.WithDataType(DataType.VarBinary);
-					break;
+						break;
 					}
 				case DataType.Binary     :
 				case DataType.VarBinary  :
 					{
 						if (value is Guid g) value = g.ToByteArray();
-					else if (parameter.Size == 0 && value != null && value.GetType().Name == "DB2Binary")
-					{
-						dynamic v = value;
-						if (v.IsNull)
-							value = DBNull.Value;
-					}
-					break;
+						else if (parameter.Size == 0 && value != null && value.GetType().Name == "DB2Binary")
+						{
+							dynamic v = value;
+							if (v.IsNull)
+								value = DBNull.Value;
+						}
+						break;
 					}
 				case DataType.Blob       :
 					base.SetParameter(parameter, "@" + name, dataType, value);
