@@ -126,6 +126,7 @@ namespace Tests.Linq
 					});
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void NestedFirstOrDefault1([DataSources] string context)
 		{

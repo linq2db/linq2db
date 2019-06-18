@@ -1,22 +1,54 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB
 {
-	using Data;
+	using Expressions;
+	using JetBrains.Annotations;
+	using Linq;
+	using LinqToDB.Async;
+	using System.Collections.Generic;
 
-	/// <summary>
-	/// Contains extension methods for merge API.
-	/// </summary>
-	[PublicAPI]
-	public static class MergeExtensions
+	public static partial class LinqExtensions
 	{
+		#region MethodInfo
+
+		internal static readonly MethodInfo MergeMethodInfo                           = MemberHelper.MethodOf(() => Merge<int>(null, null))                                          .GetGenericMethodDefinition();
+		internal static readonly MethodInfo MergeIntoMethodInfo                       = MemberHelper.MethodOf(() => MergeInto<int, int>(null, null, null))                           .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UsingMethodInfo1                          = MemberHelper.MethodOf(() => Using<int, int>(null, (IQueryable<int>)null))                    .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UsingMethodInfo2                          = MemberHelper.MethodOf(() => Using<int, int>(null, (IEnumerable<int>)null))                   .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UsingTargetMethodInfo                     = MemberHelper.MethodOf(() => UsingTarget<int>(null))                                          .GetGenericMethodDefinition();
+		internal static readonly MethodInfo OnMethodInfo1                             = MemberHelper.MethodOf(() => On<int, int, int>(null, null, null))                             .GetGenericMethodDefinition();
+		internal static readonly MethodInfo OnMethodInfo2                             = MemberHelper.MethodOf(() => On<int, int>(null, null))                                        .GetGenericMethodDefinition();
+		internal static readonly MethodInfo OnTargetKeyMethodInfo                     = MemberHelper.MethodOf(() => OnTargetKey<int>(null))                                          .GetGenericMethodDefinition();
+		internal static readonly MethodInfo InsertWhenNotMatchedAndMethodInfo         = MemberHelper.MethodOf(() => InsertWhenNotMatchedAnd<int, int>(null, null, null))             .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UpdateWhenMatchedAndMethodInfo            = MemberHelper.MethodOf(() => UpdateWhenMatchedAnd<int, int>(null, null, null))                .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UpdateWhenMatchedAndThenDeleteMethodInfo  = MemberHelper.MethodOf(() => UpdateWhenMatchedAndThenDelete<int, int>(null, null, null, null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo DeleteWhenMatchedAndMethodInfo            = MemberHelper.MethodOf(() => DeleteWhenMatchedAnd<int, int>(null, null))                      .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UpdateWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOf(() => UpdateWhenNotMatchedBySourceAnd<int, int>(null, null, null))     .GetGenericMethodDefinition();
+		internal static readonly MethodInfo DeleteWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOf(() => DeleteWhenNotMatchedBySourceAnd<int, int>(null, null))           .GetGenericMethodDefinition();
+		internal static readonly MethodInfo ExecuteMergeMethodInfo                    = MemberHelper.MethodOf(() => Merge<int, int>(null))                                           .GetGenericMethodDefinition();
+
+		#endregion
+
+		private class MergeQuery<TTarget, TSource> :
+			IMergeableUsing<TTarget>,
+			IMergeableOn<TTarget, TSource>,
+			IMergeableSource<TTarget, TSource>,
+			IMergeable<TTarget, TSource>
+		{
+			public MergeQuery(IQueryable<TTarget> query)
+			{
+				Query = query;
+			}
+
+			public IQueryable<TTarget> Query { get; }
+		}
+
 		#region source/target configuration
 		/// <summary>
 		/// Starts merge operation definition from target table.
@@ -24,12 +56,19 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <param name="target">Target table.</param>
 		/// <returns>Returns merge command builder, that contains only target.</returns>
-		public static IMergeableUsing<TTarget> Merge<TTarget>(this ITable<TTarget> target)
-				where TTarget : class
+		[Pure, LinqTunnel]
+		public static IMergeableUsing<TTarget> Merge<TTarget>(
+			[NotNull] this ITable<TTarget> target)
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
-			return new MergeDefinition<TTarget, TTarget>(target);
+			var query = target.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					MergeMethodInfo.MakeGenericMethod(typeof(TTarget)),
+					new[] { target.Expression, Expression.Constant(null, typeof(string)) }));
+
+			return new MergeQuery<TTarget, TTarget>(query);
 		}
 
 		/// <summary>
@@ -39,13 +78,21 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="hint">Database-specific merge hint.</param>
 		/// <returns>Returns merge command builder, that contains only target.</returns>
-		public static IMergeableUsing<TTarget> Merge<TTarget>(this ITable<TTarget> target, string hint)
-				where TTarget : class
+		[Pure, LinqTunnel]
+		public static IMergeableUsing<TTarget> Merge<TTarget>(
+			[NotNull]                    this ITable<TTarget> target,
+			[NotNull, SqlQueryDependent]      string          hint)
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (hint   == null) throw new ArgumentNullException(nameof(hint));
 
-			return new MergeDefinition<TTarget, TTarget>(target, hint);
+			var query = target.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					MergeMethodInfo.MakeGenericMethod(typeof(TTarget)),
+					new[] { target.Expression, Expression.Constant(hint) }));
+
+			return new MergeQuery<TTarget, TTarget>(query);
 		}
 
 		/// <summary>
@@ -56,16 +103,21 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table.</param>
 		/// <returns>Returns merge command builder with source and target set.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
-			this IQueryable<TSource> source,
-			ITable<TTarget>          target)
-				where TTarget : class
-				where TSource : class
+			[NotNull] this IQueryable<TSource> source,
+			[NotNull]      ITable<TTarget>     target)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
-			return new MergeDefinition<TTarget, TSource>(target, source, null);
+			var query = target.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					MergeIntoMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { source.Expression, target.Expression, Expression.Constant(null, typeof(string)) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 
 		/// <summary>
@@ -77,18 +129,23 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="hint">Database-specific merge hint.</param>
 		/// <returns>Returns merge command builder with source and target set.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
-			this IQueryable<TSource> source,
-			ITable<TTarget>          target,
-			string                   hint)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                    this IQueryable<TSource> source,
+			[NotNull]                         ITable<TTarget>     target,
+			[NotNull, SqlQueryDependent]      string              hint)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (hint   == null) throw new ArgumentNullException(nameof(hint));
 
-			return new MergeDefinition<TTarget, TSource>(target, source, hint);
+			var query = target.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					MergeIntoMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { source.Expression, target.Expression, Expression.Constant(hint) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 
 		/// <summary>
@@ -99,16 +156,22 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder.</param>
 		/// <param name="source">Source data query.</param>
 		/// <returns>Returns merge command builder with source and target set.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
-			this IMergeableUsing<TTarget> merge,
-			IQueryable<TSource>           source)
-				where TTarget : class
-				where TSource : class
+			[NotNull] this IMergeableUsing<TTarget> merge,
+			[NotNull]      IQueryable<TSource>      source)
 		{
 			if (merge  == null) throw new ArgumentNullException(nameof(merge));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return ((MergeDefinition<TTarget, TTarget>)merge).AddSource(source);
+			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					UsingMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, source.Expression }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 
 		/// <summary>
@@ -119,16 +182,32 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder.</param>
 		/// <param name="source">Source data collection.</param>
 		/// <returns>Returns merge command builder with source and target set.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
-			this IMergeableUsing<TTarget> merge,
-			IEnumerable<TSource>          source)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                    this IMergeableUsing<TTarget> merge,
+			[NotNull, SqlQueryDependent] IEnumerable<TSource>          source)
 		{
 			if (merge  == null) throw new ArgumentNullException(nameof(merge));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return ((MergeDefinition<TTarget, TTarget>)merge).AddSource(source);
+			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
+
+			IQueryable<TTarget> query;
+			if (source is IQueryable<TSource> querySource)
+				query = mergeQuery.Provider.CreateQuery<TTarget>(
+					Expression.Call(
+						null,
+						UsingMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+						new[] { mergeQuery.Expression, querySource.Expression }));
+			else
+				query = mergeQuery.Provider.CreateQuery<TTarget>(
+					Expression.Call(
+						null,
+						UsingMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+						new[] { mergeQuery.Expression, Expression.Constant(source) }));
+
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 
 		/// <summary>
@@ -137,13 +216,20 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <param name="merge">Merge command builder.</param>
 		/// <returns>Returns merge command builder with source and target set.</returns>
-		public static IMergeableOn<TTarget, TTarget> UsingTarget<TTarget>(this IMergeableUsing<TTarget> merge)
-			where TTarget : class
+		[Pure, LinqTunnel]
+		public static IMergeableOn<TTarget, TTarget> UsingTarget<TTarget>(
+			[NotNull] this IMergeableUsing<TTarget> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
-			var builder = (MergeDefinition<TTarget,TTarget>)merge;
-			return builder.AddSource(builder.Target);
+			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					UsingTargetMethodInfo.MakeGenericMethod(typeof(TTarget)),
+					new[] { mergeQuery.Expression }));
+
+			return new MergeQuery<TTarget, TTarget>(query);
 		}
 		#endregion
 
@@ -158,18 +244,24 @@ namespace LinqToDB
 		/// <param name="targetKey">Target record match key definition.</param>
 		/// <param name="sourceKey">Source record match key definition.</param>
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeableSource<TTarget, TSource> On<TTarget, TSource, TKey>(
-			this IMergeableOn<TTarget, TSource> merge,
-			Expression<Func<TTarget, TKey>>     targetKey,
-			Expression<Func<TSource, TKey>>     sourceKey)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                this IMergeableOn<TTarget, TSource>  merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TKey>> targetKey,
+			[NotNull, InstantHandle]      Expression<Func<TSource, TKey>> sourceKey)
 		{
 			if (merge     == null) throw new ArgumentNullException(nameof(merge));
 			if (targetKey == null) throw new ArgumentNullException(nameof(targetKey));
 			if (sourceKey == null) throw new ArgumentNullException(nameof(sourceKey));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOnKey(targetKey, sourceKey);
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					OnMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TKey)),
+					new[] { mergeQuery.Expression, Expression.Quote(targetKey), Expression.Quote(sourceKey) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 
 		/// <summary>
@@ -180,16 +272,22 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder.</param>
 		/// <param name="matchCondition">Rule to match/join target and source records.</param>
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeableSource<TTarget, TSource> On<TTarget, TSource>(
-			this IMergeableOn<TTarget, TSource>      merge,
-			Expression<Func<TTarget, TSource, bool>> matchCondition)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                this IMergeableOn<TTarget, TSource>           merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, bool>> matchCondition)
 		{
 			if (merge          == null) throw new ArgumentNullException(nameof(merge));
 			if (matchCondition == null) throw new ArgumentNullException(nameof(matchCondition));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOnPredicate(matchCondition);
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					OnMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Quote(matchCondition) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 
 		/// <summary>
@@ -198,12 +296,20 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <param name="merge">Merge command builder.</param>
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
-		public static IMergeableSource<TTarget, TTarget> OnTargetKey<TTarget>(this IMergeableOn<TTarget, TTarget> merge)
-				where TTarget : class
+		[Pure, LinqTunnel]
+		public static IMergeableSource<TTarget, TTarget> OnTargetKey<TTarget>(
+			[NotNull] this IMergeableOn<TTarget, TTarget> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
-			return (MergeDefinition<TTarget, TTarget>)merge;
+			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					OnTargetKeyMethodInfo.MakeGenericMethod(typeof(TTarget)),
+					new[] { mergeQuery.Expression }));
+
+			return new MergeQuery<TTarget, TTarget>(query);
 		}
 		#endregion
 
@@ -216,13 +322,20 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target and source records type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMergeable<TTarget, TTarget> InsertWhenNotMatched<TTarget>(this IMergeableSource<TTarget, TTarget> merge)
-				where TTarget : class
+		[Pure, LinqTunnel]
+		public static IMergeable<TTarget, TTarget> InsertWhenNotMatched<TTarget>(
+			[NotNull] this IMergeableSource<TTarget, TTarget> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
-			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
-				MergeDefinition<TTarget, TTarget>.Operation.Insert(null, null));
+			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, bool>>)), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget>>)) }));
+
+			return new MergeQuery<TTarget, TTarget>(query);
 		}
 
 		/// <summary>
@@ -235,16 +348,22 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="searchCondition">Operation execution condition over source record.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> InsertWhenNotMatchedAnd<TTarget>(
-			this IMergeableSource<TTarget, TTarget> merge,
-			Expression<Func<TTarget, bool>>         searchCondition)
-				where TTarget : class
+			[NotNull]                this IMergeableSource<TTarget, TTarget> merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, bool>>    searchCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
 
-			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
-				MergeDefinition<TTarget, TTarget>.Operation.Insert(searchCondition, null));
+			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
+					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget>>)) }));
+
+			return new MergeQuery<TTarget, TTarget>(query);
 		}
 
 		/// <summary>
@@ -258,17 +377,22 @@ namespace LinqToDB
 		/// <param name="setter">Create record expression using source record. Expression should be a call to target
 		/// record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> InsertWhenNotMatched<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource> merge,
-			Expression<Func<TSource, TTarget>>      setter)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                this IMergeableSource<TTarget, TSource> merge,
+			[NotNull, InstantHandle]      Expression<Func<TSource, TTarget>> setter)
 		{
 			if (merge  == null) throw new ArgumentNullException(nameof(merge));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.Insert(null, setter));
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TSource, bool>>)), Expression.Quote(setter) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 
 		/// <summary>
@@ -284,19 +408,24 @@ namespace LinqToDB
 		/// <param name="setter">Create record expression using source record. Expression should be a call to target
 		/// record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> InsertWhenNotMatchedAnd<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource> merge,
-			Expression<Func<TSource, bool>>         searchCondition,
-			Expression<Func<TSource, TTarget>>      setter)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                this IMergeableSource<TTarget, TSource> merge,
+			[NotNull, InstantHandle]      Expression<Func<TSource, bool>>    searchCondition,
+			[NotNull, InstantHandle]      Expression<Func<TSource, TTarget>> setter)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
 			if (setter          == null) throw new ArgumentNullException(nameof(setter));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.Insert(searchCondition, setter));
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 		#endregion
 
@@ -309,13 +438,20 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target and source records type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMergeable<TTarget, TTarget> UpdateWhenMatched<TTarget>(this IMergeableSource<TTarget, TTarget> merge)
-				where TTarget : class
+		[Pure, LinqTunnel]
+		public static IMergeable<TTarget, TTarget> UpdateWhenMatched<TTarget>(
+			[NotNull] this IMergeableSource<TTarget, TTarget> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
-			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
-				MergeDefinition<TTarget, TTarget>.Operation.Update(null, null));
+			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, bool>>)), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)) }));
+
+			return new MergeQuery<TTarget, TTarget>(query);
 		}
 
 		/// <summary>
@@ -328,16 +464,22 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="searchCondition">Operation execution condition over target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedAnd<TTarget>(
-			this IMergeableSource<TTarget, TTarget>  merge,
-			Expression<Func<TTarget, TTarget, bool>> searchCondition)
-				where TTarget : class
+			[NotNull]                this IMergeableSource<TTarget, TTarget>       merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TTarget, bool>> searchCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
 
-			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
-				MergeDefinition<TTarget, TTarget>.Operation.Update(searchCondition, null));
+			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
+					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)) }));
+
+			return new MergeQuery<TTarget, TTarget>(query);
 		}
 
 		/// <summary>
@@ -351,17 +493,22 @@ namespace LinqToDB
 		/// <param name="setter">Update record expression using target and source records.
 		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatched<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource>     merge,
-			Expression<Func<TTarget, TSource, TTarget>> setter)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                this IMergeableSource<TTarget, TSource>          merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter)
 		{
 			if (merge  == null) throw new ArgumentNullException(nameof(merge));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.Update(null, setter));
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TSource, bool>>)), Expression.Quote(setter) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 
 		/// <summary>
@@ -377,19 +524,24 @@ namespace LinqToDB
 		/// <param name="setter">Update record expression using target and source records.
 		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedAnd<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource>     merge,
-			Expression<Func<TTarget, TSource, bool>>    searchCondition,
-			Expression<Func<TTarget, TSource, TTarget>> setter)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                this IMergeableSource<TTarget, TSource>          merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, bool>>    searchCondition,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
 			if (setter          == null) throw new ArgumentNullException(nameof(setter));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.Update(searchCondition, setter));
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 		#endregion
 
@@ -405,16 +557,22 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedThenDelete<TTarget>(
-			this IMergeableSource<TTarget, TTarget>  merge,
-			Expression<Func<TTarget, TTarget, bool>> deleteCondition)
-				where TTarget : class
+			[NotNull]                this IMergeableSource<TTarget, TTarget>       merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TTarget, bool>> deleteCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (deleteCondition == null) throw new ArgumentNullException(nameof(deleteCondition));
 
-			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
-				MergeDefinition<TTarget, TTarget>.Operation.UpdateWithDelete(null, null, deleteCondition));
+			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, bool>>)), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)), Expression.Quote(deleteCondition) }));
+
+			return new MergeQuery<TTarget, TTarget>(query);
 		}
 
 		/// <summary>
@@ -430,18 +588,24 @@ namespace LinqToDB
 		/// <param name="searchCondition">Update execution condition over target and source records.</param>
 		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedAndThenDelete<TTarget>(
-			this IMergeableSource<TTarget, TTarget>  merge,
-			Expression<Func<TTarget, TTarget, bool>> searchCondition,
-			Expression<Func<TTarget, TTarget, bool>> deleteCondition)
-				where TTarget : class
+			[NotNull]                this IMergeableSource<TTarget, TTarget>       merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TTarget, bool>> searchCondition,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TTarget, bool>> deleteCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
 			if (deleteCondition == null) throw new ArgumentNullException(nameof(deleteCondition));
 
-			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
-				MergeDefinition<TTarget, TTarget>.Operation.UpdateWithDelete(searchCondition, null, deleteCondition));
+			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
+					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)), Expression.Quote(deleteCondition) }));
+
+			return new MergeQuery<TTarget, TTarget>(query);
 		}
 
 		/// <summary>
@@ -458,19 +622,24 @@ namespace LinqToDB
 		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
 		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedThenDelete<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource>     merge,
-			Expression<Func<TTarget, TSource, TTarget>> setter,
-			Expression<Func<TTarget, TSource, bool>>    deleteCondition)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                this IMergeableSource<TTarget, TSource>          merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, bool>>    deleteCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (setter          == null) throw new ArgumentNullException(nameof(setter));
 			if (deleteCondition == null) throw new ArgumentNullException(nameof(deleteCondition));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.UpdateWithDelete(null, setter, deleteCondition));
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TSource, bool>>)), Expression.Quote(setter), Expression.Quote(deleteCondition) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 
 		/// <summary>
@@ -489,21 +658,26 @@ namespace LinqToDB
 		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
 		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedAndThenDelete<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource>     merge,
-			Expression<Func<TTarget, TSource, bool>>    searchCondition,
-			Expression<Func<TTarget, TSource, TTarget>> setter,
-			Expression<Func<TTarget, TSource, bool>>    deleteCondition)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                this IMergeableSource<TTarget, TSource>          merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, bool>>    searchCondition,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, bool>>    deleteCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
 			if (setter          == null) throw new ArgumentNullException(nameof(setter));
 			if (deleteCondition == null) throw new ArgumentNullException(nameof(deleteCondition));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.UpdateWithDelete(searchCondition, setter, deleteCondition));
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter), Expression.Quote(deleteCondition) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 		#endregion
 
@@ -517,15 +691,20 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenMatched<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource> merge)
-				where TTarget : class
-				where TSource : class
+			[NotNull] this IMergeableSource<TTarget, TSource> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.Delete(null));
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					DeleteWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TSource, bool>>)) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 
 		/// <summary>
@@ -538,17 +717,22 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="searchCondition">Operation execution condition over target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenMatchedAnd<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource>  merge,
-			Expression<Func<TTarget, TSource, bool>> searchCondition)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                this IMergeableSource<TTarget, TSource>       merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TSource, bool>> searchCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.Delete(searchCondition));
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					DeleteWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Quote(searchCondition) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 		#endregion
 
@@ -565,17 +749,22 @@ namespace LinqToDB
 		/// <param name="setter">Update record expression using target record. Expression should be a call to
 		/// target record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenNotMatchedBySource<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, TTarget>>      setter)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                this IMergeableSource<TTarget, TSource> merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TTarget>> setter)
 		{
 			if (merge  == null) throw new ArgumentNullException(nameof(merge));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.UpdateBySource(null, setter));
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					UpdateWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, bool>>)), Expression.Quote(setter) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 
 		/// <summary>
@@ -592,19 +781,24 @@ namespace LinqToDB
 		/// <param name="setter">Update record expression using target record. Expression should be a call to
 		/// target record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenNotMatchedBySourceAnd<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, bool>>         searchCondition,
-			Expression<Func<TTarget, TTarget>>      setter)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                this IMergeableSource<TTarget, TSource> merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, bool>>    searchCondition,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, TTarget>> setter)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
 			if (setter          == null) throw new ArgumentNullException(nameof(setter));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.UpdateBySource(searchCondition, setter));
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					UpdateWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 		#endregion
 
@@ -619,15 +813,20 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenNotMatchedBySource<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource> merge)
-				where TTarget : class
-				where TSource : class
+			[NotNull] this IMergeableSource<TTarget, TSource> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.DeleteBySource(null));
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					DeleteWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, bool>>)) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 
 		/// <summary>
@@ -641,17 +840,22 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="searchCondition">Operation execution condition over target record.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenNotMatchedBySourceAnd<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, bool>>         searchCondition)
-				where TTarget : class
-				where TSource : class
+			[NotNull]                this IMergeableSource<TTarget, TSource> merge,
+			[NotNull, InstantHandle]      Expression<Func<TTarget, bool>>    searchCondition)
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
 			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
 
-			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.DeleteBySource(searchCondition));
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					DeleteWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Quote(searchCondition) }));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 		#endregion
 
@@ -663,25 +867,20 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <returns>Returns number of target table records, affected by merge comand.</returns>
-		public static int Merge<TTarget, TSource>(this IMergeable<TTarget, TSource> merge)
-			where TTarget : class
-			where TSource : class
+		public static int Merge<TTarget, TSource>(
+			[NotNull] this IMergeable<TTarget, TSource> merge)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
-			var definition = (MergeDefinition<TTarget, TSource>)merge;
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 
-			DataConnection dataConnection;
+			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
 
-			switch (definition.Target.DataContext)
-			{
-				case DataConnection dcon : dataConnection = dcon;                     break;
-				case DataContext    dctx : dataConnection = dctx.GetDataConnection(); break;
-				default:
-					throw new ArgumentException("DataContext must be of DataConnection or DataContext type.");
-			}
-
-			return dataConnection.DataProvider.Merge(dataConnection, definition);
+			return currentQuery.Provider.Execute<int>(
+				Expression.Call(
+					null,
+					ExecuteMergeMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					currentQuery.Expression));
 		}
 		#endregion
 
@@ -695,66 +894,25 @@ namespace LinqToDB
 		/// <param name="token">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns number of target table records, affected by merge comand.</returns>
 		public static async Task<int> MergeAsync<TTarget, TSource>(
-			this IMergeable<TTarget, TSource> merge,
-			CancellationToken                 token = default)
-				where TTarget : class
-				where TSource : class
+			[NotNull] this IMergeable<TTarget, TSource> merge,
+			               CancellationToken            token = default)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
-			var definition = (MergeDefinition<TTarget, TSource>)merge;
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 
-			DataConnection dataConnection;
+			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
 
-			switch (definition.Target.DataContext)
-			{
-				case DataConnection dcon : dataConnection = dcon;                     break;
-				case DataContext    dctx : dataConnection = dctx.GetDataConnection(); break;
-				default:
-					throw new ArgumentException("DataContext must be of DataConnection or DataContext type.");
-			}
+			var expr = Expression.Call(
+				null,
+				ExecuteMergeMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+				currentQuery.Expression);
 
-			return await dataConnection.DataProvider.MergeAsync(dataConnection, definition, token);
+			if (currentQuery is IQueryProviderAsync query)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await TaskEx.Run(() => currentQuery.Provider.Execute<int>(expr), token);
 		}
 		#endregion
-	}
-
-	/// <summary>
-	/// Merge command builder that have only target table configured.
-	/// Only operation available for this type of builder is source configuration.
-	/// </summary>
-	/// <typeparam name="TTarget">Target record type.</typeparam>
-	public interface IMergeableUsing<TTarget>
-	{
-	}
-
-	/// <summary>
-	/// Merge command builder that have only target table and source configured.
-	/// Only operation available for this type of builder is match (ON) condition configuration.
-	/// </summary>
-	/// <typeparam name="TTarget">Target record type.</typeparam>
-	/// <typeparam name="TSource">Source record type.</typeparam>
-	public interface IMergeableOn<TTarget,TSource>
-	{
-	}
-
-	/// <summary>
-	/// Merge command builder that have target table, source and match (ON) condition configured.
-	/// You can only add operations to this type of builder.
-	/// </summary>
-	/// <typeparam name="TTarget">Target record type.</typeparam>
-	/// <typeparam name="TSource">Source record type.</typeparam>
-	public interface IMergeableSource<TTarget,TSource>
-	{
-	}
-
-	/// <summary>
-	/// Merge command builder that have target table, source, match (ON) condition and at least one operation configured.
-	/// You can add more operations to this type of builder or execute command.
-	/// </summary>
-	/// <typeparam name="TTarget">Target record type.</typeparam>
-	/// <typeparam name="TSource">Source record type.</typeparam>
-	public interface IMergeable<TTarget, TSource> : IMergeableSource<TTarget, TSource>
-	{
 	}
 }

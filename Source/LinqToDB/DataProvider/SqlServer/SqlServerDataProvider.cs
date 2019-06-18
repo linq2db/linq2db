@@ -21,6 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using LinqToDB.Linq;
 
 	public class SqlServerDataProvider : DataProviderBase
 	{
@@ -328,6 +329,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.UInt32        : parameter.DbType = DbType.Int64;   break;
 				case DataType.UInt64        : parameter.DbType = DbType.Decimal; break;
 				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal; break;
+				case DataType.DateTime      :
 				case DataType.DateTime2     :
 					parameter.DbType =
 						Version == SqlServerVersion.v2000 || Version == SqlServerVersion.v2005 ?
@@ -402,29 +404,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				table,
 				options,
 				source);
-		}
-
-		#endregion
-
-		#region Merge
-
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
-		{
-			return new SqlServerMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-		}
-
-		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-		{
-			return new SqlServerMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
-		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new SqlServerMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		#endregion

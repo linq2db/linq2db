@@ -2161,7 +2161,7 @@ namespace LinqToDB.Linq.Builder
 			var dbType     = baseType.DbType;
 			var length     = baseType.Length;
 
-			QueryVisitor.Find(expr, e =>
+			new QueryVisitor().Find(expr, e =>
 			{
 				switch (e.ElementType)
 				{
@@ -2835,8 +2835,8 @@ namespace LinqToDB.Linq.Builder
 					var expr1 = exprExpr != null ? exprExpr.Expr1 : inList.Expr1;
 					var expr2 = exprExpr?.Expr2;
 
-					var nullValue1 =                 QueryVisitor.Find(expr1, _ => _ is IValueContainer);
-					var nullValue2 = expr2 != null ? QueryVisitor.Find(expr2, _ => _ is IValueContainer) : null;
+					var nullValue1 =                 new QueryVisitor().Find(expr1, _ => _ is IValueContainer);
+					var nullValue2 = expr2 != null ? new QueryVisitor().Find(expr2, _ => _ is IValueContainer) : null;
 
 					var hasNullValue =
 						   nullValue1 != null && ((IValueContainer) nullValue1).Value == null
@@ -2844,8 +2844,8 @@ namespace LinqToDB.Linq.Builder
 
 					if (!hasNullValue)
 					{
-						var expr1IsField =                  expr1.CanBeNull && QueryVisitor.Find(expr1, _ => _.ElementType == QueryElementType.SqlField) != null;
-						var expr2IsField = expr2 != null && expr2.CanBeNull && QueryVisitor.Find(expr2, _ => _.ElementType == QueryElementType.SqlField) != null;
+						var expr1IsField =                  expr1.CanBeNull && new QueryVisitor().Find(expr1, _ => _.ElementType == QueryElementType.SqlField) != null;
+						var expr2IsField = expr2 != null && expr2.CanBeNull && new QueryVisitor().Find(expr2, _ => _.ElementType == QueryElementType.SqlField) != null;
 
 						var nullableField = expr1IsField
 							? expr1

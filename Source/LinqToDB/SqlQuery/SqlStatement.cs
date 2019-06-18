@@ -340,6 +340,31 @@ namespace LinqToDB.SqlQuery
 			{
 				switch (expr.ElementType)
 				{
+					case QueryElementType.MergeSourceTable:
+						{
+							var source = (SqlMergeSourceTable)expr;
+
+							Utils.MakeUniqueNames(
+								source.SourceFields,
+								n => !ReservedWords.IsReserved(n),
+								f => f.PhysicalName,
+								(f, n) => { f.PhysicalName = n; },
+								f =>
+								{
+									var a = f.PhysicalName;
+									return a.IsNullOrEmpty()
+										? "c1"
+										: a + (a.EndsWith("_") ? string.Empty : "_") + "1";
+								},
+								StringComparer.OrdinalIgnoreCase);
+
+							// copy aliases to source query fields
+							if (source.SourceQuery != null)
+								for (var i = 0; i < source.SourceFields.Count; i++)
+									source.SourceQuery.Select.Columns[i].Alias = source.SourceFields[i].PhysicalName;
+
+							break;
+						}
 					case QueryElementType.SqlQuery:
 						{
 							var query = (SelectQuery)expr;

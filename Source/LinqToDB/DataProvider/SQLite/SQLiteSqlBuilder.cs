@@ -110,12 +110,12 @@ namespace LinqToDB.DataProvider.SQLite
 			return value;
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
-				case DataType.Int32 : StringBuilder.Append("INTEGER");               break;
-				default             : base.BuildDataType(type, createDbType);        break;
+				case DataType.Int32 : StringBuilder.Append("INTEGER");                      break;
+				default             : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 			}
 		}
 
@@ -192,6 +192,11 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			BuildDropTableStatementIfExists(dropTable);
+		}
+
+		protected override void BuildMergeStatement(SqlMergeStatement merge)
+		{
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 	}
 }

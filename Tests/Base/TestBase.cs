@@ -233,17 +233,21 @@ namespace Tests
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 		const int IP = 22654;
 		static bool _isHostOpen;
+		static LinqService _service;
 #endif
 
-		static void OpenHost()
+		static void OpenHost(MappingSchema ms)
 		{
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 			if (_isHostOpen)
+			{
+				_service.MappingSchema = ms;
 				return;
+			}
 
 			_isHostOpen = true;
 
-			var host = new ServiceHost(new LinqService { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
+			var host = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
 
 			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
 			host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
@@ -320,7 +324,7 @@ namespace Tests
 			if (configuration.EndsWith(".LinqService"))
 			{
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
-				OpenHost();
+				OpenHost(ms);
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 				var dx  = new TestServiceModelDataContext(IP) { Configuration = str };
@@ -1044,6 +1048,12 @@ namespace Tests
 		protected List<LinqDataTypes> GetTypes(string context)
 		{
 			return DataCache<LinqDataTypes>.Get(context);
+		}
+
+		protected string GetProviderName(string context, out bool isLinqService)
+		{
+			isLinqService = context.EndsWith(".LinqService");
+			return context.Replace(".LinqService", "");
 		}
 	}
 

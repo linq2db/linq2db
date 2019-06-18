@@ -97,6 +97,17 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		public override int GetHashCode()
+		{
+			var hashCode = Parent.GetHashCode();
+
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.GetHashCode());
+			if (UnderlyingColumn != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ UnderlyingColumn.GetHashCode());
+
+			return hashCode;
+		}
+
 		public bool Equals(SqlColumn other)
 		{
 			if (other == null)

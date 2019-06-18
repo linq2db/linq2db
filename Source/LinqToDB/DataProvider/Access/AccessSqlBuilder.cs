@@ -341,12 +341,12 @@ namespace LinqToDB.DataProvider.Access
 				base.BuildFromClause(statement, selectQuery);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime2 : StringBuilder.Append("timestamp");      break;
-				default                 : base.BuildDataType(type, createDbType); break;
+				case DataType.DateTime2 : StringBuilder.Append("timestamp");                    break;
+				default                 : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 			}
 		}
 
@@ -428,6 +428,11 @@ namespace LinqToDB.DataProvider.Access
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.OleDb.OleDbParameter)parameter).OleDbType.ToString();
+		}
+
+		protected override void BuildMergeStatement(SqlMergeStatement merge)
+		{
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 	}
 }

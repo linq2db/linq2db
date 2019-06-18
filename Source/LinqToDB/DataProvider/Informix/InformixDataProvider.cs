@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Common;
 	using Data;
 	using Extensions;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 
@@ -208,35 +209,6 @@ namespace LinqToDB.DataProvider.Informix
 				table,
 				options,
 				source);
-		}
-
-		#endregion
-
-		#region Merge
-
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
-		{
-			if (delete)
-				throw new LinqToDBException("Informix MERGE statement does not support DELETE by source.");
-
-			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-		}
-
-		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-		{
-			if (delete)
-				throw new LinqToDBException("Informix MERGE statement does not support DELETE by source.");
-
-			return new InformixMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
-		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new InformixMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		#endregion

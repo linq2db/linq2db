@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+using System.ServiceModel;
+#endif
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -1719,6 +1722,8 @@ namespace Tests.Linq
 		[Test]
 		public void EnumMappingReadUndefinedValue([DataSources] string context)
 		{
+			GetProviderName(context, out var isLinqService);
+
 			using (var db = GetDataContext(context))
 			{
 				using (new Cleaner(db))
@@ -1729,11 +1734,22 @@ namespace Tests.Linq
 						TestField = 5
 					});
 
-					Assert.Throws<LinqToDBConvertException>(() =>
-						db.GetTable<UndefinedValueTest>()
-							.Select(r => new { r.Id, r.TestField })
-							.Where(r => r.Id == RID)
-							.ToList());
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+					if (isLinqService)
+					{
+						Assert.Throws<FaultException<ExceptionDetail>>(() =>
+							db.GetTable<UndefinedValueTest>()
+								.Select(r => new { r.Id, r.TestField })
+								.Where(r => r.Id == RID)
+								.ToList());
+					}
+					else
+#endif
+						Assert.Throws<LinqToDBConvertException>(() =>
+							db.GetTable<UndefinedValueTest>()
+								.Select(r => new { r.Id, r.TestField })
+								.Where(r => r.Id == RID)
+								.ToList());
 				}
 			}
 		}

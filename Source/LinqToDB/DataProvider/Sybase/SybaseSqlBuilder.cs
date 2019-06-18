@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using SqlQuery;
 	using SqlProvider;
 
-	class SybaseSqlBuilder : BasicSqlBuilder
+	partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
 		public SybaseSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return new SybaseSqlBuilder(_isSelect, SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -90,7 +90,7 @@ namespace LinqToDB.DataProvider.Sybase
 					break;
 			}
 
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
@@ -264,6 +264,13 @@ namespace LinqToDB.DataProvider.Sybase
 				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
 				StringBuilder.AppendLine(", 'identity_burn_max', 0, '0'");
 			}
+		}
+
+		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
+		{
+			StringBuilder.Append($"SET IDENTITY_INSERT ");
+			BuildTableName(table, true, false);
+			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
 	}
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider
 {
 	using Data;
+	using LinqToDB.Linq;
 	using Mapping;
 	using Common;
 	using SchemaProvider;
@@ -47,36 +48,5 @@ namespace LinqToDB.DataProvider
 #endif
 
 		BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source);
-
-		int Merge<T>(
-			DataConnection           dataConnection,
-			Expression<Func<T,bool>> predicate,
-			bool                     delete,
-			IEnumerable<T>           source,
-			string                   tableName,
-			string                   databaseName,
-			string                   schemaName)
-			where T : class;
-
-		Task<int> MergeAsync<T>(
-			DataConnection           dataConnection,
-			Expression<Func<T,bool>> predicate,
-			bool                     delete,
-			IEnumerable<T>           source,
-			string                   tableName,
-			string                   databaseName,
-			string                   schemaName,
-			CancellationToken        token)
-			where T : class;
-
-		int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
-			where TTarget : class
-			where TSource : class;
-
-		Task<int> MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
-			where TTarget : class
-			where TSource : class;
-
-		//TimeSpan? ShouldRetryOn(Exception exception, int retryCount, TimeSpan baseDelay);
 	}
 }

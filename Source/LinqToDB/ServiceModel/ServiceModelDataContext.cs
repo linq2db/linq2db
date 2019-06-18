@@ -24,7 +24,7 @@ namespace LinqToDB.ServiceModel
 			: this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
-			_remoteAddress             = remoteAddress ?? throw new ArgumentNullException(nameof(remoteAddress));
+			_remoteAddress             = remoteAddress             ?? throw new ArgumentNullException(nameof(remoteAddress));
 		}
 
 		public ServiceModelDataContext([NotNull] string endpointConfigurationName, [NotNull] EndpointAddress endpointAddress)

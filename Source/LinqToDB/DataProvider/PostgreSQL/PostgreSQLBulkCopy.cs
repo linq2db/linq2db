@@ -144,7 +144,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var npgsqlType = _dataProvider.GetNativeType(columns[i].DbType);
 				if (npgsqlType == null)
 				{
-					var columnType = columns[i].DataType != DataType.Undefined ? new SqlDataType(columns[i].DataType) : null;
+					var columnType = columns[i].DataType != DataType.Undefined ? new SqlDataType(columns[i].DataType, columns[i].MemberType) : null;
 
 					if (columnType == null || columnType.DataType == DataType.Undefined)
 						columnType = mappingSchema.GetDataType(columns[i].StorageType);

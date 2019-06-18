@@ -291,7 +291,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -333,7 +333,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					return;
 			}
 
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		protected override string GetTypeName(IDbDataParameter parameter)
@@ -359,6 +359,13 @@ namespace LinqToDB.DataProvider.SqlServer
 				StringBuilder.Append("TRUNCATE TABLE ");
 			else
 				StringBuilder.Append("DELETE FROM ");
+		}
+
+		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
+		{
+			StringBuilder.Append($"SET IDENTITY_INSERT ");
+			BuildTableName(table, true, false);
+			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
 	}
 }

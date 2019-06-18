@@ -42,7 +42,7 @@ namespace LinqToDB
 
 		#region DatePart
 
-		class DatePartBuilder : Sql.IExtensionCallBuilder
+		internal class DatePartBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -261,14 +261,14 @@ namespace LinqToDB
 							var param = builder.GetExpression("date");
 							builder.ResultExpression = builder.Inc(
 								builder.Sub<int>(
-									new SqlFunction(null, "Mdy",
-										new SqlFunction(null, "Month", param),
-										new SqlFunction(null, "Day", param),
-										new SqlFunction(null, "Year", param)),
-									new SqlFunction(null, "Mdy",
+									new SqlFunction(typeof(DateTime?), "Mdy",
+										new SqlFunction(typeof(int?), "Month", param),
+										new SqlFunction(typeof(int?), "Day",   param),
+										new SqlFunction(typeof(int?), "Year",  param)),
+									new SqlFunction(typeof(DateTime?), "Mdy",
 										new SqlValue(1),
 										new SqlValue(1),
-										new SqlFunction(null, "Year", param)))
+										new SqlFunction(typeof(int?), "Year", param)))
 							);
 							return;
 						}
@@ -439,7 +439,7 @@ namespace LinqToDB
 				var partStr = DatePartBuilder.DatePartToStr(part);
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
-				builder.ResultExpression = new SqlFunction(typeof(int), builder.Expression,
+				builder.ResultExpression = new SqlFunction(typeof(DateTime?), builder.Expression,
 					new SqlExpression(partStr, Precedence.Primary), number, date);
 			}
 		}
@@ -708,24 +708,23 @@ namespace LinqToDB
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
 
-				ISqlExpression partSql = null;
 				switch (part)
 				{
 					case Sql.DateParts.Quarter   :
-						partSql = new SqlValue(Sql.DateParts.Month);
-						number  = builder.Mul(number, 3);
+						part   = DateParts.Month;
+						number = builder.Mul(number, 3);
 						break;
 					case Sql.DateParts.DayOfYear :
 					case Sql.DateParts.WeekDay   :
-						partSql = new SqlValue(Sql.DateParts.Day);
+						part   = DateParts.Day;
 						break;
 					case Sql.DateParts.Week      :
-						partSql = new SqlValue(Sql.DateParts.Day);
+						part   = DateParts.Day;
 						number = builder.Mul(number, 7);
 						break;
 				}
 
-				partSql = partSql ?? new SqlValue(part);
+				var partSql = new SqlExpression(part.ToString());
 
 				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd", partSql, number, date);
 			}

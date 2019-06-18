@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using SqlQuery;
 	using SqlProvider;
 
-	class SapHanaSqlBuilder : BasicSqlBuilder
+	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
 		public SapHanaSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -81,7 +81,7 @@ namespace LinqToDB.DataProvider.SapHana
 			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider.SapHana
 					}
 					break;
 			}
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)

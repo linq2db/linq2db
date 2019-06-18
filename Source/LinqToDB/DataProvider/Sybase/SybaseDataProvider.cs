@@ -7,6 +7,7 @@ using System.Xml.Linq;
 namespace LinqToDB.DataProvider.Sybase
 {
 	using Data;
+	using LinqToDB.Linq;
 	using Mapping;
 	using Common;
 	using SchemaProvider;
@@ -208,15 +209,6 @@ namespace LinqToDB.DataProvider.Sybase
 				source);
 		}
 
-		#endregion
-
-		#region Merge
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget,TSource> merge)
-		{
-			return new SybaseMergeBuilder<TTarget, TSource>(connection, merge);
-		}
 		#endregion
 	}
 }

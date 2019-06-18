@@ -40,16 +40,20 @@ namespace LinqToDB.Linq.Builder
 			public EntityDescriptor EntityDescriptor;
 			public SqlTable         SqlTable;
 
+			internal bool           ForceLeftJoinAssociations { get; set; }
+
+			private bool            _associationsToSubQueries;
 			#endregion
 
 			#region Init
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
+				Builder                   = builder;
+				Parent                    = buildInfo.Parent;
+				Expression                = buildInfo.Expression;
+				SelectQuery               = buildInfo.SelectQuery;
+				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
@@ -63,10 +67,11 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
+				Builder                   = builder;
+				Parent                    = buildInfo.Parent;
+				Expression                = buildInfo.Expression;
+				SelectQuery               = buildInfo.SelectQuery;
+				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
@@ -86,10 +91,11 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo)
 			{
-				Builder     = builder;
-				Parent      = buildInfo.Parent;
-				Expression  = buildInfo.Expression;
-				SelectQuery = buildInfo.SelectQuery;
+				Builder                   = builder;
+				Parent                    = buildInfo.Parent;
+				Expression                = buildInfo.Expression;
+				SelectQuery               = buildInfo.SelectQuery;
+				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				var mc   = (MethodCallExpression)Expression;
 				var attr = builder.GetTableFunctionAttribute(mc.Method);
@@ -546,13 +552,31 @@ namespace LinqToDB.Linq.Builder
 					info = ConvertToSql(null, 0, ConvertFlags.All);
 
 					var table = new SqlTable(Builder.MappingSchema, tableType);
-					var q     =
-						from fld1 in table.Fields.Values.Select((f,i) => new { f, i })
-						join fld2 in info on fld1.f.Name equals ((SqlField)fld2.Sql).Name
-						orderby fld1.i
-						select GetIndex(fld2);
 
-					info = q.ToArray();
+					var matchedFields = new List<SqlInfo>();
+					foreach (var field in table.Fields.Values)
+					{
+						foreach (var sqlInfo in info)
+						{
+							var sqlField = (SqlField)sqlInfo.Sql;
+							var found = sqlField.Name == field.Name;
+
+							if (!found)
+							{
+								found = EntityDescriptor.Aliases != null &&
+								        EntityDescriptor.Aliases.TryGetValue(field.Name, out var alias) &&
+								        alias == sqlField.Name;
+							}
+
+							if (found)
+							{
+								matchedFields.Add(GetIndex(sqlInfo));
+								break;
+							}
+						}
+					}
+
+					info = matchedFields.ToArray();
 				}
 
 				var index = info.Select(idx => ConvertToParentIndex(idx.Index, null)).ToArray();
@@ -723,7 +747,12 @@ namespace LinqToDB.Linq.Builder
 									from f in table.Table.SqlTable.Fields.Values
 									where f.IsPrimaryKey
 									orderby f.PrimaryKeyOrder
-									select new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f };
+									select new SqlInfo(f.ColumnDescriptor.MemberInfo)
+									{
+										Sql = _associationsToSubQueries
+											? table.Table.SelectQuery.Select.Field(f).SelectQuery
+											: (ISqlExpression)f
+									};
 
 								var key = q.ToArray();
 
@@ -920,7 +949,8 @@ namespace LinqToDB.Linq.Builder
 						return expr;
 					}
 
-					foreach (var cond in association.ParentAssociationJoin.Condition.Conditions.Take(association.RegularConditionCount))
+					var conditions = association.ParentAssociationJoin?.Condition ?? association.SelectQuery.Where.SearchCondition;
+					foreach (var cond in conditions.Conditions.Take(association.RegularConditionCount))
 					{
 						SqlPredicate.ExprExpr p;
 
@@ -1022,7 +1052,7 @@ namespace LinqToDB.Linq.Builder
 
 								buildInfo.IsAssociationBuilt = true;
 
-								if (tableLevel.IsNew || buildInfo.CopyTable)
+								if (association.ParentAssociationJoin != null && (tableLevel.IsNew || buildInfo.CopyTable))
 									association.ParentAssociationJoin.IsWeak = true;
 
 								return Builder.BuildSequence(new BuildInfo(buildInfo, expr));
@@ -1243,13 +1273,10 @@ namespace LinqToDB.Linq.Builder
 									{
 										if (!SqlTable.Fields.TryGetValue(fieldName, out var newField))
 										{
-											newField = new SqlField
-											{
-												Name             = fieldName,
-												PhysicalName     = fieldName,
-												ColumnDescriptor = new ColumnDescriptor(Builder.MappingSchema, new ColumnAttribute(fieldName),
-													new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member))
-											};
+											newField = new SqlField(new ColumnDescriptor(
+												Builder.MappingSchema,
+												new ColumnAttribute(fieldName),
+												new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member)));
 
 											SqlTable.Add(newField);
 										}
@@ -1257,7 +1284,6 @@ namespace LinqToDB.Linq.Builder
 										return newField;
 									}
 								}
-
 							}
 
 							if (throwException &&
@@ -1353,7 +1379,9 @@ namespace LinqToDB.Linq.Builder
 								aa.QueryExpression,
 								aa.Storage,
 								aa.CanBeNull,
-								aa.AliasName))
+								aa.AliasName),
+							ForceLeftJoinAssociations,
+							_associationsToSubQueries)
 							{ Parent = Parent };
 
 					isNew = true;
@@ -1364,18 +1392,21 @@ namespace LinqToDB.Linq.Builder
 
 					var memberExpression = (MemberExpression)levelExpression;
 
-					if (!_associations.TryGetValue(memberExpression.Member, out tableAssociation))
+					// subquery association shouldn't be cached, because different assciation navigation pathes
+					// should produce different subqueries
+					if (_associationsToSubQueries || !_associations.TryGetValue(memberExpression.Member, out tableAssociation))
 					{
 						var q =
 							from a in objectMapper.Associations.Concat(inheritance.SelectMany(om => om.Associations))
 							where a.MemberInfo.EqualsTo(memberExpression.Member)
-							select new AssociatedTableContext(Builder, this, a) { Parent = Parent };
+							select new AssociatedTableContext(Builder, this, a, ForceLeftJoinAssociations, _associationsToSubQueries) { Parent = Parent };
 
 						tableAssociation = q.FirstOrDefault();
 
 						isNew = true;
 
-						_associations.Add(memberExpression.Member, tableAssociation);
+						if (!_associationsToSubQueries)
+							_associations.Add(memberExpression.Member, tableAssociation);
 					}
 				}
 
@@ -1390,6 +1421,14 @@ namespace LinqToDB.Linq.Builder
 						return al;
 
 					var field = tableAssociation.GetField(expression, level + 1, false);
+
+					if (_associationsToSubQueries)
+					{
+						tableAssociation.SelectQuery.Select.Columns.Clear();
+						if (field != null)
+							tableAssociation.SelectQuery.Select.Add(field);
+						field = tableAssociation.SelectQuery;
+					}
 
 					return new TableLevel { Table = tableAssociation, Field = field, Level = field == null ? level : level + 1, IsNew = isNew };
 				}
