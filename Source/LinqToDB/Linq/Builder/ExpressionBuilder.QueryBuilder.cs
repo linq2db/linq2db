@@ -763,106 +763,16 @@ namespace LinqToDB.Linq.Builder
 		static readonly MethodInfo _whereMethodInfo =
 			MemberHelper.MethodOf(() => LinqExtensions.Where<int,int,object>(null,null)).GetGenericMethodDefinition();
 
-		static readonly MethodInfo _queryableMethodInfo =
-			MemberHelper.MethodOf<IQueryable<bool>>(n => n.Where(a => a)).GetGenericMethodDefinition();
-
-		static readonly MethodInfo _selectManyMethodInfo =
-			MemberHelper.MethodOf<IQueryable<object>>(n => n.SelectMany(a => new object[0], (m, d) => d)).GetGenericMethodDefinition();
-
-		static int _masterParamcounter;
-
-		static string GetMasterParamName(string prefix)
-		{
-			var idx = Interlocked.Increment(ref _masterParamcounter);
-			return prefix + idx;
-		}
-
 		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappingSchema,
 			Expression expression, HashSet<ParameterExpression> parameters, out bool isLazy)
 		{
-			var masterQuery = context.Builder.Expression.Unwrap();
-			expression = expression.Unwrap();
+			var valueExpression = EagerLoading.GenerateDetailsExpression(context, mappingSchema, expression, parameters);
 
-			var mainParamTransformation = new Dictionary<ParameterExpression, ParameterExpression>();
-			if (masterQuery.NodeType == ExpressionType.Call)
+			if (valueExpression == null)
 			{
-				var mc = (MethodCallExpression)masterQuery;
-				if (context is SelectContext selectContext)
-				{
-					if (mc.IsQueryable("Select"))
-					{
-						// remove projection
-						masterQuery   = mc.Arguments[0];
-						var paramType = EagerLoading.GetEnumerableElementType(masterQuery.Type);
-
-						mainParamTransformation.Add(((LambdaExpression)mc.Arguments[1].Unwrap()).Parameters[0], Expression.Parameter(paramType, GetMasterParamName("master_")));
-
-						context = selectContext.Sequence[0];
-					}
-					else if (mc.IsQueryable("SelectMany"))
-					{
-						var masterQueryLambda = ((LambdaExpression)mc.Arguments[1].Unwrap());
-						var newMasterQuery = masterQueryLambda.Body.Unwrap();
-						if (newMasterQuery is MethodCallExpression subMaster && subMaster.IsQueryable("Select"))
-						{
-							var withoutProjection = subMaster.Arguments[0].Unwrap();
-							var paramType         = EagerLoading.GetEnumerableElementType(withoutProjection.Type);
-							var subMasterParam    = Expression.Parameter(paramType, GetMasterParamName("submaster_"));
-
-							mainParamTransformation.Add(((LambdaExpression)subMaster.Arguments[1].Unwrap()).Parameters[0], subMasterParam);
-
-							var prevMasterType = EagerLoading.GetEnumerableElementType(mc.Arguments[0].Type);
-							var selectManyMethod = _selectManyMethodInfo.MakeGenericMethod(prevMasterType,
-								paramType, paramType);
-
-							var masterParam    = ((LambdaExpression)mc.Arguments[2].Unwrap()).Parameters[0];
-							var enumerableType = typeof(IEnumerable<>).MakeGenericType(paramType);
-
-							if (withoutProjection.Type != enumerableType)
-								withoutProjection = Expression.Convert(withoutProjection, enumerableType);
-
-							var withoutProjectionLambda = Expression.Lambda(withoutProjection, masterQueryLambda.Parameters);
-
-							masterQuery = Expression.Call(selectManyMethod, mc.Arguments[0].Unwrap(),
-								withoutProjectionLambda,
-								Expression.Lambda(subMasterParam, masterParam, subMasterParam));
-						}
-					}
-				}
-			}
-
-			var detailsQuery = expression.Transform(e =>
-			{
-				if (e.NodeType == ExpressionType.Parameter && mainParamTransformation.TryGetValue((ParameterExpression)e, out var replacement))
-				{
-					return replacement;
-				}
-
-				return e;
-			});
-
-			var hasConnection  = !ReferenceEquals(detailsQuery, expression);
-
-			var foundMembers = new List<MemberExpression>();
-			expression.Visit(e =>
-			{
-				if (e.NodeType == ExpressionType.MemberAccess)
-				{
-					var ma = (MemberExpression)e;
-					var root = ma.GetRootObject(context.Builder.MappingSchema);
-					if (root is ParameterExpression mainParam && mainParamTransformation.ContainsKey(mainParam))
-						foundMembers.Add(ma);
-				}
-			});
-
-			if (hasConnection && !EagerLoading.ValidateEagerLoading(context, mainParamTransformation, ref detailsQuery))
-			{
-				// TODO: temporary fallback to lazy implementation
 				isLazy = true;
 				return GetMultipleQueryExpressionLazy(context, mappingSchema, expression, parameters);
 			}
-
-			var valueExpression = EagerLoading.GenerateDetailsExpression(context, masterQuery, detailsQuery, mainParamTransformation, foundMembers, hasConnection);
 
 			isLazy = false;
 			return valueExpression;
