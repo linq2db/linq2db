@@ -1,15 +1,20 @@
-﻿using LinqToDB;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using LinqToDB.Data;
 using System.Threading;
-using Tests.Model;
+
+using JetBrains.Annotations;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.Firebird;
 using LinqToDB.SchemaProvider;
 
 namespace Tests
 {
+	using Model;
+
 	public static class TestUtils
 	{
 		private static int _cnt;
@@ -28,7 +33,7 @@ namespace Tests
 			return Interlocked.Increment(ref _cnt);
 		}
 
-		public const string NO_SCHEMA_NAME   = "UNUSED_SCHEMA";
+		public const string NO_SCHEMA_NAME = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
 		public const string NO_SERVER_NAME   = "UNUSED_SERVER";
 
@@ -60,7 +65,7 @@ namespace Tests
 		[Sql.Function("current_schema"  , ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
 		[Sql.Function("USER_NAME"       , ServerSideOnly = true, Configuration = ProviderName.Sybase)]
 		[Sql.Expression("current_schema", ServerSideOnly = true, Configuration = ProviderName.SapHana)]
-		[Sql.Function("SCHEMA_NAME", ServerSideOnly = true)]
+		[Sql.Function("SCHEMA_NAME"     , ServerSideOnly = true)]
 		private static string SchemaName()
 		{
 			throw new InvalidOperationException();
@@ -88,6 +93,12 @@ namespace Tests
 				case ProviderName.OracleNative:
 				case ProviderName.OracleManaged:
 				case ProviderName.PostgreSQL:
+				case ProviderName.PostgreSQL92:
+				case ProviderName.PostgreSQL93:
+				case ProviderName.PostgreSQL95:
+				case TestProvName.PostgreSQL10:
+				case TestProvName.PostgreSQL11:
+				case TestProvName.PostgreSQLLatest:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
@@ -96,6 +107,7 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case ProviderName.SqlServer2017:
 				case TestProvName.SqlAzure:
 				case ProviderName.SapHana:
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
@@ -120,7 +132,11 @@ namespace Tests
 				bool loadCheck(ProcedureSchema p)
 				{
 					return p.ProcedureName != "SERIES_GENERATE_TIME"
-						&& p.ProcedureName != "SERIES_DISAGGREGATE_TIME";
+						&& p.ProcedureName != "SERIES_DISAGGREGATE_TIME"
+						// just too slow
+						&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP"
+						&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP_WITH_PARAMETERS"
+						&& p.ProcedureName != "FULL_SYSTEM_INFO_DUMP_CREATE";
 				}
 
 				return options;
@@ -197,9 +213,16 @@ namespace Tests
 				case ProviderName.Access:
 					return "Database\\TestData";
 				case ProviderName.MySql:
+				case ProviderName.MySqlConnector:
 				case TestProvName.MariaDB:
 				case TestProvName.MySql57:
 				case ProviderName.PostgreSQL:
+				case ProviderName.PostgreSQL92:
+				case ProviderName.PostgreSQL93:
+				case ProviderName.PostgreSQL95:
+				case TestProvName.PostgreSQL10:
+				case TestProvName.PostgreSQL11:
+				case TestProvName.PostgreSQLLatest:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
@@ -208,6 +231,7 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case ProviderName.SqlServer2017:
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
 				case ProviderName.Informix:
@@ -242,16 +266,47 @@ namespace Tests
 			return fix ? value.AddMilliseconds(-value.Millisecond) : value;
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string tableName = null)
+		class FirebirdTempTable<T> : TempTable<T>
+		{
+			public FirebirdTempTable([NotNull] IDataContext db, string tableName = null, string databaseName = null, string schemaName = null) 
+				: base(db, tableName, databaseName, schemaName)
+			{
+			}
+
+			public override void Dispose()
+			{
+				DataContext.Close();
+				FirebirdTools.ClearAllPools();
+				base.Dispose();
+			}
+		}
+
+		static TempTable<T> CreateTable<T>(IDataContext db, string tableName) =>
+			db.CreateSqlProvider() is FirebirdSqlBuilder ?
+				new FirebirdTempTable<T>(db, tableName) : 
+				new         TempTable<T>(db, tableName);
+
+		static void ClearDataContext(IDataContext db)
+		{
+			if (db.CreateSqlProvider() is FirebirdSqlBuilder)
+			{
+				db.Close();
+				FirebirdTools.ClearAllPools();
+			}
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db,
+			string tableName = null)
 		{
 			try
 			{
-				return new TempTable<T>(db, tableName);
+				return CreateTable<T>(db, tableName);
 			}
 			catch
 			{
-				db.DropTable<T>(tableName);
-				return new TempTable<T>(db, tableName);
+				ClearDataContext(db);
+				db.DropTable<T>(tableName, throwExceptionIfNotExists:false);
+				return CreateTable<T>(db, tableName);
 			}
 		}
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -9,6 +10,7 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	using Data;
 
+	[PublicAPI]
 	public static class FirebirdTools
 	{
 		static readonly FirebirdDataProvider _firebirdDataProvider = new FirebirdDataProvider();
@@ -25,13 +27,13 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public static void ResolveFirebird([NotNull] string path)
 		{
-			if (path == null) throw new ArgumentNullException("path");
+			if (path == null) throw new ArgumentNullException(nameof(path));
 			new AssemblyResolver(path, "FirebirdSql.Data.FirebirdClient");
 		}
 
 		public static void ResolveFirebird([NotNull] Assembly assembly)
 		{
-			if (assembly == null) throw new ArgumentNullException("assembly");
+			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
 			new AssemblyResolver(assembly, "FirebirdSql.Data.FirebirdClient");
 		}
 
@@ -54,21 +56,16 @@ namespace LinqToDB.DataProvider.Firebird
 
 		#endregion
 
-
 		#region BulkCopy
 
-		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
-		public  static BulkCopyType  DefaultBulkCopyType
-		{
-			get { return _defaultBulkCopyType;  }
-			set { _defaultBulkCopyType = value; }
-		}
+		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection             dataConnection,
 			IEnumerable<T>             source,
 			int                        maxBatchSize       = 1000,
 			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			where T : class
 		{
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions
@@ -77,6 +74,25 @@ namespace LinqToDB.DataProvider.Firebird
 					MaxBatchSize       = maxBatchSize,
 					RowsCopiedCallback = rowsCopiedCallback,
 				}, source);
+		}
+
+		#endregion
+
+		#region ClearAllPools
+
+		static Action _clearAllPools;
+
+		public static void ClearAllPools()
+		{
+			if (_clearAllPools == null)
+				_clearAllPools =
+					Expression.Lambda<Action>(
+						Expression.Call(
+							_firebirdDataProvider.GetConnectionType(),
+							"ClearAllPools",
+							new Type[0]))
+						.Compile();
+			_clearAllPools();
 		}
 
 		#endregion

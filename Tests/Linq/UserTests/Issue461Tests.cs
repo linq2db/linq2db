@@ -73,8 +73,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SelectToAnonimousTest1(string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[Test]
+		public void SelectToAnonimousTest1([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -110,8 +111,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SelecyToAnonimousTest2(string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[Test]
+		public void SelectToAnonymousTest2([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -149,8 +151,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SelectToTypeTest1(string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[Test]
+		public void SelectToTypeTest1([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -186,8 +189,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SelectToTypeTest2(string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[Test]
+		public void SelectToTypeTest2([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -226,8 +230,8 @@ namespace Tests.UserTests
 		}
 
 		// Sybase do not supports limiting subqueries
-		[Test, DataContextSource(true, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
-		public void SelectPlainTest1(string context)
+		[Test]
+		public void SelectPlainTest1([DataSources(TestProvName.AllSybase, ProviderName.Informix, ProviderName.SapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -244,8 +248,8 @@ namespace Tests.UserTests
 		}
 
 		// Sybase do not supports limiting subqueries
-		[Test, DataContextSource(true, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
-		public void SelectPlainTest2(string context)
+		[Test]
+		public void SelectPlainTest2([DataSources(TestProvName.AllSybase, ProviderName.Informix, ProviderName.SapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -261,8 +265,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SimpleSelectToType(string context)
+		[Test]
+		public void SimpleSelectToType([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -273,8 +277,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void SimpleSelectToAnonimous(string context)
+		[Test]
+		public void SimpleSelectToAnonimous([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

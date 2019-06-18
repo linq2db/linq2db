@@ -52,7 +52,9 @@ namespace LinqToDB.DataProvider.MySql
 				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
 				select new TableInfo
 				{
-					TableID            = catalog + ".." + name,
+					// The latest MySql returns FK information with lowered schema names.
+					//
+					TableID            = catalog?.ToLower() + ".." + name,
 					CatalogName        = catalog,
 					SchemaName         = "",
 					TableName          = name,
@@ -66,7 +68,7 @@ namespace LinqToDB.DataProvider.MySql
 				let name    = t.Field<string>("TABLE_NAME")
 				select new TableInfo
 				{
-					TableID         = catalog + ".." + name,
+					TableID         = catalog?.ToLower() + ".." + name,
 					CatalogName     = catalog,
 					SchemaName      = "",
 					TableName       = name,
@@ -79,33 +81,25 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
-			var dbConnection = (DbConnection)dataConnection.Connection;
-			var pks          = dbConnection.GetSchema("IndexColumns");
-			var idxs         = dbConnection.GetSchema("Indexes");
-
-			return
-			(
-				from pk  in pks. AsEnumerable()
-				join idx in idxs.AsEnumerable()
-					on
-						pk. Field<string>("INDEX_CATALOG") + "." +
-						pk. Field<string>("INDEX_SCHEMA")  + "." +
-						pk. Field<string>("INDEX_NAME")    + "." +
-						pk. Field<string>("TABLE_NAME")
-					equals
-						idx.Field<string>("INDEX_CATALOG") + "." +
-						idx.Field<string>("INDEX_SCHEMA")  + "." +
-						idx.Field<string>("INDEX_NAME")    + "." +
-						idx.Field<string>("TABLE_NAME")
-				where idx.Field<bool>("PRIMARY")
-				select new PrimaryKeyInfo
-				{
-					TableID        = pk.Field<string>("INDEX_SCHEMA") + ".." + pk.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = pk.Field<string>("INDEX_NAME"),
-					ColumnName     = pk.Field<string>("COLUMN_NAME"),
-					Ordinal        = pk.Field<int>   ("ORDINAL_POSITION"),
-				}
-			).ToList();
+			return dataConnection.Query<PrimaryKeyInfo>(@"
+			SELECT
+					CONCAT(lower(k.CONSTRAINT_SCHEMA),'..',k.TABLE_NAME) as TableID,
+					k.CONSTRAINT_NAME                                    as PrimaryKeyName,
+					k.COLUMN_NAME                                        as ColumnName,
+					k.ORDINAL_POSITION                                   as Ordinal
+				FROM
+					INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
+					JOIN
+						INFORMATION_SCHEMA.TABLE_CONSTRAINTS c
+					ON
+						k.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND
+						k.CONSTRAINT_SCHEMA  = c.CONSTRAINT_SCHEMA AND
+						k.CONSTRAINT_NAME    = c.CONSTRAINT_NAME AND
+						k.TABLE_NAME         = c.TABLE_NAME
+				WHERE
+					c.CONSTRAINT_TYPE   ='PRIMARY KEY' AND
+					c.CONSTRAINT_SCHEMA = database()")
+			.ToList();
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
@@ -119,7 +113,7 @@ namespace LinqToDB.DataProvider.MySql
 				let dataType = c.Field<string>("DATA_TYPE")
 				select new ColumnInfo
 				{
-					TableID      = c.Field<string>("TABLE_SCHEMA") + ".." + c.Field<string>("TABLE_NAME"),
+					TableID      = c.Field<string>("TABLE_SCHEMA")?.ToLower() + ".." + c.Field<string>("TABLE_NAME"),
 					Name         = c.Field<string>("COLUMN_NAME"),
 					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
@@ -136,7 +130,7 @@ namespace LinqToDB.DataProvider.MySql
 //				let dataType = c.Field<string>("DATA_TYPE")
 //				select new ColumnInfo
 //				{
-//					TableID      = c.Field<string>("VIEW_SCHEMA") + ".." + c.Field<string>("VIEW_NAME"),
+//					TableID      = c.Field<string>("VIEW_SCHEMA")?.ToLower() + ".." + c.Field<string>("VIEW_NAME"),
 //					Name         = c.Field<string>("COLUMN_NAME"),
 //					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
 //					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
@@ -180,15 +174,17 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var fks = ((DbConnection)dataConnection.Connection).GetSchema("Foreign Key Columns");
 
+			//DataTable fks = ((dynamic)dataConnection.Connection).GetSchemaCollection("Foreign Key Columns", null);
+
 			return
 			(
 				from fk in fks.AsEnumerable()
 				select new ForeignKeyInfo
 				{
 					Name         = fk.Field<string>("CONSTRAINT_NAME"),
-					ThisTableID  = fk.Field<string>("TABLE_SCHEMA")   + ".." + fk.Field<string>("TABLE_NAME"),
+					ThisTableID  = fk.Field<string>("TABLE_SCHEMA")?.ToLower() + ".." + fk.Field<string>("TABLE_NAME"),
 					ThisColumn   = fk.Field<string>("COLUMN_NAME"),
-					OtherTableID = fk.Field<string>("REFERENCED_TABLE_SCHEMA") + ".." + fk.Field<string>("REFERENCED_TABLE_NAME"),
+					OtherTableID = fk.Field<string>("REFERENCED_TABLE_SCHEMA")?.ToLower() + ".." + fk.Field<string>("REFERENCED_TABLE_NAME"),
 					OtherColumn  = fk.Field<string>("REFERENCED_COLUMN_NAME"),
 					Ordinal      = Converter.ChangeTypeTo<int>(fk["ORDINAL_POSITION"]),
 				}
@@ -321,7 +317,7 @@ namespace LinqToDB.DataProvider.MySql
 				select new ColumnSchema
 				{
 					ColumnName           = columnName,
-					ColumnType           = GetDbType(columnType, dataType, length, precision, scale),
+					ColumnType           = GetDbType(columnType, dataType, length, precision, scale, null, null, null),
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
@@ -380,6 +376,13 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
+		}
+
+		protected override StringComparison ForeignKeyColumnComparison(string column)
+		{
+			// The latest MySql returns FK information with lowered schema names.
+			//
+			return column.All(char.IsLower) ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 		}
 	}
 }

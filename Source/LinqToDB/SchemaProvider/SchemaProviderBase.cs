@@ -119,7 +119,7 @@ namespace LinqToDB.SchemaProvider
 					var dataType   = column.c.DataType;
 					var systemType = GetSystemType(dataType, column.c.ColumnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale);
 					var isNullable = column.c.IsNullable;
-					var columnType = column.c.ColumnType ?? GetDbType(dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale);
+					var columnType = column.c.ColumnType ?? GetDbType(dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, null, null, null);
 
 					column.t.Columns.Add(new ColumnSchema
 					{
@@ -158,8 +158,15 @@ namespace LinqToDB.SchemaProvider
 					if (thisTable == null || otherTable == null)
 						continue;
 
+					var stringComparison = ForeignKeyColumnComparison(fk.OtherColumn);
+
 					var thisColumn  = (from c in thisTable. Columns where c.ColumnName == fk.ThisColumn   select c).SingleOrDefault();
-					var otherColumn = (from c in otherTable.Columns where c.ColumnName == fk.OtherColumn  select c).SingleOrDefault();
+					var otherColumn =
+					(
+						from c in otherTable.Columns
+						where string.Compare(c.ColumnName, fk.OtherColumn, stringComparison)  == 0
+						select c
+					).SingleOrDefault();
 
 					if (thisColumn == null || otherColumn == null)
 						continue;
@@ -242,7 +249,7 @@ namespace LinqToDB.SchemaProvider
 								select new ParameterSchema
 								{
 									SchemaName           = pr.ParameterName,
-									SchemaType           = GetDbType(pr.DataType, dt, pr.Length, pr.Precision, pr.Scale),
+									SchemaType           = GetDbType(pr.DataType, dt, pr.Length, pr.Precision, pr.Scale, pr.UDTCatalog, pr.UDTSchema, pr.UDTName),
 									IsIn                 = pr.IsIn,
 									IsOut                = pr.IsOut,
 									IsResult             = pr.IsResult,
@@ -255,7 +262,6 @@ namespace LinqToDB.SchemaProvider
 								}
 							).ToList()
 						} into ps
-						where ps.Parameters.All(p => p.SchemaType != "table type")
 						select ps
 					).ToList();
 
@@ -319,6 +325,8 @@ namespace LinqToDB.SchemaProvider
 			}, options);
 		}
 
+		protected virtual StringComparison ForeignKeyColumnComparison(string column) => StringComparison.Ordinal;
+
 		protected static HashSet<string> GetHashSet(string[] data, IEqualityComparer<string> comparer)
 		{
 			var set = new HashSet<string>(comparer ?? StringComparer.OrdinalIgnoreCase);
@@ -376,23 +384,7 @@ namespace LinqToDB.SchemaProvider
 			else
 			{
 				commandType = CommandType.StoredProcedure;
-				parameters  = procedure.Parameters.Select(p =>
-					new DataParameter
-					{
-						Name      = p.ParameterName,
-						Value     =
-							p.SystemType == typeof(string)   ? "" :
-							p.SystemType == typeof(DateTime) ? DateTime.Now :
-								DefaultValue.GetValue(p.SystemType),
-						DataType  = p.DataType,
-						Size      = (int?)p.Size,
-						Direction =
-							p.IsIn ?
-								p.IsOut ?
-									ParameterDirection.InputOutput :
-									ParameterDirection.Input :
-								ParameterDirection.Output
-					}).ToArray();
+				parameters = procedure.Parameters.Select(BuildProcedureParameter).ToArray();
 			}
 
 			try
@@ -428,6 +420,28 @@ namespace LinqToDB.SchemaProvider
 			{
 				procedure.ResultException = ex;
 			}
+		}
+
+		protected virtual DataParameter BuildProcedureParameter(ParameterSchema p)
+		{
+			return new DataParameter
+			{
+				Name = p.ParameterName,
+				Value =
+					p.SystemType == typeof(string) ?
+						"" :
+						p.SystemType == typeof(DateTime) ?
+							DateTime.Now :
+							DefaultValue.GetValue(p.SystemType),
+				DataType = p.DataType,
+				Size = (int?)p.Size,
+				Direction =
+					p.IsIn ?
+						p.IsOut ?
+							ParameterDirection.InputOutput :
+							ParameterDirection.Input :
+						ParameterDirection.Output
+			};
 		}
 
 		protected virtual string GetProviderSpecificType(string dataType)
@@ -471,7 +485,7 @@ namespace LinqToDB.SchemaProvider
 				select new ColumnSchema
 				{
 					ColumnName           = columnName,
-					ColumnType           = GetDbType(columnType, dt, length, precision, scale),
+					ColumnType           = GetDbType(columnType, dt, length, precision, scale, null, null, null),
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
@@ -535,7 +549,7 @@ namespace LinqToDB.SchemaProvider
 			return systemType;
 		}
 
-		protected virtual string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale)
+		protected virtual string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
 		{
 			var dbType = columnType;
 

@@ -1,12 +1,16 @@
-﻿using LinqToDB;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.xUpdate
 {
 	[TestFixture]
+	[Order(10000)]
 	public class DropTableTests : TestBase
 	{
 		class DropTableTest
@@ -14,8 +18,8 @@ namespace Tests.xUpdate
 			public int ID { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void DropCurrentDatabaseTableTest(string context)
+		[Test]
+		public void DropCurrentDatabaseTableTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -24,24 +28,60 @@ namespace Tests.xUpdate
 
 				var table = db.CreateTable<DropTableTest>();
 
-				table.Insert(() => new DropTableTest() { ID = 123 });
+				table.Insert(() => new DropTableTest { ID = 123 });
 
 				var data = table.ToList();
+
+				table.Drop();
 
 				Assert.NotNull(data);
 				Assert.AreEqual(1, data.Count);
 				Assert.AreEqual(123, data[0].ID);
 
-				table.Drop();
-
 				// check that table dropped
 				var exception = Assert.Catch(() => table.ToList());
-				Assert.True(exception is Exception);
+				Assert.IsNotNull(exception);
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.SapHana)]
-		public void DropSpecificDatabaseTableTest(string context)
+		class DropTableTestID
+		{
+			[Identity, PrimaryKey]
+			public int ID  { get; set; }
+			public int ID1 { get; set; }
+		}
+
+		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		[Test]
+		public void DropCurrentDatabaseTableWIthIdentityTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// cleanup
+				db.DropTable<DropTableTestID>(throwExceptionIfNotExists: false);
+				db.Close();
+
+				var table = db.CreateTable<DropTableTestID>();
+
+				table.Insert(() => new DropTableTestID { ID1 = 2 });
+
+				var data = table.Select(t => new { t.ID, t.ID1 }).ToList();
+
+				table.Drop();
+
+				Assert.That(data, Is.EquivalentTo(new[]
+				{
+					new { ID = 1, ID1 = 2 }
+				}));
+
+				// check that table dropped
+				var exception = Assert.Catch(() => table.ToList());
+				Assert.IsNotNull(exception);
+			}
+		}
+
+		[Test]
+		public void DropSpecificDatabaseTableTest([DataSources(false, ProviderName.SapHana)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

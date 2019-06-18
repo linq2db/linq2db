@@ -8,6 +8,8 @@ using JetBrains.Annotations;
 namespace LinqToDB.Expressions
 {
 	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
+	using System.Reflection;
 
 	public static class Extensions
 	{
@@ -1689,5 +1691,22 @@ namespace LinqToDB.Expressions
 		}
 
 		#endregion
+
+		private static readonly MethodInfo _sqlProperty = typeof(Sql).GetMethodEx("Property").GetGenericMethodDefinition();
+
+		public static Expression GetMemberGetter(MemberInfo mi, Expression obj)
+		{
+#if !NETSTANDARD1_6
+			if (mi is DynamicColumnInfo)
+			{
+				return Expression.Call(
+					_sqlProperty.MakeGenericMethod(mi.GetMemberType()),
+					obj,
+					Expression.Constant(mi.Name));
+			}
+			else
+#endif
+				return Expression.PropertyOrField(obj, mi.Name);
+		}
 	}
 }

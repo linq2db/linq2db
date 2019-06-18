@@ -34,8 +34,8 @@ namespace Tests.UserTests
 			A
 		}
 
-		[Test, DataContextSource]
-		public void Issue693Test(string context)
+		[Test]
+		public void Issue693Test([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -49,7 +49,7 @@ namespace Tests.UserTests
 			ms.SetConverter<Test?,DataParameter>((obj) =>
 			{
 				if (obj != null)
-					return new DataParameter { Value = obj.ToString() };
+					return new DataParameter { Value = obj.ToString(), DataType = DataType.NVarChar };
 				return new DataParameter { Value = DBNull.Value };
 			});
 

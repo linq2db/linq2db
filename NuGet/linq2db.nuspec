@@ -2,42 +2,49 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db</id>
-		<version>2.5.0</version>
 		<title>LINQ to DB</title>
-		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
-		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
-		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
-		<projectUrl>http://linq2db.com</projectUrl>
-		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
-		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</description>
 		<summary />
 		<tags>
 			linq linq2db LinqToDB ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
-		<repository type="git" url="https://github.com/linq2db/linq2db.git" />
 		<dependencies>
 			<group targetFramework=".NETFramework4.5" />
+			<group targetFramework=".NETFramework4.6" />
 			<group targetFramework=".NETStandard1.6">
-				<dependency id="Microsoft.CSharp"                     version="4.3.0" />
+				<dependency id="Microsoft.CSharp"                     version="4.5.0" />
 				<dependency id="System.Diagnostics.TraceSource"       version="4.3.0" />
-				<dependency id="Microsoft.Extensions.DependencyModel" version="1.1.0" />
-				<dependency id="System.ComponentModel.Annotations"    version="4.4.1" />
+				<dependency id="Microsoft.Extensions.DependencyModel" version="2.1.0" />
+				<dependency id="System.ComponentModel.Annotations"    version="4.5.0" />
 				<dependency id="System.ComponentModel.TypeConverter"  version="4.3.0" />
 				<dependency id="System.Linq.Queryable"                version="4.3.0" />
 				<dependency id="System.Runtime.Loader"                version="4.3.0" />
 				<dependency id="System.Xml.XmlDocument"               version="4.3.0" />
-				<dependency id="System.Data.SqlClient"                version="4.4.2" />
+				<dependency id="System.Data.SqlClient"                version="4.6.0" />
 				<dependency id="System.Net.NetworkInformation"        version="4.3.0" />
 			</group>
 			<group targetFramework=".NETStandard2.0">
-				<dependency id="Microsoft.CSharp"                     version="4.4.0" />
-				<dependency id="System.ComponentModel.Annotations"    version="4.4.1" />
-				<dependency id="System.Data.SqlClient"                version="4.4.2" />
+				<dependency id="Microsoft.CSharp"                     version="4.5.0" />
+				<dependency id="System.ComponentModel.Annotations"    version="4.5.0" />
+				<dependency id="System.Data.SqlClient"                version="4.6.0" />
+				<dependency id="System.Data.DataSetExtensions"        version="4.5.0" />
+			</group>
+			<group targetFramework=".NETCoreApp1.0">
+				<dependency id="Microsoft.CSharp"                     version="4.5.0" />
+				<dependency id="System.Diagnostics.TraceSource"       version="4.3.0" />
+				<dependency id="Microsoft.Extensions.DependencyModel" version="2.1.0" />
+				<dependency id="System.ComponentModel.Annotations"    version="4.5.0" />
+				<dependency id="System.ComponentModel.TypeConverter"  version="4.3.0" />
+				<dependency id="System.Linq.Queryable"                version="4.3.0" />
+				<dependency id="System.Runtime.Loader"                version="4.3.0" />
+				<dependency id="System.Xml.XmlDocument"               version="4.3.0" />
+				<dependency id="System.Data.SqlClient"                version="4.6.0" />
+				<dependency id="System.Net.NetworkInformation"        version="4.3.0" />
 			</group>
 			<group targetFramework=".NETCoreApp2.0">
-				<dependency id="System.ComponentModel.Annotations"    version="4.4.1" />
-				<dependency id="System.Data.SqlClient"                version="4.4.2" />
+				<dependency id="System.ComponentModel.Annotations"    version="4.5.0" />
+				<dependency id="System.Data.SqlClient"                version="4.6.0" />
+				<dependency id="System.Data.DataSetExtensions"        version="4.5.0" />
 			</group>
 		</dependencies>
 	</metadata>

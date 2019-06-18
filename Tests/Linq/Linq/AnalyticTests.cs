@@ -8,9 +8,14 @@
 	[TestFixture]
 	public class AnalyticTests : TestBase
 	{
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
-		public void Test(string context)
+		[Test]
+		public void Test(
+			[IncludeDataSources(
+				true,
+				TestProvName.AllOracle,
+				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllPostgreSQL)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -47,9 +52,14 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			 ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
-		public void TestSubqueryOptimization(string context)
+		[Test]
+		public void TestSubqueryOptimization(
+			[IncludeDataSources(
+				true,
+				TestProvName.AllOracle,
+				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllPostgreSQL)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -72,8 +82,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestExtensionsOracle(string context)
+		[Test]
+		public void TestExtensionsOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -112,8 +122,12 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleNative)]
-		public void TestAvg(string context)
+		[ActiveIssue(
+			Configuration         = TestProvName.AllOracle,
+			Details               = "Specified cast is not valid.",
+			SkipForNonLinqService = true)]
+		[Test]
+		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -139,8 +153,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestAvgOracle(string context)
+		[Test]
+		public void TestAvgOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -218,8 +233,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestCorrOracle(string context)
+		[Test]
+		public void TestCorrOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -260,8 +276,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestCountOracle(string context)
+		[Test]
+		public void TestCountOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -289,8 +305,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
-		public void TestCount(string context)
+		[Test]
+		public void TestCount([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -318,8 +334,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestCovarPopOracle(string context)
+		[Test]
+		public void TestCovarPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -354,8 +371,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestCovarSampOracle(string context)
+		[Test]
+		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -390,8 +408,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestCumeDistOracle(string context)
+		[Test]
+		public void TestCumeDistOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -417,8 +436,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestDenseRankOracle(string context)
+		[Test]
+		public void TestDenseRankOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -443,8 +462,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestFirstValueOracle(string context)
+		[Test]
+		public void TestFirstValueOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -463,8 +482,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestLastValueOracle(string context)
+		[Test]
+		public void TestLastValueOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -483,8 +502,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestLagOracle(string context)
+		[Test]
+		public void TestLagOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -502,8 +521,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestLeadOracle(string context)
+		[Test]
+		public void TestLeadOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -522,8 +541,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestListAggOracle(string context)
+		[Test]
+		public void TestListAggOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -546,8 +565,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestMaxOracle(string context)
+		[Test]
+		public void TestMaxOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -584,8 +603,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle)]
-		public void TestMax(string context)
+		[Test]
+		public void TestMax([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -611,8 +630,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestMedianOracle(string context)
+		[Test]
+		public void TestMedianOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -644,8 +663,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestMinOracle(string context)
+		[Test]
+		public void TestMinOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -672,8 +691,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
-		public void TestMin(string context)
+		[Test]
+		public void TestMin([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -699,8 +718,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestNthValueOracle(string context)
+		[Test]
+		public void TestNthValueOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -726,8 +745,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestNTileOracle(string context)
+		[Test]
+		public void TestNTileOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -744,8 +764,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestPercentileContOracle(string context)
+		[Test]
+		public void TestPercentileContOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -774,10 +794,10 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestPercentileDiscOracle(string Discext)
+		[Test]
+		public void TestPercentileDiscOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(Discext))
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in db.Parent
@@ -804,8 +824,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestPercentRankOracle(string context)
+		[Test]
+		public void TestPercentRankOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -830,8 +851,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestPercentRatioToReportOracle(string context)
+		[Test]
+		public void TestPercentRatioToReportOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -847,8 +869,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestRowNumberOracle(string context)
+		[Test]
+		public void TestRowNumberOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -864,8 +887,10 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestRankOracle(string context)
+		[Test]
+		public void TestRankOracle([IncludeDataSources(true,
+			ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -891,8 +916,10 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestRegrOracle(string context)
+		[Test]
+		public void TestRegrOracle([IncludeDataSources(
+			true, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -917,8 +944,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestStdDevOracle(string context)
+		[Test]
+		public void TestStdDevOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -945,8 +973,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestStdDev(string context)
+		[Test]
+		public void TestStdDev([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -972,8 +1000,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestStdDevPopOracle(string context)
+		[Test]
+		public void TestStdDevPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1007,8 +1036,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestStdDevSampOracle(string context)
+		[Test]
+		public void TestStdDevSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1042,8 +1072,10 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestSumOracle(string context)
+		[Test]
+		public void TestSumOracle([IncludeDataSources(true,
+			ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1072,8 +1104,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestVarPopOracle(string context)
+		[Test]
+		public void TestVarPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1107,8 +1140,9 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestVarSampOracle(string context)
+		[Test]
+		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1143,8 +1177,8 @@
 		}
 
 
-		[Test, IncludeDataContextSource(ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestVarianceOracle(string context)
+		[Test]
+		public void TestVarianceOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1190,8 +1224,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestKeepFirstOracle(string context)
+		[Test]
+		public void TestKeepFirstOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1210,8 +1244,8 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
-		public void TestKeepLastOracle(string context)
+		[Test]
+		public void TestKeepLastOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

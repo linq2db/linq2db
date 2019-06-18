@@ -17,15 +17,15 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServer2005SqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
 				case DataType.DateTimeOffset :
 				case DataType.DateTime2      :
 				case DataType.Time           :
-				case DataType.Date           : StringBuilder.Append("DateTime");       break;
-				default                      : base.BuildDataType(type, createDbType); break;
+				case DataType.Date           : StringBuilder.Append("DateTime");                     break;
+				default                      : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 			}
 		}
 

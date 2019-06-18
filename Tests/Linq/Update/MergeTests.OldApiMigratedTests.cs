@@ -16,10 +16,10 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		// ASE: just fails
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void Merge(string context)
+		[Test]
+		public void Merge([MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<LinqDataTypes2>()
 					.Merge()
@@ -32,10 +32,10 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: just fails
-		[Test, MergeDataContextSource(ProviderName.Sybase)]
-		public void MergeWithEmptySource(string context)
+		[Test]
+		public void MergeWithEmptySource([MergeDataContextSource(ProviderName.OracleManaged, ProviderName.OracleNative, TestProvName.AllSybase)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<Person>()
 					.Merge()
@@ -47,8 +47,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void MergeWithDelete(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void MergeWithDelete([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -64,8 +64,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void MergeWithDeletePredicate1(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void MergeWithDeletePredicate1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -81,8 +81,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void MergeWithDeletePredicate3(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void MergeWithDeletePredicate3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -115,8 +115,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void MergeWithDeletePredicate4(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void MergeWithDeletePredicate4([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -151,8 +151,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void MergeWithDeletePredicate5(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void MergeWithDeletePredicate5([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -184,8 +184,11 @@ namespace Tests.xUpdate
 
 		// DB2: ncharDataType field missing in AllTypes
 		// Informix: install the latest server
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void MergeChar1(string context)
+		[Test]
+		public void MergeChar1([MergeDataContextSource(
+			false,
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -209,8 +212,11 @@ namespace Tests.xUpdate
 		// ASE: alltypes table must be fixed
 		// DB2: ncharDataType field missing in AllTypes
 		// Informix: install the latest server
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
-		public void MergeChar2(string context)
+		[Test]
+		public void MergeChar2([MergeDataContextSource(
+			false,
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -237,8 +243,11 @@ namespace Tests.xUpdate
 		// ASE: AllTypes table must be fixed
 		// DB2: ncharDataType and nvarcharDataType fields missing in AllTypes
 		// Informix, SAP: looks like \0 terminates string
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
-		public void MergeString(string context)
+		[Test]
+		public void MergeString([MergeDataContextSource(
+			false,
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())

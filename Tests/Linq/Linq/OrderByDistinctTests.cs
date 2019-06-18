@@ -1,7 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -57,10 +60,9 @@ namespace Tests.Linq
 			return GetTestData().Where(t => t.Id == 1 || t.Id == 10 || t.Id == 100).ToArray();
 		}
 
-		[Test, Combinatorial]
-		public void OrderByDistinctTestOrdering(
-			[DataSources(ProviderName.SqlCe)] 
-			string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[Test]
+		public void OrderByDistinctTestOrdering([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var testData = GetUniqueTestData();
 
@@ -179,10 +181,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
-		public void OrderByDistinctTest(
-			[DataSources(ProviderName.SqlCe)] 
-			string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[Test]
+		public void OrderByDistinctTest([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var testData = GetTestData();
 
@@ -237,10 +238,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
-		public void OrderByDistinctFailTest(
-			[IncludeDataSources(ProviderName.SqlCe)] 
-			string context)
+		[Test]
+		public void OrderByDistinctFailTest([IncludeDataSources(true, ProviderName.SqlCe)] string context)
 		{
 			var testData = GetTestData();
 
@@ -260,10 +259,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
-		public void OrderByExpressionDistinctTests(
-			[DataSources(ProviderName.SqlCe)] 
-			string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[Test]
+		public void OrderByExpressionDistinctTests([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var testData = GetTestData();
 
@@ -295,9 +293,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[Test]
 		public void OrderByDistinctNoTransformTests(
-			[DataSources(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
+			[DataSources(TestProvName.AllFirebird, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
 			string context)
 		{
 			var testData = GetTestData();
@@ -325,9 +324,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[Test]
 		public void OrderByDistinctPartialTransformTests(
-			[DataSources(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
+			[DataSources(TestProvName.AllFirebird, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
 			string context)
 		{
 			var testData = GetTestData();
@@ -363,10 +363,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
-		public void OrderByUnionOptimization(
-			[DataSources(ProviderName.SqlCe)] 
-			string context)
+		[Test]
+		public void OrderByUnionOptimization([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var testData = GetTestData();
 
@@ -414,10 +412,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Combinatorial]
-		public void OrderBySubQuery(
-			[DataSources(ProviderName.SqlCe)] 
-			string context)
+		[Test]
+		public void OrderBySubQuery([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var testData = GetTestData();
 
@@ -454,11 +450,9 @@ namespace Tests.Linq
 
 		}
 
-		
-		[Test, Combinatorial]
-		public void DoubleOrderBy(
-			[DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)] 
-			string context)
+
+		[Test]
+		public void DoubleOrderBy([DataSources(TestProvName.AllSybase)] string context)
 		{
 			var testData = GetTestData();
 

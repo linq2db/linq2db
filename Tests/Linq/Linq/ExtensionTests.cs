@@ -7,7 +7,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.SqlQuery;
 	using Model;
 
 	[TestFixture]
@@ -19,29 +18,29 @@ namespace Tests.Linq
 			public int? Value1;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void TableName(string context)
+		[Test]
+		public void TableName([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<ParenTable>().TableName("Parent").ToList();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void DatabaseName(string context)
+		[Test]
+		public void DatabaseName([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<Parent>().DatabaseName(TestUtils.GetDatabaseName(db)).ToList();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void SchemaName(string context)
+		[Test]
+		public void SchemaName([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<Parent>().SchemaName("dbo").ToList();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void AllNames(string context)
+		[Test]
+		public void AllNames([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<ParenTable>()
@@ -51,8 +50,53 @@ namespace Tests.Linq
 					.ToList();
 		}
 
-		[Test, DataContextSource]
-		public void GetTableNameTest(string context)
+		[Test]
+		public void TableNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var table1 = db.GetTable<ParenTable>();
+				var table2 = table1.TableName("Parent2");
+				var table3 = table2.TableName("Parent3");
+
+				Assert.AreEqual(table1.TableName, "ParenTable");
+				Assert.AreEqual(table2.TableName, "Parent2");
+				Assert.AreEqual(table3.TableName, "Parent3");
+			}
+		}
+
+		[Test]
+		public void DatabaseNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var table1 = db.GetTable<ParenTable>();
+				var table2 = table1.DatabaseName("db2");
+				var table3 = table2.DatabaseName("db3");
+
+				Assert.AreEqual(table1.DatabaseName, null);
+				Assert.AreEqual(table2.DatabaseName, "db2");
+				Assert.AreEqual(table3.DatabaseName, "db3");
+			}
+		}
+
+		[Test]
+		public void SchemaNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var table1 = db.GetTable<ParenTable>();
+				var table2 = table1.SchemaName("schema2");
+				var table3 = table2.SchemaName("schema3");
+
+				Assert.AreEqual(table1.SchemaName, null);
+				Assert.AreEqual(table2.SchemaName, "schema2");
+				Assert.AreEqual(table3.SchemaName, "schema3");
+			}
+		}
+
+		[Test]
+		public void GetTableNameTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

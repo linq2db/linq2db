@@ -7,6 +7,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.SqlServer;
+
 using NUnit.Framework;
 
 namespace Tests.Data
@@ -83,8 +84,8 @@ namespace Tests.Data
 		public class FakeClass
 		{}
 
-		[Test, DataContextSource(false)]
-		public void RetryPoliceTest(string context)
+		[Test]
+		public void RetryPoliceTest([DataSources(false)] string context)
 		{
 			var ret = new Retry();
 			Assert.Throws<TestException>(() =>
@@ -99,8 +100,8 @@ namespace Tests.Data
 			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008)]
-		public async Task ExecuteTestAsync(string context)
+		[Test]
+		public async Task ExecuteTestAsync([IncludeDataSources(ProviderName.SqlServer2008)] string context)
 		{
 			var ret = new Retry();
 
@@ -112,8 +113,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void RetryPoliceTestAsync(string context)
+		[Test]
+		public void RetryPoliceTestAsync([DataSources(false)] string context)
 		{
 			var ret = new Retry();
 

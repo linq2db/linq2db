@@ -127,16 +127,21 @@ namespace LinqToDB.Mapping
 
 		ConvertInfo _convertInfo;
 
-		public void SetConvertInfo(Type from, Type to, ConvertInfo.LambdaInfo expr)
+		public void SetConvertInfo(DbDataType from, DbDataType to, ConvertInfo.LambdaInfo expr)
 		{
 			if (_convertInfo == null)
 				_convertInfo = new ConvertInfo();
 			_convertInfo.Set(from, to, expr);
 		}
 
-		public ConvertInfo.LambdaInfo GetConvertInfo(Type from, Type to)
+		public void SetConvertInfo(Type from, Type to, ConvertInfo.LambdaInfo expr)
 		{
-			return _convertInfo == null ? null : _convertInfo.Get(@from, to);
+			SetConvertInfo(new DbDataType(from), new DbDataType(to), expr);
+		}
+
+		public ConvertInfo.LambdaInfo GetConvertInfo(DbDataType from, DbDataType to)
+		{
+			return _convertInfo == null ? null : _convertInfo.Get(from, to);
 		}
 
 		private ConcurrentDictionary<object,Func<object,object>> _converters;
@@ -193,7 +198,7 @@ namespace LinqToDB.Mapping
 
 		public void SetDataType(Type type, DataType dataType)
 		{
-			SetDataType(type, new SqlDataType(dataType, type, null, null, null));
+			SetDataType(type, new SqlDataType(dataType, type, null, null, null, null));
 		}
 
 		public void SetDataType(Type type, SqlDataType dataType)
@@ -241,39 +246,20 @@ namespace LinqToDB.Mapping
 
 		#region EntityDescriptor
 
-		readonly ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors
-			= new ConcurrentDictionary<Type,EntityDescriptor>();
-
-		public EntityDescriptor GetEntityDescriptor(MappingSchema mappingSchema, Type type)
-		{
-			if (!_entityDescriptors.TryGetValue(type, out var ed))
-				ed = _entityDescriptors.GetOrAdd(type, key =>
-				{
-					var edNew = new EntityDescriptor(mappingSchema, key);
-					mappingSchema.EntityDescriptorCreatedCallback?.Invoke(mappingSchema, edNew);
-					return edNew;
-				});
-
-			return ed;
-		}
-
 		/// <summary>
-		/// Enumerate types for cached <see cref="EntityDescriptor" /> instances.
+		/// Enumerates types, registered by FluentMetadataBuilder.
 		/// </summary>
-		/// <seealso cref="GetEntityDescriptor" />
 		/// <returns>
-		///     <see cref="Array{Type}" />
+		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
-		public Type[] GetEntites()
+		public Type[] GetRegisteredTypes()
 		{
-			return _entityDescriptors.Keys.ToArray();
-		}
-
-		internal void ResetEntityDescriptor(Type type)
-		{
-			_entityDescriptors.TryRemove(type, out _);
+			if (MetadataReader is FluentMetadataReader fluent)
+				return fluent.GetRegisteredTypes();
+			return Array<Type>.Empty;
 		}
 
 		#endregion
+
 	}
 }

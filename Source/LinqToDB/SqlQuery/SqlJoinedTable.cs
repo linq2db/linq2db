@@ -57,11 +57,11 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> action)
+		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> action)
 		{
-			Condition = (SqlSearchCondition)((ISqlExpressionWalkable)Condition).Walk(skipColumns, action);
+			Condition = (SqlSearchCondition)((ISqlExpressionWalkable)Condition).Walk(options, action);
 
-			Table.Walk(skipColumns, action);
+			Table.Walk(options, action);
 
 			return null;
 		}

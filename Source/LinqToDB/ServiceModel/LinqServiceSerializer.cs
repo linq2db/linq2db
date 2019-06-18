@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -18,34 +19,34 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Public Members
 
-		public static string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
+		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
 		{
-			return new QuerySerializer().Serialize(statement, parameters, queryHints);
+			return new QuerySerializer(serializationSchema).Serialize(statement, parameters, queryHints);
 		}
 
-		public static LinqServiceQuery Deserialize(string str)
+		public static LinqServiceQuery Deserialize(MappingSchema serializationSchema, string str)
 		{
-			return new QueryDeserializer().Deserialize(str);
+			return new QueryDeserializer(serializationSchema).Deserialize(str);
 		}
 
-		public static string Serialize(LinqServiceResult result)
+		public static string Serialize(MappingSchema serializationSchema, LinqServiceResult result)
 		{
-			return new ResultSerializer().Serialize(result);
+			return new ResultSerializer(serializationSchema).Serialize(result);
 		}
 
-		public static LinqServiceResult DeserializeResult(string str)
+		public static LinqServiceResult DeserializeResult(MappingSchema serializationSchema, string str)
 		{
-			return new ResultDeserializer().DeserializeResult(str);
+			return new ResultDeserializer(serializationSchema).DeserializeResult(str);
 		}
 
-		public static string Serialize(string[] data)
+		public static string Serialize(MappingSchema serializationSchema, string[] data)
 		{
-			return new StringArraySerializer().Serialize(data);
+			return new StringArraySerializer(serializationSchema).Serialize(data);
 		}
 
-		public static string[] DeserializeStringArray(string str)
+		public static string[] DeserializeStringArray(MappingSchema serializationSchema, string str)
 		{
-			return new StringArrayDeserializer().Deserialize(str);
+			return new StringArrayDeserializer(serializationSchema).Deserialize(str);
 		}
 
 		#endregion
@@ -58,36 +59,27 @@ namespace LinqToDB.ServiceModel
 
 		class SerializerBase
 		{
-			protected readonly StringBuilder             Builder        = new StringBuilder();
+			private   readonly MappingSchema _ms;
+			protected readonly StringBuilder Builder        = new StringBuilder();
 			protected readonly Dictionary<object,int>    ObjectIndices  = new Dictionary<object,int>();
 			protected readonly Dictionary<object,string> DelayedObjects = new Dictionary<object,string>();
 			protected int                                Index;
 
-			static string ConvertToString(Type type, object value)
+			protected SerializerBase(MappingSchema serializationMappingSchema)
 			{
-				switch (type.ToNullableUnderlying().GetTypeCodeEx())
-				{
-					case TypeCode.Decimal  : return ((decimal) value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.Double   : return ((double)  value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.Single   : return ((float)   value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.DateTime : return ((DateTime)value).ToString("o");
-				}
-
-				if (type == typeof(DateTimeOffset))
-					return ((DateTimeOffset)value).ToString("o");
-
-				return Converter.ChangeTypeTo<string>(value);
+				_ms = serializationMappingSchema;
 			}
 
 			protected void Append(Type type, object value)
 			{
 				Append(type);
 
-				if (value == null)
+				// TODO: should we preserve DBNull is AST?
+				if (value == null || value is DBNull)
 					Append((string)null);
 				else if (!type.IsArray)
 				{
-					Append(ConvertToString(type, value));
+					Append(SerializationConverter.Serialize(_ms, value));
 				}
 				else
 				{
@@ -110,7 +102,7 @@ namespace LinqToDB.ServiceModel
 							if (val == null)
 								Append(elementType, null);
 							else
-								Append(val.GetType(), val); //Append(ConvertToString(val.GetType(), val));
+								Append(val.GetType(), val);
 							cnt++;
 						}
 
@@ -232,11 +224,17 @@ namespace LinqToDB.ServiceModel
 
 		public class DeserializerBase
 		{
+			private   readonly MappingSchema _ms;
 			protected readonly Dictionary<int,object>         ObjectIndices  = new Dictionary<int,object>();
 			protected readonly Dictionary<int,Action<object>> DelayedObjects = new Dictionary<int,Action<object>>();
 
 			protected string Str;
 			protected int    Pos;
+
+			protected DeserializerBase(MappingSchema serializationMappingSchema)
+			{
+				_ms = serializationMappingSchema;
+			}
 
 			protected char Peek()
 			{
@@ -489,23 +487,8 @@ namespace LinqToDB.ServiceModel
 					return deserializer(this);
 				}
 
-				var str = ReadString();
-
-				if (str == null)
-					return null;
-
-				switch (type.ToNullableUnderlying().GetTypeCodeEx())
-				{
-					case TypeCode.Decimal  : return decimal. Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.Double   : return double.  Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.Single   : return float.   Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.DateTime : return DateTime.ParseExact(str, "o", CultureInfo.InvariantCulture);
-				}
-
-				if (type == typeof(DateTimeOffset))
-					return DateTimeOffset.ParseExact(str, "o", CultureInfo.InvariantCulture);
-
-				return Converter.ChangeType(str, type);
+				return SerializationConverter.Deserialize(_ms, type, ReadString());
+				
 			}
 
 			protected readonly List<string> UnresolvedTypes = new List<string>();
@@ -522,8 +505,23 @@ namespace LinqToDB.ServiceModel
 					if (str == "System.Data.Linq.Binary")
 						return typeof(System.Data.Linq.Binary);
 
-					type = LinqService.TypeResolver(str);
+					try
+					{
+						foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+						{
+							type = assembly.GetType(str);
+							if (type != null)
+								break;
+						}
+					}
+					catch
+					{
+						// ignore errors
+					}
 
+					if (type == null)
+					{
+					type = LinqService.TypeResolver(str);
 					if (type == null)
 					{
 						if (Configuration.LinqService.ThrowUnresolvedTypeException)
@@ -537,6 +535,7 @@ namespace LinqToDB.ServiceModel
 							"LinqServiceSerializer");
 					}
 				}
+				}
 
 				return type;
 			}
@@ -548,6 +547,11 @@ namespace LinqToDB.ServiceModel
 
 		class QuerySerializer : SerializerBase
 		{
+			public QuerySerializer(MappingSchema serializationMappingSchema)
+				: base(serializationMappingSchema)
+			{
+			}
+
 			public string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
 			{
 				var queryHintCount = queryHints?.Count ?? 0;
@@ -625,6 +629,7 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlTable            : GetType(((SqlTable)           e).ObjectType); break;
 					case QueryElementType.SqlCteTable         : GetType(((SqlCteTable)        e).ObjectType); break;
 					case QueryElementType.CteClause           : GetType(((CteClause)          e).ObjectType); break;
+					case QueryElementType.SqlRawSqlTable      : GetType(((SqlRawSqlTable)     e).ObjectType); break;
 				}
 
 				ObjectIndices.Add(e, ++Index);
@@ -664,6 +669,8 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Precision);
 							Append(elem.Scale);
 							Append(elem.CreateFormat);
+							Append(elem.CreateOrder);
+							AppendDelayed(elem.Table);
 
 							break;
 						}
@@ -688,6 +695,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
 							Append((int)elem.DataType);
+							Append(elem.DbType);
 							Append(elem.DbSize);
 							Append(elem.LikeStart);
 							Append(elem.LikeEnd);
@@ -740,6 +748,11 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlValue :
 						{
 							var elem = (SqlValue)e;
+
+							Append((int)elem.ValueType.DataType);
+							Append(elem.ValueType.DbType);
+							Append(elem.ValueType.Length);
+
 							Append(elem.SystemType, elem.Value);
 							break;
 						}
@@ -749,6 +762,7 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlDataType)e;
 
 							Append((int)elem.DataType);
+							Append(elem.DbType);
 							Append(elem.Type);
 							Append(elem.Length);
 							Append(elem.Precision);
@@ -821,6 +835,35 @@ namespace LinqToDB.ServiceModel
 
 							foreach (var field in elem.Fields)
 								Append(ObjectIndices[field.Value]);
+
+							break;
+						}
+
+					case QueryElementType.SqlRawSqlTable :
+						{
+							var elem = (SqlRawSqlTable)e;
+
+							Append(elem.SourceID);
+							Append(elem.Alias);
+							Append(elem.ObjectType);
+
+							Append(ObjectIndices[elem.All]);
+							Append(elem.Fields.Count);
+
+							foreach (var field in elem.Fields)
+								Append(ObjectIndices[field.Value]);
+
+							Append(elem.SQL);
+
+							if (elem.Parameters == null)
+								Append(0);
+							else
+							{
+								Append(elem.Parameters.Length);
+
+								foreach (var expr in elem.Parameters)
+									Append(ObjectIndices[expr]);
+							}
 
 							break;
 						}
@@ -1007,6 +1050,8 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsDistinct);
 							Append(elem.SkipValue);
 							Append(elem.TakeValue);
+							Append((int?)elem.TakeHints);
+
 							Append(elem.Columns);
 
 							break;
@@ -1050,7 +1095,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Name);
 							Append(elem.Body);
 							Append(elem.ObjectType);
-							Append(elem.Fields.Values);
+							Append(elem.Fields);
 							Append(elem.IsRecursive);
 
 							break;
@@ -1142,6 +1187,7 @@ namespace LinqToDB.ServiceModel
 
 						Append(elem.Table);
 						Append(elem.Parameters);
+						Append(elem.IfExists);
 
 						break;
 					}
@@ -1181,6 +1227,60 @@ namespace LinqToDB.ServiceModel
 
 							break;
 						}
+
+					case QueryElementType.MergeSourceTable:
+						{
+							var elem = (SqlMergeSourceTable)e;
+
+							Append(elem.SourceID);
+							Append(elem.SourceEnumerable);
+							Append(elem.SourceQuery);
+							Append(elem.SourceFields);
+
+							break;
+						}
+
+					case QueryElementType.MergeOperationClause:
+						{
+							var elem = (SqlMergeOperationClause)e;
+
+							Append((int)elem.OperationType);
+							Append(elem.Where);
+							Append(elem.WhereDelete);
+							Append(elem.Items);
+
+							break;
+						}
+
+					case QueryElementType.MergeStatement:
+						{
+							var elem = (SqlMergeStatement)e;
+
+							Append(elem.Hint);
+							Append(elem.Target);
+							Append(elem.Source);
+							Append(elem.On);
+							Append(elem.Operations);
+							Append(elem.Parameters);
+
+							break;
+						}
+
+					case QueryElementType.SqlValuesTable:
+						{
+							var elem = (SqlValuesTable)e;
+
+							Append(elem.Fields.Values);
+							Append(elem.Rows.Count);
+
+							foreach (var row in elem.Rows)
+								Append(row);
+
+							break;
+						}
+
+					default:
+						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
 				}
 
 				Builder.AppendLine();
@@ -1212,6 +1312,11 @@ namespace LinqToDB.ServiceModel
 
 			readonly Dictionary<int,SelectQuery> _queries = new Dictionary<int,SelectQuery>();
 			readonly List<Action>                _actions = new List<Action>();
+
+			public QueryDeserializer(MappingSchema serializationMappingSchema)
+				: base(serializationMappingSchema)
+			{
+			}
 
 			public LinqServiceQuery Deserialize(string str)
 			{
@@ -1282,8 +1387,10 @@ namespace LinqToDB.ServiceModel
 							var precision        = ReadNullableInt();
 							var scale            = ReadNullableInt();
 							var createFormat     = ReadString();
+							var createOrder      = ReadNullableInt();
 
-							obj = new SqlField
+							SqlField field;
+							obj = field = new SqlField
 							{
 								SystemType      = systemType,
 								Name            = name,
@@ -1300,7 +1407,13 @@ namespace LinqToDB.ServiceModel
 								Precision       = precision,
 								Scale           = scale,
 								CreateFormat    = createFormat,
+								CreateOrder     = createOrder
 							};
+
+							ReadDelayedObject(table =>
+							{
+								field.Table = table as ISqlTableSource;
+							});
 
 							break;
 						}
@@ -1322,8 +1435,9 @@ namespace LinqToDB.ServiceModel
 						{
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
-							var dbType           = (DataType)ReadInt();
-							var dbSize           = ReadInt();
+							var dataType         = (DataType)ReadInt();
+							var dbType           = ReadString();
+							var dbSize           = ReadNullableInt();
 							var likeStart        = ReadString();
 							var likeEnd          = ReadString();
 							var replaceLike      = ReadBool();
@@ -1334,7 +1448,8 @@ namespace LinqToDB.ServiceModel
 							obj = new SqlParameter(systemType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
-								DataType         = dbType,
+								DataType         = dataType,
+								DbType           = dbType,
 								DbSize           = dbSize,
 								LikeStart        = likeStart,
 								LikeEnd          = likeEnd,
@@ -1371,23 +1486,28 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlValue :
 						{
+							var dataType   = (DataType)ReadInt();
+							var dbType     = ReadString();
+							var length     = ReadNullableInt();
+
 							var systemType = Read<Type>();
 							var value      = ReadValue(systemType);
 
-							obj = new SqlValue(systemType, value);
+							obj = new SqlValue(new DbDataType(systemType, dataType, dbType, length), value);
 
 							break;
 						}
 
 					case QueryElementType.SqlDataType :
 						{
-							var dbType     = (DataType)ReadInt();
+							var dataType   = (DataType)ReadInt();
+							var dbType     = ReadString();
 							var systemType = Read<Type>();
 							var length     = ReadNullableInt();
 							var precision  = ReadNullableInt();
 							var scale      = ReadNullableInt();
 
-							obj = new SqlDataType(dbType, systemType, length, precision, scale);
+							obj = new SqlDataType(dataType, systemType, length, precision, scale, dbType);
 
 							break;
 						}
@@ -1463,6 +1583,27 @@ namespace LinqToDB.ServiceModel
 								new SqlCteTable(sourceID, alias, flds, cte);
 
 							obj = cteTable;
+
+							break;
+						}
+
+					case QueryElementType.SqlRawSqlTable :
+						{
+							var sourceID           = ReadInt();
+							var alias              = ReadString();
+							var objectType         = Read<Type>();
+
+							var all    = Read<SqlField>();
+							var fields = ReadArray<SqlField>();
+							var flds   = new SqlField[fields.Length + 1];
+
+							flds[0] = all;
+							Array.Copy(fields, 0, flds, 1, fields.Length);
+
+							var sql        = ReadString();
+							var parameters = ReadArray<ISqlExpression>();
+
+							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, parameters);
 
 							break;
 						}
@@ -1656,9 +1797,10 @@ namespace LinqToDB.ServiceModel
 							var isDistinct = ReadBool();
 							var skipValue  = Read<ISqlExpression>();
 							var takeValue  = Read<ISqlExpression>();
+							var takeHints  = (TakeHints?)ReadNullableInt();
 							var columns    = ReadArray<SqlColumn>();
 
-							obj = new SqlSelectClause(isDistinct, takeValue, skipValue, columns);
+							obj = new SqlSelectClause(isDistinct, takeValue, takeHints, skipValue, columns);
 
 							break;
 						}
@@ -1712,7 +1854,7 @@ namespace LinqToDB.ServiceModel
 							var fields      = ReadArray<SqlField>();
 							var isRecursive = ReadBool();
 
-							var c = new CteClause(body, fields, objectType, name) { IsRecursive = isRecursive };
+							var c = new CteClause(body, fields, objectType, isRecursive, name);
 
 							obj = c;
 
@@ -1814,8 +1956,9 @@ namespace LinqToDB.ServiceModel
 					{
 						var table      = Read<SqlTable>();
 						var parameters = ReadArray<SqlParameter>();
+						var ifExists   = ReadBool();
 
-						obj = _statement = new SqlDropTableStatement
+						obj = _statement = new SqlDropTableStatement(ifExists)
 						{
 							Table = table,
 						};
@@ -1865,6 +2008,63 @@ namespace LinqToDB.ServiceModel
 
 							break;
 						}
+
+					case QueryElementType.MergeSourceTable:
+						{
+							var sourceID         = ReadInt();
+							var enumerableSource = Read<SqlValuesTable>();
+							var querySource      = Read<SelectQuery>();
+							var fields           = ReadArray<SqlField>();
+
+							obj = new SqlMergeSourceTable(sourceID, enumerableSource, querySource, fields);
+
+							break;
+						}
+
+					case QueryElementType.MergeOperationClause:
+						{
+							var operationType = (MergeOperationType)ReadInt();
+							var where         = Read<SqlSearchCondition>();
+							var whereDelete   = Read<SqlSearchCondition>();
+							var items         = ReadArray<SqlSetExpression>();
+
+							obj = new SqlMergeOperationClause(operationType, where, whereDelete, items);
+
+							break;
+						}
+
+					case QueryElementType.MergeStatement:
+						{
+							var hint       = ReadString();
+							var target     = Read<SqlTableSource>();
+							var source     = Read<SqlMergeSourceTable>();
+							var on         = Read<SqlSearchCondition>();
+							var operations = ReadArray<SqlMergeOperationClause>();
+							var parameters = ReadArray<SqlParameter>();
+
+							obj = _statement = new SqlMergeStatement(hint, target, source, on, operations);
+							_statement.Parameters.AddRange(parameters);
+
+							break;
+						}
+
+					case QueryElementType.SqlValuesTable:
+						{
+							var fields    = ReadArray<SqlField>();
+
+							var rowsCount = ReadInt();
+							var rows      = new IList<ISqlExpression>[rowsCount];
+
+							for (var i = 0; i < rowsCount; i++)
+								rows[i] = ReadArray<ISqlExpression>();
+
+							obj = new SqlValuesTable(fields, rows);
+
+							break;
+						}
+
+					default:
+						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
 				}
 
 				ObjectIndices.Add(idx, obj);
@@ -1888,10 +2088,14 @@ namespace LinqToDB.ServiceModel
 
 		class ResultSerializer : SerializerBase
 		{
+			public ResultSerializer(MappingSchema serializationMappingSchema)
+				: base(serializationMappingSchema)
+			{
+			}
+
 			public string Serialize(LinqServiceResult result)
 			{
 				Append(result.FieldCount);
-				Append(result.VaryingTypes.Length);
 				Append(result.RowCount);
 				Append(result.QueryID.ToString());
 
@@ -1909,25 +2113,10 @@ namespace LinqToDB.ServiceModel
 					Builder.AppendLine();
 				}
 
-				foreach (var type in result.VaryingTypes)
-				{
-					Append(type.FullName);
-					Builder.AppendLine();
-				}
-
 				foreach (var data in result.Data)
 				{
 					foreach (var str in data)
-					{
-						if (result.VaryingTypes.Length > 0 && !string.IsNullOrEmpty(str) && str[0] == '\0')
-						{
-							Builder.Append('*');
-							Append((int)str[1]);
-							Append(str.Substring(2));
-						}
-						else
-							Append(str);
-					}
+						Append(str);
 
 					Builder.AppendLine();
 				}
@@ -1942,18 +2131,21 @@ namespace LinqToDB.ServiceModel
 
 		class ResultDeserializer : DeserializerBase
 		{
+			public ResultDeserializer(MappingSchema serializationMappingSchema)
+				: base(serializationMappingSchema)
+			{
+			}
+
 			public LinqServiceResult DeserializeResult(string str)
 			{
 				Str = str;
 
 				var fieldCount  = ReadInt();
-				var varTypesLen = ReadInt();
 
 				var result = new LinqServiceResult
 				{
 					FieldCount   = fieldCount,
 					RowCount     = ReadInt(),
-					VaryingTypes = new Type[varTypesLen],
 					QueryID      = new Guid(ReadString()),
 					FieldNames   = new string[fieldCount],
 					FieldTypes   = new Type  [fieldCount],
@@ -1964,29 +2156,13 @@ namespace LinqToDB.ServiceModel
 
 				for (var i = 0; i < fieldCount;  i++) { result.FieldNames  [i] = ReadString();              NextLine(); }
 				for (var i = 0; i < fieldCount;  i++) { result.FieldTypes  [i] = ResolveType(ReadString()); NextLine(); }
-				for (var i = 0; i < varTypesLen; i++) { result.VaryingTypes[i] = ResolveType(ReadString()); NextLine(); }
 
 				for (var n = 0; n < result.RowCount; n++)
 				{
 					var data = new string[fieldCount];
 
 					for (var i = 0; i < fieldCount; i++)
-					{
-						if (varTypesLen > 0)
-						{
-							Get(' ');
-
-							if (Get('*'))
-							{
-								var idx = ReadInt();
-								data[i] = "\0" + (char)idx + ReadString();
-							}
-							else
-								data[i] = ReadString();
-						}
-						else
-							data[i] = ReadString();
-					}
+						data[i] = ReadString();
 
 					result.Data.Add(data);
 
@@ -2003,6 +2179,11 @@ namespace LinqToDB.ServiceModel
 
 		class StringArraySerializer : SerializerBase
 		{
+			public StringArraySerializer(MappingSchema serializationMappingSchema)
+				: base(serializationMappingSchema)
+			{
+			}
+
 			public string Serialize(string[] data)
 			{
 				Append(data.Length);
@@ -2022,6 +2203,11 @@ namespace LinqToDB.ServiceModel
 
 		class StringArrayDeserializer : DeserializerBase
 		{
+			public StringArrayDeserializer(MappingSchema serializationMappingSchema)
+				: base(serializationMappingSchema)
+			{
+			}
+
 			public string[] Deserialize(string str)
 			{
 				Str = str;

@@ -5,7 +5,9 @@ using System.Linq;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Data;
+	using Microsoft.SqlServer.Server;
 	using SchemaProvider;
+	using System.Data;
 
 	class SqlServerSchemaProvider : SchemaProviderBase
 	{
@@ -146,7 +148,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						--OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
 						OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
 						COLUMNPROPERTY(OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'ColumnID') = x.minor_id AND
-						x.name = 'MS_Description'")
+						x.name = 'MS_Description' AND x.class = 1")
 				.Select(c =>
 				{
 					DataTypeInfo dti;
@@ -264,7 +266,10 @@ namespace LinqToDB.DataProvider.SqlServer
 					NUMERIC_SCALE                                                                  as Scale,
 					CASE WHEN PARAMETER_MODE = 'IN'  OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END as IsIn,
 					CASE WHEN PARAMETER_MODE = 'OUT' OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END as IsOut,
-					CASE WHEN IS_RESULT      = 'YES'                             THEN 1 ELSE 0 END as IsResult
+					CASE WHEN IS_RESULT      = 'YES'                             THEN 1 ELSE 0 END as IsResult,
+					USER_DEFINED_TYPE_CATALOG                                                      as UDTCatalog,
+					USER_DEFINED_TYPE_SCHEMA                                                       as UDTSchema,
+					USER_DEFINED_TYPE_NAME                                                         as UDTName
 				FROM
 					INFORMATION_SCHEMA.PARAMETERS")
 				.ToList();
@@ -308,6 +313,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "hierarchyid"      :
 				case "geography"        :
 				case "geometry"         : return DataType.Udt;
+				case "table type"       : return DataType.Structured;
 			}
 
 			return DataType.Undefined;
@@ -366,9 +372,38 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "hierarchyid" :
 				case "geography"   :
 				case "geometry"    : return SqlServerDataProvider.GetUdtType(dataType);
+				case "table type"  : return typeof(DataTable);
 			}
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
+		}
+
+		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
+		{
+			// database name for udt not supported by sql server
+			if (udtName != null)
+				return (udtSchema != null ? SqlServerTools.QuoteIdentifier(udtSchema) + '.' : null) + SqlServerTools.QuoteIdentifier(udtName);
+
+			return base.GetDbType(columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
+		}
+
+		protected override DataParameter BuildProcedureParameter(ParameterSchema p)
+		{
+			if (p.DataType == DataType.Structured)
+				return new DataParameter()
+				{
+					Name      = p.ParameterName,
+					DataType  = p.DataType,
+					Direction =
+						p.IsIn ?
+							p.IsOut ?
+								ParameterDirection.InputOutput :
+								ParameterDirection.Input :
+							ParameterDirection.Output,
+					DbType   = p.SchemaType
+				};
+
+			return base.BuildProcedureParameter(p);
 		}
 	}
 }

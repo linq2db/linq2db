@@ -18,6 +18,7 @@ namespace LinqToDB
 		string SchemaName   { get; }
 		string TableName    { get; }
 
+		//TODO: replace with extension method
 		string GetTableName();
 	}
 }

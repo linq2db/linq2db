@@ -30,38 +30,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
 
-		public override int CommandCount(SqlStatement statement)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			return statement.NeedsIdentity() ? 2 : 1;
-		}
+			var identityField = insertClause.Into.GetIdentityField();
 
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			var insertClause = Statement.GetInsertClause();
-			if (insertClause != null)
-			{
-				var into = insertClause.Into;
-				var attr = GetSequenceNameAttribute(into, false);
-				var name =
-					attr != null
-						? attr.SequenceName
-						: Convert(
-							$"{into.PhysicalName}_{into.GetIdentityField().PhysicalName}_seq",
-							ConvertType.NameToQueryField);
+			if (identityField == null)
+				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
-				name = Convert(name, ConvertType.NameToQueryTable);
-
-				var server   = GetTableServerName(into);
-				var database = GetTableDatabaseName(into);
-				var schema   = GetTableSchemaName(into);
-
-				AppendIndent()
-					.Append("SELECT currval('");
-
-				BuildTableName(StringBuilder, server, database, schema, name.ToString());
-
-				StringBuilder.AppendLine("')");
-			}
+			AppendIndent().AppendLine("RETURNING ");
+			AppendIndent().Append("\t");
+			BuildExpression(identityField, false, true);
+			StringBuilder.AppendLine();
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -79,7 +58,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return "OFFSET {0} ";
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -96,10 +75,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					StringBuilder.Append("VarChar");
 					if (type.Length > 0)
 						StringBuilder.Append('(').Append(type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
-					break;
-				case DataType.Undefined      :
-					if (type.Type == typeof(string))
-						goto case DataType.NVarChar;
 					break;
 				case DataType.Json           : StringBuilder.Append("json");           break;
 				case DataType.BinaryJson     : StringBuilder.Append("jsonb");          break;
@@ -136,14 +111,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						else if (udtType == typeof(IPAddress))            StringBuilder.Append("inet");
 						else if (udtType == typeof(PhysicalAddress)
 							&& !_provider.HasMacAddr8)                    StringBuilder.Append("macaddr");
-						else                                              base.BuildDataType(type, createDbType);
+						else                                              base.BuildDataTypeFromDataType(type, forCreateTable);
 					}
 					else
-						base.BuildDataType(type, createDbType);
+						base.BuildDataTypeFromDataType(type, forCreateTable);
 
 					break;
 
-				default                      : base.BuildDataType(type, createDbType); break;
+				default                      : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 			}
 		}
 
@@ -265,11 +240,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					var name     = Convert(attr.SequenceName, ConvertType.NameToQueryTable).ToString();
 					var server   = GetTableServerName(table);
 					var database = GetTableDatabaseName(table);
-					var schema   = GetTableSchemaName  (table);
+					var schema   = attr.Schema != null
+						? Convert(attr.Schema, ConvertType.NameToSchema).ToString()
+						: GetTableSchemaName(table);
 
-					var sb = BuildTableName(new StringBuilder(), server, database, schema, name);
-
-					return new SqlExpression($"nextval('{sb}')", Precedence.Primary);
+					var sb = new StringBuilder();
+					sb.Append("nextval(");
+					ValueToSqlConverter.Convert(sb, BuildTableName(new StringBuilder(), server, database, schema, name).ToString());
+					sb.Append(")");
+					return new SqlExpression(sb.ToString(), Precedence.Primary);
 				}
 			}
 
@@ -349,6 +328,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 
 			StringBuilder.AppendLine();
+		}
+
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
+		{
+			BuildDropTableStatementIfExists(dropTable);
+		}
+
+		protected override void BuildMergeStatement(SqlMergeStatement merge)
+		{
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 	}
 }

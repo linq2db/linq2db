@@ -1,14 +1,14 @@
 ﻿namespace Tests.UserTests
 {
 	using System.Linq;
-
+	using LinqToDB;
 	using NUnit.Framework;
 
 	[TestFixture]
 	public class Issue569Tests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -44,12 +44,12 @@
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var result = 
+				var result =
 					from parent     in db.Parent
 					from child      in db.Child
 					from grandChild in child.GrandChildren.DefaultIfEmpty()
@@ -60,7 +60,7 @@
 						grandChild.GrandChildID
 					};
 
-				var expected = 
+				var expected =
 					from parent     in Parent
 					from child      in Child
 					from grandChild in child.GrandChildren.DefaultIfEmpty()
@@ -75,8 +75,8 @@
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -107,12 +107,12 @@
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test4(string context)
+		[Test]
+		public void Test4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var sq = 
+				var sq =
 					from parent     in db.Parent
 					from child      in db.Child
 					from grandChild in child.GrandChildren.DefaultIfEmpty()
@@ -123,7 +123,7 @@
 						grandChild.GrandChildID
 					};
 
-				var q = 
+				var q =
 					from parent in db.Parent
 					from s in sq
 					select new
@@ -132,7 +132,7 @@
 						s
 					};
 
-				var rsq = 
+				var rsq =
 					from parent     in Parent
 					from child      in Child
 					from grandChild in child.GrandChildren.DefaultIfEmpty()
@@ -143,7 +143,7 @@
 						GrandChildID = grandChild != null ? grandChild.GrandChildID : null
 					};
 
-				var rq = 
+				var rq =
 					from parent in Parent
 					from s in rsq
 					select new
@@ -156,12 +156,12 @@
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test5(string context)
+		[Test]
+		public void Test5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var sq = 
+				var sq =
 					from parent     in db.Parent
 					from child      in db.Child
 					from grandChild in child.GrandChildren.DefaultIfEmpty()
@@ -172,7 +172,7 @@
 						grandChild.GrandChildID
 					};
 
-				var q = 
+				var q =
 					from s in sq
 					from parent in db.Parent
 					select new
@@ -181,7 +181,7 @@
 						s
 					};
 
-				var rsq = 
+				var rsq =
 					from parent     in Parent
 					from child      in Child
 					from grandChild in child.GrandChildren.DefaultIfEmpty()
@@ -192,7 +192,7 @@
 						GrandChildID = grandChild != null ? grandChild.GrandChildID : null
 					};
 
-				var rq = 
+				var rq =
 					from s in rsq
 					from parent in Parent
 					select new

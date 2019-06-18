@@ -25,7 +25,7 @@ namespace LinqToDB
 	/// </summary>
 	/// <typeparam name="T">Table record mapping class.</typeparam>
 	[PublicAPI]
-	public class TempTable<T> : ITable<T>, IDisposable
+	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable
 	{
 		readonly ITable<T> _table;
 
@@ -230,6 +230,25 @@ namespace LinqToDB
 
 		#endregion
 
+		#region ITableMutable<T> implementation
+
+		ITable<T> ITableMutable<T>.ChangeDatabaseName(string databaseName)
+		{
+			return ((ITableMutable<T>)_table).ChangeDatabaseName(databaseName);
+		}
+
+		ITable<T> ITableMutable<T>.ChangeSchemaName(string schemaName)
+		{
+			return ((ITableMutable<T>)_table).ChangeSchemaName(schemaName);
+		}
+
+		ITable<T> ITableMutable<T>.ChangeTableName(string tableName)
+		{
+			return ((ITableMutable<T>)_table).ChangeTableName(tableName);
+		}
+
+		#endregion
+
 		#region IQueryProvider
 
 		IQueryable IQueryProvider.CreateQuery(Expression expression)
@@ -265,7 +284,7 @@ namespace LinqToDB
 		{
 			return _table.ExecuteAsync<TResult>(expression);
 		}
-		
+
 		#endregion
 
 		#region IExpressionQuery<T>
@@ -317,7 +336,7 @@ namespace LinqToDB
 
 		#endregion
 
-		void IDisposable.Dispose()
+		public virtual void Dispose()
 		{
 			_table.DropTable();
 		}

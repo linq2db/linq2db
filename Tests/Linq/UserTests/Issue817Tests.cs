@@ -2,7 +2,6 @@
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -13,8 +12,9 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue817Tests : TestBase
 	{
-		[Test, DataContextSource]
-		public void TestUnorderedTake(string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[Test]
+		public void TestUnorderedTake([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -24,8 +24,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestUnorderedSkip(string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[Test]
+		public void TestUnorderedSkip([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -37,8 +38,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestUnorderedTakeSkip(string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[Test]
+		public void TestUnorderedTakeSkip([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -48,8 +50,10 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestUnorderedTakeSkipZero(string context)
+
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[Test]
+		public void TestUnorderedTakeSkipZero([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

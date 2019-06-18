@@ -96,6 +96,9 @@ namespace LinqToDB.Linq.Builder
 				case RequestFor.Field       :
 				case RequestFor.Expression  :
 					{
+						if (expression == null)
+							return IsExpressionResult.False;
+
 						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 						if (Lambda.Parameters.Count > 1)
@@ -124,9 +127,15 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
 		{
+			var root = expression.GetRootObject(Builder.MappingSchema);
+
 			for (var i = 0; i < Lambda.Parameters.Count; i++)
-				if (ReferenceEquals(expression, Lambda.Parameters[i]))
-					return Sequences[i].GetContext(null, 0, buildInfo);
+				if (ReferenceEquals(root, Lambda.Parameters[i]))
+				{
+					if (expression == root)
+						return Sequences[i].GetContext(null, 0, buildInfo);
+					return Sequences[i].GetContext(expression, level + 1, buildInfo);
+				}
 
 			switch (expression.NodeType)
 			{

@@ -99,7 +99,7 @@ namespace LinqToDB.Mapping
 		/// Gets or sets the name of mapped member.
 		/// When applied to class or interface, should contain name of property of field.
 		///
-		/// If column is mapped to a property or field of composite object, <see cref="MemberName"/> should contain a path to that
+		/// If column mapped to a property or field of composite object, <see cref="MemberName"/> should contain a path to that
 		/// member using dot as separator.
 		/// <example>
 		/// <code>
@@ -110,7 +110,7 @@ namespace LinqToDB.Mapping
 		///     public int    Building { get; set; }
 		/// }
 		///
-		/// [Column("city", "Residence.Street")]
+		/// [Column("city", "Residence.City")]
 		/// [Column("user_name", "Name")]
 		/// public class User
 		/// {

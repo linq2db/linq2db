@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Data
 {
 	using Linq;
+	using Common;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -32,7 +33,8 @@ namespace LinqToDB.Data
 			}
 
 			readonly DataConnection _dataConnection;
-			readonly DateTime       _startedOn = DateTime.Now;
+			readonly DateTime       _startedOn = DateTime.UtcNow;
+			readonly Stopwatch      _stopwatch = Stopwatch.StartNew();
 
 			bool       _isAsync;
 			Expression _mapperExpression;
@@ -52,6 +54,8 @@ namespace LinqToDB.Data
 							TraceLevel       = TraceLevel.Info,
 							DataConnection   = _dataConnection,
 							MapperExpression = MapperExpression,
+							StartTime        = _startedOn,
+							ExecutionTime    = _stopwatch.Elapsed,
 							IsAsync          = _isAsync,
 						});
 					}
@@ -118,8 +122,10 @@ namespace LinqToDB.Data
 					{
 						TraceLevel       = TraceLevel.Info,
 						DataConnection   = _dataConnection,
+						Command          = _dataConnection.Command,
 						MapperExpression = MapperExpression,
-						ExecutionTime    = DateTime.Now - _startedOn,
+						StartTime        = _startedOn,
+						ExecutionTime    = _stopwatch.Elapsed,
 						RecordsAffected  = RowsCount,
 						IsAsync          = _isAsync,
 					});
@@ -153,7 +159,10 @@ namespace LinqToDB.Data
 					 };
 				}
 
+				// before processing query we correct parameters
 				var sql    = query.Statement.ProcessParameters(dataConnection.MappingSchema);
+
+				// custom query handling
 				var newSql = dataConnection.ProcessQuery(sql);
 
 				if (!object.ReferenceEquals(sql, newSql))
@@ -163,6 +172,8 @@ namespace LinqToDB.Data
 				}
 
 				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder();
+
+				sql = dataConnection.DataProvider.GetSqlOptimizer().OptimizeStatement(sql, dataConnection.MappingSchema);
 
 				var cc = sqlProvider.CommandCount(sql);
 				var sb = new StringBuilder();
@@ -230,19 +241,28 @@ namespace LinqToDB.Data
 
 			static void AddParameter(DataConnection dataConnection, ICollection<IDbDataParameter> parms, string name, SqlParameter parm)
 			{
-				var p         = dataConnection.Command.CreateParameter();
-				var dataType  = parm.DataType;
-				var parmValue = parm.Value;
+				var p          = dataConnection.Command.CreateParameter();
+				var systemType = parm.SystemType;
+				var dataType   = parm.DataType;
+				var dbType     = parm.DbType;
+				var dbSize     = parm.DbSize;
+				var paramValue = parm.Value;
+
+				if (systemType == null)
+				{
+					if (paramValue != null)
+						systemType = paramValue.GetType();
+				}
 
 				if (dataType == DataType.Undefined)
 				{
 					dataType = dataConnection.MappingSchema.GetDataType(
-						parm.SystemType == typeof(object) && parmValue != null ?
-							parmValue.GetType() :
-							parm.SystemType).DataType;
+						parm.SystemType == typeof(object) && paramValue != null ?
+							paramValue.GetType() :
+							systemType).DataType;
 				}
 
-				dataConnection.DataProvider.SetParameter(p, name, dataType, parmValue);
+				dataConnection.DataProvider.SetParameter(p, name, new DbDataType(systemType, dataType, dbType, dbSize), paramValue);
 
 				parms.Add(p);
 			}
@@ -450,7 +470,9 @@ namespace LinqToDB.Data
 
 				public void Dispose()
 				{
-					_dataReader.Dispose();
+					// call interface method, because at least MySQL provider incorrectly override
+					// methods for .net core 1x
+					DataReader.Dispose();
 				}
 			}
 
@@ -468,7 +490,7 @@ namespace LinqToDB.Data
 					foreach (var p in _preparedQuery.Parameters)
 						_dataConnection.Command.Parameters.Add(p);
 
-				var dataReader = await _dataConnection.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken);
+				var dataReader = await _dataConnection.ExecuteReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken);
 
 				return new DataReaderAsync(dataReader);
 			}

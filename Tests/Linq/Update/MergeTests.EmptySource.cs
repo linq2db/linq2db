@@ -1,24 +1,23 @@
-﻿
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Common;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB;
-	using LinqToDB.Common;
 	using Model;
-	using System;
-	using System.Linq;
 
 	// tests for empty enumerable source
 	public partial class MergeTests
 	{
-		[Test, MergeDataContextSource]
-		public void MergeEmptyLocalSourceSameType(string context)
+		[Test]
+		public void MergeEmptyLocalSourceSameType([MergeDataContextSource(ProviderName.OracleManaged, ProviderName.OracleNative)] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
-
 				PrepareData(db);
 
 				var table = GetTarget(db);
@@ -43,11 +42,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource]
-		public void MergeEmptyLocalSourceDifferentTypes(string context)
+		[Test]
+		public void MergeEmptyLocalSourceDifferentTypes([MergeDataContextSource(ProviderName.OracleManaged, ProviderName.OracleNative)] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 
 				PrepareData(db);

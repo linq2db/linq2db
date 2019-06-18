@@ -30,16 +30,21 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var context        = new SelectManyContext(buildInfo.Parent, collectionSelector, sequence);
+			context.SetAlias(collectionSelector.Parameters[0].Name);
+
 			var expr           = collectionSelector.Body.Unwrap();
 
 			var collectionInfo = new BuildInfo(context, expr, new SelectQuery());
 			var collection     = builder.BuildSequence(collectionInfo);
+			if (resultSelector.Parameters.Count > 1)
+				collection.SetAlias(resultSelector.Parameters[1].Name);
+
 			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext || collectionInfo.JoinType == JoinType.Left;
 			var sql            = collection.SelectQuery;
 
 			var sequenceTables = new HashSet<ISqlTableSource>(sequence.SelectQuery.From.Tables[0].GetTables());
-			var newQuery       = null != QueryVisitor.Find(sql, e => e == collectionInfo.SelectQuery);
-			var crossApply     = null != QueryVisitor.Find(sql, e =>
+			var newQuery       = null != new QueryVisitor().Find(sql, e => e == collectionInfo.SelectQuery);
+			var crossApply     = null != new QueryVisitor().Find(sql, e =>
 				e.ElementType == QueryElementType.TableSource && sequenceTables.Contains((ISqlTableSource)e)  ||
 				e.ElementType == QueryElementType.SqlField    && sequenceTables.Contains(((SqlField)e).Table) ||
 				e.ElementType == QueryElementType.Column      && sequenceTables.Contains(((SqlColumn)e).Parent));
@@ -65,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 
 							collection.SelectQuery.Where.ConcatSearchCondition(foundJoin.Condition);
 
-							((ISqlExpressionWalkable) collection.SelectQuery.Where).Walk(false, e =>
+							((ISqlExpressionWalkable) collection.SelectQuery.Where).Walk(new WalkOptions(), e =>
 							{
 								if (e is SqlColumn column)
 								{
@@ -105,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var tableSources = new HashSet<ISqlTableSource>();
 
-				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(false, e =>
+				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(new WalkOptions(), e =>
 				{
 					if (e is ISqlTableSource ts && !tableSources.Contains(ts))
 						tableSources.Add(ts);
@@ -114,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 
 				bool ContainsTable(ISqlTableSource tbl, IQueryElement qe)
 				{
-					return null != QueryVisitor.Find(qe, e =>
+					return null != new QueryVisitor().Find(qe, e =>
 						e == tbl ||
 						e.ElementType == QueryElementType.SqlField && tbl == ((SqlField) e).Table ||
 						e.ElementType == QueryElementType.Column   && tbl == ((SqlColumn)e).Parent);
@@ -152,7 +157,8 @@ namespace LinqToDB.Linq.Builder
 					var isApplyJoin =
 						//Common.Configuration.Linq.PrefereApply    ||
 						collection.SelectQuery.Select.HasModifier ||
-					                  table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0;
+						table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0 ||
+						table.SqlTable is SqlRawSqlTable rawTable && rawTable.Parameters.Length > 0;
 
 					joinType = isApplyJoin
 						? (leftJoin ? JoinType.OuterApply : JoinType.CrossApply)
@@ -172,7 +178,7 @@ namespace LinqToDB.Linq.Builder
 				if (collection.Parent is TableBuilder.TableContext collectionParent &&
 					collectionInfo.IsAssociationBuilt)
 				{
-					var ts = (SqlTableSource)QueryVisitor.Find(sequence.SelectQuery.From, e =>
+					var ts = (SqlTableSource)new QueryVisitor().Find(sequence.SelectQuery.From, e =>
 					{
 						if (e.ElementType == QueryElementType.TableSource)
 						{

@@ -17,11 +17,11 @@ using LinqToDB.Mapping;
 namespace MySqlDataContext
 {
 	/// <summary>
-	/// Database       : testdb57
+	/// Database       : testdb55
 	/// Data Source    : localhost
-	/// Server Version : 5.7.17-log
+	/// Server Version : 5.5.55-log
 	/// </summary>
-	public partial class Testdb57DB : LinqToDB.Data.DataConnection
+	public partial class Testdb55DB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
@@ -41,24 +41,21 @@ namespace MySqlDataContext
 		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
 		public ITable<Testsamename>      Testsamenames      { get { return this.GetTable<Testsamename>(); } }
 
-		public void InitMappingSchema()
-		{
-		}
-
-		public Testdb57DB()
+		public Testdb55DB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public Testdb57DB(string configuration)
+		public Testdb55DB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		partial void InitDataContext();
+		partial void InitDataContext  ();
+		partial void InitMappingSchema();
 	}
 
 	[Table("alltypes")]
@@ -79,7 +76,7 @@ namespace MySqlDataContext
 		[Column("timestampDataType"),   Nullable            ] public DateTime? TimestampDataType   { get; set; } // timestamp
 		[Column("timeDataType"),        Nullable            ] public TimeSpan? TimeDataType        { get; set; } // time
 		[Column("yearDataType"),        Nullable            ] public int?      YearDataType        { get; set; } // year(4)
-		[Column("year2DataType"),       Nullable            ] public int?      Year2DataType       { get; set; } // year(4)
+		[Column("year2DataType"),       Nullable            ] public int?      Year2DataType       { get; set; } // year(2)
 		[Column("year4DataType"),       Nullable            ] public int?      Year4DataType       { get; set; } // year(4)
 		[Column("charDataType"),        Nullable            ] public char?     CharDataType        { get; set; } // char(1)
 		[Column("char20DataType"),      Nullable            ] public string    Char20DataType      { get; set; } // char(20)
@@ -176,7 +173,7 @@ namespace MySqlDataContext
 	{
 		[Column, Nullable] public int?      ID             { get; set; } // int(11)
 		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // decimal(10,4)
-		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // datetime(3)
+		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // datetime
 		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // datetime
 		[Column, Nullable] public bool?     BoolValue      { get; set; } // tinyint(1)
 		[Column, Nullable] public string    GuidValue      { get; set; } // char(36)
@@ -316,7 +313,7 @@ namespace MySqlDataContext
 		[PrimaryKey, NotNull] public int ID { get; set; } // int(11)
 	}
 
-	public static partial class Testdb57DBStoredProcedures
+	public static partial class Testdb55DBStoredProcedures
 	{
 		#region AddIssue792Record
 
@@ -332,8 +329,8 @@ namespace MySqlDataContext
 		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
 		{
 			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
-				new DataParameter("aInParam", aInParam, DataType.VarChar),
-				new DataParameter("aOutParam", null, DataType.SByte)   { Direction = ParameterDirection.Output });
+				new DataParameter("aInParam",  aInParam,  DataType.VarChar),
+				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
 
 			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
 
@@ -353,6 +350,21 @@ namespace MySqlDataContext
 
 			param2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param2"]).Value);
 			param1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param1"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region TestProc
+
+		public static int TestProc(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		{
+			var ret = dataConnection.ExecuteProc("`test_proc`",
+				new DataParameter("aInParam",  aInParam,  DataType.VarChar),
+				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
+
+			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
 
 			return ret;
 		}

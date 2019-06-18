@@ -48,10 +48,8 @@ namespace Tests.UserTests
 			[Column, Nullable] public string Name { get; set; }
 		}
 
-		[Test, Combinatorial]
-		public void TestConcurrentSelect(
-			[IncludeDataSources(false, ProviderName.SqlServer,ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context
-		)
+		[Test]
+		public void TestConcurrentSelect([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var dbFactory = MyDB.CreateFactory(context, 1, TimeSpan.FromSeconds(1));
 
@@ -77,6 +75,6 @@ namespace Tests.UserTests
 					Assert.IsNotNull(user2Task.Result);
 				}
 			}
-		}		
+		}
 	}
 }

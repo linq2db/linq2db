@@ -1,18 +1,169 @@
 ﻿using System;
 using System.Linq;
+
 using Tests.Model;
 
 using LinqToDB;
-using LinqToDB.Data;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using System.Linq.Expressions;
 
 namespace Tests.xUpdate
 {
 	public partial class MergeTests
 	{
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceAssociationInDeleteBySourcePredicate(string context)
+		[Table("Person")]
+		public class TestJoinPerson
+		{
+			[Column("PersonID"), Identity, PrimaryKey] public int ID;
+
+			[Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull = false)]
+			public TestJoinPatient Patient;
+
+			[Association(QueryExpressionMethod = nameof(Query), CanBeNull = false)]
+			public TestJoinPatient PatientQuery;
+
+			static Expression<Func<TestJoinPerson, IDataContext, IQueryable<TestJoinPatient>>> Query
+				=> (t, ctx) => ctx.GetTable<TestJoinPatient>().Where(p => p.PersonID == t.ID);
+		}
+
+		[Table("Patient")]
+		public class TestJoinPatient
+		{
+			[PrimaryKey] public int    PersonID;
+			[Column]     public string Diagnosis;
+		}
+
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TargetAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareAssociationsData(db);
+
+				var rows = db.GetTable<TestJoinPerson>()
+					.Merge()
+					.Using(db.GetTable<TestJoinPerson>())
+					.On((t, s) => t.ID == s.ID + 10)
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient.Diagnosis.Contains("very"))
+					.Merge();
+
+				var result = db.Person.OrderBy(_ => _.ID).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertPerson(AssociationPersons[0], result[0]);
+				AssertPerson(AssociationPersons[1], result[1]);
+				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(AssociationPersons[4], result[3]);
+				AssertPerson(AssociationPersons[5], result[4]);
+			}
+		}
+
+		[Test, Parallelizable(ParallelScope.None)]
+		public void TargetQueryAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareAssociationsData(db);
+
+				var rows = db.GetTable<TestJoinPerson>()
+					.Merge()
+					.Using(db.GetTable<TestJoinPerson>())
+					.On((t, s) => t.ID == s.ID + 10)
+					.DeleteWhenNotMatchedBySourceAnd(t => t.PatientQuery.Diagnosis.Contains("very"))
+					.Merge();
+
+				var result = db.Person.OrderBy(_ => _.ID).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertPerson(AssociationPersons[0], result[0]);
+				AssertPerson(AssociationPersons[1], result[1]);
+				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(AssociationPersons[4], result[3]);
+				AssertPerson(AssociationPersons[5], result[4]);
+			}
+		}
+
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SourceAssociationAsInnerJoin1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareAssociationsData(db);
+
+				var parsons = db.Person.ToArray();
+				var patients = db.Patient.ToArray();
+
+				var cnt = db.GetTable<TestJoinPerson>()
+					.Merge()
+					// inner join performed in source
+					.Using(db.GetTable<TestJoinPerson>().Select(p => new { p.ID, p.Patient.Diagnosis }))
+					.On((t, s) => t.ID == s.ID)
+					.DeleteWhenMatchedAnd((t, s) => s.Diagnosis != "sick")
+					.Merge();
+
+				Assert.AreEqual(1, cnt);
+			}
+		}
+
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SourceAssociationAsInnerJoin2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareAssociationsData(db);
+
+				var parsons = db.Person.ToArray();
+				var patients = db.Patient.ToArray();
+
+				var cnt = db.GetTable<TestJoinPerson>()
+					.Merge()
+					.Using(db.GetTable<TestJoinPerson>())
+					// inner join still performed in source
+					.On((t, s) => t.ID == s.ID && s.Patient.Diagnosis != null)
+					.DeleteWhenMatchedAnd((t, s) => s.Patient.Diagnosis != "sick")
+					.Merge();
+
+				Assert.AreEqual(1, cnt);
+			}
+		}
+
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SourceAssociationAsOuterJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareAssociationsData(db);
+
+				var parsons = db.Person.ToArray();
+				var patients = db.Patient.ToArray();
+
+				var cnt = db.GetTable<TestJoinPerson>()
+					.Merge()
+					.Using(db.GetTable<TestJoinPerson>())
+					.On((t, s) => t.ID == s.ID)
+					// // inner join promoted to outer join
+					.DeleteWhenMatchedAnd((t, s) => s.Patient.Diagnosis != "sick")
+					.Merge();
+
+				Assert.AreEqual(5, cnt);
+			}
+		}
+
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceAssociationInDeleteBySourcePredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -40,9 +191,13 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void OtherSourceAssociationInDeletePredicate(string context)
+		[Test]
+		public void OtherSourceAssociationInDeletePredicate([MergeDataContextSource(
+			false,
+			ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -69,9 +224,13 @@ namespace Tests.xUpdate
 
 		// ASE: server dies
 		// Oracle: associations in insert setter
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void OtherSourceAssociationInInsertCreate(string context)
+		[Test]
+		public void OtherSourceAssociationInInsertCreate([MergeDataContextSource(
+			false,
+			ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -82,7 +241,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatchedAnd(s => s.Patient.Diagnosis.Contains("sick"), s => new Model.Person()
+					.InsertWhenNotMatchedAnd(s => s.Patient.Diagnosis.Contains("sick"), s => new Person()
 					{
 						FirstName = s.Patient.Diagnosis,
 						LastName = "Inserted 2",
@@ -115,9 +274,12 @@ namespace Tests.xUpdate
 		// Oracle: associations in insert setters
 		// Informix: associations doesn't work right now
 		// SAP: associations doesn't work right now
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test]
+		public void OtherSourceAssociationInInsertCreate2([MergeDataContextSource(
+			false,
+			ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
-		public void OtherSourceAssociationInInsertCreate2(string context)
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -128,7 +290,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatched(s => new Model.Person()
+					.InsertWhenNotMatched(s => new Person()
 					{
 						FirstName = s.Patient.Diagnosis,
 						LastName = "Inserted 2",
@@ -158,8 +320,12 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: server dies
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void OtherSourceAssociationInInsertPredicate(string context)
+		[Test]
+		public void OtherSourceAssociationInInsertPredicate([MergeDataContextSource(
+			false,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -170,7 +336,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatchedAnd(s => s.Patient.Diagnosis.Contains("sick"), s => new Model.Person()
+					.InsertWhenNotMatchedAnd(s => s.Patient.Diagnosis.Contains("sick"), s => new Person()
 					{
 						FirstName = "Inserted 1",
 						LastName = "Inserted 2",
@@ -201,8 +367,11 @@ namespace Tests.xUpdate
 
 		// ASE, DB2: Associations in match not supported
 		// Informix: associations doesn't work right now
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void OtherSourceAssociationInMatch(string context)
+		[Test]
+		public void OtherSourceAssociationInMatch([MergeDataContextSource(
+			false,
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -244,8 +413,11 @@ namespace Tests.xUpdate
 
 		// ASE: server dies
 		// Informix: associations doesn't work right now
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void OtherSourceAssociationInUpdate(string context)
+		[Test]
+		public void OtherSourceAssociationInUpdate([MergeDataContextSource(
+			false,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -256,7 +428,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.UpdateWhenMatched((t, s) => new Model.Person()
+					.UpdateWhenMatched((t, s) => new Person()
 					{
 						MiddleName = "first " + s.Patient.Diagnosis,
 						LastName = "last " + t.Patient.Diagnosis
@@ -284,8 +456,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceAssociationInUpdateBySource(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -297,7 +469,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID + 10)
 					.UpdateWhenNotMatchedBySourceAnd(t => t.FirstName == "first 3",
-						t => new Model.Person()
+						t => new Person()
 						{
 							FirstName = "Updated",
 							LastName = t.Patient.Diagnosis
@@ -325,8 +497,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceAssociationInUpdateBySourcePredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void OtherSourceAssociationInUpdateBySourcePredicate(
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -338,7 +511,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID + 10)
 					.UpdateWhenNotMatchedBySourceAnd(t => t.Patient.Diagnosis.Contains("very"),
-						t => new Model.Person()
+						t => new Person()
 						{
 							FirstName = "Updated"
 						})
@@ -366,8 +539,12 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: server dies
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void OtherSourceAssociationInUpdatePredicate(string context)
+		[Test]
+		public void OtherSourceAssociationInUpdatePredicate([MergeDataContextSource(
+			false,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -380,7 +557,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedAnd(
 						(t, s) => s.Patient.Diagnosis == t.Patient.Diagnosis && t.Patient.Diagnosis.Contains("very"),
-						(t, s) => new Model.Person()
+						(t, s) => new Person()
 						{
 							LastName = "Updated"
 						})
@@ -407,8 +584,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceAssociationInDeleteBySourcePredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceAssociationInDeleteBySourcePredicate(
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -436,9 +614,13 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void SameSourceAssociationInDeletePredicate(string context)
+		[Test]
+		public void SameSourceAssociationInDeletePredicate([MergeDataContextSource(
+			false,
+			ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -465,9 +647,13 @@ namespace Tests.xUpdate
 
 		// ASE: server dies
 		// Oracle: associations in instert setters
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void SameSourceAssociationInInsertCreate(string context)
+		[Test]
+		public void SameSourceAssociationInInsertCreate([MergeDataContextSource(
+			false,
+			ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -480,7 +666,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatchedAnd(
 						s => s.Patient.Diagnosis.Contains("sick"),
-						s => new Model.Person()
+						s => new Person()
 						{
 							FirstName = s.Patient.Diagnosis,
 							LastName = "Inserted 2",
@@ -513,9 +699,12 @@ namespace Tests.xUpdate
 		// Oracle: associations in instert setters
 		// Informix: associations doesn't work right now
 		// SAP: associations doesn't work right now
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test]
+		public void SameSourceAssociationInInsertCreate2([MergeDataContextSource(
+			false,
+			ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana)]
-		public void SameSourceAssociationInInsertCreate2(string context)
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -526,7 +715,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatched(s => new Model.Person()
+					.InsertWhenNotMatched(s => new Person()
 					{
 						FirstName = s.Patient.Diagnosis,
 						LastName = "Inserted 2",
@@ -556,8 +745,12 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: server dies
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void SameSourceAssociationInInsertPredicate(string context)
+		[Test]
+		public void SameSourceAssociationInInsertPredicate([MergeDataContextSource(
+			false,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -570,7 +763,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatchedAnd(
 						s => s.Patient.Diagnosis.Contains("sick"),
-						s => new Model.Person()
+						s => new Person()
 						{
 							FirstName = "Inserted 1",
 							LastName = "Inserted 2",
@@ -601,8 +794,11 @@ namespace Tests.xUpdate
 
 		// ASE, DB2: Associations in match not supported
 		// Informix: associations doesn't work right now
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void SameSourceAssociationInMatch(string context)
+		[Test]
+		public void SameSourceAssociationInMatch([MergeDataContextSource(
+			false,
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -644,8 +840,11 @@ namespace Tests.xUpdate
 
 		// ASE: server dies
 		// Informix: associations doesn't work right now
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void SameSourceAssociationInUpdate(string context)
+		[Test]
+		public void SameSourceAssociationInUpdate([MergeDataContextSource(
+			false,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -656,7 +855,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.UpdateWhenMatched((t, s) => new Model.Person()
+					.UpdateWhenMatched((t, s) => new Person()
 					{
 						MiddleName = "first " + s.Patient.Diagnosis,
 						LastName = "last " + t.Patient.Diagnosis
@@ -684,8 +883,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceAssociationInUpdateBySource(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -698,7 +897,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID + 10)
 					.UpdateWhenNotMatchedBySourceAnd(
 						t => t.FirstName == "first 3",
-						t => new Model.Person()
+						t => new Person()
 						{
 							FirstName = "Updated",
 							LastName = t.Patient.Diagnosis
@@ -726,8 +925,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeBySourceDataContextSource]
-		public void SameSourceAssociationInUpdateBySourcePredicate(string context)
+		[Test, Parallelizable(ParallelScope.None)]
+		public void SameSourceAssociationInUpdateBySourcePredicate(
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -740,7 +940,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID + 10)
 					.UpdateWhenNotMatchedBySourceAnd(
 						t => t.Patient.Diagnosis.Contains("very"),
-						t => new Model.Person()
+						t => new Person()
 						{
 							FirstName = "Updated"
 						})
@@ -768,8 +968,12 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: server dies
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
-		public void SameSourceAssociationInUpdatePredicate(string context)
+		[Test]
+		public void SameSourceAssociationInUpdatePredicate([MergeDataContextSource(
+			false,
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix,
+			ProviderName.SapHana, ProviderName.Firebird)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -782,7 +986,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedAnd(
 						(t, s) => s.Patient.Diagnosis.Contains("very") && t.Patient.Diagnosis.Contains("very"),
-						(t, s) => new Model.Person()
+						(t, s) => new Person()
 						{
 							MiddleName = "Updated"
 						})
@@ -809,8 +1013,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void TestAssociationsData(string context)
+		[Test]
+		public void TestAssociationsData([DataSources(false)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -844,8 +1048,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeUpdateWithDeleteDataContextSource]
-		public void SameSourceAssociationInUpdateWithDeleteDeletePredicate(string context)
+		[Test]
+		public void SameSourceAssociationInUpdateWithDeleteDeletePredicate(
+			[IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -857,7 +1062,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedThenDelete(
-						(t, s) => new Model.Person()
+						(t, s) => new Person()
 						{
 							LastName = s.LastName
 						},
@@ -878,8 +1083,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeUpdateWithDeleteDataContextSource]
-		public void OtherSourceAssociationInUpdateWithDeleteDeletePredicate(string context)
+		[Test]
+		public void OtherSourceAssociationInUpdateWithDeleteDeletePredicate(
+			[IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -891,7 +1097,7 @@ namespace Tests.xUpdate
 					.Using(db.Person)
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedThenDelete(
-						(t, s) => new Model.Person()
+						(t, s) => new Person()
 						{
 							LastName = s.FirstName
 						},
@@ -944,7 +1150,7 @@ namespace Tests.xUpdate
 			Assert.AreEqual(expected.MiddleName, actual.MiddleName);
 		}
 
-		private void PrepareAssociationsData(TestDataConnection db)
+		private void PrepareAssociationsData(ITestDataContext db)
 		{
 			using (new DisableLogging())
 			{
@@ -957,10 +1163,7 @@ namespace Tests.xUpdate
 				{
 					person.ID = id++;
 
-					if (db.ConfigurationString == TestProvName.Firebird3 + "sdf")
-						person.ID = Convert.ToInt32(db.Insert(person));
-					else
-						person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
+					person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
 				}
 
 				AssociationDoctors[0].PersonID = AssociationPersons[4].ID;

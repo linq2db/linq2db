@@ -39,7 +39,7 @@ namespace LinqToDB.SqlQuery
 			SearchCondition = searchCondition;
 		}
 
-		public SqlSearchCondition SearchCondition { get; private set; }
+		public SqlSearchCondition SearchCondition { get; internal set; }
 
 		public bool IsEmpty => SearchCondition.Conditions.Count == 0;
 
@@ -61,9 +61,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> action)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> action)
 		{
-			SearchCondition = (SqlSearchCondition)((ISqlExpressionWalkable)SearchCondition).Walk(skipColumns, action);
+			SearchCondition = (SqlSearchCondition)((ISqlExpressionWalkable)SearchCondition).Walk(options, action);
 			return null;
 		}
 

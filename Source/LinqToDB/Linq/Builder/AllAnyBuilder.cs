@@ -10,14 +10,18 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("All", "Any");
+			return
+				methodCall.IsQueryable     ("All", "Any") ||
+				methodCall.IsAsyncExtension("All", "Any");
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CopyTable = true });
 
-			if (methodCall.Arguments.Count == 2)
+			var isAsync = methodCall.Method.DeclaringType == typeof(AsyncExtensions);
+
+			if (methodCall.Arguments.Count == (isAsync ? 3 : 2))
 			{
 				if (sequence.SelectQuery.Select.TakeValue != null ||
 				    sequence.SelectQuery.Select.SkipValue != null)
@@ -27,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 
 				var condition = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
-				if (methodCall.Method.Name == "All")
+				if (methodCall.Method.Name.StartsWith("All"))
 					condition = Expression.Lambda(Expression.Not(condition.Body), condition.Name, condition.Parameters);
 
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence, condition, true);
@@ -40,7 +44,9 @@ namespace LinqToDB.Linq.Builder
 		protected override SequenceConvertInfo Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
 		{
-			if (methodCall.Arguments.Count == 2)
+			var isAsync = methodCall.Method.DeclaringType == typeof(AsyncExtensions);
+
+			if (methodCall.Arguments.Count == (isAsync ? 3 : 2))
 			{
 				var predicate = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 				var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0], true);
@@ -98,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
 				if (Parent != null)
-					ConvertToParentIndex(index, Parent);
+					index = ConvertToParentIndex(index, Parent);
 				return Builder.BuildSql(typeof(bool), index);
 			}
 
@@ -154,7 +160,7 @@ namespace LinqToDB.Linq.Builder
 				if (_subQuerySql == null)
 				{
 					var cond = new SqlCondition(
-						_methodCall.Method.Name == "All",
+						_methodCall.Method.Name.StartsWith("All"),
 						new SqlPredicate.FuncLike(SqlFunction.CreateExists(SelectQuery)));
 
 					_subQuerySql = new SqlSearchCondition(cond);

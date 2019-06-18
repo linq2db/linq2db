@@ -8,8 +8,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue1261Tests : TestBase
 	{
-		[Test, DataContextSource]
-		public void TestLinqAll(string context)
+		[Test]
+		public void TestLinqAll([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

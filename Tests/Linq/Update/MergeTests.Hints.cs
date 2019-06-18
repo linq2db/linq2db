@@ -9,8 +9,8 @@ namespace Tests.xUpdate
 	// tests for query hints
 	public partial class MergeTests
 	{
-		[Test, IncludeDataContextSource(false, TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void MergeIntoWithTargetHintSqlServer(string context)
+		[Test]
+		public void MergeIntoWithTargetHintSqlServer([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -41,8 +41,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void UsingTargetWithTargetHintSqlServer(string context)
+		[Test]
+		public void UsingTargetWithTargetHintSqlServer([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -60,7 +60,7 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
+				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK)"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
@@ -98,8 +98,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void MergeWithTargetHintSqlServer(string context)
+		[Test]
+		public void MergeWithTargetHintSqlServer([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -138,8 +138,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
-		public void MergeIntoWithTargetHintOracle(string context)
+		[Test]
+		public void MergeIntoWithTargetHintOracle([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -170,8 +170,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.Informix)]
-		public void MergeIntoWithTargetHintInformix(string context)
+		[Test]
+		public void MergeIntoWithTargetHintInformix([IncludeDataSources(false, ProviderName.Informix)]
+			string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

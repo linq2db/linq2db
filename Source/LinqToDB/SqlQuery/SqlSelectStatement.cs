@@ -23,10 +23,10 @@ namespace LinqToDB.SqlQuery
 			return SelectQuery.ToString(sb, dic);
 		}
 
-		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
-			With?.Walk(skipColumns, func);
-			var newQuery = SelectQuery.Walk(skipColumns, func);
+			With?.Walk(options, func);
+			var newQuery = SelectQuery.Walk(options, func);
 			if (!ReferenceEquals(newQuery, SelectQuery))
 				SelectQuery = (SelectQuery)newQuery;
 			return null;
@@ -38,6 +38,9 @@ namespace LinqToDB.SqlQuery
 
 			if (SelectQuery != null)
 				clone.SelectQuery = (SelectQuery)SelectQuery.Clone(objectTree, doClone);
+
+			if (With != null)
+				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
 
 			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 

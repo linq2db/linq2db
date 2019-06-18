@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
@@ -8,7 +9,13 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlValue(Type systemType, object value)
 		{
-			SystemType = systemType;
+			ValueType  = new DbDataType(systemType);
+			Value      = value;
+		}
+
+		public SqlValue(DbDataType valueType, object value)
+		{
+			ValueType  = valueType;
 			Value      = value;
 		}
 
@@ -17,18 +24,12 @@ namespace LinqToDB.SqlQuery
 			Value = value;
 
 			if (value != null)
-				SystemType = value.GetType();
+				ValueType = new DbDataType(value.GetType());
 		}
 
-		public   object    Value      { get; internal set; }
-		public   Type      SystemType { get; }
-
-		// TODO refactor this to make DataType required parameter for SqlValue
-		/// <summary>
-		/// This implementation is hack to fix <a href="https://github.com/linq2db/linq2db/issues/271">issue 271</a>
-		/// <a href="https://github.com/linq2db/linq2db/pull/608">PR</a>.
-		/// </summary>
-		internal DataType? DataType   { get; set; }
+		public   object     Value      { get; internal set; }
+		public   DbDataType ValueType  { get; set; }
+		public   Type       SystemType => ValueType.SystemType;
 
 		#region Overrides
 
@@ -51,7 +52,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			return func(this);
 		}
@@ -69,6 +70,18 @@ namespace LinqToDB.SqlQuery
 				other is SqlValue value        &&
 				SystemType == value.SystemType &&
 				(Value == null && value.Value == null || Value != null && Value.Equals(value.Value));
+		}
+
+		public override int GetHashCode()
+		{
+			var hashCode = 17;
+
+			if (SystemType != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
+			if (Value != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Value.GetHashCode());
+
+			return hashCode;
 		}
 
 		#endregion
@@ -92,7 +105,7 @@ namespace LinqToDB.SqlQuery
 				return this;
 
 			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlValue(SystemType, Value));
+				objectTree.Add(this, clone = new SqlValue(ValueType, Value));
 
 			return clone;
 		}

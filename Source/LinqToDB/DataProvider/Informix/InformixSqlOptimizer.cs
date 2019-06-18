@@ -18,18 +18,14 @@ namespace LinqToDB.DataProvider.Informix
 			if (element.ElementType == QueryElementType.SqlParameter)
 			{
 				var p = (SqlParameter)element;
-				if (p.SystemType == null || p.SystemType.IsScalar(false))
-					p.IsQueryParameter = false;
-			}
-		}
 
-		static void EnforceBinaryParameters(IQueryElement element)
-		{
-			if (element.ElementType == QueryElementType.SqlParameter)
-			{
-				var p = (SqlParameter)element;
-				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary))
+				// enforce binary and timespan as parameters
+				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary)
+					|| p.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
 					p.IsQueryParameter = true;
+				else
+					// TODO: Ifx doesn't like parameters for some reason
+					p.IsQueryParameter = false;
 			}
 		}
 
@@ -37,13 +33,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement.WalkQueries(selectQuery =>
-			{
-				new QueryVisitor().Visit(selectQuery, SetQueryParameter);
-				return selectQuery;
-			});
-
-			new QueryVisitor().VisitAll(statement, EnforceBinaryParameters);
+			new QueryVisitor().VisitAll(statement, SetQueryParameter);
 
 			statement = base.Finalize(statement);
 
@@ -136,29 +126,6 @@ namespace LinqToDB.DataProvider.Informix
 
 							return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, par1, par0);
 						}
-
-					case "Quarter"  : return Inc(Div(Dec(new SqlFunction(func.SystemType, "Month", func.Parameters)), 3));
-					case "WeekDay"  : return Inc(new SqlFunction(func.SystemType, "weekDay", func.Parameters));
-					case "DayOfYear":
-						return
-							Inc(Sub<int>(
-								new SqlFunction(null, "Mdy",
-									new SqlFunction(null, "Month", func.Parameters),
-									new SqlFunction(null, "Day",   func.Parameters),
-									new SqlFunction(null, "Year",  func.Parameters)),
-								new SqlFunction(null, "Mdy",
-									new SqlValue(1),
-									new SqlValue(1),
-									new SqlFunction(null, "Year", func.Parameters))));
-					case "Week"     :
-						return
-							new SqlExpression(
-								func.SystemType,
-								"((Extend({0}, year to day) - (Mdy(12, 31 - WeekDay(Mdy(1, 1, year({0}))), Year({0}) - 1) + Interval(1) day to day)) / 7 + Interval(1) day to day)::char(10)::int",
-								func.Parameters);
-					case "Hour"     :
-					case "Minute"   :
-					case "Second"   : return new SqlExpression(func.SystemType, string.Format("({{0}}::datetime {0} to {0})::char(3)::int", func.Name), func.Parameters);
 				}
 			}
 

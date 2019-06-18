@@ -8,9 +8,8 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	[TestFixture]
+	[Order(10000)]
 	public class TruncateTableTests : TestBase
 	{
 		[Table]
@@ -21,8 +20,8 @@ namespace Tests.xUpdate
 			[Column]             public decimal Field1;
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
-		public void TruncateTableTest(string context)
+		[Test]
+		public void TruncateTableTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -41,8 +40,12 @@ namespace Tests.xUpdate
 			[Column]                       public decimal Field1;
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.Informix)]
-		public void TruncateIdentityTest(string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		// todo: reenable oracle when fix merged
+		//[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[Test]
+		public void TruncateIdentityTest([DataSources(ProviderName.Informix, ProviderName.SapHana, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -70,8 +73,11 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
-		public void TruncateIdentityNoResetTest(string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[Test]
+		// todo: reenable oracle after fix merged
+		//[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
+		public void TruncateIdentityNoResetTest([DataSources(ProviderName.OracleNative)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

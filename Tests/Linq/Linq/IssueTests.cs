@@ -18,8 +18,8 @@ namespace Tests.Linq
 	{
 		// https://github.com/linq2db/linq2db/issues/38
 		//
-		[Test, DataContextSource(false)]
-		public void Issue38Test(string context)
+		[Test]
+		public void Issue38Test([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -39,8 +39,8 @@ namespace Tests.Linq
 
 		// https://github.com/linq2db/linq2db/issues/42
 		//
-		[Test, DataContextSource]
-		public void Issue42Test(string context)
+		[Test]
+		public void Issue42Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -62,15 +62,8 @@ namespace Tests.Linq
 #if !NETSTANDARD1_6
 		// https://github.com/linq2db/linq2db/issues/60
 		//
-		[Test, IncludeDataContextSource(
-			ProviderName.SqlServer2000,
-			ProviderName.SqlServer2005,
-			ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014,
-			TestProvName.SqlAzure,
-			ProviderName.SqlCe)]
-		public void Issue60Test(string context)
+		[Test]
+		public void Issue60Test([IncludeDataSources(TestProvName.AllSqlServer, ProviderName.SqlCe)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -91,8 +84,8 @@ namespace Tests.Linq
 #endif
 		// https://github.com/linq2db/linq2db/issues/67
 		//
-		[Test, DataContextSource]
-		public void Issue67Test(string context)
+		[Test]
+		public void Issue67Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -110,8 +103,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource()]
-		public void Issue75Test(string context)
+		[Test()]
+		public void Issue75Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -155,8 +148,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Issue115Test(string context)
+		[Test]
+		public void Issue115Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -187,8 +180,8 @@ namespace Tests.Linq
 		}
 
 
-		[Test, DataContextSource]
-		public void Issue424Test1(string context)
+		[Test]
+		public void Issue424Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -199,8 +192,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Issue424Test2(string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[Test]
+		public void Issue424Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -211,8 +205,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Issue424Test3(string context)
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
+		[Test]
+		public void Issue424Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -225,8 +220,8 @@ namespace Tests.Linq
 
 		// https://github.com/linq2db/linq2db/issues/498
 		//
-		[Test, DataContextSource()]
-		public void Issue498Test(string context)
+		[Test()]
+		public void Issue498Test([DataSources] string context)
 		{
 			using (new WithoutJoinOptimization())
 			using (var db = GetDataContext(context))
@@ -258,8 +253,8 @@ namespace Tests.Linq
 		}
 
 
-		[Test, DataContextSource]
-		public void Issue528Test1(string context)
+		[Test]
+		public void Issue528Test1([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -276,8 +271,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Issue528Test2(string context)
+		[Test]
+		public void Issue528Test2([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -294,8 +289,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Issue528Test3(string context)
+		[Test]
+		public void Issue528Test3([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -312,8 +307,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Issue508Test(string context)
+		[Test]
+		public void Issue508Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -349,8 +344,8 @@ namespace Tests.Linq
 			public string SecondName;
 		}
 
-		[Test, DataContextSource]
-		public void Issue535Test(string context)
+		[Test]
+		public void Issue535Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -432,8 +427,8 @@ namespace Tests.Linq
 			};
 		}
 
-		[Test, DataContextSource]
-		public void Issue376(string context)
+		[Test]
+		public void Issue376([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -460,8 +455,8 @@ namespace Tests.Linq
 			                                           public char   Gender;
 		}
 
-		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Issue88(string context)
+		[Test]
+		public void Issue88([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -491,8 +486,8 @@ namespace Tests.Linq
 		}
 
 
-		[Test, DataContextSource]
-		public void Issue173(string context)
+		[Test]
+		public void Issue173([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new AllowMultipleQuery())
@@ -517,8 +512,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Issue909(string context)
+		[Test]
+		public void Issue909([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -536,8 +531,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Issue909Join(string context)
+		[Test]
+		public void Issue909Join([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -556,12 +551,12 @@ namespace Tests.Linq
 				AreEqual(expected, actual);
 			}
 		}
-		[Test, DataContextSource]
-		public void Issue909Subquery(string context)
+		[Test]
+		public void Issue909Subquery([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var values = new int[] { 123 };
+				var values = new[] { 123 };
 
 				var expected = from c in Child
 					where (from p in Parent
@@ -595,9 +590,8 @@ namespace Tests.Linq
 			public IQueryable<InsertIssueTest> Association => throw new InvalidOperationException();
 		}
 
-		// Sybase: we need to get rid of bit field from AllTypes table as it creates a lot of issues with testing
-		[Test, DataContextSource(ProviderName.Sybase)]
-		public void InsertFromSelectWithNullableFilter(string context)
+		[Test]
+		public void InsertFromSelectWithNullableFilter([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -1,9 +1,11 @@
-﻿using LinqToDB;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using LinqToDB;
+
+using LinqToDB.Mapping;
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
@@ -47,9 +49,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void TestDateTime(
-			[IncludeDataSources(ProviderName.Informix)] string context,
+			[IncludeDataSources(true, ProviderName.Informix)] string context,
 			[Values] bool inlineParameters,
 			[ValueSource(nameof(DateTimePairs))] Tuple<DateTimeQuantifiers, DateTimeQuantifiers> quantifiers)
 		{
@@ -161,8 +163,8 @@ namespace Tests.UserTests
 		// server and client should run with DB_LOCALE=en_us.utf8;CLIENT_LOCALE=en_us.utf8 options
 		// and database should be created with same locale
 		//[Explicit("Could fail on non-utf8 locales")]
-		[Test, IncludeDataContextSource(ProviderName.Informix)]
-		public void Test_Insert(string context)
+		[Test]
+		public void Test_Insert([IncludeDataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Table>())
@@ -177,8 +179,8 @@ namespace Tests.UserTests
 		}
 
 		//[Explicit("Could fail on non-utf8 locales")]
-		[Test, IncludeDataContextSource(ProviderName.Informix)]
-		public void Test_Update(string context)
+		[Test]
+		public void Test_Update([IncludeDataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Table>())
@@ -193,8 +195,8 @@ namespace Tests.UserTests
 		}
 
 		//[Explicit("Could fail on non-utf8 locales")]
-		[Test, IncludeDataContextSource(ProviderName.Informix)]
-		public void Test_InsertOrUpdate(string context)
+		[Test]
+		public void Test_InsertOrUpdate([IncludeDataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Table>())
@@ -209,8 +211,8 @@ namespace Tests.UserTests
 		}
 
 		//[Explicit("Could fail on non-utf8 locales")]
-		[Test, IncludeDataContextSource(ProviderName.Informix)]
-		public void Test_Inline(string context)
+		[Test]
+		public void Test_Inline([IncludeDataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Table>())

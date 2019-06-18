@@ -8,6 +8,7 @@ using NUnit.Framework;
 namespace Tests.xUpdate
 {
 	[TestFixture]
+	[Order(10000)]
 	public class CreateTempTableTests : TestBase
 	{
 		class IDTable
@@ -15,7 +16,7 @@ namespace Tests.xUpdate
 			public int ID;
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void CreateTable1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -36,7 +37,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void CreateTable2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -57,7 +58,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, Combinatorial]
+		[Test]
 		public void CreateTable3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

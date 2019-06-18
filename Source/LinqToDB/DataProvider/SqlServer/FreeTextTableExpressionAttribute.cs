@@ -8,7 +8,9 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using Mapping;
 	using SqlQuery;
+	using Expressions;
 
+	[Obsolete("Use Sql.Ext.SqlServer().FreeTextTable methods")]
 	public class FreeTextTableExpressionAttribute : Sql.TableExpressionAttribute
 	{
 		public FreeTextTableExpressionAttribute()
@@ -29,51 +31,32 @@ namespace LinqToDB.DataProvider.SqlServer
 			var arr    = ConvertArgs(member, aargs).ToList();
 			var method = (MethodInfo)member;
 
-			{
 				var ttype  = method.GetGenericArguments()[0];
 				var tbl    = new SqlTable(ttype);
 
-				var server       = Convert(tbl.Server);
-				var database     = Convert(tbl.Database);
-				var schema       = Convert(tbl.Schema);
-				var physicalName = Convert(tbl.PhysicalName);
+			arr.Add(tbl);
 
-				var name = "";
+			var fieldExpr = expArgs.First().Unwrap();
+			object field = fieldExpr;
+			if (fieldExpr.NodeType == ExpressionType.Constant)
+				field = ((ConstantExpression)fieldExpr).Value;
 
-				if (server != null)
-					name = server + "." + (database != null ? database + "." + (schema == null ? "." : schema + ".") : "." + (schema == null ? "." : schema + "."));
-				if (database != null)
-					name = database + "." + (schema == null ? "." : schema + ".");
-				else if (schema != null)
-					name = schema + ".";
+			ISqlExpression fieldExpression = null;
 
-				name += physicalName;
-
-				arr.Add(new SqlExpression(name, Precedence.Primary));
-			}
-
+			if (field is LambdaExpression lambdaExpression)
 			{
-				var field = ((ConstantExpression)expArgs.First()).Value;
+				var memberInfo = MemberHelper.GetMemberInfo(lambdaExpression.Body);
 
-				if (field is string)
-				{
-					arr[0] = new SqlExpression(field.ToString(), Precedence.Primary);
+				var ed = mappingSchema.GetEntityDescriptor(ttype);
+
+				var column = ed.Columns.FirstOrDefault(c => c.MemberInfo == memberInfo);
+				if (column != null) 
+					fieldExpression = new SqlField(tbl.Fields[column.MemberName]);
 				}
-				else if (field is LambdaExpression)
-				{
-					var body = ((LambdaExpression)field).Body;
+			else if (field is string fieldName)
+				fieldExpression = new SqlExpression(fieldName, Precedence.Primary);
 
-					if (body is MemberExpression)
-					{
-						var name = ((MemberExpression)body).Member.Name;
-
-						if (name.Length > 0 && name[0] != '[')
-							name = "[" + name + "]";
-
-						arr[0] = new SqlExpression(name, Precedence.Primary);
-					}
-				}
-			}
+			arr[0] = fieldExpression ?? throw new LinqToDBException($"Can not retrieve Field Name from expression {field}");
 
 			table.SqlTableType   = SqlTableType.Expression;
 			table.Name           = "FREETEXTTABLE({6}, {2}, {3}) {1}";

@@ -376,7 +376,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 				select new ColumnSchema
 				{
-					ColumnType           = GetDbType(columnType, dataType, length, precision, scale),
+					ColumnType           = GetDbType(columnType, dataType, length, precision, scale, null, null, null),
 					ColumnName           = columnName,
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
@@ -685,7 +685,7 @@ namespace LinqToDB.DataProvider.SapHana
 						select new ParameterSchema
 						{
 							SchemaName           = pr.ParameterName,
-							SchemaType           = GetDbType(pr.DataType, dt, pr.Length ?? 0, pr.Precision, pr.Scale),
+							SchemaType           = GetDbType(pr.DataType, dt, pr.Length ?? 0, pr.Precision, pr.Scale, pr.UDTCatalog, pr.UDTSchema, pr.UDTName),
 							IsIn                 = pr.IsIn,
 							IsOut                = pr.IsOut,
 							IsResult             = pr.IsResult,
@@ -716,7 +716,7 @@ namespace LinqToDB.DataProvider.SapHana
 				{
 					Table                = column.v,
 					ColumnName           = column.c.Name,
-					ColumnType           = column.c.ColumnType ?? GetDbType(dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale),
+					ColumnType           = column.c.ColumnType ?? GetDbType(dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, null, null, null),
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(column.c.Name),
 					MemberType           = ToTypeName(systemType, isNullable),

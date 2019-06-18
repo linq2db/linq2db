@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using SqlQuery;
 	using SqlProvider;
 
-	class SapHanaSqlBuilder : BasicSqlBuilder
+	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
 		public SapHanaSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -81,7 +81,7 @@ namespace LinqToDB.DataProvider.SapHana
 			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -115,16 +115,16 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.NVarChar:
 				case DataType.VarChar:
 				case DataType.VarBinary:
-					if (type.Length == int.MaxValue || type.Length < 0)
+					if (type.Length == null || type.Length > 5000 || type.Length < 1)
 					{
 						StringBuilder
 							.Append(type.DataType)
-							.Append("(Max)");
+							.Append("(5000)");
 						return;
 					}
 					break;
 			}
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
@@ -187,9 +187,6 @@ namespace LinqToDB.DataProvider.SapHana
 						var name = value.ToString();
 						if (name.Length > 0 && name[0] == '\"')
 							return value;
-
-						if (name.IndexOf('.') > 0)
-							value = string.Join("\".\"", name.Split('.'));
 
 						return "\"" + value + "\"";
 					}

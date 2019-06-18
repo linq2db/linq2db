@@ -15,7 +15,9 @@ using System.Xml.Linq;
 namespace LinqToDB.DataProvider
 {
 	using Data;
+	using Common;
 	using Expressions;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -272,9 +274,9 @@ namespace LinqToDB.DataProvider
 
 		#region SetParameter
 
-		public virtual void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public virtual void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Char      :
 				case DataType.NChar     :
@@ -324,9 +326,9 @@ namespace LinqToDB.DataProvider
 			parameter.Value = value ?? DBNull.Value;
 		}
 
-		public virtual Type ConvertParameterType(Type type, DataType dataType)
+		public virtual Type ConvertParameterType(Type type, DbDataType dataType)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Char      :
 				case DataType.NChar     :
@@ -359,11 +361,11 @@ namespace LinqToDB.DataProvider
 		public abstract ISchemaProvider GetSchemaProvider     ();
 #endif
 
-		protected virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected virtual void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			DbType dbType;
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Char           : dbType = DbType.AnsiStringFixedLength; break;
 				case DataType.VarChar        : dbType = DbType.AnsiString;            break;
@@ -446,84 +448,11 @@ namespace LinqToDB.DataProvider
 
 		#region BulkCopy
 
-		public virtual BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public virtual BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, dataConnection, options, source);
+			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, table, options, source);
 		}
 
 		#endregion
-
-		#region Merge
-
-		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string serverName, string databaseName, string schemaName)
-			where T : class
-		{
-			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, serverName, databaseName, schemaName);
-		}
-
-		public virtual Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string serverName, string databaseName, string schemaName, CancellationToken token)
-			where T : class
-		{
-			return new BasicMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, serverName, databaseName, schemaName, token);
-		}
-
-		public int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
-			where TTarget : class
-			where TSource : class
-		{
-			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
-			if (merge          == null) throw new ArgumentNullException(nameof(merge));
-
-			var builder = GetMergeBuilder(dataConnection, merge);
-
-			builder.Validate();
-
-			var cmd = builder.BuildCommand();
-
-			if (builder.NoopCommand)
-				return 0;
-
-			return dataConnection.Execute(cmd, builder.Parameters);
-		}
-
-		public async Task<int> MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
-			where TTarget : class
-			where TSource : class
-		{
-			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
-			if (merge          == null) throw new ArgumentNullException(nameof(merge));
-
-			var builder = GetMergeBuilder(dataConnection, merge);
-
-			builder.Validate();
-
-			var cmd = builder.BuildCommand();
-
-			if (builder.NoopCommand)
-				return 0;
-
-			return await dataConnection.ExecuteAsync(cmd, token, builder.Parameters);
-		}
-
-		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-			where TTarget : class
-			where TSource : class
-		{
-			return new UnsupportedMergeBuilder<TTarget, TSource>(connection, merge);
-		}
-
-		#endregion
-
-		//public virtual TimeSpan? ShouldRetryOn(Exception exception, int retryCount, TimeSpan baseDelay)
-		//{
-		//	return
-		//		retryCount <= MaxRetryCount && exception is TimeoutException
-		//			? baseDelay
-		//			: (TimeSpan?)null;
-		//}
 	}
 }

@@ -8,8 +8,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue241Tests : TestBase
 	{
-		[Test, NorthwindDataContext]
-		public void Test(string context)
+		[Test]
+		public void Test([NorthwindDataContext] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{

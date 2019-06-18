@@ -170,6 +170,10 @@ namespace LinqToDB.Linq
 #if DEBUG1
 #if NET45
 			var targetFramework = "net45";
+#elif NET45
+			var targetFramework = "net45";
+#elif NETCOREAPP1_0
+			var targetFramework = "netcoreapp1.0";
 #elif NETCOREAPP2_0
 			var targetFramework = "netcoreapp2.0";
 #elif NETSTANDARD1_6
@@ -1585,7 +1589,22 @@ namespace LinqToDB.Linq
 
 		// SqlServer
 		//
-		[Sql.Function]
+
+		class DateAddBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var partStr = Sql.DatePartBuilder.DatePartToStr(part);
+				var number  = builder.GetExpression("number");
+				var days    = builder.GetExpression("days");
+
+				builder.ResultExpression = new SqlQuery.SqlFunction(typeof(DateTime?), builder.Expression,
+					new SqlQuery.SqlExpression(partStr, SqlQuery.Precedence.Primary), number, days);
+			}
+		}
+
+		[Sql.Extension("DateAdd", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilder))]
 		public static DateTime? DateAdd(Sql.DateParts part, int? number, int? days)
 		{
 			return days == null ? null : Sql.DateAdd(part, number, new DateTime(1900, 1, days.Value + 1));
@@ -1594,9 +1613,10 @@ namespace LinqToDB.Linq
 		// MSSQL
 		//
 		[Sql.Function]
-		public static Decimal? Round(Decimal? value, int precision, int mode) { return 0; }
+		public static Decimal? Round(Decimal? value, int precision, int mode) => 0;
+
 		[Sql.Function]
-		public static Double?  Round(Double?  value, int precision, int mode) { return 0; }
+		public static Double?  Round(Double?  value, int precision, int mode) => 0;
 
 		// Access
 		//
@@ -1625,9 +1645,9 @@ namespace LinqToDB.Linq
 
 		// Firebird
 		//
-		[Sql.Function("PI", ServerSideOnly = true)]
+		[Sql.Function("PI", ServerSideOnly = true, CanBeNull = false)]
 		public static decimal DecimalPI() { return (decimal)Math.PI; }
-		[Sql.Function("PI", ServerSideOnly = true)]
+		[Sql.Function("PI", ServerSideOnly = true, CanBeNull = false)]
 		public static double  DoublePI () { return          Math.PI; }
 
 		// Informix

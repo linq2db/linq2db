@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,7 +12,7 @@ namespace LinqToDB.Data
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
 	[PublicAPI]
-	public static class DataConnectionExtensions
+	public static partial class DataConnectionExtensions
 	{
 		#region SetCommand
 
@@ -97,7 +95,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="connection">Database connection.</param>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns collection of query result records.</returns>
 		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
@@ -386,7 +384,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns collection of query result records.</returns>
 		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -908,7 +906,7 @@ namespace LinqToDB.Data
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns number of affected records.
 		/// </summary>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Number of records, affected by command execution.</returns>
 		public static int ExecuteProc(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -1032,7 +1030,7 @@ namespace LinqToDB.Data
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
 		/// </summary>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public static Task<int> ExecuteProcAsync(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -1044,7 +1042,7 @@ namespace LinqToDB.Data
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
 		/// </summary>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
@@ -1122,7 +1120,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Resulting value.</returns>
 		public static T ExecuteProc<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -1263,7 +1261,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Task with resulting value.</returns>
 		public static Task<T> ExecuteProcAsync<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -1276,7 +1274,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="connection">Database connection.</param>
-		/// <param name="sql">Command text.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Resulting value.</returns>
@@ -1381,9 +1379,10 @@ namespace LinqToDB.Data
 		/// <param name="source">Records to insert.</param>
 		/// <returns>Bulk insert operation status.</returns>
 		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			where T : class
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
-			return dataConnection.DataProvider.BulkCopy(dataConnection, options, source);
+			return dataConnection.DataProvider.BulkCopy(dataConnection.GetTable<T>(), options, source);
 		}
 
 		/// <summary>
@@ -1395,11 +1394,12 @@ namespace LinqToDB.Data
 		/// <param name="source">Records to insert.</param>
 		/// <returns>Bulk insert operation status.</returns>
 		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
+			where T : class
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
 			return dataConnection.DataProvider.BulkCopy(
-				dataConnection,
+				dataConnection.GetTable<T>(),
 				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
 				source);
 		}
@@ -1412,17 +1412,18 @@ namespace LinqToDB.Data
 		/// <param name="source">Records to insert.</param>
 		/// <returns>Bulk insert operation status.</returns>
 		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this DataConnection dataConnection, IEnumerable<T> source)
+			where T : class
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
 			return dataConnection.DataProvider.BulkCopy(
-				dataConnection,
+				dataConnection.GetTable<T>(),
 				new BulkCopyOptions(),
 				source);
 		}
 
 		/// <summary>
-		/// Performs bulk intert operation into table specified in <paramref name="options"/> parameter or into table, identified by <paramref name="table"/>.
+		/// Performs bulk insert operation into table specified in <paramref name="options"/> parameter or into table, identified by <paramref name="table"/>.
 		/// </summary>
 		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
 		/// <param name="table">Target table.</param>
@@ -1436,16 +1437,11 @@ namespace LinqToDB.Data
 			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
-			if (options.TableName    == null) options.TableName    = table.TableName;
-			if (options.ServerName   == null) options.ServerName   = table.ServerName;
-			if (options.DatabaseName == null) options.DatabaseName = table.DatabaseName;
-			if (options.SchemaName   == null) options.SchemaName   = table.SchemaName;
-
-			return dataConnection.DataProvider.BulkCopy(dataConnection, options, source);
+			return dataConnection.DataProvider.BulkCopy(table, options, source);
 		}
 
 		/// <summary>
-		/// Performs bulk intert operation into table, identified by <paramref name="table"/>.
+		/// Performs bulk insert operation into table, identified by <paramref name="table"/>.
 		/// </summary>
 		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
 		/// <param name="table">Target table.</param>
@@ -1459,21 +1455,11 @@ namespace LinqToDB.Data
 			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
-			return dataConnection.DataProvider.BulkCopy(
-				dataConnection,
-				new BulkCopyOptions
-				{
-					MaxBatchSize = maxBatchSize,
-					TableName    = table.TableName,
-					ServerName   = table.ServerName,
-					DatabaseName = table.DatabaseName,
-					SchemaName   = table.SchemaName,
-				},
-				source);
+			return dataConnection.DataProvider.BulkCopy(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source);
 		}
 
 		/// <summary>
-		/// Performs bulk intert operation into table, identified by <paramref name="table"/>.
+		/// Performs bulk insert operation into table, identified by <paramref name="table"/>.
 		/// </summary>
 		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
 		/// <param name="table">Target table.</param>
@@ -1486,574 +1472,7 @@ namespace LinqToDB.Data
 			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
-			return dataConnection.DataProvider.BulkCopy(
-				dataConnection,
-				new BulkCopyOptions
-				{
-					TableName    = table.TableName,
-					ServerName   = table.ServerName,
-					DatabaseName = table.DatabaseName,
-					SchemaName   = table.SchemaName,
-				},
-				source);
-		}
-
-		#endregion
-
-		#region Merge
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="source">Source data to merge into target table. All source data will be loaded from server for command generation.</param>
-		/// <param name="predicate">Filter, applied both to source and delete operation. Required.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this DataConnection      dataConnection,
-			IQueryable<T>            source,
-			Expression<Func<T,bool>> predicate,
-			string                   tableName    = null,
-			string                   databaseName = null,
-			string                   schemaName   = null,
-			string                   serverName   = null
-		)
-			where T : class
-		{
-			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate), tableName, serverName, databaseName, schemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="predicate">Filter, applied to delete operation. Optional.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this DataConnection      dataConnection,
-			Expression<Func<T,bool>> predicate,
-			IEnumerable<T>           source,
-			string                   tableName    = null,
-			string                   databaseName = null,
-			string                   schemaName   = null,
-			string                   serverName   = null
-		)
-			where T : class
-		{
-			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source, tableName, serverName, databaseName, schemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source (optional).
-		/// If delete operation enabled by <paramref name="delete"/> parameter - method could be used only for with Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="delete">If true, merge command will include delete by source operation without condition.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this DataConnection dataConnection,
-			bool                delete,
-			IEnumerable<T>      source,
-			string              tableName    = null,
-			string              databaseName = null,
-			string              schemaName   = null,
-			string              serverName   = null
-		)
-			where T : class
-		{
-			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source, tableName, serverName, databaseName, schemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this DataConnection dataConnection,
-			IEnumerable<T>      source,
-			string              tableName    = null,
-			string              databaseName = null,
-			string              schemaName   = null,
-			string              serverName   = null
-		)
-			where T : class
-		{
-			return dataConnection.DataProvider.Merge(dataConnection, null, false, source, tableName, serverName, databaseName, schemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="source">Source data to merge into target table. All source data will be loaded from server for command generation.</param>
-		/// <param name="predicate">Filter, applied both to source and delete operation. Required.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this ITable<T>           table,
-			IQueryable<T>            source,
-			Expression<Func<T,bool>> predicate,
-			string                   tableName    = null,
-			string                   databaseName = null,
-			string                   schemaName   = null,
-			string                   serverName   = null
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate),
-				tableName    ?? table.TableName,
-				serverName   ?? table.ServerName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="predicate">Filter, applied to delete operation. Optional.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this ITable<T>           table,
-			Expression<Func<T,bool>> predicate,
-			IEnumerable<T>           source,
-			string                   tableName    = null,
-			string                   databaseName = null,
-			string                   schemaName   = null,
-			string                   serverName   = null
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source,
-				tableName    ?? table.TableName,
-				serverName   ?? table.ServerName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source (optional).
-		/// If delete operation enabled by <paramref name="delete"/> parameter - method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="delete">If true, merge command will include delete by source operation without condition.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this ITable<T> table,
-			bool           delete,
-			IEnumerable<T> source,
-			string         tableName    = null,
-			string         databaseName = null,
-			string         schemaName   = null,
-			string         serverName   = null
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source,
-				tableName    ?? table.TableName,
-				serverName   ?? table.ServerName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations in specified order:
-		/// - Update
-		/// - Insert.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Returns number of affected target records.</returns>
-		public static int Merge<T>(
-			this ITable<T> table,
-			IEnumerable<T> source,
-			string         tableName    = null,
-			string         databaseName = null,
-			string         schemaName   = null,
-			string         serverName   = null
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.Merge(dataConnection, null, false, source,
-				tableName    ?? table.TableName,
-				serverName   ?? table.ServerName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="source">Source data to merge into target table. All source data will be loaded from server for command generation.</param>
-		/// <param name="predicate">Filter, applied both to source and delete operation. Required.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this DataConnection      dataConnection,
-			IQueryable<T>            source,
-			Expression<Func<T,bool>> predicate,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default,
-			string                   serverName        = null)
-			where T : class
-		{
-			return dataConnection.DataProvider.MergeAsync(
-				dataConnection, predicate, true, source.Where(predicate), tableName, serverName, databaseName, schemaName, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="predicate">Filter, applied to delete operation. Optional.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this DataConnection      dataConnection,
-			Expression<Func<T,bool>> predicate,
-			IEnumerable<T>           source,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default,
-			string                   serverName        = null)
-			where T : class
-		{
-			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source, tableName, serverName, databaseName, schemaName, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source (optional).
-		/// If delete operation enabled by <paramref name="delete"/> parameter - method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="delete">If true, merge command will include delete by source operation without condition.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this DataConnection dataConnection,
-			bool                delete,
-			IEnumerable<T>      source,
-			string              tableName         = null,
-			string              databaseName      = null,
-			string              schemaName        = null,
-			CancellationToken   cancellationToken = default,
-			string              serverName        = null
-		)
-			where T : class
-		{
-			return dataConnection.DataProvider.MergeAsync(dataConnection, null, delete, source, tableName, serverName, databaseName, schemaName, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this DataConnection dataConnection,
-			IEnumerable<T>      source,
-			string              tableName         = null,
-			string              databaseName      = null,
-			string              schemaName        = null,
-			CancellationToken   cancellationToken = default,
-			string              serverName        = null
-		)
-			where T : class
-		{
-			return dataConnection.DataProvider.MergeAsync(dataConnection, null, false, source, tableName, serverName, databaseName, schemaName, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="source">Source data to merge into target table. All source data will be loaded from server for command generation.</param>
-		/// <param name="predicate">Filter, applied both to source and delete operation. Required.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this ITable<T>           table,
-			IQueryable<T>            source,
-			Expression<Func<T,bool>> predicate,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default,
-			string                   serverName        = null
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source.Where(predicate),
-				tableName    ?? table.TableName,
-				serverName   ?? table.ServerName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName,
-				cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="predicate">Filter, applied to delete operation. Optional.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this ITable<T>           table,
-			Expression<Func<T,bool>> predicate,
-			IEnumerable<T>           source,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default,
-			string                   serverName        = null
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source,
-				tableName    ?? table.TableName,
-				serverName   ?? table.ServerName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName,
-				cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source (optional).
-		/// If delete operation enabled by <paramref name="delete"/> parameter - method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="delete">If true, merge command will include delete by source operation without condition.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this ITable<T>    table,
-			bool              delete,
-			IEnumerable<T>    source,
-			string            tableName         = null,
-			string            databaseName      = null,
-			string            schemaName        = null,
-			CancellationToken cancellationToken = default,
-			string            serverName        = null
-		)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.MergeAsync(dataConnection, null, delete, source,
-				tableName    ?? table.TableName,
-				serverName   ?? table.ServerName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName,
-				cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this ITable<T>    table,
-			IEnumerable<T>    source,
-			string            tableName         = null,
-			string            databaseName      = null,
-			string            schemaName        = null,
-			CancellationToken cancellationToken = default,
-			string            serverName        = null)
-			where T : class
-		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.MergeAsync(dataConnection, null, false, source,
-				tableName    ?? table.TableName,
-				serverName   ?? table.ServerName,
-				databaseName ?? table.DatabaseName,
-				schemaName   ?? table.SchemaName,
-				cancellationToken);
+			return dataConnection.DataProvider.BulkCopy(table, new BulkCopyOptions(), source);
 		}
 
 		#endregion

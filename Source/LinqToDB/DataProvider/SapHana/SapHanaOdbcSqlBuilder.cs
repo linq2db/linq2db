@@ -82,7 +82,7 @@ namespace LinqToDB.DataProvider.SapHana
 			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -120,7 +120,7 @@ namespace LinqToDB.DataProvider.SapHana
 					StringBuilder.Append("Char (36)");
 					break;
 				default:
-					base.BuildDataType(type, createDbType);
+					base.BuildDataTypeFromDataType(type, forCreateTable);
 					break;
 			}
 		}

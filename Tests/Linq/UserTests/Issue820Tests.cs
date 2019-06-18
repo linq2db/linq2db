@@ -2,7 +2,6 @@
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -25,8 +24,8 @@ namespace Tests.UserTests
 			return value;
 		}
 
-		[Test, DataContextSource]
-		public void TestAndWithFunction(string context)
+		[Test]
+		public void TestAndWithFunction([DataSources] string context)
 		{
 			short? param = 1;
 			using (var db = GetDataContext(context))
@@ -43,8 +42,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestAndWithCastAndFunction(string context)
+		[ActiveIssue(1685, Configuration = ProviderName.SapHana)]
+		[Test]
+		public void TestAndWithCastAndFunction([DataSources] string context)
 		{
 			short? param = 1;
 			using (var db = GetDataContext(context))
@@ -61,8 +61,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestAndWithCast(string context)
+		[Test]
+		public void TestAndWithCast([DataSources] string context)
 		{
 			short? param = 1;
 			using (var db = GetDataContext(context))
@@ -79,8 +79,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestAndWithValue(string context)
+		[Test]
+		public void TestAndWithValue([DataSources] string context)
 		{
 			short? param = 1;
 			using (var db = GetDataContext(context))
@@ -97,8 +97,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestWithoutValue(string context)
+		[Test]
+		public void TestWithoutValue([DataSources] string context)
 		{
 			short? param = 1;
 			using (var db = GetDataContext(context))
@@ -115,8 +115,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestOrWithValue(string context)
+		[Test]
+		public void TestOrWithValue([DataSources] string context)
 		{
 			short? param = 1;
 			using (var db = GetDataContext(context))

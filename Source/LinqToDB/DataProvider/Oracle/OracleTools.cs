@@ -11,11 +11,12 @@ namespace LinqToDB.DataProvider.Oracle
 	using Configuration;
 	using Data;
 	using Extensions;
+
 	public enum AlternativeBulkCopy
 	{
 		InsertAll,
 		InsertInto,
-		InsertDual	
+		InsertDual
 	}
 
 	public static partial class OracleTools
@@ -146,6 +147,7 @@ namespace LinqToDB.DataProvider.Oracle
 			IEnumerable<T>             source,
 			int                        maxBatchSize       = 1000,
 			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			where T : class
 		{
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions
@@ -163,6 +165,7 @@ namespace LinqToDB.DataProvider.Oracle
 			int?                       bulkCopyTimeout    = null,
 			int                        notifyAfter        = 0,
 			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			where T : class
 		{
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions

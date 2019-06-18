@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -21,6 +22,7 @@ namespace LinqToDB.Mapping
 	using Metadata;
 	using SqlProvider;
 	using SqlQuery;
+	using Common.Internal.Cache;
 
 	/// <summary>
 	/// Mapping schema.
@@ -51,11 +53,17 @@ namespace LinqToDB.Mapping
 		/// Creates mapping schema for specified configuration name.
 		/// </summary>
 		/// <param name="configuration">Mapping schema configuration name.
-		/// <see cref="ProviderName"/> for standard names.</param>
-		public MappingSchema(string configuration/* ??? */)
+		/// <see cref="ProviderName"/> for standard names.
+		/// </param>
+		/// <remarks>Schema name should be unique for mapping schemas with different mappings.
+		/// Using same name could lead to incorrect mapping used when mapping schemas with same name define different
+		/// mappings for same type.</remarks>
+		public MappingSchema(string configuration)
 			: this(configuration, null)
 		{
 		}
+
+		static long _configurationCounter;
 
 		/// <summary>
 		/// Creates mapping schema with specified configuration name and base mapping schemas.
@@ -63,8 +71,14 @@ namespace LinqToDB.Mapping
 		/// <param name="configuration">Mapping schema configuration name.
 		/// <see cref="ProviderName"/> for standard names.</param>
 		/// <param name="schemas">Base mapping schemas.</param>
+		/// <remarks>Schema name should be unique for mapping schemas with different mappings.
+		/// Using same name could lead to incorrect mapping used when mapping schemas with same name define different
+		/// mappings for same type.</remarks>
 		public MappingSchema(string configuration, params MappingSchema[] schemas)
 		{
+			if (configuration.IsNullOrEmpty() && (schemas == null || schemas.Length == 0))
+				configuration = "auto_" + Interlocked.Increment(ref _configurationCounter);
+
 			var schemaInfo = new MappingSchemaInfo(configuration);
 
 			if (schemas == null || schemas.Length == 0)
@@ -365,9 +379,25 @@ namespace LinqToDB.Mapping
 		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <c>false</c>.</returns>
 		public LambdaExpression GetConvertExpression(Type from, Type to, bool checkNull = true, bool createDefault = true)
 		{
+			return GetConvertExpression(new DbDataType(from), new DbDataType(to), checkNull, createDefault);
+		}
+
+		/// <summary>
+		/// Returns conversion expression from <paramref name="from"/> type to <paramref name="to"/> type.
+		/// </summary>
+		/// <param name="from">Source type.</param>
+		/// <param name="to">Target type.</param>
+		/// <param name="checkNull">If <c>true</c>, and source type could contain <c>null</c>, conversion expression will check converted value for <c>null</c> and replace it with default value.
+		/// <see cref="SetDefaultValue(Type, object)"/> for more details.
+		/// </param>
+		/// <param name="createDefault">Create new conversion expression, if conversion is not defined.</param>
+		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <c>false</c>.</returns>
+		public LambdaExpression GetConvertExpression(DbDataType from, DbDataType to, bool checkNull = true, bool createDefault = true)
+		{
 			var li = GetConverter(from, to, createDefault);
 			return li == null ? null : (LambdaExpression)ReduceDefaultValue(checkNull ? li.CheckNullLambda : li.Lambda);
 		}
+
 
 		/// <summary>
 		/// Returns conversion delegate for conversion from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
@@ -377,14 +407,16 @@ namespace LinqToDB.Mapping
 		/// <returns>Conversion delegate.</returns>
 		public Func<TFrom,TTo> GetConverter<TFrom,TTo>()
 		{
-			var li = GetConverter(typeof(TFrom), typeof(TTo), true);
+			var from = new DbDataType(typeof(TFrom));
+			var to   = new DbDataType(typeof(TTo));
+			var li   = GetConverter(from, to, true);
 
 			if (li.Delegate == null)
 			{
 				var rex = (Expression<Func<TFrom,TTo>>)ReduceDefaultValue(li.CheckNullLambda);
 				var l   = rex.Compile();
 
-				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(li.CheckNullLambda, null, l, li.IsSchemaSpecific));
+				Schemas[0].SetConvertInfo(from, to, new ConvertInfo.LambdaInfo(li.CheckNullLambda, null, l, li.IsSchemaSpecific));
 
 				return l;
 			}
@@ -409,9 +441,35 @@ namespace LinqToDB.Mapping
 			[JetBrains.Annotations.NotNull] LambdaExpression expr,
 			bool addNullCheck = true)
 		{
-			if (fromType == null) throw new ArgumentNullException("fromType");
-			if (toType   == null) throw new ArgumentNullException("toType");
-			if (expr     == null) throw new ArgumentNullException("expr");
+			if (fromType == null) throw new ArgumentNullException(nameof(fromType));
+			if (toType   == null) throw new ArgumentNullException(nameof(toType));
+			if (expr     == null) throw new ArgumentNullException(nameof(expr));
+
+			var ex = addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null?
+				AddNullCheck(expr) :
+				expr;
+
+			Schemas[0].SetConvertInfo(new DbDataType(fromType), new DbDataType(toType), new ConvertInfo.LambdaInfo(ex, expr, null, false));
+		}
+
+		/// <summary>
+		/// Specify conversion expression for conversion from <paramref name="fromType"/> type to <paramref name="toType"/> type.
+		/// </summary>
+		/// <param name="fromType">Source type.</param>
+		/// <param name="toType">Target type.</param>
+		/// <param name="expr">Conversion expression.</param>
+		/// <param name="addNullCheck">If <c>true</c>, conversion expression will be wrapped with default value substitution logic for <c>null</c> values.
+		/// Wrapper will be added only if source type can have <c>null</c> values and conversion expression doesn't use
+		/// default value provider.
+		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
+		/// </param>
+		public void SetConvertExpression(
+			DbDataType                      fromType,
+			DbDataType                      toType,
+			[JetBrains.Annotations.NotNull] LambdaExpression expr,
+			bool                            addNullCheck = true)
+		{
+			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
 			var ex = addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null?
 				AddNullCheck(expr) :
@@ -435,7 +493,7 @@ namespace LinqToDB.Mapping
 			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> expr,
 			bool addNullCheck = true)
 		{
-			if (expr == null) throw new ArgumentNullException("expr");
+			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
 			var ex = addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null?
 				AddNullCheck(expr) :
@@ -455,7 +513,7 @@ namespace LinqToDB.Mapping
 			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> checkNullExpr,
 			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> expr)
 		{
-			if (expr == null) throw new ArgumentNullException("expr");
+			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
 			Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(checkNullExpr, expr, null, false));
 		}
@@ -468,12 +526,37 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Conversion delegate.</param>
 		public void SetConverter<TFrom,TTo>([JetBrains.Annotations.NotNull] Func<TFrom,TTo> func)
 		{
-			if (func == null) throw new ArgumentNullException("func");
+			if (func == null) throw new ArgumentNullException(nameof(func));
 
 			var p  = Expression.Parameter(typeof(TFrom), "p");
 			var ex = Expression.Lambda<Func<TFrom,TTo>>(Expression.Invoke(Expression.Constant(func), p), p);
 
 			Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, null, func, false));
+		}
+
+
+		/// <summary>
+		/// Specify conversion delegate for conversion from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
+		/// </summary>
+		/// <typeparam name="TFrom">Source type.</typeparam>
+		/// <typeparam name="TTo">Target type.</typeparam>
+		/// <param name="func">Conversion delegate.</param>
+		/// <param name="from">Source type detalization</param>
+		/// <param name="to">Target type detalization</param>
+		public void SetConverter<TFrom,TTo>([JetBrains.Annotations.NotNull] Func<TFrom,TTo> func, DbDataType from, DbDataType to)
+		{
+			if (func == null) throw new ArgumentNullException(nameof(func));
+
+			if (from.SystemType != typeof(TFrom))
+				throw new ArgumentException($"'{nameof(from)}' parameter expects the same SystemType as in generic definition.", nameof(from));
+
+			if (to.SystemType != typeof(TTo))
+				throw new ArgumentException($"'{nameof(to)}' parameter expects the same SystemType as in generic definition.", nameof(to));
+
+			var p  = Expression.Parameter(typeof(TFrom), "p");
+			var ex = Expression.Lambda<Func<TFrom,TTo>>(Expression.Invoke(Expression.Constant(func), p), p);
+
+			Schemas[0].SetConvertInfo(from, to, new ConvertInfo.LambdaInfo(ex, null, func, false));
 		}
 
 		LambdaExpression AddNullCheck(LambdaExpression expr)
@@ -499,24 +582,49 @@ namespace LinqToDB.Mapping
 			return expr;
 		}
 
-		internal ConvertInfo.LambdaInfo GetConverter(Type from, Type to, bool create)
+		static bool IsSimple (ref DbDataType type) 
+			=> type.DataType == DataType.Undefined && string.IsNullOrEmpty(type.DbType) && type.Length == null;
+
+		static void Simplify(ref DbDataType type)
 		{
-			for (var i = 0; i < Schemas.Length; i++)
+			if (!string.IsNullOrEmpty(type.DbType))
+				type = type.WithDbType(null);
+
+			if (type.DataType != DataType.Undefined)
+				type = type.WithDataType(DataType.Undefined);
+
+			if (type.Length != null)
+				type = type.WithLength(null);
+		}
+
+		internal ConvertInfo.LambdaInfo GetConverter(DbDataType from, DbDataType to, bool create)
+		{
+			do
 			{
-				var info = Schemas[i];
-				var li   = info.GetConvertInfo(@from, to);
+				for (var i = 0; i < Schemas.Length; i++)
+				{
+					var info = Schemas[i];
+					var li   = info.GetConvertInfo(from, to);
 
-				if (li != null && (i == 0 || !li.IsSchemaSpecific))
-					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
-			}
+					if (li != null && (i == 0 || !li.IsSchemaSpecific))
+						return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
+				}
 
-			var isFromGeneric = from.IsGenericTypeEx() && !from.IsGenericTypeDefinitionEx();
-			var isToGeneric   = to.  IsGenericTypeEx() && !to.  IsGenericTypeDefinitionEx();
+				if (!IsSimple(ref from))
+					Simplify(ref from);
+				else if (!IsSimple(ref to))
+					Simplify(ref to);
+				else break;
+
+			} while (true);
+
+			var isFromGeneric = from.SystemType.IsGenericTypeEx() && !from.SystemType.IsGenericTypeDefinitionEx();
+			var isToGeneric   = to.SystemType.  IsGenericTypeEx() && !to.SystemType.  IsGenericTypeDefinitionEx();
 
 			if (isFromGeneric || isToGeneric)
 			{
-				var fromGenericArgs = isFromGeneric ? from.GetGenericArgumentsEx() : Array<Type>.Empty;
-				var toGenericArgs   = isToGeneric   ? to.  GetGenericArgumentsEx() : Array<Type>.Empty;
+				var fromGenericArgs = isFromGeneric ? from.SystemType.GetGenericArgumentsEx() : Array<Type>.Empty;
+				var toGenericArgs   = isToGeneric   ? to.SystemType.  GetGenericArgumentsEx() : Array<Type>.Empty;
 
 				var args = fromGenericArgs.SequenceEqual(toGenericArgs) ?
 					fromGenericArgs : fromGenericArgs.Concat(toGenericArgs).ToArray();
@@ -527,15 +635,15 @@ namespace LinqToDB.Mapping
 
 			if (create)
 			{
-				var ufrom = from.ToNullableUnderlying();
-				var uto   = to.  ToNullableUnderlying();
+				var ufrom = from.SystemType.ToNullableUnderlying();
+				var uto   = to.SystemType.  ToNullableUnderlying();
 
 				LambdaExpression ex;
 				bool             ss = false;
 
-				if (from != ufrom)
+				if (from.SystemType != ufrom)
 				{
-					var li = GetConverter(ufrom, to, false);
+					var li = GetConverter(new DbDataType(ufrom), to, false);
 
 					if (li != null)
 					{
@@ -544,16 +652,16 @@ namespace LinqToDB.Mapping
 
 						// For int? -> byte try to find int -> byte and convert int to int?
 						//
-						var p = Expression.Parameter(from, ps[0].Name);
+						var p = Expression.Parameter(from.SystemType, ps[0].Name);
 
 						ss = li.IsSchemaSpecific;
 						ex = Expression.Lambda(
 							b.Transform(e => e == ps[0] ? Expression.Convert(p, ufrom) : e),
 							p);
 					}
-					else if (to != uto)
+					else if (to.SystemType != uto)
 					{
-						li = GetConverter(ufrom, uto, false);
+						li = GetConverter(new DbDataType(ufrom), new DbDataType(uto), false);
 
 						if (li != null)
 						{
@@ -562,13 +670,13 @@ namespace LinqToDB.Mapping
 
 							// For int? -> byte? try to find int -> byte and convert int to int? and result to byte?
 							//
-							var p = Expression.Parameter(from, ps[0].Name);
+							var p = Expression.Parameter(from.SystemType, ps[0].Name);
 
 							ss = li.IsSchemaSpecific;
 							ex = Expression.Lambda(
 								Expression.Convert(
 									b.Transform(e => e == ps[0] ? Expression.Convert(p, ufrom) : e),
-									to),
+									to.SystemType),
 								p);
 						}
 						else
@@ -577,11 +685,11 @@ namespace LinqToDB.Mapping
 					else
 						ex = null;
 				}
-				else if (to != uto)
+				else if (to.SystemType != uto)
 				{
 					// For int? -> byte? try to find int -> byte and convert int to int? and result to byte?
 					//
-					var li = GetConverter(from, uto, false);
+					var li = GetConverter(from, new DbDataType(uto), false);
 
 					if (li != null)
 					{
@@ -589,7 +697,7 @@ namespace LinqToDB.Mapping
 						var ps = li.CheckNullLambda.Parameters;
 
 						ss = li.IsSchemaSpecific;
-						ex = Expression.Lambda(Expression.Convert(b, to), ps);
+						ex = Expression.Lambda(Expression.Convert(b, to.SystemType), ps);
 					}
 					else
 						ex = null;
@@ -856,17 +964,23 @@ namespace LinqToDB.Mapping
 		/// <param name="type">Attributes owner type.</param>
 		/// <param name="configGetter">Attribute configuration name provider.</param>
 		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
+		/// <param name="exactForConfiguration">If <c>true</c> - only associated to configuration attributes will be returned.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, Func<T,string> configGetter, bool inherit = true)
+		public T[] GetAttributes<T>(Type type, Func<T,string> configGetter, bool inherit = true, 
+			bool exactForConfiguration = false)
 			where T : Attribute
 		{
 			var list  = new List<T>();
 			var attrs = GetAttributes<T>(type, inherit);
 
 			foreach (var c in ConfigurationList)
+			{
 				foreach (var a in attrs)
 					if (configGetter(a) == c)
 						list.Add(a);
+				if (exactForConfiguration && list.Count > 0)
+					return list.ToArray();
+			}
 
 			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
 		}
@@ -880,17 +994,23 @@ namespace LinqToDB.Mapping
 		/// <param name="memberInfo">Attributes owner member.</param>
 		/// <param name="configGetter">Attribute configuration name provider.</param>
 		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
+		/// <param name="exactForConfiguration">If <c>true</c> - only associated to configuration attributes will be returned.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true, 
+			bool exactForConfiguration = false)
 			where T : Attribute
 		{
 			var list  = new List<T>();
 			var attrs = GetAttributes<T>(type, memberInfo, inherit);
 
 			foreach (var c in ConfigurationList)
+			{
 				foreach (var a in attrs)
 					if (configGetter(a) == c)
 						list.Add(a);
+				if (exactForConfiguration && list.Count > 0)
+					return list.ToArray();
+			}
 
 			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
 		}
@@ -1004,8 +1124,8 @@ namespace LinqToDB.Mapping
 			public DefaultMappingSchema()
 				: base(new MappingSchemaInfo("") { MetadataReader = Metadata.MetadataReader.Default })
 			{
-				AddScalarType(typeof(char),            new SqlDataType(DataType.NChar, typeof(char),  1, null, null));
-				AddScalarType(typeof(char?),           new SqlDataType(DataType.NChar, typeof(char?), 1, null, null));
+				AddScalarType(typeof(char),            new SqlDataType(DataType.NChar, typeof(char),  1, null, null, null));
+				AddScalarType(typeof(char?),           new SqlDataType(DataType.NChar, typeof(char?), 1, null, null, null));
 				AddScalarType(typeof(string),          DataType.NVarChar);
 				AddScalarType(typeof(decimal),         DataType.Decimal);
 				AddScalarType(typeof(decimal?),        DataType.Decimal);
@@ -1204,8 +1324,9 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Returns <c>true</c>, if <paramref name="type"/> type is enum with mapping to <c>null</c> value.
 		/// Initial parameter value, passed to this method is not used.</param>
 		/// <returns>Scalar database type information.</returns>
-		public SqlDataType GetUnderlyingDataType(Type type, ref bool canBeNull)
+		public SqlDataType GetUnderlyingDataType(Type type, out bool canBeNull)
 		{
+			canBeNull   = false;
 			int? length = null;
 
 			var underlyingType = type.ToNullableUnderlying();
@@ -1298,9 +1419,7 @@ namespace LinqToDB.Mapping
 			if (_mapValues == null)
 				_mapValues = new ConcurrentDictionary<Type,MapValue[]>();
 
-			MapValue[] mapValues;
-
-			if (_mapValues.TryGetValue(type, out mapValues))
+			if (_mapValues.TryGetValue(type, out var mapValues))
 				return mapValues;
 
 			var underlyingType = type.ToNullableUnderlying();
@@ -1361,6 +1480,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public Action<MappingSchema, IEntityChangeDescriptor> EntityDescriptorCreatedCallback { get; set; }
 
+		internal static MemoryCache EntityDescriptorsCache { get; } = new MemoryCache(new MemoryCacheOptions());
+
 		/// <summary>
 		/// Returns mapped entity descriptor.
 		/// </summary>
@@ -1368,25 +1489,42 @@ namespace LinqToDB.Mapping
 		/// <returns>Mapping descriptor.</returns>
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
-			return Schemas[0].GetEntityDescriptor(this, type);
+			var key = new { Type = type, ConfigurationID };
+			var ed = EntityDescriptorsCache.GetOrCreate(key,
+				o =>
+				{
+					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					var edNew = new EntityDescriptor(this, type);
+					EntityDescriptorCreatedCallback?.Invoke(this, edNew);
+					return edNew;
+				});
+
+			return ed;
 		}
 
-		// TODO: V2 - do we need it??
 		/// <summary>
-		/// Returns types for cached <see cref="EntityDescriptor" />s.
+		/// Enumerates types registered by FluentMetadataBuilder.
 		/// </summary>
-		/// <seealso cref="GetEntityDescriptor(Type)" />
 		/// <returns>
-		/// Mapping types.
+		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
-		public Type[] GetEntites()
+		public Type[] GetDefinedTypes()
 		{
-			return Schemas[0].GetEntites();
+			return Schemas.SelectMany(s => s.GetRegisteredTypes()).ToArray();
+		}
+
+		/// <summary>
+		/// Clears EntityDescriptor cache.
+		/// </summary>
+		public static void ClearCache()
+		{
+			EntityDescriptorsCache.Compact(1);
 		}
 
 		internal void ResetEntityDescriptor(Type type)
 		{
-			Schemas[0].ResetEntityDescriptor(type);
+			var key = new { Type = type, ConfigurationID };
+			EntityDescriptorsCache.Remove(key);
 		}
 
 		#endregion

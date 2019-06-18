@@ -1,42 +1,42 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Text;
+
 using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider
 {
 	using Data;
 	using Expressions;
-	using Mapping;
 	using SqlProvider;
 
 	public class BasicBulkCopy
 	{
-		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			switch (bulkCopyType)
 			{
-				case BulkCopyType.MultipleRows : return MultipleRowsCopy    (dataConnection, options, source);
-				case BulkCopyType.RowByRow     : return RowByRowCopy        (dataConnection, options, source);
-				default                        : return ProviderSpecificCopy(dataConnection, options, source);
+				case BulkCopyType.MultipleRows : return MultipleRowsCopy    (table, options, source);
+				case BulkCopyType.RowByRow     : return RowByRowCopy        (table, options, source);
+				default                        : return ProviderSpecificCopy(table, options, source);
 			}
 		}
 
-		protected virtual BulkCopyRowsCopied ProviderSpecificCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		protected virtual BulkCopyRowsCopied ProviderSpecificCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return MultipleRowsCopy(dataConnection, options, source);
+			return MultipleRowsCopy(table, options, source);
 		}
 
-		protected virtual BulkCopyRowsCopied MultipleRowsCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		protected virtual BulkCopyRowsCopied MultipleRowsCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return RowByRowCopy(dataConnection, options, source);
+			return RowByRowCopy(table, options, source);
 		}
 
-		protected virtual BulkCopyRowsCopied RowByRowCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		protected virtual BulkCopyRowsCopied RowByRowCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			// This limitation could be lifted later for some providers that supports identity insert if we will get such request
 			// It will require support from DataConnection.Insert
@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider
 
 			foreach (var item in source)
 			{
-				dataConnection.Insert(item, options.TableName, options.DatabaseName, options.SchemaName);
+				table.DataContext.Insert(item, options.TableName, options.DatabaseName, options.SchemaName);
 				rowsCopied.RowsCopied++;
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
@@ -62,12 +62,12 @@ namespace LinqToDB.DataProvider
 			return rowsCopied;
 		}
 
-		protected internal static string GetTableName(ISqlBuilder sqlBuilder, BulkCopyOptions options, EntityDescriptor descriptor)
+		protected internal static string GetTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table)
 		{
 			var serverName   = options.ServerName   ?? descriptor.ServerName;
-			var databaseName = options.DatabaseName ?? descriptor.DatabaseName;
-			var schemaName   = options.SchemaName   ?? descriptor.SchemaName;
-			var tableName    = options.TableName    ?? descriptor.TableName;
+			var databaseName = options.DatabaseName ?? table.DatabaseName;
+			var schemaName   = options.SchemaName   ?? table.SchemaName;
+			var tableName    = options.TableName    ?? table.TableName;
 
 			return sqlBuilder.BuildTableName(
 				new StringBuilder(),
@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider
 				Expression.Convert(
 					Expression.New(
 						columnMappingType.GetConstructorEx(new[] { typeof(int), typeof(string) }),
-						new [] { p1, p2 }),
+						new Expression[] { p1, p2 }),
 					typeof(object)),
 				p1, p2);
 
@@ -160,6 +160,9 @@ namespace LinqToDB.DataProvider
 
 		protected void TraceAction(DataConnection dataConnection, Func<string> commandText, Func<int> action)
 		{
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
 			if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 			{
 				dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
@@ -167,10 +170,9 @@ namespace LinqToDB.DataProvider
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = dataConnection,
 					CommandText    = commandText(),
+					StartTime      = now,
 				});
 			}
-
-			var now = DateTime.Now;
 
 			try
 			{
@@ -183,7 +185,8 @@ namespace LinqToDB.DataProvider
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = dataConnection,
 						CommandText     = commandText(),
-						ExecutionTime   = DateTime.Now - now,
+						StartTime       = now,
+						ExecutionTime   = sw.Elapsed,
 						RecordsAffected = count,
 					});
 				}
@@ -197,7 +200,8 @@ namespace LinqToDB.DataProvider
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = dataConnection,
 						CommandText    = commandText(),
-						ExecutionTime  = DateTime.Now - now,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
 					});
 				}
@@ -211,17 +215,12 @@ namespace LinqToDB.DataProvider
 		#region MultipleRows Support
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(
-			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return MultipleRowsCopy1(
-				new MultipleRowsHelper<T>(dataConnection, options),
-				dataConnection,
-				options,
-				source);
+			return MultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source);
 		}
 
-		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(
-			MultipleRowsHelper<T> helper, DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		protected BulkCopyRowsCopied MultipleRowsCopy1(MultipleRowsHelper helper, IEnumerable source)
 		{
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
@@ -274,18 +273,13 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected virtual BulkCopyRowsCopied MultipleRowsCopy2<T>(
-			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, string from)
 		{
-			return MultipleRowsCopy2<T>(
-				new MultipleRowsHelper<T>(dataConnection, options),
-				dataConnection,
-				options,
-				source,
-				from);
+			return MultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source, from);
 		}
 
-		protected  BulkCopyRowsCopied MultipleRowsCopy2<T>(
-			MultipleRowsHelper<T> helper, DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
+		protected  BulkCopyRowsCopied MultipleRowsCopy2(
+			MultipleRowsHelper helper, IEnumerable source, string from)
 		{
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
@@ -334,10 +328,9 @@ namespace LinqToDB.DataProvider
 			return helper.RowsCopied;
 		}
 
-		protected  BulkCopyRowsCopied MultipleRowsCopy3<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
+		protected  BulkCopyRowsCopied MultipleRowsCopy3(
+			MultipleRowsHelper helper, BulkCopyOptions options, IEnumerable source, string from)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options);
-
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
 				.Append("(");

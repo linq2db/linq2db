@@ -10,6 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 	using SqlQuery;
+	using Common;
 
 	// This class implements double functionality (scalar and member type selects)
 	// and could be implemented as two different classes.
@@ -34,6 +35,8 @@ namespace LinqToDB.Linq.Builder
 		public SqlStatement      Statement   { [DebuggerStepThrough] get; set; }
 		public IBuildContext     Parent      { [DebuggerStepThrough] get; set; }
 		public bool              IsScalar    { [DebuggerStepThrough] get; }
+
+		public bool              AllowAddDefault { [DebuggerStepThrough] get; set; } = true;
 
 		Expression IBuildContext.Expression => Lambda;
 
@@ -479,7 +482,7 @@ namespace LinqToDB.Linq.Builder
 						idx = ConvertToSql(null, 0, flags);
 
 						foreach (var info in idx)
-							SetInfo(info);
+							SetInfo(info, null);
 
 						_memberIndex.Add(key, idx);
 					}
@@ -490,6 +493,7 @@ namespace LinqToDB.Linq.Builder
 				switch (flags)
 				{
 					case ConvertFlags.Field :
+					case ConvertFlags.Key   :
 					case ConvertFlags.All   :
 						return ProcessScalar(
 							expression,
@@ -536,7 +540,7 @@ namespace LinqToDB.Linq.Builder
 								var idx = Builder.ConvertExpressions(this, expression, flags);
 
 								foreach (var info in idx)
-									SetInfo(info);
+									SetInfo(info, null);
 
 								return idx;
 							}
@@ -559,7 +563,7 @@ namespace LinqToDB.Linq.Builder
 													throw new InvalidOperationException();
 
 												foreach (var info in idx)
-													SetInfo(info);
+													SetInfo(info, member.Item1);
 
 												_memberIndex.Add(member, idx);
 											}
@@ -591,14 +595,18 @@ namespace LinqToDB.Linq.Builder
 			throw new NotImplementedException();
 		}
 
-		void SetInfo(SqlInfo info)
+		void SetInfo(SqlInfo info, MemberInfo member)
 		{
 			info.Query = SelectQuery;
 
 			if (info.Sql == SelectQuery)
 				info.Index = SelectQuery.Select.Columns.Count - 1;
 			else
+			{
 				info.Index = SelectQuery.Select.Add(info.Sql);
+				if (member != null)
+					SelectQuery.Select.Columns[info.Index].Alias = member.Name;
+			}
 		}
 
 		#endregion
@@ -862,6 +870,10 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void SetAlias(string alias)
 		{
+			if (!alias.IsNullOrEmpty() && !alias.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
+			{
+				SelectQuery.Select.From.Tables[0].Alias = alias;
+			}
 		}
 
 		#endregion
@@ -971,7 +983,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Parameter    :
 					if (sequence != null)
 						return action(2, sequence, newExpression, nextLevel, memberExpression);
-					throw new NotImplementedException();
+					break;
 
 				case ExpressionType.New          :
 				case ExpressionType.MemberInit   :
@@ -1151,7 +1163,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					if (add)
+					if (add && AllowAddDefault)
 					{
 						memberExpression = Expression.Constant(type.GetDefaultValue(), type);
 						Members.Add(member, memberExpression);

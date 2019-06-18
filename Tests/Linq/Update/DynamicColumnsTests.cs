@@ -1,21 +1,26 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Update
 {
 	[TestFixture]
+	[Order(10000)]
 	public class DynamicColumnsTests : TestBase
 	{
 		// Introduced to ensure that we process not only constants in column names
 		private static string ChildIDColumn  = "ChildID";
 		private static string ParentIDColumn = "ParentID";
 
-		[Test, DataContextSource]
-		public void InsertViaSqlProperty(string context)
+		[Test]
+		public void InsertViaSqlProperty([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -40,8 +45,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void UpdateViaSqlProperty(string context)
+		[Test]
+		public void UpdateViaSqlProperty([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -67,8 +72,35 @@ namespace Tests.Update
 			}
 		}
 
-		[Test, DataContextSource]
-		public void InsertDynamicColumns(string context)
+		[Test]
+		public void UpdateViaSqlPropertyValue([DataSources(ProviderName.Informix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 1001;
+
+					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
+					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
+
+					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
+					Assert.AreEqual(1,
+						db.Child
+							.Where(c => Sql.Property<int>(c, ChildIDColumn) == id && Sql.Property<int?>(Sql.Property<Parent>(c, "Parent"), "Value1") == 1)
+							.Set(c => Sql.Property<int>(c, ChildIDColumn), 5000)
+							.Update());
+					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == 5000));
+				}
+				finally
+				{
+					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
+				}
+			}
+		}
+
+		[Test]
+		public void InsertDynamicColumns([DataSources] string context)
 		{
 			var firstNameColumn = "FirstName";
 			var lastNameColumn  = "LastName";
@@ -95,8 +127,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void UpdateDynamicColumn(string context)
+		[Test]
+		public void UpdateDynamicColumn([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicMyClass()))
 			{

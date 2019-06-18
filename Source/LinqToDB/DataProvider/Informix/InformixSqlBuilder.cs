@@ -6,12 +6,11 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
 	using SqlQuery;
 	using SqlProvider;
 	using System.Globalization;
 
-	class InformixSqlBuilder : BasicSqlBuilder
+	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
 		public InformixSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -117,22 +116,22 @@ namespace LinqToDB.DataProvider.Informix
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
-				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      break;
-				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                   break;
-				case DataType.DateTime   : StringBuilder.Append("datetime year to second");   break;
-				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction"); break;
+				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      return;
+				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                   return;
+				case DataType.DateTime   : StringBuilder.Append("datetime year to second");   return;
+				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction"); return;
 				case DataType.Time       :
 					StringBuilder.Append("INTERVAL HOUR TO FRACTION");
 					StringBuilder.AppendFormat("({0})", (type.Length ?? 5).ToString(CultureInfo.InvariantCulture));
-					break;
-				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");      break;
+					return;
+				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");      return;
 				case DataType.SByte      :
-				case DataType.Byte       : StringBuilder.Append("SmallInt");                  break;
-				case DataType.SmallMoney : StringBuilder.Append("Decimal(10,4)");             break;
+				case DataType.Byte       : StringBuilder.Append("SmallInt");                  return;
+				case DataType.SmallMoney : StringBuilder.Append("Decimal(10,4)");             return;
 				case DataType.Decimal    :
 					StringBuilder.Append("Decimal");
 					if (type.Precision != null && type.Scale != null)
@@ -140,9 +139,20 @@ namespace LinqToDB.DataProvider.Informix
 							"({0}, {1})",
 							type.Precision.Value.ToString(CultureInfo.InvariantCulture),
 							type.Scale.Value.ToString(CultureInfo.InvariantCulture));
+					return;
+				case DataType.NVarChar:
+					if (type.Length == null || type.Length > 255 || type.Length < 1)
+					{
+						StringBuilder
+							.Append(type.DataType)
+							.Append("(255)");
+						return;
+					}
+
 					break;
-				default                  : base.BuildDataType(type, createDbType);            break;
 			}
+
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
@@ -261,6 +271,13 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			dynamic p = parameter;
 			return p.IfxType.ToString();
+		}
+
+		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
+		{
+			BuildExpression(value);
+			StringBuilder.Append("::");
+			BuildDataType(dataType, false);
 		}
 	}
 }

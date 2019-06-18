@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.DB2
 	using SqlQuery;
 	using SqlProvider;
 
-	abstract class DB2SqlBuilderBase : BasicSqlBuilder
+	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
 	{
 		protected DB2SqlBuilderBase(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -154,16 +154,27 @@ namespace LinqToDB.DataProvider.DB2
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime  : StringBuilder.Append("timestamp");             break;
-				case DataType.DateTime2 : StringBuilder.Append("timestamp");             break;
-				case DataType.Boolean   : StringBuilder.Append("smallint");              break;
-				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); break;
-				default                 : base.BuildDataType(type, createDbType);        break;
+				case DataType.DateTime  : StringBuilder.Append("timestamp");             return;
+				case DataType.DateTime2 : StringBuilder.Append("timestamp");             return;
+				case DataType.Boolean   : StringBuilder.Append("smallint");              return;
+				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); return;
+				case DataType.NVarChar:
+					if (type.Length == null || type.Length > 8168 || type.Length < 1)
+					{
+						StringBuilder
+							.Append(type.DataType)
+							.Append("(8168)");
+						return;
+					}
+
+					break;
 			}
+
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;
@@ -253,6 +264,29 @@ namespace LinqToDB.DataProvider.DB2
 
 			dynamic p = parameter;
 			return p.DB2Type.ToString();
+		}
+
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
+		{
+			var table = dropTable.Table;
+
+			if (dropTable.IfExists)
+			{
+				AppendIndent().Append(@"BEGIN
+	DECLARE CONTINUE HANDLER FOR SQLSTATE '42704'
+		BEGIN END;
+	EXECUTE IMMEDIATE 'DROP TABLE ");
+				BuildPhysicalTable(table, null);
+				StringBuilder.AppendLine(
+				@"';
+END");
+			}
+			else
+			{
+				AppendIndent().Append("DROP TABLE ");
+				BuildPhysicalTable(table, null);
+				StringBuilder.AppendLine();
+			}
 		}
 	}
 }

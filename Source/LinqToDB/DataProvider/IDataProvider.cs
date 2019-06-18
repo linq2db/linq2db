@@ -8,7 +8,9 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider
 {
 	using Data;
+	using LinqToDB.Linq;
 	using Mapping;
+	using Common;
 	using SchemaProvider;
 	using SqlProvider;
 
@@ -27,8 +29,8 @@ namespace LinqToDB.DataProvider
 		object             GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?              IsDBNullAllowed       (IDataReader reader, int idx);
-		void               SetParameter          (IDbDataParameter parameter, string name, DataType dataType, object value);
-		Type               ConvertParameterType  (Type type, DataType dataType);
+		void               SetParameter          (IDbDataParameter parameter, string name, DbDataType dataType, object value);
+		Type               ConvertParameterType  (Type type, DbDataType dataType);
 		bool               IsCompatibleConnection(IDbConnection connection);
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);
 		/// <summary>
@@ -45,39 +47,6 @@ namespace LinqToDB.DataProvider
 		ISchemaProvider    GetSchemaProvider     ();
 #endif
 
-		BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source);
-
-		int Merge<T>(
-			DataConnection           dataConnection,
-			Expression<Func<T,bool>> predicate,
-			bool                     delete,
-			IEnumerable<T>           source,
-			string                   tableName,
-			string                   serverName,
-			string                   databaseName,
-			string                   schemaName)
-			where T : class;
-
-		Task<int> MergeAsync<T>(
-			DataConnection           dataConnection,
-			Expression<Func<T,bool>> predicate,
-			bool                     delete,
-			IEnumerable<T>           source,
-			string                   tableName,
-			string                   serverName,
-			string                   databaseName,
-			string                   schemaName,
-			CancellationToken        token)
-			where T : class;
-
-		int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
-			where TTarget : class
-			where TSource : class;
-
-		Task<int> MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
-			where TTarget : class
-			where TSource : class;
-
-		//TimeSpan? ShouldRetryOn(Exception exception, int retryCount, TimeSpan baseDelay);
+		BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source);
 	}
 }

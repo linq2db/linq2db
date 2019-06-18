@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -30,12 +32,28 @@ namespace LinqToDB.Mapping
 			if (MemberInfo.IsFieldEx())
 			{
 				var fieldInfo = (FieldInfo)MemberInfo;
-				MemberType = fieldInfo.FieldType;
+				MemberType    = fieldInfo.FieldType;
 			}
 			else if (MemberInfo.IsPropertyEx())
 			{
 				var propertyInfo = (PropertyInfo)MemberInfo;
-				MemberType = propertyInfo.PropertyType;
+				MemberType       = propertyInfo.PropertyType;
+			}
+
+			if (columnAttribute == null)
+			{
+				columnAttribute = new ColumnAttribute();
+				var dataType = mappingSchema.GetDataType(MemberType);
+
+				if (dataType.DataType == DataType.Undefined)
+					dataType = mappingSchema.GetUnderlyingDataType(dataType.SystemType, out var _);
+
+				columnAttribute.DataType  = dataType.DataType;
+				columnAttribute.DbType    = dataType.DbType;
+
+				if (dataType.Length    != null) columnAttribute.Length    = dataType.Length.Value;
+				if (dataType.Precision != null) columnAttribute.Precision = dataType.Precision.Value;
+				if (dataType.Scale     != null) columnAttribute.Scale     = dataType.Scale.Value;
 			}
 
 			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;
@@ -131,32 +149,76 @@ namespace LinqToDB.Mapping
 						DataType = a.DataType.Value;
 				}
 			}
+
+			if (MemberType.ToNullableUnderlying().IsEnumEx())
+			{
+				if (DataType == DataType.Undefined)
+				{
+					var enumtype = mappingSchema.GetDefaultFromEnumType(MemberType);
+
+					if (enumtype != null)
+						DataType = mappingSchema.GetDataType(enumtype).DataType;
+				}
+
+				if (DataType == DataType.Undefined && MemberType.IsNullable())
+				{
+					var enumtype = mappingSchema.GetDefaultFromEnumType(MemberType.ToNullableUnderlying());
+
+					if (enumtype != null)
+						DataType = mappingSchema.GetDataType(enumtype).DataType;
+				}
+
+				if (DataType == DataType.Undefined)
+				{
+					var enumtype = mappingSchema.GetDefaultFromEnumType(typeof(Enum));
+
+					if (enumtype != null)
+						DataType = mappingSchema.GetDataType(enumtype).DataType;
+				}
+
+				if (DataType == DataType.Undefined)
+				{
+					DataType = mappingSchema.GetUnderlyingDataType(MemberType, out var canBeNull).DataType;
+					if (canBeNull)
+						CanBeNull = canBeNull;
+				}
+			}
+
+			if (DataType == DataType.Undefined)
+				DataType = mappingSchema.GetDataType(MemberType).DataType;
+
+			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			if (skipValueAttributes != null && skipValueAttributes.Length > 0)
+			{
+				SkipBaseAttributes    = skipValueAttributes;
+				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
+			}
 		}
 
 		/// <summary>
 		/// Gets column mapping member accessor.
 		/// </summary>
-		public MemberAccessor MemberAccessor  { get; private set; }
+		public MemberAccessor MemberAccessor  { get; }
 
 		/// <summary>
 		/// Gets column mapping member (field or property).
 		/// </summary>
-		public MemberInfo     MemberInfo      { get; private set; }
+		public MemberInfo     MemberInfo      { get; }
 
 		/// <summary>
 		/// Gets value storage member (field or property).
 		/// </summary>
-		public MemberInfo     StorageInfo     { get; private set; }
+		public MemberInfo     StorageInfo     { get; }
 
 		/// <summary>
 		/// Gets type of column mapping member (field or property).
 		/// </summary>
-		public Type           MemberType      { get; private set; }
+		public Type           MemberType      { get; }
 
 		/// <summary>
 		/// Gets type of column value storage member (field or property).
 		/// </summary>
-		public Type           StorageType     { get; private set; }
+		public Type           StorageType     { get; }
 
 		/// <summary>
 		/// Gets the name of mapped member.
@@ -186,7 +248,7 @@ namespace LinqToDB.Mapping
 		/// </code>
 		/// </example>
 		/// </summary>
-		public string         MemberName      { get; private set; }
+		public string         MemberName      { get; }
 
 		string IColumnChangeDescriptor.MemberName => MemberName;
 
@@ -206,29 +268,29 @@ namespace LinqToDB.Mapping
 		/// Gets storage property or field to hold the value from a column.
 		/// Could be usefull e.g. in combination of private storage field and getter-only mapping property.
 		/// </summary>
-		public string         Storage         { get; private set; }
+		public string         Storage         { get; }
 
 		/// <summary>
 		/// Gets whether a column contains a discriminator value for a LINQ to DB inheritance hierarchy.
 		/// <see cref="InheritanceMappingAttribute"/> for more details.
 		/// Default value: <c>false</c>.
 		/// </summary>
-		public bool           IsDiscriminator { get; private set; }
+		public bool           IsDiscriminator { get; }
 
 		/// <summary>
 		/// Gets LINQ to DB type for column.
 		/// </summary>
-		public DataType       DataType        { get; private set; }
+		public DataType       DataType        { get; }
 
 		/// <summary>
 		/// Gets the name of the database column type.
 		/// </summary>
-		public string         DbType          { get; private set; }
+		public string         DbType          { get; }
 
 		/// <summary>
 		/// Gets whether a column contains values that the database auto-generates.
 		/// </summary>
-		public bool           IsIdentity      { get; private set; }
+		public bool           IsIdentity      { get; }
 
 		/// <summary>
 		/// Gets whether a column is insertable.
@@ -236,7 +298,46 @@ namespace LinqToDB.Mapping
 		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
-		public bool           SkipOnInsert    { get; private set; }
+		public bool           SkipOnInsert    { get; }
+
+		/// <summary>
+		/// Gets whether the column has specific values that should be skipped on insert.
+		/// </summary>
+		public bool           HasValuesToSkipOnInsert => SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Insert) != 0) ?? false;
+
+		/// <summary>
+		/// Gets whether the column has specific values that should be skipped on update.
+		/// </summary>
+		public bool           HasValuesToSkipOnUpdate => SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Update) != 0) ?? false;
+
+		/// <summary>
+		/// Gets whether the column has specific values that should be skipped on insert.
+		/// </summary>
+		private SkipBaseAttribute[] SkipBaseAttributes { get; }
+
+		/// <summary>
+		/// Gets flags for which operation values are skipped.
+		/// </summary>
+		public SkipModification SkipModificationFlags { get; }
+
+		/// <summary> 
+		/// Checks if the passed object has values that should bes skipped based on the given flags. 
+		/// </summary>
+		/// <param name="obj">The object containing the values for the operation.</param>
+		/// <param name="descriptor"><see cref="EntityDescriptor"/> of the current instance.</param>
+		/// <param name="flags">The flags that specify which operation should be checked.</param>
+		/// <returns><c>true</c> if object contains values that should be skipped. </returns>
+		public virtual bool ShouldSkip(object obj, EntityDescriptor descriptor, SkipModification flags)
+		{
+			if (SkipBaseAttributes == null)
+				return false;
+	
+			foreach (var skipBaseAttribute in SkipBaseAttributes)
+				if ((skipBaseAttribute.Affects & flags) != 0 && skipBaseAttribute.ShouldSkip(obj, descriptor, this))
+					return true;
+
+			return false;
+		}
 
 		/// <summary>
 		/// Gets whether a column is updatable.
@@ -244,40 +345,40 @@ namespace LinqToDB.Mapping
 		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
-		public bool           SkipOnUpdate    { get; private set; }
+		public bool           SkipOnUpdate    { get; }
 
 		/// <summary>
 		/// Gets whether this member represents a column that is part or all of the primary key of the table.
 		/// Also see <see cref="PrimaryKeyAttribute"/>.
 		/// </summary>
-		public bool           IsPrimaryKey    { get; private set; }
+		public bool           IsPrimaryKey    { get; }
 
 		/// <summary>
 		/// Gets order of current column in composite primary key.
 		/// Order is used for query generation to define in which order primary key columns must be mentioned in query
 		/// from columns with smallest order value to greatest.
 		/// </summary>
-		public int            PrimaryKeyOrder { get; private set; }
+		public int            PrimaryKeyOrder { get; }
 
 		/// <summary>
 		/// Gets whether a column can contain null values.
 		/// </summary>
-		public bool           CanBeNull       { get; private set; }
+		public bool           CanBeNull       { get; }
 
 		/// <summary>
 		/// Gets the length of the database column.
 		/// </summary>
-		public int?           Length          { get; private set; }
+		public int?           Length          { get; }
 
 		/// <summary>
 		/// Gets the precision of the database column.
 		/// </summary>
-		public int?           Precision       { get; private set; }
+		public int?           Precision       { get; }
 
 		/// <summary>
 		/// Gets the Scale of the database column.
 		/// </summary>
-		public int?           Scale           { get; private set; }
+		public int?           Scale           { get; }
 
 		/// <summary>
 		/// Custom template for column definition in create table SQL expression, generated using
@@ -288,18 +389,18 @@ namespace LinqToDB.Mapping
 		/// - {2} - NULL specifier;
 		/// - {3} - identity specification.
 		/// </summary>
-		public string         CreateFormat    { get; private set; }
+		public string         CreateFormat    { get; }
 
 		/// <summary>
 		/// Sort order for column list.
 		/// Positive values first, then unspecified (null), then negative values.
 		/// </summary>
-		public int?           Order           { get; private set; }
+		public int?           Order           { get; }
 
 		/// <summary>
 		/// Gets sequence name for specified column.
 		/// </summary>
-		public SequenceNameAttribute SequenceName { get; private set; }
+		public SequenceNameAttribute SequenceName { get; }
 
 		Func<object,object> _getter;
 
@@ -317,7 +418,9 @@ namespace LinqToDB.Mapping
 				var objParam   = Expression.Parameter(typeof(object), "obj");
 				var getterExpr = MemberAccessor.GetterExpression.GetBody(Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type));
 
-				var expr = mappingSchema.GetConvertExpression(MemberType, typeof(DataParameter), createDefault : false);
+				var expr = mappingSchema.GetConvertExpression(
+					new DbDataType(MemberType, DataType, DbType, Length), 
+					new DbDataType(typeof(DataParameter), DataType, DbType, Length), createDefault : false);
 
 				if (expr != null)
 				{

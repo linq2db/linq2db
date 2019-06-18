@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -39,16 +40,20 @@ namespace LinqToDB.Linq.Builder
 			public EntityDescriptor EntityDescriptor;
 			public SqlTable         SqlTable;
 
+			internal bool           ForceLeftJoinAssociations { get; set; }
+
+			private bool            _associationsToSubQueries;
 			#endregion
 
 			#region Init
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
+				Builder                   = builder;
+				Parent                    = buildInfo.Parent;
+				Expression                = buildInfo.Expression;
+				SelectQuery               = buildInfo.SelectQuery;
+				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
@@ -62,10 +67,11 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
+				Builder                   = builder;
+				Parent                    = buildInfo.Parent;
+				Expression                = buildInfo.Expression;
+				SelectQuery               = buildInfo.SelectQuery;
+				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
@@ -85,10 +91,11 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo)
 			{
-				Builder     = builder;
-				Parent      = buildInfo.Parent;
-				Expression  = buildInfo.Expression;
-				SelectQuery = buildInfo.SelectQuery;
+				Builder                   = builder;
+				Parent                    = buildInfo.Parent;
+				Expression                = buildInfo.Expression;
+				SelectQuery               = buildInfo.SelectQuery;
+				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				var mc   = (MethodCallExpression)Expression;
 				var attr = builder.GetTableFunctionAttribute(mc.Method);
@@ -245,6 +252,7 @@ namespace LinqToDB.Linq.Builder
 				return _variable = Builder.BuildVariable(expr);
 			}
 
+			[UsedImplicitly]
 			static object OnEntityCreated(IDataContext context, object entity)
 			{
 				var onEntityCreated = ((IEntityServices)context).OnEntityCreated;
@@ -342,13 +350,16 @@ namespace LinqToDB.Linq.Builder
 					}
 				).ToList();
 
-				Expression expr = Expression.MemberInit(
+				var initExpr = Expression.MemberInit(
 					Expression.New(objectType),
 						members
+							// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
 							.Where (m => !m.Column.MemberAccessor.IsComplex)
 							.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
 
-				var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
+				Expression expr = initExpr;
+
+				var hasComplex = members.Count > initExpr.Bindings.Count;
 				var loadWith   = GetLoadWith();
 
 				if (hasComplex || loadWith != null)
@@ -541,13 +552,31 @@ namespace LinqToDB.Linq.Builder
 					info = ConvertToSql(null, 0, ConvertFlags.All);
 
 					var table = new SqlTable(Builder.MappingSchema, tableType);
-					var q     =
-						from fld1 in table.Fields.Values.Select((f,i) => new { f, i })
-						join fld2 in info on fld1.f.Name equals ((SqlField)fld2.Sql).Name
-						orderby fld1.i
-						select GetIndex(fld2);
 
-					info = q.ToArray();
+					var matchedFields = new List<SqlInfo>();
+					foreach (var field in table.Fields.Values)
+					{
+						foreach (var sqlInfo in info)
+						{
+							var sqlField = (SqlField)sqlInfo.Sql;
+							var found = sqlField.Name == field.Name;
+
+							if (!found)
+							{
+								found = EntityDescriptor.Aliases != null &&
+								        EntityDescriptor.Aliases.TryGetValue(field.Name, out var alias) &&
+								        alias == sqlField.Name;
+							}
+
+							if (found)
+							{
+								matchedFields.Add(GetIndex(sqlInfo));
+								break;
+							}
+						}
+					}
+
+					info = matchedFields.ToArray();
 				}
 
 				var index = info.Select(idx => ConvertToParentIndex(idx.Index, null)).ToArray();
@@ -718,7 +747,12 @@ namespace LinqToDB.Linq.Builder
 									from f in table.Table.SqlTable.Fields.Values
 									where f.IsPrimaryKey
 									orderby f.PrimaryKeyOrder
-									select new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f };
+									select new SqlInfo(f.ColumnDescriptor.MemberInfo)
+									{
+										Sql = _associationsToSubQueries
+											? table.Table.SelectQuery.Select.Field(f).SelectQuery
+											: (ISqlExpression)f
+									};
 
 								var key = q.ToArray();
 
@@ -735,7 +769,7 @@ namespace LinqToDB.Linq.Builder
 							if (table.Field != null)
 								return new[]
 								{
-									new SqlInfo(table.Field.ColumnDescriptor.MemberInfo) { Sql = table.Field }
+									new SqlInfo(QueryHelper.GetUnderlyingField(table.Field)?.ColumnDescriptor.MemberInfo) { Sql = table.Field }
 								};
 
 							if (expression == null)
@@ -778,7 +812,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			public SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public virtual SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
 			{
 				switch (flags)
 				{
@@ -801,7 +835,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region IsExpression
 
-			public IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFor)
+			public virtual IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFor)
 			{
 				switch (requestFor)
 				{
@@ -907,7 +941,16 @@ namespace LinqToDB.Linq.Builder
 					Expression expr  = null;
 					var        param = Expression.Parameter(typeof(T), "c");
 
-					foreach (var cond in association.ParentAssociationJoin.Condition.Conditions.Take(association.RegularConditionCount))
+					var queryMethod = association.Association.GetQueryMethod(parent.Type, typeof(T));
+
+					if (queryMethod != null)
+					{
+						expr = queryMethod.GetBody(parent, Expression.Constant(association.Builder.DataContext));
+						return expr;
+					}
+
+					var conditions = association.ParentAssociationJoin?.Condition ?? association.SelectQuery.Where.SearchCondition;
+					foreach (var cond in conditions.Conditions.Take(association.RegularConditionCount))
 					{
 						SqlPredicate.ExprExpr p;
 
@@ -951,10 +994,13 @@ namespace LinqToDB.Linq.Builder
 					if (association.ExpressionPredicate != null)
 					{
 						var l  = association.ExpressionPredicate;
-						var ex = l.Body.Transform(e => e == l.Parameters[0] ? parent : e == l.Parameters[1] ? param : e);
+						var ex = l.GetBody(parent, param);
 
 						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
 					}
+
+					if (expr == null)
+						throw new LinqToDBException("Invalid association for LoadWith");
 
 					var predicate = Expression.Lambda<Func<T,bool>>(expr, param);
 
@@ -985,7 +1031,9 @@ namespace LinqToDB.Linq.Builder
 					if (buildInfo != null && buildInfo.IsSubQuery)
 					{
 						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
+
+						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess ||
+						    expression.NodeType == ExpressionType.Call)
 						{
 							var tableLevel  = GetAssociation(expression, level);
 							var association = (AssociatedTableContext)tableLevel.Table;
@@ -1004,7 +1052,7 @@ namespace LinqToDB.Linq.Builder
 
 								buildInfo.IsAssociationBuilt = true;
 
-								if (tableLevel.IsNew || buildInfo.CopyTable)
+								if (association.ParentAssociationJoin != null && (tableLevel.IsNew || buildInfo.CopyTable))
 									association.ParentAssociationJoin.IsWeak = true;
 
 								return Builder.BuildSequence(new BuildInfo(buildInfo, expr));
@@ -1027,7 +1075,7 @@ namespace LinqToDB.Linq.Builder
 				throw new InvalidOperationException();
 			}
 
-			public SqlStatement GetResultStatement()
+			public virtual SqlStatement GetResultStatement()
 			{
 				return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
 			}
@@ -1036,7 +1084,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region ConvertToParentIndex
 
-			public int ConvertToParentIndex(int index, IBuildContext context)
+			public virtual int ConvertToParentIndex(int index, IBuildContext context)
 			{
 				return Parent?.ConvertToParentIndex(index, this) ?? index;
 			}
@@ -1050,7 +1098,7 @@ namespace LinqToDB.Linq.Builder
 				if (alias == null)
 					return;
 
-				if (alias.Contains('<'))
+				if (!alias.Contains('<'))
 					if (SqlTable.Alias == null)
 						SqlTable.Alias = alias;
 			}
@@ -1099,7 +1147,7 @@ namespace LinqToDB.Linq.Builder
 				return LoadWith;
 			}
 
-			SqlField GetField(Expression expression, int level, bool throwException)
+			protected virtual ISqlExpression GetField(Expression expression, int level, bool throwException)
 			{
 				if (expression.NodeType == ExpressionType.MemberAccess)
 				{
@@ -1107,9 +1155,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (EntityDescriptor.Aliases != null)
 					{
-						if (EntityDescriptor.Aliases.ContainsKey(memberExpression.Member.Name))
+						if (EntityDescriptor.Aliases.TryGetValue(memberExpression.Member.Name, out var aliasName))
 						{
-							var alias = EntityDescriptor[memberExpression.Member.Name];
+							var alias = EntityDescriptor[aliasName];
 
 							if (alias == null)
 							{
@@ -1225,13 +1273,10 @@ namespace LinqToDB.Linq.Builder
 									{
 										if (!SqlTable.Fields.TryGetValue(fieldName, out var newField))
 										{
-											newField = new SqlField
-											{
-												Name             = fieldName,
-												PhysicalName     = fieldName,
-												ColumnDescriptor = new ColumnDescriptor(Builder.MappingSchema, new ColumnAttribute(fieldName),
-													new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member))
-											};
+											newField = new SqlField(new ColumnDescriptor(
+												Builder.MappingSchema,
+												new ColumnAttribute(fieldName),
+												new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member)));
 
 											SqlTable.Add(newField);
 										}
@@ -1239,7 +1284,6 @@ namespace LinqToDB.Linq.Builder
 										return newField;
 									}
 								}
-
 							}
 
 							if (throwException &&
@@ -1262,10 +1306,10 @@ namespace LinqToDB.Linq.Builder
 
 			class TableLevel
 			{
-				public TableContext Table;
-				public SqlField     Field;
-				public int          Level;
-				public bool         IsNew;
+				public TableContext   Table;
+				public ISqlExpression Field;
+				public int            Level;
+				public bool           IsNew;
 			}
 
 			TableLevel FindTable(Expression expression, int level, bool throwException, bool throwExceptionForNull)
@@ -1331,8 +1375,13 @@ namespace LinqToDB.Linq.Builder
 								aa.GetOtherKeys(),
 								aa.ExpressionPredicate,
 								aa.Predicate,
+								aa.QueryExpressionMethod,
+								aa.QueryExpression,
 								aa.Storage,
-								aa.CanBeNull))
+								aa.CanBeNull,
+								aa.AliasName),
+							ForceLeftJoinAssociations,
+							_associationsToSubQueries)
 							{ Parent = Parent };
 
 					isNew = true;
@@ -1343,18 +1392,21 @@ namespace LinqToDB.Linq.Builder
 
 					var memberExpression = (MemberExpression)levelExpression;
 
-					if (!_associations.TryGetValue(memberExpression.Member, out tableAssociation))
+					// subquery association shouldn't be cached, because different assciation navigation pathes
+					// should produce different subqueries
+					if (_associationsToSubQueries || !_associations.TryGetValue(memberExpression.Member, out tableAssociation))
 					{
 						var q =
 							from a in objectMapper.Associations.Concat(inheritance.SelectMany(om => om.Associations))
 							where a.MemberInfo.EqualsTo(memberExpression.Member)
-							select new AssociatedTableContext(Builder, this, a) { Parent = Parent };
+							select new AssociatedTableContext(Builder, this, a, ForceLeftJoinAssociations, _associationsToSubQueries) { Parent = Parent };
 
 						tableAssociation = q.FirstOrDefault();
 
 						isNew = true;
 
-						_associations.Add(memberExpression.Member, tableAssociation);
+						if (!_associationsToSubQueries)
+							_associations.Add(memberExpression.Member, tableAssociation);
 					}
 				}
 
@@ -1369,6 +1421,14 @@ namespace LinqToDB.Linq.Builder
 						return al;
 
 					var field = tableAssociation.GetField(expression, level + 1, false);
+
+					if (_associationsToSubQueries)
+					{
+						tableAssociation.SelectQuery.Select.Columns.Clear();
+						if (field != null)
+							tableAssociation.SelectQuery.Select.Add(field);
+						field = tableAssociation.SelectQuery;
+					}
 
 					return new TableLevel { Table = tableAssociation, Field = field, Level = field == null ? level : level + 1, IsNew = isNew };
 				}
