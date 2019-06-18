@@ -13,7 +13,10 @@ namespace LinqToDB.Linq
 	{
 		public static class InsertWithIdentity<T>
 		{
-			static Query<object> CreateQuery(IDataContext dataContext, EntityDescriptor descriptor, T obj, string tableName, string serverName, string databaseName, string schemaName, Type type)
+			static Query<object> CreateQuery(
+				IDataContext dataContext, EntityDescriptor descriptor, T obj,
+				string tableName, string serverName, string databaseName, string schemaName,
+				Type type)
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
@@ -57,7 +60,9 @@ namespace LinqToDB.Linq
 				return ei;
 			}
 
-			public static object Query(IDataContext dataContext, T obj, string tableName, string serverName, string databaseName, string schemaName)
+			public static object Query(
+				IDataContext dataContext, T obj,
+				string tableName, string serverName, string databaseName, string schemaName)
 			{
 				if (Equals(default(T), obj))
 					return 0;
@@ -77,8 +82,10 @@ namespace LinqToDB.Linq
 				return ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
 
-			public static async Task<object> QueryAsync(IDataContext dataContext, T obj, string tableName,
-				string serverName, string databaseName, string schemaName, CancellationToken token = default)
+			public static async Task<object> QueryAsync(
+				IDataContext dataContext, T obj,
+				string tableName, string serverName, string databaseName, string schemaName,
+				CancellationToken token)
 			{
 				if (Equals(default(T), obj))
 					return 0;

@@ -26,6 +26,7 @@ namespace LinqToDB.Data
 			KeepNulls              = options.KeepNulls;
 			FireTriggers           = options.FireTriggers;
 			UseInternalTransaction = options.UseInternalTransaction;
+			ServerName             = options.ServerName;
 			DatabaseName           = options.DatabaseName;
 			SchemaName             = options.SchemaName;
 			TableName              = options.TableName;

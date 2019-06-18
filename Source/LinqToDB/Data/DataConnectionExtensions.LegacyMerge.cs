@@ -41,6 +41,7 @@ namespace LinqToDB.Data
 		/// <param name="tableName">Optional target table name.</param>
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
 			this DataConnection      dataConnection,
@@ -48,11 +49,12 @@ namespace LinqToDB.Data
 			Expression<Func<T,bool>> predicate,
 			string                   tableName    = null,
 			string                   databaseName = null,
-			string                   schemaName   = null
+			string                   schemaName   = null,
+			string                   serverName   = null
 		)
 			where T : class
 		{
-			return Merge(dataConnection.GetTable<T>(), source, predicate, tableName, databaseName, schemaName);
+			return Merge(dataConnection.GetTable<T>(), source, predicate, tableName, databaseName, schemaName, serverName);
 		}
 
 		/// <summary>
@@ -69,6 +71,7 @@ namespace LinqToDB.Data
 		/// <param name="tableName">Optional target table name.</param>
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
 			this DataConnection      dataConnection,
@@ -76,11 +79,12 @@ namespace LinqToDB.Data
 			IEnumerable<T>           source,
 			string                   tableName    = null,
 			string                   databaseName = null,
-			string                   schemaName   = null
+			string                   schemaName   = null,
+			string                   serverName   = null
 		)
 			where T : class
 		{
-			return Merge(dataConnection.GetTable<T>(), predicate, source, tableName, databaseName, schemaName);
+			return Merge(dataConnection.GetTable<T>(), predicate, source, tableName, databaseName, schemaName, serverName);
 		}
 
 		/// <summary>
@@ -97,6 +101,7 @@ namespace LinqToDB.Data
 		/// <param name="tableName">Optional target table name.</param>
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
 			this DataConnection dataConnection,
@@ -104,11 +109,12 @@ namespace LinqToDB.Data
 			IEnumerable<T>      source,
 			string              tableName    = null,
 			string              databaseName = null,
-			string              schemaName   = null
+			string              schemaName   = null,
+			string              serverName   = null
 		)
 			where T : class
 		{
-			return Merge(dataConnection.GetTable<T>(), delete, source, tableName, databaseName, schemaName);
+			return Merge(dataConnection.GetTable<T>(), delete, source, tableName, databaseName, schemaName, serverName);
 		}
 
 		/// <summary>
@@ -122,17 +128,19 @@ namespace LinqToDB.Data
 		/// <param name="tableName">Optional target table name.</param>
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
 			this DataConnection dataConnection,
 			IEnumerable<T>      source,
 			string              tableName    = null,
 			string              databaseName = null,
-			string              schemaName   = null
+			string              schemaName   = null,
+			string              serverName   = null
 		)
 			where T : class
 		{
-			return Merge(dataConnection.GetTable<T>(), source, tableName, databaseName, schemaName);
+			return Merge(dataConnection.GetTable<T>(), source, tableName, databaseName, schemaName, serverName);
 		}
 
 		/// <summary>
@@ -149,6 +157,7 @@ namespace LinqToDB.Data
 		/// <param name="tableName">Optional target table name.</param>
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
 			this ITable<T>           table,
@@ -156,7 +165,8 @@ namespace LinqToDB.Data
 			Expression<Func<T,bool>> predicate,
 			string                   tableName    = null,
 			string                   databaseName = null,
-			string                   schemaName   = null
+			string                   schemaName   = null,
+			string                   serverName   = null
 		)
 			where T : class
 		{
@@ -168,6 +178,7 @@ namespace LinqToDB.Data
 			if (tableName    != null) target = target.TableName   (tableName);
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
+			if (serverName   != null) target = target.ServerName  (serverName);
 
 			var query = target
 				.Merge()
@@ -197,6 +208,7 @@ namespace LinqToDB.Data
 		/// <param name="tableName">Optional target table name.</param>
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
 			this ITable<T>           table,
@@ -204,7 +216,8 @@ namespace LinqToDB.Data
 			IEnumerable<T>           source,
 			string                   tableName    = null,
 			string                   databaseName = null,
-			string                   schemaName   = null
+			string                   schemaName   = null,
+			string                   serverName   = null
 		)
 			where T : class
 		{
@@ -219,6 +232,7 @@ namespace LinqToDB.Data
 			if (tableName    != null) target = target.TableName   (tableName);
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
+			if (serverName   != null) target = target.ServerName  (serverName);
 
 			var query = target
 				.Merge()
@@ -248,6 +262,7 @@ namespace LinqToDB.Data
 		/// <param name="tableName">Optional target table name.</param>
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
 			this ITable<T> table,
@@ -255,7 +270,8 @@ namespace LinqToDB.Data
 			IEnumerable<T> source,
 			string         tableName    = null,
 			string         databaseName = null,
-			string         schemaName   = null
+			string         schemaName   = null,
+			string         serverName   = null
 		)
 			where T : class
 		{
@@ -270,6 +286,7 @@ namespace LinqToDB.Data
 			if (tableName    != null) target = target.TableName   (tableName);
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
+			if (serverName   != null) target = target.ServerName  (serverName);
 
 			var query = target
 				.Merge()
@@ -295,13 +312,15 @@ namespace LinqToDB.Data
 		/// <param name="tableName">Optional target table name.</param>
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
 			this ITable<T> table,
 			IEnumerable<T> source,
 			string         tableName    = null,
 			string         databaseName = null,
-			string         schemaName   = null
+			string         schemaName   = null,
+			string         serverName   = null
 		)
 			where T : class
 		{
@@ -316,6 +335,7 @@ namespace LinqToDB.Data
 			if (tableName    != null) target = target.TableName   (tableName);
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
+			if (serverName   != null) target = target.ServerName  (serverName);
 
 			var query = target
 				.Merge()
@@ -345,6 +365,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this DataConnection      dataConnection,
@@ -353,10 +374,11 @@ namespace LinqToDB.Data
 			string                   tableName         = null,
 			string                   databaseName      = null,
 			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default)
+			CancellationToken        cancellationToken = default,
+			string                   serverName        = null)
 			where T : class
 		{
-			return MergeAsync(dataConnection.GetTable<T>(), source, predicate, tableName, databaseName, schemaName, cancellationToken);
+			return MergeAsync(dataConnection.GetTable<T>(), source, predicate, tableName, databaseName, schemaName, cancellationToken, serverName);
 		}
 
 		/// <summary>
@@ -374,6 +396,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this DataConnection      dataConnection,
@@ -382,10 +405,11 @@ namespace LinqToDB.Data
 			string                   tableName         = null,
 			string                   databaseName      = null,
 			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default)
+			CancellationToken        cancellationToken = default,
+			string                   serverName        = null)
 			where T : class
 		{
-			return MergeAsync(dataConnection.GetTable<T>(), predicate, source, tableName, databaseName, schemaName, cancellationToken);
+			return MergeAsync(dataConnection.GetTable<T>(), predicate, source, tableName, databaseName, schemaName, cancellationToken, serverName);
 		}
 
 		/// <summary>
@@ -403,6 +427,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this DataConnection dataConnection,
@@ -411,11 +436,12 @@ namespace LinqToDB.Data
 			string              tableName         = null,
 			string              databaseName      = null,
 			string              schemaName        = null,
-			CancellationToken   cancellationToken = default
+			CancellationToken   cancellationToken = default,
+			string              serverName        = null
 		)
 			where T : class
 		{
-			return MergeAsync(dataConnection.GetTable<T>(), delete, source, tableName, databaseName, schemaName, cancellationToken);
+			return MergeAsync(dataConnection.GetTable<T>(), delete, source, tableName, databaseName, schemaName, cancellationToken, serverName);
 		}
 
 		/// <summary>
@@ -430,6 +456,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this DataConnection dataConnection,
@@ -437,11 +464,12 @@ namespace LinqToDB.Data
 			string              tableName         = null,
 			string              databaseName      = null,
 			string              schemaName        = null,
-			CancellationToken   cancellationToken = default
+			CancellationToken   cancellationToken = default,
+			string              serverName        = null
 		)
 			where T : class
 		{
-			return MergeAsync(dataConnection.GetTable<T>(), source, tableName, databaseName, schemaName, cancellationToken);
+			return MergeAsync(dataConnection.GetTable<T>(), source, tableName, databaseName, schemaName, cancellationToken, serverName);
 		}
 
 		/// <summary>
@@ -459,6 +487,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>           table,
@@ -467,7 +496,8 @@ namespace LinqToDB.Data
 			string                   tableName         = null,
 			string                   databaseName      = null,
 			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default
+			CancellationToken        cancellationToken = default,
+			string                   serverName        = null
 		)
 			where T : class
 		{
@@ -479,6 +509,7 @@ namespace LinqToDB.Data
 			if (tableName    != null) target = target.TableName   (tableName);
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
+			if (serverName   != null) target = target.ServerName  (serverName);
 
 			var query = target
 				.Merge()
@@ -509,6 +540,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>           table,
@@ -517,7 +549,8 @@ namespace LinqToDB.Data
 			string                   tableName         = null,
 			string                   databaseName      = null,
 			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default
+			CancellationToken        cancellationToken = default,
+			string                   serverName        = null
 		)
 			where T : class
 		{
@@ -532,6 +565,7 @@ namespace LinqToDB.Data
 			if (tableName    != null) target = target.TableName   (tableName);
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
+			if (serverName   != null) target = target.ServerName  (serverName);
 
 			var query = target
 				.Merge()
@@ -562,6 +596,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>    table,
@@ -570,7 +605,8 @@ namespace LinqToDB.Data
 			string            tableName         = null,
 			string            databaseName      = null,
 			string            schemaName        = null,
-			CancellationToken cancellationToken = default
+			CancellationToken cancellationToken = default,
+			string            serverName        = null
 		)
 			where T : class
 		{
@@ -585,6 +621,7 @@ namespace LinqToDB.Data
 			if (tableName    != null) target = target.TableName   (tableName);
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
+			if (serverName   != null) target = target.ServerName  (serverName);
 
 			var query = target
 				.Merge()
@@ -611,6 +648,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>    table,
@@ -618,7 +656,8 @@ namespace LinqToDB.Data
 			string            tableName         = null,
 			string            databaseName      = null,
 			string            schemaName        = null,
-			CancellationToken cancellationToken = default)
+			CancellationToken cancellationToken = default,
+			string            serverName        = null)
 			where T : class
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
@@ -632,6 +671,7 @@ namespace LinqToDB.Data
 			if (tableName    != null) target = target.TableName   (tableName);
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
+			if (serverName   != null) target = target.ServerName  (serverName);
 
 			var query = target
 				.Merge()

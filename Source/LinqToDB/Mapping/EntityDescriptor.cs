@@ -153,10 +153,10 @@ namespace LinqToDB.Mapping
 
 			if (ta != null)
 			{
-				TableName = ta.Name;
-				SchemaName = ta.Schema;
-				DatabaseName = ta.Database;
-				ServerName = ta.Server;
+				TableName                 = ta.Name;
+				SchemaName                = ta.Schema;
+				DatabaseName              = ta.Database;
+				ServerName                = ta.Server;
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
 			}
 

@@ -85,15 +85,8 @@ namespace LinqToDB
 			if (table == null) throw new ArgumentNullException(nameof(table));
 			if (name  == null) throw new ArgumentNullException(nameof(name));
 
-			if (table is Table<T> tbl)
-				tbl.ServerName = name;
-			else
-				table.Expression = Expression.Call(
-					null,
-					ServerNameMethodInfo.MakeGenericMethod(typeof(T)),
-					new[] { table.Expression, Expression.Constant(name) });
-
-			return table;
+			var result = ((ITableMutable<T>)table).ChangeServerName(name);
+			return result;
 		}
 
 		/// <summary>

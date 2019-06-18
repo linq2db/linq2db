@@ -179,6 +179,7 @@ namespace LinqToDB.DataProvider.SapHana
 						return "\"" + value + "\"";
 					}
 
+				case ConvertType.NameToServer     :
 				case ConvertType.NameToDatabase   :
 				case ConvertType.NameToSchema     :
 				case ConvertType.NameToQueryTable :

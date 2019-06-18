@@ -13,7 +13,10 @@ namespace LinqToDB.Linq
 	{
 		public static class Delete<T>
 		{
-			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string serverName, string databaseName, string schemaName, Type type)
+			static Query<int> CreateQuery(
+				IDataContext dataContext,
+				string tableName, string serverName, string databaseName, string schemaName,
+				Type type)
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
@@ -53,7 +56,9 @@ namespace LinqToDB.Linq
 				return ei;
 			}
 
-			public static int Query(IDataContext dataContext, T obj, string tableName, string serverName, string databaseName = null, string schemaName = null)
+			public static int Query(
+				IDataContext dataContext, T obj,
+				string tableName, string serverName, string databaseName, string schemaName)
 			{
 				if (Equals(default(T), obj))
 					return 0;
@@ -72,8 +77,10 @@ namespace LinqToDB.Linq
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
 
-			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, string tableName = null,
-				string serverName, string databaseName = null, string schemaName = null, CancellationToken token = default)
+			public static async Task<int> QueryAsync(
+				IDataContext dataContext, T obj,
+				string tableName, string serverName, string databaseName, string schemaName,
+				CancellationToken token)
 			{
 				if (Equals(default(T), obj))
 					return 0;

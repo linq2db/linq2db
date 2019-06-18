@@ -133,6 +133,8 @@ GenerateDatabaseName          = false;
 // Enables generation of TableAttribute.Database property with provided name value.
 // (string) If set, overrides GenerateDatabaseName behavior
 DatabaseName                  = null;
+// Enables generation of TableAttribute.Server property with provided name value.
+ServerName                    = null;
 // Enables generation of TableAttribute.Schema property for default schema
 IncludeDefaultSchema          = true;
 // Enables generation of mappings for views

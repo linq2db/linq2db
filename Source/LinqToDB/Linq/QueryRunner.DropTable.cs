@@ -11,7 +11,10 @@ namespace LinqToDB.Linq
 	{
 		public static class DropTable<T>
 		{
-			public static void Query(IDataContext dataContext, string tableName, string serverName, string databaseName, string schemaName, bool ifExists)
+			public static void Query(
+				IDataContext dataContext,
+				string tableName, string serverName, string databaseName, string schemaName,
+				bool ifExists)
 			{
 				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
 				var dropTable = new SqlDropTableStatement(ifExists);

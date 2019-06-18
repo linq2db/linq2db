@@ -285,7 +285,7 @@ namespace LinqToDB
 		/// <param name="obj">Object with data to insert.</param>
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>				
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static int InsertWithInt32Identity<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, string serverName = null)
@@ -303,7 +303,7 @@ namespace LinqToDB
 		/// <param name="obj">Object with data to insert.</param>
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>				
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static long InsertWithInt64Identity<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, string serverName = null)
@@ -321,7 +321,7 @@ namespace LinqToDB
 		/// <param name="obj">Object with data to insert.</param>
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>				
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static decimal InsertWithDecimalIdentity<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, string serverName = null)
@@ -339,7 +339,7 @@ namespace LinqToDB
 		/// <param name="obj">Object with data to insert.</param>
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>					
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
@@ -359,7 +359,7 @@ namespace LinqToDB
 		/// <param name="obj">Object with data to insert.</param>
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>				
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
@@ -381,7 +381,7 @@ namespace LinqToDB
 		/// <param name="obj">Object with data to insert.</param>
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>						
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
@@ -403,7 +403,7 @@ namespace LinqToDB
 		/// <param name="obj">Object with data to insert.</param>
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>					
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
@@ -429,7 +429,7 @@ namespace LinqToDB
 		/// <param name="obj">Object with data to update.</param>
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>						
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int Update<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, string serverName = null)
@@ -471,7 +471,7 @@ namespace LinqToDB
 		/// <param name="obj">Object with data for delete operation.</param>
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>				
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int Delete<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, string serverName = null)
@@ -489,7 +489,7 @@ namespace LinqToDB
 		/// <param name="obj">Object with data for delete operation.</param>
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>				
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>

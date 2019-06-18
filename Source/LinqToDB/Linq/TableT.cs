@@ -113,11 +113,23 @@ namespace LinqToDB.Linq
 				.ConvertTableName(new StringBuilder(), ServerName, DatabaseName, SchemaName, TableName)
 				.ToString();
 
+		public ITable<T> ChangeServerName(string serverName)
+		{
+			var table          = new Table<T>(DataContext);
+			table.TableName    = TableName;
+			table.SchemaName   = SchemaName;
+			table.DatabaseName = DatabaseName;
+			table.Expression   = Expression;
+			table.ServerName   = serverName;
+			return table;
+		}
+
 		public ITable<T> ChangeDatabaseName(string databaseName)
 		{
 			var table          = new Table<T>(DataContext);
 			table.TableName    = TableName;
 			table.SchemaName   = SchemaName;
+			table.ServerName   = ServerName;
 			table.Expression   = Expression;
 			table.DatabaseName = databaseName;
 			return table;
@@ -127,6 +139,7 @@ namespace LinqToDB.Linq
 		{
 			var table          = new Table<T>(DataContext);
 			table.TableName    = TableName;
+			table.ServerName   = ServerName;
 			table.DatabaseName = DatabaseName;
 			table.Expression   = Expression;
 			table.SchemaName   = schemaName;
@@ -137,6 +150,7 @@ namespace LinqToDB.Linq
 		{
 			var table          = new Table<T>(DataContext);
 			table.SchemaName   = SchemaName;
+			table.ServerName   = ServerName;
 			table.DatabaseName = DatabaseName;
 			table.Expression   = Expression;
 			table.TableName    = tableName;

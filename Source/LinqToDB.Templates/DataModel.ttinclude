@@ -20,6 +20,7 @@ string   NamespaceName
 	set { Model.Namespace.Name = value; }
 }
 
+string   ServerName                    = null;
 string   DatabaseName                  = null;
 string   DataContextName               = null;
 string   BaseDataContextClass          = null;

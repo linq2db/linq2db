@@ -32,12 +32,6 @@ namespace LinqToDB.SqlProvider
 
 		/// <summary>
 		/// If <see cref="MergeSupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
-		/// FROM clause, this property could contain name of database for table with single record.
-		/// </summary>
-		protected virtual string FakeTableDatabase => null;
-
-		/// <summary>
-		/// If <see cref="MergeSupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property could contain name of schema for table with single record.
 		/// </summary>
 		protected virtual string FakeTableSchema => null;
@@ -183,7 +177,7 @@ namespace LinqToDB.SqlProvider
 		{
 			StringBuilder.Append(" ");
 
-			ConvertTableName(StringBuilder, null, null, mergeSource.Name);
+			ConvertTableName(StringBuilder, null, null, null, mergeSource.Name);
 
 			if (MergeSupportsColumnAliasesInSource)
 			{
@@ -319,7 +313,7 @@ namespace LinqToDB.SqlProvider
 			if (FakeTable == null)
 				return false;
 
-			BuildTableName(StringBuilder, FakeTableDatabase, FakeTableSchema, FakeTable);
+			BuildTableName(StringBuilder, null, null, FakeTableSchema, FakeTable);
 			return true;
 		}
 

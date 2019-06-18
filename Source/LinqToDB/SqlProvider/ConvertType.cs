@@ -75,7 +75,7 @@ namespace LinqToDB.SqlProvider
 		NameToDatabase,
 
 		/// <summary>
-		/// Provided name should be converted to query database.
+		/// Provided name should be converted to query schema/owner.
 		/// For example:
 		///     dbo -> [dbo]
 		/// for the following query:

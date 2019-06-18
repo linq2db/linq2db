@@ -49,8 +49,9 @@ namespace LinqToDB.Linq
 			}
 
 			public static async Task<ITable<T>> QueryAsync(IDataContext dataContext,
-				string tableName, string serverName, string databaseName, string schemaName, string statementHeader,
-				string statementFooter, DefaultNullable defaultNullable,
+				string tableName, string serverName, string databaseName, string schemaName,
+				string statementHeader, string statementFooter,
+				DefaultNullable defaultNullable,
 				CancellationToken token)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
