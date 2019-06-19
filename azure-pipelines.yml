@@ -107,7 +107,7 @@ stages:
           >&2 echo "Postgres is unavailable - sleeping"
           sleep 5
        done
-       displayName: Run Postgres container
+      displayName: Run Postgres container
 
     - script: |
        docker run --name mysql57 -e MYSQL_ROOT_PASSWORD=Password12! -d mysql:5.7
