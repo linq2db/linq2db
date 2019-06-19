@@ -108,6 +108,7 @@ stages:
           sleep 5
         done
         docker exec postgres10 psql -U postgres -c "create database TestData"
+        docker exec postgres10 psql -U postgres -c '\l'
       displayName: Run Postgres container
 
 #    - script: |
