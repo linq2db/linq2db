@@ -221,15 +221,15 @@ namespace Tests.Playground
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
 			{
-				var masterQuery = from m in master
-					where m.Id1 > 5
+				var masterQuery = from master_1 in master
+					where master_1.Id1 > 5
 					select new
 					{
-						m.Id1,
-						Details = detail.Where(d => d.MasterId == m.Id1).Select(d => new
+						master_1.Id1,
+						Details = detail.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
 						{
-							Detail = d.DetailId,
-							Masters = master.Where(mm => mm.Id1 == d.MasterId).ToArray()
+							Detail = masterP_1.DetailId,
+							Masters = master.Where(d_b => d_b.Id1 == masterP_1.MasterId).ToArray()
 						}).ToArray()
 					};
 
