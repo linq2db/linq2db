@@ -365,36 +365,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this DataConnection       dataConnection,
-			IQueryable<T>             source,
-			Expression<Func<T, bool>> predicate,
-			string                    tableName    = null,
-			string                    databaseName = null,
-			string                    schemaName   = null,
-			CancellationToken cancellationToken    = default)
-			where T : class
-		{
-			return MergeAsync(dataConnection.GetTable<T>(), source, predicate, tableName, databaseName, schemaName, null, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="source">Source data to merge into target table. All source data will be loaded from server for command generation.</param>
-		/// <param name="predicate">Filter, applied both to source and delete operation. Required.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this DataConnection      dataConnection,
@@ -403,11 +374,11 @@ namespace LinqToDB.Data
 			string                   tableName         = null,
 			string                   databaseName      = null,
 			string                   schemaName        = null,
-			string                   serverName        = null,
-			CancellationToken        cancellationToken = default)
+			CancellationToken        cancellationToken = default,
+			string                   serverName        = null)
 			where T : class
 		{
-			return MergeAsync(dataConnection.GetTable<T>(), source, predicate, tableName, databaseName, schemaName, serverName, cancellationToken);
+			return MergeAsync(dataConnection.GetTable<T>(), source, predicate, tableName, databaseName, schemaName, cancellationToken, serverName);
 		}
 
 		/// <summary>
@@ -425,36 +396,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this DataConnection      dataConnection,
-			Expression<Func<T,bool>> predicate,
-			IEnumerable<T>           source,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default)
-			where T : class
-		{
-			return MergeAsync(dataConnection.GetTable<T>(), predicate, source, tableName, databaseName, schemaName, null, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="predicate">Filter, applied to delete operation. Optional.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this DataConnection      dataConnection,
@@ -463,11 +405,11 @@ namespace LinqToDB.Data
 			string                   tableName         = null,
 			string                   databaseName      = null,
 			string                   schemaName        = null,
-			string                   serverName        = null,
-			CancellationToken        cancellationToken = default)
+			CancellationToken        cancellationToken = default,
+			string                   serverName        = null)
 			where T : class
 		{
-			return MergeAsync(dataConnection.GetTable<T>(), predicate, source, tableName, databaseName, schemaName, serverName, cancellationToken);
+			return MergeAsync(dataConnection.GetTable<T>(), predicate, source, tableName, databaseName, schemaName, cancellationToken, serverName);
 		}
 
 		/// <summary>
@@ -485,36 +427,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this DataConnection dataConnection,
-			bool                delete,
-			IEnumerable<T>      source,
-			string              tableName         = null,
-			string              databaseName      = null,
-			string              schemaName        = null,
-			CancellationToken   cancellationToken = default)
-			where T : class
-		{
-			return MergeAsync(dataConnection.GetTable<T>(), delete, source, tableName, databaseName, schemaName, null, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source (optional).
-		/// If delete operation enabled by <paramref name="delete"/> parameter - method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="delete">If true, merge command will include delete by source operation without condition.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this DataConnection dataConnection,
@@ -523,11 +436,12 @@ namespace LinqToDB.Data
 			string              tableName         = null,
 			string              databaseName      = null,
 			string              schemaName        = null,
-			string              serverName        = null,
-			CancellationToken   cancellationToken = default)
+			CancellationToken   cancellationToken = default,
+			string              serverName        = null
+		)
 			where T : class
 		{
-			return MergeAsync(dataConnection.GetTable<T>(), delete, source, tableName, databaseName, schemaName, serverName, cancellationToken);
+			return MergeAsync(dataConnection.GetTable<T>(), delete, source, tableName, databaseName, schemaName, cancellationToken, serverName);
 		}
 
 		/// <summary>
@@ -542,32 +456,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this DataConnection dataConnection,
-			IEnumerable<T>      source,
-			string              tableName         = null,
-			string              databaseName      = null,
-			string              schemaName        = null,
-			CancellationToken   cancellationToken = default)
-			where T : class
-		{
-			return MergeAsync(dataConnection.GetTable<T>(), source, tableName, databaseName, schemaName, null, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="dataConnection">Data connection instance.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this DataConnection dataConnection,
@@ -575,11 +464,12 @@ namespace LinqToDB.Data
 			string              tableName         = null,
 			string              databaseName      = null,
 			string              schemaName        = null,
-			string              serverName        = null,
-			CancellationToken cancellationToken = default)
+			CancellationToken   cancellationToken = default,
+			string              serverName        = null
+		)
 			where T : class
 		{
-			return MergeAsync(dataConnection.GetTable<T>(), source, tableName, databaseName, schemaName, serverName, cancellationToken);
+			return MergeAsync(dataConnection.GetTable<T>(), source, tableName, databaseName, schemaName, cancellationToken, serverName);
 		}
 
 		/// <summary>
@@ -597,36 +487,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this ITable<T>            table,
-			IQueryable<T>             source,
-			Expression<Func<T, bool>> predicate,
-			string                    tableName         = null,
-			string                    databaseName      = null,
-			string                    schemaName        = null,
-			CancellationToken         cancellationToken = default)
-			where T : class
-		{
-			return MergeAsync(table, source, predicate, tableName, databaseName, schemaName, null, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="source">Source data to merge into target table. All source data will be loaded from server for command generation.</param>
-		/// <param name="predicate">Filter, applied both to source and delete operation. Required.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>           table,
@@ -635,8 +496,9 @@ namespace LinqToDB.Data
 			string                   tableName         = null,
 			string                   databaseName      = null,
 			string                   schemaName        = null,
-			string                   serverName        = null,
-			CancellationToken        cancellationToken = default)
+			CancellationToken        cancellationToken = default,
+			string                   serverName        = null
+		)
 			where T : class
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
@@ -678,36 +540,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this ITable<T>           table,
-			Expression<Func<T,bool>> predicate,
-			IEnumerable<T>           source,
-			string                   tableName         = null,
-			string                   databaseName      = null,
-			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default)
-			where T : class
-		{
-			return MergeAsync(table, predicate, source, tableName, databaseName, schemaName, null, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source.
-		/// Method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="predicate">Filter, applied to delete operation. Optional.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>           table,
@@ -716,8 +549,9 @@ namespace LinqToDB.Data
 			string                   tableName         = null,
 			string                   databaseName      = null,
 			string                   schemaName        = null,
-			string                   serverName        = null,
-			CancellationToken        cancellationToken = default)
+			CancellationToken        cancellationToken = default,
+			string                   serverName        = null
+		)
 			where T : class
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
@@ -762,36 +596,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this ITable<T>    table,
-			bool              delete,
-			IEnumerable<T>    source,
-			string            tableName         = null,
-			string            databaseName      = null,
-			string            schemaName        = null,
-			CancellationToken cancellationToken = default)
-			where T : class
-		{
-			return MergeAsync(table, delete, source, tableName, databaseName, schemaName, null, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert
-		/// - Delete By Source (optional).
-		/// If delete operation enabled by <paramref name="delete"/> parameter - method could be used only with SQL Server.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="delete">If true, merge command will include delete by source operation without condition.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>    table,
@@ -800,8 +605,9 @@ namespace LinqToDB.Data
 			string            tableName         = null,
 			string            databaseName      = null,
 			string            schemaName        = null,
-			string            serverName        = null,
-			CancellationToken cancellationToken = default)
+			CancellationToken cancellationToken = default,
+			string            serverName        = null
+		)
 			where T : class
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
@@ -842,32 +648,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(
-			this ITable<T>    table,
-			IEnumerable<T>    source,
-			string            tableName         = null,
-			string            databaseName      = null,
-			string            schemaName        = null,
-			CancellationToken cancellationToken = default)
-			where T : class
-		{
-			return MergeAsync(table, source, tableName, databaseName, schemaName, null, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes following merge operations asynchronously in specified order:
-		/// - Update
-		/// - Insert.
-		/// </summary>
-		/// <typeparam name="T">Target table mapping class.</typeparam>
-		/// <param name="table">Target table.</param>
-		/// <param name="source">Source data to merge into target table.</param>
-		/// <param name="tableName">Optional target table name.</param>
-		/// <param name="databaseName">Optional target table's database name.</param>
-		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>    table,
@@ -875,8 +656,8 @@ namespace LinqToDB.Data
 			string            tableName         = null,
 			string            databaseName      = null,
 			string            schemaName        = null,
-			string            serverName        = null,
-			CancellationToken cancellationToken = default)
+			CancellationToken cancellationToken = default,
+			string            serverName        = null)
 			where T : class
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
