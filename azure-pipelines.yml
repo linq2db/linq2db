@@ -102,7 +102,7 @@ stages:
         workingDirectory: '$(core2tests)'
 
     - script: |
-        docker run -d --name postgres10 -e POSTGRES_PASSWORD=Password12! -p 127.0.0.1:5432:5432 -v /var/run/postgresql:/var/run/postgresql postgres:10
+        docker run -d --name postgres10 --net host -e POSTGRES_PASSWORD=Password12! -p 127.0.0.1:5432:5432 -v /var/run/postgresql:/var/run/postgresql postgres:10
         until docker exec postgres10 psql -U postgres -c '\l'; do
           >&2 echo "Postgres is unavailable - sleeping"
           sleep 5
