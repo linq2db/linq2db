@@ -11,7 +11,7 @@
 			//"Northwind.SQLite.MS",
 			//"MySqlConnector",
 			//"MySql57",
-			//"PostgreSQL",
+			"PostgreSQL",
 			//"Northwind",
 			//"SqlServer",
 			//"SqlServer.2014",
