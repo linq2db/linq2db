@@ -107,17 +107,18 @@ stages:
           >&2 echo "Postgres is unavailable - sleeping"
           sleep 5
         done
-        docker exec postgres10 psql -U postgres -c "create database testdata"
+        docker exec postgres10 psql -U postgres -c 'create database testdata'
         docker exec postgres10 psql -U postgres -c '\l'
       displayName: Run Postgres container
 
-#    - script: |
-#       docker run --name mysql57 -e MYSQL_ROOT_PASSWORD=Password12! -d mysql:5.7
-#       until docker exec mysql57 mysql -e 'CREATE DATABASE TestDatacore2 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci'; do
-#          >&2 echo "MySql is unavailable - sleeping"
-#          sleep 5
-#       done
-#      displayName: Run MySQL container
+    - script: |
+       docker run --name mysql57 -e MYSQL_ROOT_PASSWORD=Password12! -d mysql:5.7
+       until docker exec mysql57 mysql -e 'SELECT 1'; do
+          >&2 echo "MySql is unavailable - sleeping"
+          sleep 5
+       done
+       docker exec mysql57 mysql -e 'CREATE DATABASE testdata DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci'
+      displayName: Run MySQL container
        
 
     - script: dotnet vstest ./$(core2tests)/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
