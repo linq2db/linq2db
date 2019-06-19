@@ -107,7 +107,7 @@ stages:
           >&2 echo "Postgres is unavailable - sleeping"
           sleep 5
        done
-       docker exec postgres10 psql -U postgres -c "create database TestDatacore2"
+       docker exec postgres10 psql -U postgres -c "create database TestData"
       displayName: Run Postgres container
 
 #    - script: |
