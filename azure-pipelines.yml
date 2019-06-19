@@ -107,7 +107,7 @@ stages:
           >&2 echo "Postgres is unavailable - sleeping"
           sleep 1
        done
-       docker exec postgres10 psql -U postgres -c "create database testdatabase"
+       docker exec postgres10 psql -U postgres -c "create database TestDatacore2"
 
     - script: dotnet vstest ./$(core2tests)/linq2db.Tests.Core2.dll /TestCaseFilter:"TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue" /Framework:.NETCoreApp,Version=v2.0
 
