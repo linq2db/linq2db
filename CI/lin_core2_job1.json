@@ -26,7 +26,7 @@
 			"Northwind.SQLite.MS" : { "Provider" : "SQLite.Microsoft",      "ConnectionString" : "Data Source=Database\\Northwind.MS.sqlite" },
 			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=TestDatacore2;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;" },
 			"MySqlConnector"      : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=TestDatacore2;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;Treat Tiny As Boolean=False;Use Affected Rows=False" },
-			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=localhost;Port=5432;Database=TestData;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
+			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=127.0.0.1;Port=5432;Database=TestData;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
 			"SqlServer"           : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestData;User Id=sa;Password=Password12!;" },
 			"SqlServer.2014"      : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestData;User Id=sa;Password=Password12!;" }
 		}
