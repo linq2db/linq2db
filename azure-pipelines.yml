@@ -101,9 +101,8 @@ stages:
         filePath: '$(core2tests)/$(file)'
         workingDirectory: '$(core2tests)'
 
-#        docker run -d --name postgres10 --net host -e POSTGRES_PASSWORD=Password12! -p 5432:5432 -v /var/run/postgresql:/var/run/postgresql postgres:10
     - script: |
-        docker run -d --name postgres10 -e POSTGRES_PASSWORD=Password12! postgres:10
+        docker run -d --name postgres10 --net host -e POSTGRES_PASSWORD=Password12! -p 5432:5432 -v /var/run/postgresql:/var/run/postgresql postgres:10
         until docker exec postgres10 psql -U postgres -c '\l'; do
           >&2 echo "Postgres is unavailable - sleeping"
           sleep 5
@@ -113,7 +112,7 @@ stages:
       displayName: Run Postgres container
 
     - script: |
-       docker run -d --name mysql57 -e MYSQL_ROOT_PASSWORD=Password12! mysql:5.7
+       docker run -d --name mysql57 -e MYSQL_ROOT_PASSWORD=Password12!;MYSQL_ROOT_HOST=% mysql:5.7
        until docker exec mysql57 mysql -e 'SELECT 1'; do
           >&2 echo "MySql is unavailable - sleeping"
           sleep 5
