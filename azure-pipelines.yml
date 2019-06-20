@@ -113,13 +113,12 @@ stages:
       displayName: Run Postgres container
 
     - script: |
-       docker run --name mysql57 -e 'MYSQL_ROOT_PASSWORD=Password12! MYSQL_ROOT_HOST=%'-d mysql:5.7
+       docker run --name mysql57 -e 'MYSQL_ROOT_PASSWORD=Password12!;MYSQL_ROOT_HOST=%;'-d mysql:5.7
        until docker exec mysql57 mysql -e 'SELECT 1'; do
           >&2 echo "MySql is unavailable - sleeping"
           sleep 5
        done
        docker exec mysql57 mysql -e 'CREATE DATABASE IF NOT EXISTS testdata DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;'
-       docker exec mysql57 mysql -e 'SHOW DATABASES;'
       displayName: Run MySQL container
        
 
