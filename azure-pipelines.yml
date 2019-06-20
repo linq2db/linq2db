@@ -112,7 +112,7 @@ stages:
       displayName: Run Postgres container
 
     - script: |
-        docker run -d --name mysql57 --net host --env 'MYSQL_ROOT_PASSWORD=Password12!;MYSQL_ROOT_HOST=%' mysql/mysql-server:5.7
+        docker run -d --name mysql57 --net host -e MYSQL_ROOT_PASSWORD=Password12! mysql/mysql-server:5.7
         until docker exec mysql57 mysql -e 'SELECT 1'; do
           >&2 echo "MySql is unavailable - sleeping"
           sleep 5
