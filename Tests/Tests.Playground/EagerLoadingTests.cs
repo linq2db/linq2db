@@ -217,18 +217,19 @@ namespace Tests.Playground
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
+			var masterFilter = 5;
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
 			{
 				var masterQuery = from master_1 in master
-					where master_1.Id1 > 5
+					where master_1.Id1 > masterFilter
 					select new
 					{
 						master_1.Id1,
 						Details = detail.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
 						{
-							Detail = masterP_1.DetailId,
+//							DetailWithId = masterP_1.DetailId,
 							Masters = master.Where(d_b => d_b.Id1 == masterP_1.MasterId).ToArray()
 						}).ToArray()
 					};
@@ -240,7 +241,7 @@ namespace Tests.Playground
 						m.Id1,
 						Details = detailRecords.Where(d => d.MasterId == m.Id1).Select(d => new
 						{
-							Detail = d.DetailId,
+//							DetailWithId = d.DetailId,
 							Masters = masterRecords.Where(mm => mm.Id1 == d.MasterId).ToArray()
 						}).ToArray()
 					};
