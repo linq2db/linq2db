@@ -1810,8 +1810,7 @@ namespace LinqToDB.SqlQuery
 
 								if (ret != null && !ReferenceEquals(e, ret))
 								{
-									//TODO: temporary solution for correct SqlSearchCondition handling
-									if (!(e is SqlSearchCondition))
+									if (ret.ElementType == QueryElementType.Column) 
 										_visitedElements.Add(e, ret);
 									return true;
 								}
