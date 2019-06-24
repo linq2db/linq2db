@@ -9,7 +9,7 @@
 			"SQLite.MS",
 			//"Northwind.SQLite.MS",
 			//"MySqlConnector",
-			"MySql57",
+			//"MySql57",
 			"PostgreSQL",
 			//"Northwind",
 			//"SqlServer",
