@@ -229,7 +229,6 @@ namespace Tests.Playground
 						master_1.Id1,
 						Details = detail.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
 						{
-//							DetailWithId = masterP_1.DetailId,
 							Masters = master.Where(d_b => d_b.Id1 == masterP_1.MasterId).ToArray()
 						}).ToArray()
 					};
@@ -241,7 +240,6 @@ namespace Tests.Playground
 						m.Id1,
 						Details = detailRecords.Where(d => d.MasterId == m.Id1).Select(d => new
 						{
-//							DetailWithId = d.DetailId,
 							Masters = masterRecords.Where(mm => mm.Id1 == d.MasterId).ToArray()
 						}).ToArray()
 					};
@@ -298,7 +296,6 @@ namespace Tests.Playground
 			{
 				var query = from m in master.Take(20)
 					from d in detail
-					where d.MasterId == m.Id1
 					select new
 					{
 						Detail = d,
@@ -307,7 +304,6 @@ namespace Tests.Playground
 
 				var expectedQuery = from m in masterRecords.Take(20)
 					from d in detailRecords
-					where d.MasterId == m.Id1
 					select new
 					{
 						Detail = d,

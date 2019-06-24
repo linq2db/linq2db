@@ -26,7 +26,7 @@ namespace LinqToDB.Tools.Comparers
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[NotNull, Pure]
 		public static Func<T,T,bool> GetEqualsFunc<T>()
-			=> GetEqualsFunc<T>(TypeAccessor.GetAccessor<T>().Members);
+			=> GetEqualsFunc<T>(TypeAccessor.GetAccessor<T>().Members.Where(m => m.GetAttribute<IgnoreComparisonAttribute>() == null));
 
 		/// <summary>
 		/// Returns GetEqualsFunc function for provided members for type T to compare.

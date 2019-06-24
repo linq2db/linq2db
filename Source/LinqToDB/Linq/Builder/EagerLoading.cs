@@ -498,19 +498,17 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-		static Expression RemoveProjection(IBuildContext context, Expression query, out ParameterExpression reducedParam, out IBuildContext newContext)
+		static Expression RemoveProjection(IBuildContext context, Expression query, out IBuildContext newContext)
 		{
 			newContext = context;
 			if (IsQueryableMethod(query, "Select", out var selectMethod))
 			{
-				reducedParam = ((LambdaExpression)selectMethod.Arguments[1].Unwrap()).Parameters[0];
 				if (context is SelectContext selectContext)
 					newContext = selectContext.Sequence[0];
 				if (newContext != null)
 					return selectMethod.Arguments[0];
 			}
 
-			reducedParam = null;
 			newContext = context;
 			return query;
 		}
@@ -764,107 +762,107 @@ namespace LinqToDB.Linq.Builder
 						var master_2              = Expression.Parameter(GetEnumerableElementType(masterQuery.Type), "master_2");
 
 						if (!IsQueryableMethod(master_1_Lambda.Body, "Select", out var masterP_1_Select))
-							throw new NotImplementedException();
-
-						var masterP_1            = ((LambdaExpression)masterP_1_Select.Arguments[1].Unwrap()).Parameters[0];
-						var masterP_1Dpendencies = SearchDependencies(subDetail, masterP_1, mappingSchema);
-
-						var subDetailQueryWithoutProjection = masterP_1_Select.Arguments[0].Unwrap();
-
-						var master_1_Dependencies = SearchDependencies(subDetailQueryWithoutProjection, master_1,
-							mappingSchema);
-
-						if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(masterDetail_1_Lambda.Body.Type))
 						{
-							var envelopeCreate = (MethodCallExpression)masterDetail_1_Lambda.Body.Unwrap();
-
-							var p = Expression.Parameter(GetEnumerableElementType(subDetailQueryWithoutProjection.Type),
-								"temp");
-
-
-							var reducedBody = RemoveProjection(selectContext, master_1_Lambda.Body, out var reducedParam, out var newContext);
-
-							var subMasterParam =
-								Expression.Parameter(GetEnumerableElementType(reducedBody.Type), "submaster");
-
-							var dependencies1 = master_1_Dependencies.SelectMany(d => ExtractKeys(newContext, d)).ToArray();
-							var dependencies2 = masterP_1Dpendencies.SelectMany(d => ExtractKeys(newContext, d)).ToArray();
-
-							var preparedKeys = ExtractKeys(context, envelopeCreate.Arguments[0])
-								.Concat(ExtractKeys(newContext, subMasterParam))
-								.Concat(dependencies1)
-								.Concat(dependencies2)
-								.ToArray();
-
-							var newSubMasterLambda = Expression.Lambda(EnsureEnumerable(reducedBody), master_1);
-
-							var keyCompiledExpression = GenerateKeyExpression(preparedKeys.Select(k => k.ForCompilation).ToArray(), 0);
-							var keySelectExpression = GenerateKeyExpression(preparedKeys.Select(k => k.ForSelect).ToArray(), 0);
-
-							var originalKeySelectExpression = keySelectExpression;
-							keySelectExpression = keySelectExpression.Transform(e => e == master_1 ? master_12 : e);
-							keySelectExpression = keySelectExpression.Transform(e => e == masterP_1 ? subMasterParam : e);
-							var keySelectLambda = Expression.Lambda(keySelectExpression, master_12, subMasterParam); 
-
-							var detailParam =
-								Expression.Parameter(GetEnumerableElementType(keySelectExpression.Type), "ddd");
-
-							var extractedTupleValues1 = ExtractTupleValues(keySelectExpression, detailParam).ToArray();
-							var tupleAccessExpressions = extractedTupleValues1.Select(t => t.Item2).ToArray();
-
-							var detailKeyExpression = GenerateKeyExpression(tupleAccessExpressions, 0);
-
-
-							var masterQueryFinalMethod =
-								_selectManyMethodInfo.MakeGenericMethod(master_2.Type, GetEnumerableElementType(newSubMasterLambda.Body.Type), GetEnumerableElementType(keySelectLambda.Body.Type));
-
-							masterQueryFinal = Expression.Call(masterQueryFinalMethod, masterQuery, newSubMasterLambda, keySelectLambda);
-
-							var masterObjType1  = GetEnumerableElementType(masterQueryFinal.Type);
-
-							var secondMasterParam  = Expression.Parameter(masterObjType1, "subMaster");
-
-							
-							var extractedTupleValues2 = ExtractTupleValues(originalKeySelectExpression, secondMasterParam).ToArray();
-							var correctLookup = extractedTupleValues2.ToLookup(tv => tv.Item1, tv => tv.Item2, new ExpressionEqualityComparer());
-
-							var correctedQueryDetail = queryableDetail.Transform(e =>
-							{
-								if (correctLookup.Contains(e))
-								{
-									return correctLookup[e].First();
-								}
-
-								return e;
-							});
-
-							var detailsQueryLambda  = Expression.Lambda(EnsureEnumerable(correctedQueryDetail), secondMasterParam);
-//							var detailsQueryLambda  = Expression.Lambda(EnsureEnumerable(queryableDetail), masterP_1);
-
-							var detailObjType1  = GetEnumerableElementType(correctedQueryDetail.Type);
-
-							var detailsKeyExpression = Expression.Lambda(detailKeyExpression, detailParam);
-
-							var enlistMethod =
-								EnlistEagerLoadingFunctionalityMethodInfo.MakeGenericMethod(masterObjType1, detailObjType1,
-									detailKeyExpression.Type);
-
-							var ms = VisualizeMethod(enlistMethod);
-
-							var master   = VisualizeType(masterQueryFinal.Type);
-							var qd       = VisualizeType(detailsQueryLambda.Type);
-							var compiled = VisualizeType(keyCompiledExpression.Type);
-							var ke       = VisualizeType(detailKeyExpression.Type);
-
-							resultExpression = (Expression)enlistMethod.Invoke(null,
-								new object[]
-									{ builder, masterQueryFinal, detailsQueryLambda, keyCompiledExpression, detailsKeyExpression });
-
-							return resultExpression;
+							var reducedBody = RemoveProjection(selectContext, master_1_Lambda.Body, out var newContext);
 						}
 						else
 						{
-							throw new NotImplementedException();
+							var masterP_1            = ((LambdaExpression)masterP_1_Select.Arguments[1].Unwrap()).Parameters[0];
+							var masterP_1Dpendencies = SearchDependencies(subDetail, masterP_1, mappingSchema);
+
+							var subDetailQueryWithoutProjection = masterP_1_Select.Arguments[0].Unwrap();
+
+							var master_1_Dependencies = SearchDependencies(subDetailQueryWithoutProjection, master_1,
+								mappingSchema);
+
+							if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(masterDetail_1_Lambda.Body.Type))
+							{
+								var envelopeCreate = (MethodCallExpression)masterDetail_1_Lambda.Body.Unwrap();
+
+								var reducedBody = RemoveProjection(selectContext, master_1_Lambda.Body, out var newContext);
+
+								var subMasterParam =
+									Expression.Parameter(GetEnumerableElementType(reducedBody.Type), "submaster");
+
+								var dependencies1 = master_1_Dependencies.SelectMany(d => ExtractKeys(newContext, d)).ToArray();
+								var dependencies2 = masterP_1Dpendencies.SelectMany(d => ExtractKeys(newContext, d)).ToArray();
+
+								var preparedKeys = ExtractKeys(context, envelopeCreate.Arguments[0])
+									.Concat(ExtractKeys(newContext, subMasterParam))
+									.Concat(dependencies1)
+									.Concat(dependencies2)
+									.ToArray();
+
+								var newSubMasterLambda = Expression.Lambda(EnsureEnumerable(reducedBody), master_1);
+
+								var keyCompiledExpression = GenerateKeyExpression(preparedKeys.Select(k => k.ForCompilation).ToArray(), 0);
+								var keySelectExpression = GenerateKeyExpression(preparedKeys.Select(k => k.ForSelect).ToArray(), 0);
+
+								var originalKeySelectExpression = keySelectExpression;
+								keySelectExpression = keySelectExpression.Transform(e => e == master_1 ? master_12 : e);
+								keySelectExpression = keySelectExpression.Transform(e => e == masterP_1 ? subMasterParam : e);
+								var keySelectLambda = Expression.Lambda(keySelectExpression, master_12, subMasterParam); 
+
+								var detailParam =
+									Expression.Parameter(GetEnumerableElementType(keySelectExpression.Type), "ddd");
+
+								var extractedTupleValues1 = ExtractTupleValues(keySelectExpression, detailParam).ToArray();
+								var tupleAccessExpressions = extractedTupleValues1.Select(t => t.Item2).ToArray();
+
+								var detailKeyExpression = GenerateKeyExpression(tupleAccessExpressions, 0);
+
+
+								var masterQueryFinalMethod =
+									_selectManyMethodInfo.MakeGenericMethod(master_2.Type, GetEnumerableElementType(newSubMasterLambda.Body.Type), GetEnumerableElementType(keySelectLambda.Body.Type));
+
+								masterQueryFinal = Expression.Call(masterQueryFinalMethod, masterQuery, newSubMasterLambda, keySelectLambda);
+
+								var masterObjType1  = GetEnumerableElementType(masterQueryFinal.Type);
+
+								var secondMasterParam  = Expression.Parameter(masterObjType1, "subMaster");
+
+							
+								var extractedTupleValues2 = ExtractTupleValues(originalKeySelectExpression, secondMasterParam).ToArray();
+								var correctLookup = extractedTupleValues2.ToLookup(tv => tv.Item1, tv => tv.Item2, new ExpressionEqualityComparer());
+
+								var correctedQueryDetail = queryableDetail.Transform(e =>
+								{
+									if (correctLookup.Contains(e))
+									{
+										return correctLookup[e].First();
+									}
+
+									return e;
+								});
+
+								var detailsQueryLambda  = Expression.Lambda(EnsureEnumerable(correctedQueryDetail), secondMasterParam);
+//							var detailsQueryLambda  = Expression.Lambda(EnsureEnumerable(queryableDetail), masterP_1);
+
+								var detailObjType1  = GetEnumerableElementType(correctedQueryDetail.Type);
+
+								var detailsKeyExpression = Expression.Lambda(detailKeyExpression, detailParam);
+
+								var enlistMethod =
+									EnlistEagerLoadingFunctionalityMethodInfo.MakeGenericMethod(masterObjType1, detailObjType1,
+										detailKeyExpression.Type);
+
+								var ms = VisualizeMethod(enlistMethod);
+
+								var master   = VisualizeType(masterQueryFinal.Type);
+								var qd       = VisualizeType(detailsQueryLambda.Type);
+								var compiled = VisualizeType(keyCompiledExpression.Type);
+								var ke       = VisualizeType(detailKeyExpression.Type);
+
+								resultExpression = (Expression)enlistMethod.Invoke(null,
+									new object[]
+										{ builder, masterQueryFinal, detailsQueryLambda, keyCompiledExpression, detailsKeyExpression });
+
+								return resultExpression;
+							}
+							else
+							{
+								throw new NotImplementedException();
+							}
 						}
 					}
 				}
