@@ -7,7 +7,7 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	/// <seealso cref="System.Attribute" />
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-	public class DynamicColumnsStoreAttribute : Attribute
+	public class DynamicColumnsStoreAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.

@@ -60,5 +60,9 @@ namespace LinqToDB.SchemaProvider
 		/// Parameter's user-defined type(UDT) name.
 		/// </summary>
 		public string UDTName;
+		/// <summary>
+		/// Gets flag indicating that it is nullable parameter.
+		/// </summary>
+		public bool IsNullable;
 	}
 }

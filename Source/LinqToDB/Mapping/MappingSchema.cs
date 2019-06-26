@@ -1559,5 +1559,17 @@ namespace LinqToDB.Mapping
 		}
 
 		#endregion
+
+		internal IEnumerable<T> SortByConfiguration<T>(Func<T, string> configGetter, IEnumerable<T> values)
+		{
+			return values
+				.Select(val => new
+				{
+					Value = val,
+					Order = Array.IndexOf(ConfigurationList, configGetter(val)) == -1 ? ConfigurationList.Length : Array.IndexOf(ConfigurationList, configGetter(val))
+				})
+				.OrderBy(_ => _.Order)
+				.Select(_ => _.Value);
+		}
 	}
 }

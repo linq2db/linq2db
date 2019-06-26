@@ -49,10 +49,10 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType)
 			{
-				Builder                   = builder;
-				Parent                    = buildInfo.Parent;
-				Expression                = buildInfo.Expression;
-				SelectQuery               = buildInfo.SelectQuery;
+				Builder          = builder;
+				Parent           = buildInfo.Parent;
+				Expression       = buildInfo.Expression;
+				SelectQuery      = buildInfo.SelectQuery;
 				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				OriginalType     = originalType;
@@ -67,10 +67,10 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table)
 			{
-				Builder                   = builder;
-				Parent                    = buildInfo.Parent;
-				Expression                = buildInfo.Expression;
-				SelectQuery               = buildInfo.SelectQuery;
+				Builder          = builder;
+				Parent           = buildInfo.Parent;
+				Expression       = buildInfo.Expression;
+				SelectQuery      = buildInfo.SelectQuery;
 				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				OriginalType     = table.ObjectType;
@@ -91,10 +91,10 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo)
 			{
-				Builder                   = builder;
-				Parent                    = buildInfo.Parent;
-				Expression                = buildInfo.Expression;
-				SelectQuery               = buildInfo.SelectQuery;
+				Builder     = builder;
+				Parent      = buildInfo.Parent;
+				Expression  = buildInfo.Expression;
+				SelectQuery = buildInfo.SelectQuery;
 				_associationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				var mc   = (MethodCallExpression)Expression;
@@ -185,7 +185,7 @@ namespace LinqToDB.Linq.Builder
 						if (member.MemberInfo.IsDynamicColumnPropertyEx())
 						{
 							var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedTypeEx());
-							var setter  = new MemberAccessor(typeAcc, member.MemberInfo).SetterExpression;
+							var setter  = new MemberAccessor(typeAcc, member.MemberInfo, EntityDescriptor).SetterExpression;
 
 							exprs.Add(Expression.Invoke(setter, parentObject, ex));
 						}
@@ -1276,7 +1276,7 @@ namespace LinqToDB.Linq.Builder
 											newField = new SqlField(new ColumnDescriptor(
 												Builder.MappingSchema,
 												new ColumnAttribute(fieldName),
-												new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member)));
+												new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member, EntityDescriptor)));
 
 											SqlTable.Add(newField);
 										}
@@ -1406,7 +1406,7 @@ namespace LinqToDB.Linq.Builder
 						isNew = true;
 
 						if (!_associationsToSubQueries)
-							_associations.Add(memberExpression.Member, tableAssociation);
+						_associations.Add(memberExpression.Member, tableAssociation);
 					}
 				}
 

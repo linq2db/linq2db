@@ -4,6 +4,9 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -16,33 +19,24 @@ using LinqToDB.Mapping;
 
 namespace SybaseDataActionDataContext
 {
-	/// <summary>
-	/// Database       : TestDataCore
-	/// Data Source    : dbhost2,5000
-	/// Server Version : 16.0.2
-	/// </summary>
 	public partial class TestDataCoreDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<dbo_AllType>           AllTypes            { get { return this.GetTable<dbo_AllType>(); } }
-		public ITable<dbo_Child>             Children            { get { return this.GetTable<dbo_Child>(); } }
-		public ITable<dbo_Doctor>            Doctors             { get { return this.GetTable<dbo_Doctor>(); } }
-		public ITable<dbo_GrandChild>        GrandChildren       { get { return this.GetTable<dbo_GrandChild>(); } }
-		public ITable<dbo_InheritanceChild>  InheritanceChildren { get { return this.GetTable<dbo_InheritanceChild>(); } }
-		public ITable<dbo_InheritanceParent> InheritanceParents  { get { return this.GetTable<dbo_InheritanceParent>(); } }
-		public ITable<dbo_LinqDataType>      LinqDataTypes       { get { return this.GetTable<dbo_LinqDataType>(); } }
-		public ITable<dbo_Parent>            Parents             { get { return this.GetTable<dbo_Parent>(); } }
-		public ITable<dbo_Patient>           Patients            { get { return this.GetTable<dbo_Patient>(); } }
-		public ITable<dbo_Person>            People              { get { return this.GetTable<dbo_Person>(); } }
-		public ITable<SysObject>             SysObjects          { get { return this.GetTable<SysObject>(); } }
-		public ITable<dbo_Sysquerymetric>    Sysquerymetrics     { get { return this.GetTable<dbo_Sysquerymetric>(); } }
-		public ITable<dbo_TestIdentity>      TestIdentities      { get { return this.GetTable<dbo_TestIdentity>(); } }
-		public ITable<dbo_TestMerge1>        TestMerge1          { get { return this.GetTable<dbo_TestMerge1>(); } }
-		public ITable<dbo_TestMerge2>        TestMerge2          { get { return this.GetTable<dbo_TestMerge2>(); } }
-		public ITable<dbo_TestMergeIdentity> TestMergeIdentities { get { return this.GetTable<dbo_TestMergeIdentity>(); } }
-
-		public void InitMappingSchema()
-		{
-		}
+		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
+		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
+		public ITable<Doctor>            Doctors             { get { return this.GetTable<Doctor>(); } }
+		public ITable<GrandChild>        GrandChildren       { get { return this.GetTable<GrandChild>(); } }
+		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
+		public ITable<InheritanceParent> InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<LinqDataType>      LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Parent>            Parents             { get { return this.GetTable<Parent>(); } }
+		public ITable<Patient>           Patients            { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>            People              { get { return this.GetTable<Person>(); } }
+		public ITable<SysObject>         SysObjects          { get { return this.GetTable<SysObject>(); } }
+		public ITable<Sysquerymetric>    Sysquerymetrics     { get { return this.GetTable<Sysquerymetric>(); } }
+		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestMergeIdentity> TestMergeIdentities { get { return this.GetTable<TestMergeIdentity>(); } }
 
 		public TestDataCoreDB()
 		{
@@ -57,11 +51,12 @@ namespace SybaseDataActionDataContext
 			InitMappingSchema();
 		}
 
-		partial void InitDataContext();
+		partial void InitDataContext  ();
+		partial void InitMappingSchema();
 	}
 
 	[Table(Schema="dbo", Name="AllTypes")]
-	public partial class dbo_AllType
+	public partial class AllType
 	{
 		[Column(),                                                              Identity   ] public int       ID                    { get; set; } // int
 		[Column("bigintDataType"),                                                 Nullable] public long?     BigintDataType        { get; set; } // bigint
@@ -96,14 +91,14 @@ namespace SybaseDataActionDataContext
 	}
 
 	[Table(Schema="dbo", Name="Child")]
-	public partial class dbo_Child
+	public partial class Child
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // int
 		[Column, Nullable] public int? ChildID  { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="Doctor")]
-	public partial class dbo_Doctor
+	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
 		[Column,     NotNull] public string Taxonomy { get; set; } // nvarchar(150)
@@ -114,13 +109,13 @@ namespace SybaseDataActionDataContext
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
-		public dbo_Person Person { get; set; }
+		public Person Person { get; set; }
 
 		#endregion
 	}
 
 	[Table(Schema="dbo", Name="GrandChild")]
-	public partial class dbo_GrandChild
+	public partial class GrandChild
 	{
 		[Column, Nullable] public int? ParentID     { get; set; } // int
 		[Column, Nullable] public int? ChildID      { get; set; } // int
@@ -128,7 +123,7 @@ namespace SybaseDataActionDataContext
 	}
 
 	[Table(Schema="dbo", Name="InheritanceChild")]
-	public partial class dbo_InheritanceChild
+	public partial class InheritanceChild
 	{
 		[PrimaryKey, NotNull    ] public int    InheritanceChildId  { get; set; } // int
 		[Column,     NotNull    ] public int    InheritanceParentId { get; set; } // int
@@ -137,7 +132,7 @@ namespace SybaseDataActionDataContext
 	}
 
 	[Table(Schema="dbo", Name="InheritanceParent")]
-	public partial class dbo_InheritanceParent
+	public partial class InheritanceParent
 	{
 		[PrimaryKey, NotNull    ] public int    InheritanceParentId { get; set; } // int
 		[Column,        Nullable] public int?   TypeDiscriminator   { get; set; } // int
@@ -145,7 +140,7 @@ namespace SybaseDataActionDataContext
 	}
 
 	[Table(Schema="dbo", Name="LinqDataTypes")]
-	public partial class dbo_LinqDataType
+	public partial class LinqDataType
 	{
 		[Column, NotNull    ] public int       ID             { get; set; } // int
 		[Column,    Nullable] public decimal?  MoneyValue     { get; set; } // decimal(10, 4)
@@ -161,14 +156,14 @@ namespace SybaseDataActionDataContext
 	}
 
 	[Table(Schema="dbo", Name="Parent")]
-	public partial class dbo_Parent
+	public partial class Parent
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // int
 		[Column, Nullable] public int? Value1   { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="Patient")]
-	public partial class dbo_Patient
+	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
 		[Column,     NotNull] public string Diagnosis { get; set; } // nvarchar(768)
@@ -179,13 +174,13 @@ namespace SybaseDataActionDataContext
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
-		public dbo_Person Person { get; set; }
+		public Person Person { get; set; }
 
 		#endregion
 	}
 
 	[Table(Schema="dbo", Name="Person")]
-	public partial class dbo_Person
+	public partial class Person
 	{
 		[PrimaryKey, Identity   ] public int    PersonID   { get; set; } // int
 		[Column,     NotNull    ] public string FirstName  { get; set; } // nvarchar(150)
@@ -199,13 +194,13 @@ namespace SybaseDataActionDataContext
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public dbo_Doctor Doctor { get; set; }
+		public Doctor Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public dbo_Patient Patient { get; set; }
+		public Patient Patient { get; set; }
 
 		#endregion
 	}
@@ -230,14 +225,14 @@ namespace SybaseDataActionDataContext
 		[Column, NotNull    ] public int      seltrig   { get; set; } // int
 		[Column, NotNull    ] public int      ckfirst   { get; set; } // int
 		[Column, NotNull    ] public short    cache     { get; set; } // smallint
-		[Column,    Nullable] public int      audflags  { get; set; } // int
+		[Column,    Nullable] public int?     audflags  { get; set; } // int
 		[Column, NotNull    ] public int      objspare  { get; set; } // int
 		[Column,    Nullable] public byte[]   versionts { get; set; } // binary
-		[Column, NotNull    ] public string   loginame  { get; set; } // varchar
+		[Column,    Nullable] public string   loginame  { get; set; } // varchar
 	}
 
 	[Table(Schema="dbo", Name="sysquerymetrics", IsView=true)]
-	public partial class dbo_Sysquerymetric
+	public partial class Sysquerymetric
 	{
 		[Column("uid"),       NotNull    ] public int    Uid      { get; set; } // int
 		[Column("gid"),       NotNull    ] public int    Gid      { get; set; } // int
@@ -262,13 +257,13 @@ namespace SybaseDataActionDataContext
 	}
 
 	[Table(Schema="dbo", Name="TestIdentity")]
-	public partial class dbo_TestIdentity
+	public partial class TestIdentity
 	{
 		[PrimaryKey, Identity] public int ID { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="TestMerge1")]
-	public partial class dbo_TestMerge1
+	public partial class TestMerge1
 	{
 		[PrimaryKey, NotNull    ] public int       Id              { get; set; } // int
 		[Column,        Nullable] public int?      Field1          { get; set; } // int
@@ -294,7 +289,7 @@ namespace SybaseDataActionDataContext
 	}
 
 	[Table(Schema="dbo", Name="TestMerge2")]
-	public partial class dbo_TestMerge2
+	public partial class TestMerge2
 	{
 		[PrimaryKey, NotNull    ] public int       Id              { get; set; } // int
 		[Column,        Nullable] public int?      Field1          { get; set; } // int
@@ -320,7 +315,7 @@ namespace SybaseDataActionDataContext
 	}
 
 	[Table(Schema="dbo", Name="TestMergeIdentity")]
-	public partial class dbo_TestMergeIdentity
+	public partial class TestMergeIdentity
 	{
 		[PrimaryKey, Identity] public int  Id    { get; set; } // int
 		[Column,     Nullable] public int? Field { get; set; } // int
@@ -328,55 +323,55 @@ namespace SybaseDataActionDataContext
 
 	public static partial class TableExtensions
 	{
-		public static dbo_Doctor Find(this ITable<dbo_Doctor> table, int PersonID)
+		public static Doctor Find(this ITable<Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static dbo_InheritanceChild Find(this ITable<dbo_InheritanceChild> table, int InheritanceChildId)
+		public static InheritanceChild Find(this ITable<InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static dbo_InheritanceParent Find(this ITable<dbo_InheritanceParent> table, int InheritanceParentId)
+		public static InheritanceParent Find(this ITable<InheritanceParent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static dbo_Patient Find(this ITable<dbo_Patient> table, int PersonID)
+		public static Patient Find(this ITable<Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static dbo_Person Find(this ITable<dbo_Person> table, int PersonID)
+		public static Person Find(this ITable<Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static dbo_TestIdentity Find(this ITable<dbo_TestIdentity> table, int ID)
+		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static dbo_TestMerge1 Find(this ITable<dbo_TestMerge1> table, int Id)
+		public static TestMerge1 Find(this ITable<TestMerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static dbo_TestMerge2 Find(this ITable<dbo_TestMerge2> table, int Id)
+		public static TestMerge2 Find(this ITable<TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static dbo_TestMergeIdentity Find(this ITable<dbo_TestMergeIdentity> table, int Id)
+		public static TestMergeIdentity Find(this ITable<TestMergeIdentity> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
@@ -384,3 +379,4 @@ namespace SybaseDataActionDataContext
 	}
 }
 
+#pragma warning restore 1591

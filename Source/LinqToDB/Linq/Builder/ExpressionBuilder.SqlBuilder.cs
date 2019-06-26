@@ -516,6 +516,36 @@ namespace LinqToDB.Linq.Builder
 
 							break;
 						}
+
+					default:
+						{
+							if (e is BinaryExpression binary)
+							{
+								var l = Expressions.ConvertBinary(MappingSchema, binary);
+								if (l != null)
+								{
+									var body = l.Body.Unwrap();
+									var expr = body.Transform(wpi =>
+									{
+										if (wpi.NodeType == ExpressionType.Parameter)
+										{
+											if (l.Parameters[0] == wpi)
+												return binary.Left;
+											if (l.Parameters[1] == wpi)
+												return binary.Right;
+										}
+
+										return wpi;
+									});
+
+									if (expr.Type != e.Type)
+										expr = new ChangeTypeExpression(expr, e.Type);
+
+									return new TransformInfo(ConvertExpression(expr));
+								}
+							}
+							break;
+						}
 				}
 
 				return new TransformInfo(e);
