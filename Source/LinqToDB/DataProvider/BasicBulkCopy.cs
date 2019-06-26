@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider
 
 			foreach (var item in source)
 			{
-				table.DataContext.Insert(item, options.TableName, options.DatabaseName, options.SchemaName);
+				table.DataContext.Insert(item, options.TableName, options.DatabaseName, options.SchemaName, options.ServerName);
 				rowsCopied.RowsCopied++;
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
@@ -64,12 +64,14 @@ namespace LinqToDB.DataProvider
 
 		protected internal static string GetTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table)
 		{
+			var serverName   = options.ServerName   ?? table.ServerName;
 			var databaseName = options.DatabaseName ?? table.DatabaseName;
 			var schemaName   = options.SchemaName   ?? table.SchemaName;
 			var tableName    = options.TableName    ?? table.TableName;
 
 			return sqlBuilder.BuildTableName(
 				new StringBuilder(),
+				serverName   == null ? null : sqlBuilder.Convert(serverName,   ConvertType.NameToServer).    ToString(),
 				databaseName == null ? null : sqlBuilder.Convert(databaseName, ConvertType.NameToDatabase).  ToString(),
 				schemaName   == null ? null : sqlBuilder.Convert(schemaName,   ConvertType.NameToSchema).    ToString(),
 				tableName    == null ? null : sqlBuilder.Convert(tableName,    ConvertType.NameToQueryTable).ToString())

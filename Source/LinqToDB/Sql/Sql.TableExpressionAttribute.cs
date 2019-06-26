@@ -56,6 +56,7 @@ namespace LinqToDB
 
 				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;
+				if (Server   != null) table.Server   = Server;
 			}
 		}
 	}

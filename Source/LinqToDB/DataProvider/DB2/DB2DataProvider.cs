@@ -218,8 +218,8 @@ namespace LinqToDB.DataProvider.DB2
 						{
 							value    = b ? 1 : 0;
 							dataType = dataType.WithDataType(DataType.Int16);
-						}
-						break;
+					}
+					break;
 					}
 				case DataType.Guid       :
 					{

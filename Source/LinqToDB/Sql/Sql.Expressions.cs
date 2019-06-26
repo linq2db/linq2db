@@ -140,8 +140,9 @@ namespace LinqToDB
 			TableName    = 0x1,
 			DatabaseName = 0x2,
 			SchemaName   = 0x4,
+			ServerName   = 0x8,
 
-			Full = DatabaseName | SchemaName
+			Full = TableName | DatabaseName | SchemaName | ServerName
 		}
 
 		[Sql.Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
@@ -282,6 +283,7 @@ namespace LinqToDB
 
 		private abstract class TableHelper
 		{
+			public abstract string ServerName   { get; }
 			public abstract string DatabaseName { get; }
 			public abstract string SchemaName   { get; }
 			public abstract string TableName    { get; }
@@ -296,6 +298,7 @@ namespace LinqToDB
 				_table = table;
 			}
 
+			public override string ServerName   => _table.ServerName;
 			public override string DatabaseName => _table.DatabaseName;
 			public override string SchemaName   => _table.SchemaName;
 			public override string TableName    => _table.TableName;
@@ -321,6 +324,7 @@ namespace LinqToDB
 					{
 						var table = new SqlTable(tableType);
 						table.PhysicalName = tableHelper.TableName;
+						table.Server       = (qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null;
 						table.Database     = (qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null;
 						table.Schema       = (qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null;
 
@@ -335,6 +339,7 @@ namespace LinqToDB
 					{
 						var sb = new StringBuilder();
 						builder.DataContext.CreateSqlProvider().ConvertTableName(sb, 
+							(qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null,
 							(qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null,
 							(qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null,
 							name);
@@ -376,6 +381,7 @@ namespace LinqToDB
 				{
 					var sb = new StringBuilder();
 					builder.DataContext.CreateSqlProvider().ConvertTableName(sb, 
+						(qualified & TableQualification.ServerName)   != 0 ? sqlTable.Server   : null,
 						(qualified & TableQualification.DatabaseName) != 0 ? sqlTable.Database : null,
 						(qualified & TableQualification.SchemaName)   != 0 ? sqlTable.Schema   : null,
 						sqlTable.PhysicalName);
@@ -490,6 +496,7 @@ namespace LinqToDB
 				var sqlBuilder = dataContext.CreateSqlProvider();
 				var sb = new StringBuilder();
 				sqlBuilder.ConvertTableName(sb, 
+					(qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
 					(qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
 					(qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null,
 					table.TableName);
@@ -531,6 +538,7 @@ namespace LinqToDB
 				var sqlBuilder = dataContext.CreateSqlProvider();
 				var sb = new StringBuilder();
 				sqlBuilder.ConvertTableName(sb,
+					(qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
 					(qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
 					(qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null,
 					table.TableName);

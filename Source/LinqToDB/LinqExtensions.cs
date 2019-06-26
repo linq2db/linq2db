@@ -67,11 +67,33 @@ namespace LinqToDB
 			return result;
 		}
 
+		internal static readonly MethodInfo ServerNameMethodInfo = MemberHelper.MethodOf(() => ServerName<int>(null, null)).GetGenericMethodDefinition();
+
+		/// <summary>
+		/// Overrides linked server name with new name for current query. This call will have effect only for databases that support
+		/// linked server name in fully-qualified table name.
+		/// <para>Supported by: SQL Server, Informix, Oracle, SAP HANA2.</para>
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="name">Name of linked server.</param>
+		/// <returns>Table-like query source with new linked server name.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static ITable<T> ServerName<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string name)
+		{
+			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (name  == null) throw new ArgumentNullException(nameof(name));
+
+			var result = ((ITableMutable<T>)table).ChangeServerName(name);
+			return result;
+		}
+
 		/// <summary>
 		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
 		/// owner/schema name in fully-qualified table name.
 		/// <see cref="SchemaName{T}(ITable{T}, string)"/> method is a synonym of this method.
-		/// <para>Supported by: DB2, Oracle, PostgreSQL, SAP HANA, Informix, SQL Server, Sybase ASE.</para>
+		/// <para>Supported by: DB2, Oracle, PostgreSQL, Informix, SQL Server, Sybase ASE.</para>
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
@@ -90,7 +112,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
 		/// owner/schema name in fully-qualified table name.
-		/// <para>Supported by: DB2, Oracle, PostgreSQL, SAP HANA, Informix, SQL Server, Sybase ASE.</para>
+		/// <para>Supported by: DB2, Oracle, PostgreSQL, Informix, SQL Server, Sybase ASE.</para>
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>

@@ -13,11 +13,15 @@ namespace LinqToDB.Linq
 	{
 		public static class Insert<T>
 		{
-			static Query<int> CreateQuery(IDataContext dataContext, EntityDescriptor descriptor, T obj,string tableName, string databaseName, string schemaName, Type type)
+			static Query<int> CreateQuery(
+				IDataContext dataContext, EntityDescriptor descriptor, T obj,
+				string tableName, string serverName, string databaseName, string schemaName,
+				Type type)
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
@@ -52,42 +56,46 @@ namespace LinqToDB.Linq
 				return ei;
 			}
 
-			public static int Query(IDataContext dataContext, T obj, string tableName, string databaseName, string schemaName)
+			public static int Query(
+				IDataContext dataContext, T obj,
+				string tableName, string serverName, string databaseName, string schemaName)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type             = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
-					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type)
+					? CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						new { Operation = 'I', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName, type },
+						new { Operation = 'I', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, serverName, databaseName, schemaName, type },
 						o =>
 						{
 							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type);
+							return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type);
 						});
 
 				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
 
 			public static async Task<int> QueryAsync(
-				IDataContext dataContext, T obj, string tableName, string databaseName, string schemaName, CancellationToken token)
+				IDataContext dataContext, T obj,
+				string tableName, string serverName, string databaseName, string schemaName,
+				CancellationToken token)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type             = GetType<T>(obj, dataContext);
+				var type = GetType<T>(obj, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
-					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type)
+					? CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						new { Operation = 'I', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName, type },
+						new { Operation = 'I', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, serverName, databaseName, schemaName, type },
 						o =>
 						{
 							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schemaName, type);
+							return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type);
 						});
 
 				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);

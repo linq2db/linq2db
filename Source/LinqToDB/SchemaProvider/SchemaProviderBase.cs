@@ -282,9 +282,10 @@ namespace LinqToDB.SchemaProvider
 							if (!procedure.IsResultDynamic && (!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
 							{
 								var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
-									 procedure.CatalogName,
-									 procedure.SchemaName,
-									 procedure.ProcedureName).ToString();
+									null,
+									procedure.CatalogName,
+									procedure.SchemaName,
+									procedure.ProcedureName).ToString();
 
 								LoadProcedureTableSchema(dataConnection, procedure, commandText, tables);
 							}

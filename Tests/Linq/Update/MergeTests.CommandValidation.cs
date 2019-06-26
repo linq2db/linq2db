@@ -1,4 +1,17 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Data;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
 
 using NUnit.Framework;
 
@@ -29,8 +42,8 @@ namespace Tests.xUpdate
 				if (!isLinq)
 					Assert.Throws<LinqToDBException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
 #if NET45
-				else
-					Assert.Throws<FaultException<ExceptionDetail>>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
+					else
+						Assert.Throws<FaultException<ExceptionDetail>>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
 #endif
 			}
 		}

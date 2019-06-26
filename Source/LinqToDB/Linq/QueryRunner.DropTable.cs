@@ -11,12 +11,16 @@ namespace LinqToDB.Linq
 	{
 		public static class DropTable<T>
 		{
-			public static void Query(IDataContext dataContext, string tableName, string databaseName, string schemaName, bool ifExists)
+			public static void Query(
+				IDataContext dataContext,
+				string tableName, string serverName, string databaseName, string schemaName,
+				bool ifExists)
 			{
 				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
 				var dropTable = new SqlDropTableStatement(ifExists);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
@@ -34,7 +38,7 @@ namespace LinqToDB.Linq
 
 			public static async Task QueryAsync(
 				IDataContext dataContext,
-				string tableName, string databaseName, string schemaName,
+				string tableName, string serverName, string databaseName, string schemaName,
 				bool ifExists,
 				CancellationToken token)
 			{
@@ -42,6 +46,7 @@ namespace LinqToDB.Linq
 				var dropTable = new SqlDropTableStatement(ifExists);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
 

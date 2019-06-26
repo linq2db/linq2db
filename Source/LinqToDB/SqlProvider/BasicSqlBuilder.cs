@@ -287,16 +287,18 @@ namespace LinqToDB.SqlProvider
 			throw new SqlException("Unknown query type '{0}'.", Statement.QueryType);
 		}
 
-		public virtual StringBuilder ConvertTableName(StringBuilder sb, string database, string schema, string table)
+		public virtual StringBuilder ConvertTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
+			if (server   != null) server   = Convert(server,   ConvertType.NameToServer).    ToString();
 			if (database != null) database = Convert(database, ConvertType.NameToDatabase).  ToString();
 			if (schema   != null) schema   = Convert(schema,   ConvertType.NameToSchema).    ToString();
 			if (table    != null) table    = Convert(table,    ConvertType.NameToQueryTable).ToString();
 
-			return BuildTableName(sb, database, schema, table);
+			return BuildTableName(sb, server, database, schema, table);
 		}
 
 		public virtual StringBuilder BuildTableName(StringBuilder sb,
+			string server,
 			string database,
 			string schema,
 			[JetBrains.Annotations.NotNull] string table)
@@ -352,7 +354,7 @@ namespace LinqToDB.SqlProvider
 					AppendIndent();
 				}
 
-				ConvertTableName(StringBuilder, null, null, cte.Name);
+				ConvertTableName(StringBuilder, null, null, null, cte.Name);
 
 				if (cte.Fields.Count > 3)
 				{
@@ -2921,6 +2923,11 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		protected virtual string GetTableServerName(SqlTable table)
+		{
+			return table.Server == null ? null : Convert(table.Server, ConvertType.NameToServer).ToString();
+		}
+
 		protected virtual string GetTableDatabaseName(SqlTable table)
 		{
 			return table.Database == null ? null : Convert(table.Database, ConvertType.NameToDatabase).ToString();
@@ -2950,13 +2957,14 @@ namespace LinqToDB.SqlProvider
 					{
 						var tbl = (SqlTable)table;
 
+						var server       = GetTableServerName  (tbl);
 						var database     = GetTableDatabaseName(tbl);
 						var schema       = GetTableSchemaName  (tbl);
 						var physicalName = GetTablePhysicalName(tbl);
 
 						var sb = new StringBuilder();
 
-						BuildTableName(sb, database, schema, physicalName);
+						BuildTableName(sb, server, database, schema, physicalName);
 
 						if (!ignoreTableExpression && tbl.SqlTableType == SqlTableType.Expression)
 						{
@@ -3215,6 +3223,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual string GetMaxValueSql(EntityDescriptor entity, ColumnDescriptor column)
 		{
+			var server   = entity.ServerName;
 			var database = entity.DatabaseName;
 			var schema   = entity.SchemaName;
 			var table    = entity.TableName;
@@ -3222,6 +3231,7 @@ namespace LinqToDB.SqlProvider
 			var columnName = Convert(column.ColumnName, ConvertType.NameToQueryField);
 			var tableName  = BuildTableName(
 				new StringBuilder(),
+				server   == null ? null : Convert(server,   ConvertType.NameToServer).    ToString(),
 				database == null ? null : Convert(database, ConvertType.NameToDatabase).  ToString(),
 				schema   == null ? null : Convert(schema,   ConvertType.NameToSchema).    ToString(),
 				table    == null ? null : Convert(table,    ConvertType.NameToQueryTable).ToString())
