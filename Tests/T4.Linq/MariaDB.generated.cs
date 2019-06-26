@@ -4,6 +4,9 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -16,17 +19,13 @@ using LinqToDB.Mapping;
 
 namespace MariaDBDataContext
 {
-	/// <summary>
-	/// Database       : testdata
-	/// Data Source    : dbhost2
-	/// Server Version : 5.5.5-10.3.11-MariaDB
-	/// </summary>
-	public partial class TestdataDB : LinqToDB.Data.DataConnection
+	public partial class TestmariadbDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
 		public ITable<Datatypetest>      Datatypetests      { get { return this.GetTable<Datatypetest>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
+		public ITable<Fulltextindextest> Fulltextindextests { get { return this.GetTable<Fulltextindextest>(); } }
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
 		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
 		public ITable<Inheritanceparent> Inheritanceparents { get { return this.GetTable<Inheritanceparent>(); } }
@@ -35,29 +34,27 @@ namespace MariaDBDataContext
 		public ITable<Patient>           Patients           { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>            People             { get { return this.GetTable<Person>(); } }
 		public ITable<Personview>        Personviews        { get { return this.GetTable<Personview>(); } }
+		public ITable<Test>              Tests              { get { return this.GetTable<Test>(); } }
 		public ITable<Testidentity>      Testidentities     { get { return this.GetTable<Testidentity>(); } }
 		public ITable<Testmerge1>        Testmerge1         { get { return this.GetTable<Testmerge1>(); } }
 		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
 		public ITable<Testsamename>      Testsamenames      { get { return this.GetTable<Testsamename>(); } }
 
-		public void InitMappingSchema()
-		{
-		}
-
-		public TestdataDB()
+		public TestmariadbDB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestdataDB(string configuration)
+		public TestmariadbDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		partial void InitDataContext();
+		partial void InitDataContext  ();
+		partial void InitMappingSchema();
 	}
 
 	[Table("alltypes")]
@@ -143,6 +140,14 @@ namespace MariaDBDataContext
 		public Person Person { get; set; }
 
 		#endregion
+	}
+
+	[Table("fulltextindextest")]
+	public partial class Fulltextindextest
+	{
+		[Column("id"), PrimaryKey, Identity] public uint   Id         { get; set; } // int(10) unsigned
+		[Column(),     Nullable            ] public string TestField1 { get; set; } // text
+		[Column(),     Nullable            ] public string TestField2 { get; set; } // text
 	}
 
 	[Table("grandchild")]
@@ -242,6 +247,13 @@ namespace MariaDBDataContext
 		[Column, NotNull] public int ID { get; set; } // int(11)
 	}
 
+	[Table("test")]
+	public partial class Test
+	{
+		[Column, NotNull    ] public int  Id           { get; set; } // int(11)
+		[Column,    Nullable] public int? TestAnimalId { get; set; } // int(11)
+	}
+
 	[Table("testidentity")]
 	public partial class Testidentity
 	{
@@ -308,7 +320,7 @@ namespace MariaDBDataContext
 		[PrimaryKey, NotNull] public int ID { get; set; } // int(11)
 	}
 
-	public static partial class TestdataDBStoredProcedures
+	public static partial class TestmariadbDBStoredProcedures
 	{
 		#region AddIssue792Record
 
@@ -350,6 +362,21 @@ namespace MariaDBDataContext
 		}
 
 		#endregion
+
+		#region TestProc
+
+		public static int TestProc(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		{
+			var ret = dataConnection.ExecuteProc("`test_proc`",
+				new DataParameter("aInParam",  aInParam,  DataType.VarChar),
+				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
+
+			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
+
+			return ret;
+		}
+
+		#endregion
 	}
 
 	public static partial class SqlFunctions
@@ -383,6 +410,12 @@ namespace MariaDBDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static Fulltextindextest Find(this ITable<Fulltextindextest> table, uint Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
 		}
 
 		public static Inheritancechild Find(this ITable<Inheritancechild> table, int InheritanceChildId)
@@ -435,3 +468,4 @@ namespace MariaDBDataContext
 	}
 }
 
+#pragma warning restore 1591

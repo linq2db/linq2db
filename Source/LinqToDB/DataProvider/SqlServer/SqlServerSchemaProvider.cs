@@ -269,7 +269,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					CASE WHEN IS_RESULT      = 'YES'                             THEN 1 ELSE 0 END as IsResult,
 					USER_DEFINED_TYPE_CATALOG                                                      as UDTCatalog,
 					USER_DEFINED_TYPE_SCHEMA                                                       as UDTSchema,
-					USER_DEFINED_TYPE_NAME                                                         as UDTName
+					USER_DEFINED_TYPE_NAME                                                         as UDTName,
+					1                                                                              as IsNullable
 				FROM
 					INFORMATION_SCHEMA.PARAMETERS")
 				.ToList();

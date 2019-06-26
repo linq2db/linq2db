@@ -4,6 +4,9 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -16,58 +19,50 @@ using LinqToDB.Mapping;
 
 namespace OracleDataContext
 {
-	/// <summary>
-	/// Database       : TestData
-	/// Data Source    : dbhost2
-	/// Server Version : 11.2.0.1.0
-	/// </summary>
-	public partial class TestDataDB : LinqToDB.Data.DataConnection
+	public partial class XEDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<TESTUSER_ALLTYPE>             ALLTYPES            { get { return this.GetTable<TESTUSER_ALLTYPE>(); } }
-		public ITable<TESTUSER_BINARYDATA>          Binarydatas         { get { return this.GetTable<TESTUSER_BINARYDATA>(); } }
-		public ITable<TESTUSER_CHILD>               Children            { get { return this.GetTable<TESTUSER_CHILD>(); } }
-		public ITable<TESTUSER_DATATYPETEST>        Datatypetests       { get { return this.GetTable<TESTUSER_DATATYPETEST>(); } }
-		public ITable<TESTUSER_DECIMALOVERFLOW>     Decimaloverflows    { get { return this.GetTable<TESTUSER_DECIMALOVERFLOW>(); } }
-		public ITable<TESTUSER_DOCTOR>              Doctors             { get { return this.GetTable<TESTUSER_DOCTOR>(); } }
-		public ITable<TESTUSER_GRANDCHILD>          Grandchilds         { get { return this.GetTable<TESTUSER_GRANDCHILD>(); } }
-		public ITable<TESTUSER_INHERITANCECHILD>    Inheritancechilds   { get { return this.GetTable<TESTUSER_INHERITANCECHILD>(); } }
-		public ITable<TESTUSER_INHERITANCEPARENT>   Inheritanceparents  { get { return this.GetTable<TESTUSER_INHERITANCEPARENT>(); } }
-		public ITable<TESTUSER_LINQDATATYPE>        LINQDATATYPES       { get { return this.GetTable<TESTUSER_LINQDATATYPE>(); } }
-		public ITable<TESTUSER_PARENT>              Parents             { get { return this.GetTable<TESTUSER_PARENT>(); } }
-		public ITable<TESTUSER_PATIENT>             Patients            { get { return this.GetTable<TESTUSER_PATIENT>(); } }
-		public ITable<TESTUSER_PERSON>              People              { get { return this.GetTable<TESTUSER_PERSON>(); } }
-		public ITable<TESTUSER_SEQUENCETEST>        Sequencetests       { get { return this.GetTable<TESTUSER_SEQUENCETEST>(); } }
-		public ITable<TESTUSER_StgTradeInformation> StgTradeInformation { get { return this.GetTable<TESTUSER_StgTradeInformation>(); } }
-		public ITable<TESTUSER_STRINGTEST>          Stringtests         { get { return this.GetTable<TESTUSER_STRINGTEST>(); } }
-		public ITable<TESTUSER_TEntity>             TEntities           { get { return this.GetTable<TESTUSER_TEntity>(); } }
-		public ITable<TESTUSER_TESTIDENTITY>        Testidentities      { get { return this.GetTable<TESTUSER_TESTIDENTITY>(); } }
-		public ITable<TESTUSER_TESTMERGE1>          TESTMERGE1          { get { return this.GetTable<TESTUSER_TESTMERGE1>(); } }
-		public ITable<TESTUSER_TESTMERGE2>          TESTMERGE2          { get { return this.GetTable<TESTUSER_TESTMERGE2>(); } }
-		public ITable<TESTUSER_TTestUser>           TTestUsers          { get { return this.GetTable<TESTUSER_TTestUser>(); } }
-		public ITable<TESTUSER_TTestUserContract>   TTestUserContracts  { get { return this.GetTable<TESTUSER_TTestUserContract>(); } }
+		public ITable<ALLTYPE>             ALLTYPES            { get { return this.GetTable<ALLTYPE>(); } }
+		public ITable<BINARYDATA>          Binarydatas         { get { return this.GetTable<BINARYDATA>(); } }
+		public ITable<CHILD>               Children            { get { return this.GetTable<CHILD>(); } }
+		public ITable<DATATYPETEST>        Datatypetests       { get { return this.GetTable<DATATYPETEST>(); } }
+		public ITable<DECIMALOVERFLOW>     Decimaloverflows    { get { return this.GetTable<DECIMALOVERFLOW>(); } }
+		public ITable<DOCTOR>              Doctors             { get { return this.GetTable<DOCTOR>(); } }
+		public ITable<GRANDCHILD>          Grandchilds         { get { return this.GetTable<GRANDCHILD>(); } }
+		public ITable<INHERITANCECHILD>    Inheritancechilds   { get { return this.GetTable<INHERITANCECHILD>(); } }
+		public ITable<INHERITANCEPARENT>   Inheritanceparents  { get { return this.GetTable<INHERITANCEPARENT>(); } }
+		public ITable<LINQDATATYPE>        LINQDATATYPES       { get { return this.GetTable<LINQDATATYPE>(); } }
+		public ITable<PARENT>              Parents             { get { return this.GetTable<PARENT>(); } }
+		public ITable<PATIENT>             Patients            { get { return this.GetTable<PATIENT>(); } }
+		public ITable<PERSON>              People              { get { return this.GetTable<PERSON>(); } }
+		public ITable<SEQUENCETEST>        Sequencetests       { get { return this.GetTable<SEQUENCETEST>(); } }
+		public ITable<StgTradeInformation> StgTradeInformation { get { return this.GetTable<StgTradeInformation>(); } }
+		public ITable<STRINGTEST>          Stringtests         { get { return this.GetTable<STRINGTEST>(); } }
+		public ITable<TEntity>             TEntities           { get { return this.GetTable<TEntity>(); } }
+		public ITable<TESTIDENTITY>        Testidentities      { get { return this.GetTable<TESTIDENTITY>(); } }
+		public ITable<TESTMERGE1>          TESTMERGE1          { get { return this.GetTable<TESTMERGE1>(); } }
+		public ITable<TESTMERGE2>          TESTMERGE2          { get { return this.GetTable<TESTMERGE2>(); } }
+		public ITable<TTestUser>           TTestUsers          { get { return this.GetTable<TTestUser>(); } }
+		public ITable<TTestUserContract>   TTestUserContracts  { get { return this.GetTable<TTestUserContract>(); } }
 
-		public void InitMappingSchema()
-		{
-		}
-
-		public TestDataDB()
+		public XEDB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestDataDB(string configuration)
+		public XEDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		partial void InitDataContext();
+		partial void InitDataContext  ();
+		partial void InitMappingSchema();
 	}
 
-	[Table(Schema="TESTUSER", Name="ALLTYPES")]
-	public partial class TESTUSER_ALLTYPE
+	[Table(Schema="MANAGED", Name="ALLTYPES")]
+	public partial class ALLTYPE
 	{
 		[Column(DbType="NUMBER",                            DataType=DataType.Decimal,        Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal         ID                     { get; set; } // NUMBER
 		[Column(DbType="NUMBER (20,0)",                     DataType=DataType.Decimal,        Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?        BIGINTDATATYPE         { get; set; } // NUMBER (20,0)
@@ -99,23 +94,23 @@ namespace OracleDataContext
 		[Column(DbType="XMLTYPE",                           DataType=DataType.Xml,            Length=2000),                         Nullable         ] public string          XMLDATATYPE            { get; set; } // XMLTYPE
 	}
 
-	[Table(Schema="TESTUSER", Name="BINARYDATA")]
-	public partial class TESTUSER_BINARYDATA
+	[Table(Schema="MANAGED", Name="BINARYDATA")]
+	public partial class BINARYDATA
 	{
 		[Column(DbType="NUMBER",       DataType=DataType.Decimal,   Length=22),          PrimaryKey, NotNull] public decimal  BINARYDATAID { get; set; } // NUMBER
 		[Column(DbType="TIMESTAMP(6)", DataType=DataType.DateTime2, Length=11, Scale=6),             NotNull] public DateTime STAMP        { get; set; } // TIMESTAMP(6)
 		[Column(DbType="BLOB",         DataType=DataType.Blob,      Length=4000),                    NotNull] public byte[]   DATA         { get; set; } // BLOB
 	}
 
-	[Table(Schema="TESTUSER", Name="CHILD")]
-	public partial class TESTUSER_CHILD
+	[Table(Schema="MANAGED", Name="CHILD")]
+	public partial class CHILD
 	{
 		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? PARENTID { get; set; } // NUMBER
 		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? CHILDID  { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TESTUSER", Name="DATATYPETEST")]
-	public partial class TESTUSER_DATATYPETEST
+	[Table(Schema="MANAGED", Name="DATATYPETEST")]
+	public partial class DATATYPETEST
 	{
 		[Column(             DbType="NUMBER",         DataType=DataType.Decimal,  Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal   DATATYPEID { get; set; } // NUMBER
 		[Column("BINARY_",   DbType="RAW(50)",        DataType=DataType.Binary,   Length=50),                           Nullable         ] public byte[]    Binary     { get; set; } // RAW(50)
@@ -141,8 +136,8 @@ namespace OracleDataContext
 		[Column("XML_",      DbType="XMLTYPE",        DataType=DataType.Xml,      Length=2000),                         Nullable         ] public string    Xml        { get; set; } // XMLTYPE
 	}
 
-	[Table(Schema="TESTUSER", Name="DECIMALOVERFLOW")]
-	public partial class TESTUSER_DECIMALOVERFLOW
+	[Table(Schema="MANAGED", Name="DECIMALOVERFLOW")]
+	public partial class DECIMALOVERFLOW
 	{
 		[Column(DbType="NUMBER (38,20)", DataType=DataType.Decimal, Length=22, Precision=38, Scale=20), Nullable] public decimal? DECIMAL1 { get; set; } // NUMBER (38,20)
 		[Column(DbType="NUMBER (31,2)",  DataType=DataType.Decimal, Length=22, Precision=31, Scale=2),  Nullable] public decimal? DECIMAL2 { get; set; } // NUMBER (31,2)
@@ -151,8 +146,8 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER (38,38)", DataType=DataType.Decimal, Length=22, Precision=38, Scale=38), Nullable] public decimal? DECIMAL5 { get; set; } // NUMBER (38,38)
 	}
 
-	[Table(Schema="TESTUSER", Name="DOCTOR")]
-	public partial class TESTUSER_DOCTOR
+	[Table(Schema="MANAGED", Name="DOCTOR")]
+	public partial class DOCTOR
 	{
 		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),  PrimaryKey, NotNull] public decimal PERSONID { get; set; } // NUMBER
 		[Column(DbType="NVARCHAR2(100)", DataType=DataType.NVarChar, Length=100),             NotNull] public string  TAXONOMY { get; set; } // NVARCHAR2(100)
@@ -163,21 +158,21 @@ namespace OracleDataContext
 		/// FK_DOCTOR_PERSON
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_DOCTOR_PERSON", BackReferenceName="DOCTOR")]
-		public TESTUSER_PERSON PERSON { get; set; }
+		public PERSON PERSON { get; set; }
 
 		#endregion
 	}
 
-	[Table(Schema="TESTUSER", Name="GRANDCHILD")]
-	public partial class TESTUSER_GRANDCHILD
+	[Table(Schema="MANAGED", Name="GRANDCHILD")]
+	public partial class GRANDCHILD
 	{
 		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? PARENTID     { get; set; } // NUMBER
 		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? CHILDID      { get; set; } // NUMBER
 		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? GRANDCHILDID { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TESTUSER", Name="INHERITANCECHILD")]
-	public partial class TESTUSER_INHERITANCECHILD
+	[Table(Schema="MANAGED", Name="INHERITANCECHILD")]
+	public partial class INHERITANCECHILD
 	{
 		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),  PrimaryKey,  NotNull] public decimal  INHERITANCECHILDID  { get; set; } // NUMBER
 		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),               NotNull] public decimal  INHERITANCEPARENTID { get; set; } // NUMBER
@@ -185,16 +180,16 @@ namespace OracleDataContext
 		[Column(DbType="NVARCHAR2(100)", DataType=DataType.NVarChar, Length=100),    Nullable         ] public string   NAME                { get; set; } // NVARCHAR2(100)
 	}
 
-	[Table(Schema="TESTUSER", Name="INHERITANCEPARENT")]
-	public partial class TESTUSER_INHERITANCEPARENT
+	[Table(Schema="MANAGED", Name="INHERITANCEPARENT")]
+	public partial class INHERITANCEPARENT
 	{
 		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),  PrimaryKey,  NotNull] public decimal  INHERITANCEPARENTID { get; set; } // NUMBER
 		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),     Nullable         ] public decimal? TYPEDISCRIMINATOR   { get; set; } // NUMBER
 		[Column(DbType="NVARCHAR2(100)", DataType=DataType.NVarChar, Length=100),    Nullable         ] public string   NAME                { get; set; } // NVARCHAR2(100)
 	}
 
-	[Table(Schema="TESTUSER", Name="LINQDATATYPES")]
-	public partial class TESTUSER_LINQDATATYPE
+	[Table(Schema="MANAGED", Name="LINQDATATYPES")]
+	public partial class LINQDATATYPE
 	{
 		[Column(DbType="NUMBER",        DataType=DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  ID             { get; set; } // NUMBER
 		[Column(DbType="NUMBER (10,4)", DataType=DataType.Decimal,   Length=22, Precision=10, Scale=4), Nullable] public decimal?  MONEYVALUE     { get; set; } // NUMBER (10,4)
@@ -209,15 +204,15 @@ namespace OracleDataContext
 		[Column(DbType="VARCHAR2(50)",  DataType=DataType.VarChar,   Length=50),                        Nullable] public string    STRINGVALUE    { get; set; } // VARCHAR2(50)
 	}
 
-	[Table(Schema="TESTUSER", Name="PARENT")]
-	public partial class TESTUSER_PARENT
+	[Table(Schema="MANAGED", Name="PARENT")]
+	public partial class PARENT
 	{
 		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? PARENTID { get; set; } // NUMBER
 		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? VALUE1   { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TESTUSER", Name="PATIENT")]
-	public partial class TESTUSER_PATIENT
+	[Table(Schema="MANAGED", Name="PATIENT")]
+	public partial class PATIENT
 	{
 		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),  PrimaryKey, NotNull] public decimal PERSONID  { get; set; } // NUMBER
 		[Column(DbType="NVARCHAR2(512)", DataType=DataType.NVarChar, Length=512),             NotNull] public string  DIAGNOSIS { get; set; } // NVARCHAR2(512)
@@ -228,13 +223,13 @@ namespace OracleDataContext
 		/// FK_PATIENT_PERSON
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_PATIENT_PERSON", BackReferenceName="PATIENT")]
-		public TESTUSER_PERSON PERSON { get; set; }
+		public PERSON PERSON { get; set; }
 
 		#endregion
 	}
 
-	[Table(Schema="TESTUSER", Name="PERSON")]
-	public partial class TESTUSER_PERSON
+	[Table(Schema="MANAGED", Name="PERSON")]
+	public partial class PERSON
 	{
 		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22), PrimaryKey,  NotNull] public decimal PERSONID   { get; set; } // NUMBER
 		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),              NotNull] public string  FIRSTNAME  { get; set; } // VARCHAR2(50)
@@ -248,26 +243,26 @@ namespace OracleDataContext
 		/// FK_DOCTOR_PERSON_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public TESTUSER_DOCTOR DOCTOR { get; set; }
+		public DOCTOR DOCTOR { get; set; }
 
 		/// <summary>
 		/// FK_PATIENT_PERSON_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public TESTUSER_PATIENT PATIENT { get; set; }
+		public PATIENT PATIENT { get; set; }
 
 		#endregion
 	}
 
-	[Table(Schema="TESTUSER", Name="SEQUENCETEST")]
-	public partial class TESTUSER_SEQUENCETEST
+	[Table(Schema="MANAGED", Name="SEQUENCETEST")]
+	public partial class SEQUENCETEST
 	{
 		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22, Scale=0), PrimaryKey, NotNull] public decimal ID    { get; set; } // NUMBER
 		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),                      NotNull] public string  VALUE { get; set; } // VARCHAR2(50)
 	}
 
-	[Table(Schema="TESTUSER", Name="STG_TRADE_INFORMATION")]
-	public partial class TESTUSER_StgTradeInformation
+	[Table(Schema="MANAGED", Name="STG_TRADE_INFORMATION")]
+	public partial class StgTradeInformation
 	{
 		[Column("STG_TRADE_ID",          DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),   NotNull    ] public decimal   StgTradeId          { get; set; } // NUMBER
 		[Column("STG_TRADE_VERSION",     DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),   NotNull    ] public decimal   StgTradeVersion     { get; set; } // NUMBER
@@ -278,30 +273,30 @@ namespace OracleDataContext
 		[Column("VALUE_AS_DATE",         DbType="DATE",           DataType=DataType.DateTime, Length=7),       Nullable] public DateTime? ValueAsDate         { get; set; } // DATE
 	}
 
-	[Table(Schema="TESTUSER", Name="STRINGTEST")]
-	public partial class TESTUSER_STRINGTEST
+	[Table(Schema="MANAGED", Name="STRINGTEST")]
+	public partial class STRINGTEST
 	{
 		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),    Nullable] public string STRINGVALUE1 { get; set; } // VARCHAR2(50)
 		[Column(DbType="CHAR(50)",     DataType=DataType.Char,    Length=50),    Nullable] public string STRINGVALUE2 { get; set; } // CHAR(50)
 		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50), NotNull    ] public string KEYVALUE     { get; set; } // VARCHAR2(50)
 	}
 
-	[Table(Schema="TESTUSER", Name="T_ENTITY")]
-	public partial class TESTUSER_TEntity
+	[Table(Schema="MANAGED", Name="T_ENTITY")]
+	public partial class TEntity
 	{
 		[Column("ENTITY_ID", DbType="NUMBER",                       DataType=DataType.Decimal,   Length=22, Scale=0),              PrimaryKey,  NotNull] public decimal   EntityId { get; set; } // NUMBER
 		[Column(             DbType="DATE",                         DataType=DataType.DateTime,  Length=7),                           Nullable         ] public DateTime? TIME     { get; set; } // DATE
 		[Column(             DbType="INTERVAL DAY(3) TO SECOND(2)", DataType=DataType.Undefined, Length=11, Precision=3, Scale=2),    Nullable         ] public object    DURATION { get; set; } // INTERVAL DAY(3) TO SECOND(2)
 	}
 
-	[Table(Schema="TESTUSER", Name="TESTIDENTITY")]
-	public partial class TESTUSER_TESTIDENTITY
+	[Table(Schema="MANAGED", Name="TESTIDENTITY")]
+	public partial class TESTIDENTITY
 	{
 		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22), PrimaryKey, NotNull] public decimal ID { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TESTUSER", Name="TESTMERGE1")]
-	public partial class TESTUSER_TESTMERGE1
+	[Table(Schema="MANAGED", Name="TESTMERGE1")]
+	public partial class TESTMERGE1
 	{
 		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                         PrimaryKey,  NotNull] public decimal         ID              { get; set; } // NUMBER
 		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELD1          { get; set; } // NUMBER
@@ -326,8 +321,8 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELDENUMNUMBER { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TESTUSER", Name="TESTMERGE2")]
-	public partial class TESTUSER_TESTMERGE2
+	[Table(Schema="MANAGED", Name="TESTMERGE2")]
+	public partial class TESTMERGE2
 	{
 		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                         PrimaryKey,  NotNull] public decimal         ID              { get; set; } // NUMBER
 		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELD1          { get; set; } // NUMBER
@@ -352,8 +347,8 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELDENUMNUMBER { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TESTUSER", Name="T_TEST_USER")]
-	public partial class TESTUSER_TTestUser
+	[Table(Schema="MANAGED", Name="T_TEST_USER")]
+	public partial class TTestUser
 	{
 		[Column("USER_ID", DbType="NUMBER",        DataType=DataType.Decimal, Length=22),  PrimaryKey, NotNull] public decimal UserId { get; set; } // NUMBER
 		[Column(           DbType="VARCHAR2(255)", DataType=DataType.VarChar, Length=255),             NotNull] public string  NAME   { get; set; } // VARCHAR2(255)
@@ -361,16 +356,16 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C0015654_BackReference
+		/// SYS_C00168572_BackReference
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<TESTUSER_TTestUserContract> Syscs { get; set; }
+		public IEnumerable<TTestUserContract> Syscs { get; set; }
 
 		#endregion
 	}
 
-	[Table(Schema="TESTUSER", Name="T_TEST_USER_CONTRACT")]
-	public partial class TESTUSER_TTestUserContract
+	[Table(Schema="MANAGED", Name="T_TEST_USER_CONTRACT")]
+	public partial class TTestUserContract
 	{
 		[Column("USER_CONTRACT_ID", DbType="NUMBER",        DataType=DataType.Decimal, Length=22),  PrimaryKey, NotNull] public decimal UserContractId { get; set; } // NUMBER
 		[Column("USER_ID",          DbType="NUMBER",        DataType=DataType.Decimal, Length=22),              NotNull] public decimal UserId         { get; set; } // NUMBER
@@ -380,21 +375,21 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C0015654
+		/// SYS_C00168572
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C0015654", BackReferenceName="Syscs")]
-		public TESTUSER_TTestUser USER { get; set; }
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00168572", BackReferenceName="Syscs")]
+		public TTestUser USER { get; set; }
 
 		#endregion
 	}
 
-	public static partial class TestDataDBStoredProcedures
+	public static partial class XEDBStoredProcedures
 	{
 		#region PersonUpdate
 
 		public static int PersonUpdate(this DataConnection dataConnection, decimal? PPERSONID, string PFIRSTNAME, string PLASTNAME, string PMIDDLENAME, string PGENDER)
 		{
-			return dataConnection.ExecuteProc("TESTUSER.PERSON_UPDATE",
+			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE",
 				new DataParameter("PPERSONID",   PPERSONID,   DataType.Decimal),
 				new DataParameter("PFIRSTNAME",  PFIRSTNAME,  DataType.NVarChar),
 				new DataParameter("PLASTNAME",   PLASTNAME,   DataType.NVarChar),
@@ -408,7 +403,7 @@ namespace OracleDataContext
 
 		public static int PersonDelete(this DataConnection dataConnection, decimal? PPERSONID)
 		{
-			return dataConnection.ExecuteProc("TESTUSER.PERSON_DELETE",
+			return dataConnection.ExecuteProc("MANAGED.PERSON_DELETE",
 				new DataParameter("PPERSONID", PPERSONID, DataType.Decimal));
 		}
 
@@ -418,7 +413,7 @@ namespace OracleDataContext
 
 		public static int OUTREFTEST(this DataConnection dataConnection, decimal? PID, out decimal? POUTPUTID, ref decimal? PINPUTOUTPUTID, string PSTR, out string POUTPUTSTR, ref string PINPUTOUTPUTSTR)
 		{
-			var ret = dataConnection.ExecuteProc("TESTUSER.OUTREFTEST",
+			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFTEST",
 				new DataParameter("PID",             PID,             DataType.Decimal),
 				new DataParameter("POUTPUTID", null,       DataType.Decimal) { Direction = ParameterDirection.Output, Size = 22 },
 				new DataParameter("PINPUTOUTPUTID",  PINPUTOUTPUTID,  DataType.Decimal) { Direction = ParameterDirection.InputOutput, Size = 22 },
@@ -440,7 +435,7 @@ namespace OracleDataContext
 
 		public static int OUTREFENUMTEST(this DataConnection dataConnection, string PSTR, out string POUTPUTSTR, ref string PINPUTOUTPUTSTR)
 		{
-			var ret = dataConnection.ExecuteProc("TESTUSER.OUTREFENUMTEST",
+			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST",
 				new DataParameter("PSTR",            PSTR,            DataType.NVarChar),
 				new DataParameter("POUTPUTSTR", null,      DataType.NVarChar) { Direction = ParameterDirection.Output },
 				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, DataType.NVarChar) { Direction = ParameterDirection.InputOutput });
@@ -456,94 +451,96 @@ namespace OracleDataContext
 
 	public static partial class TableExtensions
 	{
-		public static TESTUSER_ALLTYPE Find(this ITable<TESTUSER_ALLTYPE> table, decimal ID)
+		public static ALLTYPE Find(this ITable<ALLTYPE> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TESTUSER_BINARYDATA Find(this ITable<TESTUSER_BINARYDATA> table, decimal BINARYDATAID)
+		public static BINARYDATA Find(this ITable<BINARYDATA> table, decimal BINARYDATAID)
 		{
 			return table.FirstOrDefault(t =>
 				t.BINARYDATAID == BINARYDATAID);
 		}
 
-		public static TESTUSER_DATATYPETEST Find(this ITable<TESTUSER_DATATYPETEST> table, decimal DATATYPEID)
+		public static DATATYPETEST Find(this ITable<DATATYPETEST> table, decimal DATATYPEID)
 		{
 			return table.FirstOrDefault(t =>
 				t.DATATYPEID == DATATYPEID);
 		}
 
-		public static TESTUSER_DOCTOR Find(this ITable<TESTUSER_DOCTOR> table, decimal PERSONID)
+		public static DOCTOR Find(this ITable<DOCTOR> table, decimal PERSONID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PERSONID == PERSONID);
 		}
 
-		public static TESTUSER_INHERITANCECHILD Find(this ITable<TESTUSER_INHERITANCECHILD> table, decimal INHERITANCECHILDID)
+		public static INHERITANCECHILD Find(this ITable<INHERITANCECHILD> table, decimal INHERITANCECHILDID)
 		{
 			return table.FirstOrDefault(t =>
 				t.INHERITANCECHILDID == INHERITANCECHILDID);
 		}
 
-		public static TESTUSER_INHERITANCEPARENT Find(this ITable<TESTUSER_INHERITANCEPARENT> table, decimal INHERITANCEPARENTID)
+		public static INHERITANCEPARENT Find(this ITable<INHERITANCEPARENT> table, decimal INHERITANCEPARENTID)
 		{
 			return table.FirstOrDefault(t =>
 				t.INHERITANCEPARENTID == INHERITANCEPARENTID);
 		}
 
-		public static TESTUSER_PATIENT Find(this ITable<TESTUSER_PATIENT> table, decimal PERSONID)
+		public static PATIENT Find(this ITable<PATIENT> table, decimal PERSONID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PERSONID == PERSONID);
 		}
 
-		public static TESTUSER_PERSON Find(this ITable<TESTUSER_PERSON> table, decimal PERSONID)
+		public static PERSON Find(this ITable<PERSON> table, decimal PERSONID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PERSONID == PERSONID);
 		}
 
-		public static TESTUSER_SEQUENCETEST Find(this ITable<TESTUSER_SEQUENCETEST> table, decimal ID)
+		public static SEQUENCETEST Find(this ITable<SEQUENCETEST> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TESTUSER_TEntity Find(this ITable<TESTUSER_TEntity> table, decimal EntityId)
+		public static TEntity Find(this ITable<TEntity> table, decimal EntityId)
 		{
 			return table.FirstOrDefault(t =>
 				t.EntityId == EntityId);
 		}
 
-		public static TESTUSER_TESTIDENTITY Find(this ITable<TESTUSER_TESTIDENTITY> table, decimal ID)
+		public static TESTIDENTITY Find(this ITable<TESTIDENTITY> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TESTUSER_TESTMERGE1 Find(this ITable<TESTUSER_TESTMERGE1> table, decimal ID)
+		public static TESTMERGE1 Find(this ITable<TESTMERGE1> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TESTUSER_TESTMERGE2 Find(this ITable<TESTUSER_TESTMERGE2> table, decimal ID)
+		public static TESTMERGE2 Find(this ITable<TESTMERGE2> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TESTUSER_TTestUser Find(this ITable<TESTUSER_TTestUser> table, decimal UserId)
+		public static TTestUser Find(this ITable<TTestUser> table, decimal UserId)
 		{
 			return table.FirstOrDefault(t =>
 				t.UserId == UserId);
 		}
 
-		public static TESTUSER_TTestUserContract Find(this ITable<TESTUSER_TTestUserContract> table, decimal UserContractId)
+		public static TTestUserContract Find(this ITable<TTestUserContract> table, decimal UserContractId)
 		{
 			return table.FirstOrDefault(t =>
 				t.UserContractId == UserContractId);
 		}
 	}
 }
+
+#pragma warning restore 1591

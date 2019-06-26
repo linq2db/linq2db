@@ -259,6 +259,7 @@ namespace LinqToDB.SchemaProvider
 									SystemType           = systemType ?? typeof(object),
 									DataType             = GetDataType(pr.DataType, null, pr.Length, pr.Precision, pr.Scale),
 									ProviderSpecificType = GetProviderSpecificType(pr.DataType),
+									IsNullable           = pr.IsNullable
 								}
 							).ToList()
 						} into ps

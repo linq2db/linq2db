@@ -275,6 +275,7 @@ namespace LinqToDB.DataProvider.MySql
 						Ordinal       = Converter.ChangeTypeTo<int>(rd["ORDINAL_POSITION"]),
 						IsResult      = mode == null,
 						DataType      = rd.GetString(7).ToUpper(),
+						IsNullable    = true
 					};
 				}, "SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, PARAMETER_MODE, ORDINAL_POSITION, PARAMETER_NAME, NUMERIC_PRECISION, NUMERIC_SCALE, DATA_TYPE FROM INFORMATION_SCHEMA.parameters WHERE SPECIFIC_SCHEMA = database()")
 				.ToList();

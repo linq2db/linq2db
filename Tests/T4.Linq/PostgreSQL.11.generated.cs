@@ -4,6 +4,9 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,34 +25,33 @@ using NpgsqlTypes;
 
 namespace PostreSQL11DataContext
 {
-	/// <summary>
-	/// Database       : testdb
-	/// Data Source    : tcp://localhost:5411
-	/// Server Version : 11.1
-	/// </summary>
 	public partial class TestdbDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<_testsamename>                  _testsamename        { get { return this.GetTable<_testsamename>(); } }
-		public ITable<AllType>                        AllTypes             { get { return this.GetTable<AllType>(); } }
-		public ITable<Child>                          Children             { get { return this.GetTable<Child>(); } }
-		public ITable<Doctor>                         Doctors              { get { return this.GetTable<Doctor>(); } }
-		public ITable<Entity>                         Entities             { get { return this.GetTable<Entity>(); } }
-		public ITable<GrandChild>                     GrandChildren        { get { return this.GetTable<GrandChild>(); } }
-		public ITable<InheritanceChild>               InheritanceChildren  { get { return this.GetTable<InheritanceChild>(); } }
-		public ITable<InheritanceParent>              InheritanceParents   { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<LinqDataType>                   LinqDataTypes        { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<Parent>                         Parents              { get { return this.GetTable<Parent>(); } }
-		public ITable<Patient>                        Patients             { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>                         People               { get { return this.GetTable<Person>(); } }
-		public ITable<SequenceTest1>                  SequenceTest1        { get { return this.GetTable<SequenceTest1>(); } }
-		public ITable<SequenceTest2>                  SequenceTest2        { get { return this.GetTable<SequenceTest2>(); } }
-		public ITable<SequenceTest3>                  SequenceTest3        { get { return this.GetTable<SequenceTest3>(); } }
-		public ITable<TestIdentity>                   TestIdentities       { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<TestMerge1>                     TestMerge1           { get { return this.GetTable<TestMerge1>(); } }
-		public ITable<TestMerge2>                     TestMerge2           { get { return this.GetTable<TestMerge2>(); } }
-		public ITable<test_schema_Testsamename>       Testsamenames        { get { return this.GetTable<test_schema_Testsamename>(); } }
-		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities { get { return this.GetTable<test_schema_TestSchemaIdentity>(); } }
-		public ITable<test_schema_Testserialidentity> Testserialidentities { get { return this.GetTable<test_schema_Testserialidentity>(); } }
+		public ITable<_testsamename>                  _testsamename             { get { return this.GetTable<_testsamename>(); } }
+		public ITable<AllType>                        AllTypes                  { get { return this.GetTable<AllType>(); } }
+		public ITable<Child>                          Children                  { get { return this.GetTable<Child>(); } }
+		public ITable<Doctor>                         Doctors                   { get { return this.GetTable<Doctor>(); } }
+		public ITable<Entity>                         Entities                  { get { return this.GetTable<Entity>(); } }
+		public ITable<GrandChild>                     GrandChildren             { get { return this.GetTable<GrandChild>(); } }
+		public ITable<InheritanceChild>               InheritanceChildren       { get { return this.GetTable<InheritanceChild>(); } }
+		public ITable<InheritanceParent>              InheritanceParents        { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<LinqDataType>                   LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Parent>                         Parents                   { get { return this.GetTable<Parent>(); } }
+		public ITable<Patient>                        Patients                  { get { return this.GetTable<Patient>(); } }
+		/// <summary>
+		/// This is the Person table
+		/// </summary>
+		public ITable<Person>                         People                    { get { return this.GetTable<Person>(); } }
+		public ITable<SequenceCustomNamingTest>       SequenceCustomNamingTests { get { return this.GetTable<SequenceCustomNamingTest>(); } }
+		public ITable<SequenceTest1>                  SequenceTest1             { get { return this.GetTable<SequenceTest1>(); } }
+		public ITable<SequenceTest2>                  SequenceTest2             { get { return this.GetTable<SequenceTest2>(); } }
+		public ITable<SequenceTest3>                  SequenceTest3             { get { return this.GetTable<SequenceTest3>(); } }
+		public ITable<TestIdentity>                   TestIdentities            { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestMerge1>                     TestMerge1                { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>                     TestMerge2                { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<test_schema_Testsamename>       Testsamenames             { get { return this.GetTable<test_schema_Testsamename>(); } }
+		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities      { get { return this.GetTable<test_schema_TestSchemaIdentity>(); } }
+		public ITable<test_schema_Testserialidentity> Testserialidentities      { get { return this.GetTable<test_schema_Testserialidentity>(); } }
 
 		partial void InitMappingSchema()
 		{
@@ -1732,9 +1734,15 @@ namespace PostreSQL11DataContext
 		#endregion
 	}
 
+	/// <summary>
+	/// This is the Person table
+	/// </summary>
 	[Table(Schema="public", Name="Person")]
 	public partial class Person
 	{
+		/// <summary>
+		/// This is the Person.PersonID column
+		/// </summary>
 		[PrimaryKey, Identity   ] public int    PersonID   { get; set; } // integer
 		[Column,     NotNull    ] public string FirstName  { get; set; } // character varying(50)
 		[Column,     NotNull    ] public string LastName   { get; set; } // character varying(50)
@@ -1756,6 +1764,13 @@ namespace PostreSQL11DataContext
 		public Patient PatientPersonIDfkey { get; set; }
 
 		#endregion
+	}
+
+	[Table(Schema="public", Name="SequenceCustomNamingTest")]
+	public partial class SequenceCustomNamingTest
+	{
+		[PrimaryKey, Identity] public int    ID    { get; set; } // integer
+		[Column,     Nullable] public string Value { get; set; } // character varying(50)
 	}
 
 	[Table(Schema="public", Name="SequenceTest1")]
@@ -25666,6 +25681,12 @@ namespace PostreSQL11DataContext
 				t.PersonID == PersonID);
 		}
 
+		public static SequenceCustomNamingTest Find(this ITable<SequenceCustomNamingTest> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
 		public static SequenceTest1 Find(this ITable<SequenceTest1> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
@@ -25721,3 +25742,5 @@ namespace PostreSQL11DataContext
 		}
 	}
 }
+
+#pragma warning restore 1591

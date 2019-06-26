@@ -23,7 +23,9 @@ void ValidationImpl()
 		if (props.Count > 0)
 		{
 			if (!Model.Usings.Contains("System.Collections.Generic"))
+			{
 				Model.Usings.Add("System.Collections.Generic");
+			}
 
 			var isValid      = new Method(() => "bool", "IsValid", new Func<string>[] { () => cl.Name + " obj" }) { IsStatic = true };
 			var validator    = new Class("CustomValidator", isValid) { IsStatic = true, };
