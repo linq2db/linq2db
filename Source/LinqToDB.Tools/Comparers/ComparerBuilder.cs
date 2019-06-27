@@ -212,8 +212,10 @@ namespace LinqToDB.Tools.Comparers
 						? type.GetElementType()
 						: type.GetGenericArguments()[0])
 					: typeof(EnumerableEqualityComparer);
-			else
+			else if (type.IsClassEx() && typeof(string) != type)
 				return Expression.Call(_getEqualityComparerMethodInfo.MakeGenericMethod(type));
+			else 
+				comparerType = typeof(EqualityComparer<>).MakeGenericType(type);
 
 			var constructors = comparerType.GetConstructors();
 

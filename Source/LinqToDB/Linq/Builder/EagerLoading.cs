@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using LinqToDB.Common;
+using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
@@ -637,38 +638,6 @@ namespace LinqToDB.Linq.Builder
 
 		}
 
-		static string VisualizeType(Type type)
-		{
-			if (type == null)
-				return "void";
-
-			if (!type.IsGenericTypeEx())
-				return type.Name;
-
-			var arguments = string.Join(", ", type.GetGenericArguments().Select(VisualizeType));
-			return $"{type.Name}<{arguments}>";
-		}
-
-		static string VisualizeMethod(MethodInfo method)
-		{
-			var declaringType = VisualizeType(method.DeclaringType);
-
-			var returnType = VisualizeType(method.ReturnType);
-			var pms = string.Join(",\n\t",
-				method.GetParameters().Select(p => $"{VisualizeType(p.ParameterType)} {p.Name}"));
-			if (!pms.IsNullOrEmpty())
-				pms += "\n";
-
-			var genericArgs = string.Empty;
-			if (method.IsGenericMethod)
-			{
-				genericArgs = string.Join(", ", method.GetGenericArguments().Select(VisualizeType));
-				genericArgs = $"<{genericArgs}>";
-			}
-
-			return $"{returnType} {method.Name}{genericArgs}({pms})";
-		}
-
 		class KeyInfo
 		{
 			public Expression Original;
@@ -726,14 +695,18 @@ namespace LinqToDB.Linq.Builder
 			var initialMainQuery = context.Builder.Expression.Unwrap();
 			var masterQueryFinal = initialMainQuery;
 			expression = expression.Unwrap();
+			var unchangedDetailQuery = expression;
 
-			ExtractIndepended(initialMainQuery, expression, parameters, out var queryableDetail, out var finalExpression, out var replaceParam);
+			ExtractIndepended(initialMainQuery, unchangedDetailQuery, parameters, out var queryableDetail, out var finalExpression, out var replaceParam);
 
 			var foundMembers = new List<Expression>();
 			Expression resultExpression;
 
 			var mainParamTransformation = new Dictionary<ParameterExpression, ParameterExpression>();
 			var foundKeyExpressions = new List<Expression>();
+
+			var hasConnectionWithMaster = false;
+			var detailExpressionTransformation = new Dictionary<Expression, Expression>(new ExpressionEqualityComparer());
 
 			if (initialMainQuery.NodeType == ExpressionType.Call)
 			{
@@ -763,7 +736,109 @@ namespace LinqToDB.Linq.Builder
 
 						if (!IsQueryableMethod(master_1_Lambda.Body, "Select", out var masterP_1_Select))
 						{
-							var reducedBody = RemoveProjection(selectContext, master_1_Lambda.Body, out var newContext);
+							var initialMainQueryProjectionLambda = (LambdaExpression)mc.Arguments[2].Unwrap();
+							var projectionMethod = _tupleConstructors[0].MakeGenericMethod(
+								initialMainQueryProjectionLambda.Parameters[0].Type,
+								initialMainQueryProjectionLambda.Parameters[1].Type);
+
+							var tupleType = projectionMethod.ReturnType;
+
+							var newProjection = Expression.Call(projectionMethod,
+								initialMainQueryProjectionLambda.Parameters);
+
+							var newProjectionLambda = Expression.Lambda(newProjection, initialMainQueryProjectionLambda.Parameters);
+
+							var newSelectManyMethod = _selectManyMethodInfo.MakeGenericMethod(
+								mc.Method.GetGenericArguments()[0], mc.Method.GetGenericArguments()[1],
+								newProjection.Type);
+
+							var ms = newSelectManyMethod.DisplayName(fullName:false);
+							var zz = mc.Method.GetGenericArguments()[1];
+
+							var newSelectMany = Expression.Call(newSelectManyMethod, mc.Arguments[0], mc.Arguments[1],
+								newProjectionLambda);
+
+							var masterParm = Expression.Parameter(tupleType, GetMasterParamName("master_x_"));
+
+							detailExpressionTransformation.Add(initialMainQueryProjectionLambda.Parameters[0], Expression.PropertyOrField(masterParm, "Item1"));
+							detailExpressionTransformation.Add(initialMainQueryProjectionLambda.Parameters[1], Expression.PropertyOrField(masterParm, "Item2"));
+
+							var newDetailQuery = queryableDetail.Transform(e =>
+							{
+								if (e.NodeType == ExpressionType.Parameter)
+								{
+									if (detailExpressionTransformation.TryGetValue((ParameterExpression)e,
+										out var replacement2))
+										return replacement2;
+								}
+
+								return e;
+							});
+
+							masterQueryFinal = newSelectMany;
+							var zzz = initialMainQuery;
+
+							hasConnectionWithMaster = !ReferenceEquals(initialMainQuery, newDetailQuery);
+
+							if (!hasConnectionWithMaster)
+							{
+								// detail query has no dependency with master, so load all
+
+								var detailElementType = GetEnumerableElementType(unchangedDetailQuery.Type);
+								var enlistMethod1 = EnlistEagerLoadingFunctionalityDetachedMethodInfo.MakeGenericMethod(detailElementType);
+
+								resultExpression = (Expression)enlistMethod1.Invoke(null,
+									new object[]
+										{ builder, unchangedDetailQuery });
+
+                                return resultExpression;
+							}
+
+							context = selectContext.Sequence[1];
+
+							var masterKeys = ExtractKeys(context, initialMainQueryProjectionLambda.Parameters[1]).ToArray();
+
+							var additionalDependencies1 = SearchDependencies(queryableDetail, initialMainQueryProjectionLambda.Parameters[0],
+								mappingSchema);
+
+							var additionalDependencies2 = SearchDependencies(queryableDetail, initialMainQueryProjectionLambda.Parameters[1],
+								mappingSchema);
+
+							var dependencies1 = additionalDependencies1.SelectMany(d => ExtractKeys(context, d)).ToArray();
+							var dependencies2 = additionalDependencies2.SelectMany(d => ExtractKeys(context, d)).ToArray();
+
+							var preparedKeys = masterKeys
+								.Concat(dependencies1)
+								.Concat(dependencies2)
+								.ToArray();
+
+							var keyCompiledExpression = GenerateKeyExpression(preparedKeys.Select(k => k.ForCompilation).ToArray(), 0);
+							var keySelectExpression   = GenerateKeyExpression(preparedKeys.Select(k => k.ForSelect).ToArray(), 0);
+
+							keySelectExpression = keySelectExpression.Transform(e =>
+								detailExpressionTransformation.TryGetValue(e, out var replacement) ? replacement : e);
+
+							var keySelectLambda    = Expression.Lambda(keySelectExpression, masterParm);
+							var detailsQueryLambda = Expression.Lambda(EnsureEnumerable(newDetailQuery), masterParm);
+
+							var enlistMethod =
+								EnlistEagerLoadingFunctionalityMethodInfo.MakeGenericMethod(
+									GetEnumerableElementType(masterQueryFinal.Type),
+									GetEnumerableElementType(newDetailQuery.Type),
+									keyCompiledExpression.Type);
+
+							var msStr = enlistMethod.DisplayName(fullName:false);
+
+							var master   = masterQueryFinal.Type.ShortDisplayName();
+							var qd       = detailsQueryLambda.Type.ShortDisplayName();
+							var compiled = keyCompiledExpression.Type.ShortDisplayName();
+							var ke       = keySelectExpression.Type.ShortDisplayName();
+
+							resultExpression = (Expression)enlistMethod.Invoke(null,
+								new object[]
+									{ builder, masterQueryFinal, detailsQueryLambda, keyCompiledExpression, keySelectLambda });
+
+							return resultExpression;
 						}
 						else
 						{
@@ -785,7 +860,7 @@ namespace LinqToDB.Linq.Builder
 									Expression.Parameter(GetEnumerableElementType(reducedBody.Type), "submaster");
 
 								var dependencies1 = master_1_Dependencies.SelectMany(d => ExtractKeys(newContext, d)).ToArray();
-								var dependencies2 = masterP_1Dpendencies.SelectMany(d => ExtractKeys(newContext, d)).ToArray();
+								var dependencies2 = masterP_1Dpendencies. SelectMany(d => ExtractKeys(newContext, d)).ToArray();
 
 								var preparedKeys = ExtractKeys(context, envelopeCreate.Arguments[0])
 									.Concat(ExtractKeys(newContext, subMasterParam))
@@ -796,7 +871,7 @@ namespace LinqToDB.Linq.Builder
 								var newSubMasterLambda = Expression.Lambda(EnsureEnumerable(reducedBody), master_1);
 
 								var keyCompiledExpression = GenerateKeyExpression(preparedKeys.Select(k => k.ForCompilation).ToArray(), 0);
-								var keySelectExpression = GenerateKeyExpression(preparedKeys.Select(k => k.ForSelect).ToArray(), 0);
+								var keySelectExpression   = GenerateKeyExpression(preparedKeys.Select(k => k.ForSelect).ToArray(), 0);
 
 								var originalKeySelectExpression = keySelectExpression;
 								keySelectExpression = keySelectExpression.Transform(e => e == master_1 ? master_12 : e);
@@ -846,12 +921,12 @@ namespace LinqToDB.Linq.Builder
 									EnlistEagerLoadingFunctionalityMethodInfo.MakeGenericMethod(masterObjType1, detailObjType1,
 										detailKeyExpression.Type);
 
-								var ms = VisualizeMethod(enlistMethod);
+								var ms = enlistMethod.DisplayName(fullName:false);
 
-								var master   = VisualizeType(masterQueryFinal.Type);
-								var qd       = VisualizeType(detailsQueryLambda.Type);
-								var compiled = VisualizeType(keyCompiledExpression.Type);
-								var ke       = VisualizeType(detailKeyExpression.Type);
+								var master   = masterQueryFinal.Type.ShortDisplayName();
+								var qd       = detailsQueryLambda.Type.ShortDisplayName();
+								var compiled = keyCompiledExpression.Type.ShortDisplayName();
+								var ke       = detailKeyExpression.Type.ShortDisplayName();
 
 								resultExpression = (Expression)enlistMethod.Invoke(null,
 									new object[]
@@ -870,9 +945,12 @@ namespace LinqToDB.Linq.Builder
 
 			var detailsQuery = queryableDetail.Transform(e =>
 			{
-				if (e.NodeType == ExpressionType.Parameter && mainParamTransformation.TryGetValue((ParameterExpression)e, out var replacement))
+				if (e.NodeType == ExpressionType.Parameter)
 				{
-					return replacement;
+                    if (mainParamTransformation.TryGetValue((ParameterExpression)e, out var replacement1))
+						return replacement1;
+                    if (detailExpressionTransformation.TryGetValue((ParameterExpression)e, out var replacement2))
+						return replacement2;
 				}
 
 				return e;
