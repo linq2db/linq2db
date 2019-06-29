@@ -11,8 +11,8 @@ branches:
     - /dev.*/
 
 environment:
-  assemblyVersion: {version}
-  packageVersion: {version}
+  assemblyVersion: '{version}'
+  packageVersion: '{version}'
 
 cache:
 - packages -> appveyor.yml
