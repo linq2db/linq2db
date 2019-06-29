@@ -1,6 +1,7 @@
 image: Visual Studio 2017
 configuration: Release
 skip_tags: true
+version: 2.8.0.{build}
 
 branches:
   only:
@@ -10,13 +11,11 @@ branches:
     - /dev.*/
 
 environment:
-  assemblyVersion: 2.8.0
-  packageVersion: 2.8.0
+  assemblyVersion: {version}
+  packageVersion: {version}
 
 cache:
 - packages -> appveyor.yml
-
-version: $(assemblyVersion).{build}
 
 services:
 - mssql2014
@@ -36,15 +35,6 @@ build_script:
 
 before_build:
 - ps: |
-    echo $env:assemblyVersion
-    echo $env:packageVersion
-    echo $(assemblyVersion)
-    echo ${assemblyVersion}
-    echo %assemblyVersion%
-    echo $(version)
-    echo ${version}
-    echo %version%
-    echo $env:version
     if ($env:APPVEYOR_REPO_BRANCH -ne "release")
     {
         $env:packageVersion = "$env:assemblyVersion-rc$env:appveyor_build_number"
