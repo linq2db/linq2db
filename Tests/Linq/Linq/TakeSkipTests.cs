@@ -210,7 +210,16 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[ActiveIssue(
+			Configurations = new[]
+			{
+				ProviderName.DB2,
+				TestProvName.AllOracle,
+				ProviderName.SqlServer2005,
+				ProviderName.SqlServer2008
+			},
+			SkipForNonLinqService = true,
+			Details = "SELECT * query")]
 		[Test]
 		public void SkipTake4([DataSources(
 			TestProvName.AllSQLite,

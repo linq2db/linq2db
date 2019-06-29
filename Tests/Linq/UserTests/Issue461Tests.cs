@@ -73,7 +73,22 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[ActiveIssue(
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				ProviderName.Informix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllSQLite,
+				ProviderName.SapHana,
+				ProviderName.SqlServer2000,
+				TestProvName.AllSybase
+			},
+			SkipForNonLinqService = true,
+			Details = "SELECT * query")]
 		[Test]
 		public void SelectToAnonimousTest1([DataSources] string context)
 		{
@@ -111,7 +126,22 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[ActiveIssue(
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				ProviderName.Informix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllSQLite,
+				ProviderName.SapHana,
+				ProviderName.SqlServer2000,
+				TestProvName.AllSybase
+			},
+			SkipForNonLinqService = true,
+			Details = "SELECT * query")]
 		[Test]
 		public void SelectToAnonymousTest2([DataSources] string context)
 		{
@@ -151,7 +181,22 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[ActiveIssue(
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				ProviderName.Informix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllSQLite,
+				ProviderName.SapHana,
+				ProviderName.SqlServer2000,
+				TestProvName.AllSybase
+			},
+			SkipForNonLinqService = true,
+			Details = "SELECT * query")]
 		[Test]
 		public void SelectToTypeTest1([DataSources] string context)
 		{
@@ -189,7 +234,22 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
+		[ActiveIssue(
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				ProviderName.Informix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllSQLite,
+				ProviderName.SapHana,
+				ProviderName.SqlServer2000,
+				TestProvName.AllSybase
+			},
+			SkipForNonLinqService = true,
+			Details = "SELECT * query")]
 		[Test]
 		public void SelectToTypeTest2([DataSources] string context)
 		{

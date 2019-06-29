@@ -41,10 +41,8 @@ namespace Tests.xUpdate
 		}
 
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
-		// todo: reenable oracle when fix merged
-		//[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
-		public void TruncateIdentityTest([DataSources(ProviderName.Informix, ProviderName.SapHana, ProviderName.OracleNative)]
+		public void TruncateIdentityTest([DataSources(ProviderName.Informix, ProviderName.SapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -75,9 +73,7 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
-		// todo: reenable oracle after fix merged
-		//[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
-		public void TruncateIdentityNoResetTest([DataSources(ProviderName.OracleNative)] string context)
+		public void TruncateIdentityNoResetTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

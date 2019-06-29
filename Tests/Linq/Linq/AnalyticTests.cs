@@ -122,10 +122,6 @@
 			}
 		}
 
-		[ActiveIssue(
-			Configuration         = TestProvName.AllOracle,
-			Details               = "Specified cast is not valid.",
-			SkipForNonLinqService = true)]
 		[Test]
 		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
