@@ -17,7 +17,7 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{expr}",                           TokenName = "order_item")]
 		public static Sql.IStringAggregateOrdered<T> OrderBy<T, TKey>(
-			                [NotNull] this Sql.IStringAggregateNotOrdered<T> aggregate, 
+							[NotNull] this Sql.IStringAggregateNotOrdered<T> aggregate, 
 			[ExprParameter] [NotNull]      Expression<Func<T, TKey>>         expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -54,7 +54,7 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{expr} DESC",                      TokenName = "order_item")]
 		public static Sql.IStringAggregateOrdered<T> OrderByDescending<T, TKey>(
-			                [NotNull] this Sql.IStringAggregateNotOrdered<T> aggregate, 
+							[NotNull] this Sql.IStringAggregateNotOrdered<T> aggregate, 
 			[ExprParameter] [NotNull]      Expression<Func<T, TKey>>         expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -90,7 +90,7 @@ namespace LinqToDB
 
 		[Sql.Extension("{expr}", TokenName = "order_item")]
 		public static Sql.IStringAggregateOrdered<T> ThenBy<T, TKey>(
-			                [NotNull] this Sql.IStringAggregateOrdered<T> aggregate, 
+							[NotNull] this Sql.IStringAggregateOrdered<T> aggregate, 
 			[ExprParameter] [NotNull]      Expression<Func<T, TKey>>      expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -108,7 +108,7 @@ namespace LinqToDB
 
 		[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 		public static Sql.IStringAggregateOrdered<T> ThenByDescending<T, TKey>(
-			                [NotNull] this Sql.IStringAggregateOrdered<T> aggregate, 
+							[NotNull] this Sql.IStringAggregateOrdered<T> aggregate, 
 			[ExprParameter] [NotNull]      Expression<Func<T, TKey>>      expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -207,7 +207,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
-			                [NotNull] this IEnumerable<T> source,
+							[NotNull] this IEnumerable<T> source,
 			[ExprParameter] [NotNull] string separator,
 			[ExprParameter] [NotNull] Func<T, string> selector)
 		{
@@ -226,7 +226,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
-			                [NotNull] this IQueryable<T> source,
+							[NotNull] this IQueryable<T> source,
 			[ExprParameter] [NotNull] string separator,
 			[ExprParameter] [NotNull] Expression<Func<T, string>> selector)
 		{
@@ -368,8 +368,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Concatenates NOT NULL strings, using the specified separator between each member.
 		/// </summary>
-        /// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
-    	/// <param name="arguments">A collection that contains the strings to concatenate.</param>
+		/// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
+		/// <param name="arguments">A collection that contains the strings to concatenate.</param>
 		/// <returns></returns>
 		[Sql.Extension(PN.SqlServer2017, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')")]
 		[Sql.Extension(PN.PostgreSQL,    "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null)]
@@ -378,7 +378,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.SQLite,        "", BuilderType = typeof(SqliteConcatWsBuilder))]
 		public static string ConcatStrings(
 			[ExprParameter] [NotNull] string separator,
-			                [NotNull] params string[] arguments)
+							[NotNull] params string[] arguments)
 		{
 			return string.Join(separator, arguments.Where(a => a != null));
 		}
