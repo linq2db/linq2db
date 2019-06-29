@@ -18,7 +18,6 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		public void GeneralTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

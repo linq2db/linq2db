@@ -286,10 +286,11 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				// ((OracleCommand)dataConnection.Command).BindByName = true;
 
-				var p = Expression.Parameter(typeof(DataConnection), "dataConnection");
+				var p     = Expression.Parameter(typeof(DataConnection), "dataConnection");
+				var pbind = Expression.Parameter(typeof(bool), "value");
 
 				_setBindByName =
-					Expression.Lambda<Action<DataConnection>>(
+					Expression.Lambda<Action<DataConnection, bool>>(
 						Expression.Assign(
 							Expression.PropertyOrField(
 								Expression.Convert(
@@ -298,8 +299,9 @@ namespace LinqToDB.DataProvider.Oracle
 										Expression.Convert(Expression.PropertyOrField(p, "Command"), typeof(DbCommand))),
 									connectionType.AssemblyEx().GetType(AssemblyName + ".Client.OracleCommand", true)),
 								"BindByName"),
-							Expression.Constant(true)),
-							p
+							pbind),
+							p,
+							pbind
 					).Compile();
 			}
 
@@ -438,25 +440,23 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 #endif
 
-		Action<DataConnection> _setBindByName;
+		Action<DataConnection, bool> _setBindByName;
 
-		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters)
+		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters)
 		{
 			dataConnection.DisposeCommand();
 
 			if (_setBindByName == null)
 				EnsureConnection();
 
-			//if (Name == ProviderName.OracleNative)
-				_setBindByName(dataConnection);
+			// binding disabled for native provider without parameters to reduce changes to fail when SQL contains
+			// parameter-like token.
+			// This is mostly issue with triggers creation, because they can have record tokens like :NEW
+			// incorectly identified by native provider as parameter
+			var bind = Name != ProviderName.OracleNative || parameters?.Length > 0 || withParameters;
+			_setBindByName(dataConnection, bind);
 
-//			if (Name == ProviderName.OracleNative)
-//			{
-//				dynamic cmd = Proxy.GetUnderlyingObject((DbCommand)dataConnection.Command);
-//				cmd.BindByName = true;
-//			}
-
-			base.InitCommand(dataConnection, commandType, commandText, parameters);
+			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
 
 			if (parameters != null)
 				foreach (var parameter in parameters)

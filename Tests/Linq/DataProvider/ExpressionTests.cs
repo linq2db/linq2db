@@ -26,7 +26,7 @@ namespace Tests.DataProvider
 
 			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
-				conn.InitCommand(CommandType.Text, "SELECT 1", null, null);
+				conn.InitCommand(CommandType.Text, "SELECT 1", null, null, false);
 
 				var rd = conn.Command.ExecuteReader();
 
