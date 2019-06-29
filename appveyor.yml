@@ -33,10 +33,10 @@ nuget:
 
 build_script:
 - cmd: msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
-##- ps: .\build.ps1
 
 before_build:
 - ps: |
+    echo {version}
     if ($env:APPVEYOR_REPO_BRANCH -ne "release")
     {
         $env:packageVersion = "$env:assemblyVersion-rc$env:appveyor_build_number"
