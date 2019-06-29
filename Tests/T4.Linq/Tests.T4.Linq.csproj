@@ -53,6 +53,12 @@
 		  <DependentUpon>MySql.tt</DependentUpon>
 		</Compile>
 
+		<Compile Update="MySqlConnector.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>MySqlConnector.tt</DependentUpon>
+		</Compile>
+
 		<Compile Update="Oracle.generated.cs">
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
