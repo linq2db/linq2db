@@ -46,7 +46,6 @@ namespace Tests.UserTests
 			[Column("inIdMain"), NotNull]          public int InIdMain { get; set; } // int
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void Test([DataSources] string context)
 		{

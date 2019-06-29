@@ -190,7 +190,7 @@ namespace Tests.xUpdate
 
 				ISqlOptimizer IDataProvider.GetSqlOptimizer() => throw new NotImplementedException();
 
-				void IDataProvider.InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters) => throw new NotImplementedException();
+				void IDataProvider.InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters) => throw new NotImplementedException();
 
 				bool IDataProvider.IsCompatibleConnection(IDbConnection connection) => throw new NotImplementedException();
 
