@@ -19,9 +19,6 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\MySql.Data.dll"  target="tools" />
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll" target="tools" />
-		
 		<file src="MySqlConnector\linq2db.MySqlConnector.props"      target="build" />
 		
 		<file src="MySqlConnector\*.*"                               target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />

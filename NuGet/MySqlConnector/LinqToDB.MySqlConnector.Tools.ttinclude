@@ -1,3 +1,3 @@
-<#@ assembly name="$(LinqToDBT4MySqlConnectorToolsDirectory)MySql.Data.dll" #>
-<#@ include file="LinqToDB.Tools.ttinclude" #>
+<#@ assembly name="$(ProjectDir)\bin\$(ConfigurationName)\MySqlConnector.dll" #>
+<#@ assembly name="$(ProjectDir)\bin\$(ConfigurationName)\linq2db.dll"        #>
 <#@ include file="LinqToDB.MySql.ttinclude" #>

@@ -133,6 +133,10 @@
 		  <Generator>TextTemplatingFileGenerator</Generator>
 		  <LastGenOutput>MariaDB.generated.cs</LastGenOutput>
 		</None>
+		<None Update="MySqlConnector.tt">
+		  <LastGenOutput>MySqlConnector.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 		<None Update="MySql.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>MySql.generated.cs</LastGenOutput>
