@@ -837,7 +837,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1202)]
 		[Test, Parallelizable(ParallelScope.None)]
 		public void SelectReverseNullPropagationWhereTest([DataSources] string context)
 		{

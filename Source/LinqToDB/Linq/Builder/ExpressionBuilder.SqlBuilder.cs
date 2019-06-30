@@ -3105,7 +3105,7 @@ namespace LinqToDB.Linq.Builder
 					if (conditional.Test.NodeType == ExpressionType.NotEqual)
 					{
 						var binary = (BinaryExpression)conditional.Test;
-						if (IsNullConstant(binary.Right))
+						if (IsNullConstant(binary.Right) || IsNullConstant(binary.Left))
 						{
 							if (IsNullConstant(conditional.IfFalse))
 							{
@@ -3116,7 +3116,7 @@ namespace LinqToDB.Linq.Builder
 					else if (conditional.Test.NodeType == ExpressionType.Equal)
 					{
 						var binary = (BinaryExpression)conditional.Test;
-						if (IsNullConstant(binary.Right))
+						if (IsNullConstant(binary.Right) || IsNullConstant(binary.Left))
 						{
 							if (IsNullConstant(conditional.IfTrue))
 							{
