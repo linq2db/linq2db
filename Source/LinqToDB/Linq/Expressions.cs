@@ -507,8 +507,8 @@ namespace LinqToDB.Linq
 
 					provider.SetInfo();
 
-					// Nullable.HasValue
-					gtype = typeof(HasValueExpressionInfo<>).MakeGenericType(type);
+					// Nullable<T>.HasValue
+					gtype    = typeof(HasValueExpressionInfo<>).MakeGenericType(type);
 					provider = (ISetInfo)Activator.CreateInstance(gtype);
 
 					provider.SetInfo();
