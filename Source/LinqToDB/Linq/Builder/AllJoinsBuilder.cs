@@ -10,9 +10,15 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			return IsMatchingMethod(methodCall, false);
+		}
+
+		internal static bool IsMatchingMethod(MethodCallExpression methodCall, bool rightNullableOnly)
+		{
 			return
-				methodCall.IsQueryable("Join") && methodCall.Arguments.Count == 3 ||
-				methodCall.IsQueryable("InnerJoin", "LeftJoin", "RightJoin", "FullJoin") && methodCall.Arguments.Count == 2;
+				methodCall.IsQueryable("Join") && methodCall.Arguments.Count == 3
+				|| !rightNullableOnly && methodCall.IsQueryable("InnerJoin", "LeftJoin", "RightJoin", "FullJoin") && methodCall.Arguments.Count == 2
+				|| rightNullableOnly && methodCall.IsQueryable("RightJoin", "FullJoin") && methodCall.Arguments.Count == 2;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

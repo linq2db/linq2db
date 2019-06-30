@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SelectQuery));
+			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
 			JoinType joinType;
@@ -52,7 +52,10 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
+			if (joinType == JoinType.Right)
+				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, null);
 			outerContext = new SubQueryContext(outerContext);
+
 			innerContext = joinType == JoinType.Left
 				? new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, null)
 				: (IBuildContext)new SubQueryContext(innerContext);

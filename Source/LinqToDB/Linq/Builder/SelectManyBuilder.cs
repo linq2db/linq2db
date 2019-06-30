@@ -25,19 +25,27 @@ namespace LinqToDB.Linq.Builder
 			var resultSelector     = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
 			if (sequence.SelectQuery.HasUnion || !sequence.SelectQuery.IsSimple)
-			{
 				sequence = new SubQueryContext(sequence);
+
+			var expr           = collectionSelector.Body.Unwrap();
+			DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty = null;
+			if (expr is MethodCallExpression mc && AllJoinsBuilder.IsMatchingMethod(mc, true))
+			{
+				defaultIfEmpty = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
+				sequence = new SubQueryContext(defaultIfEmpty);
+				defaultIfEmpty.Disabled = true;
 			}
 
 			var context        = new SelectManyContext(buildInfo.Parent, collectionSelector, sequence);
 			context.SetAlias(collectionSelector.Parameters[0].Name);
 
-			var expr           = collectionSelector.Body.Unwrap();
-
 			var collectionInfo = new BuildInfo(context, expr, new SelectQuery());
 			var collection     = builder.BuildSequence(collectionInfo);
 			if (resultSelector.Parameters.Count > 1)
 				collection.SetAlias(resultSelector.Parameters[1].Name);
+
+			if (defaultIfEmpty != null && collectionInfo.JoinType == JoinType.Right)
+				defaultIfEmpty.Disabled = false;
 
 			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext || collectionInfo.JoinType == JoinType.Left;
 			var sql            = collection.SelectQuery;

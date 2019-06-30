@@ -1730,5 +1730,96 @@ namespace Tests.Linq
 				Assert.IsNull(results[1].leftTag);
 			}
 		}
+
+		[Test]
+		public void RightJoinWithRecordSelection1([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.Data))
+			{
+				var t =
+					from leftTag in tagTable
+					from fact in factTable.RightJoin(fact => leftTag.FactId == fact.Id)
+					where fact.Id > 3
+					select new { fact, leftTag };
+
+				var results = t.ToArray();
+
+				Assert.AreEqual(2, results.Length);
+				Assert.AreEqual(4, results[0].fact.Id);
+				Assert.AreEqual("Tag4", results[0].leftTag.Name);
+				Assert.AreEqual(5, results[1].fact.Id);
+				Assert.IsNull(results[1].leftTag);
+			}
+		}
+
+		[Test]
+		public void RightJoinWithRecordSelection2([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.Data))
+			{
+				var t =
+					from leftTag in tagTable
+					from fact in factTable.Join(SqlJoinType.Right, fact => leftTag.FactId == fact.Id)
+					where fact.Id > 3
+					select new { fact, leftTag };
+
+				var results = t.ToArray();
+
+				Assert.AreEqual(2, results.Length);
+				Assert.AreEqual(4, results[0].fact.Id);
+				Assert.AreEqual("Tag4", results[0].leftTag.Name);
+				Assert.AreEqual(5, results[1].fact.Id);
+				Assert.IsNull(results[1].leftTag);
+			}
+		}
+
+		[Test]
+		public void RightJoinWithRecordSelection3([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.Data))
+			{
+				var q =
+					from ft in tagTable.RightJoin(factTable, (t, f) => t.FactId == f.Id, (t, f) => new { fact = f, leftTag = t })
+					where ft.fact.Id > 3
+					select ft;
+
+				var results = q.ToArray();
+
+				Assert.AreEqual(2, results.Length);
+				Assert.AreEqual(4, results[0].fact.Id);
+				Assert.AreEqual("Tag4", results[0].leftTag.Name);
+				Assert.AreEqual(5, results[1].fact.Id);
+				Assert.IsNull(results[1].leftTag);
+			}
+		}
+
+		[Test]
+		public void RightJoinWithRecordSelection4([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.Data))
+			{
+				var q =
+					from ft in tagTable.Join(factTable, SqlJoinType.Right, (t, f) => t.FactId == f.Id, (t, f) => new { fact = f, leftTag = t })
+					where ft.fact.Id > 3
+					select ft;
+
+				var results = q.ToArray();
+
+				Assert.AreEqual(2, results.Length);
+				Assert.AreEqual(4, results[0].fact.Id);
+				Assert.AreEqual("Tag4", results[0].leftTag.Name);
+				Assert.AreEqual(5, results[1].fact.Id);
+				Assert.IsNull(results[1].leftTag);
+			}
+		}
+
 	}
 }
