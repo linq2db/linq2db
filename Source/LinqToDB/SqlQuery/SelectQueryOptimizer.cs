@@ -346,7 +346,7 @@ namespace LinqToDB.SqlQuery
 
 				var union = (SelectQuery)table.Source;
 
-				if (!union.HasUnion)
+				if (!union.HasUnion || sql.Select.Columns.Count != union.Select.Columns.Count)
 					return;
 
 				for (var i = 0; i < sql.Select.Columns.Count; i++)

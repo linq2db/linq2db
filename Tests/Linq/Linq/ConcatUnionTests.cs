@@ -935,5 +935,21 @@ namespace Tests.Linq
 			}
 		}
 
+		// https://github.com/linq2db/linq2db/issues/1774
+		[Test]
+		public void SelectFromUnion([IncludeDataSources(
+				true,
+				TestProvName.AllOracle,
+				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 = from p in db.Person where p.ID == 1 select new { p.ID };
+				var q2 = from p in db.Person where p.ID != 1 select new { p.ID };
+				var q = q1.Concat(q2);
+				var f = q.Select(t => new { t.ID, rn = Sql.Ext.DenseRank().Over().OrderBy(t.ID).ToValue() }).ToList();
+			}
+		}
 	}
 }
