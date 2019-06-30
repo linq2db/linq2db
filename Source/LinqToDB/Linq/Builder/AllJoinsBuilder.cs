@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 
 			buildInfo.JoinType = joinType;
 
-			sequence = joinType == JoinType.Left
+			sequence = joinType == JoinType.Left || joinType == JoinType.Full
 				? new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null)
 				: (IBuildContext)new SubQueryContext(sequence);
 

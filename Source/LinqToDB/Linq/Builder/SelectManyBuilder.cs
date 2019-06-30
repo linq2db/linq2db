@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 			if (resultSelector.Parameters.Count > 1)
 				collection.SetAlias(resultSelector.Parameters[1].Name);
 
-			if (defaultIfEmpty != null && collectionInfo.JoinType == JoinType.Right)
+			if (defaultIfEmpty != null && (collectionInfo.JoinType == JoinType.Right || collectionInfo.JoinType == JoinType.Full))
 				defaultIfEmpty.Disabled = false;
 
 			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext || collectionInfo.JoinType == JoinType.Left;

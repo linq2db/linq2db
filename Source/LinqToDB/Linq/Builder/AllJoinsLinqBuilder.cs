@@ -52,11 +52,11 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
-			if (joinType == JoinType.Right)
+			if (joinType == JoinType.Right || joinType == JoinType.Full)
 				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, null);
 			outerContext = new SubQueryContext(outerContext);
 
-			innerContext = joinType == JoinType.Left
+			innerContext = joinType == JoinType.Left || joinType == JoinType.Full
 				? new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, null)
 				: (IBuildContext)new SubQueryContext(innerContext);
 

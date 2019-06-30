@@ -1567,6 +1567,14 @@ namespace Tests.Linq
 				new Tag() { Id = 2, FactId = 3, Name = "Tag3" },
 				new Tag() { Id = 3, FactId = 4, Name = "Tag4" }
 			};
+
+			public static readonly Tag[] FullJoinData = new[]
+			{
+				new Tag() { Id = 1, FactId = 3, Name = "Tag3" },
+				new Tag() { Id = 2, FactId = 3, Name = "Tag3" },
+				new Tag() { Id = 3, FactId = 4, Name = "Tag4" },
+				new Tag() { Id = 4, FactId = 6, Name = "Tag6" }
+			};
 		}
 
 
@@ -1821,5 +1829,90 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void FullJoinWithRecordSelection1([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.FullJoinData))
+			{
+				var t =
+					from leftTag in tagTable
+					from fact in factTable.FullJoin(fact => leftTag.FactId == fact.Id)
+					where fact.Id > 3 || leftTag.FactId > 3
+					select new { fact, leftTag };
+
+				var results = t.ToArray();
+
+				Assert.AreEqual(3, results.Length);
+				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null));
+				Assert.AreEqual(1, results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"));
+				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
+			}
+		}
+
+		[Test]
+		public void FullJoinWithRecordSelection2([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.FullJoinData))
+			{
+				var t =
+					from leftTag in tagTable
+					from fact in factTable.Join(SqlJoinType.Full, fact => leftTag.FactId == fact.Id)
+					where fact.Id > 3 || leftTag.FactId > 3
+					select new { fact, leftTag };
+
+				var results = t.ToArray();
+
+				Assert.AreEqual(3, results.Length);
+				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null));
+				Assert.AreEqual(1, results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"));
+				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
+			}
+		}
+
+		[Test]
+		public void FullJoinWithRecordSelection3([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.FullJoinData))
+			{
+				var q =
+					from ft in tagTable.FullJoin(factTable, (t, f) => t.FactId == f.Id, (t, f) => new { fact = f, leftTag = t })
+					where ft.fact.Id > 3 || ft.leftTag.FactId > 3
+					select ft;
+
+				var results = q.ToArray();
+
+				Assert.AreEqual(3, results.Length);
+				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null));
+				Assert.AreEqual(1, results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"));
+				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
+			}
+		}
+
+		[Test]
+		public void FullJoinWithRecordSelection4([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.FullJoinData))
+			{
+				var q =
+					from ft in tagTable.Join(factTable, SqlJoinType.Full, (t, f) => t.FactId == f.Id, (t, f) => new { fact = f, leftTag = t })
+					where ft.fact.Id > 3 || ft.leftTag.FactId > 3
+					select ft;
+
+				var results = q.ToArray();
+
+				Assert.AreEqual(3, results.Length);
+				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null));
+				Assert.AreEqual(1, results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"));
+				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
+			}
+		}
 	}
 }
