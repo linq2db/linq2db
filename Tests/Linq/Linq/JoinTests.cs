@@ -1538,5 +1538,131 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table]
+		public class Fact
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Association(ThisKey = "Id", OtherKey = "FactId", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
+			public IEnumerable<Tag> TagFactIdIds { get; set; }
+
+			public static readonly Fact[] Data = new[]
+			{
+				new Fact() { Id = 3 },
+				new Fact() { Id = 4 },
+				new Fact() { Id = 5 }
+			};
+		}
+
+		[Table]
+		public partial class Tag
+		{
+			[PrimaryKey]      public int    Id     { get; set; }
+			[Column]          public int   FactId { get; set; }
+			[Column, NotNull] public string Name   { get; set; }
+
+			public static readonly Tag[] Data = new[]
+			{
+				new Tag() { Id = 1, FactId = 3, Name = "Tag3" },
+				new Tag() { Id = 2, FactId = 3, Name = "Tag3" },
+				new Tag() { Id = 3, FactId = 4, Name = "Tag4" }
+			};
+		}
+
+
+		// https://github.com/linq2db/linq2db/issues/1773
+		[Test]
+		public void LeftJoinWithRecordSelection1([DataSources] string context)
+		{
+			using (var db        = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable  = db.CreateLocalTable(Tag.Data))
+			{
+				var t =
+					from fact in factTable
+					join tag in tagTable on fact.Id equals tag.FactId into tagGroup
+					from leftTag in tagGroup.DefaultIfEmpty()
+					where fact.Id > 3
+					select new { fact, leftTag };
+
+				var results = t.ToArray();
+
+				Assert.AreEqual(2, results.Length);
+				Assert.AreEqual(4, results[0].fact.Id);
+				Assert.AreEqual("Tag4", results[0].leftTag.Name);
+				Assert.AreEqual(5, results[1].fact.Id);
+				Assert.IsNull(results[1].leftTag);
+			}
+		}
+
+		[Test]
+		[ActiveIssue(1773)]
+		public void LeftJoinWithRecordSelection2([DataSources] string context)
+		{
+			using (var db        = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable  = db.CreateLocalTable(Tag.Data))
+			{
+				var t =
+					from fact in factTable
+					from leftTag in tagTable.LeftJoin(tag => tag.FactId == fact.Id)
+					where fact.Id > 3
+					select new { fact, leftTag };
+
+				var results = t.ToArray();
+
+				Assert.AreEqual(2, results.Length);
+				Assert.AreEqual(4, results[0].fact.Id);
+				Assert.AreEqual("Tag4", results[0].leftTag.Name);
+				Assert.AreEqual(5, results[1].fact.Id);
+				Assert.IsNull(results[1].leftTag);
+			}
+		}
+
+		[Test]
+		public void LeftJoinWithRecordSelection3([DataSources] string context)
+		{
+			using (var db        = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable  = db.CreateLocalTable(Tag.Data))
+			{
+				var t =
+					from fact in factTable
+					from leftTag in tagTable.Where(tag => tag.FactId == fact.Id).DefaultIfEmpty()
+					where fact.Id > 3
+					select new { fact, leftTag };
+
+				var results = t.ToArray();
+
+				Assert.AreEqual(2, results.Length);
+				Assert.AreEqual(4, results[0].fact.Id);
+				Assert.AreEqual("Tag4", results[0].leftTag.Name);
+				Assert.AreEqual(5, results[1].fact.Id);
+				Assert.IsNull(results[1].leftTag);
+			}
+		}
+
+		[Test]
+		public void LeftJoinWithRecordSelection4([DataSources] string context)
+		{
+			using (var db        = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable  = db.CreateLocalTable(Tag.Data))
+			{
+				var t =
+					from fact in factTable
+					from leftTag in tagTable.LeftJoin(tag => tag.FactId == fact.Id)
+					where fact.Id > 3
+					select new { fact, leftTag = leftTag != null ? leftTag : null };
+
+				var results = t.ToArray();
+
+				Assert.AreEqual(2, results.Length);
+				Assert.AreEqual(4, results[0].fact.Id);
+				Assert.AreEqual("Tag4", results[0].leftTag.Name);
+				Assert.AreEqual(5, results[1].fact.Id);
+				Assert.IsNull(results[1].leftTag);
+			}
+		}
 	}
 }
