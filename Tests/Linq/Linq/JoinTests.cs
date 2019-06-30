@@ -1596,7 +1596,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(1773)]
 		public void LeftJoinWithRecordSelection2([DataSources] string context)
 		{
 			using (var db        = GetDataContext(context))

@@ -1041,7 +1041,7 @@ namespace Tests.Linq
 				var result = query.ToArray();
 
 				Assert.NotNull(result[0].Child1);
-				Assert.NotNull(result[1].Child1);
+				Assert.IsNull (result[1].Child1);
 
 				Assert.NotNull(result[0].Child2);
 				Assert.AreEqual(1,         result[0].Child2.Id);
@@ -1054,9 +1054,7 @@ namespace Tests.Linq
 				Assert.AreEqual("Generated", result[1].Child3.Value);
 
 				Assert.Null(result[0].Child4);
-				Assert.NotNull(result[1].Child4);
-				Assert.AreEqual(0,    result[1].Child4.Id);
-				Assert.AreEqual(null, result[1].Child4.Value);
+				Assert.IsNull(result[1].Child4);
 			}
 		}
 

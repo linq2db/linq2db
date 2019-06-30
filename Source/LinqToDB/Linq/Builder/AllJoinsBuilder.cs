@@ -19,8 +19,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			sequence = new SubQueryContext(sequence);
-
 			JoinType joinType;
 			var conditionIndex = 1;
 
@@ -48,6 +46,10 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			buildInfo.JoinType = joinType;
+
+			sequence = joinType == JoinType.Left
+				? new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null)
+				: (IBuildContext)new SubQueryContext(sequence);
 
 			if (methodCall.Arguments[conditionIndex] != null)
 			{
