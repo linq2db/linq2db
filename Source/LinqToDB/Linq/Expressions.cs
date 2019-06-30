@@ -306,6 +306,9 @@ namespace LinqToDB.Linq
 				}
 			}
 
+			if (mi is PropertyInfo pm && pm.DeclaringType.IsGenericTypeEx() && !pm.DeclaringType.IsGenericTypeDefinitionEx())
+				args = pm.DeclaringType.GetGenericArgumentsEx();
+
 			if (args != null && InitGenericConvertProvider(args, mappingSchema))
 				foreach (var configuration in mappingSchema.ConfigurationList)
 					if (Members.TryGetValue(configuration, out var dic))
@@ -481,14 +484,32 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		class HasValueExpressionInfo<T1> : ISetInfo
+			where T1 : struct
+		{
+			void ISetInfo.SetInfo()
+			{
+				_members[""][M(() => ((T1?)null).HasValue)] = N(() => L<T1?, bool>((T1? v) => v != null));
+			}
+		}
+
 		class GenericInfoProvider<T> : IGenericInfoProvider
 		{
 			public void SetInfo(MappingSchema mappingSchema)
 			{
-				if (!typeof(T).IsClassEx() && !typeof(T).IsInterfaceEx() && !typeof(T).IsNullable())
+				var type = typeof(T);
+
+				if (!type.IsClassEx() && !type.IsInterfaceEx() && !type.IsNullable())
 				{
-					var gtype    = typeof(GetValueOrDefaultExpressionInfo<>).MakeGenericType(typeof(T));
+					// GetValueOrDefault
+					var gtype    = typeof(GetValueOrDefaultExpressionInfo<>).MakeGenericType(type);
 					var provider = (ISetInfo)Activator.CreateInstance(gtype);
+
+					provider.SetInfo();
+
+					// Nullable.HasValue
+					gtype = typeof(HasValueExpressionInfo<>).MakeGenericType(type);
+					provider = (ISetInfo)Activator.CreateInstance(gtype);
 
 					provider.SetInfo();
 				}
@@ -797,25 +818,6 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToDouble((UInt16)  0)  ), N(() => L<UInt16,  Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
 			{ M(() => Convert.ToDouble((UInt32)  0)  ), N(() => L<UInt32,  Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
 			{ M(() => Convert.ToDouble((UInt64)  0)  ), N(() => L<UInt64,  Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
-
-			#endregion
-
-			#region HasValue
-
-			{ M(() => ((Boolean?)  null).HasValue ), N(() => L<Boolean?,  bool>  ((Boolean?  v)  => v != null)) },
-			{ M(() => ((Byte?)     null).HasValue ), N(() => L<Byte?,     bool>  ((Byte?     v)  => v != null)) },
-			{ M(() => ((Char?)     null).HasValue ), N(() => L<Char?,     bool>  ((Char?     v)  => v != null)) },
-			{ M(() => ((DateTime?) null).HasValue ), N(() => L<DateTime?, bool>  ((DateTime? v)  => v != null)) },
-			{ M(() => ((Decimal?)  null).HasValue ), N(() => L<Decimal?,  bool>  ((Decimal?  v)  => v != null)) },
-			{ M(() => ((Double?)   null).HasValue ), N(() => L<Double?,   bool>  ((Double?   v)  => v != null)) },
-			{ M(() => ((Int16?)    null).HasValue ), N(() => L<Int16?,    bool>  ((Int16?    v)  => v != null)) },
-			{ M(() => ((Int32?)    null).HasValue ), N(() => L<Int32?,    bool>  ((Int32?    v)  => v != null)) },
-			{ M(() => ((Int64?)    null).HasValue ), N(() => L<Int64?,    bool>  ((Int64?    v)  => v != null)) },
-			{ M(() => ((SByte?)    null).HasValue ), N(() => L<SByte?,    bool>  ((SByte?    v)  => v != null)) },
-			{ M(() => ((Single?)   null).HasValue ), N(() => L<Single?,   bool>  ((Single?   v)  => v != null)) },
-			{ M(() => ((UInt16?)   null).HasValue ), N(() => L<UInt16?,   bool>  ((UInt16?   v)  => v != null)) },
-			{ M(() => ((UInt32?)   null).HasValue ), N(() => L<UInt32?,   bool>  ((UInt32?   v)  => v != null)) },
-			{ M(() => ((UInt64?)   null).HasValue ), N(() => L<UInt64?,   bool>  ((UInt64?   v)  => v != null)) },
 
 			#endregion
 
