@@ -1,7 +1,7 @@
 <#@ template language="C#" debug="True" hostSpecific="True"                                      #>
 <#@ output extension=".generated.cs"                                                             #>
-<#@ include file="$(LinqToDBT4TemplatesDirectory)LinqToDB.Sybase.DataAction.Tools.ttinclude"     #>
-<#@ include file="$(LinqToDBT4TemplatesDirectory)PluralizationService.ttinclude"                 #>
+<#@ include file="$(LinqToDBT4SybaseDataActionTemplatesDirectory)LinqToDB.Sybase.DataAction.Tools.ttinclude"     #>
+<#@ include file="$(LinqToDBT4SybaseDataActionTemplatesDirectory)PluralizationService.ttinclude"                 #>
 <# //@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Sybase.DataAction.Tools.ttinclude" #>
 <# //@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"             #>
 <#

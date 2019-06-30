@@ -244,10 +244,10 @@ namespace PostreSQL11DataContext
 		#region JsonObjectKeys
 
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_object_keys")]
-		public ITable<JsonObjectKeysResult> JsonObjectKeys(string par3640)
+		public ITable<JsonObjectKeysResult> JsonObjectKeys(string par3643)
 		{
 			return this.GetTable<JsonObjectKeysResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
-				par3640);
+				par3643);
 		}
 
 		public partial class JsonObjectKeysResult
@@ -344,10 +344,10 @@ namespace PostreSQL11DataContext
 		#region JsonbObjectKeys
 
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_object_keys")]
-		public ITable<JsonbObjectKeysResult> JsonbObjectKeys(string par3753)
+		public ITable<JsonbObjectKeysResult> JsonbObjectKeys(string par3756)
 		{
 			return this.GetTable<JsonbObjectKeysResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
-				par3753);
+				par3756);
 		}
 
 		public partial class JsonbObjectKeysResult
@@ -360,11 +360,11 @@ namespace PostreSQL11DataContext
 		#region JsonbPopulateRecordset
 
 		[Sql.TableFunction(Schema="pg_catalog", Name="jsonb_populate_recordset")]
-		public ITable<JsonbPopulateRecordsetResult> JsonbPopulateRecordset(object par3759, string par3760)
+		public ITable<JsonbPopulateRecordsetResult> JsonbPopulateRecordset(object par3762, string par3763)
 		{
 			return this.GetTable<JsonbPopulateRecordsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
-				par3759,
-				par3760);
+				par3762,
+				par3763);
 		}
 
 		public partial class JsonbPopulateRecordsetResult
@@ -744,12 +744,12 @@ namespace PostreSQL11DataContext
 		#region PgLsDir
 
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_ls_dir")]
-		public ITable<PgLsDirResult> PgLsDir(string par5222, bool? par5223, bool? par5224)
+		public ITable<PgLsDirResult> PgLsDir(string par5225, bool? par5226, bool? par5227)
 		{
 			return this.GetTable<PgLsDirResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
-				par5222,
-				par5223,
-				par5224);
+				par5225,
+				par5226,
+				par5227);
 		}
 
 		public partial class PgLsDirResult
@@ -1047,10 +1047,10 @@ namespace PostreSQL11DataContext
 		#region PgTablespaceDatabases
 
 		[Sql.TableFunction(Schema="pg_catalog", Name="pg_tablespace_databases")]
-		public ITable<PgTablespaceDatabasesResult> PgTablespaceDatabases(int? par5521)
+		public ITable<PgTablespaceDatabasesResult> PgTablespaceDatabases(int? par5524)
 		{
 			return this.GetTable<PgTablespaceDatabasesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
-				par5521);
+				par5524);
 		}
 
 		public partial class PgTablespaceDatabasesResult
@@ -1098,12 +1098,12 @@ namespace PostreSQL11DataContext
 		#region RegexpMatches
 
 		[Sql.TableFunction(Schema="pg_catalog", Name="regexp_matches")]
-		public ITable<RegexpMatchesResult> RegexpMatches(string par6005, string par6006, string par6007)
+		public ITable<RegexpMatchesResult> RegexpMatches(string par6008, string par6009, string par6010)
 		{
 			return this.GetTable<RegexpMatchesResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
-				par6005,
-				par6006,
-				par6007);
+				par6008,
+				par6009,
+				par6010);
 		}
 
 		public partial class RegexpMatchesResult
@@ -1116,12 +1116,12 @@ namespace PostreSQL11DataContext
 		#region RegexpSplitToTable
 
 		[Sql.TableFunction(Schema="pg_catalog", Name="regexp_split_to_table")]
-		public ITable<RegexpSplitToTableResult> RegexpSplitToTable(string par6026, string par6027, string par6028)
+		public ITable<RegexpSplitToTableResult> RegexpSplitToTable(string par6029, string par6030, string par6031)
 		{
 			return this.GetTable<RegexpSplitToTableResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
-				par6026,
-				par6027,
-				par6028);
+				par6029,
+				par6030,
+				par6031);
 		}
 
 		public partial class RegexpSplitToTableResult
@@ -1296,10 +1296,10 @@ namespace PostreSQL11DataContext
 		#region TxidSnapshotXip
 
 		[Sql.TableFunction(Schema="pg_catalog", Name="txid_snapshot_xip")]
-		public ITable<TxidSnapshotXipResult> TxidSnapshotXip(object par7485)
+		public ITable<TxidSnapshotXipResult> TxidSnapshotXip(object par7488)
 		{
 			return this.GetTable<TxidSnapshotXipResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
-				par7485);
+				par7488);
 		}
 
 		public partial class TxidSnapshotXipResult
@@ -12116,10 +12116,40 @@ namespace PostreSQL11DataContext
 
 		#endregion
 
+		#region Issue1742Date
+
+		[Sql.Function(Name="public.issue_1742_date", ServerSideOnly=true)]
+		public static int? Issue1742Date(NpgsqlDate? p1)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region Issue1742Ts
+
+		[Sql.Function(Name="public.issue_1742_ts", ServerSideOnly=true)]
+		public static int? Issue1742Ts(DateTime? p1)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region Issue1742Tstz
+
+		[Sql.Function(Name="public.issue_1742_tstz", ServerSideOnly=true)]
+		public static int? Issue1742Tstz(DateTimeOffset? p1)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
 		#region Isvertical
 
 		[Sql.Function(Name="pg_catalog.isvertical", ServerSideOnly=true)]
-		public static bool? Isvertical(NpgsqlLine? par3597)
+		public static bool? Isvertical(NpgsqlLine? par3600)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12129,7 +12159,7 @@ namespace PostreSQL11DataContext
 		#region JohabToUtf8
 
 		[Sql.Function(Name="pg_catalog.johab_to_utf8", ServerSideOnly=true)]
-		public static object JohabToUtf8(int? par3598, int? par3599, object par3600, object par3601, int? par3602)
+		public static object JohabToUtf8(int? par3601, int? par3602, object par3603, object par3604, int? par3605)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12139,7 +12169,7 @@ namespace PostreSQL11DataContext
 		#region JsonAgg
 
 		[Sql.Function(Name="pg_catalog.json_agg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static string JsonAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3604)
+		public static string JsonAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3607)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12149,7 +12179,7 @@ namespace PostreSQL11DataContext
 		#region JsonAggFinalfn
 
 		[Sql.Function(Name="pg_catalog.json_agg_finalfn", ServerSideOnly=true)]
-		public static string JsonAggFinalfn(object par3606)
+		public static string JsonAggFinalfn(object par3609)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12159,7 +12189,7 @@ namespace PostreSQL11DataContext
 		#region JsonAggTransfn
 
 		[Sql.Function(Name="pg_catalog.json_agg_transfn", ServerSideOnly=true)]
-		public static object JsonAggTransfn(object par3608, object par3609)
+		public static object JsonAggTransfn(object par3611, object par3612)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12189,7 +12219,7 @@ namespace PostreSQL11DataContext
 		#region JsonArrayLength
 
 		[Sql.Function(Name="pg_catalog.json_array_length", ServerSideOnly=true)]
-		public static int? JsonArrayLength(string par3613)
+		public static int? JsonArrayLength(string par3616)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12239,7 +12269,7 @@ namespace PostreSQL11DataContext
 		#region JsonIn
 
 		[Sql.Function(Name="pg_catalog.json_in", ServerSideOnly=true)]
-		public static string JsonIn(object par3623)
+		public static string JsonIn(object par3626)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12249,7 +12279,7 @@ namespace PostreSQL11DataContext
 		#region JsonObject
 
 		[Sql.Function(Name="pg_catalog.json_object", ServerSideOnly=true)]
-		public static string JsonObject(object par3627, object par3628)
+		public static string JsonObject(object par3630, object par3631)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12259,7 +12289,7 @@ namespace PostreSQL11DataContext
 		#region JsonObjectAgg
 
 		[Sql.Function(Name="pg_catalog.json_object_agg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static string JsonObjectAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3630, Expression<Func<TSource, object>> par3631)
+		public static string JsonObjectAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3633, Expression<Func<TSource, object>> par3634)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12269,7 +12299,7 @@ namespace PostreSQL11DataContext
 		#region JsonObjectAggFinalfn
 
 		[Sql.Function(Name="pg_catalog.json_object_agg_finalfn", ServerSideOnly=true)]
-		public static string JsonObjectAggFinalfn(object par3633)
+		public static string JsonObjectAggFinalfn(object par3636)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12279,7 +12309,7 @@ namespace PostreSQL11DataContext
 		#region JsonObjectAggTransfn
 
 		[Sql.Function(Name="pg_catalog.json_object_agg_transfn", ServerSideOnly=true)]
-		public static object JsonObjectAggTransfn(object par3635, object par3636, object par3637)
+		public static object JsonObjectAggTransfn(object par3638, object par3639, object par3640)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12309,7 +12339,7 @@ namespace PostreSQL11DataContext
 		#region JsonOut
 
 		[Sql.Function(Name="pg_catalog.json_out", ServerSideOnly=true)]
-		public static object JsonOut(string par3642)
+		public static object JsonOut(string par3645)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12329,7 +12359,7 @@ namespace PostreSQL11DataContext
 		#region JsonRecv
 
 		[Sql.Function(Name="pg_catalog.json_recv", ServerSideOnly=true)]
-		public static string JsonRecv(object par3645)
+		public static string JsonRecv(object par3648)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12339,7 +12369,7 @@ namespace PostreSQL11DataContext
 		#region JsonSend
 
 		[Sql.Function(Name="pg_catalog.json_send", ServerSideOnly=true)]
-		public static byte[] JsonSend(string par3647)
+		public static byte[] JsonSend(string par3650)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12349,7 +12379,7 @@ namespace PostreSQL11DataContext
 		#region JsonStripNulls
 
 		[Sql.Function(Name="pg_catalog.json_strip_nulls", ServerSideOnly=true)]
-		public static string JsonStripNulls(string par3649)
+		public static string JsonStripNulls(string par3652)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12359,7 +12389,7 @@ namespace PostreSQL11DataContext
 		#region JsonToRecord
 
 		[Sql.Function(Name="pg_catalog.json_to_record", ServerSideOnly=true)]
-		public static object JsonToRecord(string par3650)
+		public static object JsonToRecord(string par3653)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12369,7 +12399,7 @@ namespace PostreSQL11DataContext
 		#region JsonToTsvector
 
 		[Sql.Function(Name="pg_catalog.json_to_tsvector", ServerSideOnly=true)]
-		public static object JsonToTsvector(object par3656, string par3657, string par3658)
+		public static object JsonToTsvector(object par3659, string par3660, string par3661)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12379,7 +12409,7 @@ namespace PostreSQL11DataContext
 		#region JsonTypeof
 
 		[Sql.Function(Name="pg_catalog.json_typeof", ServerSideOnly=true)]
-		public static string JsonTypeof(string par3660)
+		public static string JsonTypeof(string par3663)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12389,7 +12419,7 @@ namespace PostreSQL11DataContext
 		#region JsonbAgg
 
 		[Sql.Function(Name="pg_catalog.jsonb_agg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static string JsonbAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3662)
+		public static string JsonbAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3665)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12399,7 +12429,7 @@ namespace PostreSQL11DataContext
 		#region JsonbAggFinalfn
 
 		[Sql.Function(Name="pg_catalog.jsonb_agg_finalfn", ServerSideOnly=true)]
-		public static string JsonbAggFinalfn(object par3664)
+		public static string JsonbAggFinalfn(object par3667)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12409,7 +12439,7 @@ namespace PostreSQL11DataContext
 		#region JsonbAggTransfn
 
 		[Sql.Function(Name="pg_catalog.jsonb_agg_transfn", ServerSideOnly=true)]
-		public static object JsonbAggTransfn(object par3666, object par3667)
+		public static object JsonbAggTransfn(object par3669, object par3670)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12439,7 +12469,7 @@ namespace PostreSQL11DataContext
 		#region JsonbArrayLength
 
 		[Sql.Function(Name="pg_catalog.jsonb_array_length", ServerSideOnly=true)]
-		public static int? JsonbArrayLength(string par3671)
+		public static int? JsonbArrayLength(string par3674)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12469,7 +12499,7 @@ namespace PostreSQL11DataContext
 		#region JsonbCmp
 
 		[Sql.Function(Name="pg_catalog.jsonb_cmp", ServerSideOnly=true)]
-		public static int? JsonbCmp(string par3679, string par3680)
+		public static int? JsonbCmp(string par3682, string par3683)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12479,7 +12509,7 @@ namespace PostreSQL11DataContext
 		#region JsonbConcat
 
 		[Sql.Function(Name="pg_catalog.jsonb_concat", ServerSideOnly=true)]
-		public static string JsonbConcat(string par3682, string par3683)
+		public static string JsonbConcat(string par3685, string par3686)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12489,7 +12519,7 @@ namespace PostreSQL11DataContext
 		#region JsonbContained
 
 		[Sql.Function(Name="pg_catalog.jsonb_contained", ServerSideOnly=true)]
-		public static bool? JsonbContained(string par3685, string par3686)
+		public static bool? JsonbContained(string par3688, string par3689)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12499,7 +12529,7 @@ namespace PostreSQL11DataContext
 		#region JsonbContains
 
 		[Sql.Function(Name="pg_catalog.jsonb_contains", ServerSideOnly=true)]
-		public static bool? JsonbContains(string par3688, string par3689)
+		public static bool? JsonbContains(string par3691, string par3692)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12519,7 +12549,7 @@ namespace PostreSQL11DataContext
 		#region JsonbDeletePath
 
 		[Sql.Function(Name="pg_catalog.jsonb_delete_path", ServerSideOnly=true)]
-		public static string JsonbDeletePath(string par3698, object par3699)
+		public static string JsonbDeletePath(string par3701, object par3702)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12529,7 +12559,7 @@ namespace PostreSQL11DataContext
 		#region JsonbEq
 
 		[Sql.Function(Name="pg_catalog.jsonb_eq", ServerSideOnly=true)]
-		public static bool? JsonbEq(string par3701, string par3702)
+		public static bool? JsonbEq(string par3704, string par3705)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12539,7 +12569,7 @@ namespace PostreSQL11DataContext
 		#region JsonbExists
 
 		[Sql.Function(Name="pg_catalog.jsonb_exists", ServerSideOnly=true)]
-		public static bool? JsonbExists(string par3704, string par3705)
+		public static bool? JsonbExists(string par3707, string par3708)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12549,7 +12579,7 @@ namespace PostreSQL11DataContext
 		#region JsonbExistsAll
 
 		[Sql.Function(Name="pg_catalog.jsonb_exists_all", ServerSideOnly=true)]
-		public static bool? JsonbExistsAll(string par3707, object par3708)
+		public static bool? JsonbExistsAll(string par3710, object par3711)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12559,7 +12589,7 @@ namespace PostreSQL11DataContext
 		#region JsonbExistsAny
 
 		[Sql.Function(Name="pg_catalog.jsonb_exists_any", ServerSideOnly=true)]
-		public static bool? JsonbExistsAny(string par3710, object par3711)
+		public static bool? JsonbExistsAny(string par3713, object par3714)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12589,7 +12619,7 @@ namespace PostreSQL11DataContext
 		#region JsonbGe
 
 		[Sql.Function(Name="pg_catalog.jsonb_ge", ServerSideOnly=true)]
-		public static bool? JsonbGe(string par3715, string par3716)
+		public static bool? JsonbGe(string par3718, string par3719)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12599,7 +12629,7 @@ namespace PostreSQL11DataContext
 		#region JsonbGt
 
 		[Sql.Function(Name="pg_catalog.jsonb_gt", ServerSideOnly=true)]
-		public static bool? JsonbGt(string par3718, string par3719)
+		public static bool? JsonbGt(string par3721, string par3722)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12609,7 +12639,7 @@ namespace PostreSQL11DataContext
 		#region JsonbHash
 
 		[Sql.Function(Name="pg_catalog.jsonb_hash", ServerSideOnly=true)]
-		public static int? JsonbHash(string par3721)
+		public static int? JsonbHash(string par3724)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12619,7 +12649,7 @@ namespace PostreSQL11DataContext
 		#region JsonbHashExtended
 
 		[Sql.Function(Name="pg_catalog.jsonb_hash_extended", ServerSideOnly=true)]
-		public static long? JsonbHashExtended(string par3723, long? par3724)
+		public static long? JsonbHashExtended(string par3726, long? par3727)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12629,7 +12659,7 @@ namespace PostreSQL11DataContext
 		#region JsonbIn
 
 		[Sql.Function(Name="pg_catalog.jsonb_in", ServerSideOnly=true)]
-		public static string JsonbIn(object par3726)
+		public static string JsonbIn(object par3729)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12649,7 +12679,7 @@ namespace PostreSQL11DataContext
 		#region JsonbLe
 
 		[Sql.Function(Name="pg_catalog.jsonb_le", ServerSideOnly=true)]
-		public static bool? JsonbLe(string par3729, string par3730)
+		public static bool? JsonbLe(string par3732, string par3733)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12659,7 +12689,7 @@ namespace PostreSQL11DataContext
 		#region JsonbLt
 
 		[Sql.Function(Name="pg_catalog.jsonb_lt", ServerSideOnly=true)]
-		public static bool? JsonbLt(string par3732, string par3733)
+		public static bool? JsonbLt(string par3735, string par3736)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12669,7 +12699,7 @@ namespace PostreSQL11DataContext
 		#region JsonbNe
 
 		[Sql.Function(Name="pg_catalog.jsonb_ne", ServerSideOnly=true)]
-		public static bool? JsonbNe(string par3735, string par3736)
+		public static bool? JsonbNe(string par3738, string par3739)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12679,7 +12709,7 @@ namespace PostreSQL11DataContext
 		#region JsonbObject
 
 		[Sql.Function(Name="pg_catalog.jsonb_object", ServerSideOnly=true)]
-		public static string JsonbObject(object par3740, object par3741)
+		public static string JsonbObject(object par3743, object par3744)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12689,7 +12719,7 @@ namespace PostreSQL11DataContext
 		#region JsonbObjectAgg
 
 		[Sql.Function(Name="pg_catalog.jsonb_object_agg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static string JsonbObjectAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3743, Expression<Func<TSource, object>> par3744)
+		public static string JsonbObjectAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par3746, Expression<Func<TSource, object>> par3747)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12699,7 +12729,7 @@ namespace PostreSQL11DataContext
 		#region JsonbObjectAggFinalfn
 
 		[Sql.Function(Name="pg_catalog.jsonb_object_agg_finalfn", ServerSideOnly=true)]
-		public static string JsonbObjectAggFinalfn(object par3746)
+		public static string JsonbObjectAggFinalfn(object par3749)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12709,7 +12739,7 @@ namespace PostreSQL11DataContext
 		#region JsonbObjectAggTransfn
 
 		[Sql.Function(Name="pg_catalog.jsonb_object_agg_transfn", ServerSideOnly=true)]
-		public static object JsonbObjectAggTransfn(object par3748, object par3749, object par3750)
+		public static object JsonbObjectAggTransfn(object par3751, object par3752, object par3753)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12739,7 +12769,7 @@ namespace PostreSQL11DataContext
 		#region JsonbOut
 
 		[Sql.Function(Name="pg_catalog.jsonb_out", ServerSideOnly=true)]
-		public static object JsonbOut(string par3755)
+		public static object JsonbOut(string par3758)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12749,7 +12779,7 @@ namespace PostreSQL11DataContext
 		#region JsonbPopulateRecord
 
 		[Sql.Function(Name="pg_catalog.jsonb_populate_record", ServerSideOnly=true)]
-		public static object JsonbPopulateRecord(object par3757, string par3758)
+		public static object JsonbPopulateRecord(object par3760, string par3761)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12759,7 +12789,7 @@ namespace PostreSQL11DataContext
 		#region JsonbPretty
 
 		[Sql.Function(Name="pg_catalog.jsonb_pretty", ServerSideOnly=true)]
-		public static string JsonbPretty(string par3762)
+		public static string JsonbPretty(string par3765)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12769,7 +12799,7 @@ namespace PostreSQL11DataContext
 		#region JsonbRecv
 
 		[Sql.Function(Name="pg_catalog.jsonb_recv", ServerSideOnly=true)]
-		public static string JsonbRecv(object par3764)
+		public static string JsonbRecv(object par3767)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12779,7 +12809,7 @@ namespace PostreSQL11DataContext
 		#region JsonbSend
 
 		[Sql.Function(Name="pg_catalog.jsonb_send", ServerSideOnly=true)]
-		public static byte[] JsonbSend(string par3766)
+		public static byte[] JsonbSend(string par3769)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12799,7 +12829,7 @@ namespace PostreSQL11DataContext
 		#region JsonbStripNulls
 
 		[Sql.Function(Name="pg_catalog.jsonb_strip_nulls", ServerSideOnly=true)]
-		public static string JsonbStripNulls(string par3769)
+		public static string JsonbStripNulls(string par3772)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12809,7 +12839,7 @@ namespace PostreSQL11DataContext
 		#region JsonbToRecord
 
 		[Sql.Function(Name="pg_catalog.jsonb_to_record", ServerSideOnly=true)]
-		public static object JsonbToRecord(string par3770)
+		public static object JsonbToRecord(string par3773)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12819,7 +12849,7 @@ namespace PostreSQL11DataContext
 		#region JsonbToTsvector
 
 		[Sql.Function(Name="pg_catalog.jsonb_to_tsvector", ServerSideOnly=true)]
-		public static object JsonbToTsvector(object par3776, string par3777, string par3778)
+		public static object JsonbToTsvector(object par3779, string par3780, string par3781)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12829,7 +12859,7 @@ namespace PostreSQL11DataContext
 		#region JsonbTypeof
 
 		[Sql.Function(Name="pg_catalog.jsonb_typeof", ServerSideOnly=true)]
-		public static string JsonbTypeof(string par3780)
+		public static string JsonbTypeof(string par3783)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12839,7 +12869,7 @@ namespace PostreSQL11DataContext
 		#region JustifyDays
 
 		[Sql.Function(Name="pg_catalog.justify_days", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? JustifyDays(NpgsqlTimeSpan? par3782)
+		public static NpgsqlTimeSpan? JustifyDays(NpgsqlTimeSpan? par3785)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12849,7 +12879,7 @@ namespace PostreSQL11DataContext
 		#region JustifyHours
 
 		[Sql.Function(Name="pg_catalog.justify_hours", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? JustifyHours(NpgsqlTimeSpan? par3784)
+		public static NpgsqlTimeSpan? JustifyHours(NpgsqlTimeSpan? par3787)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12859,7 +12889,7 @@ namespace PostreSQL11DataContext
 		#region JustifyInterval
 
 		[Sql.Function(Name="pg_catalog.justify_interval", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? JustifyInterval(NpgsqlTimeSpan? par3786)
+		public static NpgsqlTimeSpan? JustifyInterval(NpgsqlTimeSpan? par3789)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12869,7 +12899,7 @@ namespace PostreSQL11DataContext
 		#region Koi8rToIso
 
 		[Sql.Function(Name="pg_catalog.koi8r_to_iso", ServerSideOnly=true)]
-		public static object Koi8rToIso(int? par3787, int? par3788, object par3789, object par3790, int? par3791)
+		public static object Koi8rToIso(int? par3790, int? par3791, object par3792, object par3793, int? par3794)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12879,7 +12909,7 @@ namespace PostreSQL11DataContext
 		#region Koi8rToMic
 
 		[Sql.Function(Name="pg_catalog.koi8r_to_mic", ServerSideOnly=true)]
-		public static object Koi8rToMic(int? par3792, int? par3793, object par3794, object par3795, int? par3796)
+		public static object Koi8rToMic(int? par3795, int? par3796, object par3797, object par3798, int? par3799)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12889,7 +12919,7 @@ namespace PostreSQL11DataContext
 		#region Koi8rToUtf8
 
 		[Sql.Function(Name="pg_catalog.koi8r_to_utf8", ServerSideOnly=true)]
-		public static object Koi8rToUtf8(int? par3797, int? par3798, object par3799, object par3800, int? par3801)
+		public static object Koi8rToUtf8(int? par3800, int? par3801, object par3802, object par3803, int? par3804)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12899,7 +12929,7 @@ namespace PostreSQL11DataContext
 		#region Koi8rToWin1251
 
 		[Sql.Function(Name="pg_catalog.koi8r_to_win1251", ServerSideOnly=true)]
-		public static object Koi8rToWin1251(int? par3802, int? par3803, object par3804, object par3805, int? par3806)
+		public static object Koi8rToWin1251(int? par3805, int? par3806, object par3807, object par3808, int? par3809)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12909,7 +12939,7 @@ namespace PostreSQL11DataContext
 		#region Koi8rToWin866
 
 		[Sql.Function(Name="pg_catalog.koi8r_to_win866", ServerSideOnly=true)]
-		public static object Koi8rToWin866(int? par3807, int? par3808, object par3809, object par3810, int? par3811)
+		public static object Koi8rToWin866(int? par3810, int? par3811, object par3812, object par3813, int? par3814)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12919,7 +12949,7 @@ namespace PostreSQL11DataContext
 		#region Koi8uToUtf8
 
 		[Sql.Function(Name="pg_catalog.koi8u_to_utf8", ServerSideOnly=true)]
-		public static object Koi8uToUtf8(int? par3812, int? par3813, object par3814, object par3815, int? par3816)
+		public static object Koi8uToUtf8(int? par3815, int? par3816, object par3817, object par3818, int? par3819)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12929,7 +12959,7 @@ namespace PostreSQL11DataContext
 		#region Lag
 
 		[Sql.Function(Name="pg_catalog.lag", ServerSideOnly=true)]
-		public static object Lag(object par3823, int? par3824, object par3825)
+		public static object Lag(object par3826, int? par3827, object par3828)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12939,7 +12969,7 @@ namespace PostreSQL11DataContext
 		#region LanguageHandlerIn
 
 		[Sql.Function(Name="pg_catalog.language_handler_in", ServerSideOnly=true)]
-		public static object LanguageHandlerIn(object par3827)
+		public static object LanguageHandlerIn(object par3830)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12949,7 +12979,7 @@ namespace PostreSQL11DataContext
 		#region LanguageHandlerOut
 
 		[Sql.Function(Name="pg_catalog.language_handler_out", ServerSideOnly=true)]
-		public static object LanguageHandlerOut(object par3829)
+		public static object LanguageHandlerOut(object par3832)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12959,7 +12989,7 @@ namespace PostreSQL11DataContext
 		#region LastValue
 
 		[Sql.Function(Name="pg_catalog.last_value", ServerSideOnly=true)]
-		public static object LastValue(object par3831)
+		public static object LastValue(object par3834)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12979,7 +13009,7 @@ namespace PostreSQL11DataContext
 		#region Latin1ToMic
 
 		[Sql.Function(Name="pg_catalog.latin1_to_mic", ServerSideOnly=true)]
-		public static object Latin1ToMic(int? par3833, int? par3834, object par3835, object par3836, int? par3837)
+		public static object Latin1ToMic(int? par3836, int? par3837, object par3838, object par3839, int? par3840)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12989,7 +13019,7 @@ namespace PostreSQL11DataContext
 		#region Latin2ToMic
 
 		[Sql.Function(Name="pg_catalog.latin2_to_mic", ServerSideOnly=true)]
-		public static object Latin2ToMic(int? par3838, int? par3839, object par3840, object par3841, int? par3842)
+		public static object Latin2ToMic(int? par3841, int? par3842, object par3843, object par3844, int? par3845)
 		{
 			throw new InvalidOperationException();
 		}
@@ -12999,7 +13029,7 @@ namespace PostreSQL11DataContext
 		#region Latin2ToWin1250
 
 		[Sql.Function(Name="pg_catalog.latin2_to_win1250", ServerSideOnly=true)]
-		public static object Latin2ToWin1250(int? par3843, int? par3844, object par3845, object par3846, int? par3847)
+		public static object Latin2ToWin1250(int? par3846, int? par3847, object par3848, object par3849, int? par3850)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13009,7 +13039,7 @@ namespace PostreSQL11DataContext
 		#region Latin3ToMic
 
 		[Sql.Function(Name="pg_catalog.latin3_to_mic", ServerSideOnly=true)]
-		public static object Latin3ToMic(int? par3848, int? par3849, object par3850, object par3851, int? par3852)
+		public static object Latin3ToMic(int? par3851, int? par3852, object par3853, object par3854, int? par3855)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13019,7 +13049,7 @@ namespace PostreSQL11DataContext
 		#region Latin4ToMic
 
 		[Sql.Function(Name="pg_catalog.latin4_to_mic", ServerSideOnly=true)]
-		public static object Latin4ToMic(int? par3853, int? par3854, object par3855, object par3856, int? par3857)
+		public static object Latin4ToMic(int? par3856, int? par3857, object par3858, object par3859, int? par3860)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13029,7 +13059,7 @@ namespace PostreSQL11DataContext
 		#region Lead
 
 		[Sql.Function(Name="pg_catalog.lead", ServerSideOnly=true)]
-		public static object Lead(object par3864, int? par3865, object par3866)
+		public static object Lead(object par3867, int? par3868, object par3869)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13039,7 +13069,7 @@ namespace PostreSQL11DataContext
 		#region Left
 
 		[Sql.Function(Name="pg_catalog.left", ServerSideOnly=true)]
-		public static string Left(string par3868, int? par3869)
+		public static string Left(string par3871, int? par3872)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13049,7 +13079,7 @@ namespace PostreSQL11DataContext
 		#region Length
 
 		[Sql.Function(Name="pg_catalog.length", ServerSideOnly=true)]
-		public static int? Length(object par3886)
+		public static int? Length(object par3889)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13059,7 +13089,7 @@ namespace PostreSQL11DataContext
 		#region Like
 
 		[Sql.Function(Name="pg_catalog.like", ServerSideOnly=true)]
-		public static bool? Like(byte[] par3894, byte[] par3895)
+		public static bool? Like(byte[] par3897, byte[] par3898)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13069,7 +13099,7 @@ namespace PostreSQL11DataContext
 		#region LikeEscape
 
 		[Sql.Function(Name="pg_catalog.like_escape", ServerSideOnly=true)]
-		public static byte[] LikeEscape(byte[] par3900, byte[] par3901)
+		public static byte[] LikeEscape(byte[] par3903, byte[] par3904)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13079,7 +13109,7 @@ namespace PostreSQL11DataContext
 		#region Likejoinsel
 
 		[Sql.Function(Name="pg_catalog.likejoinsel", ServerSideOnly=true)]
-		public static double? Likejoinsel(object par3903, int? par3904, object par3905, short? par3906, object par3907)
+		public static double? Likejoinsel(object par3906, int? par3907, object par3908, short? par3909, object par3910)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13089,7 +13119,7 @@ namespace PostreSQL11DataContext
 		#region Likesel
 
 		[Sql.Function(Name="pg_catalog.likesel", ServerSideOnly=true)]
-		public static double? Likesel(object par3909, int? par3910, object par3911, int? par3912)
+		public static double? Likesel(object par3912, int? par3913, object par3914, int? par3915)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13099,7 +13129,7 @@ namespace PostreSQL11DataContext
 		#region Line
 
 		[Sql.Function(Name="pg_catalog.line", ServerSideOnly=true)]
-		public static NpgsqlLine? Line(NpgsqlPoint? par3914, NpgsqlPoint? par3915)
+		public static NpgsqlLine? Line(NpgsqlPoint? par3917, NpgsqlPoint? par3918)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13109,7 +13139,7 @@ namespace PostreSQL11DataContext
 		#region LineDistance
 
 		[Sql.Function(Name="pg_catalog.line_distance", ServerSideOnly=true)]
-		public static double? LineDistance(NpgsqlLine? par3917, NpgsqlLine? par3918)
+		public static double? LineDistance(NpgsqlLine? par3920, NpgsqlLine? par3921)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13119,7 +13149,7 @@ namespace PostreSQL11DataContext
 		#region LineEq
 
 		[Sql.Function(Name="pg_catalog.line_eq", ServerSideOnly=true)]
-		public static bool? LineEq(NpgsqlLine? par3920, NpgsqlLine? par3921)
+		public static bool? LineEq(NpgsqlLine? par3923, NpgsqlLine? par3924)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13129,7 +13159,7 @@ namespace PostreSQL11DataContext
 		#region LineHorizontal
 
 		[Sql.Function(Name="pg_catalog.line_horizontal", ServerSideOnly=true)]
-		public static bool? LineHorizontal(NpgsqlLine? par3923)
+		public static bool? LineHorizontal(NpgsqlLine? par3926)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13139,7 +13169,7 @@ namespace PostreSQL11DataContext
 		#region LineIn
 
 		[Sql.Function(Name="pg_catalog.line_in", ServerSideOnly=true)]
-		public static NpgsqlLine? LineIn(object par3925)
+		public static NpgsqlLine? LineIn(object par3928)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13149,7 +13179,7 @@ namespace PostreSQL11DataContext
 		#region LineInterpt
 
 		[Sql.Function(Name="pg_catalog.line_interpt", ServerSideOnly=true)]
-		public static NpgsqlPoint? LineInterpt(NpgsqlLine? par3927, NpgsqlLine? par3928)
+		public static NpgsqlPoint? LineInterpt(NpgsqlLine? par3930, NpgsqlLine? par3931)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13159,7 +13189,7 @@ namespace PostreSQL11DataContext
 		#region LineIntersect
 
 		[Sql.Function(Name="pg_catalog.line_intersect", ServerSideOnly=true)]
-		public static bool? LineIntersect(NpgsqlLine? par3930, NpgsqlLine? par3931)
+		public static bool? LineIntersect(NpgsqlLine? par3933, NpgsqlLine? par3934)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13169,7 +13199,7 @@ namespace PostreSQL11DataContext
 		#region LineOut
 
 		[Sql.Function(Name="pg_catalog.line_out", ServerSideOnly=true)]
-		public static object LineOut(NpgsqlLine? par3933)
+		public static object LineOut(NpgsqlLine? par3936)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13179,7 +13209,7 @@ namespace PostreSQL11DataContext
 		#region LineParallel
 
 		[Sql.Function(Name="pg_catalog.line_parallel", ServerSideOnly=true)]
-		public static bool? LineParallel(NpgsqlLine? par3935, NpgsqlLine? par3936)
+		public static bool? LineParallel(NpgsqlLine? par3938, NpgsqlLine? par3939)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13189,7 +13219,7 @@ namespace PostreSQL11DataContext
 		#region LinePerp
 
 		[Sql.Function(Name="pg_catalog.line_perp", ServerSideOnly=true)]
-		public static bool? LinePerp(NpgsqlLine? par3938, NpgsqlLine? par3939)
+		public static bool? LinePerp(NpgsqlLine? par3941, NpgsqlLine? par3942)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13199,7 +13229,7 @@ namespace PostreSQL11DataContext
 		#region LineRecv
 
 		[Sql.Function(Name="pg_catalog.line_recv", ServerSideOnly=true)]
-		public static NpgsqlLine? LineRecv(object par3941)
+		public static NpgsqlLine? LineRecv(object par3944)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13209,7 +13239,7 @@ namespace PostreSQL11DataContext
 		#region LineSend
 
 		[Sql.Function(Name="pg_catalog.line_send", ServerSideOnly=true)]
-		public static byte[] LineSend(NpgsqlLine? par3943)
+		public static byte[] LineSend(NpgsqlLine? par3946)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13219,7 +13249,7 @@ namespace PostreSQL11DataContext
 		#region LineVertical
 
 		[Sql.Function(Name="pg_catalog.line_vertical", ServerSideOnly=true)]
-		public static bool? LineVertical(NpgsqlLine? par3945)
+		public static bool? LineVertical(NpgsqlLine? par3948)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13229,7 +13259,7 @@ namespace PostreSQL11DataContext
 		#region Ln
 
 		[Sql.Function(Name="pg_catalog.ln", ServerSideOnly=true)]
-		public static decimal? Ln(decimal? par3949)
+		public static decimal? Ln(decimal? par3952)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13239,7 +13269,7 @@ namespace PostreSQL11DataContext
 		#region LoClose
 
 		[Sql.Function(Name="pg_catalog.lo_close", ServerSideOnly=true)]
-		public static int? LoClose(int? par3951)
+		public static int? LoClose(int? par3954)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13249,7 +13279,7 @@ namespace PostreSQL11DataContext
 		#region LoCreat
 
 		[Sql.Function(Name="pg_catalog.lo_creat", ServerSideOnly=true)]
-		public static int? LoCreat(int? par3953)
+		public static int? LoCreat(int? par3956)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13259,7 +13289,7 @@ namespace PostreSQL11DataContext
 		#region LoCreate
 
 		[Sql.Function(Name="pg_catalog.lo_create", ServerSideOnly=true)]
-		public static int? LoCreate(int? par3955)
+		public static int? LoCreate(int? par3958)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13269,7 +13299,7 @@ namespace PostreSQL11DataContext
 		#region LoExport
 
 		[Sql.Function(Name="pg_catalog.lo_export", ServerSideOnly=true)]
-		public static int? LoExport(int? par3957, string par3958)
+		public static int? LoExport(int? par3960, string par3961)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13279,7 +13309,7 @@ namespace PostreSQL11DataContext
 		#region LoFromBytea
 
 		[Sql.Function(Name="pg_catalog.lo_from_bytea", ServerSideOnly=true)]
-		public static int? LoFromBytea(int? par3960, byte[] par3961)
+		public static int? LoFromBytea(int? par3963, byte[] par3964)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13289,7 +13319,7 @@ namespace PostreSQL11DataContext
 		#region LoGet
 
 		[Sql.Function(Name="pg_catalog.lo_get", ServerSideOnly=true)]
-		public static byte[] LoGet(int? par3965, long? par3966, int? par3967)
+		public static byte[] LoGet(int? par3968, long? par3969, int? par3970)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13299,7 +13329,7 @@ namespace PostreSQL11DataContext
 		#region LoImport
 
 		[Sql.Function(Name="pg_catalog.lo_import", ServerSideOnly=true)]
-		public static int? LoImport(string par3971, int? par3972)
+		public static int? LoImport(string par3974, int? par3975)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13309,7 +13339,7 @@ namespace PostreSQL11DataContext
 		#region LoLseek
 
 		[Sql.Function(Name="pg_catalog.lo_lseek", ServerSideOnly=true)]
-		public static int? LoLseek(int? par3974, int? par3975, int? par3976)
+		public static int? LoLseek(int? par3977, int? par3978, int? par3979)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13319,7 +13349,7 @@ namespace PostreSQL11DataContext
 		#region LoLseek64
 
 		[Sql.Function(Name="pg_catalog.lo_lseek64", ServerSideOnly=true)]
-		public static long? LoLseek64(int? par3978, long? par3979, int? par3980)
+		public static long? LoLseek64(int? par3981, long? par3982, int? par3983)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13329,7 +13359,7 @@ namespace PostreSQL11DataContext
 		#region LoOpen
 
 		[Sql.Function(Name="pg_catalog.lo_open", ServerSideOnly=true)]
-		public static int? LoOpen(int? par3982, int? par3983)
+		public static int? LoOpen(int? par3985, int? par3986)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13339,7 +13369,7 @@ namespace PostreSQL11DataContext
 		#region LoPut
 
 		[Sql.Function(Name="pg_catalog.lo_put", ServerSideOnly=true)]
-		public static object LoPut(int? par3984, long? par3985, byte[] par3986)
+		public static object LoPut(int? par3987, long? par3988, byte[] par3989)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13349,7 +13379,7 @@ namespace PostreSQL11DataContext
 		#region LoTell
 
 		[Sql.Function(Name="pg_catalog.lo_tell", ServerSideOnly=true)]
-		public static int? LoTell(int? par3988)
+		public static int? LoTell(int? par3991)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13359,7 +13389,7 @@ namespace PostreSQL11DataContext
 		#region LoTell64
 
 		[Sql.Function(Name="pg_catalog.lo_tell64", ServerSideOnly=true)]
-		public static long? LoTell64(int? par3990)
+		public static long? LoTell64(int? par3993)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13369,7 +13399,7 @@ namespace PostreSQL11DataContext
 		#region LoTruncate
 
 		[Sql.Function(Name="pg_catalog.lo_truncate", ServerSideOnly=true)]
-		public static int? LoTruncate(int? par3992, int? par3993)
+		public static int? LoTruncate(int? par3995, int? par3996)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13379,7 +13409,7 @@ namespace PostreSQL11DataContext
 		#region LoTruncate64
 
 		[Sql.Function(Name="pg_catalog.lo_truncate64", ServerSideOnly=true)]
-		public static int? LoTruncate64(int? par3995, long? par3996)
+		public static int? LoTruncate64(int? par3998, long? par3999)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13389,7 +13419,7 @@ namespace PostreSQL11DataContext
 		#region LoUnlink
 
 		[Sql.Function(Name="pg_catalog.lo_unlink", ServerSideOnly=true)]
-		public static int? LoUnlink(int? par3998)
+		public static int? LoUnlink(int? par4001)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13399,7 +13429,7 @@ namespace PostreSQL11DataContext
 		#region Log
 
 		[Sql.Function(Name="pg_catalog.log", ServerSideOnly=true)]
-		public static decimal? Log(decimal? par4005)
+		public static decimal? Log(decimal? par4008)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13409,7 +13439,7 @@ namespace PostreSQL11DataContext
 		#region Loread
 
 		[Sql.Function(Name="pg_catalog.loread", ServerSideOnly=true)]
-		public static byte[] Loread(int? par4007, int? par4008)
+		public static byte[] Loread(int? par4010, int? par4011)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13419,7 +13449,7 @@ namespace PostreSQL11DataContext
 		#region Lower
 
 		[Sql.Function(Name="pg_catalog.lower", ServerSideOnly=true)]
-		public static string Lower(string par4012)
+		public static string Lower(string par4015)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13429,7 +13459,7 @@ namespace PostreSQL11DataContext
 		#region LowerInc
 
 		[Sql.Function(Name="pg_catalog.lower_inc", ServerSideOnly=true)]
-		public static bool? LowerInc(object par4014)
+		public static bool? LowerInc(object par4017)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13439,7 +13469,7 @@ namespace PostreSQL11DataContext
 		#region LowerInf
 
 		[Sql.Function(Name="pg_catalog.lower_inf", ServerSideOnly=true)]
-		public static bool? LowerInf(object par4016)
+		public static bool? LowerInf(object par4019)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13449,7 +13479,7 @@ namespace PostreSQL11DataContext
 		#region Lowrite
 
 		[Sql.Function(Name="pg_catalog.lowrite", ServerSideOnly=true)]
-		public static int? Lowrite(int? par4018, byte[] par4019)
+		public static int? Lowrite(int? par4021, byte[] par4022)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13459,7 +13489,7 @@ namespace PostreSQL11DataContext
 		#region Lpad
 
 		[Sql.Function(Name="pg_catalog.lpad", ServerSideOnly=true)]
-		public static string Lpad(string par4025, int? par4026)
+		public static string Lpad(string par4028, int? par4029)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13469,7 +13499,7 @@ namespace PostreSQL11DataContext
 		#region Lseg
 
 		[Sql.Function(Name="pg_catalog.lseg", ServerSideOnly=true)]
-		public static NpgsqlLSeg? Lseg(NpgsqlPoint? par4030, NpgsqlPoint? par4031)
+		public static NpgsqlLSeg? Lseg(NpgsqlPoint? par4033, NpgsqlPoint? par4034)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13479,7 +13509,7 @@ namespace PostreSQL11DataContext
 		#region LsegCenter
 
 		[Sql.Function(Name="pg_catalog.lseg_center", ServerSideOnly=true)]
-		public static NpgsqlPoint? LsegCenter(NpgsqlLSeg? par4033)
+		public static NpgsqlPoint? LsegCenter(NpgsqlLSeg? par4036)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13489,7 +13519,7 @@ namespace PostreSQL11DataContext
 		#region LsegDistance
 
 		[Sql.Function(Name="pg_catalog.lseg_distance", ServerSideOnly=true)]
-		public static double? LsegDistance(NpgsqlLSeg? par4035, NpgsqlLSeg? par4036)
+		public static double? LsegDistance(NpgsqlLSeg? par4038, NpgsqlLSeg? par4039)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13499,7 +13529,7 @@ namespace PostreSQL11DataContext
 		#region LsegEq
 
 		[Sql.Function(Name="pg_catalog.lseg_eq", ServerSideOnly=true)]
-		public static bool? LsegEq(NpgsqlLSeg? par4038, NpgsqlLSeg? par4039)
+		public static bool? LsegEq(NpgsqlLSeg? par4041, NpgsqlLSeg? par4042)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13509,7 +13539,7 @@ namespace PostreSQL11DataContext
 		#region LsegGe
 
 		[Sql.Function(Name="pg_catalog.lseg_ge", ServerSideOnly=true)]
-		public static bool? LsegGe(NpgsqlLSeg? par4041, NpgsqlLSeg? par4042)
+		public static bool? LsegGe(NpgsqlLSeg? par4044, NpgsqlLSeg? par4045)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13519,7 +13549,7 @@ namespace PostreSQL11DataContext
 		#region LsegGt
 
 		[Sql.Function(Name="pg_catalog.lseg_gt", ServerSideOnly=true)]
-		public static bool? LsegGt(NpgsqlLSeg? par4044, NpgsqlLSeg? par4045)
+		public static bool? LsegGt(NpgsqlLSeg? par4047, NpgsqlLSeg? par4048)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13529,7 +13559,7 @@ namespace PostreSQL11DataContext
 		#region LsegHorizontal
 
 		[Sql.Function(Name="pg_catalog.lseg_horizontal", ServerSideOnly=true)]
-		public static bool? LsegHorizontal(NpgsqlLSeg? par4047)
+		public static bool? LsegHorizontal(NpgsqlLSeg? par4050)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13539,7 +13569,7 @@ namespace PostreSQL11DataContext
 		#region LsegIn
 
 		[Sql.Function(Name="pg_catalog.lseg_in", ServerSideOnly=true)]
-		public static NpgsqlLSeg? LsegIn(object par4049)
+		public static NpgsqlLSeg? LsegIn(object par4052)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13549,7 +13579,7 @@ namespace PostreSQL11DataContext
 		#region LsegInterpt
 
 		[Sql.Function(Name="pg_catalog.lseg_interpt", ServerSideOnly=true)]
-		public static NpgsqlPoint? LsegInterpt(NpgsqlLSeg? par4051, NpgsqlLSeg? par4052)
+		public static NpgsqlPoint? LsegInterpt(NpgsqlLSeg? par4054, NpgsqlLSeg? par4055)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13559,7 +13589,7 @@ namespace PostreSQL11DataContext
 		#region LsegIntersect
 
 		[Sql.Function(Name="pg_catalog.lseg_intersect", ServerSideOnly=true)]
-		public static bool? LsegIntersect(NpgsqlLSeg? par4054, NpgsqlLSeg? par4055)
+		public static bool? LsegIntersect(NpgsqlLSeg? par4057, NpgsqlLSeg? par4058)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13569,7 +13599,7 @@ namespace PostreSQL11DataContext
 		#region LsegLe
 
 		[Sql.Function(Name="pg_catalog.lseg_le", ServerSideOnly=true)]
-		public static bool? LsegLe(NpgsqlLSeg? par4057, NpgsqlLSeg? par4058)
+		public static bool? LsegLe(NpgsqlLSeg? par4060, NpgsqlLSeg? par4061)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13579,7 +13609,7 @@ namespace PostreSQL11DataContext
 		#region LsegLength
 
 		[Sql.Function(Name="pg_catalog.lseg_length", ServerSideOnly=true)]
-		public static double? LsegLength(NpgsqlLSeg? par4060)
+		public static double? LsegLength(NpgsqlLSeg? par4063)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13589,7 +13619,7 @@ namespace PostreSQL11DataContext
 		#region LsegLt
 
 		[Sql.Function(Name="pg_catalog.lseg_lt", ServerSideOnly=true)]
-		public static bool? LsegLt(NpgsqlLSeg? par4062, NpgsqlLSeg? par4063)
+		public static bool? LsegLt(NpgsqlLSeg? par4065, NpgsqlLSeg? par4066)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13599,7 +13629,7 @@ namespace PostreSQL11DataContext
 		#region LsegNe
 
 		[Sql.Function(Name="pg_catalog.lseg_ne", ServerSideOnly=true)]
-		public static bool? LsegNe(NpgsqlLSeg? par4065, NpgsqlLSeg? par4066)
+		public static bool? LsegNe(NpgsqlLSeg? par4068, NpgsqlLSeg? par4069)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13609,7 +13639,7 @@ namespace PostreSQL11DataContext
 		#region LsegOut
 
 		[Sql.Function(Name="pg_catalog.lseg_out", ServerSideOnly=true)]
-		public static object LsegOut(NpgsqlLSeg? par4068)
+		public static object LsegOut(NpgsqlLSeg? par4071)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13619,7 +13649,7 @@ namespace PostreSQL11DataContext
 		#region LsegParallel
 
 		[Sql.Function(Name="pg_catalog.lseg_parallel", ServerSideOnly=true)]
-		public static bool? LsegParallel(NpgsqlLSeg? par4070, NpgsqlLSeg? par4071)
+		public static bool? LsegParallel(NpgsqlLSeg? par4073, NpgsqlLSeg? par4074)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13629,7 +13659,7 @@ namespace PostreSQL11DataContext
 		#region LsegPerp
 
 		[Sql.Function(Name="pg_catalog.lseg_perp", ServerSideOnly=true)]
-		public static bool? LsegPerp(NpgsqlLSeg? par4073, NpgsqlLSeg? par4074)
+		public static bool? LsegPerp(NpgsqlLSeg? par4076, NpgsqlLSeg? par4077)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13639,7 +13669,7 @@ namespace PostreSQL11DataContext
 		#region LsegRecv
 
 		[Sql.Function(Name="pg_catalog.lseg_recv", ServerSideOnly=true)]
-		public static NpgsqlLSeg? LsegRecv(object par4076)
+		public static NpgsqlLSeg? LsegRecv(object par4079)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13649,7 +13679,7 @@ namespace PostreSQL11DataContext
 		#region LsegSend
 
 		[Sql.Function(Name="pg_catalog.lseg_send", ServerSideOnly=true)]
-		public static byte[] LsegSend(NpgsqlLSeg? par4078)
+		public static byte[] LsegSend(NpgsqlLSeg? par4081)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13659,7 +13689,7 @@ namespace PostreSQL11DataContext
 		#region LsegVertical
 
 		[Sql.Function(Name="pg_catalog.lseg_vertical", ServerSideOnly=true)]
-		public static bool? LsegVertical(NpgsqlLSeg? par4080)
+		public static bool? LsegVertical(NpgsqlLSeg? par4083)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13669,7 +13699,7 @@ namespace PostreSQL11DataContext
 		#region Ltrim
 
 		[Sql.Function(Name="pg_catalog.ltrim", ServerSideOnly=true)]
-		public static string Ltrim(string par4085)
+		public static string Ltrim(string par4088)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13679,7 +13709,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr
 
 		[Sql.Function(Name="pg_catalog.macaddr", ServerSideOnly=true)]
-		public static PhysicalAddress Macaddr(PhysicalAddress par4087)
+		public static PhysicalAddress Macaddr(PhysicalAddress par4090)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13689,7 +13719,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrAnd
 
 		[Sql.Function(Name="pg_catalog.macaddr_and", ServerSideOnly=true)]
-		public static PhysicalAddress MacaddrAnd(PhysicalAddress par4089, PhysicalAddress par4090)
+		public static PhysicalAddress MacaddrAnd(PhysicalAddress par4092, PhysicalAddress par4093)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13699,7 +13729,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrCmp
 
 		[Sql.Function(Name="pg_catalog.macaddr_cmp", ServerSideOnly=true)]
-		public static int? MacaddrCmp(PhysicalAddress par4092, PhysicalAddress par4093)
+		public static int? MacaddrCmp(PhysicalAddress par4095, PhysicalAddress par4096)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13709,7 +13739,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrEq
 
 		[Sql.Function(Name="pg_catalog.macaddr_eq", ServerSideOnly=true)]
-		public static bool? MacaddrEq(PhysicalAddress par4095, PhysicalAddress par4096)
+		public static bool? MacaddrEq(PhysicalAddress par4098, PhysicalAddress par4099)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13719,7 +13749,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrGe
 
 		[Sql.Function(Name="pg_catalog.macaddr_ge", ServerSideOnly=true)]
-		public static bool? MacaddrGe(PhysicalAddress par4098, PhysicalAddress par4099)
+		public static bool? MacaddrGe(PhysicalAddress par4101, PhysicalAddress par4102)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13729,7 +13759,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrGt
 
 		[Sql.Function(Name="pg_catalog.macaddr_gt", ServerSideOnly=true)]
-		public static bool? MacaddrGt(PhysicalAddress par4101, PhysicalAddress par4102)
+		public static bool? MacaddrGt(PhysicalAddress par4104, PhysicalAddress par4105)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13739,7 +13769,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrIn
 
 		[Sql.Function(Name="pg_catalog.macaddr_in", ServerSideOnly=true)]
-		public static PhysicalAddress MacaddrIn(object par4104)
+		public static PhysicalAddress MacaddrIn(object par4107)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13749,7 +13779,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrLe
 
 		[Sql.Function(Name="pg_catalog.macaddr_le", ServerSideOnly=true)]
-		public static bool? MacaddrLe(PhysicalAddress par4106, PhysicalAddress par4107)
+		public static bool? MacaddrLe(PhysicalAddress par4109, PhysicalAddress par4110)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13759,7 +13789,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrLt
 
 		[Sql.Function(Name="pg_catalog.macaddr_lt", ServerSideOnly=true)]
-		public static bool? MacaddrLt(PhysicalAddress par4109, PhysicalAddress par4110)
+		public static bool? MacaddrLt(PhysicalAddress par4112, PhysicalAddress par4113)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13769,7 +13799,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrNe
 
 		[Sql.Function(Name="pg_catalog.macaddr_ne", ServerSideOnly=true)]
-		public static bool? MacaddrNe(PhysicalAddress par4112, PhysicalAddress par4113)
+		public static bool? MacaddrNe(PhysicalAddress par4115, PhysicalAddress par4116)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13779,7 +13809,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrNot
 
 		[Sql.Function(Name="pg_catalog.macaddr_not", ServerSideOnly=true)]
-		public static PhysicalAddress MacaddrNot(PhysicalAddress par4115)
+		public static PhysicalAddress MacaddrNot(PhysicalAddress par4118)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13789,7 +13819,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrOr
 
 		[Sql.Function(Name="pg_catalog.macaddr_or", ServerSideOnly=true)]
-		public static PhysicalAddress MacaddrOr(PhysicalAddress par4117, PhysicalAddress par4118)
+		public static PhysicalAddress MacaddrOr(PhysicalAddress par4120, PhysicalAddress par4121)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13799,7 +13829,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrOut
 
 		[Sql.Function(Name="pg_catalog.macaddr_out", ServerSideOnly=true)]
-		public static object MacaddrOut(PhysicalAddress par4120)
+		public static object MacaddrOut(PhysicalAddress par4123)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13809,7 +13839,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrRecv
 
 		[Sql.Function(Name="pg_catalog.macaddr_recv", ServerSideOnly=true)]
-		public static PhysicalAddress MacaddrRecv(object par4122)
+		public static PhysicalAddress MacaddrRecv(object par4125)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13819,7 +13849,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrSend
 
 		[Sql.Function(Name="pg_catalog.macaddr_send", ServerSideOnly=true)]
-		public static byte[] MacaddrSend(PhysicalAddress par4124)
+		public static byte[] MacaddrSend(PhysicalAddress par4127)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13829,7 +13859,7 @@ namespace PostreSQL11DataContext
 		#region MacaddrSortsupport
 
 		[Sql.Function(Name="pg_catalog.macaddr_sortsupport", ServerSideOnly=true)]
-		public static object MacaddrSortsupport(object par4125)
+		public static object MacaddrSortsupport(object par4128)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13839,7 +13869,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8
 
 		[Sql.Function(Name="pg_catalog.macaddr8", ServerSideOnly=true)]
-		public static PhysicalAddress Macaddr8(PhysicalAddress par4127)
+		public static PhysicalAddress Macaddr8(PhysicalAddress par4130)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13849,7 +13879,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8And
 
 		[Sql.Function(Name="pg_catalog.macaddr8_and", ServerSideOnly=true)]
-		public static PhysicalAddress Macaddr8And(PhysicalAddress par4129, PhysicalAddress par4130)
+		public static PhysicalAddress Macaddr8And(PhysicalAddress par4132, PhysicalAddress par4133)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13859,7 +13889,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8Cmp
 
 		[Sql.Function(Name="pg_catalog.macaddr8_cmp", ServerSideOnly=true)]
-		public static int? Macaddr8Cmp(PhysicalAddress par4132, PhysicalAddress par4133)
+		public static int? Macaddr8Cmp(PhysicalAddress par4135, PhysicalAddress par4136)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13869,7 +13899,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8Eq
 
 		[Sql.Function(Name="pg_catalog.macaddr8_eq", ServerSideOnly=true)]
-		public static bool? Macaddr8Eq(PhysicalAddress par4135, PhysicalAddress par4136)
+		public static bool? Macaddr8Eq(PhysicalAddress par4138, PhysicalAddress par4139)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13879,7 +13909,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8Ge
 
 		[Sql.Function(Name="pg_catalog.macaddr8_ge", ServerSideOnly=true)]
-		public static bool? Macaddr8Ge(PhysicalAddress par4138, PhysicalAddress par4139)
+		public static bool? Macaddr8Ge(PhysicalAddress par4141, PhysicalAddress par4142)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13889,7 +13919,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8Gt
 
 		[Sql.Function(Name="pg_catalog.macaddr8_gt", ServerSideOnly=true)]
-		public static bool? Macaddr8Gt(PhysicalAddress par4141, PhysicalAddress par4142)
+		public static bool? Macaddr8Gt(PhysicalAddress par4144, PhysicalAddress par4145)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13899,7 +13929,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8In
 
 		[Sql.Function(Name="pg_catalog.macaddr8_in", ServerSideOnly=true)]
-		public static PhysicalAddress Macaddr8In(object par4144)
+		public static PhysicalAddress Macaddr8In(object par4147)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13909,7 +13939,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8Le
 
 		[Sql.Function(Name="pg_catalog.macaddr8_le", ServerSideOnly=true)]
-		public static bool? Macaddr8Le(PhysicalAddress par4146, PhysicalAddress par4147)
+		public static bool? Macaddr8Le(PhysicalAddress par4149, PhysicalAddress par4150)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13919,7 +13949,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8Lt
 
 		[Sql.Function(Name="pg_catalog.macaddr8_lt", ServerSideOnly=true)]
-		public static bool? Macaddr8Lt(PhysicalAddress par4149, PhysicalAddress par4150)
+		public static bool? Macaddr8Lt(PhysicalAddress par4152, PhysicalAddress par4153)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13929,7 +13959,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8Ne
 
 		[Sql.Function(Name="pg_catalog.macaddr8_ne", ServerSideOnly=true)]
-		public static bool? Macaddr8Ne(PhysicalAddress par4152, PhysicalAddress par4153)
+		public static bool? Macaddr8Ne(PhysicalAddress par4155, PhysicalAddress par4156)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13939,7 +13969,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8Not
 
 		[Sql.Function(Name="pg_catalog.macaddr8_not", ServerSideOnly=true)]
-		public static PhysicalAddress Macaddr8Not(PhysicalAddress par4155)
+		public static PhysicalAddress Macaddr8Not(PhysicalAddress par4158)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13949,7 +13979,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8Or
 
 		[Sql.Function(Name="pg_catalog.macaddr8_or", ServerSideOnly=true)]
-		public static PhysicalAddress Macaddr8Or(PhysicalAddress par4157, PhysicalAddress par4158)
+		public static PhysicalAddress Macaddr8Or(PhysicalAddress par4160, PhysicalAddress par4161)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13959,7 +13989,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8Out
 
 		[Sql.Function(Name="pg_catalog.macaddr8_out", ServerSideOnly=true)]
-		public static object Macaddr8Out(PhysicalAddress par4160)
+		public static object Macaddr8Out(PhysicalAddress par4163)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13969,7 +13999,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8Recv
 
 		[Sql.Function(Name="pg_catalog.macaddr8_recv", ServerSideOnly=true)]
-		public static PhysicalAddress Macaddr8Recv(object par4162)
+		public static PhysicalAddress Macaddr8Recv(object par4165)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13979,7 +14009,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8Send
 
 		[Sql.Function(Name="pg_catalog.macaddr8_send", ServerSideOnly=true)]
-		public static byte[] Macaddr8Send(PhysicalAddress par4164)
+		public static byte[] Macaddr8Send(PhysicalAddress par4167)
 		{
 			throw new InvalidOperationException();
 		}
@@ -13989,7 +14019,7 @@ namespace PostreSQL11DataContext
 		#region Macaddr8Set7bit
 
 		[Sql.Function(Name="pg_catalog.macaddr8_set7bit", ServerSideOnly=true)]
-		public static PhysicalAddress Macaddr8Set7bit(PhysicalAddress par4166)
+		public static PhysicalAddress Macaddr8Set7bit(PhysicalAddress par4169)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14049,7 +14079,7 @@ namespace PostreSQL11DataContext
 		#region Makeaclitem
 
 		[Sql.Function(Name="pg_catalog.makeaclitem", ServerSideOnly=true)]
-		public static object Makeaclitem(int? par4174, int? par4175, string par4176, bool? par4177)
+		public static object Makeaclitem(int? par4177, int? par4178, string par4179, bool? par4180)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14059,7 +14089,7 @@ namespace PostreSQL11DataContext
 		#region Masklen
 
 		[Sql.Function(Name="pg_catalog.masklen", ServerSideOnly=true)]
-		public static int? Masklen(NpgsqlInet? par4179)
+		public static int? Masklen(NpgsqlInet? par4182)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14069,7 +14099,7 @@ namespace PostreSQL11DataContext
 		#region Max
 
 		[Sql.Function(Name="pg_catalog.max", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static NpgsqlInet? Max<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, NpgsqlInet?>> par4221)
+		public static NpgsqlInet? Max<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, NpgsqlInet?>> par4224)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14079,7 +14109,7 @@ namespace PostreSQL11DataContext
 		#region Md5
 
 		[Sql.Function(Name="pg_catalog.md5", ServerSideOnly=true)]
-		public static string Md5(byte[] par4225)
+		public static string Md5(byte[] par4228)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14089,7 +14119,7 @@ namespace PostreSQL11DataContext
 		#region MicToAscii
 
 		[Sql.Function(Name="pg_catalog.mic_to_ascii", ServerSideOnly=true)]
-		public static object MicToAscii(int? par4226, int? par4227, object par4228, object par4229, int? par4230)
+		public static object MicToAscii(int? par4229, int? par4230, object par4231, object par4232, int? par4233)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14099,7 +14129,7 @@ namespace PostreSQL11DataContext
 		#region MicToBig5
 
 		[Sql.Function(Name="pg_catalog.mic_to_big5", ServerSideOnly=true)]
-		public static object MicToBig5(int? par4231, int? par4232, object par4233, object par4234, int? par4235)
+		public static object MicToBig5(int? par4234, int? par4235, object par4236, object par4237, int? par4238)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14109,7 +14139,7 @@ namespace PostreSQL11DataContext
 		#region MicToEucCn
 
 		[Sql.Function(Name="pg_catalog.mic_to_euc_cn", ServerSideOnly=true)]
-		public static object MicToEucCn(int? par4236, int? par4237, object par4238, object par4239, int? par4240)
+		public static object MicToEucCn(int? par4239, int? par4240, object par4241, object par4242, int? par4243)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14119,7 +14149,7 @@ namespace PostreSQL11DataContext
 		#region MicToEucJp
 
 		[Sql.Function(Name="pg_catalog.mic_to_euc_jp", ServerSideOnly=true)]
-		public static object MicToEucJp(int? par4241, int? par4242, object par4243, object par4244, int? par4245)
+		public static object MicToEucJp(int? par4244, int? par4245, object par4246, object par4247, int? par4248)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14129,7 +14159,7 @@ namespace PostreSQL11DataContext
 		#region MicToEucKr
 
 		[Sql.Function(Name="pg_catalog.mic_to_euc_kr", ServerSideOnly=true)]
-		public static object MicToEucKr(int? par4246, int? par4247, object par4248, object par4249, int? par4250)
+		public static object MicToEucKr(int? par4249, int? par4250, object par4251, object par4252, int? par4253)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14139,7 +14169,7 @@ namespace PostreSQL11DataContext
 		#region MicToEucTw
 
 		[Sql.Function(Name="pg_catalog.mic_to_euc_tw", ServerSideOnly=true)]
-		public static object MicToEucTw(int? par4251, int? par4252, object par4253, object par4254, int? par4255)
+		public static object MicToEucTw(int? par4254, int? par4255, object par4256, object par4257, int? par4258)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14149,7 +14179,7 @@ namespace PostreSQL11DataContext
 		#region MicToIso
 
 		[Sql.Function(Name="pg_catalog.mic_to_iso", ServerSideOnly=true)]
-		public static object MicToIso(int? par4256, int? par4257, object par4258, object par4259, int? par4260)
+		public static object MicToIso(int? par4259, int? par4260, object par4261, object par4262, int? par4263)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14159,7 +14189,7 @@ namespace PostreSQL11DataContext
 		#region MicToKoi8r
 
 		[Sql.Function(Name="pg_catalog.mic_to_koi8r", ServerSideOnly=true)]
-		public static object MicToKoi8r(int? par4261, int? par4262, object par4263, object par4264, int? par4265)
+		public static object MicToKoi8r(int? par4264, int? par4265, object par4266, object par4267, int? par4268)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14169,7 +14199,7 @@ namespace PostreSQL11DataContext
 		#region MicToLatin1
 
 		[Sql.Function(Name="pg_catalog.mic_to_latin1", ServerSideOnly=true)]
-		public static object MicToLatin1(int? par4266, int? par4267, object par4268, object par4269, int? par4270)
+		public static object MicToLatin1(int? par4269, int? par4270, object par4271, object par4272, int? par4273)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14179,7 +14209,7 @@ namespace PostreSQL11DataContext
 		#region MicToLatin2
 
 		[Sql.Function(Name="pg_catalog.mic_to_latin2", ServerSideOnly=true)]
-		public static object MicToLatin2(int? par4271, int? par4272, object par4273, object par4274, int? par4275)
+		public static object MicToLatin2(int? par4274, int? par4275, object par4276, object par4277, int? par4278)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14189,7 +14219,7 @@ namespace PostreSQL11DataContext
 		#region MicToLatin3
 
 		[Sql.Function(Name="pg_catalog.mic_to_latin3", ServerSideOnly=true)]
-		public static object MicToLatin3(int? par4276, int? par4277, object par4278, object par4279, int? par4280)
+		public static object MicToLatin3(int? par4279, int? par4280, object par4281, object par4282, int? par4283)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14199,7 +14229,7 @@ namespace PostreSQL11DataContext
 		#region MicToLatin4
 
 		[Sql.Function(Name="pg_catalog.mic_to_latin4", ServerSideOnly=true)]
-		public static object MicToLatin4(int? par4281, int? par4282, object par4283, object par4284, int? par4285)
+		public static object MicToLatin4(int? par4284, int? par4285, object par4286, object par4287, int? par4288)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14209,7 +14239,7 @@ namespace PostreSQL11DataContext
 		#region MicToSjis
 
 		[Sql.Function(Name="pg_catalog.mic_to_sjis", ServerSideOnly=true)]
-		public static object MicToSjis(int? par4286, int? par4287, object par4288, object par4289, int? par4290)
+		public static object MicToSjis(int? par4289, int? par4290, object par4291, object par4292, int? par4293)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14219,7 +14249,7 @@ namespace PostreSQL11DataContext
 		#region MicToWin1250
 
 		[Sql.Function(Name="pg_catalog.mic_to_win1250", ServerSideOnly=true)]
-		public static object MicToWin1250(int? par4291, int? par4292, object par4293, object par4294, int? par4295)
+		public static object MicToWin1250(int? par4294, int? par4295, object par4296, object par4297, int? par4298)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14229,7 +14259,7 @@ namespace PostreSQL11DataContext
 		#region MicToWin1251
 
 		[Sql.Function(Name="pg_catalog.mic_to_win1251", ServerSideOnly=true)]
-		public static object MicToWin1251(int? par4296, int? par4297, object par4298, object par4299, int? par4300)
+		public static object MicToWin1251(int? par4299, int? par4300, object par4301, object par4302, int? par4303)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14239,7 +14269,7 @@ namespace PostreSQL11DataContext
 		#region MicToWin866
 
 		[Sql.Function(Name="pg_catalog.mic_to_win866", ServerSideOnly=true)]
-		public static object MicToWin866(int? par4301, int? par4302, object par4303, object par4304, int? par4305)
+		public static object MicToWin866(int? par4304, int? par4305, object par4306, object par4307, int? par4308)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14249,7 +14279,7 @@ namespace PostreSQL11DataContext
 		#region Min
 
 		[Sql.Function(Name="pg_catalog.min", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static NpgsqlInet? Min<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, NpgsqlInet?>> par4347)
+		public static NpgsqlInet? Min<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, NpgsqlInet?>> par4350)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14259,7 +14289,7 @@ namespace PostreSQL11DataContext
 		#region Mktinterval
 
 		[Sql.Function(Name="pg_catalog.mktinterval", ServerSideOnly=true)]
-		public static object Mktinterval(object par4349, object par4350)
+		public static object Mktinterval(object par4352, object par4353)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14269,7 +14299,7 @@ namespace PostreSQL11DataContext
 		#region Mod
 
 		[Sql.Function(Name="pg_catalog.mod", ServerSideOnly=true)]
-		public static long? Mod(long? par4361, long? par4362)
+		public static long? Mod(long? par4364, long? par4365)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14279,7 +14309,7 @@ namespace PostreSQL11DataContext
 		#region Mode
 
 		[Sql.Function(Name="pg_catalog.mode", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static object Mode<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par4364)
+		public static object Mode<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par4367)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14289,7 +14319,7 @@ namespace PostreSQL11DataContext
 		#region ModeFinal
 
 		[Sql.Function(Name="pg_catalog.mode_final", ServerSideOnly=true)]
-		public static object ModeFinal(object par4366, object par4367)
+		public static object ModeFinal(object par4369, object par4370)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14299,7 +14329,7 @@ namespace PostreSQL11DataContext
 		#region Money
 
 		[Sql.Function(Name="pg_catalog.money", ServerSideOnly=true)]
-		public static decimal? Money(decimal? par4373)
+		public static decimal? Money(decimal? par4376)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14309,7 +14339,7 @@ namespace PostreSQL11DataContext
 		#region MulDInterval
 
 		[Sql.Function(Name="pg_catalog.mul_d_interval", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? MulDInterval(double? par4375, NpgsqlTimeSpan? par4376)
+		public static NpgsqlTimeSpan? MulDInterval(double? par4378, NpgsqlTimeSpan? par4379)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14319,7 +14349,7 @@ namespace PostreSQL11DataContext
 		#region MxidAge
 
 		[Sql.Function(Name="pg_catalog.mxid_age", ServerSideOnly=true)]
-		public static int? MxidAge(int? par4378)
+		public static int? MxidAge(int? par4381)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14329,7 +14359,7 @@ namespace PostreSQL11DataContext
 		#region Name
 
 		[Sql.Function(Name="pg_catalog.name", ServerSideOnly=true)]
-		public static string Name(string par4384)
+		public static string Name(string par4387)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14339,7 +14369,7 @@ namespace PostreSQL11DataContext
 		#region Nameeq
 
 		[Sql.Function(Name="pg_catalog.nameeq", ServerSideOnly=true)]
-		public static bool? Nameeq(string par4386, string par4387)
+		public static bool? Nameeq(string par4389, string par4390)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14349,7 +14379,7 @@ namespace PostreSQL11DataContext
 		#region Namege
 
 		[Sql.Function(Name="pg_catalog.namege", ServerSideOnly=true)]
-		public static bool? Namege(string par4389, string par4390)
+		public static bool? Namege(string par4392, string par4393)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14359,7 +14389,7 @@ namespace PostreSQL11DataContext
 		#region Namegt
 
 		[Sql.Function(Name="pg_catalog.namegt", ServerSideOnly=true)]
-		public static bool? Namegt(string par4392, string par4393)
+		public static bool? Namegt(string par4395, string par4396)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14369,7 +14399,7 @@ namespace PostreSQL11DataContext
 		#region Nameiclike
 
 		[Sql.Function(Name="pg_catalog.nameiclike", ServerSideOnly=true)]
-		public static bool? Nameiclike(string par4395, string par4396)
+		public static bool? Nameiclike(string par4398, string par4399)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14379,7 +14409,7 @@ namespace PostreSQL11DataContext
 		#region Nameicnlike
 
 		[Sql.Function(Name="pg_catalog.nameicnlike", ServerSideOnly=true)]
-		public static bool? Nameicnlike(string par4398, string par4399)
+		public static bool? Nameicnlike(string par4401, string par4402)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14389,7 +14419,7 @@ namespace PostreSQL11DataContext
 		#region Nameicregexeq
 
 		[Sql.Function(Name="pg_catalog.nameicregexeq", ServerSideOnly=true)]
-		public static bool? Nameicregexeq(string par4401, string par4402)
+		public static bool? Nameicregexeq(string par4404, string par4405)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14399,7 +14429,7 @@ namespace PostreSQL11DataContext
 		#region Nameicregexne
 
 		[Sql.Function(Name="pg_catalog.nameicregexne", ServerSideOnly=true)]
-		public static bool? Nameicregexne(string par4404, string par4405)
+		public static bool? Nameicregexne(string par4407, string par4408)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14409,7 +14439,7 @@ namespace PostreSQL11DataContext
 		#region Namein
 
 		[Sql.Function(Name="pg_catalog.namein", ServerSideOnly=true)]
-		public static string Namein(object par4407)
+		public static string Namein(object par4410)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14419,7 +14449,7 @@ namespace PostreSQL11DataContext
 		#region Namele
 
 		[Sql.Function(Name="pg_catalog.namele", ServerSideOnly=true)]
-		public static bool? Namele(string par4409, string par4410)
+		public static bool? Namele(string par4412, string par4413)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14429,7 +14459,7 @@ namespace PostreSQL11DataContext
 		#region Namelike
 
 		[Sql.Function(Name="pg_catalog.namelike", ServerSideOnly=true)]
-		public static bool? Namelike(string par4412, string par4413)
+		public static bool? Namelike(string par4415, string par4416)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14439,7 +14469,7 @@ namespace PostreSQL11DataContext
 		#region Namelt
 
 		[Sql.Function(Name="pg_catalog.namelt", ServerSideOnly=true)]
-		public static bool? Namelt(string par4415, string par4416)
+		public static bool? Namelt(string par4418, string par4419)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14449,7 +14479,7 @@ namespace PostreSQL11DataContext
 		#region Namene
 
 		[Sql.Function(Name="pg_catalog.namene", ServerSideOnly=true)]
-		public static bool? Namene(string par4418, string par4419)
+		public static bool? Namene(string par4421, string par4422)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14459,7 +14489,7 @@ namespace PostreSQL11DataContext
 		#region Namenlike
 
 		[Sql.Function(Name="pg_catalog.namenlike", ServerSideOnly=true)]
-		public static bool? Namenlike(string par4421, string par4422)
+		public static bool? Namenlike(string par4424, string par4425)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14469,7 +14499,7 @@ namespace PostreSQL11DataContext
 		#region Nameout
 
 		[Sql.Function(Name="pg_catalog.nameout", ServerSideOnly=true)]
-		public static object Nameout(string par4424)
+		public static object Nameout(string par4427)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14479,7 +14509,7 @@ namespace PostreSQL11DataContext
 		#region Namerecv
 
 		[Sql.Function(Name="pg_catalog.namerecv", ServerSideOnly=true)]
-		public static string Namerecv(object par4426)
+		public static string Namerecv(object par4429)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14489,7 +14519,7 @@ namespace PostreSQL11DataContext
 		#region Nameregexeq
 
 		[Sql.Function(Name="pg_catalog.nameregexeq", ServerSideOnly=true)]
-		public static bool? Nameregexeq(string par4428, string par4429)
+		public static bool? Nameregexeq(string par4431, string par4432)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14499,7 +14529,7 @@ namespace PostreSQL11DataContext
 		#region Nameregexne
 
 		[Sql.Function(Name="pg_catalog.nameregexne", ServerSideOnly=true)]
-		public static bool? Nameregexne(string par4431, string par4432)
+		public static bool? Nameregexne(string par4434, string par4435)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14509,7 +14539,7 @@ namespace PostreSQL11DataContext
 		#region Namesend
 
 		[Sql.Function(Name="pg_catalog.namesend", ServerSideOnly=true)]
-		public static byte[] Namesend(string par4434)
+		public static byte[] Namesend(string par4437)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14519,7 +14549,7 @@ namespace PostreSQL11DataContext
 		#region Neqjoinsel
 
 		[Sql.Function(Name="pg_catalog.neqjoinsel", ServerSideOnly=true)]
-		public static double? Neqjoinsel(object par4436, int? par4437, object par4438, short? par4439, object par4440)
+		public static double? Neqjoinsel(object par4439, int? par4440, object par4441, short? par4442, object par4443)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14529,7 +14559,7 @@ namespace PostreSQL11DataContext
 		#region Neqsel
 
 		[Sql.Function(Name="pg_catalog.neqsel", ServerSideOnly=true)]
-		public static double? Neqsel(object par4442, int? par4443, object par4444, int? par4445)
+		public static double? Neqsel(object par4445, int? par4446, object par4447, int? par4448)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14539,7 +14569,7 @@ namespace PostreSQL11DataContext
 		#region Netmask
 
 		[Sql.Function(Name="pg_catalog.netmask", ServerSideOnly=true)]
-		public static NpgsqlInet? Netmask(NpgsqlInet? par4447)
+		public static NpgsqlInet? Netmask(NpgsqlInet? par4450)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14549,7 +14579,7 @@ namespace PostreSQL11DataContext
 		#region Network
 
 		[Sql.Function(Name="pg_catalog.network", ServerSideOnly=true)]
-		public static NpgsqlInet? Network(NpgsqlInet? par4449)
+		public static NpgsqlInet? Network(NpgsqlInet? par4452)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14559,7 +14589,7 @@ namespace PostreSQL11DataContext
 		#region NetworkCmp
 
 		[Sql.Function(Name="pg_catalog.network_cmp", ServerSideOnly=true)]
-		public static int? NetworkCmp(NpgsqlInet? par4451, NpgsqlInet? par4452)
+		public static int? NetworkCmp(NpgsqlInet? par4454, NpgsqlInet? par4455)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14569,7 +14599,7 @@ namespace PostreSQL11DataContext
 		#region NetworkEq
 
 		[Sql.Function(Name="pg_catalog.network_eq", ServerSideOnly=true)]
-		public static bool? NetworkEq(NpgsqlInet? par4454, NpgsqlInet? par4455)
+		public static bool? NetworkEq(NpgsqlInet? par4457, NpgsqlInet? par4458)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14579,7 +14609,7 @@ namespace PostreSQL11DataContext
 		#region NetworkGe
 
 		[Sql.Function(Name="pg_catalog.network_ge", ServerSideOnly=true)]
-		public static bool? NetworkGe(NpgsqlInet? par4457, NpgsqlInet? par4458)
+		public static bool? NetworkGe(NpgsqlInet? par4460, NpgsqlInet? par4461)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14589,7 +14619,7 @@ namespace PostreSQL11DataContext
 		#region NetworkGt
 
 		[Sql.Function(Name="pg_catalog.network_gt", ServerSideOnly=true)]
-		public static bool? NetworkGt(NpgsqlInet? par4460, NpgsqlInet? par4461)
+		public static bool? NetworkGt(NpgsqlInet? par4463, NpgsqlInet? par4464)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14599,7 +14629,7 @@ namespace PostreSQL11DataContext
 		#region NetworkLarger
 
 		[Sql.Function(Name="pg_catalog.network_larger", ServerSideOnly=true)]
-		public static NpgsqlInet? NetworkLarger(NpgsqlInet? par4463, NpgsqlInet? par4464)
+		public static NpgsqlInet? NetworkLarger(NpgsqlInet? par4466, NpgsqlInet? par4467)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14609,7 +14639,7 @@ namespace PostreSQL11DataContext
 		#region NetworkLe
 
 		[Sql.Function(Name="pg_catalog.network_le", ServerSideOnly=true)]
-		public static bool? NetworkLe(NpgsqlInet? par4466, NpgsqlInet? par4467)
+		public static bool? NetworkLe(NpgsqlInet? par4469, NpgsqlInet? par4470)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14619,7 +14649,7 @@ namespace PostreSQL11DataContext
 		#region NetworkLt
 
 		[Sql.Function(Name="pg_catalog.network_lt", ServerSideOnly=true)]
-		public static bool? NetworkLt(NpgsqlInet? par4469, NpgsqlInet? par4470)
+		public static bool? NetworkLt(NpgsqlInet? par4472, NpgsqlInet? par4473)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14629,7 +14659,7 @@ namespace PostreSQL11DataContext
 		#region NetworkNe
 
 		[Sql.Function(Name="pg_catalog.network_ne", ServerSideOnly=true)]
-		public static bool? NetworkNe(NpgsqlInet? par4472, NpgsqlInet? par4473)
+		public static bool? NetworkNe(NpgsqlInet? par4475, NpgsqlInet? par4476)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14639,7 +14669,7 @@ namespace PostreSQL11DataContext
 		#region NetworkOverlap
 
 		[Sql.Function(Name="pg_catalog.network_overlap", ServerSideOnly=true)]
-		public static bool? NetworkOverlap(NpgsqlInet? par4475, NpgsqlInet? par4476)
+		public static bool? NetworkOverlap(NpgsqlInet? par4478, NpgsqlInet? par4479)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14649,7 +14679,7 @@ namespace PostreSQL11DataContext
 		#region NetworkSmaller
 
 		[Sql.Function(Name="pg_catalog.network_smaller", ServerSideOnly=true)]
-		public static NpgsqlInet? NetworkSmaller(NpgsqlInet? par4478, NpgsqlInet? par4479)
+		public static NpgsqlInet? NetworkSmaller(NpgsqlInet? par4481, NpgsqlInet? par4482)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14659,7 +14689,7 @@ namespace PostreSQL11DataContext
 		#region NetworkSub
 
 		[Sql.Function(Name="pg_catalog.network_sub", ServerSideOnly=true)]
-		public static bool? NetworkSub(NpgsqlInet? par4481, NpgsqlInet? par4482)
+		public static bool? NetworkSub(NpgsqlInet? par4484, NpgsqlInet? par4485)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14669,7 +14699,7 @@ namespace PostreSQL11DataContext
 		#region NetworkSubeq
 
 		[Sql.Function(Name="pg_catalog.network_subeq", ServerSideOnly=true)]
-		public static bool? NetworkSubeq(NpgsqlInet? par4484, NpgsqlInet? par4485)
+		public static bool? NetworkSubeq(NpgsqlInet? par4487, NpgsqlInet? par4488)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14679,7 +14709,7 @@ namespace PostreSQL11DataContext
 		#region NetworkSup
 
 		[Sql.Function(Name="pg_catalog.network_sup", ServerSideOnly=true)]
-		public static bool? NetworkSup(NpgsqlInet? par4487, NpgsqlInet? par4488)
+		public static bool? NetworkSup(NpgsqlInet? par4490, NpgsqlInet? par4491)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14689,7 +14719,7 @@ namespace PostreSQL11DataContext
 		#region NetworkSupeq
 
 		[Sql.Function(Name="pg_catalog.network_supeq", ServerSideOnly=true)]
-		public static bool? NetworkSupeq(NpgsqlInet? par4490, NpgsqlInet? par4491)
+		public static bool? NetworkSupeq(NpgsqlInet? par4493, NpgsqlInet? par4494)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14699,7 +14729,7 @@ namespace PostreSQL11DataContext
 		#region Networkjoinsel
 
 		[Sql.Function(Name="pg_catalog.networkjoinsel", ServerSideOnly=true)]
-		public static double? Networkjoinsel(object par4493, int? par4494, object par4495, short? par4496, object par4497)
+		public static double? Networkjoinsel(object par4496, int? par4497, object par4498, short? par4499, object par4500)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14709,7 +14739,7 @@ namespace PostreSQL11DataContext
 		#region Networksel
 
 		[Sql.Function(Name="pg_catalog.networksel", ServerSideOnly=true)]
-		public static double? Networksel(object par4499, int? par4500, object par4501, int? par4502)
+		public static double? Networksel(object par4502, int? par4503, object par4504, int? par4505)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14719,7 +14749,7 @@ namespace PostreSQL11DataContext
 		#region Nextval
 
 		[Sql.Function(Name="pg_catalog.nextval", ServerSideOnly=true)]
-		public static long? Nextval(object par4504)
+		public static long? Nextval(object par4507)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14729,7 +14759,7 @@ namespace PostreSQL11DataContext
 		#region Nlikejoinsel
 
 		[Sql.Function(Name="pg_catalog.nlikejoinsel", ServerSideOnly=true)]
-		public static double? Nlikejoinsel(object par4506, int? par4507, object par4508, short? par4509, object par4510)
+		public static double? Nlikejoinsel(object par4509, int? par4510, object par4511, short? par4512, object par4513)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14739,7 +14769,7 @@ namespace PostreSQL11DataContext
 		#region Nlikesel
 
 		[Sql.Function(Name="pg_catalog.nlikesel", ServerSideOnly=true)]
-		public static double? Nlikesel(object par4512, int? par4513, object par4514, int? par4515)
+		public static double? Nlikesel(object par4515, int? par4516, object par4517, int? par4518)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14749,7 +14779,7 @@ namespace PostreSQL11DataContext
 		#region Notlike
 
 		[Sql.Function(Name="pg_catalog.notlike", ServerSideOnly=true)]
-		public static bool? Notlike(byte[] par4523, byte[] par4524)
+		public static bool? Notlike(byte[] par4526, byte[] par4527)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14769,7 +14799,7 @@ namespace PostreSQL11DataContext
 		#region Npoints
 
 		[Sql.Function(Name="pg_catalog.npoints", ServerSideOnly=true)]
-		public static int? Npoints(NpgsqlPolygon? par4529)
+		public static int? Npoints(NpgsqlPolygon? par4532)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14779,7 +14809,7 @@ namespace PostreSQL11DataContext
 		#region NthValue
 
 		[Sql.Function(Name="pg_catalog.nth_value", ServerSideOnly=true)]
-		public static object NthValue(object par4531, int? par4532)
+		public static object NthValue(object par4534, int? par4535)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14789,7 +14819,7 @@ namespace PostreSQL11DataContext
 		#region Ntile
 
 		[Sql.Function(Name="pg_catalog.ntile", ServerSideOnly=true)]
-		public static int? Ntile(int? par4534)
+		public static int? Ntile(int? par4537)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14799,7 +14829,7 @@ namespace PostreSQL11DataContext
 		#region NumNonnulls
 
 		[Sql.Function(Name="pg_catalog.num_nonnulls", ServerSideOnly=true)]
-		public static int? NumNonnulls(object par4536)
+		public static int? NumNonnulls(object par4539)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14809,7 +14839,7 @@ namespace PostreSQL11DataContext
 		#region NumNulls
 
 		[Sql.Function(Name="pg_catalog.num_nulls", ServerSideOnly=true)]
-		public static int? NumNulls(object par4538)
+		public static int? NumNulls(object par4541)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14819,7 +14849,7 @@ namespace PostreSQL11DataContext
 		#region Numeric
 
 		[Sql.Function(Name="pg_catalog.numeric", ServerSideOnly=true)]
-		public static decimal? Numeric(decimal? par4555)
+		public static decimal? Numeric(decimal? par4558)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14829,7 +14859,7 @@ namespace PostreSQL11DataContext
 		#region NumericAbs
 
 		[Sql.Function(Name="pg_catalog.numeric_abs", ServerSideOnly=true)]
-		public static decimal? NumericAbs(decimal? par4557)
+		public static decimal? NumericAbs(decimal? par4560)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14839,7 +14869,7 @@ namespace PostreSQL11DataContext
 		#region NumericAccum
 
 		[Sql.Function(Name="pg_catalog.numeric_accum", ServerSideOnly=true)]
-		public static object NumericAccum(object par4559, decimal? par4560)
+		public static object NumericAccum(object par4562, decimal? par4563)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14849,7 +14879,7 @@ namespace PostreSQL11DataContext
 		#region NumericAccumInv
 
 		[Sql.Function(Name="pg_catalog.numeric_accum_inv", ServerSideOnly=true)]
-		public static object NumericAccumInv(object par4562, decimal? par4563)
+		public static object NumericAccumInv(object par4565, decimal? par4566)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14859,7 +14889,7 @@ namespace PostreSQL11DataContext
 		#region NumericAdd
 
 		[Sql.Function(Name="pg_catalog.numeric_add", ServerSideOnly=true)]
-		public static decimal? NumericAdd(decimal? par4565, decimal? par4566)
+		public static decimal? NumericAdd(decimal? par4568, decimal? par4569)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14869,7 +14899,7 @@ namespace PostreSQL11DataContext
 		#region NumericAvg
 
 		[Sql.Function(Name="pg_catalog.numeric_avg", ServerSideOnly=true)]
-		public static decimal? NumericAvg(object par4568)
+		public static decimal? NumericAvg(object par4571)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14879,7 +14909,7 @@ namespace PostreSQL11DataContext
 		#region NumericAvgAccum
 
 		[Sql.Function(Name="pg_catalog.numeric_avg_accum", ServerSideOnly=true)]
-		public static object NumericAvgAccum(object par4570, decimal? par4571)
+		public static object NumericAvgAccum(object par4573, decimal? par4574)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14889,7 +14919,7 @@ namespace PostreSQL11DataContext
 		#region NumericAvgCombine
 
 		[Sql.Function(Name="pg_catalog.numeric_avg_combine", ServerSideOnly=true)]
-		public static object NumericAvgCombine(object par4573, object par4574)
+		public static object NumericAvgCombine(object par4576, object par4577)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14899,7 +14929,7 @@ namespace PostreSQL11DataContext
 		#region NumericAvgDeserialize
 
 		[Sql.Function(Name="pg_catalog.numeric_avg_deserialize", ServerSideOnly=true)]
-		public static object NumericAvgDeserialize(byte[] par4576, object par4577)
+		public static object NumericAvgDeserialize(byte[] par4579, object par4580)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14909,7 +14939,7 @@ namespace PostreSQL11DataContext
 		#region NumericAvgSerialize
 
 		[Sql.Function(Name="pg_catalog.numeric_avg_serialize", ServerSideOnly=true)]
-		public static byte[] NumericAvgSerialize(object par4579)
+		public static byte[] NumericAvgSerialize(object par4582)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14919,7 +14949,7 @@ namespace PostreSQL11DataContext
 		#region NumericCmp
 
 		[Sql.Function(Name="pg_catalog.numeric_cmp", ServerSideOnly=true)]
-		public static int? NumericCmp(decimal? par4581, decimal? par4582)
+		public static int? NumericCmp(decimal? par4584, decimal? par4585)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14929,7 +14959,7 @@ namespace PostreSQL11DataContext
 		#region NumericCombine
 
 		[Sql.Function(Name="pg_catalog.numeric_combine", ServerSideOnly=true)]
-		public static object NumericCombine(object par4584, object par4585)
+		public static object NumericCombine(object par4587, object par4588)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14939,7 +14969,7 @@ namespace PostreSQL11DataContext
 		#region NumericDeserialize
 
 		[Sql.Function(Name="pg_catalog.numeric_deserialize", ServerSideOnly=true)]
-		public static object NumericDeserialize(byte[] par4587, object par4588)
+		public static object NumericDeserialize(byte[] par4590, object par4591)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14949,7 +14979,7 @@ namespace PostreSQL11DataContext
 		#region NumericDiv
 
 		[Sql.Function(Name="pg_catalog.numeric_div", ServerSideOnly=true)]
-		public static decimal? NumericDiv(decimal? par4590, decimal? par4591)
+		public static decimal? NumericDiv(decimal? par4593, decimal? par4594)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14959,7 +14989,7 @@ namespace PostreSQL11DataContext
 		#region NumericDivTrunc
 
 		[Sql.Function(Name="pg_catalog.numeric_div_trunc", ServerSideOnly=true)]
-		public static decimal? NumericDivTrunc(decimal? par4593, decimal? par4594)
+		public static decimal? NumericDivTrunc(decimal? par4596, decimal? par4597)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14969,7 +14999,7 @@ namespace PostreSQL11DataContext
 		#region NumericEq
 
 		[Sql.Function(Name="pg_catalog.numeric_eq", ServerSideOnly=true)]
-		public static bool? NumericEq(decimal? par4596, decimal? par4597)
+		public static bool? NumericEq(decimal? par4599, decimal? par4600)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14979,7 +15009,7 @@ namespace PostreSQL11DataContext
 		#region NumericExp
 
 		[Sql.Function(Name="pg_catalog.numeric_exp", ServerSideOnly=true)]
-		public static decimal? NumericExp(decimal? par4599)
+		public static decimal? NumericExp(decimal? par4602)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14989,7 +15019,7 @@ namespace PostreSQL11DataContext
 		#region NumericFac
 
 		[Sql.Function(Name="pg_catalog.numeric_fac", ServerSideOnly=true)]
-		public static decimal? NumericFac(long? par4601)
+		public static decimal? NumericFac(long? par4604)
 		{
 			throw new InvalidOperationException();
 		}
@@ -14999,7 +15029,7 @@ namespace PostreSQL11DataContext
 		#region NumericGe
 
 		[Sql.Function(Name="pg_catalog.numeric_ge", ServerSideOnly=true)]
-		public static bool? NumericGe(decimal? par4603, decimal? par4604)
+		public static bool? NumericGe(decimal? par4606, decimal? par4607)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15009,7 +15039,7 @@ namespace PostreSQL11DataContext
 		#region NumericGt
 
 		[Sql.Function(Name="pg_catalog.numeric_gt", ServerSideOnly=true)]
-		public static bool? NumericGt(decimal? par4606, decimal? par4607)
+		public static bool? NumericGt(decimal? par4609, decimal? par4610)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15019,7 +15049,7 @@ namespace PostreSQL11DataContext
 		#region NumericIn
 
 		[Sql.Function(Name="pg_catalog.numeric_in", ServerSideOnly=true)]
-		public static decimal? NumericIn(object par4609, int? par4610, int? par4611)
+		public static decimal? NumericIn(object par4612, int? par4613, int? par4614)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15029,7 +15059,7 @@ namespace PostreSQL11DataContext
 		#region NumericInc
 
 		[Sql.Function(Name="pg_catalog.numeric_inc", ServerSideOnly=true)]
-		public static decimal? NumericInc(decimal? par4613)
+		public static decimal? NumericInc(decimal? par4616)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15039,7 +15069,7 @@ namespace PostreSQL11DataContext
 		#region NumericLarger
 
 		[Sql.Function(Name="pg_catalog.numeric_larger", ServerSideOnly=true)]
-		public static decimal? NumericLarger(decimal? par4615, decimal? par4616)
+		public static decimal? NumericLarger(decimal? par4618, decimal? par4619)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15049,7 +15079,7 @@ namespace PostreSQL11DataContext
 		#region NumericLe
 
 		[Sql.Function(Name="pg_catalog.numeric_le", ServerSideOnly=true)]
-		public static bool? NumericLe(decimal? par4618, decimal? par4619)
+		public static bool? NumericLe(decimal? par4621, decimal? par4622)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15059,7 +15089,7 @@ namespace PostreSQL11DataContext
 		#region NumericLn
 
 		[Sql.Function(Name="pg_catalog.numeric_ln", ServerSideOnly=true)]
-		public static decimal? NumericLn(decimal? par4621)
+		public static decimal? NumericLn(decimal? par4624)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15069,7 +15099,7 @@ namespace PostreSQL11DataContext
 		#region NumericLog
 
 		[Sql.Function(Name="pg_catalog.numeric_log", ServerSideOnly=true)]
-		public static decimal? NumericLog(decimal? par4623, decimal? par4624)
+		public static decimal? NumericLog(decimal? par4626, decimal? par4627)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15079,7 +15109,7 @@ namespace PostreSQL11DataContext
 		#region NumericLt
 
 		[Sql.Function(Name="pg_catalog.numeric_lt", ServerSideOnly=true)]
-		public static bool? NumericLt(decimal? par4626, decimal? par4627)
+		public static bool? NumericLt(decimal? par4629, decimal? par4630)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15089,7 +15119,7 @@ namespace PostreSQL11DataContext
 		#region NumericMod
 
 		[Sql.Function(Name="pg_catalog.numeric_mod", ServerSideOnly=true)]
-		public static decimal? NumericMod(decimal? par4629, decimal? par4630)
+		public static decimal? NumericMod(decimal? par4632, decimal? par4633)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15099,7 +15129,7 @@ namespace PostreSQL11DataContext
 		#region NumericMul
 
 		[Sql.Function(Name="pg_catalog.numeric_mul", ServerSideOnly=true)]
-		public static decimal? NumericMul(decimal? par4632, decimal? par4633)
+		public static decimal? NumericMul(decimal? par4635, decimal? par4636)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15109,7 +15139,7 @@ namespace PostreSQL11DataContext
 		#region NumericNe
 
 		[Sql.Function(Name="pg_catalog.numeric_ne", ServerSideOnly=true)]
-		public static bool? NumericNe(decimal? par4635, decimal? par4636)
+		public static bool? NumericNe(decimal? par4638, decimal? par4639)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15119,7 +15149,7 @@ namespace PostreSQL11DataContext
 		#region NumericOut
 
 		[Sql.Function(Name="pg_catalog.numeric_out", ServerSideOnly=true)]
-		public static object NumericOut(decimal? par4638)
+		public static object NumericOut(decimal? par4641)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15129,7 +15159,7 @@ namespace PostreSQL11DataContext
 		#region NumericPolyAvg
 
 		[Sql.Function(Name="pg_catalog.numeric_poly_avg", ServerSideOnly=true)]
-		public static decimal? NumericPolyAvg(object par4640)
+		public static decimal? NumericPolyAvg(object par4643)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15139,7 +15169,7 @@ namespace PostreSQL11DataContext
 		#region NumericPolyCombine
 
 		[Sql.Function(Name="pg_catalog.numeric_poly_combine", ServerSideOnly=true)]
-		public static object NumericPolyCombine(object par4642, object par4643)
+		public static object NumericPolyCombine(object par4645, object par4646)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15149,7 +15179,7 @@ namespace PostreSQL11DataContext
 		#region NumericPolyDeserialize
 
 		[Sql.Function(Name="pg_catalog.numeric_poly_deserialize", ServerSideOnly=true)]
-		public static object NumericPolyDeserialize(byte[] par4645, object par4646)
+		public static object NumericPolyDeserialize(byte[] par4648, object par4649)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15159,7 +15189,7 @@ namespace PostreSQL11DataContext
 		#region NumericPolySerialize
 
 		[Sql.Function(Name="pg_catalog.numeric_poly_serialize", ServerSideOnly=true)]
-		public static byte[] NumericPolySerialize(object par4648)
+		public static byte[] NumericPolySerialize(object par4651)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15169,7 +15199,7 @@ namespace PostreSQL11DataContext
 		#region NumericPolyStddevPop
 
 		[Sql.Function(Name="pg_catalog.numeric_poly_stddev_pop", ServerSideOnly=true)]
-		public static decimal? NumericPolyStddevPop(object par4650)
+		public static decimal? NumericPolyStddevPop(object par4653)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15179,7 +15209,7 @@ namespace PostreSQL11DataContext
 		#region NumericPolyStddevSamp
 
 		[Sql.Function(Name="pg_catalog.numeric_poly_stddev_samp", ServerSideOnly=true)]
-		public static decimal? NumericPolyStddevSamp(object par4652)
+		public static decimal? NumericPolyStddevSamp(object par4655)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15189,7 +15219,7 @@ namespace PostreSQL11DataContext
 		#region NumericPolySum
 
 		[Sql.Function(Name="pg_catalog.numeric_poly_sum", ServerSideOnly=true)]
-		public static decimal? NumericPolySum(object par4654)
+		public static decimal? NumericPolySum(object par4657)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15199,7 +15229,7 @@ namespace PostreSQL11DataContext
 		#region NumericPolyVarPop
 
 		[Sql.Function(Name="pg_catalog.numeric_poly_var_pop", ServerSideOnly=true)]
-		public static decimal? NumericPolyVarPop(object par4656)
+		public static decimal? NumericPolyVarPop(object par4659)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15209,7 +15239,7 @@ namespace PostreSQL11DataContext
 		#region NumericPolyVarSamp
 
 		[Sql.Function(Name="pg_catalog.numeric_poly_var_samp", ServerSideOnly=true)]
-		public static decimal? NumericPolyVarSamp(object par4658)
+		public static decimal? NumericPolyVarSamp(object par4661)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15219,7 +15249,7 @@ namespace PostreSQL11DataContext
 		#region NumericPower
 
 		[Sql.Function(Name="pg_catalog.numeric_power", ServerSideOnly=true)]
-		public static decimal? NumericPower(decimal? par4660, decimal? par4661)
+		public static decimal? NumericPower(decimal? par4663, decimal? par4664)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15229,7 +15259,7 @@ namespace PostreSQL11DataContext
 		#region NumericRecv
 
 		[Sql.Function(Name="pg_catalog.numeric_recv", ServerSideOnly=true)]
-		public static decimal? NumericRecv(object par4663, int? par4664, int? par4665)
+		public static decimal? NumericRecv(object par4666, int? par4667, int? par4668)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15239,7 +15269,7 @@ namespace PostreSQL11DataContext
 		#region NumericSend
 
 		[Sql.Function(Name="pg_catalog.numeric_send", ServerSideOnly=true)]
-		public static byte[] NumericSend(decimal? par4667)
+		public static byte[] NumericSend(decimal? par4670)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15249,7 +15279,7 @@ namespace PostreSQL11DataContext
 		#region NumericSerialize
 
 		[Sql.Function(Name="pg_catalog.numeric_serialize", ServerSideOnly=true)]
-		public static byte[] NumericSerialize(object par4669)
+		public static byte[] NumericSerialize(object par4672)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15259,7 +15289,7 @@ namespace PostreSQL11DataContext
 		#region NumericSmaller
 
 		[Sql.Function(Name="pg_catalog.numeric_smaller", ServerSideOnly=true)]
-		public static decimal? NumericSmaller(decimal? par4671, decimal? par4672)
+		public static decimal? NumericSmaller(decimal? par4674, decimal? par4675)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15269,7 +15299,7 @@ namespace PostreSQL11DataContext
 		#region NumericSortsupport
 
 		[Sql.Function(Name="pg_catalog.numeric_sortsupport", ServerSideOnly=true)]
-		public static object NumericSortsupport(object par4673)
+		public static object NumericSortsupport(object par4676)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15279,7 +15309,7 @@ namespace PostreSQL11DataContext
 		#region NumericSqrt
 
 		[Sql.Function(Name="pg_catalog.numeric_sqrt", ServerSideOnly=true)]
-		public static decimal? NumericSqrt(decimal? par4675)
+		public static decimal? NumericSqrt(decimal? par4678)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15289,7 +15319,7 @@ namespace PostreSQL11DataContext
 		#region NumericStddevPop
 
 		[Sql.Function(Name="pg_catalog.numeric_stddev_pop", ServerSideOnly=true)]
-		public static decimal? NumericStddevPop(object par4677)
+		public static decimal? NumericStddevPop(object par4680)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15299,7 +15329,7 @@ namespace PostreSQL11DataContext
 		#region NumericStddevSamp
 
 		[Sql.Function(Name="pg_catalog.numeric_stddev_samp", ServerSideOnly=true)]
-		public static decimal? NumericStddevSamp(object par4679)
+		public static decimal? NumericStddevSamp(object par4682)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15309,7 +15339,7 @@ namespace PostreSQL11DataContext
 		#region NumericSub
 
 		[Sql.Function(Name="pg_catalog.numeric_sub", ServerSideOnly=true)]
-		public static decimal? NumericSub(decimal? par4681, decimal? par4682)
+		public static decimal? NumericSub(decimal? par4684, decimal? par4685)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15319,7 +15349,7 @@ namespace PostreSQL11DataContext
 		#region NumericSum
 
 		[Sql.Function(Name="pg_catalog.numeric_sum", ServerSideOnly=true)]
-		public static decimal? NumericSum(object par4684)
+		public static decimal? NumericSum(object par4687)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15329,7 +15359,7 @@ namespace PostreSQL11DataContext
 		#region NumericTransform
 
 		[Sql.Function(Name="pg_catalog.numeric_transform", ServerSideOnly=true)]
-		public static object NumericTransform(object par4686)
+		public static object NumericTransform(object par4689)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15339,7 +15369,7 @@ namespace PostreSQL11DataContext
 		#region NumericUminus
 
 		[Sql.Function(Name="pg_catalog.numeric_uminus", ServerSideOnly=true)]
-		public static decimal? NumericUminus(decimal? par4688)
+		public static decimal? NumericUminus(decimal? par4691)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15349,7 +15379,7 @@ namespace PostreSQL11DataContext
 		#region NumericUplus
 
 		[Sql.Function(Name="pg_catalog.numeric_uplus", ServerSideOnly=true)]
-		public static decimal? NumericUplus(decimal? par4690)
+		public static decimal? NumericUplus(decimal? par4693)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15359,7 +15389,7 @@ namespace PostreSQL11DataContext
 		#region NumericVarPop
 
 		[Sql.Function(Name="pg_catalog.numeric_var_pop", ServerSideOnly=true)]
-		public static decimal? NumericVarPop(object par4692)
+		public static decimal? NumericVarPop(object par4695)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15369,7 +15399,7 @@ namespace PostreSQL11DataContext
 		#region NumericVarSamp
 
 		[Sql.Function(Name="pg_catalog.numeric_var_samp", ServerSideOnly=true)]
-		public static decimal? NumericVarSamp(object par4694)
+		public static decimal? NumericVarSamp(object par4697)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15379,7 +15409,7 @@ namespace PostreSQL11DataContext
 		#region Numerictypmodin
 
 		[Sql.Function(Name="pg_catalog.numerictypmodin", ServerSideOnly=true)]
-		public static int? Numerictypmodin(object par4696)
+		public static int? Numerictypmodin(object par4699)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15389,7 +15419,7 @@ namespace PostreSQL11DataContext
 		#region Numerictypmodout
 
 		[Sql.Function(Name="pg_catalog.numerictypmodout", ServerSideOnly=true)]
-		public static object Numerictypmodout(int? par4698)
+		public static object Numerictypmodout(int? par4701)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15399,7 +15429,7 @@ namespace PostreSQL11DataContext
 		#region Numnode
 
 		[Sql.Function(Name="pg_catalog.numnode", ServerSideOnly=true)]
-		public static int? Numnode(object par4700)
+		public static int? Numnode(object par4703)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15409,7 +15439,7 @@ namespace PostreSQL11DataContext
 		#region Numrange
 
 		[Sql.Function(Name="pg_catalog.numrange", ServerSideOnly=true)]
-		public static object Numrange(decimal? par4705, decimal? par4706, string par4707)
+		public static object Numrange(decimal? par4708, decimal? par4709, string par4710)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15419,7 +15449,7 @@ namespace PostreSQL11DataContext
 		#region NumrangeSubdiff
 
 		[Sql.Function(Name="pg_catalog.numrange_subdiff", ServerSideOnly=true)]
-		public static double? NumrangeSubdiff(decimal? par4709, decimal? par4710)
+		public static double? NumrangeSubdiff(decimal? par4712, decimal? par4713)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15429,7 +15459,7 @@ namespace PostreSQL11DataContext
 		#region ObjDescription
 
 		[Sql.Function(Name="pg_catalog.obj_description", ServerSideOnly=true)]
-		public static string ObjDescription(int? par4715)
+		public static string ObjDescription(int? par4718)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15439,7 +15469,7 @@ namespace PostreSQL11DataContext
 		#region OctetLength
 
 		[Sql.Function(Name="pg_catalog.octet_length", ServerSideOnly=true)]
-		public static int? OctetLength(byte[] par4723)
+		public static int? OctetLength(byte[] par4726)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15449,7 +15479,7 @@ namespace PostreSQL11DataContext
 		#region Oid
 
 		[Sql.Function(Name="pg_catalog.oid", ServerSideOnly=true)]
-		public static int? Oid(long? par4725)
+		public static int? Oid(long? par4728)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15459,7 +15489,7 @@ namespace PostreSQL11DataContext
 		#region Oideq
 
 		[Sql.Function(Name="pg_catalog.oideq", ServerSideOnly=true)]
-		public static bool? Oideq(int? par4727, int? par4728)
+		public static bool? Oideq(int? par4730, int? par4731)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15469,7 +15499,7 @@ namespace PostreSQL11DataContext
 		#region Oidge
 
 		[Sql.Function(Name="pg_catalog.oidge", ServerSideOnly=true)]
-		public static bool? Oidge(int? par4730, int? par4731)
+		public static bool? Oidge(int? par4733, int? par4734)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15479,7 +15509,7 @@ namespace PostreSQL11DataContext
 		#region Oidgt
 
 		[Sql.Function(Name="pg_catalog.oidgt", ServerSideOnly=true)]
-		public static bool? Oidgt(int? par4733, int? par4734)
+		public static bool? Oidgt(int? par4736, int? par4737)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15489,7 +15519,7 @@ namespace PostreSQL11DataContext
 		#region Oidin
 
 		[Sql.Function(Name="pg_catalog.oidin", ServerSideOnly=true)]
-		public static int? Oidin(object par4736)
+		public static int? Oidin(object par4739)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15499,7 +15529,7 @@ namespace PostreSQL11DataContext
 		#region Oidlarger
 
 		[Sql.Function(Name="pg_catalog.oidlarger", ServerSideOnly=true)]
-		public static int? Oidlarger(int? par4738, int? par4739)
+		public static int? Oidlarger(int? par4741, int? par4742)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15509,7 +15539,7 @@ namespace PostreSQL11DataContext
 		#region Oidle
 
 		[Sql.Function(Name="pg_catalog.oidle", ServerSideOnly=true)]
-		public static bool? Oidle(int? par4741, int? par4742)
+		public static bool? Oidle(int? par4744, int? par4745)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15519,7 +15549,7 @@ namespace PostreSQL11DataContext
 		#region Oidlt
 
 		[Sql.Function(Name="pg_catalog.oidlt", ServerSideOnly=true)]
-		public static bool? Oidlt(int? par4744, int? par4745)
+		public static bool? Oidlt(int? par4747, int? par4748)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15529,7 +15559,7 @@ namespace PostreSQL11DataContext
 		#region Oidne
 
 		[Sql.Function(Name="pg_catalog.oidne", ServerSideOnly=true)]
-		public static bool? Oidne(int? par4747, int? par4748)
+		public static bool? Oidne(int? par4750, int? par4751)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15539,7 +15569,7 @@ namespace PostreSQL11DataContext
 		#region Oidout
 
 		[Sql.Function(Name="pg_catalog.oidout", ServerSideOnly=true)]
-		public static object Oidout(int? par4750)
+		public static object Oidout(int? par4753)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15549,7 +15579,7 @@ namespace PostreSQL11DataContext
 		#region Oidrecv
 
 		[Sql.Function(Name="pg_catalog.oidrecv", ServerSideOnly=true)]
-		public static int? Oidrecv(object par4752)
+		public static int? Oidrecv(object par4755)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15559,7 +15589,7 @@ namespace PostreSQL11DataContext
 		#region Oidsend
 
 		[Sql.Function(Name="pg_catalog.oidsend", ServerSideOnly=true)]
-		public static byte[] Oidsend(int? par4754)
+		public static byte[] Oidsend(int? par4757)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15569,7 +15599,7 @@ namespace PostreSQL11DataContext
 		#region Oidsmaller
 
 		[Sql.Function(Name="pg_catalog.oidsmaller", ServerSideOnly=true)]
-		public static int? Oidsmaller(int? par4756, int? par4757)
+		public static int? Oidsmaller(int? par4759, int? par4760)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15579,7 +15609,7 @@ namespace PostreSQL11DataContext
 		#region Oidvectoreq
 
 		[Sql.Function(Name="pg_catalog.oidvectoreq", ServerSideOnly=true)]
-		public static bool? Oidvectoreq(object par4759, object par4760)
+		public static bool? Oidvectoreq(object par4762, object par4763)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15589,7 +15619,7 @@ namespace PostreSQL11DataContext
 		#region Oidvectorge
 
 		[Sql.Function(Name="pg_catalog.oidvectorge", ServerSideOnly=true)]
-		public static bool? Oidvectorge(object par4762, object par4763)
+		public static bool? Oidvectorge(object par4765, object par4766)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15599,7 +15629,7 @@ namespace PostreSQL11DataContext
 		#region Oidvectorgt
 
 		[Sql.Function(Name="pg_catalog.oidvectorgt", ServerSideOnly=true)]
-		public static bool? Oidvectorgt(object par4765, object par4766)
+		public static bool? Oidvectorgt(object par4768, object par4769)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15609,7 +15639,7 @@ namespace PostreSQL11DataContext
 		#region Oidvectorin
 
 		[Sql.Function(Name="pg_catalog.oidvectorin", ServerSideOnly=true)]
-		public static object Oidvectorin(object par4768)
+		public static object Oidvectorin(object par4771)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15619,7 +15649,7 @@ namespace PostreSQL11DataContext
 		#region Oidvectorle
 
 		[Sql.Function(Name="pg_catalog.oidvectorle", ServerSideOnly=true)]
-		public static bool? Oidvectorle(object par4770, object par4771)
+		public static bool? Oidvectorle(object par4773, object par4774)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15629,7 +15659,7 @@ namespace PostreSQL11DataContext
 		#region Oidvectorlt
 
 		[Sql.Function(Name="pg_catalog.oidvectorlt", ServerSideOnly=true)]
-		public static bool? Oidvectorlt(object par4773, object par4774)
+		public static bool? Oidvectorlt(object par4776, object par4777)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15639,7 +15669,7 @@ namespace PostreSQL11DataContext
 		#region Oidvectorne
 
 		[Sql.Function(Name="pg_catalog.oidvectorne", ServerSideOnly=true)]
-		public static bool? Oidvectorne(object par4776, object par4777)
+		public static bool? Oidvectorne(object par4779, object par4780)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15649,7 +15679,7 @@ namespace PostreSQL11DataContext
 		#region Oidvectorout
 
 		[Sql.Function(Name="pg_catalog.oidvectorout", ServerSideOnly=true)]
-		public static object Oidvectorout(object par4779)
+		public static object Oidvectorout(object par4782)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15659,7 +15689,7 @@ namespace PostreSQL11DataContext
 		#region Oidvectorrecv
 
 		[Sql.Function(Name="pg_catalog.oidvectorrecv", ServerSideOnly=true)]
-		public static object Oidvectorrecv(object par4781)
+		public static object Oidvectorrecv(object par4784)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15669,7 +15699,7 @@ namespace PostreSQL11DataContext
 		#region Oidvectorsend
 
 		[Sql.Function(Name="pg_catalog.oidvectorsend", ServerSideOnly=true)]
-		public static byte[] Oidvectorsend(object par4783)
+		public static byte[] Oidvectorsend(object par4786)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15679,7 +15709,7 @@ namespace PostreSQL11DataContext
 		#region Oidvectortypes
 
 		[Sql.Function(Name="pg_catalog.oidvectortypes", ServerSideOnly=true)]
-		public static string Oidvectortypes(object par4785)
+		public static string Oidvectortypes(object par4788)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15689,7 +15719,7 @@ namespace PostreSQL11DataContext
 		#region OnPb
 
 		[Sql.Function(Name="pg_catalog.on_pb", ServerSideOnly=true)]
-		public static bool? OnPb(NpgsqlPoint? par4787, NpgsqlBox? par4788)
+		public static bool? OnPb(NpgsqlPoint? par4790, NpgsqlBox? par4791)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15699,7 +15729,7 @@ namespace PostreSQL11DataContext
 		#region OnPl
 
 		[Sql.Function(Name="pg_catalog.on_pl", ServerSideOnly=true)]
-		public static bool? OnPl(NpgsqlPoint? par4790, NpgsqlLine? par4791)
+		public static bool? OnPl(NpgsqlPoint? par4793, NpgsqlLine? par4794)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15709,7 +15739,7 @@ namespace PostreSQL11DataContext
 		#region OnPpath
 
 		[Sql.Function(Name="pg_catalog.on_ppath", ServerSideOnly=true)]
-		public static bool? OnPpath(NpgsqlPoint? par4793, NpgsqlPath? par4794)
+		public static bool? OnPpath(NpgsqlPoint? par4796, NpgsqlPath? par4797)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15719,7 +15749,7 @@ namespace PostreSQL11DataContext
 		#region OnPs
 
 		[Sql.Function(Name="pg_catalog.on_ps", ServerSideOnly=true)]
-		public static bool? OnPs(NpgsqlPoint? par4796, NpgsqlLSeg? par4797)
+		public static bool? OnPs(NpgsqlPoint? par4799, NpgsqlLSeg? par4800)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15729,7 +15759,7 @@ namespace PostreSQL11DataContext
 		#region OnSb
 
 		[Sql.Function(Name="pg_catalog.on_sb", ServerSideOnly=true)]
-		public static bool? OnSb(NpgsqlLSeg? par4799, NpgsqlBox? par4800)
+		public static bool? OnSb(NpgsqlLSeg? par4802, NpgsqlBox? par4803)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15739,7 +15769,7 @@ namespace PostreSQL11DataContext
 		#region OnSl
 
 		[Sql.Function(Name="pg_catalog.on_sl", ServerSideOnly=true)]
-		public static bool? OnSl(NpgsqlLSeg? par4802, NpgsqlLine? par4803)
+		public static bool? OnSl(NpgsqlLSeg? par4805, NpgsqlLine? par4806)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15749,7 +15779,7 @@ namespace PostreSQL11DataContext
 		#region OpaqueIn
 
 		[Sql.Function(Name="pg_catalog.opaque_in", ServerSideOnly=true)]
-		public static object OpaqueIn(object par4805)
+		public static object OpaqueIn(object par4808)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15759,7 +15789,7 @@ namespace PostreSQL11DataContext
 		#region OpaqueOut
 
 		[Sql.Function(Name="pg_catalog.opaque_out", ServerSideOnly=true)]
-		public static object OpaqueOut(object par4807)
+		public static object OpaqueOut(object par4810)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15769,7 +15799,7 @@ namespace PostreSQL11DataContext
 		#region OrderedSetTransition
 
 		[Sql.Function(Name="pg_catalog.ordered_set_transition", ServerSideOnly=true)]
-		public static object OrderedSetTransition(object par4809, object par4810)
+		public static object OrderedSetTransition(object par4812, object par4813)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15779,7 +15809,7 @@ namespace PostreSQL11DataContext
 		#region OrderedSetTransitionMulti
 
 		[Sql.Function(Name="pg_catalog.ordered_set_transition_multi", ServerSideOnly=true)]
-		public static object OrderedSetTransitionMulti(object par4812, object par4813)
+		public static object OrderedSetTransitionMulti(object par4815, object par4816)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15789,7 +15819,7 @@ namespace PostreSQL11DataContext
 		#region Overlaps
 
 		[Sql.Function(Name="pg_catalog.overlaps", ServerSideOnly=true)]
-		public static bool? Overlaps(DateTime? par4875, NpgsqlTimeSpan? par4876, DateTime? par4877, DateTime? par4878)
+		public static bool? Overlaps(DateTime? par4878, NpgsqlTimeSpan? par4879, DateTime? par4880, DateTime? par4881)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15799,7 +15829,7 @@ namespace PostreSQL11DataContext
 		#region Overlay
 
 		[Sql.Function(Name="pg_catalog.overlay", ServerSideOnly=true)]
-		public static byte[] Overlay(byte[] par4903, byte[] par4904, int? par4905)
+		public static byte[] Overlay(byte[] par4906, byte[] par4907, int? par4908)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15819,7 +15849,7 @@ namespace PostreSQL11DataContext
 		#region Path
 
 		[Sql.Function(Name="pg_catalog.path", ServerSideOnly=true)]
-		public static NpgsqlPath? Path(NpgsqlPolygon? par4908)
+		public static NpgsqlPath? Path(NpgsqlPolygon? par4911)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15829,7 +15859,7 @@ namespace PostreSQL11DataContext
 		#region PathAdd
 
 		[Sql.Function(Name="pg_catalog.path_add", ServerSideOnly=true)]
-		public static NpgsqlPath? PathAdd(NpgsqlPath? par4910, NpgsqlPath? par4911)
+		public static NpgsqlPath? PathAdd(NpgsqlPath? par4913, NpgsqlPath? par4914)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15839,7 +15869,7 @@ namespace PostreSQL11DataContext
 		#region PathAddPt
 
 		[Sql.Function(Name="pg_catalog.path_add_pt", ServerSideOnly=true)]
-		public static NpgsqlPath? PathAddPt(NpgsqlPath? par4913, NpgsqlPoint? par4914)
+		public static NpgsqlPath? PathAddPt(NpgsqlPath? par4916, NpgsqlPoint? par4917)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15849,7 +15879,7 @@ namespace PostreSQL11DataContext
 		#region PathCenter
 
 		[Sql.Function(Name="pg_catalog.path_center", ServerSideOnly=true)]
-		public static NpgsqlPoint? PathCenter(NpgsqlPath? par4916)
+		public static NpgsqlPoint? PathCenter(NpgsqlPath? par4919)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15859,7 +15889,7 @@ namespace PostreSQL11DataContext
 		#region PathContainPt
 
 		[Sql.Function(Name="pg_catalog.path_contain_pt", ServerSideOnly=true)]
-		public static bool? PathContainPt(NpgsqlPath? par4918, NpgsqlPoint? par4919)
+		public static bool? PathContainPt(NpgsqlPath? par4921, NpgsqlPoint? par4922)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15869,7 +15899,7 @@ namespace PostreSQL11DataContext
 		#region PathDistance
 
 		[Sql.Function(Name="pg_catalog.path_distance", ServerSideOnly=true)]
-		public static double? PathDistance(NpgsqlPath? par4921, NpgsqlPath? par4922)
+		public static double? PathDistance(NpgsqlPath? par4924, NpgsqlPath? par4925)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15879,7 +15909,7 @@ namespace PostreSQL11DataContext
 		#region PathDivPt
 
 		[Sql.Function(Name="pg_catalog.path_div_pt", ServerSideOnly=true)]
-		public static NpgsqlPath? PathDivPt(NpgsqlPath? par4924, NpgsqlPoint? par4925)
+		public static NpgsqlPath? PathDivPt(NpgsqlPath? par4927, NpgsqlPoint? par4928)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15889,7 +15919,7 @@ namespace PostreSQL11DataContext
 		#region PathIn
 
 		[Sql.Function(Name="pg_catalog.path_in", ServerSideOnly=true)]
-		public static NpgsqlPath? PathIn(object par4927)
+		public static NpgsqlPath? PathIn(object par4930)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15899,7 +15929,7 @@ namespace PostreSQL11DataContext
 		#region PathInter
 
 		[Sql.Function(Name="pg_catalog.path_inter", ServerSideOnly=true)]
-		public static bool? PathInter(NpgsqlPath? par4929, NpgsqlPath? par4930)
+		public static bool? PathInter(NpgsqlPath? par4932, NpgsqlPath? par4933)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15909,7 +15939,7 @@ namespace PostreSQL11DataContext
 		#region PathLength
 
 		[Sql.Function(Name="pg_catalog.path_length", ServerSideOnly=true)]
-		public static double? PathLength(NpgsqlPath? par4932)
+		public static double? PathLength(NpgsqlPath? par4935)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15919,7 +15949,7 @@ namespace PostreSQL11DataContext
 		#region PathMulPt
 
 		[Sql.Function(Name="pg_catalog.path_mul_pt", ServerSideOnly=true)]
-		public static NpgsqlPath? PathMulPt(NpgsqlPath? par4934, NpgsqlPoint? par4935)
+		public static NpgsqlPath? PathMulPt(NpgsqlPath? par4937, NpgsqlPoint? par4938)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15929,7 +15959,7 @@ namespace PostreSQL11DataContext
 		#region PathNEq
 
 		[Sql.Function(Name="pg_catalog.path_n_eq", ServerSideOnly=true)]
-		public static bool? PathNEq(NpgsqlPath? par4937, NpgsqlPath? par4938)
+		public static bool? PathNEq(NpgsqlPath? par4940, NpgsqlPath? par4941)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15939,7 +15969,7 @@ namespace PostreSQL11DataContext
 		#region PathNGe
 
 		[Sql.Function(Name="pg_catalog.path_n_ge", ServerSideOnly=true)]
-		public static bool? PathNGe(NpgsqlPath? par4940, NpgsqlPath? par4941)
+		public static bool? PathNGe(NpgsqlPath? par4943, NpgsqlPath? par4944)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15949,7 +15979,7 @@ namespace PostreSQL11DataContext
 		#region PathNGt
 
 		[Sql.Function(Name="pg_catalog.path_n_gt", ServerSideOnly=true)]
-		public static bool? PathNGt(NpgsqlPath? par4943, NpgsqlPath? par4944)
+		public static bool? PathNGt(NpgsqlPath? par4946, NpgsqlPath? par4947)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15959,7 +15989,7 @@ namespace PostreSQL11DataContext
 		#region PathNLe
 
 		[Sql.Function(Name="pg_catalog.path_n_le", ServerSideOnly=true)]
-		public static bool? PathNLe(NpgsqlPath? par4946, NpgsqlPath? par4947)
+		public static bool? PathNLe(NpgsqlPath? par4949, NpgsqlPath? par4950)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15969,7 +15999,7 @@ namespace PostreSQL11DataContext
 		#region PathNLt
 
 		[Sql.Function(Name="pg_catalog.path_n_lt", ServerSideOnly=true)]
-		public static bool? PathNLt(NpgsqlPath? par4949, NpgsqlPath? par4950)
+		public static bool? PathNLt(NpgsqlPath? par4952, NpgsqlPath? par4953)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15979,7 +16009,7 @@ namespace PostreSQL11DataContext
 		#region PathNpoints
 
 		[Sql.Function(Name="pg_catalog.path_npoints", ServerSideOnly=true)]
-		public static int? PathNpoints(NpgsqlPath? par4952)
+		public static int? PathNpoints(NpgsqlPath? par4955)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15989,7 +16019,7 @@ namespace PostreSQL11DataContext
 		#region PathOut
 
 		[Sql.Function(Name="pg_catalog.path_out", ServerSideOnly=true)]
-		public static object PathOut(NpgsqlPath? par4954)
+		public static object PathOut(NpgsqlPath? par4957)
 		{
 			throw new InvalidOperationException();
 		}
@@ -15999,7 +16029,7 @@ namespace PostreSQL11DataContext
 		#region PathRecv
 
 		[Sql.Function(Name="pg_catalog.path_recv", ServerSideOnly=true)]
-		public static NpgsqlPath? PathRecv(object par4956)
+		public static NpgsqlPath? PathRecv(object par4959)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16009,7 +16039,7 @@ namespace PostreSQL11DataContext
 		#region PathSend
 
 		[Sql.Function(Name="pg_catalog.path_send", ServerSideOnly=true)]
-		public static byte[] PathSend(NpgsqlPath? par4958)
+		public static byte[] PathSend(NpgsqlPath? par4961)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16019,7 +16049,7 @@ namespace PostreSQL11DataContext
 		#region PathSubPt
 
 		[Sql.Function(Name="pg_catalog.path_sub_pt", ServerSideOnly=true)]
-		public static NpgsqlPath? PathSubPt(NpgsqlPath? par4960, NpgsqlPoint? par4961)
+		public static NpgsqlPath? PathSubPt(NpgsqlPath? par4963, NpgsqlPoint? par4964)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16029,7 +16059,7 @@ namespace PostreSQL11DataContext
 		#region Pclose
 
 		[Sql.Function(Name="pg_catalog.pclose", ServerSideOnly=true)]
-		public static NpgsqlPath? Pclose(NpgsqlPath? par4963)
+		public static NpgsqlPath? Pclose(NpgsqlPath? par4966)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16039,7 +16069,7 @@ namespace PostreSQL11DataContext
 		#region PercentRank
 
 		[Sql.Function(Name="pg_catalog.percent_rank", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? PercentRank<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par4966)
+		public static double? PercentRank<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par4969)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16049,7 +16079,7 @@ namespace PostreSQL11DataContext
 		#region PercentRankFinal
 
 		[Sql.Function(Name="pg_catalog.percent_rank_final", ServerSideOnly=true)]
-		public static double? PercentRankFinal(object par4968, object par4969)
+		public static double? PercentRankFinal(object par4971, object par4972)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16059,7 +16089,7 @@ namespace PostreSQL11DataContext
 		#region PercentileCont
 
 		[Sql.Function(Name="pg_catalog.percentile_cont", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static object PercentileCont<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par4980, Expression<Func<TSource, NpgsqlTimeSpan?>> par4981)
+		public static object PercentileCont<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par4983, Expression<Func<TSource, NpgsqlTimeSpan?>> par4984)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16069,7 +16099,7 @@ namespace PostreSQL11DataContext
 		#region PercentileContFloat8Final
 
 		[Sql.Function(Name="pg_catalog.percentile_cont_float8_final", ServerSideOnly=true)]
-		public static double? PercentileContFloat8Final(object par4983, double? par4984)
+		public static double? PercentileContFloat8Final(object par4986, double? par4987)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16079,7 +16109,7 @@ namespace PostreSQL11DataContext
 		#region PercentileContFloat8MultiFinal
 
 		[Sql.Function(Name="pg_catalog.percentile_cont_float8_multi_final", ServerSideOnly=true)]
-		public static object PercentileContFloat8MultiFinal(object par4986, object par4987)
+		public static object PercentileContFloat8MultiFinal(object par4989, object par4990)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16089,7 +16119,7 @@ namespace PostreSQL11DataContext
 		#region PercentileContIntervalFinal
 
 		[Sql.Function(Name="pg_catalog.percentile_cont_interval_final", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? PercentileContIntervalFinal(object par4989, double? par4990)
+		public static NpgsqlTimeSpan? PercentileContIntervalFinal(object par4992, double? par4993)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16099,7 +16129,7 @@ namespace PostreSQL11DataContext
 		#region PercentileContIntervalMultiFinal
 
 		[Sql.Function(Name="pg_catalog.percentile_cont_interval_multi_final", ServerSideOnly=true)]
-		public static object PercentileContIntervalMultiFinal(object par4992, object par4993)
+		public static object PercentileContIntervalMultiFinal(object par4995, object par4996)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16109,7 +16139,7 @@ namespace PostreSQL11DataContext
 		#region PercentileDisc
 
 		[Sql.Function(Name="pg_catalog.percentile_disc", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static object PercentileDisc<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par4998, Expression<Func<TSource, object>> par4999)
+		public static object PercentileDisc<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par5001, Expression<Func<TSource, object>> par5002)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16119,7 +16149,7 @@ namespace PostreSQL11DataContext
 		#region PercentileDiscFinal
 
 		[Sql.Function(Name="pg_catalog.percentile_disc_final", ServerSideOnly=true)]
-		public static object PercentileDiscFinal(object par5001, double? par5002, object par5003)
+		public static object PercentileDiscFinal(object par5004, double? par5005, object par5006)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16129,7 +16159,7 @@ namespace PostreSQL11DataContext
 		#region PercentileDiscMultiFinal
 
 		[Sql.Function(Name="pg_catalog.percentile_disc_multi_final", ServerSideOnly=true)]
-		public static object PercentileDiscMultiFinal(object par5005, object par5006, object par5007)
+		public static object PercentileDiscMultiFinal(object par5008, object par5009, object par5010)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16139,7 +16169,7 @@ namespace PostreSQL11DataContext
 		#region PgAdvisoryLock
 
 		[Sql.Function(Name="pg_catalog.pg_advisory_lock", ServerSideOnly=true)]
-		public static object PgAdvisoryLock(int? par5009, int? par5010)
+		public static object PgAdvisoryLock(int? par5012, int? par5013)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16149,7 +16179,7 @@ namespace PostreSQL11DataContext
 		#region PgAdvisoryLockShared
 
 		[Sql.Function(Name="pg_catalog.pg_advisory_lock_shared", ServerSideOnly=true)]
-		public static object PgAdvisoryLockShared(int? par5012, int? par5013)
+		public static object PgAdvisoryLockShared(int? par5015, int? par5016)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16159,7 +16189,7 @@ namespace PostreSQL11DataContext
 		#region PgAdvisoryUnlock
 
 		[Sql.Function(Name="pg_catalog.pg_advisory_unlock", ServerSideOnly=true)]
-		public static bool? PgAdvisoryUnlock(int? par5017, int? par5018)
+		public static bool? PgAdvisoryUnlock(int? par5020, int? par5021)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16179,7 +16209,7 @@ namespace PostreSQL11DataContext
 		#region PgAdvisoryUnlockShared
 
 		[Sql.Function(Name="pg_catalog.pg_advisory_unlock_shared", ServerSideOnly=true)]
-		public static bool? PgAdvisoryUnlockShared(int? par5022, int? par5023)
+		public static bool? PgAdvisoryUnlockShared(int? par5025, int? par5026)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16189,7 +16219,7 @@ namespace PostreSQL11DataContext
 		#region PgAdvisoryXactLock
 
 		[Sql.Function(Name="pg_catalog.pg_advisory_xact_lock", ServerSideOnly=true)]
-		public static object PgAdvisoryXactLock(int? par5025, int? par5026)
+		public static object PgAdvisoryXactLock(int? par5028, int? par5029)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16199,7 +16229,7 @@ namespace PostreSQL11DataContext
 		#region PgAdvisoryXactLockShared
 
 		[Sql.Function(Name="pg_catalog.pg_advisory_xact_lock_shared", ServerSideOnly=true)]
-		public static object PgAdvisoryXactLockShared(int? par5028, int? par5029)
+		public static object PgAdvisoryXactLockShared(int? par5031, int? par5032)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16229,7 +16259,7 @@ namespace PostreSQL11DataContext
 		#region PgBlockingPids
 
 		[Sql.Function(Name="pg_catalog.pg_blocking_pids", ServerSideOnly=true)]
-		public static object PgBlockingPids(int? par5033)
+		public static object PgBlockingPids(int? par5036)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16239,7 +16269,7 @@ namespace PostreSQL11DataContext
 		#region PgCancelBackend
 
 		[Sql.Function(Name="pg_catalog.pg_cancel_backend", ServerSideOnly=true)]
-		public static bool? PgCancelBackend(int? par5035)
+		public static bool? PgCancelBackend(int? par5038)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16249,7 +16279,7 @@ namespace PostreSQL11DataContext
 		#region PgCharToEncoding
 
 		[Sql.Function(Name="pg_catalog.pg_char_to_encoding", ServerSideOnly=true)]
-		public static int? PgCharToEncoding(string par5037)
+		public static int? PgCharToEncoding(string par5040)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16269,7 +16299,7 @@ namespace PostreSQL11DataContext
 		#region PgCollationActualVersion
 
 		[Sql.Function(Name="pg_catalog.pg_collation_actual_version", ServerSideOnly=true)]
-		public static string PgCollationActualVersion(int? par5040)
+		public static string PgCollationActualVersion(int? par5043)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16279,7 +16309,7 @@ namespace PostreSQL11DataContext
 		#region PgCollationFor
 
 		[Sql.Function(Name="pg_catalog.pg_collation_for", ServerSideOnly=true)]
-		public static string PgCollationFor(object par5042)
+		public static string PgCollationFor(object par5045)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16289,7 +16319,7 @@ namespace PostreSQL11DataContext
 		#region PgCollationIsVisible
 
 		[Sql.Function(Name="pg_catalog.pg_collation_is_visible", ServerSideOnly=true)]
-		public static bool? PgCollationIsVisible(int? par5044)
+		public static bool? PgCollationIsVisible(int? par5047)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16299,7 +16329,7 @@ namespace PostreSQL11DataContext
 		#region PgColumnIsUpdatable
 
 		[Sql.Function(Name="pg_catalog.pg_column_is_updatable", ServerSideOnly=true)]
-		public static bool? PgColumnIsUpdatable(object par5046, short? par5047, bool? par5048)
+		public static bool? PgColumnIsUpdatable(object par5049, short? par5050, bool? par5051)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16309,7 +16339,7 @@ namespace PostreSQL11DataContext
 		#region PgColumnSize
 
 		[Sql.Function(Name="pg_catalog.pg_column_size", ServerSideOnly=true)]
-		public static int? PgColumnSize(object par5050)
+		public static int? PgColumnSize(object par5053)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16369,7 +16399,7 @@ namespace PostreSQL11DataContext
 		#region PgConversionIsVisible
 
 		[Sql.Function(Name="pg_catalog.pg_conversion_is_visible", ServerSideOnly=true)]
-		public static bool? PgConversionIsVisible(int? par5053)
+		public static bool? PgConversionIsVisible(int? par5056)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16399,7 +16429,7 @@ namespace PostreSQL11DataContext
 		#region PgCreateRestorePoint
 
 		[Sql.Function(Name="pg_catalog.pg_create_restore_point", ServerSideOnly=true)]
-		public static object PgCreateRestorePoint(string par5055)
+		public static object PgCreateRestorePoint(string par5058)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16409,7 +16439,7 @@ namespace PostreSQL11DataContext
 		#region PgCurrentLogfile
 
 		[Sql.Function(Name="pg_catalog.pg_current_logfile", ServerSideOnly=true)]
-		public static string PgCurrentLogfile(string par5058)
+		public static string PgCurrentLogfile(string par5061)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16449,7 +16479,7 @@ namespace PostreSQL11DataContext
 		#region PgDatabaseSize
 
 		[Sql.Function(Name="pg_catalog.pg_database_size", ServerSideOnly=true)]
-		public static long? PgDatabaseSize(int? par5065)
+		public static long? PgDatabaseSize(int? par5068)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16459,7 +16489,7 @@ namespace PostreSQL11DataContext
 		#region PgDdlCommandIn
 
 		[Sql.Function(Name="pg_catalog.pg_ddl_command_in", ServerSideOnly=true)]
-		public static object PgDdlCommandIn(object par5067)
+		public static object PgDdlCommandIn(object par5070)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16469,7 +16499,7 @@ namespace PostreSQL11DataContext
 		#region PgDdlCommandOut
 
 		[Sql.Function(Name="pg_catalog.pg_ddl_command_out", ServerSideOnly=true)]
-		public static object PgDdlCommandOut(object par5069)
+		public static object PgDdlCommandOut(object par5072)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16479,7 +16509,7 @@ namespace PostreSQL11DataContext
 		#region PgDdlCommandRecv
 
 		[Sql.Function(Name="pg_catalog.pg_ddl_command_recv", ServerSideOnly=true)]
-		public static object PgDdlCommandRecv(object par5071)
+		public static object PgDdlCommandRecv(object par5074)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16489,7 +16519,7 @@ namespace PostreSQL11DataContext
 		#region PgDdlCommandSend
 
 		[Sql.Function(Name="pg_catalog.pg_ddl_command_send", ServerSideOnly=true)]
-		public static byte[] PgDdlCommandSend(object par5073)
+		public static byte[] PgDdlCommandSend(object par5076)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16499,7 +16529,7 @@ namespace PostreSQL11DataContext
 		#region PgDependenciesIn
 
 		[Sql.Function(Name="pg_catalog.pg_dependencies_in", ServerSideOnly=true)]
-		public static object PgDependenciesIn(object par5075)
+		public static object PgDependenciesIn(object par5078)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16509,7 +16539,7 @@ namespace PostreSQL11DataContext
 		#region PgDependenciesOut
 
 		[Sql.Function(Name="pg_catalog.pg_dependencies_out", ServerSideOnly=true)]
-		public static object PgDependenciesOut(object par5077)
+		public static object PgDependenciesOut(object par5080)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16519,7 +16549,7 @@ namespace PostreSQL11DataContext
 		#region PgDependenciesRecv
 
 		[Sql.Function(Name="pg_catalog.pg_dependencies_recv", ServerSideOnly=true)]
-		public static object PgDependenciesRecv(object par5079)
+		public static object PgDependenciesRecv(object par5082)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16529,7 +16559,7 @@ namespace PostreSQL11DataContext
 		#region PgDependenciesSend
 
 		[Sql.Function(Name="pg_catalog.pg_dependencies_send", ServerSideOnly=true)]
-		public static byte[] PgDependenciesSend(object par5081)
+		public static byte[] PgDependenciesSend(object par5084)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16539,7 +16569,7 @@ namespace PostreSQL11DataContext
 		#region PgDescribeObject
 
 		[Sql.Function(Name="pg_catalog.pg_describe_object", ServerSideOnly=true)]
-		public static string PgDescribeObject(int? par5083, int? par5084, int? par5085)
+		public static string PgDescribeObject(int? par5086, int? par5087, int? par5088)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16549,7 +16579,7 @@ namespace PostreSQL11DataContext
 		#region PgDropReplicationSlot
 
 		[Sql.Function(Name="pg_catalog.pg_drop_replication_slot", ServerSideOnly=true)]
-		public static object PgDropReplicationSlot(string par5086)
+		public static object PgDropReplicationSlot(string par5089)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16559,7 +16589,7 @@ namespace PostreSQL11DataContext
 		#region PgEncodingMaxLength
 
 		[Sql.Function(Name="pg_catalog.pg_encoding_max_length", ServerSideOnly=true)]
-		public static int? PgEncodingMaxLength(int? par5088)
+		public static int? PgEncodingMaxLength(int? par5091)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16569,7 +16599,7 @@ namespace PostreSQL11DataContext
 		#region PgEncodingToChar
 
 		[Sql.Function(Name="pg_catalog.pg_encoding_to_char", ServerSideOnly=true)]
-		public static string PgEncodingToChar(int? par5090)
+		public static string PgEncodingToChar(int? par5093)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16609,7 +16639,7 @@ namespace PostreSQL11DataContext
 		#region PgExtensionConfigDump
 
 		[Sql.Function(Name="pg_catalog.pg_extension_config_dump", ServerSideOnly=true)]
-		public static object PgExtensionConfigDump(object par5093, string par5094)
+		public static object PgExtensionConfigDump(object par5096, string par5097)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16619,7 +16649,7 @@ namespace PostreSQL11DataContext
 		#region PgFilenodeRelation
 
 		[Sql.Function(Name="pg_catalog.pg_filenode_relation", ServerSideOnly=true)]
-		public static object PgFilenodeRelation(int? par5096, int? par5097)
+		public static object PgFilenodeRelation(int? par5099, int? par5100)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16629,7 +16659,7 @@ namespace PostreSQL11DataContext
 		#region PgFunctionIsVisible
 
 		[Sql.Function(Name="pg_catalog.pg_function_is_visible", ServerSideOnly=true)]
-		public static bool? PgFunctionIsVisible(int? par5099)
+		public static bool? PgFunctionIsVisible(int? par5102)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16639,7 +16669,7 @@ namespace PostreSQL11DataContext
 		#region PgGetConstraintdef
 
 		[Sql.Function(Name="pg_catalog.pg_get_constraintdef", ServerSideOnly=true)]
-		public static string PgGetConstraintdef(int? par5103, bool? par5104)
+		public static string PgGetConstraintdef(int? par5106, bool? par5107)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16649,7 +16679,7 @@ namespace PostreSQL11DataContext
 		#region PgGetExpr
 
 		[Sql.Function(Name="pg_catalog.pg_get_expr", ServerSideOnly=true)]
-		public static string PgGetExpr(object par5109, int? par5110, bool? par5111)
+		public static string PgGetExpr(object par5112, int? par5113, bool? par5114)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16659,7 +16689,7 @@ namespace PostreSQL11DataContext
 		#region PgGetFunctionArgDefault
 
 		[Sql.Function(Name="pg_catalog.pg_get_function_arg_default", ServerSideOnly=true)]
-		public static string PgGetFunctionArgDefault(int? par5113, int? par5114)
+		public static string PgGetFunctionArgDefault(int? par5116, int? par5117)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16669,7 +16699,7 @@ namespace PostreSQL11DataContext
 		#region PgGetFunctionArguments
 
 		[Sql.Function(Name="pg_catalog.pg_get_function_arguments", ServerSideOnly=true)]
-		public static string PgGetFunctionArguments(int? par5116)
+		public static string PgGetFunctionArguments(int? par5119)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16679,7 +16709,7 @@ namespace PostreSQL11DataContext
 		#region PgGetFunctionIdentityArguments
 
 		[Sql.Function(Name="pg_catalog.pg_get_function_identity_arguments", ServerSideOnly=true)]
-		public static string PgGetFunctionIdentityArguments(int? par5118)
+		public static string PgGetFunctionIdentityArguments(int? par5121)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16689,7 +16719,7 @@ namespace PostreSQL11DataContext
 		#region PgGetFunctionResult
 
 		[Sql.Function(Name="pg_catalog.pg_get_function_result", ServerSideOnly=true)]
-		public static string PgGetFunctionResult(int? par5120)
+		public static string PgGetFunctionResult(int? par5123)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16699,7 +16729,7 @@ namespace PostreSQL11DataContext
 		#region PgGetFunctiondef
 
 		[Sql.Function(Name="pg_catalog.pg_get_functiondef", ServerSideOnly=true)]
-		public static string PgGetFunctiondef(int? par5122)
+		public static string PgGetFunctiondef(int? par5125)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16709,7 +16739,7 @@ namespace PostreSQL11DataContext
 		#region PgGetIndexdef
 
 		[Sql.Function(Name="pg_catalog.pg_get_indexdef", ServerSideOnly=true)]
-		public static string PgGetIndexdef(int? par5126, int? par5127, bool? par5128)
+		public static string PgGetIndexdef(int? par5129, int? par5130, bool? par5131)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16729,7 +16759,7 @@ namespace PostreSQL11DataContext
 		#region PgGetPartitionConstraintdef
 
 		[Sql.Function(Name="pg_catalog.pg_get_partition_constraintdef", ServerSideOnly=true)]
-		public static string PgGetPartitionConstraintdef(int? par5130)
+		public static string PgGetPartitionConstraintdef(int? par5133)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16739,7 +16769,7 @@ namespace PostreSQL11DataContext
 		#region PgGetPartkeydef
 
 		[Sql.Function(Name="pg_catalog.pg_get_partkeydef", ServerSideOnly=true)]
-		public static string PgGetPartkeydef(int? par5132)
+		public static string PgGetPartkeydef(int? par5135)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16749,7 +16779,7 @@ namespace PostreSQL11DataContext
 		#region PgGetReplicaIdentityIndex
 
 		[Sql.Function(Name="pg_catalog.pg_get_replica_identity_index", ServerSideOnly=true)]
-		public static object PgGetReplicaIdentityIndex(object par5134)
+		public static object PgGetReplicaIdentityIndex(object par5137)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16759,7 +16789,7 @@ namespace PostreSQL11DataContext
 		#region PgGetRuledef
 
 		[Sql.Function(Name="pg_catalog.pg_get_ruledef", ServerSideOnly=true)]
-		public static string PgGetRuledef(int? par5138, bool? par5139)
+		public static string PgGetRuledef(int? par5141, bool? par5142)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16769,7 +16799,7 @@ namespace PostreSQL11DataContext
 		#region PgGetSerialSequence
 
 		[Sql.Function(Name="pg_catalog.pg_get_serial_sequence", ServerSideOnly=true)]
-		public static string PgGetSerialSequence(string par5141, string par5142)
+		public static string PgGetSerialSequence(string par5144, string par5145)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16779,7 +16809,7 @@ namespace PostreSQL11DataContext
 		#region PgGetStatisticsobjdef
 
 		[Sql.Function(Name="pg_catalog.pg_get_statisticsobjdef", ServerSideOnly=true)]
-		public static string PgGetStatisticsobjdef(int? par5144)
+		public static string PgGetStatisticsobjdef(int? par5147)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16789,7 +16819,7 @@ namespace PostreSQL11DataContext
 		#region PgGetTriggerdef
 
 		[Sql.Function(Name="pg_catalog.pg_get_triggerdef", ServerSideOnly=true)]
-		public static string PgGetTriggerdef(int? par5148, bool? par5149)
+		public static string PgGetTriggerdef(int? par5151, bool? par5152)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16799,7 +16829,7 @@ namespace PostreSQL11DataContext
 		#region PgGetUserbyid
 
 		[Sql.Function(Name="pg_catalog.pg_get_userbyid", ServerSideOnly=true)]
-		public static string PgGetUserbyid(int? par5151)
+		public static string PgGetUserbyid(int? par5154)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16809,7 +16839,7 @@ namespace PostreSQL11DataContext
 		#region PgGetViewdef
 
 		[Sql.Function(Name="pg_catalog.pg_get_viewdef", ServerSideOnly=true)]
-		public static string PgGetViewdef(int? par5163, int? par5164)
+		public static string PgGetViewdef(int? par5166, int? par5167)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16819,7 +16849,7 @@ namespace PostreSQL11DataContext
 		#region PgHasRole
 
 		[Sql.Function(Name="pg_catalog.pg_has_role", ServerSideOnly=true)]
-		public static bool? PgHasRole(int? par5185, string par5186)
+		public static bool? PgHasRole(int? par5188, string par5189)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16849,7 +16879,7 @@ namespace PostreSQL11DataContext
 		#region PgImportSystemCollations
 
 		[Sql.Function(Name="pg_catalog.pg_import_system_collations", ServerSideOnly=true)]
-		public static int? PgImportSystemCollations(object par5188)
+		public static int? PgImportSystemCollations(object par5191)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16859,7 +16889,7 @@ namespace PostreSQL11DataContext
 		#region PgIndexColumnHasProperty
 
 		[Sql.Function(Name="pg_catalog.pg_index_column_has_property", ServerSideOnly=true)]
-		public static bool? PgIndexColumnHasProperty(object par5190, int? par5191, string par5192)
+		public static bool? PgIndexColumnHasProperty(object par5193, int? par5194, string par5195)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16869,7 +16899,7 @@ namespace PostreSQL11DataContext
 		#region PgIndexHasProperty
 
 		[Sql.Function(Name="pg_catalog.pg_index_has_property", ServerSideOnly=true)]
-		public static bool? PgIndexHasProperty(object par5194, string par5195)
+		public static bool? PgIndexHasProperty(object par5197, string par5198)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16879,7 +16909,7 @@ namespace PostreSQL11DataContext
 		#region PgIndexamHasProperty
 
 		[Sql.Function(Name="pg_catalog.pg_indexam_has_property", ServerSideOnly=true)]
-		public static bool? PgIndexamHasProperty(int? par5197, string par5198)
+		public static bool? PgIndexamHasProperty(int? par5200, string par5201)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16889,7 +16919,7 @@ namespace PostreSQL11DataContext
 		#region PgIndexesSize
 
 		[Sql.Function(Name="pg_catalog.pg_indexes_size", ServerSideOnly=true)]
-		public static long? PgIndexesSize(object par5200)
+		public static long? PgIndexesSize(object par5203)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16919,7 +16949,7 @@ namespace PostreSQL11DataContext
 		#region PgIsOtherTempSchema
 
 		[Sql.Function(Name="pg_catalog.pg_is_other_temp_schema", ServerSideOnly=true)]
-		public static bool? PgIsOtherTempSchema(int? par5204)
+		public static bool? PgIsOtherTempSchema(int? par5207)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16939,7 +16969,7 @@ namespace PostreSQL11DataContext
 		#region PgIsolationTestSessionIsBlocked
 
 		[Sql.Function(Name="pg_catalog.pg_isolation_test_session_is_blocked", ServerSideOnly=true)]
-		public static bool? PgIsolationTestSessionIsBlocked(int? par5207, object par5208)
+		public static bool? PgIsolationTestSessionIsBlocked(int? par5210, object par5211)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16999,7 +17029,7 @@ namespace PostreSQL11DataContext
 		#region PgLogicalEmitMessage
 
 		[Sql.Function(Name="pg_catalog.pg_logical_emit_message", ServerSideOnly=true)]
-		public static object PgLogicalEmitMessage(bool? par5218, string par5219, byte[] par5220)
+		public static object PgLogicalEmitMessage(bool? par5221, string par5222, byte[] par5223)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17009,7 +17039,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnCmp
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_cmp", ServerSideOnly=true)]
-		public static int? PgLsnCmp(object par5226, object par5227)
+		public static int? PgLsnCmp(object par5229, object par5230)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17019,7 +17049,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnEq
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_eq", ServerSideOnly=true)]
-		public static bool? PgLsnEq(object par5229, object par5230)
+		public static bool? PgLsnEq(object par5232, object par5233)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17029,7 +17059,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnGe
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_ge", ServerSideOnly=true)]
-		public static bool? PgLsnGe(object par5232, object par5233)
+		public static bool? PgLsnGe(object par5235, object par5236)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17039,7 +17069,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnGt
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_gt", ServerSideOnly=true)]
-		public static bool? PgLsnGt(object par5235, object par5236)
+		public static bool? PgLsnGt(object par5238, object par5239)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17049,7 +17079,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnHash
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_hash", ServerSideOnly=true)]
-		public static int? PgLsnHash(object par5238)
+		public static int? PgLsnHash(object par5241)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17059,7 +17089,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnHashExtended
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_hash_extended", ServerSideOnly=true)]
-		public static long? PgLsnHashExtended(object par5240, long? par5241)
+		public static long? PgLsnHashExtended(object par5243, long? par5244)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17069,7 +17099,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnIn
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_in", ServerSideOnly=true)]
-		public static object PgLsnIn(object par5243)
+		public static object PgLsnIn(object par5246)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17079,7 +17109,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnLe
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_le", ServerSideOnly=true)]
-		public static bool? PgLsnLe(object par5245, object par5246)
+		public static bool? PgLsnLe(object par5248, object par5249)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17089,7 +17119,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnLt
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_lt", ServerSideOnly=true)]
-		public static bool? PgLsnLt(object par5248, object par5249)
+		public static bool? PgLsnLt(object par5251, object par5252)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17099,7 +17129,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnMi
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_mi", ServerSideOnly=true)]
-		public static decimal? PgLsnMi(object par5251, object par5252)
+		public static decimal? PgLsnMi(object par5254, object par5255)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17109,7 +17139,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnNe
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_ne", ServerSideOnly=true)]
-		public static bool? PgLsnNe(object par5254, object par5255)
+		public static bool? PgLsnNe(object par5257, object par5258)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17119,7 +17149,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnOut
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_out", ServerSideOnly=true)]
-		public static object PgLsnOut(object par5257)
+		public static object PgLsnOut(object par5260)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17129,7 +17159,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnRecv
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_recv", ServerSideOnly=true)]
-		public static object PgLsnRecv(object par5259)
+		public static object PgLsnRecv(object par5262)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17139,7 +17169,7 @@ namespace PostreSQL11DataContext
 		#region PgLsnSend
 
 		[Sql.Function(Name="pg_catalog.pg_lsn_send", ServerSideOnly=true)]
-		public static byte[] PgLsnSend(object par5261)
+		public static byte[] PgLsnSend(object par5264)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17159,7 +17189,7 @@ namespace PostreSQL11DataContext
 		#region PgNdistinctIn
 
 		[Sql.Function(Name="pg_catalog.pg_ndistinct_in", ServerSideOnly=true)]
-		public static object PgNdistinctIn(object par5264)
+		public static object PgNdistinctIn(object par5267)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17169,7 +17199,7 @@ namespace PostreSQL11DataContext
 		#region PgNdistinctOut
 
 		[Sql.Function(Name="pg_catalog.pg_ndistinct_out", ServerSideOnly=true)]
-		public static object PgNdistinctOut(object par5266)
+		public static object PgNdistinctOut(object par5269)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17179,7 +17209,7 @@ namespace PostreSQL11DataContext
 		#region PgNdistinctRecv
 
 		[Sql.Function(Name="pg_catalog.pg_ndistinct_recv", ServerSideOnly=true)]
-		public static object PgNdistinctRecv(object par5268)
+		public static object PgNdistinctRecv(object par5271)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17189,7 +17219,7 @@ namespace PostreSQL11DataContext
 		#region PgNdistinctSend
 
 		[Sql.Function(Name="pg_catalog.pg_ndistinct_send", ServerSideOnly=true)]
-		public static byte[] PgNdistinctSend(object par5270)
+		public static byte[] PgNdistinctSend(object par5273)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17199,7 +17229,7 @@ namespace PostreSQL11DataContext
 		#region PgNodeTreeIn
 
 		[Sql.Function(Name="pg_catalog.pg_node_tree_in", ServerSideOnly=true)]
-		public static object PgNodeTreeIn(object par5272)
+		public static object PgNodeTreeIn(object par5275)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17209,7 +17239,7 @@ namespace PostreSQL11DataContext
 		#region PgNodeTreeOut
 
 		[Sql.Function(Name="pg_catalog.pg_node_tree_out", ServerSideOnly=true)]
-		public static object PgNodeTreeOut(object par5274)
+		public static object PgNodeTreeOut(object par5277)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17219,7 +17249,7 @@ namespace PostreSQL11DataContext
 		#region PgNodeTreeRecv
 
 		[Sql.Function(Name="pg_catalog.pg_node_tree_recv", ServerSideOnly=true)]
-		public static object PgNodeTreeRecv(object par5276)
+		public static object PgNodeTreeRecv(object par5279)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17229,7 +17259,7 @@ namespace PostreSQL11DataContext
 		#region PgNodeTreeSend
 
 		[Sql.Function(Name="pg_catalog.pg_node_tree_send", ServerSideOnly=true)]
-		public static byte[] PgNodeTreeSend(object par5278)
+		public static byte[] PgNodeTreeSend(object par5281)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17249,7 +17279,7 @@ namespace PostreSQL11DataContext
 		#region PgNotify
 
 		[Sql.Function(Name="pg_catalog.pg_notify", ServerSideOnly=true)]
-		public static object PgNotify(string par5280, string par5281)
+		public static object PgNotify(string par5283, string par5284)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17259,7 +17289,7 @@ namespace PostreSQL11DataContext
 		#region PgOpclassIsVisible
 
 		[Sql.Function(Name="pg_catalog.pg_opclass_is_visible", ServerSideOnly=true)]
-		public static bool? PgOpclassIsVisible(int? par5283)
+		public static bool? PgOpclassIsVisible(int? par5286)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17269,7 +17299,7 @@ namespace PostreSQL11DataContext
 		#region PgOperatorIsVisible
 
 		[Sql.Function(Name="pg_catalog.pg_operator_is_visible", ServerSideOnly=true)]
-		public static bool? PgOperatorIsVisible(int? par5285)
+		public static bool? PgOperatorIsVisible(int? par5288)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17279,7 +17309,7 @@ namespace PostreSQL11DataContext
 		#region PgOpfamilyIsVisible
 
 		[Sql.Function(Name="pg_catalog.pg_opfamily_is_visible", ServerSideOnly=true)]
-		public static bool? PgOpfamilyIsVisible(int? par5287)
+		public static bool? PgOpfamilyIsVisible(int? par5290)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17299,7 +17329,7 @@ namespace PostreSQL11DataContext
 		#region PgReadBinaryFile
 
 		[Sql.Function(Name="pg_catalog.pg_read_binary_file", ServerSideOnly=true)]
-		public static byte[] PgReadBinaryFile(string par5299)
+		public static byte[] PgReadBinaryFile(string par5302)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17309,7 +17339,7 @@ namespace PostreSQL11DataContext
 		#region PgReadFile
 
 		[Sql.Function(Name="pg_catalog.pg_read_file", ServerSideOnly=true)]
-		public static string PgReadFile(string par5310)
+		public static string PgReadFile(string par5313)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17319,7 +17349,7 @@ namespace PostreSQL11DataContext
 		#region PgReadFileOld
 
 		[Sql.Function(Name="pg_catalog.pg_read_file_old", ServerSideOnly=true)]
-		public static string PgReadFileOld(string par5312, long? par5313, long? par5314)
+		public static string PgReadFileOld(string par5315, long? par5316, long? par5317)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17329,7 +17359,7 @@ namespace PostreSQL11DataContext
 		#region PgRelationFilenode
 
 		[Sql.Function(Name="pg_catalog.pg_relation_filenode", ServerSideOnly=true)]
-		public static int? PgRelationFilenode(object par5316)
+		public static int? PgRelationFilenode(object par5319)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17339,7 +17369,7 @@ namespace PostreSQL11DataContext
 		#region PgRelationFilepath
 
 		[Sql.Function(Name="pg_catalog.pg_relation_filepath", ServerSideOnly=true)]
-		public static string PgRelationFilepath(object par5318)
+		public static string PgRelationFilepath(object par5321)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17349,7 +17379,7 @@ namespace PostreSQL11DataContext
 		#region PgRelationIsPublishable
 
 		[Sql.Function(Name="pg_catalog.pg_relation_is_publishable", ServerSideOnly=true)]
-		public static bool? PgRelationIsPublishable(object par5320)
+		public static bool? PgRelationIsPublishable(object par5323)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17359,7 +17389,7 @@ namespace PostreSQL11DataContext
 		#region PgRelationIsUpdatable
 
 		[Sql.Function(Name="pg_catalog.pg_relation_is_updatable", ServerSideOnly=true)]
-		public static int? PgRelationIsUpdatable(object par5322, bool? par5323)
+		public static int? PgRelationIsUpdatable(object par5325, bool? par5326)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17369,7 +17399,7 @@ namespace PostreSQL11DataContext
 		#region PgRelationSize
 
 		[Sql.Function(Name="pg_catalog.pg_relation_size", ServerSideOnly=true)]
-		public static long? PgRelationSize(object par5327, string par5328)
+		public static long? PgRelationSize(object par5330, string par5331)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17389,7 +17419,7 @@ namespace PostreSQL11DataContext
 		#region PgReplicationOriginAdvance
 
 		[Sql.Function(Name="pg_catalog.pg_replication_origin_advance", ServerSideOnly=true)]
-		public static object PgReplicationOriginAdvance(string par5330, object par5331)
+		public static object PgReplicationOriginAdvance(string par5333, object par5334)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17399,7 +17429,7 @@ namespace PostreSQL11DataContext
 		#region PgReplicationOriginCreate
 
 		[Sql.Function(Name="pg_catalog.pg_replication_origin_create", ServerSideOnly=true)]
-		public static int? PgReplicationOriginCreate(string par5333)
+		public static int? PgReplicationOriginCreate(string par5336)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17409,7 +17439,7 @@ namespace PostreSQL11DataContext
 		#region PgReplicationOriginDrop
 
 		[Sql.Function(Name="pg_catalog.pg_replication_origin_drop", ServerSideOnly=true)]
-		public static object PgReplicationOriginDrop(string par5334)
+		public static object PgReplicationOriginDrop(string par5337)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17419,7 +17449,7 @@ namespace PostreSQL11DataContext
 		#region PgReplicationOriginOid
 
 		[Sql.Function(Name="pg_catalog.pg_replication_origin_oid", ServerSideOnly=true)]
-		public static int? PgReplicationOriginOid(string par5336)
+		public static int? PgReplicationOriginOid(string par5339)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17429,7 +17459,7 @@ namespace PostreSQL11DataContext
 		#region PgReplicationOriginProgress
 
 		[Sql.Function(Name="pg_catalog.pg_replication_origin_progress", ServerSideOnly=true)]
-		public static object PgReplicationOriginProgress(string par5338, bool? par5339)
+		public static object PgReplicationOriginProgress(string par5341, bool? par5342)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17449,7 +17479,7 @@ namespace PostreSQL11DataContext
 		#region PgReplicationOriginSessionProgress
 
 		[Sql.Function(Name="pg_catalog.pg_replication_origin_session_progress", ServerSideOnly=true)]
-		public static object PgReplicationOriginSessionProgress(bool? par5342)
+		public static object PgReplicationOriginSessionProgress(bool? par5345)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17469,7 +17499,7 @@ namespace PostreSQL11DataContext
 		#region PgReplicationOriginSessionSetup
 
 		[Sql.Function(Name="pg_catalog.pg_replication_origin_session_setup", ServerSideOnly=true)]
-		public static object PgReplicationOriginSessionSetup(string par5343)
+		public static object PgReplicationOriginSessionSetup(string par5346)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17489,7 +17519,7 @@ namespace PostreSQL11DataContext
 		#region PgReplicationOriginXactSetup
 
 		[Sql.Function(Name="pg_catalog.pg_replication_origin_xact_setup", ServerSideOnly=true)]
-		public static object PgReplicationOriginXactSetup(object par5344, DateTimeOffset? par5345)
+		public static object PgReplicationOriginXactSetup(object par5347, DateTimeOffset? par5348)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17529,7 +17559,7 @@ namespace PostreSQL11DataContext
 		#region PgSafeSnapshotBlockingPids
 
 		[Sql.Function(Name="pg_catalog.pg_safe_snapshot_blocking_pids", ServerSideOnly=true)]
-		public static object PgSafeSnapshotBlockingPids(int? par5349)
+		public static object PgSafeSnapshotBlockingPids(int? par5352)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17539,7 +17569,7 @@ namespace PostreSQL11DataContext
 		#region PgSequenceLastValue
 
 		[Sql.Function(Name="pg_catalog.pg_sequence_last_value", ServerSideOnly=true)]
-		public static long? PgSequenceLastValue(object par5351)
+		public static long? PgSequenceLastValue(object par5354)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17559,7 +17589,7 @@ namespace PostreSQL11DataContext
 		#region PgSizeBytes
 
 		[Sql.Function(Name="pg_catalog.pg_size_bytes", ServerSideOnly=true)]
-		public static long? PgSizeBytes(string par5353)
+		public static long? PgSizeBytes(string par5356)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17569,7 +17599,7 @@ namespace PostreSQL11DataContext
 		#region PgSizePretty
 
 		[Sql.Function(Name="pg_catalog.pg_size_pretty", ServerSideOnly=true)]
-		public static string PgSizePretty(decimal? par5357)
+		public static string PgSizePretty(decimal? par5360)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17579,7 +17609,7 @@ namespace PostreSQL11DataContext
 		#region PgSleep
 
 		[Sql.Function(Name="pg_catalog.pg_sleep", ServerSideOnly=true)]
-		public static object PgSleep(double? par5358)
+		public static object PgSleep(double? par5361)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17589,7 +17619,7 @@ namespace PostreSQL11DataContext
 		#region PgSleepFor
 
 		[Sql.Function(Name="pg_catalog.pg_sleep_for", ServerSideOnly=true)]
-		public static object PgSleepFor(NpgsqlTimeSpan? par5359)
+		public static object PgSleepFor(NpgsqlTimeSpan? par5362)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17599,7 +17629,7 @@ namespace PostreSQL11DataContext
 		#region PgSleepUntil
 
 		[Sql.Function(Name="pg_catalog.pg_sleep_until", ServerSideOnly=true)]
-		public static object PgSleepUntil(DateTimeOffset? par5360)
+		public static object PgSleepUntil(DateTimeOffset? par5363)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17639,7 +17669,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetAnalyzeCount
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_analyze_count", ServerSideOnly=true)]
-		public static long? PgStatGetAnalyzeCount(int? par5363)
+		public static long? PgStatGetAnalyzeCount(int? par5366)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17659,7 +17689,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetAutoanalyzeCount
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_autoanalyze_count", ServerSideOnly=true)]
-		public static long? PgStatGetAutoanalyzeCount(int? par5365)
+		public static long? PgStatGetAutoanalyzeCount(int? par5368)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17669,7 +17699,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetAutovacuumCount
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_autovacuum_count", ServerSideOnly=true)]
-		public static long? PgStatGetAutovacuumCount(int? par5367)
+		public static long? PgStatGetAutovacuumCount(int? par5370)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17679,7 +17709,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBackendActivity
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_backend_activity", ServerSideOnly=true)]
-		public static string PgStatGetBackendActivity(int? par5369)
+		public static string PgStatGetBackendActivity(int? par5372)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17689,7 +17719,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBackendActivityStart
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_backend_activity_start", ServerSideOnly=true)]
-		public static DateTimeOffset? PgStatGetBackendActivityStart(int? par5371)
+		public static DateTimeOffset? PgStatGetBackendActivityStart(int? par5374)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17699,7 +17729,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBackendClientAddr
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_backend_client_addr", ServerSideOnly=true)]
-		public static NpgsqlInet? PgStatGetBackendClientAddr(int? par5373)
+		public static NpgsqlInet? PgStatGetBackendClientAddr(int? par5376)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17709,7 +17739,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBackendClientPort
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_backend_client_port", ServerSideOnly=true)]
-		public static int? PgStatGetBackendClientPort(int? par5375)
+		public static int? PgStatGetBackendClientPort(int? par5378)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17719,7 +17749,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBackendDbid
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_backend_dbid", ServerSideOnly=true)]
-		public static int? PgStatGetBackendDbid(int? par5377)
+		public static int? PgStatGetBackendDbid(int? par5380)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17729,7 +17759,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBackendPid
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_backend_pid", ServerSideOnly=true)]
-		public static int? PgStatGetBackendPid(int? par5379)
+		public static int? PgStatGetBackendPid(int? par5382)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17739,7 +17769,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBackendStart
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_backend_start", ServerSideOnly=true)]
-		public static DateTimeOffset? PgStatGetBackendStart(int? par5381)
+		public static DateTimeOffset? PgStatGetBackendStart(int? par5384)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17749,7 +17779,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBackendUserid
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_backend_userid", ServerSideOnly=true)]
-		public static int? PgStatGetBackendUserid(int? par5383)
+		public static int? PgStatGetBackendUserid(int? par5386)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17759,7 +17789,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBackendWaitEvent
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_backend_wait_event", ServerSideOnly=true)]
-		public static string PgStatGetBackendWaitEvent(int? par5385)
+		public static string PgStatGetBackendWaitEvent(int? par5388)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17769,7 +17799,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBackendWaitEventType
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_backend_wait_event_type", ServerSideOnly=true)]
-		public static string PgStatGetBackendWaitEventType(int? par5387)
+		public static string PgStatGetBackendWaitEventType(int? par5390)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17779,7 +17809,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBackendXactStart
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_backend_xact_start", ServerSideOnly=true)]
-		public static DateTimeOffset? PgStatGetBackendXactStart(int? par5389)
+		public static DateTimeOffset? PgStatGetBackendXactStart(int? par5392)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17849,7 +17879,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBlocksFetched
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_blocks_fetched", ServerSideOnly=true)]
-		public static long? PgStatGetBlocksFetched(int? par5397)
+		public static long? PgStatGetBlocksFetched(int? par5400)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17859,7 +17889,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetBlocksHit
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_blocks_hit", ServerSideOnly=true)]
-		public static long? PgStatGetBlocksHit(int? par5399)
+		public static long? PgStatGetBlocksHit(int? par5402)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17919,7 +17949,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbBlkReadTime
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_blk_read_time", ServerSideOnly=true)]
-		public static double? PgStatGetDbBlkReadTime(int? par5406)
+		public static double? PgStatGetDbBlkReadTime(int? par5409)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17929,7 +17959,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbBlkWriteTime
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_blk_write_time", ServerSideOnly=true)]
-		public static double? PgStatGetDbBlkWriteTime(int? par5408)
+		public static double? PgStatGetDbBlkWriteTime(int? par5411)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17939,7 +17969,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbBlocksFetched
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_blocks_fetched", ServerSideOnly=true)]
-		public static long? PgStatGetDbBlocksFetched(int? par5410)
+		public static long? PgStatGetDbBlocksFetched(int? par5413)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17949,7 +17979,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbBlocksHit
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_blocks_hit", ServerSideOnly=true)]
-		public static long? PgStatGetDbBlocksHit(int? par5412)
+		public static long? PgStatGetDbBlocksHit(int? par5415)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17959,7 +17989,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbConflictAll
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_conflict_all", ServerSideOnly=true)]
-		public static long? PgStatGetDbConflictAll(int? par5414)
+		public static long? PgStatGetDbConflictAll(int? par5417)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17969,7 +17999,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbConflictBufferpin
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_conflict_bufferpin", ServerSideOnly=true)]
-		public static long? PgStatGetDbConflictBufferpin(int? par5416)
+		public static long? PgStatGetDbConflictBufferpin(int? par5419)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17979,7 +18009,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbConflictLock
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_conflict_lock", ServerSideOnly=true)]
-		public static long? PgStatGetDbConflictLock(int? par5418)
+		public static long? PgStatGetDbConflictLock(int? par5421)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17989,7 +18019,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbConflictSnapshot
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_conflict_snapshot", ServerSideOnly=true)]
-		public static long? PgStatGetDbConflictSnapshot(int? par5420)
+		public static long? PgStatGetDbConflictSnapshot(int? par5423)
 		{
 			throw new InvalidOperationException();
 		}
@@ -17999,7 +18029,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbConflictStartupDeadlock
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_conflict_startup_deadlock", ServerSideOnly=true)]
-		public static long? PgStatGetDbConflictStartupDeadlock(int? par5422)
+		public static long? PgStatGetDbConflictStartupDeadlock(int? par5425)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18009,7 +18039,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbConflictTablespace
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_conflict_tablespace", ServerSideOnly=true)]
-		public static long? PgStatGetDbConflictTablespace(int? par5424)
+		public static long? PgStatGetDbConflictTablespace(int? par5427)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18019,7 +18049,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbDeadlocks
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_deadlocks", ServerSideOnly=true)]
-		public static long? PgStatGetDbDeadlocks(int? par5426)
+		public static long? PgStatGetDbDeadlocks(int? par5429)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18029,7 +18059,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbNumbackends
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_numbackends", ServerSideOnly=true)]
-		public static int? PgStatGetDbNumbackends(int? par5428)
+		public static int? PgStatGetDbNumbackends(int? par5431)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18039,7 +18069,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbStatResetTime
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_stat_reset_time", ServerSideOnly=true)]
-		public static DateTimeOffset? PgStatGetDbStatResetTime(int? par5430)
+		public static DateTimeOffset? PgStatGetDbStatResetTime(int? par5433)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18049,7 +18079,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbTempBytes
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_temp_bytes", ServerSideOnly=true)]
-		public static long? PgStatGetDbTempBytes(int? par5432)
+		public static long? PgStatGetDbTempBytes(int? par5435)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18059,7 +18089,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbTempFiles
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_temp_files", ServerSideOnly=true)]
-		public static long? PgStatGetDbTempFiles(int? par5434)
+		public static long? PgStatGetDbTempFiles(int? par5437)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18069,7 +18099,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbTuplesDeleted
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_tuples_deleted", ServerSideOnly=true)]
-		public static long? PgStatGetDbTuplesDeleted(int? par5436)
+		public static long? PgStatGetDbTuplesDeleted(int? par5439)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18079,7 +18109,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbTuplesFetched
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_tuples_fetched", ServerSideOnly=true)]
-		public static long? PgStatGetDbTuplesFetched(int? par5438)
+		public static long? PgStatGetDbTuplesFetched(int? par5441)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18089,7 +18119,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbTuplesInserted
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_tuples_inserted", ServerSideOnly=true)]
-		public static long? PgStatGetDbTuplesInserted(int? par5440)
+		public static long? PgStatGetDbTuplesInserted(int? par5443)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18099,7 +18129,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbTuplesReturned
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_tuples_returned", ServerSideOnly=true)]
-		public static long? PgStatGetDbTuplesReturned(int? par5442)
+		public static long? PgStatGetDbTuplesReturned(int? par5445)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18109,7 +18139,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbTuplesUpdated
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_tuples_updated", ServerSideOnly=true)]
-		public static long? PgStatGetDbTuplesUpdated(int? par5444)
+		public static long? PgStatGetDbTuplesUpdated(int? par5447)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18119,7 +18149,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbXactCommit
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_xact_commit", ServerSideOnly=true)]
-		public static long? PgStatGetDbXactCommit(int? par5446)
+		public static long? PgStatGetDbXactCommit(int? par5449)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18129,7 +18159,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDbXactRollback
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_db_xact_rollback", ServerSideOnly=true)]
-		public static long? PgStatGetDbXactRollback(int? par5448)
+		public static long? PgStatGetDbXactRollback(int? par5451)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18139,7 +18169,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetDeadTuples
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_dead_tuples", ServerSideOnly=true)]
-		public static long? PgStatGetDeadTuples(int? par5450)
+		public static long? PgStatGetDeadTuples(int? par5453)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18149,7 +18179,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetFunctionCalls
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_function_calls", ServerSideOnly=true)]
-		public static long? PgStatGetFunctionCalls(int? par5452)
+		public static long? PgStatGetFunctionCalls(int? par5455)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18159,7 +18189,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetFunctionSelfTime
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_function_self_time", ServerSideOnly=true)]
-		public static double? PgStatGetFunctionSelfTime(int? par5454)
+		public static double? PgStatGetFunctionSelfTime(int? par5457)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18169,7 +18199,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetFunctionTotalTime
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_function_total_time", ServerSideOnly=true)]
-		public static double? PgStatGetFunctionTotalTime(int? par5456)
+		public static double? PgStatGetFunctionTotalTime(int? par5459)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18179,7 +18209,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetLastAnalyzeTime
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_last_analyze_time", ServerSideOnly=true)]
-		public static DateTimeOffset? PgStatGetLastAnalyzeTime(int? par5458)
+		public static DateTimeOffset? PgStatGetLastAnalyzeTime(int? par5461)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18189,7 +18219,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetLastAutoanalyzeTime
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_last_autoanalyze_time", ServerSideOnly=true)]
-		public static DateTimeOffset? PgStatGetLastAutoanalyzeTime(int? par5460)
+		public static DateTimeOffset? PgStatGetLastAutoanalyzeTime(int? par5463)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18199,7 +18229,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetLastAutovacuumTime
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_last_autovacuum_time", ServerSideOnly=true)]
-		public static DateTimeOffset? PgStatGetLastAutovacuumTime(int? par5462)
+		public static DateTimeOffset? PgStatGetLastAutovacuumTime(int? par5465)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18209,7 +18239,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetLastVacuumTime
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_last_vacuum_time", ServerSideOnly=true)]
-		public static DateTimeOffset? PgStatGetLastVacuumTime(int? par5464)
+		public static DateTimeOffset? PgStatGetLastVacuumTime(int? par5467)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18219,7 +18249,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetLiveTuples
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_live_tuples", ServerSideOnly=true)]
-		public static long? PgStatGetLiveTuples(int? par5466)
+		public static long? PgStatGetLiveTuples(int? par5469)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18229,7 +18259,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetModSinceAnalyze
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_mod_since_analyze", ServerSideOnly=true)]
-		public static long? PgStatGetModSinceAnalyze(int? par5468)
+		public static long? PgStatGetModSinceAnalyze(int? par5471)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18239,7 +18269,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetNumscans
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_numscans", ServerSideOnly=true)]
-		public static long? PgStatGetNumscans(int? par5470)
+		public static long? PgStatGetNumscans(int? par5473)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18269,7 +18299,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetTuplesDeleted
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_tuples_deleted", ServerSideOnly=true)]
-		public static long? PgStatGetTuplesDeleted(int? par5473)
+		public static long? PgStatGetTuplesDeleted(int? par5476)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18279,7 +18309,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetTuplesFetched
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_tuples_fetched", ServerSideOnly=true)]
-		public static long? PgStatGetTuplesFetched(int? par5475)
+		public static long? PgStatGetTuplesFetched(int? par5478)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18289,7 +18319,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetTuplesHotUpdated
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_tuples_hot_updated", ServerSideOnly=true)]
-		public static long? PgStatGetTuplesHotUpdated(int? par5477)
+		public static long? PgStatGetTuplesHotUpdated(int? par5480)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18299,7 +18329,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetTuplesInserted
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_tuples_inserted", ServerSideOnly=true)]
-		public static long? PgStatGetTuplesInserted(int? par5479)
+		public static long? PgStatGetTuplesInserted(int? par5482)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18309,7 +18339,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetTuplesReturned
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_tuples_returned", ServerSideOnly=true)]
-		public static long? PgStatGetTuplesReturned(int? par5481)
+		public static long? PgStatGetTuplesReturned(int? par5484)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18319,7 +18349,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetTuplesUpdated
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_tuples_updated", ServerSideOnly=true)]
-		public static long? PgStatGetTuplesUpdated(int? par5483)
+		public static long? PgStatGetTuplesUpdated(int? par5486)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18329,7 +18359,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetVacuumCount
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_vacuum_count", ServerSideOnly=true)]
-		public static long? PgStatGetVacuumCount(int? par5485)
+		public static long? PgStatGetVacuumCount(int? par5488)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18349,7 +18379,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetXactBlocksFetched
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_xact_blocks_fetched", ServerSideOnly=true)]
-		public static long? PgStatGetXactBlocksFetched(int? par5487)
+		public static long? PgStatGetXactBlocksFetched(int? par5490)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18359,7 +18389,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetXactBlocksHit
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_xact_blocks_hit", ServerSideOnly=true)]
-		public static long? PgStatGetXactBlocksHit(int? par5489)
+		public static long? PgStatGetXactBlocksHit(int? par5492)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18369,7 +18399,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetXactFunctionCalls
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_xact_function_calls", ServerSideOnly=true)]
-		public static long? PgStatGetXactFunctionCalls(int? par5491)
+		public static long? PgStatGetXactFunctionCalls(int? par5494)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18379,7 +18409,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetXactFunctionSelfTime
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_xact_function_self_time", ServerSideOnly=true)]
-		public static double? PgStatGetXactFunctionSelfTime(int? par5493)
+		public static double? PgStatGetXactFunctionSelfTime(int? par5496)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18389,7 +18419,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetXactFunctionTotalTime
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_xact_function_total_time", ServerSideOnly=true)]
-		public static double? PgStatGetXactFunctionTotalTime(int? par5495)
+		public static double? PgStatGetXactFunctionTotalTime(int? par5498)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18399,7 +18429,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetXactNumscans
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_xact_numscans", ServerSideOnly=true)]
-		public static long? PgStatGetXactNumscans(int? par5497)
+		public static long? PgStatGetXactNumscans(int? par5500)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18409,7 +18439,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetXactTuplesDeleted
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_xact_tuples_deleted", ServerSideOnly=true)]
-		public static long? PgStatGetXactTuplesDeleted(int? par5499)
+		public static long? PgStatGetXactTuplesDeleted(int? par5502)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18419,7 +18449,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetXactTuplesFetched
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_xact_tuples_fetched", ServerSideOnly=true)]
-		public static long? PgStatGetXactTuplesFetched(int? par5501)
+		public static long? PgStatGetXactTuplesFetched(int? par5504)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18429,7 +18459,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetXactTuplesHotUpdated
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_xact_tuples_hot_updated", ServerSideOnly=true)]
-		public static long? PgStatGetXactTuplesHotUpdated(int? par5503)
+		public static long? PgStatGetXactTuplesHotUpdated(int? par5506)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18439,7 +18469,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetXactTuplesInserted
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_xact_tuples_inserted", ServerSideOnly=true)]
-		public static long? PgStatGetXactTuplesInserted(int? par5505)
+		public static long? PgStatGetXactTuplesInserted(int? par5508)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18449,7 +18479,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetXactTuplesReturned
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_xact_tuples_returned", ServerSideOnly=true)]
-		public static long? PgStatGetXactTuplesReturned(int? par5507)
+		public static long? PgStatGetXactTuplesReturned(int? par5510)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18459,7 +18489,7 @@ namespace PostreSQL11DataContext
 		#region PgStatGetXactTuplesUpdated
 
 		[Sql.Function(Name="pg_catalog.pg_stat_get_xact_tuples_updated", ServerSideOnly=true)]
-		public static long? PgStatGetXactTuplesUpdated(int? par5509)
+		public static long? PgStatGetXactTuplesUpdated(int? par5512)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18479,7 +18509,7 @@ namespace PostreSQL11DataContext
 		#region PgStatResetShared
 
 		[Sql.Function(Name="pg_catalog.pg_stat_reset_shared", ServerSideOnly=true)]
-		public static object PgStatResetShared(string par5510)
+		public static object PgStatResetShared(string par5513)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18489,7 +18519,7 @@ namespace PostreSQL11DataContext
 		#region PgStatResetSingleFunctionCounters
 
 		[Sql.Function(Name="pg_catalog.pg_stat_reset_single_function_counters", ServerSideOnly=true)]
-		public static object PgStatResetSingleFunctionCounters(int? par5511)
+		public static object PgStatResetSingleFunctionCounters(int? par5514)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18499,7 +18529,7 @@ namespace PostreSQL11DataContext
 		#region PgStatResetSingleTableCounters
 
 		[Sql.Function(Name="pg_catalog.pg_stat_reset_single_table_counters", ServerSideOnly=true)]
-		public static object PgStatResetSingleTableCounters(int? par5512)
+		public static object PgStatResetSingleTableCounters(int? par5515)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18509,7 +18539,7 @@ namespace PostreSQL11DataContext
 		#region PgStatisticsObjIsVisible
 
 		[Sql.Function(Name="pg_catalog.pg_statistics_obj_is_visible", ServerSideOnly=true)]
-		public static bool? PgStatisticsObjIsVisible(int? par5514)
+		public static bool? PgStatisticsObjIsVisible(int? par5517)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18529,7 +18559,7 @@ namespace PostreSQL11DataContext
 		#region PgTableIsVisible
 
 		[Sql.Function(Name="pg_catalog.pg_table_is_visible", ServerSideOnly=true)]
-		public static bool? PgTableIsVisible(int? par5518)
+		public static bool? PgTableIsVisible(int? par5521)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18539,7 +18569,7 @@ namespace PostreSQL11DataContext
 		#region PgTableSize
 
 		[Sql.Function(Name="pg_catalog.pg_table_size", ServerSideOnly=true)]
-		public static long? PgTableSize(object par5520)
+		public static long? PgTableSize(object par5523)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18549,7 +18579,7 @@ namespace PostreSQL11DataContext
 		#region PgTablespaceLocation
 
 		[Sql.Function(Name="pg_catalog.pg_tablespace_location", ServerSideOnly=true)]
-		public static string PgTablespaceLocation(int? par5523)
+		public static string PgTablespaceLocation(int? par5526)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18559,7 +18589,7 @@ namespace PostreSQL11DataContext
 		#region PgTablespaceSize
 
 		[Sql.Function(Name="pg_catalog.pg_tablespace_size", ServerSideOnly=true)]
-		public static long? PgTablespaceSize(string par5527)
+		public static long? PgTablespaceSize(string par5530)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18569,7 +18599,7 @@ namespace PostreSQL11DataContext
 		#region PgTerminateBackend
 
 		[Sql.Function(Name="pg_catalog.pg_terminate_backend", ServerSideOnly=true)]
-		public static bool? PgTerminateBackend(int? par5529)
+		public static bool? PgTerminateBackend(int? par5532)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18579,7 +18609,7 @@ namespace PostreSQL11DataContext
 		#region PgTotalRelationSize
 
 		[Sql.Function(Name="pg_catalog.pg_total_relation_size", ServerSideOnly=true)]
-		public static long? PgTotalRelationSize(object par5531)
+		public static long? PgTotalRelationSize(object par5534)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18599,7 +18629,7 @@ namespace PostreSQL11DataContext
 		#region PgTryAdvisoryLock
 
 		[Sql.Function(Name="pg_catalog.pg_try_advisory_lock", ServerSideOnly=true)]
-		public static bool? PgTryAdvisoryLock(int? par5536, int? par5537)
+		public static bool? PgTryAdvisoryLock(int? par5539, int? par5540)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18609,7 +18639,7 @@ namespace PostreSQL11DataContext
 		#region PgTryAdvisoryLockShared
 
 		[Sql.Function(Name="pg_catalog.pg_try_advisory_lock_shared", ServerSideOnly=true)]
-		public static bool? PgTryAdvisoryLockShared(int? par5541, int? par5542)
+		public static bool? PgTryAdvisoryLockShared(int? par5544, int? par5545)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18619,7 +18649,7 @@ namespace PostreSQL11DataContext
 		#region PgTryAdvisoryXactLock
 
 		[Sql.Function(Name="pg_catalog.pg_try_advisory_xact_lock", ServerSideOnly=true)]
-		public static bool? PgTryAdvisoryXactLock(int? par5546, int? par5547)
+		public static bool? PgTryAdvisoryXactLock(int? par5549, int? par5550)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18629,7 +18659,7 @@ namespace PostreSQL11DataContext
 		#region PgTryAdvisoryXactLockShared
 
 		[Sql.Function(Name="pg_catalog.pg_try_advisory_xact_lock_shared", ServerSideOnly=true)]
-		public static bool? PgTryAdvisoryXactLockShared(int? par5551, int? par5552)
+		public static bool? PgTryAdvisoryXactLockShared(int? par5554, int? par5555)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18639,7 +18669,7 @@ namespace PostreSQL11DataContext
 		#region PgTsConfigIsVisible
 
 		[Sql.Function(Name="pg_catalog.pg_ts_config_is_visible", ServerSideOnly=true)]
-		public static bool? PgTsConfigIsVisible(int? par5554)
+		public static bool? PgTsConfigIsVisible(int? par5557)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18649,7 +18679,7 @@ namespace PostreSQL11DataContext
 		#region PgTsDictIsVisible
 
 		[Sql.Function(Name="pg_catalog.pg_ts_dict_is_visible", ServerSideOnly=true)]
-		public static bool? PgTsDictIsVisible(int? par5556)
+		public static bool? PgTsDictIsVisible(int? par5559)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18659,7 +18689,7 @@ namespace PostreSQL11DataContext
 		#region PgTsParserIsVisible
 
 		[Sql.Function(Name="pg_catalog.pg_ts_parser_is_visible", ServerSideOnly=true)]
-		public static bool? PgTsParserIsVisible(int? par5558)
+		public static bool? PgTsParserIsVisible(int? par5561)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18669,7 +18699,7 @@ namespace PostreSQL11DataContext
 		#region PgTsTemplateIsVisible
 
 		[Sql.Function(Name="pg_catalog.pg_ts_template_is_visible", ServerSideOnly=true)]
-		public static bool? PgTsTemplateIsVisible(int? par5560)
+		public static bool? PgTsTemplateIsVisible(int? par5563)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18679,7 +18709,7 @@ namespace PostreSQL11DataContext
 		#region PgTypeIsVisible
 
 		[Sql.Function(Name="pg_catalog.pg_type_is_visible", ServerSideOnly=true)]
-		public static bool? PgTypeIsVisible(int? par5562)
+		public static bool? PgTypeIsVisible(int? par5565)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18689,7 +18719,7 @@ namespace PostreSQL11DataContext
 		#region PgTypeof
 
 		[Sql.Function(Name="pg_catalog.pg_typeof", ServerSideOnly=true)]
-		public static object PgTypeof(object par5564)
+		public static object PgTypeof(object par5567)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18699,7 +18729,7 @@ namespace PostreSQL11DataContext
 		#region PgWalLsnDiff
 
 		[Sql.Function(Name="pg_catalog.pg_wal_lsn_diff", ServerSideOnly=true)]
-		public static decimal? PgWalLsnDiff(object par5566, object par5567)
+		public static decimal? PgWalLsnDiff(object par5569, object par5570)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18729,7 +18759,7 @@ namespace PostreSQL11DataContext
 		#region PgWalfileName
 
 		[Sql.Function(Name="pg_catalog.pg_walfile_name", ServerSideOnly=true)]
-		public static string PgWalfileName(object par5569)
+		public static string PgWalfileName(object par5572)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18749,7 +18779,7 @@ namespace PostreSQL11DataContext
 		#region PgXactCommitTimestamp
 
 		[Sql.Function(Name="pg_catalog.pg_xact_commit_timestamp", ServerSideOnly=true)]
-		public static DateTimeOffset? PgXactCommitTimestamp(int? par5571)
+		public static DateTimeOffset? PgXactCommitTimestamp(int? par5574)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18759,7 +18789,7 @@ namespace PostreSQL11DataContext
 		#region PhrasetoTsquery
 
 		[Sql.Function(Name="pg_catalog.phraseto_tsquery", ServerSideOnly=true)]
-		public static object PhrasetoTsquery(object par5575, string par5576)
+		public static object PhrasetoTsquery(object par5578, string par5579)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18779,7 +18809,7 @@ namespace PostreSQL11DataContext
 		#region PlaintoTsquery
 
 		[Sql.Function(Name="pg_catalog.plainto_tsquery", ServerSideOnly=true)]
-		public static object PlaintoTsquery(string par5582)
+		public static object PlaintoTsquery(string par5585)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18799,7 +18829,7 @@ namespace PostreSQL11DataContext
 		#region PlpgsqlInlineHandler
 
 		[Sql.Function(Name="pg_catalog.plpgsql_inline_handler", ServerSideOnly=true)]
-		public static object PlpgsqlInlineHandler(object par5584)
+		public static object PlpgsqlInlineHandler(object par5587)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18809,7 +18839,7 @@ namespace PostreSQL11DataContext
 		#region PlpgsqlValidator
 
 		[Sql.Function(Name="pg_catalog.plpgsql_validator", ServerSideOnly=true)]
-		public static object PlpgsqlValidator(int? par5585)
+		public static object PlpgsqlValidator(int? par5588)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18819,7 +18849,7 @@ namespace PostreSQL11DataContext
 		#region Point
 
 		[Sql.Function(Name="pg_catalog.point", ServerSideOnly=true)]
-		public static NpgsqlPoint? Point(NpgsqlPolygon? par5598)
+		public static NpgsqlPoint? Point(NpgsqlPolygon? par5601)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18829,7 +18859,7 @@ namespace PostreSQL11DataContext
 		#region PointAbove
 
 		[Sql.Function(Name="pg_catalog.point_above", ServerSideOnly=true)]
-		public static bool? PointAbove(NpgsqlPoint? par5600, NpgsqlPoint? par5601)
+		public static bool? PointAbove(NpgsqlPoint? par5603, NpgsqlPoint? par5604)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18839,7 +18869,7 @@ namespace PostreSQL11DataContext
 		#region PointAdd
 
 		[Sql.Function(Name="pg_catalog.point_add", ServerSideOnly=true)]
-		public static NpgsqlPoint? PointAdd(NpgsqlPoint? par5603, NpgsqlPoint? par5604)
+		public static NpgsqlPoint? PointAdd(NpgsqlPoint? par5606, NpgsqlPoint? par5607)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18849,7 +18879,7 @@ namespace PostreSQL11DataContext
 		#region PointBelow
 
 		[Sql.Function(Name="pg_catalog.point_below", ServerSideOnly=true)]
-		public static bool? PointBelow(NpgsqlPoint? par5606, NpgsqlPoint? par5607)
+		public static bool? PointBelow(NpgsqlPoint? par5609, NpgsqlPoint? par5610)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18859,7 +18889,7 @@ namespace PostreSQL11DataContext
 		#region PointDistance
 
 		[Sql.Function(Name="pg_catalog.point_distance", ServerSideOnly=true)]
-		public static double? PointDistance(NpgsqlPoint? par5609, NpgsqlPoint? par5610)
+		public static double? PointDistance(NpgsqlPoint? par5612, NpgsqlPoint? par5613)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18869,7 +18899,7 @@ namespace PostreSQL11DataContext
 		#region PointDiv
 
 		[Sql.Function(Name="pg_catalog.point_div", ServerSideOnly=true)]
-		public static NpgsqlPoint? PointDiv(NpgsqlPoint? par5612, NpgsqlPoint? par5613)
+		public static NpgsqlPoint? PointDiv(NpgsqlPoint? par5615, NpgsqlPoint? par5616)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18879,7 +18909,7 @@ namespace PostreSQL11DataContext
 		#region PointEq
 
 		[Sql.Function(Name="pg_catalog.point_eq", ServerSideOnly=true)]
-		public static bool? PointEq(NpgsqlPoint? par5615, NpgsqlPoint? par5616)
+		public static bool? PointEq(NpgsqlPoint? par5618, NpgsqlPoint? par5619)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18889,7 +18919,7 @@ namespace PostreSQL11DataContext
 		#region PointHoriz
 
 		[Sql.Function(Name="pg_catalog.point_horiz", ServerSideOnly=true)]
-		public static bool? PointHoriz(NpgsqlPoint? par5618, NpgsqlPoint? par5619)
+		public static bool? PointHoriz(NpgsqlPoint? par5621, NpgsqlPoint? par5622)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18899,7 +18929,7 @@ namespace PostreSQL11DataContext
 		#region PointIn
 
 		[Sql.Function(Name="pg_catalog.point_in", ServerSideOnly=true)]
-		public static NpgsqlPoint? PointIn(object par5621)
+		public static NpgsqlPoint? PointIn(object par5624)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18909,7 +18939,7 @@ namespace PostreSQL11DataContext
 		#region PointLeft
 
 		[Sql.Function(Name="pg_catalog.point_left", ServerSideOnly=true)]
-		public static bool? PointLeft(NpgsqlPoint? par5623, NpgsqlPoint? par5624)
+		public static bool? PointLeft(NpgsqlPoint? par5626, NpgsqlPoint? par5627)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18919,7 +18949,7 @@ namespace PostreSQL11DataContext
 		#region PointMul
 
 		[Sql.Function(Name="pg_catalog.point_mul", ServerSideOnly=true)]
-		public static NpgsqlPoint? PointMul(NpgsqlPoint? par5626, NpgsqlPoint? par5627)
+		public static NpgsqlPoint? PointMul(NpgsqlPoint? par5629, NpgsqlPoint? par5630)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18929,7 +18959,7 @@ namespace PostreSQL11DataContext
 		#region PointNe
 
 		[Sql.Function(Name="pg_catalog.point_ne", ServerSideOnly=true)]
-		public static bool? PointNe(NpgsqlPoint? par5629, NpgsqlPoint? par5630)
+		public static bool? PointNe(NpgsqlPoint? par5632, NpgsqlPoint? par5633)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18939,7 +18969,7 @@ namespace PostreSQL11DataContext
 		#region PointOut
 
 		[Sql.Function(Name="pg_catalog.point_out", ServerSideOnly=true)]
-		public static object PointOut(NpgsqlPoint? par5632)
+		public static object PointOut(NpgsqlPoint? par5635)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18949,7 +18979,7 @@ namespace PostreSQL11DataContext
 		#region PointRecv
 
 		[Sql.Function(Name="pg_catalog.point_recv", ServerSideOnly=true)]
-		public static NpgsqlPoint? PointRecv(object par5634)
+		public static NpgsqlPoint? PointRecv(object par5637)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18959,7 +18989,7 @@ namespace PostreSQL11DataContext
 		#region PointRight
 
 		[Sql.Function(Name="pg_catalog.point_right", ServerSideOnly=true)]
-		public static bool? PointRight(NpgsqlPoint? par5636, NpgsqlPoint? par5637)
+		public static bool? PointRight(NpgsqlPoint? par5639, NpgsqlPoint? par5640)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18969,7 +18999,7 @@ namespace PostreSQL11DataContext
 		#region PointSend
 
 		[Sql.Function(Name="pg_catalog.point_send", ServerSideOnly=true)]
-		public static byte[] PointSend(NpgsqlPoint? par5639)
+		public static byte[] PointSend(NpgsqlPoint? par5642)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18979,7 +19009,7 @@ namespace PostreSQL11DataContext
 		#region PointSub
 
 		[Sql.Function(Name="pg_catalog.point_sub", ServerSideOnly=true)]
-		public static NpgsqlPoint? PointSub(NpgsqlPoint? par5641, NpgsqlPoint? par5642)
+		public static NpgsqlPoint? PointSub(NpgsqlPoint? par5644, NpgsqlPoint? par5645)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18989,7 +19019,7 @@ namespace PostreSQL11DataContext
 		#region PointVert
 
 		[Sql.Function(Name="pg_catalog.point_vert", ServerSideOnly=true)]
-		public static bool? PointVert(NpgsqlPoint? par5644, NpgsqlPoint? par5645)
+		public static bool? PointVert(NpgsqlPoint? par5647, NpgsqlPoint? par5648)
 		{
 			throw new InvalidOperationException();
 		}
@@ -18999,7 +19029,7 @@ namespace PostreSQL11DataContext
 		#region PolyAbove
 
 		[Sql.Function(Name="pg_catalog.poly_above", ServerSideOnly=true)]
-		public static bool? PolyAbove(NpgsqlPolygon? par5647, NpgsqlPolygon? par5648)
+		public static bool? PolyAbove(NpgsqlPolygon? par5650, NpgsqlPolygon? par5651)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19009,7 +19039,7 @@ namespace PostreSQL11DataContext
 		#region PolyBelow
 
 		[Sql.Function(Name="pg_catalog.poly_below", ServerSideOnly=true)]
-		public static bool? PolyBelow(NpgsqlPolygon? par5650, NpgsqlPolygon? par5651)
+		public static bool? PolyBelow(NpgsqlPolygon? par5653, NpgsqlPolygon? par5654)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19019,7 +19049,7 @@ namespace PostreSQL11DataContext
 		#region PolyCenter
 
 		[Sql.Function(Name="pg_catalog.poly_center", ServerSideOnly=true)]
-		public static NpgsqlPoint? PolyCenter(NpgsqlPolygon? par5653)
+		public static NpgsqlPoint? PolyCenter(NpgsqlPolygon? par5656)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19029,7 +19059,7 @@ namespace PostreSQL11DataContext
 		#region PolyContain
 
 		[Sql.Function(Name="pg_catalog.poly_contain", ServerSideOnly=true)]
-		public static bool? PolyContain(NpgsqlPolygon? par5655, NpgsqlPolygon? par5656)
+		public static bool? PolyContain(NpgsqlPolygon? par5658, NpgsqlPolygon? par5659)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19039,7 +19069,7 @@ namespace PostreSQL11DataContext
 		#region PolyContainPt
 
 		[Sql.Function(Name="pg_catalog.poly_contain_pt", ServerSideOnly=true)]
-		public static bool? PolyContainPt(NpgsqlPolygon? par5658, NpgsqlPoint? par5659)
+		public static bool? PolyContainPt(NpgsqlPolygon? par5661, NpgsqlPoint? par5662)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19049,7 +19079,7 @@ namespace PostreSQL11DataContext
 		#region PolyContained
 
 		[Sql.Function(Name="pg_catalog.poly_contained", ServerSideOnly=true)]
-		public static bool? PolyContained(NpgsqlPolygon? par5661, NpgsqlPolygon? par5662)
+		public static bool? PolyContained(NpgsqlPolygon? par5664, NpgsqlPolygon? par5665)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19059,7 +19089,7 @@ namespace PostreSQL11DataContext
 		#region PolyDistance
 
 		[Sql.Function(Name="pg_catalog.poly_distance", ServerSideOnly=true)]
-		public static double? PolyDistance(NpgsqlPolygon? par5664, NpgsqlPolygon? par5665)
+		public static double? PolyDistance(NpgsqlPolygon? par5667, NpgsqlPolygon? par5668)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19069,7 +19099,7 @@ namespace PostreSQL11DataContext
 		#region PolyIn
 
 		[Sql.Function(Name="pg_catalog.poly_in", ServerSideOnly=true)]
-		public static NpgsqlPolygon? PolyIn(object par5667)
+		public static NpgsqlPolygon? PolyIn(object par5670)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19079,7 +19109,7 @@ namespace PostreSQL11DataContext
 		#region PolyLeft
 
 		[Sql.Function(Name="pg_catalog.poly_left", ServerSideOnly=true)]
-		public static bool? PolyLeft(NpgsqlPolygon? par5669, NpgsqlPolygon? par5670)
+		public static bool? PolyLeft(NpgsqlPolygon? par5672, NpgsqlPolygon? par5673)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19089,7 +19119,7 @@ namespace PostreSQL11DataContext
 		#region PolyNpoints
 
 		[Sql.Function(Name="pg_catalog.poly_npoints", ServerSideOnly=true)]
-		public static int? PolyNpoints(NpgsqlPolygon? par5672)
+		public static int? PolyNpoints(NpgsqlPolygon? par5675)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19099,7 +19129,7 @@ namespace PostreSQL11DataContext
 		#region PolyOut
 
 		[Sql.Function(Name="pg_catalog.poly_out", ServerSideOnly=true)]
-		public static object PolyOut(NpgsqlPolygon? par5674)
+		public static object PolyOut(NpgsqlPolygon? par5677)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19109,7 +19139,7 @@ namespace PostreSQL11DataContext
 		#region PolyOverabove
 
 		[Sql.Function(Name="pg_catalog.poly_overabove", ServerSideOnly=true)]
-		public static bool? PolyOverabove(NpgsqlPolygon? par5676, NpgsqlPolygon? par5677)
+		public static bool? PolyOverabove(NpgsqlPolygon? par5679, NpgsqlPolygon? par5680)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19119,7 +19149,7 @@ namespace PostreSQL11DataContext
 		#region PolyOverbelow
 
 		[Sql.Function(Name="pg_catalog.poly_overbelow", ServerSideOnly=true)]
-		public static bool? PolyOverbelow(NpgsqlPolygon? par5679, NpgsqlPolygon? par5680)
+		public static bool? PolyOverbelow(NpgsqlPolygon? par5682, NpgsqlPolygon? par5683)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19129,7 +19159,7 @@ namespace PostreSQL11DataContext
 		#region PolyOverlap
 
 		[Sql.Function(Name="pg_catalog.poly_overlap", ServerSideOnly=true)]
-		public static bool? PolyOverlap(NpgsqlPolygon? par5682, NpgsqlPolygon? par5683)
+		public static bool? PolyOverlap(NpgsqlPolygon? par5685, NpgsqlPolygon? par5686)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19139,7 +19169,7 @@ namespace PostreSQL11DataContext
 		#region PolyOverleft
 
 		[Sql.Function(Name="pg_catalog.poly_overleft", ServerSideOnly=true)]
-		public static bool? PolyOverleft(NpgsqlPolygon? par5685, NpgsqlPolygon? par5686)
+		public static bool? PolyOverleft(NpgsqlPolygon? par5688, NpgsqlPolygon? par5689)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19149,7 +19179,7 @@ namespace PostreSQL11DataContext
 		#region PolyOverright
 
 		[Sql.Function(Name="pg_catalog.poly_overright", ServerSideOnly=true)]
-		public static bool? PolyOverright(NpgsqlPolygon? par5688, NpgsqlPolygon? par5689)
+		public static bool? PolyOverright(NpgsqlPolygon? par5691, NpgsqlPolygon? par5692)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19159,7 +19189,7 @@ namespace PostreSQL11DataContext
 		#region PolyRecv
 
 		[Sql.Function(Name="pg_catalog.poly_recv", ServerSideOnly=true)]
-		public static NpgsqlPolygon? PolyRecv(object par5691)
+		public static NpgsqlPolygon? PolyRecv(object par5694)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19169,7 +19199,7 @@ namespace PostreSQL11DataContext
 		#region PolyRight
 
 		[Sql.Function(Name="pg_catalog.poly_right", ServerSideOnly=true)]
-		public static bool? PolyRight(NpgsqlPolygon? par5693, NpgsqlPolygon? par5694)
+		public static bool? PolyRight(NpgsqlPolygon? par5696, NpgsqlPolygon? par5697)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19179,7 +19209,7 @@ namespace PostreSQL11DataContext
 		#region PolySame
 
 		[Sql.Function(Name="pg_catalog.poly_same", ServerSideOnly=true)]
-		public static bool? PolySame(NpgsqlPolygon? par5696, NpgsqlPolygon? par5697)
+		public static bool? PolySame(NpgsqlPolygon? par5699, NpgsqlPolygon? par5700)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19189,7 +19219,7 @@ namespace PostreSQL11DataContext
 		#region PolySend
 
 		[Sql.Function(Name="pg_catalog.poly_send", ServerSideOnly=true)]
-		public static byte[] PolySend(NpgsqlPolygon? par5699)
+		public static byte[] PolySend(NpgsqlPolygon? par5702)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19199,7 +19229,7 @@ namespace PostreSQL11DataContext
 		#region Polygon
 
 		[Sql.Function(Name="pg_catalog.polygon", ServerSideOnly=true)]
-		public static NpgsqlPolygon? Polygon(NpgsqlCircle? par5708)
+		public static NpgsqlPolygon? Polygon(NpgsqlCircle? par5711)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19209,7 +19239,7 @@ namespace PostreSQL11DataContext
 		#region Popen
 
 		[Sql.Function(Name="pg_catalog.popen", ServerSideOnly=true)]
-		public static NpgsqlPath? Popen(NpgsqlPath? par5710)
+		public static NpgsqlPath? Popen(NpgsqlPath? par5713)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19219,7 +19249,7 @@ namespace PostreSQL11DataContext
 		#region Position
 
 		[Sql.Function(Name="pg_catalog.position", ServerSideOnly=true)]
-		public static int? Position(string par5718, string par5719)
+		public static int? Position(string par5721, string par5722)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19229,7 +19259,7 @@ namespace PostreSQL11DataContext
 		#region Positionjoinsel
 
 		[Sql.Function(Name="pg_catalog.positionjoinsel", ServerSideOnly=true)]
-		public static double? Positionjoinsel(object par5721, int? par5722, object par5723, short? par5724, object par5725)
+		public static double? Positionjoinsel(object par5724, int? par5725, object par5726, short? par5727, object par5728)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19239,7 +19269,7 @@ namespace PostreSQL11DataContext
 		#region Positionsel
 
 		[Sql.Function(Name="pg_catalog.positionsel", ServerSideOnly=true)]
-		public static double? Positionsel(object par5727, int? par5728, object par5729, int? par5730)
+		public static double? Positionsel(object par5730, int? par5731, object par5732, int? par5733)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19249,7 +19279,7 @@ namespace PostreSQL11DataContext
 		#region PostgresqlFdwValidator
 
 		[Sql.Function(Name="pg_catalog.postgresql_fdw_validator", ServerSideOnly=true)]
-		public static bool? PostgresqlFdwValidator(object par5732, int? par5733)
+		public static bool? PostgresqlFdwValidator(object par5735, int? par5736)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19259,7 +19289,7 @@ namespace PostreSQL11DataContext
 		#region Pow
 
 		[Sql.Function(Name="pg_catalog.pow", ServerSideOnly=true)]
-		public static decimal? Pow(decimal? par5738, decimal? par5739)
+		public static decimal? Pow(decimal? par5741, decimal? par5742)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19269,7 +19299,7 @@ namespace PostreSQL11DataContext
 		#region Power
 
 		[Sql.Function(Name="pg_catalog.power", ServerSideOnly=true)]
-		public static decimal? Power(decimal? par5744, decimal? par5745)
+		public static decimal? Power(decimal? par5747, decimal? par5748)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19279,7 +19309,7 @@ namespace PostreSQL11DataContext
 		#region Prefixjoinsel
 
 		[Sql.Function(Name="pg_catalog.prefixjoinsel", ServerSideOnly=true)]
-		public static double? Prefixjoinsel(object par5747, int? par5748, object par5749, short? par5750, object par5751)
+		public static double? Prefixjoinsel(object par5750, int? par5751, object par5752, short? par5753, object par5754)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19289,7 +19319,7 @@ namespace PostreSQL11DataContext
 		#region Prefixsel
 
 		[Sql.Function(Name="pg_catalog.prefixsel", ServerSideOnly=true)]
-		public static double? Prefixsel(object par5753, int? par5754, object par5755, int? par5756)
+		public static double? Prefixsel(object par5756, int? par5757, object par5758, int? par5759)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19299,7 +19329,7 @@ namespace PostreSQL11DataContext
 		#region PrsdEnd
 
 		[Sql.Function(Name="pg_catalog.prsd_end", ServerSideOnly=true)]
-		public static object PrsdEnd(object par5757)
+		public static object PrsdEnd(object par5760)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19309,7 +19339,7 @@ namespace PostreSQL11DataContext
 		#region PrsdHeadline
 
 		[Sql.Function(Name="pg_catalog.prsd_headline", ServerSideOnly=true)]
-		public static object PrsdHeadline(object par5759, object par5760, object par5761)
+		public static object PrsdHeadline(object par5762, object par5763, object par5764)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19319,7 +19349,7 @@ namespace PostreSQL11DataContext
 		#region PrsdLextype
 
 		[Sql.Function(Name="pg_catalog.prsd_lextype", ServerSideOnly=true)]
-		public static object PrsdLextype(object par5763)
+		public static object PrsdLextype(object par5766)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19329,7 +19359,7 @@ namespace PostreSQL11DataContext
 		#region PrsdNexttoken
 
 		[Sql.Function(Name="pg_catalog.prsd_nexttoken", ServerSideOnly=true)]
-		public static object PrsdNexttoken(object par5765, object par5766, object par5767)
+		public static object PrsdNexttoken(object par5768, object par5769, object par5770)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19339,7 +19369,7 @@ namespace PostreSQL11DataContext
 		#region PrsdStart
 
 		[Sql.Function(Name="pg_catalog.prsd_start", ServerSideOnly=true)]
-		public static object PrsdStart(object par5769, int? par5770)
+		public static object PrsdStart(object par5772, int? par5773)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19349,7 +19379,7 @@ namespace PostreSQL11DataContext
 		#region PtContainedCircle
 
 		[Sql.Function(Name="pg_catalog.pt_contained_circle", ServerSideOnly=true)]
-		public static bool? PtContainedCircle(NpgsqlPoint? par5772, NpgsqlCircle? par5773)
+		public static bool? PtContainedCircle(NpgsqlPoint? par5775, NpgsqlCircle? par5776)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19359,7 +19389,7 @@ namespace PostreSQL11DataContext
 		#region PtContainedPoly
 
 		[Sql.Function(Name="pg_catalog.pt_contained_poly", ServerSideOnly=true)]
-		public static bool? PtContainedPoly(NpgsqlPoint? par5775, NpgsqlPolygon? par5776)
+		public static bool? PtContainedPoly(NpgsqlPoint? par5778, NpgsqlPolygon? par5779)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19399,7 +19429,7 @@ namespace PostreSQL11DataContext
 		#region Querytree
 
 		[Sql.Function(Name="pg_catalog.querytree", ServerSideOnly=true)]
-		public static string Querytree(object par5781)
+		public static string Querytree(object par5784)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19409,7 +19439,7 @@ namespace PostreSQL11DataContext
 		#region QuoteIdent
 
 		[Sql.Function(Name="pg_catalog.quote_ident", ServerSideOnly=true)]
-		public static string QuoteIdent(string par5783)
+		public static string QuoteIdent(string par5786)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19419,7 +19449,7 @@ namespace PostreSQL11DataContext
 		#region QuoteLiteral
 
 		[Sql.Function(Name="pg_catalog.quote_literal", ServerSideOnly=true)]
-		public static string QuoteLiteral(object par5787)
+		public static string QuoteLiteral(object par5790)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19429,7 +19459,7 @@ namespace PostreSQL11DataContext
 		#region QuoteNullable
 
 		[Sql.Function(Name="pg_catalog.quote_nullable", ServerSideOnly=true)]
-		public static string QuoteNullable(object par5791)
+		public static string QuoteNullable(object par5794)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19439,7 +19469,7 @@ namespace PostreSQL11DataContext
 		#region Radians
 
 		[Sql.Function(Name="pg_catalog.radians", ServerSideOnly=true)]
-		public static double? Radians(double? par5793)
+		public static double? Radians(double? par5796)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19449,7 +19479,7 @@ namespace PostreSQL11DataContext
 		#region Radius
 
 		[Sql.Function(Name="pg_catalog.radius", ServerSideOnly=true)]
-		public static double? Radius(NpgsqlCircle? par5795)
+		public static double? Radius(NpgsqlCircle? par5798)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19469,7 +19499,7 @@ namespace PostreSQL11DataContext
 		#region RangeAdjacent
 
 		[Sql.Function(Name="pg_catalog.range_adjacent", ServerSideOnly=true)]
-		public static bool? RangeAdjacent(object par5798, object par5799)
+		public static bool? RangeAdjacent(object par5801, object par5802)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19479,7 +19509,7 @@ namespace PostreSQL11DataContext
 		#region RangeAfter
 
 		[Sql.Function(Name="pg_catalog.range_after", ServerSideOnly=true)]
-		public static bool? RangeAfter(object par5801, object par5802)
+		public static bool? RangeAfter(object par5804, object par5805)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19489,7 +19519,7 @@ namespace PostreSQL11DataContext
 		#region RangeBefore
 
 		[Sql.Function(Name="pg_catalog.range_before", ServerSideOnly=true)]
-		public static bool? RangeBefore(object par5804, object par5805)
+		public static bool? RangeBefore(object par5807, object par5808)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19499,7 +19529,7 @@ namespace PostreSQL11DataContext
 		#region RangeCmp
 
 		[Sql.Function(Name="pg_catalog.range_cmp", ServerSideOnly=true)]
-		public static int? RangeCmp(object par5807, object par5808)
+		public static int? RangeCmp(object par5810, object par5811)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19509,7 +19539,7 @@ namespace PostreSQL11DataContext
 		#region RangeContainedBy
 
 		[Sql.Function(Name="pg_catalog.range_contained_by", ServerSideOnly=true)]
-		public static bool? RangeContainedBy(object par5810, object par5811)
+		public static bool? RangeContainedBy(object par5813, object par5814)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19519,7 +19549,7 @@ namespace PostreSQL11DataContext
 		#region RangeContains
 
 		[Sql.Function(Name="pg_catalog.range_contains", ServerSideOnly=true)]
-		public static bool? RangeContains(object par5813, object par5814)
+		public static bool? RangeContains(object par5816, object par5817)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19529,7 +19559,7 @@ namespace PostreSQL11DataContext
 		#region RangeContainsElem
 
 		[Sql.Function(Name="pg_catalog.range_contains_elem", ServerSideOnly=true)]
-		public static bool? RangeContainsElem(object par5816, object par5817)
+		public static bool? RangeContainsElem(object par5819, object par5820)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19539,7 +19569,7 @@ namespace PostreSQL11DataContext
 		#region RangeEq
 
 		[Sql.Function(Name="pg_catalog.range_eq", ServerSideOnly=true)]
-		public static bool? RangeEq(object par5819, object par5820)
+		public static bool? RangeEq(object par5822, object par5823)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19549,7 +19579,7 @@ namespace PostreSQL11DataContext
 		#region RangeGe
 
 		[Sql.Function(Name="pg_catalog.range_ge", ServerSideOnly=true)]
-		public static bool? RangeGe(object par5822, object par5823)
+		public static bool? RangeGe(object par5825, object par5826)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19559,7 +19589,7 @@ namespace PostreSQL11DataContext
 		#region RangeGistConsistent
 
 		[Sql.Function(Name="pg_catalog.range_gist_consistent", ServerSideOnly=true)]
-		public static bool? RangeGistConsistent(object par5825, object par5826, short? par5827, int? par5828, object par5829)
+		public static bool? RangeGistConsistent(object par5828, object par5829, short? par5830, int? par5831, object par5832)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19569,7 +19599,7 @@ namespace PostreSQL11DataContext
 		#region RangeGistPenalty
 
 		[Sql.Function(Name="pg_catalog.range_gist_penalty", ServerSideOnly=true)]
-		public static object RangeGistPenalty(object par5831, object par5832, object par5833)
+		public static object RangeGistPenalty(object par5834, object par5835, object par5836)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19579,7 +19609,7 @@ namespace PostreSQL11DataContext
 		#region RangeGistPicksplit
 
 		[Sql.Function(Name="pg_catalog.range_gist_picksplit", ServerSideOnly=true)]
-		public static object RangeGistPicksplit(object par5835, object par5836)
+		public static object RangeGistPicksplit(object par5838, object par5839)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19589,7 +19619,7 @@ namespace PostreSQL11DataContext
 		#region RangeGistSame
 
 		[Sql.Function(Name="pg_catalog.range_gist_same", ServerSideOnly=true)]
-		public static object RangeGistSame(object par5838, object par5839, object par5840)
+		public static object RangeGistSame(object par5841, object par5842, object par5843)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19599,7 +19629,7 @@ namespace PostreSQL11DataContext
 		#region RangeGistUnion
 
 		[Sql.Function(Name="pg_catalog.range_gist_union", ServerSideOnly=true)]
-		public static object RangeGistUnion(object par5842, object par5843)
+		public static object RangeGistUnion(object par5845, object par5846)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19609,7 +19639,7 @@ namespace PostreSQL11DataContext
 		#region RangeGt
 
 		[Sql.Function(Name="pg_catalog.range_gt", ServerSideOnly=true)]
-		public static bool? RangeGt(object par5845, object par5846)
+		public static bool? RangeGt(object par5848, object par5849)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19619,7 +19649,7 @@ namespace PostreSQL11DataContext
 		#region RangeIn
 
 		[Sql.Function(Name="pg_catalog.range_in", ServerSideOnly=true)]
-		public static object RangeIn(object par5848, int? par5849, int? par5850)
+		public static object RangeIn(object par5851, int? par5852, int? par5853)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19629,7 +19659,7 @@ namespace PostreSQL11DataContext
 		#region RangeIntersect
 
 		[Sql.Function(Name="pg_catalog.range_intersect", ServerSideOnly=true)]
-		public static object RangeIntersect(object par5852, object par5853)
+		public static object RangeIntersect(object par5855, object par5856)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19639,7 +19669,7 @@ namespace PostreSQL11DataContext
 		#region RangeLe
 
 		[Sql.Function(Name="pg_catalog.range_le", ServerSideOnly=true)]
-		public static bool? RangeLe(object par5855, object par5856)
+		public static bool? RangeLe(object par5858, object par5859)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19649,7 +19679,7 @@ namespace PostreSQL11DataContext
 		#region RangeLt
 
 		[Sql.Function(Name="pg_catalog.range_lt", ServerSideOnly=true)]
-		public static bool? RangeLt(object par5858, object par5859)
+		public static bool? RangeLt(object par5861, object par5862)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19659,7 +19689,7 @@ namespace PostreSQL11DataContext
 		#region RangeMerge
 
 		[Sql.Function(Name="pg_catalog.range_merge", ServerSideOnly=true)]
-		public static object RangeMerge(object par5861, object par5862)
+		public static object RangeMerge(object par5864, object par5865)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19669,7 +19699,7 @@ namespace PostreSQL11DataContext
 		#region RangeMinus
 
 		[Sql.Function(Name="pg_catalog.range_minus", ServerSideOnly=true)]
-		public static object RangeMinus(object par5864, object par5865)
+		public static object RangeMinus(object par5867, object par5868)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19679,7 +19709,7 @@ namespace PostreSQL11DataContext
 		#region RangeNe
 
 		[Sql.Function(Name="pg_catalog.range_ne", ServerSideOnly=true)]
-		public static bool? RangeNe(object par5867, object par5868)
+		public static bool? RangeNe(object par5870, object par5871)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19689,7 +19719,7 @@ namespace PostreSQL11DataContext
 		#region RangeOut
 
 		[Sql.Function(Name="pg_catalog.range_out", ServerSideOnly=true)]
-		public static object RangeOut(object par5870)
+		public static object RangeOut(object par5873)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19699,7 +19729,7 @@ namespace PostreSQL11DataContext
 		#region RangeOverlaps
 
 		[Sql.Function(Name="pg_catalog.range_overlaps", ServerSideOnly=true)]
-		public static bool? RangeOverlaps(object par5872, object par5873)
+		public static bool? RangeOverlaps(object par5875, object par5876)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19709,7 +19739,7 @@ namespace PostreSQL11DataContext
 		#region RangeOverleft
 
 		[Sql.Function(Name="pg_catalog.range_overleft", ServerSideOnly=true)]
-		public static bool? RangeOverleft(object par5875, object par5876)
+		public static bool? RangeOverleft(object par5878, object par5879)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19719,7 +19749,7 @@ namespace PostreSQL11DataContext
 		#region RangeOverright
 
 		[Sql.Function(Name="pg_catalog.range_overright", ServerSideOnly=true)]
-		public static bool? RangeOverright(object par5878, object par5879)
+		public static bool? RangeOverright(object par5881, object par5882)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19729,7 +19759,7 @@ namespace PostreSQL11DataContext
 		#region RangeRecv
 
 		[Sql.Function(Name="pg_catalog.range_recv", ServerSideOnly=true)]
-		public static object RangeRecv(object par5881, int? par5882, int? par5883)
+		public static object RangeRecv(object par5884, int? par5885, int? par5886)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19739,7 +19769,7 @@ namespace PostreSQL11DataContext
 		#region RangeSend
 
 		[Sql.Function(Name="pg_catalog.range_send", ServerSideOnly=true)]
-		public static byte[] RangeSend(object par5885)
+		public static byte[] RangeSend(object par5888)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19749,7 +19779,7 @@ namespace PostreSQL11DataContext
 		#region RangeTypanalyze
 
 		[Sql.Function(Name="pg_catalog.range_typanalyze", ServerSideOnly=true)]
-		public static bool? RangeTypanalyze(object par5887)
+		public static bool? RangeTypanalyze(object par5890)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19759,7 +19789,7 @@ namespace PostreSQL11DataContext
 		#region RangeUnion
 
 		[Sql.Function(Name="pg_catalog.range_union", ServerSideOnly=true)]
-		public static object RangeUnion(object par5889, object par5890)
+		public static object RangeUnion(object par5892, object par5893)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19769,7 +19799,7 @@ namespace PostreSQL11DataContext
 		#region Rangesel
 
 		[Sql.Function(Name="pg_catalog.rangesel", ServerSideOnly=true)]
-		public static double? Rangesel(object par5892, int? par5893, object par5894, int? par5895)
+		public static double? Rangesel(object par5895, int? par5896, object par5897, int? par5898)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19779,7 +19809,7 @@ namespace PostreSQL11DataContext
 		#region Rank
 
 		[Sql.Function(Name="pg_catalog.rank", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static long? Rank<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par5898)
+		public static long? Rank<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, object>> par5901)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19789,7 +19819,7 @@ namespace PostreSQL11DataContext
 		#region RankFinal
 
 		[Sql.Function(Name="pg_catalog.rank_final", ServerSideOnly=true)]
-		public static long? RankFinal(object par5900, object par5901)
+		public static long? RankFinal(object par5903, object par5904)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19799,7 +19829,7 @@ namespace PostreSQL11DataContext
 		#region RecordEq
 
 		[Sql.Function(Name="pg_catalog.record_eq", ServerSideOnly=true)]
-		public static bool? RecordEq(object par5903, object par5904)
+		public static bool? RecordEq(object par5906, object par5907)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19809,7 +19839,7 @@ namespace PostreSQL11DataContext
 		#region RecordGe
 
 		[Sql.Function(Name="pg_catalog.record_ge", ServerSideOnly=true)]
-		public static bool? RecordGe(object par5906, object par5907)
+		public static bool? RecordGe(object par5909, object par5910)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19819,7 +19849,7 @@ namespace PostreSQL11DataContext
 		#region RecordGt
 
 		[Sql.Function(Name="pg_catalog.record_gt", ServerSideOnly=true)]
-		public static bool? RecordGt(object par5909, object par5910)
+		public static bool? RecordGt(object par5912, object par5913)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19829,7 +19859,7 @@ namespace PostreSQL11DataContext
 		#region RecordImageEq
 
 		[Sql.Function(Name="pg_catalog.record_image_eq", ServerSideOnly=true)]
-		public static bool? RecordImageEq(object par5912, object par5913)
+		public static bool? RecordImageEq(object par5915, object par5916)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19839,7 +19869,7 @@ namespace PostreSQL11DataContext
 		#region RecordImageGe
 
 		[Sql.Function(Name="pg_catalog.record_image_ge", ServerSideOnly=true)]
-		public static bool? RecordImageGe(object par5915, object par5916)
+		public static bool? RecordImageGe(object par5918, object par5919)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19849,7 +19879,7 @@ namespace PostreSQL11DataContext
 		#region RecordImageGt
 
 		[Sql.Function(Name="pg_catalog.record_image_gt", ServerSideOnly=true)]
-		public static bool? RecordImageGt(object par5918, object par5919)
+		public static bool? RecordImageGt(object par5921, object par5922)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19859,7 +19889,7 @@ namespace PostreSQL11DataContext
 		#region RecordImageLe
 
 		[Sql.Function(Name="pg_catalog.record_image_le", ServerSideOnly=true)]
-		public static bool? RecordImageLe(object par5921, object par5922)
+		public static bool? RecordImageLe(object par5924, object par5925)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19869,7 +19899,7 @@ namespace PostreSQL11DataContext
 		#region RecordImageLt
 
 		[Sql.Function(Name="pg_catalog.record_image_lt", ServerSideOnly=true)]
-		public static bool? RecordImageLt(object par5924, object par5925)
+		public static bool? RecordImageLt(object par5927, object par5928)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19879,7 +19909,7 @@ namespace PostreSQL11DataContext
 		#region RecordImageNe
 
 		[Sql.Function(Name="pg_catalog.record_image_ne", ServerSideOnly=true)]
-		public static bool? RecordImageNe(object par5927, object par5928)
+		public static bool? RecordImageNe(object par5930, object par5931)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19889,7 +19919,7 @@ namespace PostreSQL11DataContext
 		#region RecordIn
 
 		[Sql.Function(Name="pg_catalog.record_in", ServerSideOnly=true)]
-		public static object RecordIn(object par5929, int? par5930, int? par5931)
+		public static object RecordIn(object par5932, int? par5933, int? par5934)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19899,7 +19929,7 @@ namespace PostreSQL11DataContext
 		#region RecordLe
 
 		[Sql.Function(Name="pg_catalog.record_le", ServerSideOnly=true)]
-		public static bool? RecordLe(object par5933, object par5934)
+		public static bool? RecordLe(object par5936, object par5937)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19909,7 +19939,7 @@ namespace PostreSQL11DataContext
 		#region RecordLt
 
 		[Sql.Function(Name="pg_catalog.record_lt", ServerSideOnly=true)]
-		public static bool? RecordLt(object par5936, object par5937)
+		public static bool? RecordLt(object par5939, object par5940)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19919,7 +19949,7 @@ namespace PostreSQL11DataContext
 		#region RecordNe
 
 		[Sql.Function(Name="pg_catalog.record_ne", ServerSideOnly=true)]
-		public static bool? RecordNe(object par5939, object par5940)
+		public static bool? RecordNe(object par5942, object par5943)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19929,7 +19959,7 @@ namespace PostreSQL11DataContext
 		#region RecordOut
 
 		[Sql.Function(Name="pg_catalog.record_out", ServerSideOnly=true)]
-		public static object RecordOut(object par5942)
+		public static object RecordOut(object par5945)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19939,7 +19969,7 @@ namespace PostreSQL11DataContext
 		#region RecordRecv
 
 		[Sql.Function(Name="pg_catalog.record_recv", ServerSideOnly=true)]
-		public static object RecordRecv(object par5943, int? par5944, int? par5945)
+		public static object RecordRecv(object par5946, int? par5947, int? par5948)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19949,7 +19979,7 @@ namespace PostreSQL11DataContext
 		#region RecordSend
 
 		[Sql.Function(Name="pg_catalog.record_send", ServerSideOnly=true)]
-		public static byte[] RecordSend(object par5947)
+		public static byte[] RecordSend(object par5950)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19959,7 +19989,7 @@ namespace PostreSQL11DataContext
 		#region Regclass
 
 		[Sql.Function(Name="pg_catalog.regclass", ServerSideOnly=true)]
-		public static object Regclass(string par5949)
+		public static object Regclass(string par5952)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19969,7 +19999,7 @@ namespace PostreSQL11DataContext
 		#region Regclassin
 
 		[Sql.Function(Name="pg_catalog.regclassin", ServerSideOnly=true)]
-		public static object Regclassin(object par5951)
+		public static object Regclassin(object par5954)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19979,7 +20009,7 @@ namespace PostreSQL11DataContext
 		#region Regclassout
 
 		[Sql.Function(Name="pg_catalog.regclassout", ServerSideOnly=true)]
-		public static object Regclassout(object par5953)
+		public static object Regclassout(object par5956)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19989,7 +20019,7 @@ namespace PostreSQL11DataContext
 		#region Regclassrecv
 
 		[Sql.Function(Name="pg_catalog.regclassrecv", ServerSideOnly=true)]
-		public static object Regclassrecv(object par5955)
+		public static object Regclassrecv(object par5958)
 		{
 			throw new InvalidOperationException();
 		}
@@ -19999,7 +20029,7 @@ namespace PostreSQL11DataContext
 		#region Regclasssend
 
 		[Sql.Function(Name="pg_catalog.regclasssend", ServerSideOnly=true)]
-		public static byte[] Regclasssend(object par5957)
+		public static byte[] Regclasssend(object par5960)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20009,7 +20039,7 @@ namespace PostreSQL11DataContext
 		#region Regconfigin
 
 		[Sql.Function(Name="pg_catalog.regconfigin", ServerSideOnly=true)]
-		public static object Regconfigin(object par5959)
+		public static object Regconfigin(object par5962)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20019,7 +20049,7 @@ namespace PostreSQL11DataContext
 		#region Regconfigout
 
 		[Sql.Function(Name="pg_catalog.regconfigout", ServerSideOnly=true)]
-		public static object Regconfigout(object par5961)
+		public static object Regconfigout(object par5964)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20029,7 +20059,7 @@ namespace PostreSQL11DataContext
 		#region Regconfigrecv
 
 		[Sql.Function(Name="pg_catalog.regconfigrecv", ServerSideOnly=true)]
-		public static object Regconfigrecv(object par5963)
+		public static object Regconfigrecv(object par5966)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20039,7 +20069,7 @@ namespace PostreSQL11DataContext
 		#region Regconfigsend
 
 		[Sql.Function(Name="pg_catalog.regconfigsend", ServerSideOnly=true)]
-		public static byte[] Regconfigsend(object par5965)
+		public static byte[] Regconfigsend(object par5968)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20049,7 +20079,7 @@ namespace PostreSQL11DataContext
 		#region Regdictionaryin
 
 		[Sql.Function(Name="pg_catalog.regdictionaryin", ServerSideOnly=true)]
-		public static object Regdictionaryin(object par5967)
+		public static object Regdictionaryin(object par5970)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20059,7 +20089,7 @@ namespace PostreSQL11DataContext
 		#region Regdictionaryout
 
 		[Sql.Function(Name="pg_catalog.regdictionaryout", ServerSideOnly=true)]
-		public static object Regdictionaryout(object par5969)
+		public static object Regdictionaryout(object par5972)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20069,7 +20099,7 @@ namespace PostreSQL11DataContext
 		#region Regdictionaryrecv
 
 		[Sql.Function(Name="pg_catalog.regdictionaryrecv", ServerSideOnly=true)]
-		public static object Regdictionaryrecv(object par5971)
+		public static object Regdictionaryrecv(object par5974)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20079,7 +20109,7 @@ namespace PostreSQL11DataContext
 		#region Regdictionarysend
 
 		[Sql.Function(Name="pg_catalog.regdictionarysend", ServerSideOnly=true)]
-		public static byte[] Regdictionarysend(object par5973)
+		public static byte[] Regdictionarysend(object par5976)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20089,7 +20119,7 @@ namespace PostreSQL11DataContext
 		#region Regexeqjoinsel
 
 		[Sql.Function(Name="pg_catalog.regexeqjoinsel", ServerSideOnly=true)]
-		public static double? Regexeqjoinsel(object par5975, int? par5976, object par5977, short? par5978, object par5979)
+		public static double? Regexeqjoinsel(object par5978, int? par5979, object par5980, short? par5981, object par5982)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20099,7 +20129,7 @@ namespace PostreSQL11DataContext
 		#region Regexeqsel
 
 		[Sql.Function(Name="pg_catalog.regexeqsel", ServerSideOnly=true)]
-		public static double? Regexeqsel(object par5981, int? par5982, object par5983, int? par5984)
+		public static double? Regexeqsel(object par5984, int? par5985, object par5986, int? par5987)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20109,7 +20139,7 @@ namespace PostreSQL11DataContext
 		#region Regexnejoinsel
 
 		[Sql.Function(Name="pg_catalog.regexnejoinsel", ServerSideOnly=true)]
-		public static double? Regexnejoinsel(object par5986, int? par5987, object par5988, short? par5989, object par5990)
+		public static double? Regexnejoinsel(object par5989, int? par5990, object par5991, short? par5992, object par5993)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20119,7 +20149,7 @@ namespace PostreSQL11DataContext
 		#region Regexnesel
 
 		[Sql.Function(Name="pg_catalog.regexnesel", ServerSideOnly=true)]
-		public static double? Regexnesel(object par5992, int? par5993, object par5994, int? par5995)
+		public static double? Regexnesel(object par5995, int? par5996, object par5997, int? par5998)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20129,7 +20159,7 @@ namespace PostreSQL11DataContext
 		#region RegexpMatch
 
 		[Sql.Function(Name="pg_catalog.regexp_match", ServerSideOnly=true)]
-		public static object RegexpMatch(string par6000, string par6001, string par6002)
+		public static object RegexpMatch(string par6003, string par6004, string par6005)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20139,7 +20169,7 @@ namespace PostreSQL11DataContext
 		#region RegexpReplace
 
 		[Sql.Function(Name="pg_catalog.regexp_replace", ServerSideOnly=true)]
-		public static string RegexpReplace(string par6013, string par6014, string par6015, string par6016)
+		public static string RegexpReplace(string par6016, string par6017, string par6018, string par6019)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20149,7 +20179,7 @@ namespace PostreSQL11DataContext
 		#region RegexpSplitToArray
 
 		[Sql.Function(Name="pg_catalog.regexp_split_to_array", ServerSideOnly=true)]
-		public static object RegexpSplitToArray(string par6021, string par6022, string par6023)
+		public static object RegexpSplitToArray(string par6024, string par6025, string par6026)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20159,7 +20189,7 @@ namespace PostreSQL11DataContext
 		#region Regnamespacein
 
 		[Sql.Function(Name="pg_catalog.regnamespacein", ServerSideOnly=true)]
-		public static object Regnamespacein(object par6030)
+		public static object Regnamespacein(object par6033)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20169,7 +20199,7 @@ namespace PostreSQL11DataContext
 		#region Regnamespaceout
 
 		[Sql.Function(Name="pg_catalog.regnamespaceout", ServerSideOnly=true)]
-		public static object Regnamespaceout(object par6032)
+		public static object Regnamespaceout(object par6035)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20179,7 +20209,7 @@ namespace PostreSQL11DataContext
 		#region Regnamespacerecv
 
 		[Sql.Function(Name="pg_catalog.regnamespacerecv", ServerSideOnly=true)]
-		public static object Regnamespacerecv(object par6034)
+		public static object Regnamespacerecv(object par6037)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20189,7 +20219,7 @@ namespace PostreSQL11DataContext
 		#region Regnamespacesend
 
 		[Sql.Function(Name="pg_catalog.regnamespacesend", ServerSideOnly=true)]
-		public static byte[] Regnamespacesend(object par6036)
+		public static byte[] Regnamespacesend(object par6039)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20199,7 +20229,7 @@ namespace PostreSQL11DataContext
 		#region Regoperatorin
 
 		[Sql.Function(Name="pg_catalog.regoperatorin", ServerSideOnly=true)]
-		public static object Regoperatorin(object par6038)
+		public static object Regoperatorin(object par6041)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20209,7 +20239,7 @@ namespace PostreSQL11DataContext
 		#region Regoperatorout
 
 		[Sql.Function(Name="pg_catalog.regoperatorout", ServerSideOnly=true)]
-		public static object Regoperatorout(object par6040)
+		public static object Regoperatorout(object par6043)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20219,7 +20249,7 @@ namespace PostreSQL11DataContext
 		#region Regoperatorrecv
 
 		[Sql.Function(Name="pg_catalog.regoperatorrecv", ServerSideOnly=true)]
-		public static object Regoperatorrecv(object par6042)
+		public static object Regoperatorrecv(object par6045)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20229,7 +20259,7 @@ namespace PostreSQL11DataContext
 		#region Regoperatorsend
 
 		[Sql.Function(Name="pg_catalog.regoperatorsend", ServerSideOnly=true)]
-		public static byte[] Regoperatorsend(object par6044)
+		public static byte[] Regoperatorsend(object par6047)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20239,7 +20269,7 @@ namespace PostreSQL11DataContext
 		#region Regoperin
 
 		[Sql.Function(Name="pg_catalog.regoperin", ServerSideOnly=true)]
-		public static object Regoperin(object par6046)
+		public static object Regoperin(object par6049)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20249,7 +20279,7 @@ namespace PostreSQL11DataContext
 		#region Regoperout
 
 		[Sql.Function(Name="pg_catalog.regoperout", ServerSideOnly=true)]
-		public static object Regoperout(object par6048)
+		public static object Regoperout(object par6051)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20259,7 +20289,7 @@ namespace PostreSQL11DataContext
 		#region Regoperrecv
 
 		[Sql.Function(Name="pg_catalog.regoperrecv", ServerSideOnly=true)]
-		public static object Regoperrecv(object par6050)
+		public static object Regoperrecv(object par6053)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20269,7 +20299,7 @@ namespace PostreSQL11DataContext
 		#region Regopersend
 
 		[Sql.Function(Name="pg_catalog.regopersend", ServerSideOnly=true)]
-		public static byte[] Regopersend(object par6052)
+		public static byte[] Regopersend(object par6055)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20279,7 +20309,7 @@ namespace PostreSQL11DataContext
 		#region Regprocedurein
 
 		[Sql.Function(Name="pg_catalog.regprocedurein", ServerSideOnly=true)]
-		public static object Regprocedurein(object par6054)
+		public static object Regprocedurein(object par6057)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20289,7 +20319,7 @@ namespace PostreSQL11DataContext
 		#region Regprocedureout
 
 		[Sql.Function(Name="pg_catalog.regprocedureout", ServerSideOnly=true)]
-		public static object Regprocedureout(object par6056)
+		public static object Regprocedureout(object par6059)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20299,7 +20329,7 @@ namespace PostreSQL11DataContext
 		#region Regprocedurerecv
 
 		[Sql.Function(Name="pg_catalog.regprocedurerecv", ServerSideOnly=true)]
-		public static object Regprocedurerecv(object par6058)
+		public static object Regprocedurerecv(object par6061)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20309,7 +20339,7 @@ namespace PostreSQL11DataContext
 		#region Regproceduresend
 
 		[Sql.Function(Name="pg_catalog.regproceduresend", ServerSideOnly=true)]
-		public static byte[] Regproceduresend(object par6060)
+		public static byte[] Regproceduresend(object par6063)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20319,7 +20349,7 @@ namespace PostreSQL11DataContext
 		#region Regprocin
 
 		[Sql.Function(Name="pg_catalog.regprocin", ServerSideOnly=true)]
-		public static object Regprocin(object par6062)
+		public static object Regprocin(object par6065)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20329,7 +20359,7 @@ namespace PostreSQL11DataContext
 		#region Regprocout
 
 		[Sql.Function(Name="pg_catalog.regprocout", ServerSideOnly=true)]
-		public static object Regprocout(object par6064)
+		public static object Regprocout(object par6067)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20339,7 +20369,7 @@ namespace PostreSQL11DataContext
 		#region Regprocrecv
 
 		[Sql.Function(Name="pg_catalog.regprocrecv", ServerSideOnly=true)]
-		public static object Regprocrecv(object par6066)
+		public static object Regprocrecv(object par6069)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20349,7 +20379,7 @@ namespace PostreSQL11DataContext
 		#region Regprocsend
 
 		[Sql.Function(Name="pg_catalog.regprocsend", ServerSideOnly=true)]
-		public static byte[] Regprocsend(object par6068)
+		public static byte[] Regprocsend(object par6071)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20359,7 +20389,7 @@ namespace PostreSQL11DataContext
 		#region RegrAvgx
 
 		[Sql.Function(Name="pg_catalog.regr_avgx", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static double? RegrAvgx<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6070, Expression<Func<TSource, double?>> par6071)
+		public static double? RegrAvgx<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6073, Expression<Func<TSource, double?>> par6074)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20369,7 +20399,7 @@ namespace PostreSQL11DataContext
 		#region RegrAvgy
 
 		[Sql.Function(Name="pg_catalog.regr_avgy", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static double? RegrAvgy<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6073, Expression<Func<TSource, double?>> par6074)
+		public static double? RegrAvgy<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6076, Expression<Func<TSource, double?>> par6077)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20379,7 +20409,7 @@ namespace PostreSQL11DataContext
 		#region RegrCount
 
 		[Sql.Function(Name="pg_catalog.regr_count", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static long? RegrCount<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6076, Expression<Func<TSource, double?>> par6077)
+		public static long? RegrCount<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6079, Expression<Func<TSource, double?>> par6080)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20389,7 +20419,7 @@ namespace PostreSQL11DataContext
 		#region RegrIntercept
 
 		[Sql.Function(Name="pg_catalog.regr_intercept", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static double? RegrIntercept<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6079, Expression<Func<TSource, double?>> par6080)
+		public static double? RegrIntercept<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6082, Expression<Func<TSource, double?>> par6083)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20399,7 +20429,7 @@ namespace PostreSQL11DataContext
 		#region RegrR2
 
 		[Sql.Function(Name="pg_catalog.regr_r2", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static double? RegrR2<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6082, Expression<Func<TSource, double?>> par6083)
+		public static double? RegrR2<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6085, Expression<Func<TSource, double?>> par6086)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20409,7 +20439,7 @@ namespace PostreSQL11DataContext
 		#region RegrSlope
 
 		[Sql.Function(Name="pg_catalog.regr_slope", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static double? RegrSlope<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6085, Expression<Func<TSource, double?>> par6086)
+		public static double? RegrSlope<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6088, Expression<Func<TSource, double?>> par6089)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20419,7 +20449,7 @@ namespace PostreSQL11DataContext
 		#region RegrSxx
 
 		[Sql.Function(Name="pg_catalog.regr_sxx", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static double? RegrSxx<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6088, Expression<Func<TSource, double?>> par6089)
+		public static double? RegrSxx<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6091, Expression<Func<TSource, double?>> par6092)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20429,7 +20459,7 @@ namespace PostreSQL11DataContext
 		#region RegrSxy
 
 		[Sql.Function(Name="pg_catalog.regr_sxy", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static double? RegrSxy<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6091, Expression<Func<TSource, double?>> par6092)
+		public static double? RegrSxy<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6094, Expression<Func<TSource, double?>> par6095)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20439,7 +20469,7 @@ namespace PostreSQL11DataContext
 		#region RegrSyy
 
 		[Sql.Function(Name="pg_catalog.regr_syy", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static double? RegrSyy<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6094, Expression<Func<TSource, double?>> par6095)
+		public static double? RegrSyy<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6097, Expression<Func<TSource, double?>> par6098)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20449,7 +20479,7 @@ namespace PostreSQL11DataContext
 		#region Regrolein
 
 		[Sql.Function(Name="pg_catalog.regrolein", ServerSideOnly=true)]
-		public static object Regrolein(object par6097)
+		public static object Regrolein(object par6100)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20459,7 +20489,7 @@ namespace PostreSQL11DataContext
 		#region Regroleout
 
 		[Sql.Function(Name="pg_catalog.regroleout", ServerSideOnly=true)]
-		public static object Regroleout(object par6099)
+		public static object Regroleout(object par6102)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20469,7 +20499,7 @@ namespace PostreSQL11DataContext
 		#region Regrolerecv
 
 		[Sql.Function(Name="pg_catalog.regrolerecv", ServerSideOnly=true)]
-		public static object Regrolerecv(object par6101)
+		public static object Regrolerecv(object par6104)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20479,7 +20509,7 @@ namespace PostreSQL11DataContext
 		#region Regrolesend
 
 		[Sql.Function(Name="pg_catalog.regrolesend", ServerSideOnly=true)]
-		public static byte[] Regrolesend(object par6103)
+		public static byte[] Regrolesend(object par6106)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20489,7 +20519,7 @@ namespace PostreSQL11DataContext
 		#region Regtypein
 
 		[Sql.Function(Name="pg_catalog.regtypein", ServerSideOnly=true)]
-		public static object Regtypein(object par6105)
+		public static object Regtypein(object par6108)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20499,7 +20529,7 @@ namespace PostreSQL11DataContext
 		#region Regtypeout
 
 		[Sql.Function(Name="pg_catalog.regtypeout", ServerSideOnly=true)]
-		public static object Regtypeout(object par6107)
+		public static object Regtypeout(object par6110)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20509,7 +20539,7 @@ namespace PostreSQL11DataContext
 		#region Regtyperecv
 
 		[Sql.Function(Name="pg_catalog.regtyperecv", ServerSideOnly=true)]
-		public static object Regtyperecv(object par6109)
+		public static object Regtyperecv(object par6112)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20519,7 +20549,7 @@ namespace PostreSQL11DataContext
 		#region Regtypesend
 
 		[Sql.Function(Name="pg_catalog.regtypesend", ServerSideOnly=true)]
-		public static byte[] Regtypesend(object par6111)
+		public static byte[] Regtypesend(object par6114)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20529,7 +20559,7 @@ namespace PostreSQL11DataContext
 		#region Reltime
 
 		[Sql.Function(Name="pg_catalog.reltime", ServerSideOnly=true)]
-		public static object Reltime(NpgsqlTimeSpan? par6113)
+		public static object Reltime(NpgsqlTimeSpan? par6116)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20539,7 +20569,7 @@ namespace PostreSQL11DataContext
 		#region Reltimeeq
 
 		[Sql.Function(Name="pg_catalog.reltimeeq", ServerSideOnly=true)]
-		public static bool? Reltimeeq(object par6115, object par6116)
+		public static bool? Reltimeeq(object par6118, object par6119)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20549,7 +20579,7 @@ namespace PostreSQL11DataContext
 		#region Reltimege
 
 		[Sql.Function(Name="pg_catalog.reltimege", ServerSideOnly=true)]
-		public static bool? Reltimege(object par6118, object par6119)
+		public static bool? Reltimege(object par6121, object par6122)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20559,7 +20589,7 @@ namespace PostreSQL11DataContext
 		#region Reltimegt
 
 		[Sql.Function(Name="pg_catalog.reltimegt", ServerSideOnly=true)]
-		public static bool? Reltimegt(object par6121, object par6122)
+		public static bool? Reltimegt(object par6124, object par6125)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20569,7 +20599,7 @@ namespace PostreSQL11DataContext
 		#region Reltimein
 
 		[Sql.Function(Name="pg_catalog.reltimein", ServerSideOnly=true)]
-		public static object Reltimein(object par6124)
+		public static object Reltimein(object par6127)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20579,7 +20609,7 @@ namespace PostreSQL11DataContext
 		#region Reltimele
 
 		[Sql.Function(Name="pg_catalog.reltimele", ServerSideOnly=true)]
-		public static bool? Reltimele(object par6126, object par6127)
+		public static bool? Reltimele(object par6129, object par6130)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20589,7 +20619,7 @@ namespace PostreSQL11DataContext
 		#region Reltimelt
 
 		[Sql.Function(Name="pg_catalog.reltimelt", ServerSideOnly=true)]
-		public static bool? Reltimelt(object par6129, object par6130)
+		public static bool? Reltimelt(object par6132, object par6133)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20599,7 +20629,7 @@ namespace PostreSQL11DataContext
 		#region Reltimene
 
 		[Sql.Function(Name="pg_catalog.reltimene", ServerSideOnly=true)]
-		public static bool? Reltimene(object par6132, object par6133)
+		public static bool? Reltimene(object par6135, object par6136)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20609,7 +20639,7 @@ namespace PostreSQL11DataContext
 		#region Reltimeout
 
 		[Sql.Function(Name="pg_catalog.reltimeout", ServerSideOnly=true)]
-		public static object Reltimeout(object par6135)
+		public static object Reltimeout(object par6138)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20619,7 +20649,7 @@ namespace PostreSQL11DataContext
 		#region Reltimerecv
 
 		[Sql.Function(Name="pg_catalog.reltimerecv", ServerSideOnly=true)]
-		public static object Reltimerecv(object par6137)
+		public static object Reltimerecv(object par6140)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20629,7 +20659,7 @@ namespace PostreSQL11DataContext
 		#region Reltimesend
 
 		[Sql.Function(Name="pg_catalog.reltimesend", ServerSideOnly=true)]
-		public static byte[] Reltimesend(object par6139)
+		public static byte[] Reltimesend(object par6142)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20639,7 +20669,7 @@ namespace PostreSQL11DataContext
 		#region Repeat
 
 		[Sql.Function(Name="pg_catalog.repeat", ServerSideOnly=true)]
-		public static string Repeat(string par6141, int? par6142)
+		public static string Repeat(string par6144, int? par6145)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20649,7 +20679,7 @@ namespace PostreSQL11DataContext
 		#region Replace
 
 		[Sql.Function(Name="pg_catalog.replace", ServerSideOnly=true)]
-		public static string Replace(string par6144, string par6145, string par6146)
+		public static string Replace(string par6147, string par6148, string par6149)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20659,7 +20689,7 @@ namespace PostreSQL11DataContext
 		#region Reverse
 
 		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
-		public static string Reverse0(string par6148)
+		public static string Reverse0(string par6151)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20669,7 +20699,7 @@ namespace PostreSQL11DataContext
 		#region Reverse
 
 		[Sql.Function(Name="pg_catalog.reverse", ServerSideOnly=true)]
-		public static string Reverse1(string par6150)
+		public static string Reverse1(string par6153)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20799,7 +20829,7 @@ namespace PostreSQL11DataContext
 		#region Right
 
 		[Sql.Function(Name="pg_catalog.right", ServerSideOnly=true)]
-		public static string Right(string par6164, int? par6165)
+		public static string Right(string par6167, int? par6168)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20809,7 +20839,7 @@ namespace PostreSQL11DataContext
 		#region Round
 
 		[Sql.Function(Name="pg_catalog.round", ServerSideOnly=true)]
-		public static decimal? Round(decimal? par6172)
+		public static decimal? Round(decimal? par6175)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20829,7 +20859,7 @@ namespace PostreSQL11DataContext
 		#region RowSecurityActive
 
 		[Sql.Function(Name="pg_catalog.row_security_active", ServerSideOnly=true)]
-		public static bool? RowSecurityActive(string par6177)
+		public static bool? RowSecurityActive(string par6180)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20839,7 +20869,7 @@ namespace PostreSQL11DataContext
 		#region RowToJson
 
 		[Sql.Function(Name="pg_catalog.row_to_json", ServerSideOnly=true)]
-		public static string RowToJson(object par6181, bool? par6182)
+		public static string RowToJson(object par6184, bool? par6185)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20849,7 +20879,7 @@ namespace PostreSQL11DataContext
 		#region Rpad
 
 		[Sql.Function(Name="pg_catalog.rpad", ServerSideOnly=true)]
-		public static string Rpad(string par6188, int? par6189)
+		public static string Rpad(string par6191, int? par6192)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20859,7 +20889,7 @@ namespace PostreSQL11DataContext
 		#region Rtrim
 
 		[Sql.Function(Name="pg_catalog.rtrim", ServerSideOnly=true)]
-		public static string Rtrim(string par6194)
+		public static string Rtrim(string par6197)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20869,7 +20899,7 @@ namespace PostreSQL11DataContext
 		#region SatisfiesHashPartition
 
 		[Sql.Function(Name="pg_catalog.satisfies_hash_partition", ServerSideOnly=true)]
-		public static bool? SatisfiesHashPartition(int? par6196, int? par6197, int? par6198, object par6199)
+		public static bool? SatisfiesHashPartition(int? par6199, int? par6200, int? par6201, object par6202)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20879,7 +20909,7 @@ namespace PostreSQL11DataContext
 		#region Scalargejoinsel
 
 		[Sql.Function(Name="pg_catalog.scalargejoinsel", ServerSideOnly=true)]
-		public static double? Scalargejoinsel(object par6201, int? par6202, object par6203, short? par6204, object par6205)
+		public static double? Scalargejoinsel(object par6204, int? par6205, object par6206, short? par6207, object par6208)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20889,7 +20919,7 @@ namespace PostreSQL11DataContext
 		#region Scalargesel
 
 		[Sql.Function(Name="pg_catalog.scalargesel", ServerSideOnly=true)]
-		public static double? Scalargesel(object par6207, int? par6208, object par6209, int? par6210)
+		public static double? Scalargesel(object par6210, int? par6211, object par6212, int? par6213)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20899,7 +20929,7 @@ namespace PostreSQL11DataContext
 		#region Scalargtjoinsel
 
 		[Sql.Function(Name="pg_catalog.scalargtjoinsel", ServerSideOnly=true)]
-		public static double? Scalargtjoinsel(object par6212, int? par6213, object par6214, short? par6215, object par6216)
+		public static double? Scalargtjoinsel(object par6215, int? par6216, object par6217, short? par6218, object par6219)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20909,7 +20939,7 @@ namespace PostreSQL11DataContext
 		#region Scalargtsel
 
 		[Sql.Function(Name="pg_catalog.scalargtsel", ServerSideOnly=true)]
-		public static double? Scalargtsel(object par6218, int? par6219, object par6220, int? par6221)
+		public static double? Scalargtsel(object par6221, int? par6222, object par6223, int? par6224)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20919,7 +20949,7 @@ namespace PostreSQL11DataContext
 		#region Scalarlejoinsel
 
 		[Sql.Function(Name="pg_catalog.scalarlejoinsel", ServerSideOnly=true)]
-		public static double? Scalarlejoinsel(object par6223, int? par6224, object par6225, short? par6226, object par6227)
+		public static double? Scalarlejoinsel(object par6226, int? par6227, object par6228, short? par6229, object par6230)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20929,7 +20959,7 @@ namespace PostreSQL11DataContext
 		#region Scalarlesel
 
 		[Sql.Function(Name="pg_catalog.scalarlesel", ServerSideOnly=true)]
-		public static double? Scalarlesel(object par6229, int? par6230, object par6231, int? par6232)
+		public static double? Scalarlesel(object par6232, int? par6233, object par6234, int? par6235)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20939,7 +20969,7 @@ namespace PostreSQL11DataContext
 		#region Scalarltjoinsel
 
 		[Sql.Function(Name="pg_catalog.scalarltjoinsel", ServerSideOnly=true)]
-		public static double? Scalarltjoinsel(object par6234, int? par6235, object par6236, short? par6237, object par6238)
+		public static double? Scalarltjoinsel(object par6237, int? par6238, object par6239, short? par6240, object par6241)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20949,7 +20979,7 @@ namespace PostreSQL11DataContext
 		#region Scalarltsel
 
 		[Sql.Function(Name="pg_catalog.scalarltsel", ServerSideOnly=true)]
-		public static double? Scalarltsel(object par6240, int? par6241, object par6242, int? par6243)
+		public static double? Scalarltsel(object par6243, int? par6244, object par6245, int? par6246)
 		{
 			throw new InvalidOperationException();
 		}
@@ -20959,7 +20989,7 @@ namespace PostreSQL11DataContext
 		#region Scale
 
 		[Sql.Function(Name="pg_catalog.scale", ServerSideOnly=true)]
-		public static int? Scale(decimal? par6245)
+		public static int? Scale(decimal? par6248)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21009,7 +21039,7 @@ namespace PostreSQL11DataContext
 		#region SetBit
 
 		[Sql.Function(Name="pg_catalog.set_bit", ServerSideOnly=true)]
-		public static byte[] SetBit(byte[] par6255, int? par6256, int? par6257)
+		public static byte[] SetBit(byte[] par6258, int? par6259, int? par6260)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21019,7 +21049,7 @@ namespace PostreSQL11DataContext
 		#region SetByte
 
 		[Sql.Function(Name="pg_catalog.set_byte", ServerSideOnly=true)]
-		public static byte[] SetByte(byte[] par6259, int? par6260, int? par6261)
+		public static byte[] SetByte(byte[] par6262, int? par6263, int? par6264)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21029,7 +21059,7 @@ namespace PostreSQL11DataContext
 		#region SetConfig
 
 		[Sql.Function(Name="pg_catalog.set_config", ServerSideOnly=true)]
-		public static string SetConfig(string par6263, string par6264, bool? par6265)
+		public static string SetConfig(string par6266, string par6267, bool? par6268)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21039,7 +21069,7 @@ namespace PostreSQL11DataContext
 		#region SetMasklen
 
 		[Sql.Function(Name="pg_catalog.set_masklen", ServerSideOnly=true)]
-		public static NpgsqlInet? SetMasklen(NpgsqlInet? par6270, int? par6271)
+		public static NpgsqlInet? SetMasklen(NpgsqlInet? par6273, int? par6274)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21049,7 +21079,7 @@ namespace PostreSQL11DataContext
 		#region Setseed
 
 		[Sql.Function(Name="pg_catalog.setseed", ServerSideOnly=true)]
-		public static object Setseed(double? par6272)
+		public static object Setseed(double? par6275)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21059,7 +21089,7 @@ namespace PostreSQL11DataContext
 		#region Setval
 
 		[Sql.Function(Name="pg_catalog.setval", ServerSideOnly=true)]
-		public static long? Setval(object par6277, long? par6278, bool? par6279)
+		public static long? Setval(object par6280, long? par6281, bool? par6282)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21069,7 +21099,7 @@ namespace PostreSQL11DataContext
 		#region Setweight
 
 		[Sql.Function(Name="pg_catalog.setweight", ServerSideOnly=true)]
-		public static object Setweight(object par6285, object par6286)
+		public static object Setweight(object par6288, object par6289)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21079,7 +21109,7 @@ namespace PostreSQL11DataContext
 		#region Sha224
 
 		[Sql.Function(Name="pg_catalog.sha224", ServerSideOnly=true)]
-		public static byte[] Sha224(byte[] par6288)
+		public static byte[] Sha224(byte[] par6291)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21089,7 +21119,7 @@ namespace PostreSQL11DataContext
 		#region Sha256
 
 		[Sql.Function(Name="pg_catalog.sha256", ServerSideOnly=true)]
-		public static byte[] Sha256(byte[] par6290)
+		public static byte[] Sha256(byte[] par6293)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21099,7 +21129,7 @@ namespace PostreSQL11DataContext
 		#region Sha384
 
 		[Sql.Function(Name="pg_catalog.sha384", ServerSideOnly=true)]
-		public static byte[] Sha384(byte[] par6292)
+		public static byte[] Sha384(byte[] par6295)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21109,7 +21139,7 @@ namespace PostreSQL11DataContext
 		#region Sha512
 
 		[Sql.Function(Name="pg_catalog.sha512", ServerSideOnly=true)]
-		public static byte[] Sha512(byte[] par6294)
+		public static byte[] Sha512(byte[] par6297)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21119,7 +21149,7 @@ namespace PostreSQL11DataContext
 		#region ShellIn
 
 		[Sql.Function(Name="pg_catalog.shell_in", ServerSideOnly=true)]
-		public static object ShellIn(object par6296)
+		public static object ShellIn(object par6299)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21129,7 +21159,7 @@ namespace PostreSQL11DataContext
 		#region ShellOut
 
 		[Sql.Function(Name="pg_catalog.shell_out", ServerSideOnly=true)]
-		public static object ShellOut(object par6298)
+		public static object ShellOut(object par6301)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21139,7 +21169,7 @@ namespace PostreSQL11DataContext
 		#region ShiftJis2004ToEucJis2004
 
 		[Sql.Function(Name="pg_catalog.shift_jis_2004_to_euc_jis_2004", ServerSideOnly=true)]
-		public static object ShiftJis2004ToEucJis2004(int? par6299, int? par6300, object par6301, object par6302, int? par6303)
+		public static object ShiftJis2004ToEucJis2004(int? par6302, int? par6303, object par6304, object par6305, int? par6306)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21149,7 +21179,7 @@ namespace PostreSQL11DataContext
 		#region ShiftJis2004ToUtf8
 
 		[Sql.Function(Name="pg_catalog.shift_jis_2004_to_utf8", ServerSideOnly=true)]
-		public static object ShiftJis2004ToUtf8(int? par6304, int? par6305, object par6306, object par6307, int? par6308)
+		public static object ShiftJis2004ToUtf8(int? par6307, int? par6308, object par6309, object par6310, int? par6311)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21159,7 +21189,7 @@ namespace PostreSQL11DataContext
 		#region ShobjDescription
 
 		[Sql.Function(Name="pg_catalog.shobj_description", ServerSideOnly=true)]
-		public static string ShobjDescription(int? par6310, string par6311)
+		public static string ShobjDescription(int? par6313, string par6314)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21169,7 +21199,7 @@ namespace PostreSQL11DataContext
 		#region Sign
 
 		[Sql.Function(Name="pg_catalog.sign", ServerSideOnly=true)]
-		public static double? Sign(double? par6315)
+		public static double? Sign(double? par6318)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21179,7 +21209,7 @@ namespace PostreSQL11DataContext
 		#region SimilarEscape
 
 		[Sql.Function(Name="pg_catalog.similar_escape", ServerSideOnly=true)]
-		public static string SimilarEscape(string par6317, string par6318)
+		public static string SimilarEscape(string par6320, string par6321)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21189,7 +21219,7 @@ namespace PostreSQL11DataContext
 		#region Sin
 
 		[Sql.Function(Name="pg_catalog.sin", ServerSideOnly=true)]
-		public static double? Sin(double? par6320)
+		public static double? Sin(double? par6323)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21199,7 +21229,7 @@ namespace PostreSQL11DataContext
 		#region Sind
 
 		[Sql.Function(Name="pg_catalog.sind", ServerSideOnly=true)]
-		public static double? Sind(double? par6322)
+		public static double? Sind(double? par6325)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21209,7 +21239,7 @@ namespace PostreSQL11DataContext
 		#region SjisToEucJp
 
 		[Sql.Function(Name="pg_catalog.sjis_to_euc_jp", ServerSideOnly=true)]
-		public static object SjisToEucJp(int? par6323, int? par6324, object par6325, object par6326, int? par6327)
+		public static object SjisToEucJp(int? par6326, int? par6327, object par6328, object par6329, int? par6330)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21219,7 +21249,7 @@ namespace PostreSQL11DataContext
 		#region SjisToMic
 
 		[Sql.Function(Name="pg_catalog.sjis_to_mic", ServerSideOnly=true)]
-		public static object SjisToMic(int? par6328, int? par6329, object par6330, object par6331, int? par6332)
+		public static object SjisToMic(int? par6331, int? par6332, object par6333, object par6334, int? par6335)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21229,7 +21259,7 @@ namespace PostreSQL11DataContext
 		#region SjisToUtf8
 
 		[Sql.Function(Name="pg_catalog.sjis_to_utf8", ServerSideOnly=true)]
-		public static object SjisToUtf8(int? par6333, int? par6334, object par6335, object par6336, int? par6337)
+		public static object SjisToUtf8(int? par6336, int? par6337, object par6338, object par6339, int? par6340)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21239,7 +21269,7 @@ namespace PostreSQL11DataContext
 		#region Slope
 
 		[Sql.Function(Name="pg_catalog.slope", ServerSideOnly=true)]
-		public static double? Slope(NpgsqlPoint? par6339, NpgsqlPoint? par6340)
+		public static double? Slope(NpgsqlPoint? par6342, NpgsqlPoint? par6343)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21249,7 +21279,7 @@ namespace PostreSQL11DataContext
 		#region Smgreq
 
 		[Sql.Function(Name="pg_catalog.smgreq", ServerSideOnly=true)]
-		public static bool? Smgreq(object par6342, object par6343)
+		public static bool? Smgreq(object par6345, object par6346)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21259,7 +21289,7 @@ namespace PostreSQL11DataContext
 		#region Smgrin
 
 		[Sql.Function(Name="pg_catalog.smgrin", ServerSideOnly=true)]
-		public static object Smgrin(object par6345)
+		public static object Smgrin(object par6348)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21269,7 +21299,7 @@ namespace PostreSQL11DataContext
 		#region Smgrne
 
 		[Sql.Function(Name="pg_catalog.smgrne", ServerSideOnly=true)]
-		public static bool? Smgrne(object par6347, object par6348)
+		public static bool? Smgrne(object par6350, object par6351)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21279,7 +21309,7 @@ namespace PostreSQL11DataContext
 		#region Smgrout
 
 		[Sql.Function(Name="pg_catalog.smgrout", ServerSideOnly=true)]
-		public static object Smgrout(object par6350)
+		public static object Smgrout(object par6353)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21289,7 +21319,7 @@ namespace PostreSQL11DataContext
 		#region SpgBboxQuadConfig
 
 		[Sql.Function(Name="pg_catalog.spg_bbox_quad_config", ServerSideOnly=true)]
-		public static object SpgBboxQuadConfig(object par6351, object par6352)
+		public static object SpgBboxQuadConfig(object par6354, object par6355)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21299,7 +21329,7 @@ namespace PostreSQL11DataContext
 		#region SpgBoxQuadChoose
 
 		[Sql.Function(Name="pg_catalog.spg_box_quad_choose", ServerSideOnly=true)]
-		public static object SpgBoxQuadChoose(object par6353, object par6354)
+		public static object SpgBoxQuadChoose(object par6356, object par6357)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21309,7 +21339,7 @@ namespace PostreSQL11DataContext
 		#region SpgBoxQuadConfig
 
 		[Sql.Function(Name="pg_catalog.spg_box_quad_config", ServerSideOnly=true)]
-		public static object SpgBoxQuadConfig(object par6355, object par6356)
+		public static object SpgBoxQuadConfig(object par6358, object par6359)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21319,7 +21349,7 @@ namespace PostreSQL11DataContext
 		#region SpgBoxQuadInnerConsistent
 
 		[Sql.Function(Name="pg_catalog.spg_box_quad_inner_consistent", ServerSideOnly=true)]
-		public static object SpgBoxQuadInnerConsistent(object par6357, object par6358)
+		public static object SpgBoxQuadInnerConsistent(object par6360, object par6361)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21329,7 +21359,7 @@ namespace PostreSQL11DataContext
 		#region SpgBoxQuadLeafConsistent
 
 		[Sql.Function(Name="pg_catalog.spg_box_quad_leaf_consistent", ServerSideOnly=true)]
-		public static bool? SpgBoxQuadLeafConsistent(object par6360, object par6361)
+		public static bool? SpgBoxQuadLeafConsistent(object par6363, object par6364)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21339,7 +21369,7 @@ namespace PostreSQL11DataContext
 		#region SpgBoxQuadPicksplit
 
 		[Sql.Function(Name="pg_catalog.spg_box_quad_picksplit", ServerSideOnly=true)]
-		public static object SpgBoxQuadPicksplit(object par6362, object par6363)
+		public static object SpgBoxQuadPicksplit(object par6365, object par6366)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21349,7 +21379,7 @@ namespace PostreSQL11DataContext
 		#region SpgKdChoose
 
 		[Sql.Function(Name="pg_catalog.spg_kd_choose", ServerSideOnly=true)]
-		public static object SpgKdChoose(object par6364, object par6365)
+		public static object SpgKdChoose(object par6367, object par6368)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21359,7 +21389,7 @@ namespace PostreSQL11DataContext
 		#region SpgKdConfig
 
 		[Sql.Function(Name="pg_catalog.spg_kd_config", ServerSideOnly=true)]
-		public static object SpgKdConfig(object par6366, object par6367)
+		public static object SpgKdConfig(object par6369, object par6370)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21369,7 +21399,7 @@ namespace PostreSQL11DataContext
 		#region SpgKdInnerConsistent
 
 		[Sql.Function(Name="pg_catalog.spg_kd_inner_consistent", ServerSideOnly=true)]
-		public static object SpgKdInnerConsistent(object par6368, object par6369)
+		public static object SpgKdInnerConsistent(object par6371, object par6372)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21379,7 +21409,7 @@ namespace PostreSQL11DataContext
 		#region SpgKdPicksplit
 
 		[Sql.Function(Name="pg_catalog.spg_kd_picksplit", ServerSideOnly=true)]
-		public static object SpgKdPicksplit(object par6370, object par6371)
+		public static object SpgKdPicksplit(object par6373, object par6374)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21389,7 +21419,7 @@ namespace PostreSQL11DataContext
 		#region SpgPolyQuadCompress
 
 		[Sql.Function(Name="pg_catalog.spg_poly_quad_compress", ServerSideOnly=true)]
-		public static NpgsqlBox? SpgPolyQuadCompress(NpgsqlPolygon? par6373)
+		public static NpgsqlBox? SpgPolyQuadCompress(NpgsqlPolygon? par6376)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21399,7 +21429,7 @@ namespace PostreSQL11DataContext
 		#region SpgQuadChoose
 
 		[Sql.Function(Name="pg_catalog.spg_quad_choose", ServerSideOnly=true)]
-		public static object SpgQuadChoose(object par6374, object par6375)
+		public static object SpgQuadChoose(object par6377, object par6378)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21409,7 +21439,7 @@ namespace PostreSQL11DataContext
 		#region SpgQuadConfig
 
 		[Sql.Function(Name="pg_catalog.spg_quad_config", ServerSideOnly=true)]
-		public static object SpgQuadConfig(object par6376, object par6377)
+		public static object SpgQuadConfig(object par6379, object par6380)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21419,7 +21449,7 @@ namespace PostreSQL11DataContext
 		#region SpgQuadInnerConsistent
 
 		[Sql.Function(Name="pg_catalog.spg_quad_inner_consistent", ServerSideOnly=true)]
-		public static object SpgQuadInnerConsistent(object par6378, object par6379)
+		public static object SpgQuadInnerConsistent(object par6381, object par6382)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21429,7 +21459,7 @@ namespace PostreSQL11DataContext
 		#region SpgQuadLeafConsistent
 
 		[Sql.Function(Name="pg_catalog.spg_quad_leaf_consistent", ServerSideOnly=true)]
-		public static bool? SpgQuadLeafConsistent(object par6381, object par6382)
+		public static bool? SpgQuadLeafConsistent(object par6384, object par6385)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21439,7 +21469,7 @@ namespace PostreSQL11DataContext
 		#region SpgQuadPicksplit
 
 		[Sql.Function(Name="pg_catalog.spg_quad_picksplit", ServerSideOnly=true)]
-		public static object SpgQuadPicksplit(object par6383, object par6384)
+		public static object SpgQuadPicksplit(object par6386, object par6387)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21449,7 +21479,7 @@ namespace PostreSQL11DataContext
 		#region SpgRangeQuadChoose
 
 		[Sql.Function(Name="pg_catalog.spg_range_quad_choose", ServerSideOnly=true)]
-		public static object SpgRangeQuadChoose(object par6385, object par6386)
+		public static object SpgRangeQuadChoose(object par6388, object par6389)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21459,7 +21489,7 @@ namespace PostreSQL11DataContext
 		#region SpgRangeQuadConfig
 
 		[Sql.Function(Name="pg_catalog.spg_range_quad_config", ServerSideOnly=true)]
-		public static object SpgRangeQuadConfig(object par6387, object par6388)
+		public static object SpgRangeQuadConfig(object par6390, object par6391)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21469,7 +21499,7 @@ namespace PostreSQL11DataContext
 		#region SpgRangeQuadInnerConsistent
 
 		[Sql.Function(Name="pg_catalog.spg_range_quad_inner_consistent", ServerSideOnly=true)]
-		public static object SpgRangeQuadInnerConsistent(object par6389, object par6390)
+		public static object SpgRangeQuadInnerConsistent(object par6392, object par6393)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21479,7 +21509,7 @@ namespace PostreSQL11DataContext
 		#region SpgRangeQuadLeafConsistent
 
 		[Sql.Function(Name="pg_catalog.spg_range_quad_leaf_consistent", ServerSideOnly=true)]
-		public static bool? SpgRangeQuadLeafConsistent(object par6392, object par6393)
+		public static bool? SpgRangeQuadLeafConsistent(object par6395, object par6396)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21489,7 +21519,7 @@ namespace PostreSQL11DataContext
 		#region SpgRangeQuadPicksplit
 
 		[Sql.Function(Name="pg_catalog.spg_range_quad_picksplit", ServerSideOnly=true)]
-		public static object SpgRangeQuadPicksplit(object par6394, object par6395)
+		public static object SpgRangeQuadPicksplit(object par6397, object par6398)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21499,7 +21529,7 @@ namespace PostreSQL11DataContext
 		#region SpgTextChoose
 
 		[Sql.Function(Name="pg_catalog.spg_text_choose", ServerSideOnly=true)]
-		public static object SpgTextChoose(object par6396, object par6397)
+		public static object SpgTextChoose(object par6399, object par6400)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21509,7 +21539,7 @@ namespace PostreSQL11DataContext
 		#region SpgTextConfig
 
 		[Sql.Function(Name="pg_catalog.spg_text_config", ServerSideOnly=true)]
-		public static object SpgTextConfig(object par6398, object par6399)
+		public static object SpgTextConfig(object par6401, object par6402)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21519,7 +21549,7 @@ namespace PostreSQL11DataContext
 		#region SpgTextInnerConsistent
 
 		[Sql.Function(Name="pg_catalog.spg_text_inner_consistent", ServerSideOnly=true)]
-		public static object SpgTextInnerConsistent(object par6400, object par6401)
+		public static object SpgTextInnerConsistent(object par6403, object par6404)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21529,7 +21559,7 @@ namespace PostreSQL11DataContext
 		#region SpgTextLeafConsistent
 
 		[Sql.Function(Name="pg_catalog.spg_text_leaf_consistent", ServerSideOnly=true)]
-		public static bool? SpgTextLeafConsistent(object par6403, object par6404)
+		public static bool? SpgTextLeafConsistent(object par6406, object par6407)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21539,7 +21569,7 @@ namespace PostreSQL11DataContext
 		#region SpgTextPicksplit
 
 		[Sql.Function(Name="pg_catalog.spg_text_picksplit", ServerSideOnly=true)]
-		public static object SpgTextPicksplit(object par6405, object par6406)
+		public static object SpgTextPicksplit(object par6408, object par6409)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21549,7 +21579,7 @@ namespace PostreSQL11DataContext
 		#region Spghandler
 
 		[Sql.Function(Name="pg_catalog.spghandler", ServerSideOnly=true)]
-		public static object Spghandler(object par6408)
+		public static object Spghandler(object par6411)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21559,7 +21589,7 @@ namespace PostreSQL11DataContext
 		#region SplitPart
 
 		[Sql.Function(Name="pg_catalog.split_part", ServerSideOnly=true)]
-		public static string SplitPart(string par6410, string par6411, int? par6412)
+		public static string SplitPart(string par6413, string par6414, int? par6415)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21569,7 +21599,7 @@ namespace PostreSQL11DataContext
 		#region Sqrt
 
 		[Sql.Function(Name="pg_catalog.sqrt", ServerSideOnly=true)]
-		public static decimal? Sqrt(decimal? par6416)
+		public static decimal? Sqrt(decimal? par6419)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21579,7 +21609,7 @@ namespace PostreSQL11DataContext
 		#region StartsWith
 
 		[Sql.Function(Name="pg_catalog.starts_with", ServerSideOnly=true)]
-		public static bool? StartsWith(string par6418, string par6419)
+		public static bool? StartsWith(string par6421, string par6422)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21599,7 +21629,7 @@ namespace PostreSQL11DataContext
 		#region Stddev
 
 		[Sql.Function(Name="pg_catalog.stddev", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static decimal? Stddev<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par6432)
+		public static decimal? Stddev<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par6435)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21609,7 +21639,7 @@ namespace PostreSQL11DataContext
 		#region StddevPop
 
 		[Sql.Function(Name="pg_catalog.stddev_pop", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static decimal? StddevPop<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par6444)
+		public static decimal? StddevPop<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par6447)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21619,7 +21649,7 @@ namespace PostreSQL11DataContext
 		#region StddevSamp
 
 		[Sql.Function(Name="pg_catalog.stddev_samp", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static decimal? StddevSamp<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par6456)
+		public static decimal? StddevSamp<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par6459)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21629,7 +21659,7 @@ namespace PostreSQL11DataContext
 		#region StringAgg
 
 		[Sql.Function(Name="pg_catalog.string_agg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0, 1 })]
-		public static byte[] StringAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, byte[]>> par6461, Expression<Func<TSource, byte[]>> par6462)
+		public static byte[] StringAgg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, byte[]>> par6464, Expression<Func<TSource, byte[]>> par6465)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21639,7 +21669,7 @@ namespace PostreSQL11DataContext
 		#region StringAggFinalfn
 
 		[Sql.Function(Name="pg_catalog.string_agg_finalfn", ServerSideOnly=true)]
-		public static string StringAggFinalfn(object par6464)
+		public static string StringAggFinalfn(object par6467)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21649,7 +21679,7 @@ namespace PostreSQL11DataContext
 		#region StringAggTransfn
 
 		[Sql.Function(Name="pg_catalog.string_agg_transfn", ServerSideOnly=true)]
-		public static object StringAggTransfn(object par6466, string par6467, string par6468)
+		public static object StringAggTransfn(object par6469, string par6470, string par6471)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21659,7 +21689,7 @@ namespace PostreSQL11DataContext
 		#region StringToArray
 
 		[Sql.Function(Name="pg_catalog.string_to_array", ServerSideOnly=true)]
-		public static object StringToArray(string par6474, string par6475)
+		public static object StringToArray(string par6477, string par6478)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21669,7 +21699,7 @@ namespace PostreSQL11DataContext
 		#region Strip
 
 		[Sql.Function(Name="pg_catalog.strip", ServerSideOnly=true)]
-		public static object Strip(object par6477)
+		public static object Strip(object par6480)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21679,7 +21709,7 @@ namespace PostreSQL11DataContext
 		#region Strpos
 
 		[Sql.Function(Name="pg_catalog.strpos", ServerSideOnly=true)]
-		public static int? Strpos(string par6479, string par6480)
+		public static int? Strpos(string par6482, string par6483)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21689,7 +21719,7 @@ namespace PostreSQL11DataContext
 		#region Substr
 
 		[Sql.Function(Name="pg_catalog.substr", ServerSideOnly=true)]
-		public static string Substr(string par6493, int? par6494)
+		public static string Substr(string par6496, int? par6497)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21699,7 +21729,7 @@ namespace PostreSQL11DataContext
 		#region Substring
 
 		[Sql.Function(Name="pg_catalog.substring", ServerSideOnly=true)]
-		public static string Substring(string par6521, int? par6522)
+		public static string Substring(string par6524, int? par6525)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21709,7 +21739,7 @@ namespace PostreSQL11DataContext
 		#region Sum
 
 		[Sql.Function(Name="pg_catalog.sum", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static decimal? Sum<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par6538)
+		public static decimal? Sum<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par6541)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21729,7 +21759,7 @@ namespace PostreSQL11DataContext
 		#region System
 
 		[Sql.Function(Name="pg_catalog.system", ServerSideOnly=true)]
-		public static object System(object par6541)
+		public static object System(object par6544)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21769,7 +21799,7 @@ namespace PostreSQL11DataContext
 		#region Tan
 
 		[Sql.Function(Name="pg_catalog.tan", ServerSideOnly=true)]
-		public static double? Tan(double? par6546)
+		public static double? Tan(double? par6549)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21779,7 +21809,7 @@ namespace PostreSQL11DataContext
 		#region Tand
 
 		[Sql.Function(Name="pg_catalog.tand", ServerSideOnly=true)]
-		public static double? Tand(double? par6548)
+		public static double? Tand(double? par6551)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21789,7 +21819,7 @@ namespace PostreSQL11DataContext
 		#region TestAvg
 
 		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6550)
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par6553)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21829,7 +21859,7 @@ namespace PostreSQL11DataContext
 		#region Text
 
 		[Sql.Function(Name="pg_catalog.text", ServerSideOnly=true)]
-		public static string Text(object par6563)
+		public static string Text(object par6566)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21839,7 +21869,7 @@ namespace PostreSQL11DataContext
 		#region TextGe
 
 		[Sql.Function(Name="pg_catalog.text_ge", ServerSideOnly=true)]
-		public static bool? TextGe(string par6565, string par6566)
+		public static bool? TextGe(string par6568, string par6569)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21849,7 +21879,7 @@ namespace PostreSQL11DataContext
 		#region TextGt
 
 		[Sql.Function(Name="pg_catalog.text_gt", ServerSideOnly=true)]
-		public static bool? TextGt(string par6568, string par6569)
+		public static bool? TextGt(string par6571, string par6572)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21859,7 +21889,7 @@ namespace PostreSQL11DataContext
 		#region TextLarger
 
 		[Sql.Function(Name="pg_catalog.text_larger", ServerSideOnly=true)]
-		public static string TextLarger(string par6571, string par6572)
+		public static string TextLarger(string par6574, string par6575)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21869,7 +21899,7 @@ namespace PostreSQL11DataContext
 		#region TextLe
 
 		[Sql.Function(Name="pg_catalog.text_le", ServerSideOnly=true)]
-		public static bool? TextLe(string par6574, string par6575)
+		public static bool? TextLe(string par6577, string par6578)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21879,7 +21909,7 @@ namespace PostreSQL11DataContext
 		#region TextLt
 
 		[Sql.Function(Name="pg_catalog.text_lt", ServerSideOnly=true)]
-		public static bool? TextLt(string par6577, string par6578)
+		public static bool? TextLt(string par6580, string par6581)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21889,7 +21919,7 @@ namespace PostreSQL11DataContext
 		#region TextPatternGe
 
 		[Sql.Function(Name="pg_catalog.text_pattern_ge", ServerSideOnly=true)]
-		public static bool? TextPatternGe(string par6580, string par6581)
+		public static bool? TextPatternGe(string par6583, string par6584)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21899,7 +21929,7 @@ namespace PostreSQL11DataContext
 		#region TextPatternGt
 
 		[Sql.Function(Name="pg_catalog.text_pattern_gt", ServerSideOnly=true)]
-		public static bool? TextPatternGt(string par6583, string par6584)
+		public static bool? TextPatternGt(string par6586, string par6587)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21909,7 +21939,7 @@ namespace PostreSQL11DataContext
 		#region TextPatternLe
 
 		[Sql.Function(Name="pg_catalog.text_pattern_le", ServerSideOnly=true)]
-		public static bool? TextPatternLe(string par6586, string par6587)
+		public static bool? TextPatternLe(string par6589, string par6590)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21919,7 +21949,7 @@ namespace PostreSQL11DataContext
 		#region TextPatternLt
 
 		[Sql.Function(Name="pg_catalog.text_pattern_lt", ServerSideOnly=true)]
-		public static bool? TextPatternLt(string par6589, string par6590)
+		public static bool? TextPatternLt(string par6592, string par6593)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21929,7 +21959,7 @@ namespace PostreSQL11DataContext
 		#region TextSmaller
 
 		[Sql.Function(Name="pg_catalog.text_smaller", ServerSideOnly=true)]
-		public static string TextSmaller(string par6592, string par6593)
+		public static string TextSmaller(string par6595, string par6596)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21939,7 +21969,7 @@ namespace PostreSQL11DataContext
 		#region Textanycat
 
 		[Sql.Function(Name="pg_catalog.textanycat", ServerSideOnly=true)]
-		public static string Textanycat(string par6595, object par6596)
+		public static string Textanycat(string par6598, object par6599)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21949,7 +21979,7 @@ namespace PostreSQL11DataContext
 		#region Textcat
 
 		[Sql.Function(Name="pg_catalog.textcat", ServerSideOnly=true)]
-		public static string Textcat(string par6598, string par6599)
+		public static string Textcat(string par6601, string par6602)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21959,7 +21989,7 @@ namespace PostreSQL11DataContext
 		#region Texteq
 
 		[Sql.Function(Name="pg_catalog.texteq", ServerSideOnly=true)]
-		public static bool? Texteq(string par6601, string par6602)
+		public static bool? Texteq(string par6604, string par6605)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21969,7 +21999,7 @@ namespace PostreSQL11DataContext
 		#region Texticlike
 
 		[Sql.Function(Name="pg_catalog.texticlike", ServerSideOnly=true)]
-		public static bool? Texticlike(string par6604, string par6605)
+		public static bool? Texticlike(string par6607, string par6608)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21979,7 +22009,7 @@ namespace PostreSQL11DataContext
 		#region Texticnlike
 
 		[Sql.Function(Name="pg_catalog.texticnlike", ServerSideOnly=true)]
-		public static bool? Texticnlike(string par6607, string par6608)
+		public static bool? Texticnlike(string par6610, string par6611)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21989,7 +22019,7 @@ namespace PostreSQL11DataContext
 		#region Texticregexeq
 
 		[Sql.Function(Name="pg_catalog.texticregexeq", ServerSideOnly=true)]
-		public static bool? Texticregexeq(string par6610, string par6611)
+		public static bool? Texticregexeq(string par6613, string par6614)
 		{
 			throw new InvalidOperationException();
 		}
@@ -21999,7 +22029,7 @@ namespace PostreSQL11DataContext
 		#region Texticregexne
 
 		[Sql.Function(Name="pg_catalog.texticregexne", ServerSideOnly=true)]
-		public static bool? Texticregexne(string par6613, string par6614)
+		public static bool? Texticregexne(string par6616, string par6617)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22009,7 +22039,7 @@ namespace PostreSQL11DataContext
 		#region Textin
 
 		[Sql.Function(Name="pg_catalog.textin", ServerSideOnly=true)]
-		public static string Textin(object par6616)
+		public static string Textin(object par6619)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22019,7 +22049,7 @@ namespace PostreSQL11DataContext
 		#region Textlen
 
 		[Sql.Function(Name="pg_catalog.textlen", ServerSideOnly=true)]
-		public static int? Textlen(string par6618)
+		public static int? Textlen(string par6621)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22029,7 +22059,7 @@ namespace PostreSQL11DataContext
 		#region Textlike
 
 		[Sql.Function(Name="pg_catalog.textlike", ServerSideOnly=true)]
-		public static bool? Textlike(string par6620, string par6621)
+		public static bool? Textlike(string par6623, string par6624)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22039,7 +22069,7 @@ namespace PostreSQL11DataContext
 		#region Textne
 
 		[Sql.Function(Name="pg_catalog.textne", ServerSideOnly=true)]
-		public static bool? Textne(string par6623, string par6624)
+		public static bool? Textne(string par6626, string par6627)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22049,7 +22079,7 @@ namespace PostreSQL11DataContext
 		#region Textnlike
 
 		[Sql.Function(Name="pg_catalog.textnlike", ServerSideOnly=true)]
-		public static bool? Textnlike(string par6626, string par6627)
+		public static bool? Textnlike(string par6629, string par6630)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22059,7 +22089,7 @@ namespace PostreSQL11DataContext
 		#region Textout
 
 		[Sql.Function(Name="pg_catalog.textout", ServerSideOnly=true)]
-		public static object Textout(string par6629)
+		public static object Textout(string par6632)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22069,7 +22099,7 @@ namespace PostreSQL11DataContext
 		#region Textrecv
 
 		[Sql.Function(Name="pg_catalog.textrecv", ServerSideOnly=true)]
-		public static string Textrecv(object par6631)
+		public static string Textrecv(object par6634)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22079,7 +22109,7 @@ namespace PostreSQL11DataContext
 		#region Textregexeq
 
 		[Sql.Function(Name="pg_catalog.textregexeq", ServerSideOnly=true)]
-		public static bool? Textregexeq(string par6633, string par6634)
+		public static bool? Textregexeq(string par6636, string par6637)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22089,7 +22119,7 @@ namespace PostreSQL11DataContext
 		#region Textregexne
 
 		[Sql.Function(Name="pg_catalog.textregexne", ServerSideOnly=true)]
-		public static bool? Textregexne(string par6636, string par6637)
+		public static bool? Textregexne(string par6639, string par6640)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22099,7 +22129,7 @@ namespace PostreSQL11DataContext
 		#region Textsend
 
 		[Sql.Function(Name="pg_catalog.textsend", ServerSideOnly=true)]
-		public static byte[] Textsend(string par6639)
+		public static byte[] Textsend(string par6642)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22109,7 +22139,7 @@ namespace PostreSQL11DataContext
 		#region ThesaurusInit
 
 		[Sql.Function(Name="pg_catalog.thesaurus_init", ServerSideOnly=true)]
-		public static object ThesaurusInit(object par6641)
+		public static object ThesaurusInit(object par6644)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22119,7 +22149,7 @@ namespace PostreSQL11DataContext
 		#region ThesaurusLexize
 
 		[Sql.Function(Name="pg_catalog.thesaurus_lexize", ServerSideOnly=true)]
-		public static object ThesaurusLexize(object par6643, object par6644, object par6645, object par6646)
+		public static object ThesaurusLexize(object par6646, object par6647, object par6648, object par6649)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22129,7 +22159,7 @@ namespace PostreSQL11DataContext
 		#region Tideq
 
 		[Sql.Function(Name="pg_catalog.tideq", ServerSideOnly=true)]
-		public static bool? Tideq(object par6648, object par6649)
+		public static bool? Tideq(object par6651, object par6652)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22139,7 +22169,7 @@ namespace PostreSQL11DataContext
 		#region Tidge
 
 		[Sql.Function(Name="pg_catalog.tidge", ServerSideOnly=true)]
-		public static bool? Tidge(object par6651, object par6652)
+		public static bool? Tidge(object par6654, object par6655)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22149,7 +22179,7 @@ namespace PostreSQL11DataContext
 		#region Tidgt
 
 		[Sql.Function(Name="pg_catalog.tidgt", ServerSideOnly=true)]
-		public static bool? Tidgt(object par6654, object par6655)
+		public static bool? Tidgt(object par6657, object par6658)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22159,7 +22189,7 @@ namespace PostreSQL11DataContext
 		#region Tidin
 
 		[Sql.Function(Name="pg_catalog.tidin", ServerSideOnly=true)]
-		public static object Tidin(object par6657)
+		public static object Tidin(object par6660)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22169,7 +22199,7 @@ namespace PostreSQL11DataContext
 		#region Tidlarger
 
 		[Sql.Function(Name="pg_catalog.tidlarger", ServerSideOnly=true)]
-		public static object Tidlarger(object par6659, object par6660)
+		public static object Tidlarger(object par6662, object par6663)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22179,7 +22209,7 @@ namespace PostreSQL11DataContext
 		#region Tidle
 
 		[Sql.Function(Name="pg_catalog.tidle", ServerSideOnly=true)]
-		public static bool? Tidle(object par6662, object par6663)
+		public static bool? Tidle(object par6665, object par6666)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22189,7 +22219,7 @@ namespace PostreSQL11DataContext
 		#region Tidlt
 
 		[Sql.Function(Name="pg_catalog.tidlt", ServerSideOnly=true)]
-		public static bool? Tidlt(object par6665, object par6666)
+		public static bool? Tidlt(object par6668, object par6669)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22199,7 +22229,7 @@ namespace PostreSQL11DataContext
 		#region Tidne
 
 		[Sql.Function(Name="pg_catalog.tidne", ServerSideOnly=true)]
-		public static bool? Tidne(object par6668, object par6669)
+		public static bool? Tidne(object par6671, object par6672)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22209,7 +22239,7 @@ namespace PostreSQL11DataContext
 		#region Tidout
 
 		[Sql.Function(Name="pg_catalog.tidout", ServerSideOnly=true)]
-		public static object Tidout(object par6671)
+		public static object Tidout(object par6674)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22219,7 +22249,7 @@ namespace PostreSQL11DataContext
 		#region Tidrecv
 
 		[Sql.Function(Name="pg_catalog.tidrecv", ServerSideOnly=true)]
-		public static object Tidrecv(object par6673)
+		public static object Tidrecv(object par6676)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22229,7 +22259,7 @@ namespace PostreSQL11DataContext
 		#region Tidsend
 
 		[Sql.Function(Name="pg_catalog.tidsend", ServerSideOnly=true)]
-		public static byte[] Tidsend(object par6675)
+		public static byte[] Tidsend(object par6678)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22239,7 +22269,7 @@ namespace PostreSQL11DataContext
 		#region Tidsmaller
 
 		[Sql.Function(Name="pg_catalog.tidsmaller", ServerSideOnly=true)]
-		public static object Tidsmaller(object par6677, object par6678)
+		public static object Tidsmaller(object par6680, object par6681)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22249,7 +22279,7 @@ namespace PostreSQL11DataContext
 		#region Time
 
 		[Sql.Function(Name="pg_catalog.time", ServerSideOnly=true)]
-		public static TimeSpan? Time(DateTimeOffset? par6691)
+		public static TimeSpan? Time(DateTimeOffset? par6694)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22259,7 +22289,7 @@ namespace PostreSQL11DataContext
 		#region TimeCmp
 
 		[Sql.Function(Name="pg_catalog.time_cmp", ServerSideOnly=true)]
-		public static int? TimeCmp(TimeSpan? par6693, TimeSpan? par6694)
+		public static int? TimeCmp(TimeSpan? par6696, TimeSpan? par6697)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22269,7 +22299,7 @@ namespace PostreSQL11DataContext
 		#region TimeEq
 
 		[Sql.Function(Name="pg_catalog.time_eq", ServerSideOnly=true)]
-		public static bool? TimeEq(TimeSpan? par6696, TimeSpan? par6697)
+		public static bool? TimeEq(TimeSpan? par6699, TimeSpan? par6700)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22279,7 +22309,7 @@ namespace PostreSQL11DataContext
 		#region TimeGe
 
 		[Sql.Function(Name="pg_catalog.time_ge", ServerSideOnly=true)]
-		public static bool? TimeGe(TimeSpan? par6699, TimeSpan? par6700)
+		public static bool? TimeGe(TimeSpan? par6702, TimeSpan? par6703)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22289,7 +22319,7 @@ namespace PostreSQL11DataContext
 		#region TimeGt
 
 		[Sql.Function(Name="pg_catalog.time_gt", ServerSideOnly=true)]
-		public static bool? TimeGt(TimeSpan? par6702, TimeSpan? par6703)
+		public static bool? TimeGt(TimeSpan? par6705, TimeSpan? par6706)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22299,7 +22329,7 @@ namespace PostreSQL11DataContext
 		#region TimeHash
 
 		[Sql.Function(Name="pg_catalog.time_hash", ServerSideOnly=true)]
-		public static int? TimeHash(TimeSpan? par6705)
+		public static int? TimeHash(TimeSpan? par6708)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22309,7 +22339,7 @@ namespace PostreSQL11DataContext
 		#region TimeHashExtended
 
 		[Sql.Function(Name="pg_catalog.time_hash_extended", ServerSideOnly=true)]
-		public static long? TimeHashExtended(TimeSpan? par6707, long? par6708)
+		public static long? TimeHashExtended(TimeSpan? par6710, long? par6711)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22319,7 +22349,7 @@ namespace PostreSQL11DataContext
 		#region TimeIn
 
 		[Sql.Function(Name="pg_catalog.time_in", ServerSideOnly=true)]
-		public static TimeSpan? TimeIn(object par6710, int? par6711, int? par6712)
+		public static TimeSpan? TimeIn(object par6713, int? par6714, int? par6715)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22329,7 +22359,7 @@ namespace PostreSQL11DataContext
 		#region TimeLarger
 
 		[Sql.Function(Name="pg_catalog.time_larger", ServerSideOnly=true)]
-		public static TimeSpan? TimeLarger(TimeSpan? par6714, TimeSpan? par6715)
+		public static TimeSpan? TimeLarger(TimeSpan? par6717, TimeSpan? par6718)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22339,7 +22369,7 @@ namespace PostreSQL11DataContext
 		#region TimeLe
 
 		[Sql.Function(Name="pg_catalog.time_le", ServerSideOnly=true)]
-		public static bool? TimeLe(TimeSpan? par6717, TimeSpan? par6718)
+		public static bool? TimeLe(TimeSpan? par6720, TimeSpan? par6721)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22349,7 +22379,7 @@ namespace PostreSQL11DataContext
 		#region TimeLt
 
 		[Sql.Function(Name="pg_catalog.time_lt", ServerSideOnly=true)]
-		public static bool? TimeLt(TimeSpan? par6720, TimeSpan? par6721)
+		public static bool? TimeLt(TimeSpan? par6723, TimeSpan? par6724)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22359,7 +22389,7 @@ namespace PostreSQL11DataContext
 		#region TimeMiInterval
 
 		[Sql.Function(Name="pg_catalog.time_mi_interval", ServerSideOnly=true)]
-		public static TimeSpan? TimeMiInterval(TimeSpan? par6723, NpgsqlTimeSpan? par6724)
+		public static TimeSpan? TimeMiInterval(TimeSpan? par6726, NpgsqlTimeSpan? par6727)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22369,7 +22399,7 @@ namespace PostreSQL11DataContext
 		#region TimeMiTime
 
 		[Sql.Function(Name="pg_catalog.time_mi_time", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? TimeMiTime(TimeSpan? par6726, TimeSpan? par6727)
+		public static NpgsqlTimeSpan? TimeMiTime(TimeSpan? par6729, TimeSpan? par6730)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22379,7 +22409,7 @@ namespace PostreSQL11DataContext
 		#region TimeNe
 
 		[Sql.Function(Name="pg_catalog.time_ne", ServerSideOnly=true)]
-		public static bool? TimeNe(TimeSpan? par6729, TimeSpan? par6730)
+		public static bool? TimeNe(TimeSpan? par6732, TimeSpan? par6733)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22389,7 +22419,7 @@ namespace PostreSQL11DataContext
 		#region TimeOut
 
 		[Sql.Function(Name="pg_catalog.time_out", ServerSideOnly=true)]
-		public static object TimeOut(TimeSpan? par6732)
+		public static object TimeOut(TimeSpan? par6735)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22399,7 +22429,7 @@ namespace PostreSQL11DataContext
 		#region TimePlInterval
 
 		[Sql.Function(Name="pg_catalog.time_pl_interval", ServerSideOnly=true)]
-		public static TimeSpan? TimePlInterval(TimeSpan? par6734, NpgsqlTimeSpan? par6735)
+		public static TimeSpan? TimePlInterval(TimeSpan? par6737, NpgsqlTimeSpan? par6738)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22409,7 +22439,7 @@ namespace PostreSQL11DataContext
 		#region TimeRecv
 
 		[Sql.Function(Name="pg_catalog.time_recv", ServerSideOnly=true)]
-		public static TimeSpan? TimeRecv(object par6737, int? par6738, int? par6739)
+		public static TimeSpan? TimeRecv(object par6740, int? par6741, int? par6742)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22419,7 +22449,7 @@ namespace PostreSQL11DataContext
 		#region TimeSend
 
 		[Sql.Function(Name="pg_catalog.time_send", ServerSideOnly=true)]
-		public static byte[] TimeSend(TimeSpan? par6741)
+		public static byte[] TimeSend(TimeSpan? par6744)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22429,7 +22459,7 @@ namespace PostreSQL11DataContext
 		#region TimeSmaller
 
 		[Sql.Function(Name="pg_catalog.time_smaller", ServerSideOnly=true)]
-		public static TimeSpan? TimeSmaller(TimeSpan? par6743, TimeSpan? par6744)
+		public static TimeSpan? TimeSmaller(TimeSpan? par6746, TimeSpan? par6747)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22439,7 +22469,7 @@ namespace PostreSQL11DataContext
 		#region TimeTransform
 
 		[Sql.Function(Name="pg_catalog.time_transform", ServerSideOnly=true)]
-		public static object TimeTransform(object par6746)
+		public static object TimeTransform(object par6749)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22449,7 +22479,7 @@ namespace PostreSQL11DataContext
 		#region TimedatePl
 
 		[Sql.Function(Name="pg_catalog.timedate_pl", ServerSideOnly=true)]
-		public static DateTime? TimedatePl(TimeSpan? par6748, NpgsqlDate? par6749)
+		public static DateTime? TimedatePl(TimeSpan? par6751, NpgsqlDate? par6752)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22459,7 +22489,7 @@ namespace PostreSQL11DataContext
 		#region Timemi
 
 		[Sql.Function(Name="pg_catalog.timemi", ServerSideOnly=true)]
-		public static object Timemi(object par6751, object par6752)
+		public static object Timemi(object par6754, object par6755)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22489,7 +22519,7 @@ namespace PostreSQL11DataContext
 		#region Timepl
 
 		[Sql.Function(Name="pg_catalog.timepl", ServerSideOnly=true)]
-		public static object Timepl(object par6756, object par6757)
+		public static object Timepl(object par6759, object par6760)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22499,7 +22529,7 @@ namespace PostreSQL11DataContext
 		#region Timestamp
 
 		[Sql.Function(Name="pg_catalog.timestamp", ServerSideOnly=true)]
-		public static DateTime? Timestamp(DateTimeOffset? par6769)
+		public static DateTime? Timestamp(DateTimeOffset? par6772)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22509,7 +22539,7 @@ namespace PostreSQL11DataContext
 		#region TimestampCmp
 
 		[Sql.Function(Name="pg_catalog.timestamp_cmp", ServerSideOnly=true)]
-		public static int? TimestampCmp(DateTime? par6771, DateTime? par6772)
+		public static int? TimestampCmp(DateTime? par6774, DateTime? par6775)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22519,7 +22549,7 @@ namespace PostreSQL11DataContext
 		#region TimestampCmpDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_cmp_date", ServerSideOnly=true)]
-		public static int? TimestampCmpDate(DateTime? par6774, NpgsqlDate? par6775)
+		public static int? TimestampCmpDate(DateTime? par6777, NpgsqlDate? par6778)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22529,7 +22559,7 @@ namespace PostreSQL11DataContext
 		#region TimestampCmpTimestamptz
 
 		[Sql.Function(Name="pg_catalog.timestamp_cmp_timestamptz", ServerSideOnly=true)]
-		public static int? TimestampCmpTimestamptz(DateTime? par6777, DateTimeOffset? par6778)
+		public static int? TimestampCmpTimestamptz(DateTime? par6780, DateTimeOffset? par6781)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22539,7 +22569,7 @@ namespace PostreSQL11DataContext
 		#region TimestampEq
 
 		[Sql.Function(Name="pg_catalog.timestamp_eq", ServerSideOnly=true)]
-		public static bool? TimestampEq(DateTime? par6780, DateTime? par6781)
+		public static bool? TimestampEq(DateTime? par6783, DateTime? par6784)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22549,7 +22579,7 @@ namespace PostreSQL11DataContext
 		#region TimestampEqDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_eq_date", ServerSideOnly=true)]
-		public static bool? TimestampEqDate(DateTime? par6783, NpgsqlDate? par6784)
+		public static bool? TimestampEqDate(DateTime? par6786, NpgsqlDate? par6787)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22559,7 +22589,7 @@ namespace PostreSQL11DataContext
 		#region TimestampEqTimestamptz
 
 		[Sql.Function(Name="pg_catalog.timestamp_eq_timestamptz", ServerSideOnly=true)]
-		public static bool? TimestampEqTimestamptz(DateTime? par6786, DateTimeOffset? par6787)
+		public static bool? TimestampEqTimestamptz(DateTime? par6789, DateTimeOffset? par6790)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22569,7 +22599,7 @@ namespace PostreSQL11DataContext
 		#region TimestampGe
 
 		[Sql.Function(Name="pg_catalog.timestamp_ge", ServerSideOnly=true)]
-		public static bool? TimestampGe(DateTime? par6789, DateTime? par6790)
+		public static bool? TimestampGe(DateTime? par6792, DateTime? par6793)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22579,7 +22609,7 @@ namespace PostreSQL11DataContext
 		#region TimestampGeDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_ge_date", ServerSideOnly=true)]
-		public static bool? TimestampGeDate(DateTime? par6792, NpgsqlDate? par6793)
+		public static bool? TimestampGeDate(DateTime? par6795, NpgsqlDate? par6796)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22589,7 +22619,7 @@ namespace PostreSQL11DataContext
 		#region TimestampGeTimestamptz
 
 		[Sql.Function(Name="pg_catalog.timestamp_ge_timestamptz", ServerSideOnly=true)]
-		public static bool? TimestampGeTimestamptz(DateTime? par6795, DateTimeOffset? par6796)
+		public static bool? TimestampGeTimestamptz(DateTime? par6798, DateTimeOffset? par6799)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22599,7 +22629,7 @@ namespace PostreSQL11DataContext
 		#region TimestampGt
 
 		[Sql.Function(Name="pg_catalog.timestamp_gt", ServerSideOnly=true)]
-		public static bool? TimestampGt(DateTime? par6798, DateTime? par6799)
+		public static bool? TimestampGt(DateTime? par6801, DateTime? par6802)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22609,7 +22639,7 @@ namespace PostreSQL11DataContext
 		#region TimestampGtDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_gt_date", ServerSideOnly=true)]
-		public static bool? TimestampGtDate(DateTime? par6801, NpgsqlDate? par6802)
+		public static bool? TimestampGtDate(DateTime? par6804, NpgsqlDate? par6805)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22619,7 +22649,7 @@ namespace PostreSQL11DataContext
 		#region TimestampGtTimestamptz
 
 		[Sql.Function(Name="pg_catalog.timestamp_gt_timestamptz", ServerSideOnly=true)]
-		public static bool? TimestampGtTimestamptz(DateTime? par6804, DateTimeOffset? par6805)
+		public static bool? TimestampGtTimestamptz(DateTime? par6807, DateTimeOffset? par6808)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22629,7 +22659,7 @@ namespace PostreSQL11DataContext
 		#region TimestampHash
 
 		[Sql.Function(Name="pg_catalog.timestamp_hash", ServerSideOnly=true)]
-		public static int? TimestampHash(DateTime? par6807)
+		public static int? TimestampHash(DateTime? par6810)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22639,7 +22669,7 @@ namespace PostreSQL11DataContext
 		#region TimestampHashExtended
 
 		[Sql.Function(Name="pg_catalog.timestamp_hash_extended", ServerSideOnly=true)]
-		public static long? TimestampHashExtended(DateTime? par6809, long? par6810)
+		public static long? TimestampHashExtended(DateTime? par6812, long? par6813)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22649,7 +22679,7 @@ namespace PostreSQL11DataContext
 		#region TimestampIn
 
 		[Sql.Function(Name="pg_catalog.timestamp_in", ServerSideOnly=true)]
-		public static DateTime? TimestampIn(object par6812, int? par6813, int? par6814)
+		public static DateTime? TimestampIn(object par6815, int? par6816, int? par6817)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22659,7 +22689,7 @@ namespace PostreSQL11DataContext
 		#region TimestampIzoneTransform
 
 		[Sql.Function(Name="pg_catalog.timestamp_izone_transform", ServerSideOnly=true)]
-		public static object TimestampIzoneTransform(object par6816)
+		public static object TimestampIzoneTransform(object par6819)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22669,7 +22699,7 @@ namespace PostreSQL11DataContext
 		#region TimestampLarger
 
 		[Sql.Function(Name="pg_catalog.timestamp_larger", ServerSideOnly=true)]
-		public static DateTime? TimestampLarger(DateTime? par6818, DateTime? par6819)
+		public static DateTime? TimestampLarger(DateTime? par6821, DateTime? par6822)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22679,7 +22709,7 @@ namespace PostreSQL11DataContext
 		#region TimestampLe
 
 		[Sql.Function(Name="pg_catalog.timestamp_le", ServerSideOnly=true)]
-		public static bool? TimestampLe(DateTime? par6821, DateTime? par6822)
+		public static bool? TimestampLe(DateTime? par6824, DateTime? par6825)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22689,7 +22719,7 @@ namespace PostreSQL11DataContext
 		#region TimestampLeDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_le_date", ServerSideOnly=true)]
-		public static bool? TimestampLeDate(DateTime? par6824, NpgsqlDate? par6825)
+		public static bool? TimestampLeDate(DateTime? par6827, NpgsqlDate? par6828)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22699,7 +22729,7 @@ namespace PostreSQL11DataContext
 		#region TimestampLeTimestamptz
 
 		[Sql.Function(Name="pg_catalog.timestamp_le_timestamptz", ServerSideOnly=true)]
-		public static bool? TimestampLeTimestamptz(DateTime? par6827, DateTimeOffset? par6828)
+		public static bool? TimestampLeTimestamptz(DateTime? par6830, DateTimeOffset? par6831)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22709,7 +22739,7 @@ namespace PostreSQL11DataContext
 		#region TimestampLt
 
 		[Sql.Function(Name="pg_catalog.timestamp_lt", ServerSideOnly=true)]
-		public static bool? TimestampLt(DateTime? par6830, DateTime? par6831)
+		public static bool? TimestampLt(DateTime? par6833, DateTime? par6834)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22719,7 +22749,7 @@ namespace PostreSQL11DataContext
 		#region TimestampLtDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_lt_date", ServerSideOnly=true)]
-		public static bool? TimestampLtDate(DateTime? par6833, NpgsqlDate? par6834)
+		public static bool? TimestampLtDate(DateTime? par6836, NpgsqlDate? par6837)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22729,7 +22759,7 @@ namespace PostreSQL11DataContext
 		#region TimestampLtTimestamptz
 
 		[Sql.Function(Name="pg_catalog.timestamp_lt_timestamptz", ServerSideOnly=true)]
-		public static bool? TimestampLtTimestamptz(DateTime? par6836, DateTimeOffset? par6837)
+		public static bool? TimestampLtTimestamptz(DateTime? par6839, DateTimeOffset? par6840)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22739,7 +22769,7 @@ namespace PostreSQL11DataContext
 		#region TimestampMi
 
 		[Sql.Function(Name="pg_catalog.timestamp_mi", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? TimestampMi(DateTime? par6839, DateTime? par6840)
+		public static NpgsqlTimeSpan? TimestampMi(DateTime? par6842, DateTime? par6843)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22749,7 +22779,7 @@ namespace PostreSQL11DataContext
 		#region TimestampMiInterval
 
 		[Sql.Function(Name="pg_catalog.timestamp_mi_interval", ServerSideOnly=true)]
-		public static DateTime? TimestampMiInterval(DateTime? par6842, NpgsqlTimeSpan? par6843)
+		public static DateTime? TimestampMiInterval(DateTime? par6845, NpgsqlTimeSpan? par6846)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22759,7 +22789,7 @@ namespace PostreSQL11DataContext
 		#region TimestampNe
 
 		[Sql.Function(Name="pg_catalog.timestamp_ne", ServerSideOnly=true)]
-		public static bool? TimestampNe(DateTime? par6845, DateTime? par6846)
+		public static bool? TimestampNe(DateTime? par6848, DateTime? par6849)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22769,7 +22799,7 @@ namespace PostreSQL11DataContext
 		#region TimestampNeDate
 
 		[Sql.Function(Name="pg_catalog.timestamp_ne_date", ServerSideOnly=true)]
-		public static bool? TimestampNeDate(DateTime? par6848, NpgsqlDate? par6849)
+		public static bool? TimestampNeDate(DateTime? par6851, NpgsqlDate? par6852)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22779,7 +22809,7 @@ namespace PostreSQL11DataContext
 		#region TimestampNeTimestamptz
 
 		[Sql.Function(Name="pg_catalog.timestamp_ne_timestamptz", ServerSideOnly=true)]
-		public static bool? TimestampNeTimestamptz(DateTime? par6851, DateTimeOffset? par6852)
+		public static bool? TimestampNeTimestamptz(DateTime? par6854, DateTimeOffset? par6855)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22789,7 +22819,7 @@ namespace PostreSQL11DataContext
 		#region TimestampOut
 
 		[Sql.Function(Name="pg_catalog.timestamp_out", ServerSideOnly=true)]
-		public static object TimestampOut(DateTime? par6854)
+		public static object TimestampOut(DateTime? par6857)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22799,7 +22829,7 @@ namespace PostreSQL11DataContext
 		#region TimestampPlInterval
 
 		[Sql.Function(Name="pg_catalog.timestamp_pl_interval", ServerSideOnly=true)]
-		public static DateTime? TimestampPlInterval(DateTime? par6856, NpgsqlTimeSpan? par6857)
+		public static DateTime? TimestampPlInterval(DateTime? par6859, NpgsqlTimeSpan? par6860)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22809,7 +22839,7 @@ namespace PostreSQL11DataContext
 		#region TimestampRecv
 
 		[Sql.Function(Name="pg_catalog.timestamp_recv", ServerSideOnly=true)]
-		public static DateTime? TimestampRecv(object par6859, int? par6860, int? par6861)
+		public static DateTime? TimestampRecv(object par6862, int? par6863, int? par6864)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22819,7 +22849,7 @@ namespace PostreSQL11DataContext
 		#region TimestampSend
 
 		[Sql.Function(Name="pg_catalog.timestamp_send", ServerSideOnly=true)]
-		public static byte[] TimestampSend(DateTime? par6863)
+		public static byte[] TimestampSend(DateTime? par6866)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22829,7 +22859,7 @@ namespace PostreSQL11DataContext
 		#region TimestampSmaller
 
 		[Sql.Function(Name="pg_catalog.timestamp_smaller", ServerSideOnly=true)]
-		public static DateTime? TimestampSmaller(DateTime? par6865, DateTime? par6866)
+		public static DateTime? TimestampSmaller(DateTime? par6868, DateTime? par6869)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22839,7 +22869,7 @@ namespace PostreSQL11DataContext
 		#region TimestampSortsupport
 
 		[Sql.Function(Name="pg_catalog.timestamp_sortsupport", ServerSideOnly=true)]
-		public static object TimestampSortsupport(object par6867)
+		public static object TimestampSortsupport(object par6870)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22849,7 +22879,7 @@ namespace PostreSQL11DataContext
 		#region TimestampTransform
 
 		[Sql.Function(Name="pg_catalog.timestamp_transform", ServerSideOnly=true)]
-		public static object TimestampTransform(object par6869)
+		public static object TimestampTransform(object par6872)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22859,7 +22889,7 @@ namespace PostreSQL11DataContext
 		#region TimestampZoneTransform
 
 		[Sql.Function(Name="pg_catalog.timestamp_zone_transform", ServerSideOnly=true)]
-		public static object TimestampZoneTransform(object par6871)
+		public static object TimestampZoneTransform(object par6874)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22869,7 +22899,7 @@ namespace PostreSQL11DataContext
 		#region Timestamptypmodin
 
 		[Sql.Function(Name="pg_catalog.timestamptypmodin", ServerSideOnly=true)]
-		public static int? Timestamptypmodin(object par6873)
+		public static int? Timestamptypmodin(object par6876)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22879,7 +22909,7 @@ namespace PostreSQL11DataContext
 		#region Timestamptypmodout
 
 		[Sql.Function(Name="pg_catalog.timestamptypmodout", ServerSideOnly=true)]
-		public static object Timestamptypmodout(int? par6875)
+		public static object Timestamptypmodout(int? par6878)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22889,7 +22919,7 @@ namespace PostreSQL11DataContext
 		#region Timestamptz
 
 		[Sql.Function(Name="pg_catalog.timestamptz", ServerSideOnly=true)]
-		public static DateTimeOffset? Timestamptz(DateTime? par6890)
+		public static DateTimeOffset? Timestamptz(DateTime? par6893)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22899,7 +22929,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzCmp
 
 		[Sql.Function(Name="pg_catalog.timestamptz_cmp", ServerSideOnly=true)]
-		public static int? TimestamptzCmp(DateTimeOffset? par6892, DateTimeOffset? par6893)
+		public static int? TimestamptzCmp(DateTimeOffset? par6895, DateTimeOffset? par6896)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22909,7 +22939,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzCmpDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_cmp_date", ServerSideOnly=true)]
-		public static int? TimestamptzCmpDate(DateTimeOffset? par6895, NpgsqlDate? par6896)
+		public static int? TimestamptzCmpDate(DateTimeOffset? par6898, NpgsqlDate? par6899)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22919,7 +22949,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzCmpTimestamp
 
 		[Sql.Function(Name="pg_catalog.timestamptz_cmp_timestamp", ServerSideOnly=true)]
-		public static int? TimestamptzCmpTimestamp(DateTimeOffset? par6898, DateTime? par6899)
+		public static int? TimestamptzCmpTimestamp(DateTimeOffset? par6901, DateTime? par6902)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22929,7 +22959,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzEq
 
 		[Sql.Function(Name="pg_catalog.timestamptz_eq", ServerSideOnly=true)]
-		public static bool? TimestamptzEq(DateTimeOffset? par6901, DateTimeOffset? par6902)
+		public static bool? TimestamptzEq(DateTimeOffset? par6904, DateTimeOffset? par6905)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22939,7 +22969,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzEqDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_eq_date", ServerSideOnly=true)]
-		public static bool? TimestamptzEqDate(DateTimeOffset? par6904, NpgsqlDate? par6905)
+		public static bool? TimestamptzEqDate(DateTimeOffset? par6907, NpgsqlDate? par6908)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22949,7 +22979,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzEqTimestamp
 
 		[Sql.Function(Name="pg_catalog.timestamptz_eq_timestamp", ServerSideOnly=true)]
-		public static bool? TimestamptzEqTimestamp(DateTimeOffset? par6907, DateTime? par6908)
+		public static bool? TimestamptzEqTimestamp(DateTimeOffset? par6910, DateTime? par6911)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22959,7 +22989,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzGe
 
 		[Sql.Function(Name="pg_catalog.timestamptz_ge", ServerSideOnly=true)]
-		public static bool? TimestamptzGe(DateTimeOffset? par6910, DateTimeOffset? par6911)
+		public static bool? TimestamptzGe(DateTimeOffset? par6913, DateTimeOffset? par6914)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22969,7 +22999,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzGeDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_ge_date", ServerSideOnly=true)]
-		public static bool? TimestamptzGeDate(DateTimeOffset? par6913, NpgsqlDate? par6914)
+		public static bool? TimestamptzGeDate(DateTimeOffset? par6916, NpgsqlDate? par6917)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22979,7 +23009,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzGeTimestamp
 
 		[Sql.Function(Name="pg_catalog.timestamptz_ge_timestamp", ServerSideOnly=true)]
-		public static bool? TimestamptzGeTimestamp(DateTimeOffset? par6916, DateTime? par6917)
+		public static bool? TimestamptzGeTimestamp(DateTimeOffset? par6919, DateTime? par6920)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22989,7 +23019,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzGt
 
 		[Sql.Function(Name="pg_catalog.timestamptz_gt", ServerSideOnly=true)]
-		public static bool? TimestamptzGt(DateTimeOffset? par6919, DateTimeOffset? par6920)
+		public static bool? TimestamptzGt(DateTimeOffset? par6922, DateTimeOffset? par6923)
 		{
 			throw new InvalidOperationException();
 		}
@@ -22999,7 +23029,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzGtDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_gt_date", ServerSideOnly=true)]
-		public static bool? TimestamptzGtDate(DateTimeOffset? par6922, NpgsqlDate? par6923)
+		public static bool? TimestamptzGtDate(DateTimeOffset? par6925, NpgsqlDate? par6926)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23009,7 +23039,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzGtTimestamp
 
 		[Sql.Function(Name="pg_catalog.timestamptz_gt_timestamp", ServerSideOnly=true)]
-		public static bool? TimestamptzGtTimestamp(DateTimeOffset? par6925, DateTime? par6926)
+		public static bool? TimestamptzGtTimestamp(DateTimeOffset? par6928, DateTime? par6929)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23019,7 +23049,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzIn
 
 		[Sql.Function(Name="pg_catalog.timestamptz_in", ServerSideOnly=true)]
-		public static DateTimeOffset? TimestamptzIn(object par6928, int? par6929, int? par6930)
+		public static DateTimeOffset? TimestamptzIn(object par6931, int? par6932, int? par6933)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23029,7 +23059,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzLarger
 
 		[Sql.Function(Name="pg_catalog.timestamptz_larger", ServerSideOnly=true)]
-		public static DateTimeOffset? TimestamptzLarger(DateTimeOffset? par6932, DateTimeOffset? par6933)
+		public static DateTimeOffset? TimestamptzLarger(DateTimeOffset? par6935, DateTimeOffset? par6936)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23039,7 +23069,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzLe
 
 		[Sql.Function(Name="pg_catalog.timestamptz_le", ServerSideOnly=true)]
-		public static bool? TimestamptzLe(DateTimeOffset? par6935, DateTimeOffset? par6936)
+		public static bool? TimestamptzLe(DateTimeOffset? par6938, DateTimeOffset? par6939)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23049,7 +23079,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzLeDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_le_date", ServerSideOnly=true)]
-		public static bool? TimestamptzLeDate(DateTimeOffset? par6938, NpgsqlDate? par6939)
+		public static bool? TimestamptzLeDate(DateTimeOffset? par6941, NpgsqlDate? par6942)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23059,7 +23089,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzLeTimestamp
 
 		[Sql.Function(Name="pg_catalog.timestamptz_le_timestamp", ServerSideOnly=true)]
-		public static bool? TimestamptzLeTimestamp(DateTimeOffset? par6941, DateTime? par6942)
+		public static bool? TimestamptzLeTimestamp(DateTimeOffset? par6944, DateTime? par6945)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23069,7 +23099,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzLt
 
 		[Sql.Function(Name="pg_catalog.timestamptz_lt", ServerSideOnly=true)]
-		public static bool? TimestamptzLt(DateTimeOffset? par6944, DateTimeOffset? par6945)
+		public static bool? TimestamptzLt(DateTimeOffset? par6947, DateTimeOffset? par6948)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23079,7 +23109,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzLtDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_lt_date", ServerSideOnly=true)]
-		public static bool? TimestamptzLtDate(DateTimeOffset? par6947, NpgsqlDate? par6948)
+		public static bool? TimestamptzLtDate(DateTimeOffset? par6950, NpgsqlDate? par6951)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23089,7 +23119,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzLtTimestamp
 
 		[Sql.Function(Name="pg_catalog.timestamptz_lt_timestamp", ServerSideOnly=true)]
-		public static bool? TimestamptzLtTimestamp(DateTimeOffset? par6950, DateTime? par6951)
+		public static bool? TimestamptzLtTimestamp(DateTimeOffset? par6953, DateTime? par6954)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23099,7 +23129,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzMi
 
 		[Sql.Function(Name="pg_catalog.timestamptz_mi", ServerSideOnly=true)]
-		public static NpgsqlTimeSpan? TimestamptzMi(DateTimeOffset? par6953, DateTimeOffset? par6954)
+		public static NpgsqlTimeSpan? TimestamptzMi(DateTimeOffset? par6956, DateTimeOffset? par6957)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23109,7 +23139,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzMiInterval
 
 		[Sql.Function(Name="pg_catalog.timestamptz_mi_interval", ServerSideOnly=true)]
-		public static DateTimeOffset? TimestamptzMiInterval(DateTimeOffset? par6956, NpgsqlTimeSpan? par6957)
+		public static DateTimeOffset? TimestamptzMiInterval(DateTimeOffset? par6959, NpgsqlTimeSpan? par6960)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23119,7 +23149,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzNe
 
 		[Sql.Function(Name="pg_catalog.timestamptz_ne", ServerSideOnly=true)]
-		public static bool? TimestamptzNe(DateTimeOffset? par6959, DateTimeOffset? par6960)
+		public static bool? TimestamptzNe(DateTimeOffset? par6962, DateTimeOffset? par6963)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23129,7 +23159,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzNeDate
 
 		[Sql.Function(Name="pg_catalog.timestamptz_ne_date", ServerSideOnly=true)]
-		public static bool? TimestamptzNeDate(DateTimeOffset? par6962, NpgsqlDate? par6963)
+		public static bool? TimestamptzNeDate(DateTimeOffset? par6965, NpgsqlDate? par6966)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23139,7 +23169,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzNeTimestamp
 
 		[Sql.Function(Name="pg_catalog.timestamptz_ne_timestamp", ServerSideOnly=true)]
-		public static bool? TimestamptzNeTimestamp(DateTimeOffset? par6965, DateTime? par6966)
+		public static bool? TimestamptzNeTimestamp(DateTimeOffset? par6968, DateTime? par6969)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23149,7 +23179,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzOut
 
 		[Sql.Function(Name="pg_catalog.timestamptz_out", ServerSideOnly=true)]
-		public static object TimestamptzOut(DateTimeOffset? par6968)
+		public static object TimestamptzOut(DateTimeOffset? par6971)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23159,7 +23189,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzPlInterval
 
 		[Sql.Function(Name="pg_catalog.timestamptz_pl_interval", ServerSideOnly=true)]
-		public static DateTimeOffset? TimestamptzPlInterval(DateTimeOffset? par6970, NpgsqlTimeSpan? par6971)
+		public static DateTimeOffset? TimestamptzPlInterval(DateTimeOffset? par6973, NpgsqlTimeSpan? par6974)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23169,7 +23199,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzRecv
 
 		[Sql.Function(Name="pg_catalog.timestamptz_recv", ServerSideOnly=true)]
-		public static DateTimeOffset? TimestamptzRecv(object par6973, int? par6974, int? par6975)
+		public static DateTimeOffset? TimestamptzRecv(object par6976, int? par6977, int? par6978)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23179,7 +23209,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzSend
 
 		[Sql.Function(Name="pg_catalog.timestamptz_send", ServerSideOnly=true)]
-		public static byte[] TimestamptzSend(DateTimeOffset? par6977)
+		public static byte[] TimestamptzSend(DateTimeOffset? par6980)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23189,7 +23219,7 @@ namespace PostreSQL11DataContext
 		#region TimestamptzSmaller
 
 		[Sql.Function(Name="pg_catalog.timestamptz_smaller", ServerSideOnly=true)]
-		public static DateTimeOffset? TimestamptzSmaller(DateTimeOffset? par6979, DateTimeOffset? par6980)
+		public static DateTimeOffset? TimestamptzSmaller(DateTimeOffset? par6982, DateTimeOffset? par6983)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23199,7 +23229,7 @@ namespace PostreSQL11DataContext
 		#region Timestamptztypmodin
 
 		[Sql.Function(Name="pg_catalog.timestamptztypmodin", ServerSideOnly=true)]
-		public static int? Timestamptztypmodin(object par6982)
+		public static int? Timestamptztypmodin(object par6985)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23209,7 +23239,7 @@ namespace PostreSQL11DataContext
 		#region Timestamptztypmodout
 
 		[Sql.Function(Name="pg_catalog.timestamptztypmodout", ServerSideOnly=true)]
-		public static object Timestamptztypmodout(int? par6984)
+		public static object Timestamptztypmodout(int? par6987)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23219,7 +23249,7 @@ namespace PostreSQL11DataContext
 		#region Timetypmodin
 
 		[Sql.Function(Name="pg_catalog.timetypmodin", ServerSideOnly=true)]
-		public static int? Timetypmodin(object par6986)
+		public static int? Timetypmodin(object par6989)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23229,7 +23259,7 @@ namespace PostreSQL11DataContext
 		#region Timetypmodout
 
 		[Sql.Function(Name="pg_catalog.timetypmodout", ServerSideOnly=true)]
-		public static object Timetypmodout(int? par6988)
+		public static object Timetypmodout(int? par6991)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23239,7 +23269,7 @@ namespace PostreSQL11DataContext
 		#region Timetz
 
 		[Sql.Function(Name="pg_catalog.timetz", ServerSideOnly=true)]
-		public static DateTimeOffset? Timetz(TimeSpan? par6995)
+		public static DateTimeOffset? Timetz(TimeSpan? par6998)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23249,7 +23279,7 @@ namespace PostreSQL11DataContext
 		#region TimetzCmp
 
 		[Sql.Function(Name="pg_catalog.timetz_cmp", ServerSideOnly=true)]
-		public static int? TimetzCmp(DateTimeOffset? par6997, DateTimeOffset? par6998)
+		public static int? TimetzCmp(DateTimeOffset? par7000, DateTimeOffset? par7001)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23259,7 +23289,7 @@ namespace PostreSQL11DataContext
 		#region TimetzEq
 
 		[Sql.Function(Name="pg_catalog.timetz_eq", ServerSideOnly=true)]
-		public static bool? TimetzEq(DateTimeOffset? par7000, DateTimeOffset? par7001)
+		public static bool? TimetzEq(DateTimeOffset? par7003, DateTimeOffset? par7004)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23269,7 +23299,7 @@ namespace PostreSQL11DataContext
 		#region TimetzGe
 
 		[Sql.Function(Name="pg_catalog.timetz_ge", ServerSideOnly=true)]
-		public static bool? TimetzGe(DateTimeOffset? par7003, DateTimeOffset? par7004)
+		public static bool? TimetzGe(DateTimeOffset? par7006, DateTimeOffset? par7007)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23279,7 +23309,7 @@ namespace PostreSQL11DataContext
 		#region TimetzGt
 
 		[Sql.Function(Name="pg_catalog.timetz_gt", ServerSideOnly=true)]
-		public static bool? TimetzGt(DateTimeOffset? par7006, DateTimeOffset? par7007)
+		public static bool? TimetzGt(DateTimeOffset? par7009, DateTimeOffset? par7010)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23289,7 +23319,7 @@ namespace PostreSQL11DataContext
 		#region TimetzHash
 
 		[Sql.Function(Name="pg_catalog.timetz_hash", ServerSideOnly=true)]
-		public static int? TimetzHash(DateTimeOffset? par7009)
+		public static int? TimetzHash(DateTimeOffset? par7012)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23299,7 +23329,7 @@ namespace PostreSQL11DataContext
 		#region TimetzHashExtended
 
 		[Sql.Function(Name="pg_catalog.timetz_hash_extended", ServerSideOnly=true)]
-		public static long? TimetzHashExtended(DateTimeOffset? par7011, long? par7012)
+		public static long? TimetzHashExtended(DateTimeOffset? par7014, long? par7015)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23309,7 +23339,7 @@ namespace PostreSQL11DataContext
 		#region TimetzIn
 
 		[Sql.Function(Name="pg_catalog.timetz_in", ServerSideOnly=true)]
-		public static DateTimeOffset? TimetzIn(object par7014, int? par7015, int? par7016)
+		public static DateTimeOffset? TimetzIn(object par7017, int? par7018, int? par7019)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23319,7 +23349,7 @@ namespace PostreSQL11DataContext
 		#region TimetzLarger
 
 		[Sql.Function(Name="pg_catalog.timetz_larger", ServerSideOnly=true)]
-		public static DateTimeOffset? TimetzLarger(DateTimeOffset? par7018, DateTimeOffset? par7019)
+		public static DateTimeOffset? TimetzLarger(DateTimeOffset? par7021, DateTimeOffset? par7022)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23329,7 +23359,7 @@ namespace PostreSQL11DataContext
 		#region TimetzLe
 
 		[Sql.Function(Name="pg_catalog.timetz_le", ServerSideOnly=true)]
-		public static bool? TimetzLe(DateTimeOffset? par7021, DateTimeOffset? par7022)
+		public static bool? TimetzLe(DateTimeOffset? par7024, DateTimeOffset? par7025)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23339,7 +23369,7 @@ namespace PostreSQL11DataContext
 		#region TimetzLt
 
 		[Sql.Function(Name="pg_catalog.timetz_lt", ServerSideOnly=true)]
-		public static bool? TimetzLt(DateTimeOffset? par7024, DateTimeOffset? par7025)
+		public static bool? TimetzLt(DateTimeOffset? par7027, DateTimeOffset? par7028)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23349,7 +23379,7 @@ namespace PostreSQL11DataContext
 		#region TimetzMiInterval
 
 		[Sql.Function(Name="pg_catalog.timetz_mi_interval", ServerSideOnly=true)]
-		public static DateTimeOffset? TimetzMiInterval(DateTimeOffset? par7027, NpgsqlTimeSpan? par7028)
+		public static DateTimeOffset? TimetzMiInterval(DateTimeOffset? par7030, NpgsqlTimeSpan? par7031)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23359,7 +23389,7 @@ namespace PostreSQL11DataContext
 		#region TimetzNe
 
 		[Sql.Function(Name="pg_catalog.timetz_ne", ServerSideOnly=true)]
-		public static bool? TimetzNe(DateTimeOffset? par7030, DateTimeOffset? par7031)
+		public static bool? TimetzNe(DateTimeOffset? par7033, DateTimeOffset? par7034)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23369,7 +23399,7 @@ namespace PostreSQL11DataContext
 		#region TimetzOut
 
 		[Sql.Function(Name="pg_catalog.timetz_out", ServerSideOnly=true)]
-		public static object TimetzOut(DateTimeOffset? par7033)
+		public static object TimetzOut(DateTimeOffset? par7036)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23379,7 +23409,7 @@ namespace PostreSQL11DataContext
 		#region TimetzPlInterval
 
 		[Sql.Function(Name="pg_catalog.timetz_pl_interval", ServerSideOnly=true)]
-		public static DateTimeOffset? TimetzPlInterval(DateTimeOffset? par7035, NpgsqlTimeSpan? par7036)
+		public static DateTimeOffset? TimetzPlInterval(DateTimeOffset? par7038, NpgsqlTimeSpan? par7039)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23389,7 +23419,7 @@ namespace PostreSQL11DataContext
 		#region TimetzRecv
 
 		[Sql.Function(Name="pg_catalog.timetz_recv", ServerSideOnly=true)]
-		public static DateTimeOffset? TimetzRecv(object par7038, int? par7039, int? par7040)
+		public static DateTimeOffset? TimetzRecv(object par7041, int? par7042, int? par7043)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23399,7 +23429,7 @@ namespace PostreSQL11DataContext
 		#region TimetzSend
 
 		[Sql.Function(Name="pg_catalog.timetz_send", ServerSideOnly=true)]
-		public static byte[] TimetzSend(DateTimeOffset? par7042)
+		public static byte[] TimetzSend(DateTimeOffset? par7045)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23409,7 +23439,7 @@ namespace PostreSQL11DataContext
 		#region TimetzSmaller
 
 		[Sql.Function(Name="pg_catalog.timetz_smaller", ServerSideOnly=true)]
-		public static DateTimeOffset? TimetzSmaller(DateTimeOffset? par7044, DateTimeOffset? par7045)
+		public static DateTimeOffset? TimetzSmaller(DateTimeOffset? par7047, DateTimeOffset? par7048)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23419,7 +23449,7 @@ namespace PostreSQL11DataContext
 		#region TimetzdatePl
 
 		[Sql.Function(Name="pg_catalog.timetzdate_pl", ServerSideOnly=true)]
-		public static DateTimeOffset? TimetzdatePl(DateTimeOffset? par7047, NpgsqlDate? par7048)
+		public static DateTimeOffset? TimetzdatePl(DateTimeOffset? par7050, NpgsqlDate? par7051)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23429,7 +23459,7 @@ namespace PostreSQL11DataContext
 		#region Timetztypmodin
 
 		[Sql.Function(Name="pg_catalog.timetztypmodin", ServerSideOnly=true)]
-		public static int? Timetztypmodin(object par7050)
+		public static int? Timetztypmodin(object par7053)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23439,7 +23469,7 @@ namespace PostreSQL11DataContext
 		#region Timetztypmodout
 
 		[Sql.Function(Name="pg_catalog.timetztypmodout", ServerSideOnly=true)]
-		public static object Timetztypmodout(int? par7052)
+		public static object Timetztypmodout(int? par7055)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23449,7 +23479,7 @@ namespace PostreSQL11DataContext
 		#region Timezone
 
 		[Sql.Function(Name="pg_catalog.timezone", ServerSideOnly=true)]
-		public static DateTimeOffset? Timezone(NpgsqlTimeSpan? par7069, DateTime? par7070)
+		public static DateTimeOffset? Timezone(NpgsqlTimeSpan? par7072, DateTime? par7073)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23459,7 +23489,7 @@ namespace PostreSQL11DataContext
 		#region Tinterval
 
 		[Sql.Function(Name="pg_catalog.tinterval", ServerSideOnly=true)]
-		public static object Tinterval(object par7072, object par7073)
+		public static object Tinterval(object par7075, object par7076)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23469,7 +23499,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalct
 
 		[Sql.Function(Name="pg_catalog.tintervalct", ServerSideOnly=true)]
-		public static bool? Tintervalct(object par7075, object par7076)
+		public static bool? Tintervalct(object par7078, object par7079)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23479,7 +23509,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalend
 
 		[Sql.Function(Name="pg_catalog.tintervalend", ServerSideOnly=true)]
-		public static object Tintervalend(object par7078)
+		public static object Tintervalend(object par7081)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23489,7 +23519,7 @@ namespace PostreSQL11DataContext
 		#region Tintervaleq
 
 		[Sql.Function(Name="pg_catalog.tintervaleq", ServerSideOnly=true)]
-		public static bool? Tintervaleq(object par7080, object par7081)
+		public static bool? Tintervaleq(object par7083, object par7084)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23499,7 +23529,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalge
 
 		[Sql.Function(Name="pg_catalog.tintervalge", ServerSideOnly=true)]
-		public static bool? Tintervalge(object par7083, object par7084)
+		public static bool? Tintervalge(object par7086, object par7087)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23509,7 +23539,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalgt
 
 		[Sql.Function(Name="pg_catalog.tintervalgt", ServerSideOnly=true)]
-		public static bool? Tintervalgt(object par7086, object par7087)
+		public static bool? Tintervalgt(object par7089, object par7090)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23519,7 +23549,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalin
 
 		[Sql.Function(Name="pg_catalog.tintervalin", ServerSideOnly=true)]
-		public static object Tintervalin(object par7089)
+		public static object Tintervalin(object par7092)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23529,7 +23559,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalle
 
 		[Sql.Function(Name="pg_catalog.tintervalle", ServerSideOnly=true)]
-		public static bool? Tintervalle(object par7091, object par7092)
+		public static bool? Tintervalle(object par7094, object par7095)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23539,7 +23569,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalleneq
 
 		[Sql.Function(Name="pg_catalog.tintervalleneq", ServerSideOnly=true)]
-		public static bool? Tintervalleneq(object par7094, object par7095)
+		public static bool? Tintervalleneq(object par7097, object par7098)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23549,7 +23579,7 @@ namespace PostreSQL11DataContext
 		#region Tintervallenge
 
 		[Sql.Function(Name="pg_catalog.tintervallenge", ServerSideOnly=true)]
-		public static bool? Tintervallenge(object par7097, object par7098)
+		public static bool? Tintervallenge(object par7100, object par7101)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23559,7 +23589,7 @@ namespace PostreSQL11DataContext
 		#region Tintervallengt
 
 		[Sql.Function(Name="pg_catalog.tintervallengt", ServerSideOnly=true)]
-		public static bool? Tintervallengt(object par7100, object par7101)
+		public static bool? Tintervallengt(object par7103, object par7104)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23569,7 +23599,7 @@ namespace PostreSQL11DataContext
 		#region Tintervallenle
 
 		[Sql.Function(Name="pg_catalog.tintervallenle", ServerSideOnly=true)]
-		public static bool? Tintervallenle(object par7103, object par7104)
+		public static bool? Tintervallenle(object par7106, object par7107)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23579,7 +23609,7 @@ namespace PostreSQL11DataContext
 		#region Tintervallenlt
 
 		[Sql.Function(Name="pg_catalog.tintervallenlt", ServerSideOnly=true)]
-		public static bool? Tintervallenlt(object par7106, object par7107)
+		public static bool? Tintervallenlt(object par7109, object par7110)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23589,7 +23619,7 @@ namespace PostreSQL11DataContext
 		#region Tintervallenne
 
 		[Sql.Function(Name="pg_catalog.tintervallenne", ServerSideOnly=true)]
-		public static bool? Tintervallenne(object par7109, object par7110)
+		public static bool? Tintervallenne(object par7112, object par7113)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23599,7 +23629,7 @@ namespace PostreSQL11DataContext
 		#region Tintervallt
 
 		[Sql.Function(Name="pg_catalog.tintervallt", ServerSideOnly=true)]
-		public static bool? Tintervallt(object par7112, object par7113)
+		public static bool? Tintervallt(object par7115, object par7116)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23609,7 +23639,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalne
 
 		[Sql.Function(Name="pg_catalog.tintervalne", ServerSideOnly=true)]
-		public static bool? Tintervalne(object par7115, object par7116)
+		public static bool? Tintervalne(object par7118, object par7119)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23619,7 +23649,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalout
 
 		[Sql.Function(Name="pg_catalog.tintervalout", ServerSideOnly=true)]
-		public static object Tintervalout(object par7118)
+		public static object Tintervalout(object par7121)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23629,7 +23659,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalov
 
 		[Sql.Function(Name="pg_catalog.tintervalov", ServerSideOnly=true)]
-		public static bool? Tintervalov(object par7120, object par7121)
+		public static bool? Tintervalov(object par7123, object par7124)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23639,7 +23669,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalrecv
 
 		[Sql.Function(Name="pg_catalog.tintervalrecv", ServerSideOnly=true)]
-		public static object Tintervalrecv(object par7123)
+		public static object Tintervalrecv(object par7126)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23649,7 +23679,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalrel
 
 		[Sql.Function(Name="pg_catalog.tintervalrel", ServerSideOnly=true)]
-		public static object Tintervalrel(object par7125)
+		public static object Tintervalrel(object par7128)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23659,7 +23689,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalsame
 
 		[Sql.Function(Name="pg_catalog.tintervalsame", ServerSideOnly=true)]
-		public static bool? Tintervalsame(object par7127, object par7128)
+		public static bool? Tintervalsame(object par7130, object par7131)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23669,7 +23699,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalsend
 
 		[Sql.Function(Name="pg_catalog.tintervalsend", ServerSideOnly=true)]
-		public static byte[] Tintervalsend(object par7130)
+		public static byte[] Tintervalsend(object par7133)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23679,7 +23709,7 @@ namespace PostreSQL11DataContext
 		#region Tintervalstart
 
 		[Sql.Function(Name="pg_catalog.tintervalstart", ServerSideOnly=true)]
-		public static object Tintervalstart(object par7132)
+		public static object Tintervalstart(object par7135)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23689,7 +23719,7 @@ namespace PostreSQL11DataContext
 		#region ToAscii
 
 		[Sql.Function(Name="pg_catalog.to_ascii", ServerSideOnly=true)]
-		public static string ToAscii(string par7139, string par7140)
+		public static string ToAscii(string par7142, string par7143)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23699,7 +23729,7 @@ namespace PostreSQL11DataContext
 		#region ToChar
 
 		[Sql.Function(Name="pg_catalog.to_char", ServerSideOnly=true)]
-		public static string ToChar(DateTime? par7163, string par7164)
+		public static string ToChar(DateTime? par7166, string par7167)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23709,7 +23739,7 @@ namespace PostreSQL11DataContext
 		#region ToDate
 
 		[Sql.Function(Name="pg_catalog.to_date", ServerSideOnly=true)]
-		public static NpgsqlDate? ToDate(string par7166, string par7167)
+		public static NpgsqlDate? ToDate(string par7169, string par7170)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23719,7 +23749,7 @@ namespace PostreSQL11DataContext
 		#region ToHex
 
 		[Sql.Function(Name="pg_catalog.to_hex", ServerSideOnly=true)]
-		public static string ToHex(long? par7171)
+		public static string ToHex(long? par7174)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23729,7 +23759,7 @@ namespace PostreSQL11DataContext
 		#region ToJson
 
 		[Sql.Function(Name="pg_catalog.to_json", ServerSideOnly=true)]
-		public static string ToJson(object par7173)
+		public static string ToJson(object par7176)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23739,7 +23769,7 @@ namespace PostreSQL11DataContext
 		#region ToJsonb
 
 		[Sql.Function(Name="pg_catalog.to_jsonb", ServerSideOnly=true)]
-		public static string ToJsonb(object par7175)
+		public static string ToJsonb(object par7178)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23749,7 +23779,7 @@ namespace PostreSQL11DataContext
 		#region ToNumber
 
 		[Sql.Function(Name="pg_catalog.to_number", ServerSideOnly=true)]
-		public static decimal? ToNumber(string par7177, string par7178)
+		public static decimal? ToNumber(string par7180, string par7181)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23759,7 +23789,7 @@ namespace PostreSQL11DataContext
 		#region ToRegclass
 
 		[Sql.Function(Name="pg_catalog.to_regclass", ServerSideOnly=true)]
-		public static object ToRegclass(string par7180)
+		public static object ToRegclass(string par7183)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23769,7 +23799,7 @@ namespace PostreSQL11DataContext
 		#region ToRegnamespace
 
 		[Sql.Function(Name="pg_catalog.to_regnamespace", ServerSideOnly=true)]
-		public static object ToRegnamespace(string par7182)
+		public static object ToRegnamespace(string par7185)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23779,7 +23809,7 @@ namespace PostreSQL11DataContext
 		#region ToRegoper
 
 		[Sql.Function(Name="pg_catalog.to_regoper", ServerSideOnly=true)]
-		public static object ToRegoper(string par7184)
+		public static object ToRegoper(string par7187)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23789,7 +23819,7 @@ namespace PostreSQL11DataContext
 		#region ToRegoperator
 
 		[Sql.Function(Name="pg_catalog.to_regoperator", ServerSideOnly=true)]
-		public static object ToRegoperator(string par7186)
+		public static object ToRegoperator(string par7189)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23799,7 +23829,7 @@ namespace PostreSQL11DataContext
 		#region ToRegproc
 
 		[Sql.Function(Name="pg_catalog.to_regproc", ServerSideOnly=true)]
-		public static object ToRegproc(string par7188)
+		public static object ToRegproc(string par7191)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23809,7 +23839,7 @@ namespace PostreSQL11DataContext
 		#region ToRegprocedure
 
 		[Sql.Function(Name="pg_catalog.to_regprocedure", ServerSideOnly=true)]
-		public static object ToRegprocedure(string par7190)
+		public static object ToRegprocedure(string par7193)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23819,7 +23849,7 @@ namespace PostreSQL11DataContext
 		#region ToRegrole
 
 		[Sql.Function(Name="pg_catalog.to_regrole", ServerSideOnly=true)]
-		public static object ToRegrole(string par7192)
+		public static object ToRegrole(string par7195)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23829,7 +23859,7 @@ namespace PostreSQL11DataContext
 		#region ToRegtype
 
 		[Sql.Function(Name="pg_catalog.to_regtype", ServerSideOnly=true)]
-		public static object ToRegtype(string par7194)
+		public static object ToRegtype(string par7197)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23839,7 +23869,7 @@ namespace PostreSQL11DataContext
 		#region ToTimestamp
 
 		[Sql.Function(Name="pg_catalog.to_timestamp", ServerSideOnly=true)]
-		public static DateTimeOffset? ToTimestamp(string par7198, string par7199)
+		public static DateTimeOffset? ToTimestamp(string par7201, string par7202)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23849,7 +23879,7 @@ namespace PostreSQL11DataContext
 		#region ToTsquery
 
 		[Sql.Function(Name="pg_catalog.to_tsquery", ServerSideOnly=true)]
-		public static object ToTsquery(string par7204)
+		public static object ToTsquery(string par7207)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23859,7 +23889,7 @@ namespace PostreSQL11DataContext
 		#region ToTsvector
 
 		[Sql.Function(Name="pg_catalog.to_tsvector", ServerSideOnly=true)]
-		public static object ToTsvector(object par7218, string par7219)
+		public static object ToTsvector(object par7221, string par7222)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23879,7 +23909,7 @@ namespace PostreSQL11DataContext
 		#region Translate
 
 		[Sql.Function(Name="pg_catalog.translate", ServerSideOnly=true)]
-		public static string Translate(string par7222, string par7223, string par7224)
+		public static string Translate(string par7225, string par7226, string par7227)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23889,7 +23919,7 @@ namespace PostreSQL11DataContext
 		#region TriggerIn
 
 		[Sql.Function(Name="pg_catalog.trigger_in", ServerSideOnly=true)]
-		public static object TriggerIn(object par7226)
+		public static object TriggerIn(object par7229)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23899,7 +23929,7 @@ namespace PostreSQL11DataContext
 		#region TriggerOut
 
 		[Sql.Function(Name="pg_catalog.trigger_out", ServerSideOnly=true)]
-		public static object TriggerOut(object par7228)
+		public static object TriggerOut(object par7231)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23909,7 +23939,7 @@ namespace PostreSQL11DataContext
 		#region Trunc
 
 		[Sql.Function(Name="pg_catalog.trunc", ServerSideOnly=true)]
-		public static PhysicalAddress Trunc(PhysicalAddress par7239)
+		public static PhysicalAddress Trunc(PhysicalAddress par7242)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23919,7 +23949,7 @@ namespace PostreSQL11DataContext
 		#region TsDelete
 
 		[Sql.Function(Name="pg_catalog.ts_delete", ServerSideOnly=true)]
-		public static object TsDelete(object par7244, object par7245)
+		public static object TsDelete(object par7247, object par7248)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23929,7 +23959,7 @@ namespace PostreSQL11DataContext
 		#region TsFilter
 
 		[Sql.Function(Name="pg_catalog.ts_filter", ServerSideOnly=true)]
-		public static object TsFilter(object par7247, object par7248)
+		public static object TsFilter(object par7250, object par7251)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23939,7 +23969,7 @@ namespace PostreSQL11DataContext
 		#region TsHeadline
 
 		[Sql.Function(Name="pg_catalog.ts_headline", ServerSideOnly=true)]
-		public static string TsHeadline(string par7295, object par7296)
+		public static string TsHeadline(string par7298, object par7299)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23949,7 +23979,7 @@ namespace PostreSQL11DataContext
 		#region TsLexize
 
 		[Sql.Function(Name="pg_catalog.ts_lexize", ServerSideOnly=true)]
-		public static object TsLexize(object par7298, string par7299)
+		public static object TsLexize(object par7301, string par7302)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23959,7 +23989,7 @@ namespace PostreSQL11DataContext
 		#region TsMatchQv
 
 		[Sql.Function(Name="pg_catalog.ts_match_qv", ServerSideOnly=true)]
-		public static bool? TsMatchQv(object par7301, object par7302)
+		public static bool? TsMatchQv(object par7304, object par7305)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23969,7 +23999,7 @@ namespace PostreSQL11DataContext
 		#region TsMatchTq
 
 		[Sql.Function(Name="pg_catalog.ts_match_tq", ServerSideOnly=true)]
-		public static bool? TsMatchTq(string par7304, object par7305)
+		public static bool? TsMatchTq(string par7307, object par7308)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23979,7 +24009,7 @@ namespace PostreSQL11DataContext
 		#region TsMatchTt
 
 		[Sql.Function(Name="pg_catalog.ts_match_tt", ServerSideOnly=true)]
-		public static bool? TsMatchTt(string par7307, string par7308)
+		public static bool? TsMatchTt(string par7310, string par7311)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23989,7 +24019,7 @@ namespace PostreSQL11DataContext
 		#region TsMatchVq
 
 		[Sql.Function(Name="pg_catalog.ts_match_vq", ServerSideOnly=true)]
-		public static bool? TsMatchVq(object par7310, object par7311)
+		public static bool? TsMatchVq(object par7313, object par7314)
 		{
 			throw new InvalidOperationException();
 		}
@@ -23999,7 +24029,7 @@ namespace PostreSQL11DataContext
 		#region TsRank
 
 		[Sql.Function(Name="pg_catalog.ts_rank", ServerSideOnly=true)]
-		public static float? TsRank(object par7326, object par7327)
+		public static float? TsRank(object par7329, object par7330)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24009,7 +24039,7 @@ namespace PostreSQL11DataContext
 		#region TsRankCd
 
 		[Sql.Function(Name="pg_catalog.ts_rank_cd", ServerSideOnly=true)]
-		public static float? TsRankCd(object par7342, object par7343)
+		public static float? TsRankCd(object par7345, object par7346)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24019,7 +24049,7 @@ namespace PostreSQL11DataContext
 		#region TsRewrite
 
 		[Sql.Function(Name="pg_catalog.ts_rewrite", ServerSideOnly=true)]
-		public static object TsRewrite(object par7349, string par7350)
+		public static object TsRewrite(object par7352, string par7353)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24029,7 +24059,7 @@ namespace PostreSQL11DataContext
 		#region TsTypanalyze
 
 		[Sql.Function(Name="pg_catalog.ts_typanalyze", ServerSideOnly=true)]
-		public static bool? TsTypanalyze(object par7352)
+		public static bool? TsTypanalyze(object par7355)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24039,7 +24069,7 @@ namespace PostreSQL11DataContext
 		#region TsmHandlerIn
 
 		[Sql.Function(Name="pg_catalog.tsm_handler_in", ServerSideOnly=true)]
-		public static object TsmHandlerIn(object par7354)
+		public static object TsmHandlerIn(object par7357)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24049,7 +24079,7 @@ namespace PostreSQL11DataContext
 		#region TsmHandlerOut
 
 		[Sql.Function(Name="pg_catalog.tsm_handler_out", ServerSideOnly=true)]
-		public static object TsmHandlerOut(object par7356)
+		public static object TsmHandlerOut(object par7359)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24059,7 +24089,7 @@ namespace PostreSQL11DataContext
 		#region Tsmatchjoinsel
 
 		[Sql.Function(Name="pg_catalog.tsmatchjoinsel", ServerSideOnly=true)]
-		public static double? Tsmatchjoinsel(object par7358, int? par7359, object par7360, short? par7361, object par7362)
+		public static double? Tsmatchjoinsel(object par7361, int? par7362, object par7363, short? par7364, object par7365)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24069,7 +24099,7 @@ namespace PostreSQL11DataContext
 		#region Tsmatchsel
 
 		[Sql.Function(Name="pg_catalog.tsmatchsel", ServerSideOnly=true)]
-		public static double? Tsmatchsel(object par7364, int? par7365, object par7366, int? par7367)
+		public static double? Tsmatchsel(object par7367, int? par7368, object par7369, int? par7370)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24079,7 +24109,7 @@ namespace PostreSQL11DataContext
 		#region TsqMcontained
 
 		[Sql.Function(Name="pg_catalog.tsq_mcontained", ServerSideOnly=true)]
-		public static bool? TsqMcontained(object par7369, object par7370)
+		public static bool? TsqMcontained(object par7372, object par7373)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24089,7 +24119,7 @@ namespace PostreSQL11DataContext
 		#region TsqMcontains
 
 		[Sql.Function(Name="pg_catalog.tsq_mcontains", ServerSideOnly=true)]
-		public static bool? TsqMcontains(object par7372, object par7373)
+		public static bool? TsqMcontains(object par7375, object par7376)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24099,7 +24129,7 @@ namespace PostreSQL11DataContext
 		#region TsqueryAnd
 
 		[Sql.Function(Name="pg_catalog.tsquery_and", ServerSideOnly=true)]
-		public static object TsqueryAnd(object par7375, object par7376)
+		public static object TsqueryAnd(object par7378, object par7379)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24109,7 +24139,7 @@ namespace PostreSQL11DataContext
 		#region TsqueryCmp
 
 		[Sql.Function(Name="pg_catalog.tsquery_cmp", ServerSideOnly=true)]
-		public static int? TsqueryCmp(object par7378, object par7379)
+		public static int? TsqueryCmp(object par7381, object par7382)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24119,7 +24149,7 @@ namespace PostreSQL11DataContext
 		#region TsqueryEq
 
 		[Sql.Function(Name="pg_catalog.tsquery_eq", ServerSideOnly=true)]
-		public static bool? TsqueryEq(object par7381, object par7382)
+		public static bool? TsqueryEq(object par7384, object par7385)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24129,7 +24159,7 @@ namespace PostreSQL11DataContext
 		#region TsqueryGe
 
 		[Sql.Function(Name="pg_catalog.tsquery_ge", ServerSideOnly=true)]
-		public static bool? TsqueryGe(object par7384, object par7385)
+		public static bool? TsqueryGe(object par7387, object par7388)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24139,7 +24169,7 @@ namespace PostreSQL11DataContext
 		#region TsqueryGt
 
 		[Sql.Function(Name="pg_catalog.tsquery_gt", ServerSideOnly=true)]
-		public static bool? TsqueryGt(object par7387, object par7388)
+		public static bool? TsqueryGt(object par7390, object par7391)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24149,7 +24179,7 @@ namespace PostreSQL11DataContext
 		#region TsqueryLe
 
 		[Sql.Function(Name="pg_catalog.tsquery_le", ServerSideOnly=true)]
-		public static bool? TsqueryLe(object par7390, object par7391)
+		public static bool? TsqueryLe(object par7393, object par7394)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24159,7 +24189,7 @@ namespace PostreSQL11DataContext
 		#region TsqueryLt
 
 		[Sql.Function(Name="pg_catalog.tsquery_lt", ServerSideOnly=true)]
-		public static bool? TsqueryLt(object par7393, object par7394)
+		public static bool? TsqueryLt(object par7396, object par7397)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24169,7 +24199,7 @@ namespace PostreSQL11DataContext
 		#region TsqueryNe
 
 		[Sql.Function(Name="pg_catalog.tsquery_ne", ServerSideOnly=true)]
-		public static bool? TsqueryNe(object par7396, object par7397)
+		public static bool? TsqueryNe(object par7399, object par7400)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24179,7 +24209,7 @@ namespace PostreSQL11DataContext
 		#region TsqueryNot
 
 		[Sql.Function(Name="pg_catalog.tsquery_not", ServerSideOnly=true)]
-		public static object TsqueryNot(object par7399)
+		public static object TsqueryNot(object par7402)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24189,7 +24219,7 @@ namespace PostreSQL11DataContext
 		#region TsqueryOr
 
 		[Sql.Function(Name="pg_catalog.tsquery_or", ServerSideOnly=true)]
-		public static object TsqueryOr(object par7401, object par7402)
+		public static object TsqueryOr(object par7404, object par7405)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24199,7 +24229,7 @@ namespace PostreSQL11DataContext
 		#region TsqueryPhrase
 
 		[Sql.Function(Name="pg_catalog.tsquery_phrase", ServerSideOnly=true)]
-		public static object TsqueryPhrase(object par7407, object par7408, int? par7409)
+		public static object TsqueryPhrase(object par7410, object par7411, int? par7412)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24209,7 +24239,7 @@ namespace PostreSQL11DataContext
 		#region Tsqueryin
 
 		[Sql.Function(Name="pg_catalog.tsqueryin", ServerSideOnly=true)]
-		public static object Tsqueryin(object par7411)
+		public static object Tsqueryin(object par7414)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24219,7 +24249,7 @@ namespace PostreSQL11DataContext
 		#region Tsqueryout
 
 		[Sql.Function(Name="pg_catalog.tsqueryout", ServerSideOnly=true)]
-		public static object Tsqueryout(object par7413)
+		public static object Tsqueryout(object par7416)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24229,7 +24259,7 @@ namespace PostreSQL11DataContext
 		#region Tsqueryrecv
 
 		[Sql.Function(Name="pg_catalog.tsqueryrecv", ServerSideOnly=true)]
-		public static object Tsqueryrecv(object par7415)
+		public static object Tsqueryrecv(object par7418)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24239,7 +24269,7 @@ namespace PostreSQL11DataContext
 		#region Tsquerysend
 
 		[Sql.Function(Name="pg_catalog.tsquerysend", ServerSideOnly=true)]
-		public static byte[] Tsquerysend(object par7417)
+		public static byte[] Tsquerysend(object par7420)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24249,7 +24279,7 @@ namespace PostreSQL11DataContext
 		#region Tsrange
 
 		[Sql.Function(Name="pg_catalog.tsrange", ServerSideOnly=true)]
-		public static object Tsrange(DateTime? par7422, DateTime? par7423, string par7424)
+		public static object Tsrange(DateTime? par7425, DateTime? par7426, string par7427)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24259,7 +24289,7 @@ namespace PostreSQL11DataContext
 		#region TsrangeSubdiff
 
 		[Sql.Function(Name="pg_catalog.tsrange_subdiff", ServerSideOnly=true)]
-		public static double? TsrangeSubdiff(DateTime? par7426, DateTime? par7427)
+		public static double? TsrangeSubdiff(DateTime? par7429, DateTime? par7430)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24269,7 +24299,7 @@ namespace PostreSQL11DataContext
 		#region Tstzrange
 
 		[Sql.Function(Name="pg_catalog.tstzrange", ServerSideOnly=true)]
-		public static object Tstzrange(DateTimeOffset? par7432, DateTimeOffset? par7433, string par7434)
+		public static object Tstzrange(DateTimeOffset? par7435, DateTimeOffset? par7436, string par7437)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24279,7 +24309,7 @@ namespace PostreSQL11DataContext
 		#region TstzrangeSubdiff
 
 		[Sql.Function(Name="pg_catalog.tstzrange_subdiff", ServerSideOnly=true)]
-		public static double? TstzrangeSubdiff(DateTimeOffset? par7436, DateTimeOffset? par7437)
+		public static double? TstzrangeSubdiff(DateTimeOffset? par7439, DateTimeOffset? par7440)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24289,7 +24319,7 @@ namespace PostreSQL11DataContext
 		#region TsvectorCmp
 
 		[Sql.Function(Name="pg_catalog.tsvector_cmp", ServerSideOnly=true)]
-		public static int? TsvectorCmp(object par7439, object par7440)
+		public static int? TsvectorCmp(object par7442, object par7443)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24299,7 +24329,7 @@ namespace PostreSQL11DataContext
 		#region TsvectorConcat
 
 		[Sql.Function(Name="pg_catalog.tsvector_concat", ServerSideOnly=true)]
-		public static object TsvectorConcat(object par7442, object par7443)
+		public static object TsvectorConcat(object par7445, object par7446)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24309,7 +24339,7 @@ namespace PostreSQL11DataContext
 		#region TsvectorEq
 
 		[Sql.Function(Name="pg_catalog.tsvector_eq", ServerSideOnly=true)]
-		public static bool? TsvectorEq(object par7445, object par7446)
+		public static bool? TsvectorEq(object par7448, object par7449)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24319,7 +24349,7 @@ namespace PostreSQL11DataContext
 		#region TsvectorGe
 
 		[Sql.Function(Name="pg_catalog.tsvector_ge", ServerSideOnly=true)]
-		public static bool? TsvectorGe(object par7448, object par7449)
+		public static bool? TsvectorGe(object par7451, object par7452)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24329,7 +24359,7 @@ namespace PostreSQL11DataContext
 		#region TsvectorGt
 
 		[Sql.Function(Name="pg_catalog.tsvector_gt", ServerSideOnly=true)]
-		public static bool? TsvectorGt(object par7451, object par7452)
+		public static bool? TsvectorGt(object par7454, object par7455)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24339,7 +24369,7 @@ namespace PostreSQL11DataContext
 		#region TsvectorLe
 
 		[Sql.Function(Name="pg_catalog.tsvector_le", ServerSideOnly=true)]
-		public static bool? TsvectorLe(object par7454, object par7455)
+		public static bool? TsvectorLe(object par7457, object par7458)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24349,7 +24379,7 @@ namespace PostreSQL11DataContext
 		#region TsvectorLt
 
 		[Sql.Function(Name="pg_catalog.tsvector_lt", ServerSideOnly=true)]
-		public static bool? TsvectorLt(object par7457, object par7458)
+		public static bool? TsvectorLt(object par7460, object par7461)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24359,7 +24389,7 @@ namespace PostreSQL11DataContext
 		#region TsvectorNe
 
 		[Sql.Function(Name="pg_catalog.tsvector_ne", ServerSideOnly=true)]
-		public static bool? TsvectorNe(object par7460, object par7461)
+		public static bool? TsvectorNe(object par7463, object par7464)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24369,7 +24399,7 @@ namespace PostreSQL11DataContext
 		#region TsvectorToArray
 
 		[Sql.Function(Name="pg_catalog.tsvector_to_array", ServerSideOnly=true)]
-		public static object TsvectorToArray(object par7463)
+		public static object TsvectorToArray(object par7466)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24399,7 +24429,7 @@ namespace PostreSQL11DataContext
 		#region Tsvectorin
 
 		[Sql.Function(Name="pg_catalog.tsvectorin", ServerSideOnly=true)]
-		public static object Tsvectorin(object par7467)
+		public static object Tsvectorin(object par7470)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24409,7 +24439,7 @@ namespace PostreSQL11DataContext
 		#region Tsvectorout
 
 		[Sql.Function(Name="pg_catalog.tsvectorout", ServerSideOnly=true)]
-		public static object Tsvectorout(object par7469)
+		public static object Tsvectorout(object par7472)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24419,7 +24449,7 @@ namespace PostreSQL11DataContext
 		#region Tsvectorrecv
 
 		[Sql.Function(Name="pg_catalog.tsvectorrecv", ServerSideOnly=true)]
-		public static object Tsvectorrecv(object par7471)
+		public static object Tsvectorrecv(object par7474)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24429,7 +24459,7 @@ namespace PostreSQL11DataContext
 		#region Tsvectorsend
 
 		[Sql.Function(Name="pg_catalog.tsvectorsend", ServerSideOnly=true)]
-		public static byte[] Tsvectorsend(object par7473)
+		public static byte[] Tsvectorsend(object par7476)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24469,7 +24499,7 @@ namespace PostreSQL11DataContext
 		#region TxidSnapshotIn
 
 		[Sql.Function(Name="pg_catalog.txid_snapshot_in", ServerSideOnly=true)]
-		public static object TxidSnapshotIn(object par7478)
+		public static object TxidSnapshotIn(object par7481)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24479,7 +24509,7 @@ namespace PostreSQL11DataContext
 		#region TxidSnapshotOut
 
 		[Sql.Function(Name="pg_catalog.txid_snapshot_out", ServerSideOnly=true)]
-		public static object TxidSnapshotOut(object par7480)
+		public static object TxidSnapshotOut(object par7483)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24489,7 +24519,7 @@ namespace PostreSQL11DataContext
 		#region TxidSnapshotRecv
 
 		[Sql.Function(Name="pg_catalog.txid_snapshot_recv", ServerSideOnly=true)]
-		public static object TxidSnapshotRecv(object par7482)
+		public static object TxidSnapshotRecv(object par7485)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24499,7 +24529,7 @@ namespace PostreSQL11DataContext
 		#region TxidSnapshotSend
 
 		[Sql.Function(Name="pg_catalog.txid_snapshot_send", ServerSideOnly=true)]
-		public static byte[] TxidSnapshotSend(object par7484)
+		public static byte[] TxidSnapshotSend(object par7487)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24509,7 +24539,7 @@ namespace PostreSQL11DataContext
 		#region TxidSnapshotXmax
 
 		[Sql.Function(Name="pg_catalog.txid_snapshot_xmax", ServerSideOnly=true)]
-		public static long? TxidSnapshotXmax(object par7487)
+		public static long? TxidSnapshotXmax(object par7490)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24519,7 +24549,7 @@ namespace PostreSQL11DataContext
 		#region TxidSnapshotXmin
 
 		[Sql.Function(Name="pg_catalog.txid_snapshot_xmin", ServerSideOnly=true)]
-		public static long? TxidSnapshotXmin(object par7489)
+		public static long? TxidSnapshotXmin(object par7492)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24529,7 +24559,7 @@ namespace PostreSQL11DataContext
 		#region TxidStatus
 
 		[Sql.Function(Name="pg_catalog.txid_status", ServerSideOnly=true)]
-		public static string TxidStatus(long? par7491)
+		public static string TxidStatus(long? par7494)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24539,7 +24569,7 @@ namespace PostreSQL11DataContext
 		#region TxidVisibleInSnapshot
 
 		[Sql.Function(Name="pg_catalog.txid_visible_in_snapshot", ServerSideOnly=true)]
-		public static bool? TxidVisibleInSnapshot(long? par7493, object par7494)
+		public static bool? TxidVisibleInSnapshot(long? par7496, object par7497)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24549,7 +24579,7 @@ namespace PostreSQL11DataContext
 		#region UhcToUtf8
 
 		[Sql.Function(Name="pg_catalog.uhc_to_utf8", ServerSideOnly=true)]
-		public static object UhcToUtf8(int? par7495, int? par7496, object par7497, object par7498, int? par7499)
+		public static object UhcToUtf8(int? par7498, int? par7499, object par7500, object par7501, int? par7502)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24569,7 +24599,7 @@ namespace PostreSQL11DataContext
 		#region Unknownin
 
 		[Sql.Function(Name="pg_catalog.unknownin", ServerSideOnly=true)]
-		public static object Unknownin(object par7502)
+		public static object Unknownin(object par7505)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24579,7 +24609,7 @@ namespace PostreSQL11DataContext
 		#region Unknownout
 
 		[Sql.Function(Name="pg_catalog.unknownout", ServerSideOnly=true)]
-		public static object Unknownout(object par7504)
+		public static object Unknownout(object par7507)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24589,7 +24619,7 @@ namespace PostreSQL11DataContext
 		#region Unknownrecv
 
 		[Sql.Function(Name="pg_catalog.unknownrecv", ServerSideOnly=true)]
-		public static object Unknownrecv(object par7506)
+		public static object Unknownrecv(object par7509)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24599,7 +24629,7 @@ namespace PostreSQL11DataContext
 		#region Unknownsend
 
 		[Sql.Function(Name="pg_catalog.unknownsend", ServerSideOnly=true)]
-		public static byte[] Unknownsend(object par7508)
+		public static byte[] Unknownsend(object par7511)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24609,7 +24639,7 @@ namespace PostreSQL11DataContext
 		#region Upper
 
 		[Sql.Function(Name="pg_catalog.upper", ServerSideOnly=true)]
-		public static string Upper(string par7513)
+		public static string Upper(string par7516)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24619,7 +24649,7 @@ namespace PostreSQL11DataContext
 		#region UpperInc
 
 		[Sql.Function(Name="pg_catalog.upper_inc", ServerSideOnly=true)]
-		public static bool? UpperInc(object par7515)
+		public static bool? UpperInc(object par7518)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24629,7 +24659,7 @@ namespace PostreSQL11DataContext
 		#region UpperInf
 
 		[Sql.Function(Name="pg_catalog.upper_inf", ServerSideOnly=true)]
-		public static bool? UpperInf(object par7517)
+		public static bool? UpperInf(object par7520)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24639,7 +24669,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToAscii
 
 		[Sql.Function(Name="pg_catalog.utf8_to_ascii", ServerSideOnly=true)]
-		public static object Utf8ToAscii(int? par7518, int? par7519, object par7520, object par7521, int? par7522)
+		public static object Utf8ToAscii(int? par7521, int? par7522, object par7523, object par7524, int? par7525)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24649,7 +24679,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToBig5
 
 		[Sql.Function(Name="pg_catalog.utf8_to_big5", ServerSideOnly=true)]
-		public static object Utf8ToBig5(int? par7523, int? par7524, object par7525, object par7526, int? par7527)
+		public static object Utf8ToBig5(int? par7526, int? par7527, object par7528, object par7529, int? par7530)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24659,7 +24689,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToEucCn
 
 		[Sql.Function(Name="pg_catalog.utf8_to_euc_cn", ServerSideOnly=true)]
-		public static object Utf8ToEucCn(int? par7528, int? par7529, object par7530, object par7531, int? par7532)
+		public static object Utf8ToEucCn(int? par7531, int? par7532, object par7533, object par7534, int? par7535)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24669,7 +24699,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToEucJis2004
 
 		[Sql.Function(Name="pg_catalog.utf8_to_euc_jis_2004", ServerSideOnly=true)]
-		public static object Utf8ToEucJis2004(int? par7533, int? par7534, object par7535, object par7536, int? par7537)
+		public static object Utf8ToEucJis2004(int? par7536, int? par7537, object par7538, object par7539, int? par7540)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24679,7 +24709,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToEucJp
 
 		[Sql.Function(Name="pg_catalog.utf8_to_euc_jp", ServerSideOnly=true)]
-		public static object Utf8ToEucJp(int? par7538, int? par7539, object par7540, object par7541, int? par7542)
+		public static object Utf8ToEucJp(int? par7541, int? par7542, object par7543, object par7544, int? par7545)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24689,7 +24719,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToEucKr
 
 		[Sql.Function(Name="pg_catalog.utf8_to_euc_kr", ServerSideOnly=true)]
-		public static object Utf8ToEucKr(int? par7543, int? par7544, object par7545, object par7546, int? par7547)
+		public static object Utf8ToEucKr(int? par7546, int? par7547, object par7548, object par7549, int? par7550)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24699,7 +24729,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToEucTw
 
 		[Sql.Function(Name="pg_catalog.utf8_to_euc_tw", ServerSideOnly=true)]
-		public static object Utf8ToEucTw(int? par7548, int? par7549, object par7550, object par7551, int? par7552)
+		public static object Utf8ToEucTw(int? par7551, int? par7552, object par7553, object par7554, int? par7555)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24709,7 +24739,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToGb18030
 
 		[Sql.Function(Name="pg_catalog.utf8_to_gb18030", ServerSideOnly=true)]
-		public static object Utf8ToGb18030(int? par7553, int? par7554, object par7555, object par7556, int? par7557)
+		public static object Utf8ToGb18030(int? par7556, int? par7557, object par7558, object par7559, int? par7560)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24719,7 +24749,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToGbk
 
 		[Sql.Function(Name="pg_catalog.utf8_to_gbk", ServerSideOnly=true)]
-		public static object Utf8ToGbk(int? par7558, int? par7559, object par7560, object par7561, int? par7562)
+		public static object Utf8ToGbk(int? par7561, int? par7562, object par7563, object par7564, int? par7565)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24729,7 +24759,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToIso88591
 
 		[Sql.Function(Name="pg_catalog.utf8_to_iso8859_1", ServerSideOnly=true)]
-		public static object Utf8ToIso88591(int? par7563, int? par7564, object par7565, object par7566, int? par7567)
+		public static object Utf8ToIso88591(int? par7566, int? par7567, object par7568, object par7569, int? par7570)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24739,7 +24769,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToIso8859
 
 		[Sql.Function(Name="pg_catalog.utf8_to_iso8859", ServerSideOnly=true)]
-		public static object Utf8ToIso8859(int? par7568, int? par7569, object par7570, object par7571, int? par7572)
+		public static object Utf8ToIso8859(int? par7571, int? par7572, object par7573, object par7574, int? par7575)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24749,7 +24779,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToJohab
 
 		[Sql.Function(Name="pg_catalog.utf8_to_johab", ServerSideOnly=true)]
-		public static object Utf8ToJohab(int? par7573, int? par7574, object par7575, object par7576, int? par7577)
+		public static object Utf8ToJohab(int? par7576, int? par7577, object par7578, object par7579, int? par7580)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24759,7 +24789,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToKoi8r
 
 		[Sql.Function(Name="pg_catalog.utf8_to_koi8r", ServerSideOnly=true)]
-		public static object Utf8ToKoi8r(int? par7578, int? par7579, object par7580, object par7581, int? par7582)
+		public static object Utf8ToKoi8r(int? par7581, int? par7582, object par7583, object par7584, int? par7585)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24769,7 +24799,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToKoi8u
 
 		[Sql.Function(Name="pg_catalog.utf8_to_koi8u", ServerSideOnly=true)]
-		public static object Utf8ToKoi8u(int? par7583, int? par7584, object par7585, object par7586, int? par7587)
+		public static object Utf8ToKoi8u(int? par7586, int? par7587, object par7588, object par7589, int? par7590)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24779,7 +24809,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToShiftJis2004
 
 		[Sql.Function(Name="pg_catalog.utf8_to_shift_jis_2004", ServerSideOnly=true)]
-		public static object Utf8ToShiftJis2004(int? par7588, int? par7589, object par7590, object par7591, int? par7592)
+		public static object Utf8ToShiftJis2004(int? par7591, int? par7592, object par7593, object par7594, int? par7595)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24789,7 +24819,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToSjis
 
 		[Sql.Function(Name="pg_catalog.utf8_to_sjis", ServerSideOnly=true)]
-		public static object Utf8ToSjis(int? par7593, int? par7594, object par7595, object par7596, int? par7597)
+		public static object Utf8ToSjis(int? par7596, int? par7597, object par7598, object par7599, int? par7600)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24799,7 +24829,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToUhc
 
 		[Sql.Function(Name="pg_catalog.utf8_to_uhc", ServerSideOnly=true)]
-		public static object Utf8ToUhc(int? par7598, int? par7599, object par7600, object par7601, int? par7602)
+		public static object Utf8ToUhc(int? par7601, int? par7602, object par7603, object par7604, int? par7605)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24809,7 +24839,7 @@ namespace PostreSQL11DataContext
 		#region Utf8ToWin
 
 		[Sql.Function(Name="pg_catalog.utf8_to_win", ServerSideOnly=true)]
-		public static object Utf8ToWin(int? par7603, int? par7604, object par7605, object par7606, int? par7607)
+		public static object Utf8ToWin(int? par7606, int? par7607, object par7608, object par7609, int? par7610)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24819,7 +24849,7 @@ namespace PostreSQL11DataContext
 		#region UuidCmp
 
 		[Sql.Function(Name="pg_catalog.uuid_cmp", ServerSideOnly=true)]
-		public static int? UuidCmp(Guid? par7609, Guid? par7610)
+		public static int? UuidCmp(Guid? par7612, Guid? par7613)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24829,7 +24859,7 @@ namespace PostreSQL11DataContext
 		#region UuidEq
 
 		[Sql.Function(Name="pg_catalog.uuid_eq", ServerSideOnly=true)]
-		public static bool? UuidEq(Guid? par7612, Guid? par7613)
+		public static bool? UuidEq(Guid? par7615, Guid? par7616)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24839,7 +24869,7 @@ namespace PostreSQL11DataContext
 		#region UuidGe
 
 		[Sql.Function(Name="pg_catalog.uuid_ge", ServerSideOnly=true)]
-		public static bool? UuidGe(Guid? par7615, Guid? par7616)
+		public static bool? UuidGe(Guid? par7618, Guid? par7619)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24849,7 +24879,7 @@ namespace PostreSQL11DataContext
 		#region UuidGt
 
 		[Sql.Function(Name="pg_catalog.uuid_gt", ServerSideOnly=true)]
-		public static bool? UuidGt(Guid? par7618, Guid? par7619)
+		public static bool? UuidGt(Guid? par7621, Guid? par7622)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24859,7 +24889,7 @@ namespace PostreSQL11DataContext
 		#region UuidHash
 
 		[Sql.Function(Name="pg_catalog.uuid_hash", ServerSideOnly=true)]
-		public static int? UuidHash(Guid? par7621)
+		public static int? UuidHash(Guid? par7624)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24869,7 +24899,7 @@ namespace PostreSQL11DataContext
 		#region UuidHashExtended
 
 		[Sql.Function(Name="pg_catalog.uuid_hash_extended", ServerSideOnly=true)]
-		public static long? UuidHashExtended(Guid? par7623, long? par7624)
+		public static long? UuidHashExtended(Guid? par7626, long? par7627)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24879,7 +24909,7 @@ namespace PostreSQL11DataContext
 		#region UuidIn
 
 		[Sql.Function(Name="pg_catalog.uuid_in", ServerSideOnly=true)]
-		public static Guid? UuidIn(object par7626)
+		public static Guid? UuidIn(object par7629)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24889,7 +24919,7 @@ namespace PostreSQL11DataContext
 		#region UuidLe
 
 		[Sql.Function(Name="pg_catalog.uuid_le", ServerSideOnly=true)]
-		public static bool? UuidLe(Guid? par7628, Guid? par7629)
+		public static bool? UuidLe(Guid? par7631, Guid? par7632)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24899,7 +24929,7 @@ namespace PostreSQL11DataContext
 		#region UuidLt
 
 		[Sql.Function(Name="pg_catalog.uuid_lt", ServerSideOnly=true)]
-		public static bool? UuidLt(Guid? par7631, Guid? par7632)
+		public static bool? UuidLt(Guid? par7634, Guid? par7635)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24909,7 +24939,7 @@ namespace PostreSQL11DataContext
 		#region UuidNe
 
 		[Sql.Function(Name="pg_catalog.uuid_ne", ServerSideOnly=true)]
-		public static bool? UuidNe(Guid? par7634, Guid? par7635)
+		public static bool? UuidNe(Guid? par7637, Guid? par7638)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24919,7 +24949,7 @@ namespace PostreSQL11DataContext
 		#region UuidOut
 
 		[Sql.Function(Name="pg_catalog.uuid_out", ServerSideOnly=true)]
-		public static object UuidOut(Guid? par7637)
+		public static object UuidOut(Guid? par7640)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24929,7 +24959,7 @@ namespace PostreSQL11DataContext
 		#region UuidRecv
 
 		[Sql.Function(Name="pg_catalog.uuid_recv", ServerSideOnly=true)]
-		public static Guid? UuidRecv(object par7639)
+		public static Guid? UuidRecv(object par7642)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24939,7 +24969,7 @@ namespace PostreSQL11DataContext
 		#region UuidSend
 
 		[Sql.Function(Name="pg_catalog.uuid_send", ServerSideOnly=true)]
-		public static byte[] UuidSend(Guid? par7641)
+		public static byte[] UuidSend(Guid? par7644)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24949,7 +24979,7 @@ namespace PostreSQL11DataContext
 		#region UuidSortsupport
 
 		[Sql.Function(Name="pg_catalog.uuid_sortsupport", ServerSideOnly=true)]
-		public static object UuidSortsupport(object par7642)
+		public static object UuidSortsupport(object par7645)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24959,7 +24989,7 @@ namespace PostreSQL11DataContext
 		#region VarPop
 
 		[Sql.Function(Name="pg_catalog.var_pop", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static decimal? VarPop<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par7654)
+		public static decimal? VarPop<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par7657)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24969,7 +24999,7 @@ namespace PostreSQL11DataContext
 		#region VarSamp
 
 		[Sql.Function(Name="pg_catalog.var_samp", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static decimal? VarSamp<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par7666)
+		public static decimal? VarSamp<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par7669)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24979,7 +25009,7 @@ namespace PostreSQL11DataContext
 		#region Varbit
 
 		[Sql.Function(Name="pg_catalog.varbit", ServerSideOnly=true)]
-		public static BitArray Varbit(BitArray par7668, int? par7669, bool? par7670)
+		public static BitArray Varbit(BitArray par7671, int? par7672, bool? par7673)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24989,7 +25019,7 @@ namespace PostreSQL11DataContext
 		#region VarbitIn
 
 		[Sql.Function(Name="pg_catalog.varbit_in", ServerSideOnly=true)]
-		public static BitArray VarbitIn(object par7672, int? par7673, int? par7674)
+		public static BitArray VarbitIn(object par7675, int? par7676, int? par7677)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24999,7 +25029,7 @@ namespace PostreSQL11DataContext
 		#region VarbitOut
 
 		[Sql.Function(Name="pg_catalog.varbit_out", ServerSideOnly=true)]
-		public static object VarbitOut(BitArray par7676)
+		public static object VarbitOut(BitArray par7679)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25009,7 +25039,7 @@ namespace PostreSQL11DataContext
 		#region VarbitRecv
 
 		[Sql.Function(Name="pg_catalog.varbit_recv", ServerSideOnly=true)]
-		public static BitArray VarbitRecv(object par7678, int? par7679, int? par7680)
+		public static BitArray VarbitRecv(object par7681, int? par7682, int? par7683)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25019,7 +25049,7 @@ namespace PostreSQL11DataContext
 		#region VarbitSend
 
 		[Sql.Function(Name="pg_catalog.varbit_send", ServerSideOnly=true)]
-		public static byte[] VarbitSend(BitArray par7682)
+		public static byte[] VarbitSend(BitArray par7685)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25029,7 +25059,7 @@ namespace PostreSQL11DataContext
 		#region VarbitTransform
 
 		[Sql.Function(Name="pg_catalog.varbit_transform", ServerSideOnly=true)]
-		public static object VarbitTransform(object par7684)
+		public static object VarbitTransform(object par7687)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25039,7 +25069,7 @@ namespace PostreSQL11DataContext
 		#region Varbitcmp
 
 		[Sql.Function(Name="pg_catalog.varbitcmp", ServerSideOnly=true)]
-		public static int? Varbitcmp(BitArray par7686, BitArray par7687)
+		public static int? Varbitcmp(BitArray par7689, BitArray par7690)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25049,7 +25079,7 @@ namespace PostreSQL11DataContext
 		#region Varbiteq
 
 		[Sql.Function(Name="pg_catalog.varbiteq", ServerSideOnly=true)]
-		public static bool? Varbiteq(BitArray par7689, BitArray par7690)
+		public static bool? Varbiteq(BitArray par7692, BitArray par7693)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25059,7 +25089,7 @@ namespace PostreSQL11DataContext
 		#region Varbitge
 
 		[Sql.Function(Name="pg_catalog.varbitge", ServerSideOnly=true)]
-		public static bool? Varbitge(BitArray par7692, BitArray par7693)
+		public static bool? Varbitge(BitArray par7695, BitArray par7696)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25069,7 +25099,7 @@ namespace PostreSQL11DataContext
 		#region Varbitgt
 
 		[Sql.Function(Name="pg_catalog.varbitgt", ServerSideOnly=true)]
-		public static bool? Varbitgt(BitArray par7695, BitArray par7696)
+		public static bool? Varbitgt(BitArray par7698, BitArray par7699)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25079,7 +25109,7 @@ namespace PostreSQL11DataContext
 		#region Varbitle
 
 		[Sql.Function(Name="pg_catalog.varbitle", ServerSideOnly=true)]
-		public static bool? Varbitle(BitArray par7698, BitArray par7699)
+		public static bool? Varbitle(BitArray par7701, BitArray par7702)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25089,7 +25119,7 @@ namespace PostreSQL11DataContext
 		#region Varbitlt
 
 		[Sql.Function(Name="pg_catalog.varbitlt", ServerSideOnly=true)]
-		public static bool? Varbitlt(BitArray par7701, BitArray par7702)
+		public static bool? Varbitlt(BitArray par7704, BitArray par7705)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25099,7 +25129,7 @@ namespace PostreSQL11DataContext
 		#region Varbitne
 
 		[Sql.Function(Name="pg_catalog.varbitne", ServerSideOnly=true)]
-		public static bool? Varbitne(BitArray par7704, BitArray par7705)
+		public static bool? Varbitne(BitArray par7707, BitArray par7708)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25109,7 +25139,7 @@ namespace PostreSQL11DataContext
 		#region Varbittypmodin
 
 		[Sql.Function(Name="pg_catalog.varbittypmodin", ServerSideOnly=true)]
-		public static int? Varbittypmodin(object par7707)
+		public static int? Varbittypmodin(object par7710)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25119,7 +25149,7 @@ namespace PostreSQL11DataContext
 		#region Varbittypmodout
 
 		[Sql.Function(Name="pg_catalog.varbittypmodout", ServerSideOnly=true)]
-		public static object Varbittypmodout(int? par7709)
+		public static object Varbittypmodout(int? par7712)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25129,7 +25159,7 @@ namespace PostreSQL11DataContext
 		#region Varchar
 
 		[Sql.Function(Name="pg_catalog.varchar", ServerSideOnly=true)]
-		public static string Varchar(string par7713, int? par7714, bool? par7715)
+		public static string Varchar(string par7716, int? par7717, bool? par7718)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25139,7 +25169,7 @@ namespace PostreSQL11DataContext
 		#region VarcharTransform
 
 		[Sql.Function(Name="pg_catalog.varchar_transform", ServerSideOnly=true)]
-		public static object VarcharTransform(object par7717)
+		public static object VarcharTransform(object par7720)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25149,7 +25179,7 @@ namespace PostreSQL11DataContext
 		#region Varcharin
 
 		[Sql.Function(Name="pg_catalog.varcharin", ServerSideOnly=true)]
-		public static string Varcharin(object par7719, int? par7720, int? par7721)
+		public static string Varcharin(object par7722, int? par7723, int? par7724)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25159,7 +25189,7 @@ namespace PostreSQL11DataContext
 		#region Varcharout
 
 		[Sql.Function(Name="pg_catalog.varcharout", ServerSideOnly=true)]
-		public static object Varcharout(string par7723)
+		public static object Varcharout(string par7726)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25169,7 +25199,7 @@ namespace PostreSQL11DataContext
 		#region Varcharrecv
 
 		[Sql.Function(Name="pg_catalog.varcharrecv", ServerSideOnly=true)]
-		public static string Varcharrecv(object par7725, int? par7726, int? par7727)
+		public static string Varcharrecv(object par7728, int? par7729, int? par7730)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25179,7 +25209,7 @@ namespace PostreSQL11DataContext
 		#region Varcharsend
 
 		[Sql.Function(Name="pg_catalog.varcharsend", ServerSideOnly=true)]
-		public static byte[] Varcharsend(string par7729)
+		public static byte[] Varcharsend(string par7732)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25189,7 +25219,7 @@ namespace PostreSQL11DataContext
 		#region Varchartypmodin
 
 		[Sql.Function(Name="pg_catalog.varchartypmodin", ServerSideOnly=true)]
-		public static int? Varchartypmodin(object par7731)
+		public static int? Varchartypmodin(object par7734)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25199,7 +25229,7 @@ namespace PostreSQL11DataContext
 		#region Varchartypmodout
 
 		[Sql.Function(Name="pg_catalog.varchartypmodout", ServerSideOnly=true)]
-		public static object Varchartypmodout(int? par7733)
+		public static object Varchartypmodout(int? par7736)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25209,7 +25239,7 @@ namespace PostreSQL11DataContext
 		#region Variance
 
 		[Sql.Function(Name="pg_catalog.variance", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static decimal? Variance<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par7745)
+		public static decimal? Variance<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, decimal?>> par7748)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25229,7 +25259,7 @@ namespace PostreSQL11DataContext
 		#region VoidIn
 
 		[Sql.Function(Name="pg_catalog.void_in", ServerSideOnly=true)]
-		public static object VoidIn(object par7747)
+		public static object VoidIn(object par7750)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25239,7 +25269,7 @@ namespace PostreSQL11DataContext
 		#region VoidOut
 
 		[Sql.Function(Name="pg_catalog.void_out", ServerSideOnly=true)]
-		public static object VoidOut(object par7749)
+		public static object VoidOut(object par7752)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25249,7 +25279,7 @@ namespace PostreSQL11DataContext
 		#region VoidRecv
 
 		[Sql.Function(Name="pg_catalog.void_recv", ServerSideOnly=true)]
-		public static object VoidRecv(object par7750)
+		public static object VoidRecv(object par7753)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25259,7 +25289,7 @@ namespace PostreSQL11DataContext
 		#region VoidSend
 
 		[Sql.Function(Name="pg_catalog.void_send", ServerSideOnly=true)]
-		public static byte[] VoidSend(object par7752)
+		public static byte[] VoidSend(object par7755)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25269,7 +25299,7 @@ namespace PostreSQL11DataContext
 		#region WebsearchToTsquery
 
 		[Sql.Function(Name="pg_catalog.websearch_to_tsquery", ServerSideOnly=true)]
-		public static object WebsearchToTsquery(string par7757)
+		public static object WebsearchToTsquery(string par7760)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25279,7 +25309,7 @@ namespace PostreSQL11DataContext
 		#region Width
 
 		[Sql.Function(Name="pg_catalog.width", ServerSideOnly=true)]
-		public static double? Width(NpgsqlBox? par7759)
+		public static double? Width(NpgsqlBox? par7762)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25289,7 +25319,7 @@ namespace PostreSQL11DataContext
 		#region WidthBucket
 
 		[Sql.Function(Name="pg_catalog.width_bucket", ServerSideOnly=true)]
-		public static int? WidthBucket(object par7771, object par7772)
+		public static int? WidthBucket(object par7774, object par7775)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25299,7 +25329,7 @@ namespace PostreSQL11DataContext
 		#region WinToUtf8
 
 		[Sql.Function(Name="pg_catalog.win_to_utf8", ServerSideOnly=true)]
-		public static object WinToUtf8(int? par7773, int? par7774, object par7775, object par7776, int? par7777)
+		public static object WinToUtf8(int? par7776, int? par7777, object par7778, object par7779, int? par7780)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25309,7 +25339,7 @@ namespace PostreSQL11DataContext
 		#region Win1250ToLatin2
 
 		[Sql.Function(Name="pg_catalog.win1250_to_latin2", ServerSideOnly=true)]
-		public static object Win1250ToLatin2(int? par7778, int? par7779, object par7780, object par7781, int? par7782)
+		public static object Win1250ToLatin2(int? par7781, int? par7782, object par7783, object par7784, int? par7785)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25319,7 +25349,7 @@ namespace PostreSQL11DataContext
 		#region Win1250ToMic
 
 		[Sql.Function(Name="pg_catalog.win1250_to_mic", ServerSideOnly=true)]
-		public static object Win1250ToMic(int? par7783, int? par7784, object par7785, object par7786, int? par7787)
+		public static object Win1250ToMic(int? par7786, int? par7787, object par7788, object par7789, int? par7790)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25329,7 +25359,7 @@ namespace PostreSQL11DataContext
 		#region Win1251ToIso
 
 		[Sql.Function(Name="pg_catalog.win1251_to_iso", ServerSideOnly=true)]
-		public static object Win1251ToIso(int? par7788, int? par7789, object par7790, object par7791, int? par7792)
+		public static object Win1251ToIso(int? par7791, int? par7792, object par7793, object par7794, int? par7795)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25339,7 +25369,7 @@ namespace PostreSQL11DataContext
 		#region Win1251ToKoi8r
 
 		[Sql.Function(Name="pg_catalog.win1251_to_koi8r", ServerSideOnly=true)]
-		public static object Win1251ToKoi8r(int? par7793, int? par7794, object par7795, object par7796, int? par7797)
+		public static object Win1251ToKoi8r(int? par7796, int? par7797, object par7798, object par7799, int? par7800)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25349,7 +25379,7 @@ namespace PostreSQL11DataContext
 		#region Win1251ToMic
 
 		[Sql.Function(Name="pg_catalog.win1251_to_mic", ServerSideOnly=true)]
-		public static object Win1251ToMic(int? par7798, int? par7799, object par7800, object par7801, int? par7802)
+		public static object Win1251ToMic(int? par7801, int? par7802, object par7803, object par7804, int? par7805)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25359,7 +25389,7 @@ namespace PostreSQL11DataContext
 		#region Win1251ToWin866
 
 		[Sql.Function(Name="pg_catalog.win1251_to_win866", ServerSideOnly=true)]
-		public static object Win1251ToWin866(int? par7803, int? par7804, object par7805, object par7806, int? par7807)
+		public static object Win1251ToWin866(int? par7806, int? par7807, object par7808, object par7809, int? par7810)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25369,7 +25399,7 @@ namespace PostreSQL11DataContext
 		#region Win866ToIso
 
 		[Sql.Function(Name="pg_catalog.win866_to_iso", ServerSideOnly=true)]
-		public static object Win866ToIso(int? par7808, int? par7809, object par7810, object par7811, int? par7812)
+		public static object Win866ToIso(int? par7811, int? par7812, object par7813, object par7814, int? par7815)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25379,7 +25409,7 @@ namespace PostreSQL11DataContext
 		#region Win866ToKoi8r
 
 		[Sql.Function(Name="pg_catalog.win866_to_koi8r", ServerSideOnly=true)]
-		public static object Win866ToKoi8r(int? par7813, int? par7814, object par7815, object par7816, int? par7817)
+		public static object Win866ToKoi8r(int? par7816, int? par7817, object par7818, object par7819, int? par7820)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25389,7 +25419,7 @@ namespace PostreSQL11DataContext
 		#region Win866ToMic
 
 		[Sql.Function(Name="pg_catalog.win866_to_mic", ServerSideOnly=true)]
-		public static object Win866ToMic(int? par7818, int? par7819, object par7820, object par7821, int? par7822)
+		public static object Win866ToMic(int? par7821, int? par7822, object par7823, object par7824, int? par7825)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25399,7 +25429,7 @@ namespace PostreSQL11DataContext
 		#region Win866ToWin1251
 
 		[Sql.Function(Name="pg_catalog.win866_to_win1251", ServerSideOnly=true)]
-		public static object Win866ToWin1251(int? par7823, int? par7824, object par7825, object par7826, int? par7827)
+		public static object Win866ToWin1251(int? par7826, int? par7827, object par7828, object par7829, int? par7830)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25409,7 +25439,7 @@ namespace PostreSQL11DataContext
 		#region Xideq
 
 		[Sql.Function(Name="pg_catalog.xideq", ServerSideOnly=true)]
-		public static bool? Xideq(int? par7829, int? par7830)
+		public static bool? Xideq(int? par7832, int? par7833)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25419,7 +25449,7 @@ namespace PostreSQL11DataContext
 		#region Xideqint4
 
 		[Sql.Function(Name="pg_catalog.xideqint4", ServerSideOnly=true)]
-		public static bool? Xideqint4(int? par7832, int? par7833)
+		public static bool? Xideqint4(int? par7835, int? par7836)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25429,7 +25459,7 @@ namespace PostreSQL11DataContext
 		#region Xidin
 
 		[Sql.Function(Name="pg_catalog.xidin", ServerSideOnly=true)]
-		public static int? Xidin(object par7835)
+		public static int? Xidin(object par7838)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25439,7 +25469,7 @@ namespace PostreSQL11DataContext
 		#region Xidneq
 
 		[Sql.Function(Name="pg_catalog.xidneq", ServerSideOnly=true)]
-		public static bool? Xidneq(int? par7837, int? par7838)
+		public static bool? Xidneq(int? par7840, int? par7841)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25449,7 +25479,7 @@ namespace PostreSQL11DataContext
 		#region Xidneqint4
 
 		[Sql.Function(Name="pg_catalog.xidneqint4", ServerSideOnly=true)]
-		public static bool? Xidneqint4(int? par7840, int? par7841)
+		public static bool? Xidneqint4(int? par7843, int? par7844)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25459,7 +25489,7 @@ namespace PostreSQL11DataContext
 		#region Xidout
 
 		[Sql.Function(Name="pg_catalog.xidout", ServerSideOnly=true)]
-		public static object Xidout(int? par7843)
+		public static object Xidout(int? par7846)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25469,7 +25499,7 @@ namespace PostreSQL11DataContext
 		#region Xidrecv
 
 		[Sql.Function(Name="pg_catalog.xidrecv", ServerSideOnly=true)]
-		public static int? Xidrecv(object par7845)
+		public static int? Xidrecv(object par7848)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25479,7 +25509,7 @@ namespace PostreSQL11DataContext
 		#region Xidsend
 
 		[Sql.Function(Name="pg_catalog.xidsend", ServerSideOnly=true)]
-		public static byte[] Xidsend(int? par7847)
+		public static byte[] Xidsend(int? par7850)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25489,7 +25519,7 @@ namespace PostreSQL11DataContext
 		#region Xml
 
 		[Sql.Function(Name="pg_catalog.xml", ServerSideOnly=true)]
-		public static string Xml(string par7849)
+		public static string Xml(string par7852)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25499,7 +25529,7 @@ namespace PostreSQL11DataContext
 		#region XmlIn
 
 		[Sql.Function(Name="pg_catalog.xml_in", ServerSideOnly=true)]
-		public static string XmlIn(object par7851)
+		public static string XmlIn(object par7854)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25509,7 +25539,7 @@ namespace PostreSQL11DataContext
 		#region XmlIsWellFormed
 
 		[Sql.Function(Name="pg_catalog.xml_is_well_formed", ServerSideOnly=true)]
-		public static bool? XmlIsWellFormed(string par7853)
+		public static bool? XmlIsWellFormed(string par7856)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25519,7 +25549,7 @@ namespace PostreSQL11DataContext
 		#region XmlIsWellFormedContent
 
 		[Sql.Function(Name="pg_catalog.xml_is_well_formed_content", ServerSideOnly=true)]
-		public static bool? XmlIsWellFormedContent(string par7855)
+		public static bool? XmlIsWellFormedContent(string par7858)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25529,7 +25559,7 @@ namespace PostreSQL11DataContext
 		#region XmlIsWellFormedDocument
 
 		[Sql.Function(Name="pg_catalog.xml_is_well_formed_document", ServerSideOnly=true)]
-		public static bool? XmlIsWellFormedDocument(string par7857)
+		public static bool? XmlIsWellFormedDocument(string par7860)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25539,7 +25569,7 @@ namespace PostreSQL11DataContext
 		#region XmlOut
 
 		[Sql.Function(Name="pg_catalog.xml_out", ServerSideOnly=true)]
-		public static object XmlOut(string par7859)
+		public static object XmlOut(string par7862)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25549,7 +25579,7 @@ namespace PostreSQL11DataContext
 		#region XmlRecv
 
 		[Sql.Function(Name="pg_catalog.xml_recv", ServerSideOnly=true)]
-		public static string XmlRecv(object par7861)
+		public static string XmlRecv(object par7864)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25559,7 +25589,7 @@ namespace PostreSQL11DataContext
 		#region XmlSend
 
 		[Sql.Function(Name="pg_catalog.xml_send", ServerSideOnly=true)]
-		public static byte[] XmlSend(string par7863)
+		public static byte[] XmlSend(string par7866)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25569,7 +25599,7 @@ namespace PostreSQL11DataContext
 		#region Xmlagg
 
 		[Sql.Function(Name="pg_catalog.xmlagg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static string Xmlagg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, string>> par7865)
+		public static string Xmlagg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, string>> par7868)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25579,7 +25609,7 @@ namespace PostreSQL11DataContext
 		#region Xmlcomment
 
 		[Sql.Function(Name="pg_catalog.xmlcomment", ServerSideOnly=true)]
-		public static string Xmlcomment(string par7867)
+		public static string Xmlcomment(string par7870)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25589,7 +25619,7 @@ namespace PostreSQL11DataContext
 		#region Xmlconcat2
 
 		[Sql.Function(Name="pg_catalog.xmlconcat2", ServerSideOnly=true)]
-		public static string Xmlconcat2(string par7869, string par7870)
+		public static string Xmlconcat2(string par7872, string par7873)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25599,7 +25629,7 @@ namespace PostreSQL11DataContext
 		#region Xmlexists
 
 		[Sql.Function(Name="pg_catalog.xmlexists", ServerSideOnly=true)]
-		public static bool? Xmlexists(string par7872, string par7873)
+		public static bool? Xmlexists(string par7875, string par7876)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25609,7 +25639,7 @@ namespace PostreSQL11DataContext
 		#region Xmlvalidate
 
 		[Sql.Function(Name="pg_catalog.xmlvalidate", ServerSideOnly=true)]
-		public static bool? Xmlvalidate(string par7875, string par7876)
+		public static bool? Xmlvalidate(string par7878, string par7879)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25619,7 +25649,7 @@ namespace PostreSQL11DataContext
 		#region Xpath
 
 		[Sql.Function(Name="pg_catalog.xpath", ServerSideOnly=true)]
-		public static object Xpath(string par7882, string par7883)
+		public static object Xpath(string par7885, string par7886)
 		{
 			throw new InvalidOperationException();
 		}
@@ -25629,7 +25659,7 @@ namespace PostreSQL11DataContext
 		#region XpathExists
 
 		[Sql.Function(Name="pg_catalog.xpath_exists", ServerSideOnly=true)]
-		public static bool? XpathExists(string par7889, string par7890)
+		public static bool? XpathExists(string par7892, string par7893)
 		{
 			throw new InvalidOperationException();
 		}
