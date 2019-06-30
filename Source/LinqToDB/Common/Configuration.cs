@@ -6,6 +6,7 @@ namespace LinqToDB.Common
 {
 	using Data;
 	using Data.RetryPolicy;
+	using System.Threading.Tasks;
 
 	/// <summary>
 	/// Contains global linq2db settings.
@@ -33,6 +34,12 @@ namespace LinqToDB.Common
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public static bool AvoidSpecificDataProviderAPI;
+
+		/// <summary>
+		/// Defines value to pass to <see cref="Task.ConfigureAwait(bool)"/> method for all linq2db internal await operations.
+		/// Default value: <c>true</c>.
+		/// </summary>
+		public static bool ContinueOnCapturedContext = true;
 
 		public static class Data
 		{

@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider
 			if (!BuildCommand(dataConnection, predicate, delete, source, tableName, databaseName, schemaName))
 				return 0;
 
-			return await ExecuteAsync(dataConnection, token);
+			return await ExecuteAsync(dataConnection, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
