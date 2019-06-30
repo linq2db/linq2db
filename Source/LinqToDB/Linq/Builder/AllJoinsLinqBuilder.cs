@@ -25,14 +25,6 @@ namespace LinqToDB.Linq.Builder
 			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SelectQuery));
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
-			outerContext = new SubQueryContext(outerContext);
-			innerContext = new SubQueryContext(innerContext);
-
-			var selector = (LambdaExpression)methodCall.Arguments[methodCall.Arguments.Count - 1].Unwrap();
-
-			outerContext.SetAlias(selector.Parameters[0].Name);
-			innerContext.SetAlias(selector.Parameters[1].Name);
-
 			JoinType joinType;
 			var conditionIndex = 2;
 
@@ -59,6 +51,16 @@ namespace LinqToDB.Linq.Builder
 
 					break;
 			}
+
+			outerContext = new SubQueryContext(outerContext);
+			innerContext = joinType == JoinType.Left
+				? new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, null)
+				: (IBuildContext)new SubQueryContext(innerContext);
+
+			var selector = (LambdaExpression)methodCall.Arguments[methodCall.Arguments.Count - 1].Unwrap();
+
+			outerContext.SetAlias(selector.Parameters[0].Name);
+			innerContext.SetAlias(selector.Parameters[1].Name);
 
 			if (conditionIndex != -1)
 			{

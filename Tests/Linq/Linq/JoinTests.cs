@@ -1663,5 +1663,72 @@ namespace Tests.Linq
 				Assert.IsNull(results[1].leftTag);
 			}
 		}
+
+		[Test]
+		public void LeftJoinWithRecordSelection5([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.Data))
+			{
+				var q =
+					from ft in factTable.LeftJoin(tagTable, (f, t) => t.FactId == f.Id, (f, t) => new { fact = f, leftTag = t })
+					where ft.fact.Id > 3
+					select ft;
+
+				var results = q.ToArray();
+
+				Assert.AreEqual(2, results.Length);
+				Assert.AreEqual(4, results[0].fact.Id);
+				Assert.AreEqual("Tag4", results[0].leftTag.Name);
+				Assert.AreEqual(5, results[1].fact.Id);
+				Assert.IsNull(results[1].leftTag);
+			}
+		}
+
+		[Test]
+		public void LeftJoinWithRecordSelection6([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.Data))
+			{
+				var q =
+					from ft in factTable.Join(tagTable, SqlJoinType.Left, (f, t) => t.FactId == f.Id, (f, t) => new { fact = f, leftTag = t })
+					where ft.fact.Id > 3
+					select ft;
+
+				var results = q.ToArray();
+
+				Assert.AreEqual(2, results.Length);
+				Assert.AreEqual(4, results[0].fact.Id);
+				Assert.AreEqual("Tag4", results[0].leftTag.Name);
+				Assert.AreEqual(5, results[1].fact.Id);
+				Assert.IsNull(results[1].leftTag);
+			}
+		}
+
+		[Test]
+		public void LeftJoinWithRecordSelection7([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var factTable = db.CreateLocalTable(Fact.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.Data))
+			{
+				var t =
+					from fact in factTable
+					from leftTag in tagTable.Join(SqlJoinType.Left, tag => tag.FactId == fact.Id)
+					where fact.Id > 3
+					select new { fact, leftTag };
+
+				var results = t.ToArray();
+
+				Assert.AreEqual(2, results.Length);
+				Assert.AreEqual(4, results[0].fact.Id);
+				Assert.AreEqual("Tag4", results[0].leftTag.Name);
+				Assert.AreEqual(5, results[1].fact.Id);
+				Assert.IsNull(results[1].leftTag);
+			}
+		}
 	}
 }
