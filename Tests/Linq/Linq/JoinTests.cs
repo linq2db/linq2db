@@ -1830,7 +1830,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FullJoinWithRecordSelection1([DataSources(TestProvName.AllSQLite)] string context)
+		public void FullJoinWithRecordSelection1([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var factTable = db.CreateLocalTable(Fact.Data))
@@ -1852,7 +1857,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FullJoinWithRecordSelection2([DataSources(TestProvName.AllSQLite)] string context)
+		public void FullJoinWithRecordSelection2([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var factTable = db.CreateLocalTable(Fact.Data))
@@ -1874,7 +1884,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FullJoinWithRecordSelection3([DataSources(TestProvName.AllSQLite)] string context)
+		public void FullJoinWithRecordSelection3([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var factTable = db.CreateLocalTable(Fact.Data))
@@ -1895,7 +1910,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FullJoinWithRecordSelection4([DataSources(TestProvName.AllSQLite)] string context)
+		public void FullJoinWithRecordSelection4([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var factTable = db.CreateLocalTable(Fact.Data))
