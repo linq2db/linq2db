@@ -1511,6 +1511,36 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void SqlFullJoinWithBothFiltersAlternative([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id1 = Parent.First().ParentID;
+				var id2 = Parent.Skip(1).First().ParentID;
+
+				var actual =
+					from lr in db.Parent.Where(p => p.ParentID != id1)
+						.FullJoin(db.Parent.Where(p => p.ParentID != id2), (left, right) => right.ParentID == left.ParentID, (left, right) => new { left, right})
+					select new
+					{
+						Left = lr.left != null ? (int?)lr.left.ParentID : null,
+						Right = lr.right != null ? (int?)lr.right.ParentID : null,
+					};
+
+				var expected =
+					Parent.Where(p => p.ParentID != id1)
+						.SqlJoinInternal(
+							Parent.Where(p => p.ParentID != id2), SqlJoinType.Full, o => o.ParentID, i => i.ParentID, (left, right) => new
+							{
+								Left = left?.ParentID,
+								Right = right?.ParentID
+							});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
 		/// <summary>
 		/// Tests that AllJoinsBuilder do not handle standard Joins
 		/// </summary>

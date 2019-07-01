@@ -32,8 +32,8 @@ namespace LinqToDB.Linq.Builder
 			if (expr is MethodCallExpression mc && AllJoinsBuilder.IsMatchingMethod(mc, true))
 			{
 				defaultIfEmpty = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
-				sequence = new SubQueryContext(defaultIfEmpty);
 				defaultIfEmpty.Disabled = true;
+				sequence = new SubQueryContext(defaultIfEmpty);
 			}
 
 			var context        = new SelectManyContext(buildInfo.Parent, collectionSelector, sequence);
