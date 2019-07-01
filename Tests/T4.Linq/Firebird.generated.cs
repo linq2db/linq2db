@@ -21,27 +21,24 @@ namespace FirebirdDataContext
 {
 	public partial class TESTDB25DB : LinqToDB.Data.DataConnection
 	{
-		public ITable<ALLTYPE>                  ALLTYPES                 { get { return this.GetTable<ALLTYPE>(); } }
-		public ITable<AsyncdatatableFlsSodpa81> AsyncdatatableFlsSodpa81 { get { return this.GetTable<AsyncdatatableFlsSodpa81>(); } }
-		public ITable<CamelCaseName>            CamelCaseNames           { get { return this.GetTable<CamelCaseName>(); } }
-		public ITable<CHILD>                    Children                 { get { return this.GetTable<CHILD>(); } }
-		public ITable<DATATYPETEST>             Datatypetests            { get { return this.GetTable<DATATYPETEST>(); } }
-		public ITable<DOCTOR>                   Doctors                  { get { return this.GetTable<DOCTOR>(); } }
-		public ITable<DUAL>                     Duals                    { get { return this.GetTable<DUAL>(); } }
-		public ITable<GRANDCHILD>               Grandchilds              { get { return this.GetTable<GRANDCHILD>(); } }
-		public ITable<INHERITANCECHILD>         Inheritancechilds        { get { return this.GetTable<INHERITANCECHILD>(); } }
-		public ITable<INHERITANCEPARENT>        Inheritanceparents       { get { return this.GetTable<INHERITANCEPARENT>(); } }
-		public ITable<InstanceclassFls6157>     InstanceclassFls6157     { get { return this.GetTable<InstanceclassFls6157>(); } }
-		public ITable<LINQDATATYPE>             LINQDATATYPES            { get { return this.GetTable<LINQDATATYPE>(); } }
-		public ITable<PARENT>                   Parents                  { get { return this.GetTable<PARENT>(); } }
-		public ITable<PATIENT>                  Patients                 { get { return this.GetTable<PATIENT>(); } }
-		public ITable<PERSON>                   People                   { get { return this.GetTable<PERSON>(); } }
-		public ITable<PERSONVIEW>               Personviews              { get { return this.GetTable<PERSONVIEW>(); } }
-		public ITable<SampleclassFls415570>     SampleclassFls415570     { get { return this.GetTable<SampleclassFls415570>(); } }
-		public ITable<SEQUENCETEST>             Sequencetests            { get { return this.GetTable<SEQUENCETEST>(); } }
-		public ITable<TESTIDENTITY>             Testidentities           { get { return this.GetTable<TESTIDENTITY>(); } }
-		public ITable<TESTMERGE1>               TESTMERGE1               { get { return this.GetTable<TESTMERGE1>(); } }
-		public ITable<TESTMERGE2>               TESTMERGE2               { get { return this.GetTable<TESTMERGE2>(); } }
+		public ITable<ALLTYPE>           ALLTYPES           { get { return this.GetTable<ALLTYPE>(); } }
+		public ITable<CamelCaseName>     CamelCaseNames     { get { return this.GetTable<CamelCaseName>(); } }
+		public ITable<CHILD>             Children           { get { return this.GetTable<CHILD>(); } }
+		public ITable<DATATYPETEST>      Datatypetests      { get { return this.GetTable<DATATYPETEST>(); } }
+		public ITable<DOCTOR>            Doctors            { get { return this.GetTable<DOCTOR>(); } }
+		public ITable<DUAL>              Duals              { get { return this.GetTable<DUAL>(); } }
+		public ITable<GRANDCHILD>        Grandchilds        { get { return this.GetTable<GRANDCHILD>(); } }
+		public ITable<INHERITANCECHILD>  Inheritancechilds  { get { return this.GetTable<INHERITANCECHILD>(); } }
+		public ITable<INHERITANCEPARENT> Inheritanceparents { get { return this.GetTable<INHERITANCEPARENT>(); } }
+		public ITable<LINQDATATYPE>      LINQDATATYPES      { get { return this.GetTable<LINQDATATYPE>(); } }
+		public ITable<PARENT>            Parents            { get { return this.GetTable<PARENT>(); } }
+		public ITable<PATIENT>           Patients           { get { return this.GetTable<PATIENT>(); } }
+		public ITable<PERSON>            People             { get { return this.GetTable<PERSON>(); } }
+		public ITable<PERSONVIEW>        Personviews        { get { return this.GetTable<PERSONVIEW>(); } }
+		public ITable<SEQUENCETEST>      Sequencetests      { get { return this.GetTable<SEQUENCETEST>(); } }
+		public ITable<TESTIDENTITY>      Testidentities     { get { return this.GetTable<TESTIDENTITY>(); } }
+		public ITable<TESTMERGE1>        TESTMERGE1         { get { return this.GetTable<TESTMERGE1>(); } }
+		public ITable<TESTMERGE2>        TESTMERGE2         { get { return this.GetTable<TESTMERGE2>(); } }
 
 		public TESTDB25DB()
 		{
@@ -78,12 +75,6 @@ namespace FirebirdDataContext
 		[Column(DbType="char(20)",        DataType=DataType.NChar,    Length=20, Precision=0, Scale=0),              Nullable         ] public string    NCHARDATATYPE     { get; set; } // char(20)
 		[Column(DbType="varchar(20)",     DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string    NVARCHARDATATYPE  { get; set; } // varchar(20)
 		[Column(DbType="blob",            DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    BLOBDATATYPE      { get; set; } // blob
-	}
-
-	[Table("ASYNCDATATABLE_FLS_SODPA_81")]
-	public partial class AsyncdatatableFlsSodpa81
-	{
-		[Column(DbType="integer", DataType=DataType.Int32, Length=4, Precision=0, Scale=0), PrimaryKey, NotNull] public int ID { get; set; } // integer
 	}
 
 	[Table("\"CamelCaseName\"")]
@@ -179,13 +170,6 @@ namespace FirebirdDataContext
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),    Nullable         ] public string NAME                { get; set; } // varchar(50)
 	}
 
-	[Table("INSTANCECLASS_FLS_6_157")]
-	public partial class InstanceclassFls6157
-	{
-		[Column(             DbType="integer", DataType=DataType.Int32, Length=4, Precision=0, Scale=0), NotNull] public int ID    { get; set; } // integer
-		[Column("\"Value\"", DbType="integer", DataType=DataType.Int32, Length=4, Precision=0, Scale=0), NotNull] public int Value { get; set; } // integer
-	}
-
 	[Table("LINQDATATYPES")]
 	public partial class LINQDATATYPE
 	{
@@ -218,9 +202,9 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_13739
+		/// INTEG_7030
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_13739", BackReferenceName="INTEG")]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_7030", BackReferenceName="INTEG")]
 		public PERSON PERSON { get; set; }
 
 		#endregion
@@ -244,7 +228,7 @@ namespace FirebirdDataContext
 		public DOCTOR DOCTOR { get; set; }
 
 		/// <summary>
-		/// INTEG_13739_BackReference
+		/// INTEG_7030_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public PATIENT INTEG { get; set; }
@@ -260,13 +244,6 @@ namespace FirebirdDataContext
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0), Nullable] public string LASTNAME   { get; set; } // varchar(50)
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0), Nullable] public string MIDDLENAME { get; set; } // varchar(50)
 		[Column(DbType="char(1)",     DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),  Nullable] public char?  GENDER     { get; set; } // char(1)
-	}
-
-	[Table("SAMPLECLASS_FLS_4_15_570")]
-	public partial class SampleclassFls415570
-	{
-		[Column(             DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  NotNull    ] public int    ID    { get; set; } // integer
-		[Column("\"value\"", DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),    Nullable] public string Value { get; set; } // varchar(50)
 	}
 
 	[Table("SEQUENCETEST")]
@@ -700,12 +677,6 @@ namespace FirebirdDataContext
 	public static partial class TableExtensions
 	{
 		public static ALLTYPE Find(this ITable<ALLTYPE> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
-		public static AsyncdatatableFlsSodpa81 Find(this ITable<AsyncdatatableFlsSodpa81> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

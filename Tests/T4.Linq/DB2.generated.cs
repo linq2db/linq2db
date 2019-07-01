@@ -37,6 +37,7 @@ namespace DB2DataContext
 		public ITable<DB2ADMIN_SLAVETABLE>        Slavetables         { get { return this.GetTable<DB2ADMIN_SLAVETABLE>(); } }
 		public ITable<DB2ADMIN_Test>              Tests               { get { return this.GetTable<DB2ADMIN_Test>(); } }
 		public ITable<DB2ADMIN_TestIdentity>      TestIdentities      { get { return this.GetTable<DB2ADMIN_TestIdentity>(); } }
+		public ITable<DB2ADMIN_TestIdTrun>        TestIdTruns         { get { return this.GetTable<DB2ADMIN_TestIdTrun>(); } }
 		public ITable<DB2ADMIN_Testmerge1>        Testmerge1          { get { return this.GetTable<DB2ADMIN_Testmerge1>(); } }
 		public ITable<DB2ADMIN_TestMerge1>        TestMerge1          { get { return this.GetTable<DB2ADMIN_TestMerge1>(); } }
 		public ITable<DB2ADMIN_Testmerge2>        Testmerge2          { get { return this.GetTable<DB2ADMIN_Testmerge2>(); } }
@@ -265,6 +266,13 @@ namespace DB2DataContext
 		[Column(DbType="INTEGER", DataType=DataType.Int32), PrimaryKey, Identity] public int ID { get; set; } // INTEGER
 	}
 
+	[Table(Schema="DB2ADMIN", Name="TestIdTrun")]
+	public partial class DB2ADMIN_TestIdTrun
+	{
+		[Column(DbType="INTEGER", DataType=DataType.Int32),                PrimaryKey, Identity] public int     ID     { get; set; } // INTEGER
+		[Column(DbType="DECIMAL", DataType=DataType.Decimal, Precision=5), NotNull             ] public decimal Field1 { get; set; } // DECIMAL
+	}
+
 	[Table(Schema="DB2ADMIN", Name="testmerge1")]
 	public partial class DB2ADMIN_Testmerge1
 	{
@@ -415,6 +423,12 @@ namespace DB2DataContext
 		}
 
 		public static DB2ADMIN_TestIdentity Find(this ITable<DB2ADMIN_TestIdentity> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static DB2ADMIN_TestIdTrun Find(this ITable<DB2ADMIN_TestIdTrun> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

@@ -39,6 +39,7 @@ namespace OracleDataContext
 		public ITable<STRINGTEST>          Stringtests         { get { return this.GetTable<STRINGTEST>(); } }
 		public ITable<TEntity>             TEntities           { get { return this.GetTable<TEntity>(); } }
 		public ITable<TESTIDENTITY>        Testidentities      { get { return this.GetTable<TESTIDENTITY>(); } }
+		public ITable<TESTIDTRUN>          Testidtruns         { get { return this.GetTable<TESTIDTRUN>(); } }
 		public ITable<TESTMERGE1>          TESTMERGE1          { get { return this.GetTable<TESTMERGE1>(); } }
 		public ITable<TESTMERGE2>          TESTMERGE2          { get { return this.GetTable<TESTMERGE2>(); } }
 		public ITable<TTestUser>           TTestUsers          { get { return this.GetTable<TTestUser>(); } }
@@ -295,6 +296,13 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22), PrimaryKey, NotNull] public decimal ID { get; set; } // NUMBER
 	}
 
+	[Table(Schema="MANAGED", Name="TESTIDTRUN")]
+	public partial class TESTIDTRUN
+	{
+		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), PrimaryKey, NotNull] public decimal ID     { get; set; } // NUMBER
+		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0),             NotNull] public decimal FIELD1 { get; set; } // NUMBER
+	}
+
 	[Table(Schema="MANAGED", Name="TESTMERGE1")]
 	public partial class TESTMERGE1
 	{
@@ -356,7 +364,7 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00168572_BackReference
+		/// SYS_C00203119_BackReference
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; }
@@ -375,9 +383,9 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00168572
+		/// SYS_C00203119
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00168572", BackReferenceName="Syscs")]
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00203119", BackReferenceName="Syscs")]
 		public TTestUser USER { get; set; }
 
 		#endregion
@@ -512,6 +520,12 @@ namespace OracleDataContext
 		}
 
 		public static TESTIDENTITY Find(this ITable<TESTIDENTITY> table, decimal ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TESTIDTRUN Find(this ITable<TESTIDTRUN> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

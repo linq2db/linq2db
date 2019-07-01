@@ -33,6 +33,9 @@ namespace MySqlDataContext
 		public ITable<Parent>            Parents            { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>           Patients           { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>            People             { get { return this.GetTable<Person>(); } }
+		/// <summary>
+		/// VIEW
+		/// </summary>
 		public ITable<Personview>        Personviews        { get { return this.GetTable<Personview>(); } }
 		public ITable<Test>              Tests              { get { return this.GetTable<Test>(); } }
 		public ITable<Testidentity>      Testidentities     { get { return this.GetTable<Testidentity>(); } }
@@ -241,6 +244,9 @@ namespace MySqlDataContext
 		#endregion
 	}
 
+	/// <summary>
+	/// VIEW
+	/// </summary>
 	[Table("personview", IsView=true)]
 	public partial class Personview
 	{

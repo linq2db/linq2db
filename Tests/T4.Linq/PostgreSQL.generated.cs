@@ -24543,10 +24543,40 @@ namespace PostreSQLDataContext
 
 		#endregion
 
+		#region Issue1742Date
+
+		[Sql.Function(Name="public.issue_1742_date", ServerSideOnly=true)]
+		public static int? Issue1742Date(NpgsqlDate? p1)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region Issue1742Ts
+
+		[Sql.Function(Name="public.issue_1742_ts", ServerSideOnly=true)]
+		public static int? Issue1742Ts(DateTime? p1)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region Issue1742Tstz
+
+		[Sql.Function(Name="public.issue_1742_tstz", ServerSideOnly=true)]
+		public static int? Issue1742Tstz(DateTimeOffset? p1)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
 		#region Reverse
 
 		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
-		public static string Reverse1(string par7468)
+		public static string Reverse1(string par7471)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24556,7 +24586,7 @@ namespace PostreSQLDataContext
 		#region TestAvg
 
 		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par7470)
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par7473)
 		{
 			throw new InvalidOperationException();
 		}

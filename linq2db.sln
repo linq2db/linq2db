@@ -243,6 +243,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySqlConnector", "MySqlConnector", "{B4080869-A89C-4996-938C-D7F42E9AA3CB}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\MySqlConnector\CopyMe.MySqlConnector.tt.txt = NuGet\MySqlConnector\CopyMe.MySqlConnector.tt.txt
+		NuGet\linq2db.MySqlConnector.nuspec = NuGet\linq2db.MySqlConnector.nuspec
 		NuGet\MySqlConnector\linq2db.MySqlConnector.props = NuGet\MySqlConnector\linq2db.MySqlConnector.props
 		NuGet\MySqlConnector\LinqToDB.MySqlConnector.Tools.ttinclude = NuGet\MySqlConnector\LinqToDB.MySqlConnector.Tools.ttinclude
 	EndProjectSection
