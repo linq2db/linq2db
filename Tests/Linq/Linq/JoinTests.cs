@@ -1541,6 +1541,494 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void SqlFullJoinWithInnerJoinOnLeftWithConditions([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id1 = Parent.First().ParentID;
+				var id2 = Parent.Skip(1).First().ParentID;
+
+				var actual =
+					from left in db.Parent.Where(p => p.ParentID != id1)
+					from right in (
+						from right in db.Parent.Where(p => p.ParentID != id2)
+						join right2 in db.Parent.Where(p => p.ParentID != id1)
+							on right.Value1 equals right2.Value1 + 2
+						select new { right, right2})
+						.FullJoin(p => p.right.Value1 + 2 == left.Value1)
+					select new
+					{
+						Left  = left != null ? (int?)left.ParentID : null,
+						Right = right.right != null ? (int?)right.right.ParentID : null,
+					};
+
+				var expected =
+					Parent.Where(p => p.ParentID != id1)
+						.SqlJoinInternal(
+							Parent.Where(p => p.ParentID != id2)
+								.SqlJoinInternal(
+								Parent.Where(p => p.ParentID != id1), SqlJoinType.Inner, o => o.Value1, i => i.Value1 + 2, (right, right2) => new
+								{
+									Right  = right?.ParentID,
+									Right2 = right2?.ParentID,
+									Value1 = right?.Value1
+								}), SqlJoinType.Full, o => o.Value1, i => i.Value1 + 2, (left, right) => new
+								{
+									Left = left?.ParentID,
+									Right = right?.Right
+								});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
+		[Test]
+		public void SqlFullJoinWithInnerJoinOnLeftWithoutConditions([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id1 = Parent.First().ParentID;
+
+				var actual =
+					from left in db.Parent.Where(p => p.ParentID != id1)
+					from right in (
+						from right in db.Parent
+						join right2 in db.Parent
+							on right.Value1 equals right2.Value1 + 2
+						select new { right, right2 })
+						.FullJoin(p => p.right.Value1 + 2 == left.Value1)
+					select new
+					{
+						Left = left != null ? (int?)left.ParentID : null,
+						Right = right.right != null ? (int?)right.right.ParentID : null,
+					};
+
+				var expected =
+					Parent.Where(p => p.ParentID != id1)
+						.SqlJoinInternal(
+							Parent
+								.SqlJoinInternal(
+								Parent, SqlJoinType.Inner, o => o.Value1, i => i.Value1 + 2, (right, right2) => new
+								{
+									Right = right?.ParentID,
+									Right2 = right2?.ParentID,
+									Value1 = right?.Value1
+								}), SqlJoinType.Full, o => o.Value1, i => i.Value1 + 2, (left, right) => new
+								{
+									Left = left?.ParentID,
+									Right = right?.Right
+								});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
+		[Test]
+		public void SqlFullJoinWithInnerJoinOnLeftWithoutAllConditions([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var actual =
+					from left in db.Parent
+					from right in (
+						from right in db.Parent
+						join right2 in db.Parent
+							on right.Value1 equals right2.Value1 + 2
+						select new { right, right2 })
+						.FullJoin(p => p.right.Value1 + 2 == left.Value1)
+					select new
+					{
+						Left = left != null ? (int?)left.ParentID : null,
+						Right = right.right != null ? (int?)right.right.ParentID : null,
+					};
+
+				var expected =
+					Parent
+						.SqlJoinInternal(
+							Parent
+								.SqlJoinInternal(
+								Parent, SqlJoinType.Inner, o => o.Value1, i => i.Value1 + 2, (right, right2) => new
+								{
+									Right = right?.ParentID,
+									Right2 = right2?.ParentID,
+									Value1 = right?.Value1
+								}), SqlJoinType.Full, o => o.Value1, i => i.Value1 + 2, (left, right) => new
+								{
+									Left = left?.ParentID,
+									Right = right?.Right
+								});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
+		[Test]
+		public void SqlFullJoinWithInnerJoinOnRightWithConditions([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id1 = Parent.First().ParentID;
+				var id2 = Parent.Skip(1).First().ParentID;
+
+				var actual =
+					from left in (
+						from left in db.Parent.Where(p => p.ParentID != id2)
+						join left2 in db.Parent.Where(p => p.ParentID != id1)
+							on left.Value1 equals left2.Value1 + 2
+						select new { left, left2 })
+					from right in db.Parent.Where(p => p.ParentID != id1)
+						.FullJoin(p => p.Value1 + 2 == left.left.Value1)
+					select new
+					{
+						Left  = left.left != null ? (int?)left.left.ParentID : null,
+						Right = right != null ? (int?)right.ParentID : null,
+					};
+
+				var expected =
+					Parent.Where(p => p.ParentID != id2)
+						.SqlJoinInternal(
+							Parent.Where(p => p.ParentID != id1), SqlJoinType.Inner, o => o.Value1, i => i.Value1 + 2, (left, left2) => new
+							{
+								Value1 = left?.Value1,
+								Left = left?.ParentID,
+								left2 = left2?.ParentID
+							})
+							.SqlJoinInternal(
+								Parent.Where(p => p.ParentID != id1), SqlJoinType.Full, o => o.Value1, i => i.Value1 + 2, (left, right) => new
+								{
+									Left = left?.Left,
+									Right = right?.ParentID
+								});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
+		[Test]
+		public void SqlFullJoinWithInnerJoinOnRightWithoutConditions([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id1 = Parent.First().ParentID;
+
+				var actual =
+					from left in (
+						from left in db.Parent
+						join left2 in db.Parent
+							on left.Value1 equals left2.Value1 + 2
+						select new { left, left2 })
+					from right in db.Parent.Where(p => p.ParentID != id1)
+						.FullJoin(p => p.Value1 + 2 == left.left.Value1)
+					select new
+					{
+						Left  = left.left != null ? (int?)left.left.ParentID : null,
+						Right = right != null ? (int?)right.ParentID : null,
+					};
+
+				var expected =
+					Parent
+						.SqlJoinInternal(
+							Parent, SqlJoinType.Inner, o => o.Value1, i => i.Value1 + 2, (left, left2) => new
+							{
+								Value1 = left?.Value1,
+								Left = left?.ParentID,
+								left2 = left2?.ParentID
+							})
+							.SqlJoinInternal(
+								Parent.Where(p => p.ParentID != id1), SqlJoinType.Full, o => o.Value1, i => i.Value1 + 2, (left, right) => new
+								{
+									Left = left?.Left,
+									Right = right?.ParentID
+								});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
+		[Test]
+		public void SqlFullJoinWithInnerJoinOnRightWithoutAllConditions([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var actual =
+					from left in (
+						from left in db.Parent
+						join left2 in db.Parent
+							on left.Value1 equals left2.Value1 + 2
+						select new { left, left2 })
+					from right in db.Parent
+						.FullJoin(p => p.Value1 + 2 == left.left.Value1)
+					select new
+					{
+						Left = left.left != null ? (int?)left.left.ParentID : null,
+						Right = right != null ? (int?)right.ParentID : null,
+					};
+
+				var expected =
+					Parent
+						.SqlJoinInternal(
+							Parent, SqlJoinType.Inner, o => o.Value1, i => i.Value1 + 2, (left, left2) => new
+							{
+								Value1 = left?.Value1,
+								Left = left?.ParentID,
+								left2 = left2?.ParentID
+							})
+							.SqlJoinInternal(
+								Parent, SqlJoinType.Full, o => o.Value1, i => i.Value1 + 2, (left, right) => new
+								{
+									Left = left?.Left,
+									Right = right?.ParentID
+								});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
+		[Test]
+		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id1 = Parent.First().ParentID;
+				var id2 = Parent.Skip(1).First().ParentID;
+
+				var actual =
+					from left in db.Parent.Where(p => p.ParentID != id1)
+					from right in (
+						from right in db.Parent.Where(p => p.ParentID != id2)
+						join right2 in db.Parent.Where(p => p.ParentID != id1)
+							on right.Value1 equals right2.Value1 + 2
+						select new { right, right2 })
+						.RightJoin(p => p.right.Value1 + 2 == left.Value1)
+					select new
+					{
+						Left = left != null ? (int?)left.ParentID : null,
+						Right = right.right != null ? (int?)right.right.ParentID : null,
+					};
+
+				var expected =
+					Parent.Where(p => p.ParentID != id1)
+						.SqlJoinInternal(
+							Parent.Where(p => p.ParentID != id2)
+								.SqlJoinInternal(
+								Parent.Where(p => p.ParentID != id1), SqlJoinType.Inner, o => o.Value1, i => i.Value1 + 2, (right, right2) => new
+								{
+									Right = right?.ParentID,
+									Right2 = right2?.ParentID,
+									Value1 = right?.Value1
+								}), SqlJoinType.Right, o => o.Value1, i => i.Value1 + 2, (left, right) => new
+								{
+									Left = left?.ParentID,
+									Right = right?.Right
+								});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
+		[Test]
+		public void SqlRightJoinWithInnerJoinOnLeftWithoutConditions([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id1 = Parent.First().ParentID;
+
+				var actual =
+					from left in db.Parent.Where(p => p.ParentID != id1)
+					from right in (
+						from right in db.Parent
+						join right2 in db.Parent
+							on right.Value1 equals right2.Value1 + 2
+						select new { right, right2 })
+						.RightJoin(p => p.right.Value1 + 2 == left.Value1)
+					select new
+					{
+						Left = left != null ? (int?)left.ParentID : null,
+						Right = right.right != null ? (int?)right.right.ParentID : null,
+					};
+
+				var expected =
+					Parent.Where(p => p.ParentID != id1)
+						.SqlJoinInternal(
+							Parent
+								.SqlJoinInternal(
+								Parent, SqlJoinType.Inner, o => o.Value1, i => i.Value1 + 2, (right, right2) => new
+								{
+									Right = right?.ParentID,
+									Right2 = right2?.ParentID,
+									Value1 = right?.Value1
+								}), SqlJoinType.Right, o => o.Value1, i => i.Value1 + 2, (left, right) => new
+								{
+									Left = left?.ParentID,
+									Right = right?.Right
+								});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
+		[Test]
+		public void SqlRightJoinWithInnerJoinOnLeftWithoutAllConditions([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var actual =
+					from left in db.Parent
+					from right in (
+						from right in db.Parent
+						join right2 in db.Parent
+							on right.Value1 equals right2.Value1 + 2
+						select new { right, right2 })
+						.RightJoin(p => p.right.Value1 + 2 == left.Value1)
+					select new
+					{
+						Left = left != null ? (int?)left.ParentID : null,
+						Right = right.right != null ? (int?)right.right.ParentID : null,
+					};
+
+				var expected =
+					Parent
+						.SqlJoinInternal(
+							Parent
+								.SqlJoinInternal(
+								Parent, SqlJoinType.Inner, o => o.Value1, i => i.Value1 + 2, (right, right2) => new
+								{
+									Right = right?.ParentID,
+									Right2 = right2?.ParentID,
+									Value1 = right?.Value1
+								}), SqlJoinType.Right, o => o.Value1, i => i.Value1 + 2, (left, right) => new
+								{
+									Left = left?.ParentID,
+									Right = right?.Right
+								});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
+		[Test]
+		public void SqlRightJoinWithInnerJoinOnRightWithConditions([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id1 = Parent.First().ParentID;
+				var id2 = Parent.Skip(1).First().ParentID;
+
+				var actual =
+					from left in (
+						from left in db.Parent.Where(p => p.ParentID != id2)
+						join left2 in db.Parent.Where(p => p.ParentID != id1)
+							on left.Value1 equals left2.Value1 + 2
+						select new { left, left2 })
+					from right in db.Parent.Where(p => p.ParentID != id1)
+						.RightJoin(p => p.Value1 + 2 == left.left.Value1)
+					select new
+					{
+						Left = left.left != null ? (int?)left.left.ParentID : null,
+						Right = right != null ? (int?)right.ParentID : null,
+					};
+
+				var expected =
+					Parent.Where(p => p.ParentID != id2)
+						.SqlJoinInternal(
+							Parent.Where(p => p.ParentID != id1), SqlJoinType.Inner, o => o.Value1, i => i.Value1 + 2, (left, left2) => new
+							{
+								Value1 = left?.Value1,
+								Left = left?.ParentID,
+								left2 = left2?.ParentID
+							})
+							.SqlJoinInternal(
+								Parent.Where(p => p.ParentID != id1), SqlJoinType.Right, o => o.Value1, i => i.Value1 + 2, (left, right) => new
+								{
+									Left = left?.Left,
+									Right = right?.ParentID
+								});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
+		[Test]
+		public void SqlRightJoinWithInnerJoinOnRightWithoutConditions([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id1 = Parent.First().ParentID;
+
+				var actual =
+					from left in (
+						from left in db.Parent
+						join left2 in db.Parent
+							on left.Value1 equals left2.Value1 + 2
+						select new { left, left2 })
+					from right in db.Parent.Where(p => p.ParentID != id1)
+						.RightJoin(p => p.Value1 + 2 == left.left.Value1)
+					select new
+					{
+						Left = left.left != null ? (int?)left.left.ParentID : null,
+						Right = right != null ? (int?)right.ParentID : null,
+					};
+
+				var expected =
+					Parent
+						.SqlJoinInternal(
+							Parent, SqlJoinType.Inner, o => o.Value1, i => i.Value1 + 2, (left, left2) => new
+							{
+								Value1 = left?.Value1,
+								Left = left?.ParentID,
+								left2 = left2?.ParentID
+							})
+							.SqlJoinInternal(
+								Parent.Where(p => p.ParentID != id1), SqlJoinType.Right, o => o.Value1, i => i.Value1 + 2, (left, right) => new
+								{
+									Left = left?.Left,
+									Right = right?.ParentID
+								});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
+		[Test]
+		public void SqlRightJoinWithInnerJoinOnRightWithoutAllConditions([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var actual =
+					from left in (
+						from left in db.Parent
+						join left2 in db.Parent
+							on left.Value1 equals left2.Value1 + 2
+						select new { left, left2 })
+					from right in db.Parent
+						.RightJoin(p => p.Value1 + 2 == left.left.Value1)
+					select new
+					{
+						Left = left.left != null ? (int?)left.left.ParentID : null,
+						Right = right != null ? (int?)right.ParentID : null,
+					};
+
+				var expected =
+					Parent
+						.SqlJoinInternal(
+							Parent, SqlJoinType.Inner, o => o.Value1, i => i.Value1 + 2, (left, left2) => new
+							{
+								Value1 = left?.Value1,
+								Left = left?.ParentID,
+								left2 = left2?.ParentID
+							})
+							.SqlJoinInternal(
+								Parent, SqlJoinType.Right, o => o.Value1, i => i.Value1 + 2, (left, right) => new
+								{
+									Left = left?.Left,
+									Right = right?.ParentID
+								});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
 		/// <summary>
 		/// Tests that AllJoinsBuilder do not handle standard Joins
 		/// </summary>
