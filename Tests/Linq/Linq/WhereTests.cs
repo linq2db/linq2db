@@ -1439,5 +1439,45 @@ namespace Tests.Linq
 					select new { nm });
 			}
 		}
+
+		[ActiveIssue(1755)]
+		[Test]
+		public void Issue1755Test1([DataSources] string context, [Values(1, 2)] int id, [Values(null, true, false)] bool? flag)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = (from c in db.Parent
+							   where c.ParentID == id
+								   && (!flag.HasValue || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+							   select c);
+
+				AreEqual(
+					from c in db.Parent.AsEnumerable()
+					where c.ParentID == id
+						&& (!flag.HasValue || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+					select c,
+					results);
+			}
+		}
+
+		[ActiveIssue(1755)]
+		[Test]
+		public void Issue1755Test2([DataSources] string context, [Values(1, 2)] int id, [Values(null, true, false)] bool? flag)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = (from c in db.Parent
+							   where c.ParentID == id
+								   && (flag == null || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+							   select c);
+
+				AreEqual(
+					from c in db.Parent.AsEnumerable()
+					where c.ParentID == id
+						&& (flag == null || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+					select c,
+					results);
+			}
+		}
 	}
 }
