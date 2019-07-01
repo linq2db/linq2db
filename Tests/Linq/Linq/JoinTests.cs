@@ -1393,7 +1393,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlFullJoinWithCount1([AllJoinsSource] string context)
+		public void SqlFullJoinWithCount1([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1409,7 +1414,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlFullJoinWithCount2([AllJoinsSource] string context)
+		public void SqlFullJoinWithCount2([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1427,7 +1437,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlFullJoinWithCount3([AllJoinsSource] string context)
+		public void SqlFullJoinWithCount3([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1445,7 +1460,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlFullJoinWithCount4([AllJoinsSource] string context)
+		public void SqlFullJoinWithCount4([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1464,7 +1484,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlFullJoinWithCount5([AllJoinsSource] string context)
+		public void SqlFullJoinWithCount5([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1482,7 +1507,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlFullJoinWithBothFilters([AllJoinsSource] string context)
+		public void SqlFullJoinWithBothFilters([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1512,7 +1542,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlFullJoinWithBothFiltersAlternative([AllJoinsSource] string context)
+		public void SqlFullJoinWithBothFiltersAlternative([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1542,7 +1577,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlFullJoinWithInnerJoinOnLeftWithConditions([AllJoinsSource] string context)
+		public void SqlFullJoinWithInnerJoinOnLeftWithConditions([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1584,7 +1624,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlFullJoinWithInnerJoinOnLeftWithoutConditions([AllJoinsSource] string context)
+		public void SqlFullJoinWithInnerJoinOnLeftWithoutConditions([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1625,7 +1670,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlFullJoinWithInnerJoinOnLeftWithoutAllConditions([AllJoinsSource] string context)
+		public void SqlFullJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1664,7 +1714,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlFullJoinWithInnerJoinOnRightWithConditions([AllJoinsSource] string context)
+		public void SqlFullJoinWithInnerJoinOnRightWithConditions([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1706,7 +1761,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlFullJoinWithInnerJoinOnRightWithoutConditions([AllJoinsSource] string context)
+		public void SqlFullJoinWithInnerJoinOnRightWithoutConditions([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1747,7 +1807,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlFullJoinWithInnerJoinOnRightWithoutAllConditions([AllJoinsSource] string context)
+		public void SqlFullJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(
+			TestProvName.AllSQLite,
+			ProviderName.Access,
+			ProviderName.SqlCe,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1786,7 +1851,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([AllJoinsSource] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1828,7 +1893,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithoutConditions([AllJoinsSource] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithoutConditions([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1869,7 +1934,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithoutAllConditions([AllJoinsSource] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1908,7 +1973,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithConditions([AllJoinsSource] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithConditions([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1950,7 +2015,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithoutConditions([AllJoinsSource] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithoutConditions([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1991,7 +2056,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithoutAllConditions([AllJoinsSource] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
