@@ -28,7 +28,7 @@ namespace Tests.Playground
 
 			static Expression<Func<MasterClass, IDataContext, IQueryable<DetailClass>>> DetailsQueryImpl()
 			{
-				return (m, dc) => dc.GetTable<DetailClass>().Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2);
+				return (m, dc) => dc.GetTable<DetailClass>().Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2 && d.DetailId % 2 == 0);
 			}
 		}
 
@@ -56,6 +56,17 @@ namespace Tests.Playground
 			[Column] [PrimaryKey] public int DetailId    { get; set; }
 			[Column] public int? MasterId    { get; set; }
 			[Column] public string DetailValue { get; set; }
+
+			[Association(ThisKey = nameof(DetailId), OtherKey = nameof(SubDetailClass.DetailId))]
+			public SubDetailClass[] SubDetails { get; set; }
+		}
+
+		[Table]
+		class SubDetailClass
+		{
+			[Column] [PrimaryKey] public int SubDetailId    { get; set; }
+			[Column] public int? DetailId    { get; set; }
+			[Column] public string SubDetailValue { get; set; }
 		}
 
 		(MasterClass[], DetailClass[]) GenerateData()
@@ -73,6 +84,22 @@ namespace Tests.Playground
 				.ToArray();
 
 			return (master, detail);
+		}
+
+		(MasterClass[], DetailClass[], SubDetailClass[]) GenerateDataWithSubDetail()
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			var subdetail = detailRecords.SelectMany(m => Enumerable.Range(1, m.DetailId / 100)
+					.Select(i => new SubDetailClass
+					{
+						DetailId = m.DetailId,
+						SubDetailValue = "SubDetailValue" + m.DetailId * 1000 + i,
+						SubDetailId = i
+					}))
+				.ToArray();
+
+			return (masterRecords, detailRecords, subdetail);
 		}
 
 		(MasterManyId[], DetailClass[]) GenerateDataManyId()
@@ -104,11 +131,56 @@ namespace Tests.Playground
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
 			{
-				var query = from m in master.LoadWith(m => m.DetailsQuery)
+				var query = from m in master.LoadWith(m => m.Details).LoadWith(m => m.DetailsQuery)
 					where m.Id1 >= intParam
 					select m;
 
-				var result = query.ToArray();
+				var expectedQuery = from m in masterRecords
+					where m.Id1 >= intParam
+					select new MasterClass
+					{
+						Id1 = m.Id1,
+						Id2 = m.Id2,
+						Value = m.Value,
+						Details = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
+						DetailsQuery = detailRecords.Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2 && d.DetailId % 2 == 0).ToArray(),
+					};
+
+				var result = query.ToList();
+				var expected = expectedQuery.ToList();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		[Test]
+		public void TestLoadWithDeep([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+			var intParam = 0;
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details).LoadWith(m => m.Details[0].SubDetails)
+					where m.Id1 >= intParam
+					select m;
+
+				var expectedQuery = from m in masterRecords
+					where m.Id1 >= intParam
+					select new MasterClass
+					{
+						Id1 = m.Id1,
+						Id2 = m.Id2,
+						Value = m.Value,
+						Details = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
+					};
+
+				var result = query.ToList();
+				var expected = expectedQuery.ToList();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
 		}
 
