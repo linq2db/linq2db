@@ -165,22 +165,6 @@ namespace LinqToDB.Linq.Builder
 						if (ma.Member.IsNullableValueMember())
 							break;
 
-						if (ma.Member.IsNullableHasValueMember())
-						{
-							Expression e = Expression.NotEqual(
-								ma.Expression, Expression.Constant(null, ma.Expression.Type));
-
-							return new TransformInfo(
-								BuildExpression(
-									context,
-									ma.Expression.Type.IsPrimitiveEx() ?
-										Expression.Call(
-											MemberHelper.MethodOf(() => Sql.AsSql(true)),
-											e) :
-										e, enforceServerSide),
-								true);
-						}
-
 						var ctx = GetContext(context, ma);
 
 						if (ctx != null)
