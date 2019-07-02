@@ -1138,5 +1138,109 @@ namespace Tests.Linq
 				Assert.AreEqual(value, result);
 			}
 		}
+
+		[Table("Parent")]
+		public class Parent1788
+		{
+			[Column]
+			public int Value1 { get; }
+		}
+
+		//https://github.com/linq2db/linq2db/issues/1788
+		[ActiveIssue(1788)]
+		[Test]
+		public void Issue1788Test1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = from p in db.GetTable<Parent1788>()
+							   select new
+							   {
+								   f1 = Sql.ToNullable(p.Value1).HasValue,
+								   f2 = Sql.ToNullable(p.Value1)
+							   };
+
+				AreEqual(
+					from p in db.Parent.AsEnumerable()
+					select new
+					{
+						f1 = p.Value1.HasValue,
+						f2 = p.Value1
+					},
+					results);
+			}
+		}
+
+		[ActiveIssue(1788)]
+		[Test]
+		public void Issue1788Test2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = from p in db.GetTable<Parent1788>()
+							  select new
+							  {
+								  f1 = Sql.ToNullable(p.Value1) != null,
+								  f2 = Sql.ToNullable(p.Value1)
+							  };
+
+				AreEqual(
+					from p in db.Parent.AsEnumerable()
+					select new
+					{
+						f1 = p.Value1 != null,
+						f2 = p.Value1
+					},
+					results);
+			}
+		}
+
+		[Test]
+		public void Issue1788Test3([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = from p in db.GetTable<Parent1788>()
+							  select new
+							  {
+#pragma warning disable 472
+								  f1 = ((int?)p.Value1) != null,
+#pragma warning restore 472
+								  f2 = (int?)p.Value1
+							  };
+
+				AreEqual(
+					from p in db.Parent.AsEnumerable()
+					select new
+					{
+						f1 = p.Value1 != null,
+						f2 = p.Value1
+					},
+					results);
+			}
+		}
+
+		[Test]
+		public void Issue1788Test4([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = from p in db.GetTable<Parent1788>()
+							  select new
+							  {
+								  f1 = ((int?)p.Value1).HasValue,
+								  f2 = (int?)p.Value1
+							  };
+
+				AreEqual(
+					from p in db.Parent.AsEnumerable()
+					select new
+					{
+						f1 = p.Value1 != null,
+						f2 = p.Value1
+					},
+					results);
+			}
+		}
 	}
 }
