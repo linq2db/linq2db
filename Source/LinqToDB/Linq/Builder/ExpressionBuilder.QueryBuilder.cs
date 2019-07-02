@@ -49,7 +49,8 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide)
 		{
-			return expression.Transform(expr => TransformExpression(context, expr, enforceServerSide, null));
+			var newExpr = expression.Transform(expr => TransformExpression(context, expr, enforceServerSide, null));
+			return newExpr;
 		}
 
 		Expression ConvertAssignmentArgument(IBuildContext context, Expression expr, MemberInfo memberInfo, bool enforceServerSide,
