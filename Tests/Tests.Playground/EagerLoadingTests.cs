@@ -24,7 +24,7 @@ namespace Tests.Playground
 			public List<DetailClass> Details { get; set; }
 
 			[Association(QueryExpressionMethod = nameof(DetailsQueryImpl))]
-			public List<DetailClass> DetailsQuery { get; set; }
+			public DetailClass[] DetailsQuery { get; set; }
 
 			static Expression<Func<MasterClass, IDataContext, IQueryable<DetailClass>>> DetailsQueryImpl()
 			{
@@ -92,6 +92,24 @@ namespace Tests.Playground
 				.ToArray();
 
 			return (master, detail);
+		}
+
+		[Test]
+		public void TestLoadWith([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+			var intParam = 0;
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.DetailsQuery)
+					where m.Id1 >= intParam
+					select m;
+
+				var result = query.ToArray();
+			}
 		}
 
 		[Test]
@@ -314,6 +332,40 @@ namespace Tests.Playground
 				var expected = expectedQuery.ToArray();
 
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
+			}
+		}
+
+		[Test]
+		public void TestJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.Take(20)
+					join d in detail on m.Id1 equals d.MasterId 
+					select new
+					{
+						Detail = d,
+						Masters = master.Where(mm => m.Id1 == d.MasterId).ToArray()
+					};
+
+				var zz = query.ToArray();
+
+//				var expectedQuery = from m in masterRecords.Take(20)
+//					join d in detailRecords on m.Id1 equals d.MasterId 
+//					select new
+//					{
+//						Detail = d,
+//						Masters = masterRecords.Where(mm => m.Id1 == d.MasterId).ToArray()
+//					};
+//
+//				var result   = query.ToArray();
+//				var expected = expectedQuery.ToArray();
+//
+//				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
 

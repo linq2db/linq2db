@@ -478,6 +478,26 @@ namespace LinqToDB.Linq.Builder
 				if (IsList == false)
 					return base.BuildQuery(tableType, tableContext, parentObject);
 
+				var masterExpression = Builder.Expression;
+
+				var detailQuery = Expression.Lambda(Expression.MakeMemberAccess(parentObject, Association.MemberInfo), parentObject);
+
+				var detailExpression = Builder.BuildMultipleQuery(ParentAssociation, detailQuery, true);
+
+				if (detailExpression != null)
+				{
+					var memberType = Association.MemberInfo.GetMemberType();
+					var elementType = EagerLoading.GetEnumerableElementType(memberType);
+
+					if (memberType.IsArray)
+					{
+						var toArrayMethodInfo = MemberHelper.MethodOf(() => Enumerable.ToArray<object>(null)).GetGenericMethodDefinition();
+						detailExpression = Expression.Call(null, toArrayMethodInfo.MakeGenericMethod(elementType), detailExpression);
+					}
+
+					return detailExpression;
+				}
+
 				if (Common.Configuration.Linq.AllowMultipleQuery == false)
 					throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
 
