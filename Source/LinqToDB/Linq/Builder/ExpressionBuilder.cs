@@ -514,6 +514,13 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var me = (MemberExpression)expr;
+
+							if (me.Member.IsNullableHasValueMember())
+							{
+								var obj = ExposeExpression(me.Expression);
+								return Expression.NotEqual(obj, Expression.Constant(null, obj.Type));
+							}
+
 							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedTypeEx(), me.Member);
 
 							if (l != null)
