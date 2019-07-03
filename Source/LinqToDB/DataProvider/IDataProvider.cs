@@ -23,7 +23,15 @@ namespace LinqToDB.DataProvider
 		IDbConnection      CreateConnection      (string connectionString);
 		ISqlBuilder        CreateSqlBuilder      ();
 		ISqlOptimizer      GetSqlOptimizer       ();
-		void               InitCommand           (DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters);
+		/// <summary>
+		/// Initializes <see cref="DataConnection.Command"/> object.
+		/// </summary>
+		/// <param name="dataConnection">Data connection instance to initialize with new command.</param>
+		/// <param name="commandType">Type of command.</param>
+		/// <param name="commandText">Command SQL.</param>
+		/// <param name="parameters">Optional list of parameters to add to initialized command.</param>
+		/// <param name="withParameters">Flag to indicate that command has parameters. Used to configure parameters support when method called without parameters and parameters added later to command.</param>
+		void InitCommand           (DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters);
 		void               DisposeCommand        (DataConnection dataConnection);
 		object             GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);

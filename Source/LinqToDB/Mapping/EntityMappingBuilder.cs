@@ -527,6 +527,38 @@ namespace LinqToDB.Mapping
 			return this;
 		}
 
+		#region Dynamic Properties
+		/// <summary>
+		/// Adds dynamic columns store dictionary member mapping to current entity.
+		/// </summary>
+		/// <param name="func">Column mapping property or field getter expression.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public EntityMappingBuilder<T> DynamicColumnsStore(Expression<Func<T, object>> func)
+		{
+			Member(func)
+				.HasAttribute(new DynamicColumnsStoreAttribute() { Configuration = Configuration });
+
+			return this;
+		}
+
+		public EntityMappingBuilder<T> DynamicPropertyAccessors(
+			Expression<Func<T, string, object, object>> getter,
+			Expression<Action<T, string, object>> setter)
+		{
+			_builder.HasAttribute(
+				typeof(T),
+				new DynamicColumnAccessorAttribute()
+				{
+					GetterExpression = getter,
+					SetterExpression = setter,
+					Configuration = Configuration
+				});
+
+			return this;
+		}
+
+		#endregion
+
 		EntityMappingBuilder<T> SetTable(Action<TableAttribute> setColumn)
 		{
 			return SetAttribute(

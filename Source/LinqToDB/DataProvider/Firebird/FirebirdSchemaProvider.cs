@@ -148,6 +148,7 @@ namespace LinqToDB.DataProvider.Firebird
 					Scale         = Converter.ChangeTypeTo<int>(pp["NUMERIC_SCALE"]),
 					IsIn          = direction == 1,
 					IsOut         = direction == 2,
+					IsNullable    = Converter.ChangeTypeTo<bool>(pp["IS_NULLABLE"])
 				}
 			).ToList();
 		}

@@ -272,6 +272,7 @@ namespace LinqToDB.DataProvider.Oracle
 					Scale         = Converter.ChangeTypeTo<int?> (pp["DATA_SCALE"]),
 					IsIn          = direction.StartsWith("IN"),
 					IsOut         = direction.EndsWith("OUT"),
+					IsNullable    = true
 				}
 			).ToList();
 		}

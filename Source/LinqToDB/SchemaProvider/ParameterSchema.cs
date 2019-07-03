@@ -33,6 +33,11 @@ namespace LinqToDB.SchemaProvider
 		public bool     IsResult             { get; set; }
 
 		/// <summary>
+		/// Gets flag indicating that it is nullable parameter.
+		/// </summary>
+		public bool     IsNullable           { get; set; }
+
+		/// <summary>
 		/// Gets parameter type size.
 		/// </summary>
 		public long?    Size                 { get; set; }

@@ -1206,9 +1206,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(
-			Configuration = ProviderName.OracleNative,
-			Details       = "ORA-00955: name is already used by an existing object")]
 		[Test]
 		public void UpdateByTableName([DataSources] string context)
 		{
@@ -1252,9 +1249,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(
-			Configuration = ProviderName.OracleNative,
-			Details       = "ORA-00955: name is already used by an existing object")]
 		[Test]
 		public async Task UpdateByTableNameAsync([DataSources] string context)
 		{

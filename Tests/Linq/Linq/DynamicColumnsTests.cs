@@ -373,7 +373,6 @@ namespace Tests.Linq
 			db.CreateTable<T>(tableName);
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void SqlPropertyNoStoreNonIdentifier([DataSources] string context)
 		{
@@ -403,7 +402,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void SqlPropertyNoStoreNonIdentifierGrouping([DataSources] string context)
 		{

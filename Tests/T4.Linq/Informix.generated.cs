@@ -4,6 +4,9 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,17 +16,13 @@ using LinqToDB.Mapping;
 
 namespace InformixDataContext
 {
-	/// <summary>
-	/// Database       : linq2db
-	/// Data Source    : ol_informix1210
-	/// Server Version : 12.10.0000 FC8DE
-	/// </summary>
 	public partial class Linq2dbDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
+		public ITable<Informix>          Informixes         { get { return this.GetTable<Informix>(); } }
 		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
 		public ITable<Inheritanceparent> Inheritanceparents { get { return this.GetTable<Inheritanceparent>(); } }
 		public ITable<Linqdatatype>      Linqdatatypes      { get { return this.GetTable<Linqdatatype>(); } }
@@ -110,6 +109,15 @@ namespace InformixDataContext
 		[Column("parentid"),     Nullable] public int? Parentid     { get; set; } // INTEGER
 		[Column("childid"),      Nullable] public int? Childid      { get; set; } // INTEGER
 		[Column("grandchildid"), Nullable] public int? Grandchildid { get; set; } // INTEGER
+	}
+
+	[Table(Schema="informix", Name="informix")]
+	public partial class Informix
+	{
+		[Column("id"),            PrimaryKey,  NotNull] public int    Id            { get; set; } // INTEGER
+		[Column("duplicatedata"),    Nullable         ] public string Duplicatedata { get; set; } // NVARCHAR(255)
+		[Column("orderdata1"),                 NotNull] public int    Orderdata1    { get; set; } // INTEGER
+		[Column("orderdata2"),                 NotNull] public int    Orderdata2    { get; set; } // INTEGER
 	}
 
 	[Table(Schema="informix", Name="inheritancechild")]
@@ -323,6 +331,12 @@ namespace InformixDataContext
 				t.Personid == Personid);
 		}
 
+		public static Informix Find(this ITable<Informix> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
 		public static Inheritancechild Find(this ITable<Inheritancechild> table, int Inheritancechildid)
 		{
 			return table.FirstOrDefault(t =>
@@ -373,3 +387,5 @@ namespace InformixDataContext
 		}
 	}
 }
+
+#pragma warning restore 1591

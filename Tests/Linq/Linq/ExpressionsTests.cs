@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Linq;
-
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -16,6 +16,37 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ExpressionsTests : TestBase
 	{
+		[Sql.Expression("{0} << {1}", Precedence = Precedence.Primary)]
+		public static long Shl(long v, int s) => v << s;
+
+		[Sql.Expression("{0} >> {1}", Precedence = Precedence.Primary)]
+		public static long Shr(long v, int s) => v >> s;
+
+		static ExpressionsTests()
+		{
+			Expressions.MapBinary((long v, int s) => v << s, (v, s) => Shl(v, s));
+			Expressions.MapBinary((long v, int s) => v >> s, (v, s) => Shr(v, s));
+			Expressions.MapBinary((int  v, int s) => v << s, (v, s) => Shl(v, s));
+			Expressions.MapBinary((int  v, int s) => v >> s, (v, s) => Shr(v, s));
+		}
+
+		[Test]
+		public void MapOperator([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from p in db.Parent
+					where p.ParentID >> 1 > 0
+					select p;
+
+				var expected = from p in Parent
+					where p.ParentID >> 1 > 0
+					select p;
+
+				AreEqual(expected, query);
+			}
+		}
+		
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
 		[Test]

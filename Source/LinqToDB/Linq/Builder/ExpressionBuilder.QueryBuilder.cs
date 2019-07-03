@@ -651,6 +651,32 @@ namespace LinqToDB.Linq.Builder
 						var attr = GetExpressionAttribute(pi.Method);
 						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
 					}
+				default:
+					{
+						if (expr is BinaryExpression binary)
+						{
+							var l = Expressions.ConvertBinary(MappingSchema, binary);
+							if (l != null)
+							{
+								var body = l.Body.Unwrap();
+								var newExpr = body.Transform(wpi =>
+								{
+									if (wpi.NodeType == ExpressionType.Parameter)
+									{
+										if (l.Parameters[0] == wpi)
+											return binary.Left;
+										if (l.Parameters[1] == wpi)
+											return binary.Right;
+									}
+
+									return wpi;
+								});
+
+								return PreferServerSide(newExpr, enforceServerSide);
+							}
+						}
+						break;
+					}
 			}
 
 			return false;
