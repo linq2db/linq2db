@@ -186,99 +186,6 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		static Tuple<Expression, Expression> GenerateKeyExpressions(List<Tuple<Expression, MemberExpression>> foundMembers, ParameterExpression param, ExpressionBuilder builder, params IBuildContext[] contexts)
-		{
-			var memberOfProjection = new List<Expression>();
-			var memberOfDetail = new List<Expression>();
-
-			// try to find fields
-			foreach (var member in foundMembers)
-			{
-				IBuildContext ctx = null;
-				foreach (var context in contexts)
-				{
-					ctx = builder.GetContext(context, member.Item1);
-					if (ctx != null)
-						break;
-				}
-				if (ctx == null)
-					continue;
-
-				var fieldsSql = ctx.ConvertToIndex(member.Item1, 0, ConvertFlags.Field);
-				if (fieldsSql.Length == 1)
-				{
-					var s = fieldsSql[0];
-
-					Expression forDetail = member.Item2;
-
-					var forProjection = ctx.Builder.BuildSql(s.Sql.SystemType, s.Index);
-
-					if (forDetail.Type != forProjection.Type)
-						forDetail = Expression.Convert(forDetail, forProjection.Type);
-
-					memberOfDetail.Add(forDetail);
-					memberOfProjection.Add(forProjection);
-				}
-			}
-
-			if (memberOfDetail.Count == 0)
-			{
-				// add fake one
-				var zero = Expression.Constant(0);
-				memberOfDetail.Add(zero);
-				memberOfProjection.Add(zero);
-			}
-
-			var exprProjection = GenerateKeyExpression(memberOfProjection.ToArray(), 0);
-			var expDetail      = GenerateKeyExpression(memberOfDetail.ToArray(), 0);
-
-			return Tuple.Create(exprProjection, expDetail);
-		}
-
-		static Tuple<Expression, Expression> GenerateKeyExpressionsNew(IBuildContext context, Expression expr, Expression path)
-		{
-			var sql = context.ConvertToIndex(expr, 0, ConvertFlags.Key);
-
-			var memberOfProjection = new List<Expression>();
-			var memberOfDetail = new List<Expression>();
-			foreach (var s in sql)
-			{
-				Expression forDetail = null;
-
-				forDetail = ConstructMemberPath(s.MemberChain, path);
-
-				if (forDetail == null)
-					continue;
-
-				var forProjection = context.Builder.BuildSql(s.Sql.SystemType, s.Index);
-				memberOfProjection.Add(forProjection);
-
-				//TODO: more correct memberchain processing
-
-				if (forDetail.Type != forProjection.Type)
-					forDetail = Expression.Convert(forDetail, forProjection.Type);
-				memberOfDetail.Add(forDetail);
-			}
-
-			if (memberOfDetail.Count == 0)
-			{
-				// add fake one
-				var zero = Expression.Constant(0);
-				memberOfDetail.Add(zero);
-				memberOfProjection.Add(zero);
-			}
-
-			var exprProjection = GenerateKeyExpression(memberOfProjection.ToArray(), 0);
-			var expDetail      = GenerateKeyExpression(memberOfDetail.ToArray(), 0);
-
-			return Tuple.Create(exprProjection, expDetail);
-		}
-
-		static IEnumerable<Tuple<Expression, MemberExpression>> GenerateSelectKeyExpression(Expression tupleExpression, ParameterExpression param)
-		{
-			return ExtractTupleValues(tupleExpression, param);
-		}
-
 		static Tuple<Expression, Expression> GenerateKeyExpressions(IBuildContext context, Expression expr, Dictionary<ParameterExpression, ParameterExpression> mainParamTranformation, List<Expression> foundMembers)
 		{
 			var sql = context.ConvertToIndex(expr, 0, ConvertFlags.Key);
@@ -667,7 +574,8 @@ namespace LinqToDB.Linq.Builder
 		static IEnumerable<KeyInfo> ConvertToKeyInfos(IBuildContext ctx, Expression forExpr,
 			Expression obj)
 		{
-			var sql = ctx.ConvertToIndex(forExpr, 0, forExpr == null ? ConvertFlags.Key : ConvertFlags.Field);
+			var flags = forExpr == null || forExpr.NodeType == ExpressionType.Parameter ? ConvertFlags.Key : ConvertFlags.Field;
+			var sql   = ctx.ConvertToIndex(forExpr, 0, flags);
 			foreach (var sqlInfo in sql)
 			{
 				var forSelect = ConstructMemberPath(sqlInfo.MemberChain, obj);
@@ -687,6 +595,59 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 		}
+
+//		public static Expression GenerateAssociationExpression(IBuildContext context, AssociationDescriptor association)
+//		{
+//			// that means we processing association from TableContext. First parameter is master
+//			var lambdaExpression = ((LambdaExpression)queryableDetail);
+//			var masterParm       = lambdaExpression.Parameters[0];
+//			var newDetailQuery   = lambdaExpression.Body;
+//
+//			var mainQueryElementType = GetEnumerableElementType(initialMainQuery.Type);
+//
+//			// recursive processing
+//			if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
+//			{
+//				if (!IsQueryableMethod(initialMainQuery, "SelectMany", out var mainSelectManyMethod))
+//					throw new InvalidOperationException("Unexpected Main Query");
+//				var envelopeCreateLambda = (LambdaExpression)mainSelectManyMethod.Arguments[2].Unwrap();
+//				var envelopeCreateMethod = (MethodCallExpression)envelopeCreateLambda.Body;
+//
+//				var newMasterParm = Expression.Parameter(mainQueryElementType, GetMasterParamName("loadwith_"));
+//
+//				var prevKeys       = ExtractKeys(context, envelopeCreateMethod.Arguments[0]).ToArray();
+//				var subMasterKeys  = ExtractKeys(context, envelopeCreateMethod.Arguments[1]).ToArray();
+//
+//				var prevKeysByParameter = ExtractTupleValues(envelopeCreateMethod.Arguments[0], Expression.PropertyOrField(newMasterParm, "Key")).ToArray();
+//
+//				var correctLookup = prevKeysByParameter.ToLookup(tv => tv.Item1, tv => tv.Item2, new ExpressionEqualityComparer());
+//				foreach (var key in prevKeys)
+//				{
+//					if (correctLookup.Contains(key.ForSelect)) 
+//						key.ForSelect = correctLookup[key.ForSelect].First();
+//				}
+//
+//				var detailProp = Expression.PropertyOrField(newMasterParm, "Detail");
+//				var subMasterObj = envelopeCreateMethod.Arguments[1];
+//				foreach (var key in subMasterKeys)
+//				{
+//					key.ForSelect = key.ForSelect.Transform(e => e == subMasterObj ? detailProp : e);
+//				}
+//
+//				newDetailQuery = newDetailQuery.Transform(e => e == masterParm ? detailProp : e);
+//				
+//				var masterKeys = prevKeys.Concat(subMasterKeys).ToArray();
+//				resultExpression = GeneratePreambleExpression(masterKeys, detailExpressionTransformation, newMasterParm, newDetailQuery, masterQueryFinal, builder);
+//			}
+//			else
+//			{
+//				var masterKeys = ExtractKeys(context, masterParm).ToArray();
+//				resultExpression = GeneratePreambleExpression(masterKeys, detailExpressionTransformation, masterParm, newDetailQuery, masterQueryFinal, builder);
+//			}
+//
+//
+//			return resultExpression;
+//		}
 
 //		public static Expression GenerateAssociationExpression(IBuildContext context, AssociationDescriptor association)
 //		{
@@ -785,9 +746,49 @@ namespace LinqToDB.Linq.Builder
 				var lambdaExpression = ((LambdaExpression)queryableDetail);
 				var masterParm       = lambdaExpression.Parameters[0];
 				var newDetailQuery   = lambdaExpression.Body;
-				var masterKeys       = ExtractKeys(context, masterParm).ToArray();
 
-				resultExpression = GeneratePreambleExpression(masterKeys, detailExpressionTransformation, masterParm, newDetailQuery, masterQueryFinal, builder);
+				var mainQueryElementType = GetEnumerableElementType(initialMainQuery.Type);
+
+				// recursive processing
+				if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
+				{
+					if (!IsQueryableMethod(initialMainQuery, "SelectMany", out var mainSelectManyMethod))
+						throw new InvalidOperationException("Unexpected Main Query");
+					var envelopeCreateLambda = (LambdaExpression)mainSelectManyMethod.Arguments[2].Unwrap();
+					var envelopeCreateMethod = (MethodCallExpression)envelopeCreateLambda.Body;
+
+					var newMasterParm = Expression.Parameter(mainQueryElementType, GetMasterParamName("loadwith_"));
+
+					var prevKeys       = ExtractKeys(context, envelopeCreateMethod.Arguments[0]).ToArray();
+					var subMasterKeys  = ExtractKeys(context, envelopeCreateMethod.Arguments[1]).ToArray();
+
+					var prevKeysByParameter = ExtractTupleValues(envelopeCreateMethod.Arguments[0], Expression.PropertyOrField(newMasterParm, "Key")).ToArray();
+
+					var correctLookup = prevKeysByParameter.ToLookup(tv => tv.Item1, tv => tv.Item2, new ExpressionEqualityComparer());
+					foreach (var key in prevKeys)
+					{
+						if (correctLookup.Contains(key.ForSelect)) 
+							key.ForSelect = correctLookup[key.ForSelect].First();
+					}
+
+					var detailProp = Expression.PropertyOrField(newMasterParm, "Detail");
+					var subMasterObj = envelopeCreateMethod.Arguments[1];
+					foreach (var key in subMasterKeys)
+					{
+						key.ForSelect = key.ForSelect.Transform(e => e == subMasterObj ? detailProp : e);
+					}
+
+					newDetailQuery = newDetailQuery.Transform(e => e == masterParm ? detailProp : e);
+					
+					var masterKeys = prevKeys.Concat(subMasterKeys).ToArray();
+					resultExpression = GeneratePreambleExpression(masterKeys, detailExpressionTransformation, newMasterParm, newDetailQuery, masterQueryFinal, builder);
+				}
+				else
+				{
+					var masterKeys = ExtractKeys(context, masterParm).ToArray();
+					resultExpression = GeneratePreambleExpression(masterKeys, detailExpressionTransformation, masterParm, newDetailQuery, masterQueryFinal, builder);
+				}
+
 
 				return resultExpression;
 

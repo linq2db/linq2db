@@ -95,7 +95,7 @@ namespace Tests.Playground
 					{
 						DetailId = m.DetailId,
 						SubDetailValue = "SubDetailValue" + m.DetailId * 1000 + i,
-						SubDetailId = i
+						SubDetailId = m.DetailId * 1000 + i
 					}))
 				.ToArray();
 
@@ -156,12 +156,13 @@ namespace Tests.Playground
 		[Test]
 		public void TestLoadWithDeep([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var (masterRecords, detailRecords) = GenerateData();
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 			var intParam = 0;
 
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetail = db.CreateLocalTable(subDetailRecords))
 			{
 				var query = from m in master.LoadWith(m => m.Details).LoadWith(m => m.Details[0].SubDetails)
 					where m.Id1 >= intParam
