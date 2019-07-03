@@ -212,7 +212,7 @@ namespace LinqToDB.Tools.Comparers
 						? type.GetElementType()
 						: type.GetGenericArguments()[0])
 					: typeof(EnumerableEqualityComparer);
-			else if (type.IsClassEx() && !type.GetMethodsEx().Any(m => m.Name == "Equals" && m.DeclaringType == type))
+			else if (type.IsClassEx() &&  (type.Name.StartsWith("<>") || !type.GetMethodsEx().Any(m => m.Name == "Equals" && m.DeclaringType == type)))
 				return Expression.Call(_getEqualityComparerMethodInfo.MakeGenericMethod(type));
 			else 
 				comparerType = typeof(EqualityComparer<>).MakeGenericType(type);

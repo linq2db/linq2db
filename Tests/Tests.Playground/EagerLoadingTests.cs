@@ -175,7 +175,13 @@ namespace Tests.Playground
 						Id1 = m.Id1,
 						Id2 = m.Id2,
 						Value = m.Value,
-						Details = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
+						Details = detailRecords.Where(d => d.MasterId == m.Id1).Select(d => new DetailClass
+						{
+							DetailId = d.DetailId,
+							DetailValue = d.DetailValue,
+							MasterId = d.MasterId,
+							SubDetails = subDetailRecords.Where(s => s.DetailId == d.DetailId).ToArray()
+						}).ToList(),
 					};
 
 				var result = query.ToList();
@@ -324,14 +330,14 @@ namespace Tests.Playground
 						}).ToArray()
 					};
 
-				var expectedQuery = from m in masterRecords
-					where m.Id1 > 5
+				var expectedQuery = from master_1 in masterRecords
+					where master_1.Id1 > masterFilter
 					select new
 					{
-						m.Id1,
-						Details = detailRecords.Where(d => d.MasterId == m.Id1).Select(d => new
+						master_1.Id1,
+						Details = detailRecords.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
 						{
-							Masters = masterRecords.Where(mm => mm.Id1 == d.MasterId).ToArray()
+							Masters = masterRecords.Where(d_b => d_b.Id1 == masterP_1.MasterId).ToArray()
 						}).ToArray()
 					};
 
@@ -425,20 +431,18 @@ namespace Tests.Playground
 						Masters = master.Where(mm => m.Id1 == d.MasterId).ToArray()
 					};
 
-				var zz = query.ToArray();
+				var expectedQuery = from m in masterRecords.Take(20)
+					join d in detailRecords on m.Id1 equals d.MasterId 
+					select new
+					{
+						Detail = d,
+						Masters = masterRecords.Where(mm => m.Id1 == d.MasterId).ToArray()
+					};
 
-//				var expectedQuery = from m in masterRecords.Take(20)
-//					join d in detailRecords on m.Id1 equals d.MasterId 
-//					select new
-//					{
-//						Detail = d,
-//						Masters = masterRecords.Where(mm => m.Id1 == d.MasterId).ToArray()
-//					};
-//
-//				var result   = query.ToArray();
-//				var expected = expectedQuery.ToArray();
-//
-//				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
+				var result   = query.ToArray();
+				var expected = expectedQuery.ToArray();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
 

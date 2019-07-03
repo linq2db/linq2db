@@ -186,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (ctx != null)
 						{
-							if (ma.Type.IsGenericTypeEx() && typeof(IEnumerable<>).IsSameOrParentOf(ma.Type))
+							if ((ma.Type.IsGenericTypeEx() || ma.Type.IsArray) && typeof(IEnumerable<>).IsSameOrParentOf(ma.Type))
 							{
 								var res = ctx.IsExpression(ma, 0, RequestFor.Association);
 
@@ -773,6 +773,8 @@ namespace LinqToDB.Linq.Builder
 				isLazy = true;
 				return GetMultipleQueryExpressionLazy(context, mappingSchema, expression, parameters);
 			}
+
+			valueExpression = EagerLoading.EnsureDestinationType(valueExpression, expression.Type);
 
 			isLazy = false;
 			return valueExpression;

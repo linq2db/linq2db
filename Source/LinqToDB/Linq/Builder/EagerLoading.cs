@@ -51,6 +51,9 @@ namespace LinqToDB.Linq.Builder
 		static readonly MethodInfo _asQueryableMethodInfo =
 			MemberHelper.MethodOf<IEnumerable<object>>(n => n.AsQueryable()).GetGenericMethodDefinition();
 
+		static readonly MethodInfo _toArrayMethodInfo =
+			MemberHelper.MethodOf(() => Enumerable.ToArray<object>(null)).GetGenericMethodDefinition();
+
 		static int _masterParamcounter;
 
 		static string GetMasterParamName(string prefix)
@@ -265,32 +268,6 @@ namespace LinqToDB.Linq.Builder
 			return Tuple.Create(exprProjection, expDetail);
 		}
 
-		private static Dictionary<Expression, MemberInfo> CollectAliases(Expression expr)
-		{
-			var result = new Dictionary<Expression, MemberInfo>(new ExpressionEqualityComparer());
-			expr.Visit(e =>
-			{
-				switch (e.NodeType)
-				{
-					case ExpressionType.New:
-						{
-							var ne = (NewExpression)e;
-							if (ne.Members != null)
-							{
-								for (int i = 0; i < ne.Members.Count; i++)
-								{
-									result[ne.Arguments[i]] = ne.Members[i];
-								}
-							}
-							
-							break;
-						}
-				}
-			});
-
-			return result;
-		}
-
 		static IEnumerable<Expression> ExtractArguments(Expression expression)
 		{
 			if (expression is MethodCallExpression mc)
@@ -420,19 +397,6 @@ namespace LinqToDB.Linq.Builder
 
 			newContext = context;
 			return query;
-		}
-
-		static List<Expression> GetKeys(IBuildContext context, Expression expression, Expression keyObj)
-		{
-			var result = new List<Expression>();
-			var keys = context.ConvertToSql(expression, 0, ConvertFlags.Key);
-			foreach (var key in keys)
-			{
-				var path = ConstructMemberPath(key.MemberChain, keyObj);
-				if (path != null)
-					result.Add(path);
-			}
-			return result;
 		}
 
 		public static Expression EnsureEnumerable(Expression expression)
@@ -596,128 +560,81 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-//		public static Expression GenerateAssociationExpression(IBuildContext context, AssociationDescriptor association)
-//		{
-//			// that means we processing association from TableContext. First parameter is master
-//			var lambdaExpression = ((LambdaExpression)queryableDetail);
-//			var masterParm       = lambdaExpression.Parameters[0];
-//			var newDetailQuery   = lambdaExpression.Body;
-//
-//			var mainQueryElementType = GetEnumerableElementType(initialMainQuery.Type);
-//
-//			// recursive processing
-//			if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
-//			{
-//				if (!IsQueryableMethod(initialMainQuery, "SelectMany", out var mainSelectManyMethod))
-//					throw new InvalidOperationException("Unexpected Main Query");
-//				var envelopeCreateLambda = (LambdaExpression)mainSelectManyMethod.Arguments[2].Unwrap();
-//				var envelopeCreateMethod = (MethodCallExpression)envelopeCreateLambda.Body;
-//
-//				var newMasterParm = Expression.Parameter(mainQueryElementType, GetMasterParamName("loadwith_"));
-//
-//				var prevKeys       = ExtractKeys(context, envelopeCreateMethod.Arguments[0]).ToArray();
-//				var subMasterKeys  = ExtractKeys(context, envelopeCreateMethod.Arguments[1]).ToArray();
-//
-//				var prevKeysByParameter = ExtractTupleValues(envelopeCreateMethod.Arguments[0], Expression.PropertyOrField(newMasterParm, "Key")).ToArray();
-//
-//				var correctLookup = prevKeysByParameter.ToLookup(tv => tv.Item1, tv => tv.Item2, new ExpressionEqualityComparer());
-//				foreach (var key in prevKeys)
-//				{
-//					if (correctLookup.Contains(key.ForSelect)) 
-//						key.ForSelect = correctLookup[key.ForSelect].First();
-//				}
-//
-//				var detailProp = Expression.PropertyOrField(newMasterParm, "Detail");
-//				var subMasterObj = envelopeCreateMethod.Arguments[1];
-//				foreach (var key in subMasterKeys)
-//				{
-//					key.ForSelect = key.ForSelect.Transform(e => e == subMasterObj ? detailProp : e);
-//				}
-//
-//				newDetailQuery = newDetailQuery.Transform(e => e == masterParm ? detailProp : e);
-//				
-//				var masterKeys = prevKeys.Concat(subMasterKeys).ToArray();
-//				resultExpression = GeneratePreambleExpression(masterKeys, detailExpressionTransformation, newMasterParm, newDetailQuery, masterQueryFinal, builder);
-//			}
-//			else
-//			{
-//				var masterKeys = ExtractKeys(context, masterParm).ToArray();
-//				resultExpression = GeneratePreambleExpression(masterKeys, detailExpressionTransformation, masterParm, newDetailQuery, masterQueryFinal, builder);
-//			}
-//
-//
-//			return resultExpression;
-//		}
+		public static Expression EnsureDestinationType(Expression expression, Type destinationType)
+		{
+			if (destinationType.IsArray)
+			{
+				if (destinationType.IsArray)
+				{
+					var destinationElementType = GetEnumerableElementType(destinationType);
+					expression = Expression.Call(null, _toArrayMethodInfo.MakeGenericMethod(destinationElementType), expression);
+				}
+			}
 
-//		public static Expression GenerateAssociationExpression(IBuildContext context, AssociationDescriptor association)
-//		{
-//            		var table = (TableBuilder.AssociatedTableContext)res.Context;
-//
-//		if (table.IsList)
-//		{
-//			var me = (MemberExpression)e;
-//			Expression expr;
-//
-//			var parentType = me.Expression.Type;
-//			var childType  = table.ObjectType;
-//
-//			var queryMethod = table.Association.GetQueryMethod(parentType, childType);
-//			if (queryMethod != null)
-//			{
-//				//TODO: MARS
-//				var dcConst = Expression.Constant(context.Builder.DataContext.Clone(true));
-//
-//				expr = queryMethod.GetBody(me.Expression, dcConst);
-//			}
-//			else
-//			{
-//				var ttype  = typeof(Table<>).MakeGenericType(childType);
-//				var tbl    = Activator.CreateInstance(ttype, context.Builder.DataContext);
-//				var method = e == expression ?
-//					MemberHelper.MethodOf<IEnumerable<bool>>(n => n.Where(a => a)).GetGenericMethodDefinition().MakeGenericMethod(childType) :
-//					_whereMethodInfo.MakeGenericMethod(e.Type, childType, ttype);
-//
-//				var op = Expression.Parameter(childType, "t");
-//
-//				parameters.Add(op);
-//
-//				Expression ex = null;
-//
-//				for (var i = 0; i < table.Association.ThisKey.Length; i++)
-//				{
-//					var field1 = table.ParentAssociation.SqlTable.Fields[table.Association.ThisKey [i]];
-//					var field2 = table.                  SqlTable.Fields[table.Association.OtherKey[i]];
-//
-//					var ma1 = Expression.MakeMemberAccess(op,            field2.ColumnDescriptor.MemberInfo);
-//					var ma2 = Expression.MakeMemberAccess(me.Expression, field1.ColumnDescriptor.MemberInfo);
-//
-//					var ee = Equal(mappingSchema, ma1, ma2);
-//
-//					ex = ex == null ? ee : Expression.AndAlso(ex, ee);
-//				}
-//
-//				var predicate = table.Association.GetPredicate(parentType, childType);
-//				if (predicate != null)
-//				{
-//					var body = predicate.GetBody(me.Expression, op);
-//					ex = ex == null ? body : Expression.AndAlso(ex, body);
-//				}
-//
-//				if (ex == null)
-//					throw new LinqToDBException($"Invalid association configuration for {table.Association.MemberInfo.DeclaringType}.{table.Association.MemberInfo.Name}");
-//
-//				expr = Expression.Call(null, method, Expression.Constant(tbl), Expression.Lambda(ex, op));
-//			}
-//
-//			if (e == expression)
-//			{
-//				expr = Expression.Call(
-//					MemberHelper.MethodOf<IEnumerable<int>>(n => n.ToList()).GetGenericMethodDefinition().MakeGenericMethod(childType),
-//					expr);
-//			}
-//
-//			return expr;
-//		}
+			return expression;
+		}
+
+		public static Expression GenerateAssociationExpression(ExpressionBuilder builder, IBuildContext context, AssociationDescriptor association)
+		{
+			var initialMainQuery = builder.Expression;
+
+			// that means we processing association from TableContext. First parameter is master
+			Expression detailQuery;
+
+			var mainQueryElementType = GetEnumerableElementType(initialMainQuery.Type);
+			var masterParm           = Expression.Parameter(mainQueryElementType, GetMasterParamName("loadwith_"));
+
+			Expression resultExpression;
+
+			// recursive processing
+			if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
+			{
+				if (!IsQueryableMethod(initialMainQuery, "SelectMany", out var mainSelectManyMethod))
+					throw new InvalidOperationException("Unexpected Main Query");
+
+				var envelopeCreateLambda = (LambdaExpression)mainSelectManyMethod.Arguments[2].Unwrap();
+				var envelopeCreateMethod = (MethodCallExpression)envelopeCreateLambda.Body;
+
+				var newMasterParm = Expression.Parameter(mainQueryElementType, GetMasterParamName("loadwith_"));
+
+				var prevKeys       = ExtractKeys(context, envelopeCreateMethod.Arguments[0]).ToArray();
+				var subMasterKeys  = ExtractKeys(context, envelopeCreateMethod.Arguments[1]).ToArray();
+
+				var prevKeysByParameter = ExtractTupleValues(envelopeCreateMethod.Arguments[0], Expression.PropertyOrField(newMasterParm, "Key")).ToArray();
+
+				var correctLookup = prevKeysByParameter.ToLookup(tv => tv.Item1, tv => tv.Item2, new ExpressionEqualityComparer());
+				foreach (var key in prevKeys)
+				{
+					if (correctLookup.Contains(key.ForSelect)) 
+						key.ForSelect = correctLookup[key.ForSelect].First();
+				}
+
+				var detailProp = Expression.PropertyOrField(newMasterParm, "Detail");
+				var subMasterObj = envelopeCreateMethod.Arguments[1];
+				foreach (var key in subMasterKeys)
+				{
+					key.ForSelect = key.ForSelect.Transform(e => e == subMasterObj ? detailProp : e);
+				}
+
+				detailQuery = Expression.MakeMemberAccess(detailProp, association.MemberInfo);
+				
+				var masterKeys = prevKeys.Concat(subMasterKeys).ToArray();
+				resultExpression = GeneratePreambleExpression(masterKeys, null, newMasterParm, detailQuery, initialMainQuery, builder);
+			}
+			else
+			{
+				masterParm = Expression.Parameter(mainQueryElementType, GetMasterParamName("master_"));
+				var masterKeys = ExtractKeys(context, masterParm).ToArray();
+
+				detailQuery = Expression.MakeMemberAccess(masterParm, association.MemberInfo);
+
+				resultExpression = GeneratePreambleExpression(masterKeys, null, masterParm, detailQuery, initialMainQuery, builder);
+			}
+
+			resultExpression = EnsureDestinationType(resultExpression, association.MemberInfo.GetMemberType());
+
+			return resultExpression;
+		}
 
 		public static Expression GenerateDetailsExpression(IBuildContext context, MappingSchema mappingSchema,
 			Expression expression, HashSet<ParameterExpression> parameters)
@@ -735,65 +652,10 @@ namespace LinqToDB.Linq.Builder
 			Expression resultExpression;
 
 			var mainParamTransformation = new Dictionary<ParameterExpression, ParameterExpression>();
-			var foundKeyExpressions = new List<Expression>();
 
 			var hasConnectionWithMaster = false;
 			var detailExpressionTransformation = new Dictionary<Expression, Expression>(new ExpressionEqualityComparer());
 
-			if (queryableDetail.NodeType == ExpressionType.Lambda)
-			{
-				// that means we processing association from TableContext. First parameter is master
-				var lambdaExpression = ((LambdaExpression)queryableDetail);
-				var masterParm       = lambdaExpression.Parameters[0];
-				var newDetailQuery   = lambdaExpression.Body;
-
-				var mainQueryElementType = GetEnumerableElementType(initialMainQuery.Type);
-
-				// recursive processing
-				if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
-				{
-					if (!IsQueryableMethod(initialMainQuery, "SelectMany", out var mainSelectManyMethod))
-						throw new InvalidOperationException("Unexpected Main Query");
-					var envelopeCreateLambda = (LambdaExpression)mainSelectManyMethod.Arguments[2].Unwrap();
-					var envelopeCreateMethod = (MethodCallExpression)envelopeCreateLambda.Body;
-
-					var newMasterParm = Expression.Parameter(mainQueryElementType, GetMasterParamName("loadwith_"));
-
-					var prevKeys       = ExtractKeys(context, envelopeCreateMethod.Arguments[0]).ToArray();
-					var subMasterKeys  = ExtractKeys(context, envelopeCreateMethod.Arguments[1]).ToArray();
-
-					var prevKeysByParameter = ExtractTupleValues(envelopeCreateMethod.Arguments[0], Expression.PropertyOrField(newMasterParm, "Key")).ToArray();
-
-					var correctLookup = prevKeysByParameter.ToLookup(tv => tv.Item1, tv => tv.Item2, new ExpressionEqualityComparer());
-					foreach (var key in prevKeys)
-					{
-						if (correctLookup.Contains(key.ForSelect)) 
-							key.ForSelect = correctLookup[key.ForSelect].First();
-					}
-
-					var detailProp = Expression.PropertyOrField(newMasterParm, "Detail");
-					var subMasterObj = envelopeCreateMethod.Arguments[1];
-					foreach (var key in subMasterKeys)
-					{
-						key.ForSelect = key.ForSelect.Transform(e => e == subMasterObj ? detailProp : e);
-					}
-
-					newDetailQuery = newDetailQuery.Transform(e => e == masterParm ? detailProp : e);
-					
-					var masterKeys = prevKeys.Concat(subMasterKeys).ToArray();
-					resultExpression = GeneratePreambleExpression(masterKeys, detailExpressionTransformation, newMasterParm, newDetailQuery, masterQueryFinal, builder);
-				}
-				else
-				{
-					var masterKeys = ExtractKeys(context, masterParm).ToArray();
-					resultExpression = GeneratePreambleExpression(masterKeys, detailExpressionTransformation, masterParm, newDetailQuery, masterQueryFinal, builder);
-				}
-
-
-				return resultExpression;
-
-			}
-            else
 			if (initialMainQuery.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)initialMainQuery;
@@ -812,6 +674,7 @@ namespace LinqToDB.Linq.Builder
                     else if (mc.IsQueryable("Join"))
 					{
 						resultExpression = ProcessMethodCallWithLastProjection(builder, mc, selectContext, queryableDetail, mappingSchema);
+						return resultExpression;
 					}
 					else if (mc.IsQueryable("SelectMany"))
 					{
@@ -1113,8 +976,11 @@ namespace LinqToDB.Linq.Builder
 			var keyCompiledExpression = GenerateKeyExpression(preparedKeys.Select(k => k.ForCompilation).ToArray(), 0);
 			var keySelectExpression   = GenerateKeyExpression(preparedKeys.Select(k => k.ForSelect).ToArray(), 0);
 
-			keySelectExpression = keySelectExpression.Transform(e =>
-				detailExpressionTransformation.TryGetValue(e, out var replacement) ? replacement : e);
+			if (detailExpressionTransformation != null)
+			{
+				keySelectExpression = keySelectExpression.Transform(e =>
+					detailExpressionTransformation.TryGetValue(e, out var replacement) ? replacement : e);
+			}
 
 			var keySelectLambda    = Expression.Lambda(keySelectExpression, masterParam);
 			var detailsQueryLambda = Expression.Lambda(EnsureEnumerable(detailQuery), masterParam);
@@ -1294,7 +1160,7 @@ namespace LinqToDB.Linq.Builder
 			Expression<Func<T, TKey>> selectKeyExpression)
 		{
 			var mainQuery   = Internals.CreateExpressionQueryInstance<T>(builder.DataContext, mainQueryExpr);
-			var detailQuery = mainQuery.SelectMany(detailQueryLambda, (m, d) => KeyDetailEnvelope.Create(selectKeyExpression.Compile()(m), d));
+			var detailQuery = mainQuery.SelectMany(detailQueryLambda, (main, detail) => KeyDetailEnvelope.Create(selectKeyExpression.Compile()(main), detail));
 
 			//TODO: currently we run in separate query
 
