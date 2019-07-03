@@ -40,7 +40,6 @@ namespace Tests.xUpdate
 			[Column]                       public decimal Field1;
 		}
 
-		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
 		[Test]
 		public void TruncateIdentityTest([DataSources(ProviderName.Informix, ProviderName.SapHana)]
 			string context)
@@ -72,7 +71,6 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		public void TruncateIdentityNoResetTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

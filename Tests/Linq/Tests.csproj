@@ -32,8 +32,9 @@
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 
-		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
+		<PackageReference Include="Humanizer.Core" Version="2.6.2" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" />
+		<PackageReference Include="System.Memory" Version="4.5.3" />
 	</ItemGroup>
 
 	<Target Name="AddPackageAliases" BeforeTargets="ResolveReferences" Outputs="%(PackageReference.Identity)">
@@ -68,6 +69,7 @@
 		<Compile Remove="DataProvider\OracleTests.cs" />
 		<Compile Remove="Linq\DynamicColumnsTests.cs" />
 		<Compile Remove="Mapping\FluentDynamicMappingTests.cs" />
+		<Compile Remove="Mapping\DynamicStoreTests.cs" />
 		<Compile Remove="Update\DynamicColumnsTests.cs" />
 		<Compile Remove="UserTests\Issue1268Tests.cs" />
 	</ItemGroup>

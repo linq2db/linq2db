@@ -467,7 +467,7 @@ namespace LinqToDB.Mapping
 			DbDataType                      fromType,
 			DbDataType                      toType,
 			[JetBrains.Annotations.NotNull] LambdaExpression expr,
-			bool addNullCheck = true)
+			bool                            addNullCheck = true)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
@@ -1571,5 +1571,17 @@ namespace LinqToDB.Mapping
 		}
 
 		#endregion
+
+		internal IEnumerable<T> SortByConfiguration<T>(Func<T, string> configGetter, IEnumerable<T> values)
+		{
+			return values
+				.Select(val => new
+				{
+					Value = val,
+					Order = Array.IndexOf(ConfigurationList, configGetter(val)) == -1 ? ConfigurationList.Length : Array.IndexOf(ConfigurationList, configGetter(val))
+				})
+				.OrderBy(_ => _.Order)
+				.Select(_ => _.Value);
+		}
 	}
 }

@@ -1,1 +1,0 @@
-[!include[intro](../readme.md)]

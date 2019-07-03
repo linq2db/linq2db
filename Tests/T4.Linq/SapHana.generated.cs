@@ -4,6 +4,9 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -18,11 +21,6 @@ using LinqToDB.Mapping;
 
 namespace SapHanaDataContext
 {
-	/// <summary>
-	/// Database       : SYSTEMDB
-	/// Data Source    : hxehost
-	/// Server Version : 02.00.010.00.1491294693
-	/// </summary>
 	public partial class SYSTEMDBDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>                                            AllTypes                               { get { return this.GetTable<AllType>(); } }
@@ -601,6 +599,7 @@ namespace SapHanaDataContext
 		public ITable<_SYS_XS_RuntimeJsonExtension>                       RuntimeJsonExtensions                  { get { return this.GetTable<_SYS_XS_RuntimeJsonExtension>(); } }
 		public ITable<_SYS_XS_RuntimeJsonObject>                          RuntimeJsonObjects                     { get { return this.GetTable<_SYS_XS_RuntimeJsonObject>(); } }
 		public ITable<_SYS_XS_SamlProviderConfig>                         SamlProviderConfigs                    { get { return this.GetTable<_SYS_XS_SamlProviderConfig>(); } }
+		public ITable<SapHana>                                            SapHanas                               { get { return this.GetTable<SapHana>(); } }
 		public ITable<_SYS_RT_SearchRuleSet>                              SearchRuleSets                         { get { return this.GetTable<_SYS_RT_SearchRuleSet>(); } }
 		public ITable<_SYS_XS_SecureStore>                                SecureStores                           { get { return this.GetTable<_SYS_XS_SecureStore>(); } }
 		public ITable<_SYS_XS_SecureStoreList>                            SecureStoreLists                       { get { return this.GetTable<_SYS_XS_SecureStoreList>(); } }
@@ -10838,6 +10837,15 @@ namespace SapHanaDataContext
 		[Column(),                         Nullable           ] public string PATH               { get; set; } // NVARCHAR(2048)
 	}
 
+	[Table(Schema="TESTHANA", Name="SapHana")]
+	public partial class SapHana
+	{
+		[PrimaryKey, NotNull    ] public int    Id            { get; set; } // INTEGER
+		[Column,        Nullable] public string DuplicateData { get; set; } // NVARCHAR(255)
+		[Column,     NotNull    ] public int    OrderData1    { get; set; } // INTEGER
+		[Column,     NotNull    ] public int    OrderData2    { get; set; } // INTEGER
+	}
+
 	[Table(Schema="_SYS_RT", Name="SEARCH_RULE_SETS")]
 	public partial class _SYS_RT_SearchRuleSet
 	{
@@ -13465,6 +13473,93 @@ namespace SapHanaDataContext
 
 		#endregion
 
+		#region PrdGlobalEccCvMARAproc
+
+		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this DataConnection dataConnection)
+		{
+			var ms = dataConnection.MappingSchema;
+
+			return dataConnection.QueryProc(dataReader =>
+				new PrdGlobalEccCvMARAprocResult
+				{
+					id      = Converter.ChangeTypeTo<int?>  (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
+				},
+				"\"TESTHANA\".\"prd.global.ecc/CV_MARAproc\"");
+		}
+
+		public partial class PrdGlobalEccCvMARAprocResult
+		{
+			               public int?   id      { get; set; }
+			[Column("id")] public string Column2 { get; set; }
+		}
+
+		#endregion
+
+		#region DROPEXISTINGVIEW
+
+		public static int DROPEXISTINGVIEW0(this DataConnection dataConnection, string VIEWNAME, string SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGVIEW\"",
+				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
+				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
+		}
+
+		#endregion
+
+		#region PersonSelectByKey
+
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this DataConnection dataConnection, int? ID)
+		{
+			return dataConnection.QueryProc<PersonSelectByKeyResult>("\"TESTHANA\".\"Person_SelectByKey\"",
+				new DataParameter("ID", ID, DataType.Int32));
+		}
+
+		public partial class PersonSelectByKeyResult
+		{
+			public int    PersonID   { get; set; }
+			public string FirstName  { get; set; }
+			public string LastName   { get; set; }
+			public string MiddleName { get; set; }
+			public string Gender     { get; set; }
+		}
+
+		#endregion
+
+		#region PersonSelectListByName
+
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME)
+		{
+			return dataConnection.QueryProc<PersonSelectListByNameResult>("\"TESTHANA\".\"Person_SelectListByName\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+		}
+
+		public partial class PersonSelectListByNameResult
+		{
+			public int    PersonID   { get; set; }
+			public string FirstName  { get; set; }
+			public string LastName   { get; set; }
+			public string MiddleName { get; set; }
+			public string Gender     { get; set; }
+		}
+
+		#endregion
+
+		#region PersonUpdate
+
+		public static int PersonUpdate(this DataConnection dataConnection, int? PERSONID, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Update\"",
+				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
+				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",     GENDER,     DataType.Char));
+		}
+
+		#endregion
+
 		#region PersonDelete
 
 		public static int PersonDelete(this DataConnection dataConnection, int? PERSONID)
@@ -13600,105 +13695,6 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region PrdGlobalEccCvMARAproc
-
-		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this DataConnection dataConnection)
-		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new PrdGlobalEccCvMARAprocResult
-				{
-					id      = Converter.ChangeTypeTo<int?>  (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
-				},
-				"\"TESTHANA\".\"prd.global.ecc/CV_MARAproc\"");
-		}
-
-		public partial class PrdGlobalEccCvMARAprocResult
-		{
-			               public int?   id      { get; set; }
-			[Column("id")] public string Column2 { get; set; }
-		}
-
-		#endregion
-
-		#region DROPEXISTINGVIEW
-
-		public static int DROPEXISTINGVIEW0(this DataConnection dataConnection, string VIEWNAME, string SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGVIEW\"",
-				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
-				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
-		}
-
-		#endregion
-
-		#region PersonSelectListByName
-
-		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME)
-		{
-			return dataConnection.QueryProc<PersonSelectListByNameResult>("\"TESTHANA\".\"Person_SelectListByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
-		}
-
-		public partial class PersonSelectListByNameResult
-		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		#endregion
-
-		#region PersonInsert
-
-		public static int PersonInsert(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert\"",
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     DataType.Char));
-		}
-
-		#endregion
-
-		#region PersonInsertOutputParameter
-
-		public static int PersonInsertOutputParameter(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
-		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert_OutputParameter\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",   GENDER,   DataType.Char),
-				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region PersonUpdate
-
-		public static int PersonUpdate(this DataConnection dataConnection, int? PERSONID, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Update\"",
-				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     DataType.Char));
-		}
-
-		#endregion
-
 		#region TelemetryHanaUsage
 
 		public static int TelemetryHanaUsage(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
@@ -13725,6 +13721,17 @@ namespace SapHanaDataContext
 			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
 
 			return ret;
+		}
+
+		#endregion
+
+		#region DROPEXISTINGTABLE
+
+		public static int DROPEXISTINGTABLE0(this DataConnection dataConnection, string TABLENAME, string SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGTABLE\"",
+				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
+				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
 		}
 
 		#endregion
@@ -13873,6 +13880,116 @@ namespace SapHanaDataContext
 
 		#endregion
 
+		#region PersonInsert
+
+		public static int PersonInsert(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert\"",
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
+				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",     GENDER,     DataType.Char));
+		}
+
+		#endregion
+
+		#region TelemetryHostInformation
+
+		public static int TelemetryHostInformation(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_HOST_INFORMATION\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region DROPEXISTINGPROCEDURE
+
+		public static int DROPEXISTINGPROCEDURE0(this DataConnection dataConnection, string PROCEDURENAME, string SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGPROCEDURE\"",
+				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",    SCHEMANAME,    DataType.VarChar));
+		}
+
+		#endregion
+
+		#region DROPEXISTINGFUNCTION
+
+		public static int DROPEXISTINGFUNCTION0(this DataConnection dataConnection, string FUNCTIONNAME, string SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGFUNCTION\"",
+				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",   SCHEMANAME,   DataType.VarChar));
+		}
+
+		#endregion
+
+		#region TelemetryLicenses
+
+		public static int TelemetryLicenses(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_LICENSES\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region DROPCONSTRAINTFROMTABLE
+
+		public static int DROPCONSTRAINTFROMTABLE0(this DataConnection dataConnection, string TABLENAME, string CONSTRAINTNAME, string SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPCONSTRAINTFROMTABLE\"",
+				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
+				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",     SCHEMANAME,     DataType.VarChar));
+		}
+
+		#endregion
+
+		#region PersonSelectAll
+
+		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<PersonSelectAllResult>("\"TESTHANA\".\"Person_SelectAll\"");
+		}
+
+		public partial class PersonSelectAllResult
+		{
+			public int    PersonID   { get; set; }
+			public string FirstName  { get; set; }
+			public string LastName   { get; set; }
+			public string MiddleName { get; set; }
+			public string Gender     { get; set; }
+		}
+
+		#endregion
+
+		#region TelemetryInifileContents
+
+		public static int TelemetryInifileContents(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_INIFILE_CONTENTS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
 		#region PersonSelectByName
 
 		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME)
@@ -13893,129 +14010,20 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region TelemetryHostInformation
+		#region PersonInsertOutputParameter
 
-		public static int TelemetryHostInformation(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int PersonInsertOutputParameter(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_HOST_INFORMATION\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert_OutputParameter\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",   GENDER,   DataType.Char),
+				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
 
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
 
 			return ret;
-		}
-
-		#endregion
-
-		#region DROPEXISTINGTABLE
-
-		public static int DROPEXISTINGTABLE0(this DataConnection dataConnection, string TABLENAME, string SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGTABLE\"",
-				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
-				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
-		}
-
-		#endregion
-
-		#region DROPEXISTINGPROCEDURE
-
-		public static int DROPEXISTINGPROCEDURE0(this DataConnection dataConnection, string PROCEDURENAME, string SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGPROCEDURE\"",
-				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",    SCHEMANAME,    DataType.VarChar));
-		}
-
-		#endregion
-
-		#region TelemetryLicenses
-
-		public static int TelemetryLicenses(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_LICENSES\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region DROPEXISTINGFUNCTION
-
-		public static int DROPEXISTINGFUNCTION0(this DataConnection dataConnection, string FUNCTIONNAME, string SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGFUNCTION\"",
-				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",   SCHEMANAME,   DataType.VarChar));
-		}
-
-		#endregion
-
-		#region DROPCONSTRAINTFROMTABLE
-
-		public static int DROPCONSTRAINTFROMTABLE0(this DataConnection dataConnection, string TABLENAME, string CONSTRAINTNAME, string SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPCONSTRAINTFROMTABLE\"",
-				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
-				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",     SCHEMANAME,     DataType.VarChar));
-		}
-
-		#endregion
-
-		#region TelemetryInifileContents
-
-		public static int TelemetryInifileContents(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_INIFILE_CONTENTS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region PersonSelectByKey
-
-		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this DataConnection dataConnection, int? ID)
-		{
-			return dataConnection.QueryProc<PersonSelectByKeyResult>("\"TESTHANA\".\"Person_SelectByKey\"",
-				new DataParameter("ID", ID, DataType.Int32));
-		}
-
-		public partial class PersonSelectByKeyResult
-		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		#endregion
-
-		#region PersonSelectAll
-
-		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<PersonSelectAllResult>("\"TESTHANA\".\"Person_SelectAll\"");
-		}
-
-		public partial class PersonSelectAllResult
-		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
 		}
 
 		#endregion
@@ -15359,16 +15367,6 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region AflpmEraser
-
-		public static int AflpmEraser(this DataConnection dataConnection, string PROC)
-		{
-			return dataConnection.ExecuteProc("\"SYSTEM\".\"AFLPM_ERASER\"",
-				new DataParameter("PROC", PROC, DataType.VarChar));
-		}
-
-		#endregion
-
 		#region AfllangWrapperProcedureDrop
 
 		public static int AfllangWrapperProcedureDrop(this DataConnection dataConnection, string SCHEMA_NAME, string PROCEDURE_NAME)
@@ -15385,6 +15383,16 @@ namespace SapHanaDataContext
 		public static int AflpmOnlineRegistrationCleanup(this DataConnection dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"AFLPM_ONLINE_REGISTRATION_CLEANUP\"");
+		}
+
+		#endregion
+
+		#region AflpmEraser
+
+		public static int AflpmEraser(this DataConnection dataConnection, string PROC)
+		{
+			return dataConnection.ExecuteProc("\"SYSTEM\".\"AFLPM_ERASER\"",
+				new DataParameter("PROC", PROC, DataType.VarChar));
 		}
 
 		#endregion
@@ -16253,6 +16261,12 @@ namespace SapHanaDataContext
 				t.BindingType  == BindingType);
 		}
 
+		public static SapHana Find(this ITable<SapHana> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
 		public static _SYS_XS_SecureStore Find(this ITable<_SYS_XS_SecureStore> table, string StoreId, long UserId, string DataId)
 		{
 			return table.FirstOrDefault(t =>
@@ -16550,3 +16564,5 @@ namespace SapHanaDataContext
 		}
 	}
 }
+
+#pragma warning restore 1591

@@ -1,11 +1,11 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<ItemGroup>
 		<PackageReference Include="AdoNetCore.AseClient" Version="0.13.1" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.12.1" />
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="6.6.0" />
 		<PackageReference Include="Npgsql" Version="3.2.7" />
-		<PackageReference Include="Mono.Cecil" Version="0.10.0" />
-		<PackageReference Include="MySql.Data" Version="8.0.15" Alias="MySqlData" />
-		<PackageReference Include="MySqlConnector" Version="0.53.0" Alias="MySqlConnector" />
+		<PackageReference Include="Mono.Cecil" Version="0.10.3" />
+		<PackageReference Include="MySql.Data" Version="8.0.16" Alias="MySqlData" />
+		<PackageReference Include="MySqlConnector" Version="0.55.0" Alias="MySqlConnector" />
 
 		<Folder Include="npgsql4\net451\" />
 		<Folder Include="npgsql4\netstandard2.0\" />
@@ -32,8 +32,8 @@
 			<HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
 		</Reference>
 
-		<PackageReference Include="Oracle.ManagedDataAccess" Version="12.2.1100" />
-		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
+		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.3.0" />
+		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.108" />
@@ -90,8 +90,6 @@
 		<Reference Include="Microsoft.SqlServer.Types">
 			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
 		</Reference>
-		<PackageReference Include="Oracle.ManagedDataAccess.Core">
-			<Version>2.18.3</Version>
-		</PackageReference>
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.3" />
 	</ItemGroup>
 </Project>
