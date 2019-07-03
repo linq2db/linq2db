@@ -22,14 +22,19 @@ namespace Tests.T4.Model
 
 		#region IEquatable support
 
+		private static IEqualityComparer<TestComparerClass1> EqualityComparer
+		{
+			get { return ComparerBuilder.GetEqualityComparer<TestComparerClass1>(); }
+		}
+
 		public bool Equals(TestComparerClass1 other)
 		{
-			return ComparerBuilder.GetEqualityComparer<TestComparerClass1>().Equals(this, other);
+			return EqualityComparer.Equals(this, other);
 		}
 
 		public override int GetHashCode()
 		{
-			return ComparerBuilder.GetEqualityComparer<TestComparerClass1>().GetHashCode(this);
+			return EqualityComparer.GetHashCode(this);
 		}
 
 		public override bool Equals(object obj)
@@ -52,14 +57,19 @@ namespace Tests.T4.Model
 
 		#region IEquatable support
 
+		private static IEqualityComparer<TestComparerClass2> EqualityComparer
+		{
+			get { return ComparerBuilder.GetEqualityComparer<TestComparerClass2>(); }
+		}
+
 		public bool Equals(TestComparerClass2 other)
 		{
-			return ComparerBuilder.GetEqualityComparer<TestComparerClass2>().Equals(this, other);
+			return EqualityComparer.Equals(this, other);
 		}
 
 		public override int GetHashCode()
 		{
-			return ComparerBuilder.GetEqualityComparer<TestComparerClass2>().GetHashCode(this);
+			return EqualityComparer.GetHashCode(this);
 		}
 
 		public override bool Equals(object obj)

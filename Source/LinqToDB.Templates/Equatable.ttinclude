@@ -36,6 +36,16 @@ void EquatableImpl()
 							IsCompact = false,
 							Members   =
 							{
+								new Property(() => $"IEqualityComparer<{className}>", "EqualityComparer",
+									() => new[]
+									{
+										$"ComparerBuilder.GetEqualityComparer<{className}>();"
+									})
+									{
+										AccessModifier = AccessModifier.Private,
+										IsStatic = true
+									},
+
 								new Method(() => "bool", "Equals",
 									new Func<string>[]
 									{
@@ -43,13 +53,13 @@ void EquatableImpl()
 									},
 									() => new[]
 									{
-										$"return ComparerBuilder.GetEqualityComparer<{className}>().Equals(this, other);"
+										$"return EqualityComparer.Equals(this, other);"
 									}),
 
 								new Method(() => "int", "GetHashCode", null,
 									() => new[]
 									{
-										$"return ComparerBuilder.GetEqualityComparer<{className}>().GetHashCode(this);"
+										$"return EqualityComparer.GetHashCode(this);"
 									})
 									{
 										IsOverride = true
