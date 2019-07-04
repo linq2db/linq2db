@@ -1295,10 +1295,11 @@ namespace Tests.xUpdate
 		// Model
 		public class PersonCache
 		{
-			public int            Id             { get; set; }
-			public string         PhoneNumber    { get; set; }
-			public KeyTypes       ClaimedKeyType { get; set; }
-			public DateTimeOffset Updated        { get; set; }
+			public int            Id              { get; set; }
+			public string         PhoneNumber     { get; set; }
+			public KeyTypes       ClaimedKeyType  { get; set; }
+			public KeyTypesString ClaimedKeyType2 { get; set; }
+			public DateTimeOffset Updated         { get; set; }
 		}
 
 		[Flags]
@@ -1308,10 +1309,35 @@ namespace Tests.xUpdate
 			EC  = 2
 		}
 
+		[Flags]
+		public enum KeyTypes2
+		{
+			RSA = 1,
+			EC  = 2
+		}
+
+		[Flags]
+		public enum KeyTypesString : byte
+		{
+			[MapValue("RSA")]
+			RSA = 1,
+			[MapValue("EC")]
+			EC  = 2
+		}
+
+		[Flags]
+		public enum KeyTypes2String
+		{
+			[MapValue("NOT_RSA")]
+			RSA = 1,
+			[MapValue("NOT_EC")]
+			EC  = 2
+		}
+
 		[Test]
 		public void Issue1554Test1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureIssue1554Mappings()))
+			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
 			using (var table = db.CreateLocalTable<PersonCache>())
 			{
 				var claimedKeyType = KeyTypes.EC;
@@ -1327,7 +1353,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue1554Test2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureIssue1554Mappings()))
+			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
 			using (var table = db.CreateLocalTable<PersonCache>())
 			{
 				object claimedKeyType = KeyTypes.EC;
@@ -1340,21 +1366,134 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public void Issue1554Test3([DataSources] string context)
+		{
+			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
+			using (var table = db.CreateLocalTable<PersonCache>())
+			{
+				object claimedKeyType = KeyTypes2.EC;
+				var    now            = DateTimeOffset.Now;
+
+				db.GetTable<PersonCache>().Where(p => p.Id == 0).AsUpdatable()
+					.Set(p => p.ClaimedKeyType, claimedKeyType)
+					.Set(p => p.Updated, now)
+					.Update();
+			}
+		}
+
+		[Test]
+		public void Issue1554Test4([DataSources] string context)
+		{
+			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
+			using (var table = db.CreateLocalTable<PersonCache>())
+			{
+				var now = DateTimeOffset.Now;
+
+				db.GetTable<PersonCache>().Where(p => p.Id == 0).AsUpdatable()
+					.Set(p => p.ClaimedKeyType, (KeyTypes)KeyTypes2.EC)
+					.Set(p => p.Updated, now)
+					.Update();
+			}
+		}
+
+		[Test]
+		public void Issue1554Test5([DataSources] string context)
+		{
+			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
+			using (var table = db.CreateLocalTable<PersonCache>())
+			{
+				db.Insert(new PersonCache() { Id = 0, ClaimedKeyType = KeyTypes.RSA, ClaimedKeyType2 = KeyTypesString.RSA });
+
+				var claimedKeyType = KeyTypesString.EC;
+				var now            = DateTimeOffset.Now;
+
+				db.GetTable<PersonCache>().Where(p => p.Id == 0).AsUpdatable()
+					.Set(p => p.ClaimedKeyType2, claimedKeyType)
+					.Set(p => p.Updated, now)
+					.Update();
+
+				var record = table.Single();
+				Assert.AreEqual(KeyTypesString.EC, record.ClaimedKeyType2);
+			}
+		}
+
+		[Test]
+		public void Issue1554Test6([DataSources] string context)
+		{
+			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
+			using (var table = db.CreateLocalTable<PersonCache>())
+			{
+				db.Insert(new PersonCache() { Id = 0, ClaimedKeyType = KeyTypes.RSA, ClaimedKeyType2 = KeyTypesString.RSA });
+
+				object claimedKeyType = KeyTypesString.EC;
+				var now               = DateTimeOffset.Now;
+
+				db.GetTable<PersonCache>().Where(p => p.Id == 0).AsUpdatable()
+					.Set(p => p.ClaimedKeyType2, claimedKeyType)
+					.Set(p => p.Updated, now)
+					.Update();
+
+				var record = table.Single();
+				Assert.AreEqual(KeyTypesString.EC, record.ClaimedKeyType2);
+}
+		}
+
+		[Test]
+		public void Issue1554Test7([DataSources] string context)
+		{
+			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
+			using (var table = db.CreateLocalTable<PersonCache>())
+			{
+				db.Insert(new PersonCache() { Id = 0, ClaimedKeyType = KeyTypes.RSA, ClaimedKeyType2 = KeyTypesString.RSA });
+
+				object claimedKeyType = KeyTypes2String.EC;
+				var    now            = DateTimeOffset.Now;
+
+				db.GetTable<PersonCache>().Where(p => p.Id == 0).AsUpdatable()
+					.Set(p => p.ClaimedKeyType2, claimedKeyType)
+					.Set(p => p.Updated, now)
+					.Update();
+
+				var record = table.Single();
+				Assert.AreEqual(KeyTypesString.EC, record.ClaimedKeyType2);
+}
+		}
+
+		[Test]
+		public void Issue1554Test8([DataSources] string context)
+		{
+			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
+			using (var table = db.CreateLocalTable<PersonCache>())
+			{
+				db.Insert(new PersonCache() { Id = 0, ClaimedKeyType = KeyTypes.RSA, ClaimedKeyType2 = KeyTypesString.RSA });
+
+				var now = DateTimeOffset.Now;
+
+				db.GetTable<PersonCache>().Where(p => p.Id == 0).AsUpdatable()
+					.Set(p => p.ClaimedKeyType2, (KeyTypesString)KeyTypes2String.EC)
+					.Set(p => p.Updated, now)
+					.Update();
+
+				var record = table.Single();
+				Assert.AreEqual(KeyTypesString.EC, record.ClaimedKeyType2);
+			}
+		}
+
 		private static MappingSchema ConfigureIssue1554Mappings()
 		{
 			var ms = new MappingSchema();
 			var builder = ms.GetFluentMappingBuilder();
 
-			// Fluent
 			builder.Entity<PersonCache>()
 				.HasTableName("PersonCaches")
 				.Property(p => p.Id)
 					.IsPrimaryKey()
-					.IsIdentity()
 				.Property(p => p.PhoneNumber)
 					.IsNullable()
 				.Property(p => p.ClaimedKeyType)
 				.Property(p => p.Updated);
+
 			return ms;
 		}
 	}
