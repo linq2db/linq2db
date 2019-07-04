@@ -954,20 +954,20 @@ namespace Tests.Linq
 
 		public class Lookup
 		{
-			public int Id { get; set; }
+			public int    Id { get; set; }
 			public string Type { get; set; }
 		}
 
 		public class Resource
 		{
-			public int Id { get; set; }
-			public int AssociatedObjectId { get; set; }
+			public int  Id { get; set; }
+			public int  AssociatedObjectId { get; set; }
 			public int? AssociationTypeId { get; set; }
 
 			[Association(
-				ThisKey = nameof(AssociationTypeId),
-				OtherKey = nameof(Lookup.Id),
-				CanBeNull = true,
+				ThisKey      = nameof(AssociationTypeId),
+				OtherKey     = nameof(Lookup.Id),
+				CanBeNull    = true,
 				Relationship = Relationship.ManyToOne)]
 			public Lookup AssociationTypeCode { get; set; }
 
@@ -1000,7 +1000,6 @@ namespace Tests.Linq
 				//No assert, just need to get past here without an exception
 			}
 		}
-
 	}
 
 	public static class AssociationExtension
