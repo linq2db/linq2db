@@ -368,7 +368,7 @@ namespace LinqToDB
 		{
 			var dct = new DataContextTransaction(this);
 
-			await dct.BeginTransactionAsync(level);
+			await dct.BeginTransactionAsync(level).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return dct;
 		}
@@ -384,7 +384,7 @@ namespace LinqToDB
 		{
 			var dct = new DataContextTransaction(this);
 
-			await dct.BeginTransactionAsync();
+			await dct.BeginTransactionAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return dct;
 		}
