@@ -16,7 +16,7 @@ namespace Tests.DataProvider
 {
 	using System.Collections.Generic;
 	using System.Globalization;
-
+	using LinqToDB.Tools.Comparers;
 	using Model;
 
 	[TestFixture]
@@ -532,6 +532,106 @@ namespace Tests.DataProvider
 
 					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
 				}
+			}
+		}
+
+		[Table]
+		class Issue1707
+		{
+			public static IEqualityComparer<Issue1707> Comparer = ComparerBuilder.GetEqualityComparer<Issue1707>();
+			[Column]
+			public int Id { get; set; }
+
+			[Column]
+			public TimeSpan Time { get; set; }
+
+			[Column(DataType = DataType.Time)]
+			public DateTime Time2 { get; set; }
+
+			[Column]
+			public DateTime DateTime { get; set; }
+
+			[Column]
+			public TimeSpan? TimeN { get; set; }
+
+			[Column(DataType = DataType.Time)]
+			public DateTime? Time2N { get; set; }
+
+			[Column]
+			public DateTime? DateTimeN { get; set; }
+		}
+
+		[ActiveIssue(730, SkipForNonLinqService = true)]
+		[Test]
+		public void Issue1707Test([IncludeDataSources(true, TestProvName.AllSybase)] string context, [Values] bool useParameters)
+		{
+			var testIntervals = new[]
+			{
+				TimeSpan.Zero,
+				TimeSpan.FromMinutes(123),
+				TimeSpan.FromMinutes(-123),
+				TimeSpan.FromMinutes(1567),
+				TimeSpan.FromMinutes(-1567)
+			};
+
+			var start    = new DateTime(1900, 1, 1);
+			var testData = new List<Issue1707>();
+
+			for (var i = 0; i < testIntervals.Length; i++)
+			{
+				var ts = testIntervals[i];
+
+				testData.Add(new Issue1707()
+				{
+					Id        = i + 1,
+					Time      = ts,
+					TimeN     = ts,
+					Time2     = start + ts,
+					Time2N    = start + ts,
+					DateTime  = start + ts,
+					DateTimeN = start + ts
+				});
+			}
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<Issue1707>())
+			{
+				db.InlineParameters = !useParameters;
+
+				foreach (var record in testData)
+				{
+					table.Insert(() => new Issue1707()
+					{
+						Id        = record.Id,
+						Time      = record.Time,
+						TimeN     = record.TimeN,
+						Time2     = record.Time2,
+						Time2N    = record.Time2N,
+						DateTime  = record.DateTime,
+						DateTimeN = record.DateTimeN,
+					});
+				}
+
+				var results = table.OrderBy(_ => _.Id);
+
+				AreEqual(testData.Select(fixRecord), results, Issue1707.Comparer);
+			}
+
+			Issue1707 fixRecord(Issue1707 record)
+			{
+				record.Time   = fixTime(record.Time);
+				record.TimeN  = fixTime(record.TimeN.Value);
+				record.Time2  = new DateTime() + fixTime(record.Time2 - start);
+				record.Time2N = new DateTime() + fixTime(record.Time2N.Value - start);
+
+				return record;
+			}
+
+			TimeSpan fixTime(TimeSpan time)
+			{
+				if (time < TimeSpan.Zero)
+					time = TimeSpan.FromDays(1 - time.Days) + time;
+				return time - TimeSpan.FromDays(time.Days);
 			}
 		}
 	}

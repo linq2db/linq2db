@@ -52,7 +52,7 @@ namespace LinqToDB.Data
 		/// <returns>Asynchronous operation completion task.</returns>
 		public async Task CommitAsync(CancellationToken cancellationToken = default)
 		{
-			await DataConnection.CommitTransactionAsync(cancellationToken);
+			await DataConnection.CommitTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			_disposeTransaction = false;
 		}
 
@@ -64,7 +64,7 @@ namespace LinqToDB.Data
 		/// <returns>Asynchronous operation completion task.</returns>
 		public async Task RollbackAsync(CancellationToken cancellationToken = default)
 		{
-			await DataConnection.RollbackTransactionAsync(cancellationToken);
+			await DataConnection.RollbackTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			_disposeTransaction = false;
 		}
 

@@ -98,7 +98,7 @@ namespace LinqToDB.Linq
 							return CreateQuery(dataContext, entityDescriptor, obj, tableName, serverName, databaseName, schemaName, type);
 						});
 
-				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
+				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				return (int)result;
 			}

@@ -893,7 +893,7 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="token">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns number of target table records, affected by merge comand.</returns>
-		public static async Task<int> MergeAsync<TTarget, TSource>(
+		public static Task<int> MergeAsync<TTarget, TSource>(
 			[NotNull] this IMergeable<TTarget, TSource> merge,
 			               CancellationToken            token = default)
 		{
@@ -909,9 +909,9 @@ namespace LinqToDB
 				currentQuery.Expression);
 
 			if (currentQuery is IQueryProviderAsync query)
-				return await query.ExecuteAsync<int>(expr, token);
+				return query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => currentQuery.Provider.Execute<int>(expr), token);
+			return TaskEx.Run(() => currentQuery.Provider.Execute<int>(expr), token);
 		}
 		#endregion
 	}

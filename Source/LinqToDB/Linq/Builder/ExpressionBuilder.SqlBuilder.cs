@@ -74,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ma = (MemberExpression)expr;
 
-						if (ma.Member.IsNullableValueMember() || ma.Member.IsNullableHasValueMember())
+						if (ma.Member.IsNullableValueMember())
 							return true;
 
 						if (Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member) != null)
@@ -1623,14 +1623,6 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (MemberExpression)expression;
 
-						if (e.Member.Name == "HasValue" &&
-							e.Member.DeclaringType.IsGenericTypeEx() &&
-							e.Member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>))
-						{
-							var expr = ConvertToSql(context, e.Expression);
-							return Convert(context, new SqlPredicate.IsNull(expr, true));
-						}
-
 						var attr = GetExpressionAttribute(e.Member);
 
 						if (attr != null && attr.GetIsPredicate(expression))
@@ -3105,7 +3097,7 @@ namespace LinqToDB.Linq.Builder
 					if (conditional.Test.NodeType == ExpressionType.NotEqual)
 					{
 						var binary = (BinaryExpression)conditional.Test;
-						if (IsNullConstant(binary.Right))
+						if (IsNullConstant(binary.Right) || IsNullConstant(binary.Left))
 						{
 							if (IsNullConstant(conditional.IfFalse))
 							{
@@ -3116,7 +3108,7 @@ namespace LinqToDB.Linq.Builder
 					else if (conditional.Test.NodeType == ExpressionType.Equal)
 					{
 						var binary = (BinaryExpression)conditional.Test;
-						if (IsNullConstant(binary.Right))
+						if (IsNullConstant(binary.Right) || IsNullConstant(binary.Left))
 						{
 							if (IsNullConstant(conditional.IfTrue))
 							{

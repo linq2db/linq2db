@@ -70,7 +70,7 @@ namespace LinqToDB
 		{
 			var db = DataContext.GetDataConnection();
 
-			await db.BeginTransactionAsync();
+			await db.BeginTransactionAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (_transactionCounter == 0)
 				DataContext.LockDbManagerCounter++;
@@ -88,7 +88,7 @@ namespace LinqToDB
 		{
 			var db = DataContext.GetDataConnection();
 
-			await db.BeginTransactionAsync(level);
+			await db.BeginTransactionAsync(level).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (_transactionCounter == 0)
 				DataContext.LockDbManagerCounter++;
@@ -150,7 +150,7 @@ namespace LinqToDB
 			{
 				var db = DataContext.GetDataConnection();
 
-				await db.CommitTransactionAsync(cancellationToken);
+				await db.CommitTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				_transactionCounter--;
 
@@ -174,7 +174,7 @@ namespace LinqToDB
 			{
 				var db = DataContext.GetDataConnection();
 
-				await db.RollbackTransactionAsync(cancellationToken);
+				await db.RollbackTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				_transactionCounter--;
 

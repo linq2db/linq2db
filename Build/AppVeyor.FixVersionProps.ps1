@@ -1,13 +1,12 @@
 Param(
 	[Parameter(Mandatory=$true)][string]$path,
-	[Parameter(Mandatory=$true)][string]$buildVersion,
-	[Parameter(Mandatory=$true)][string]$nugetVersion
+	[Parameter(Mandatory=$true)][string]$buildVersion
 )
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
-if ($buildVersion -or $nugetVersion) {
+if ($buildVersion) {
 
 	$xmlPath = Resolve-Path "$path"
 
@@ -15,22 +14,11 @@ if ($buildVersion -or $nugetVersion) {
 	$xml.PreserveWhitespace = $true
 	$save = $false
 
-	if ($buildVersion) {
-		$xPath = "//PropertyGroup/Version"
-		$nodes = $xml.SelectNodes($xPath)
-		foreach($node in $nodes) {
-			$node.InnerXml = $buildVersion
-			$save = $true
-		}
-	}
-
-	if ($nugetVersion) {
-		$xPath = "//PropertyGroup/PackageVersion"
-		$nodes = $xml.SelectNodes($xPath)
-		foreach($node in $nodes) {
-			$node.InnerXml = $nugetVersion
-			$save = $true
-		}
+	$xPath = "//PropertyGroup/Version"
+	$nodes = $xml.SelectNodes($xPath)
+	foreach($node in $nodes) {
+		$node.InnerXml = $buildVersion
+		$save = $true
 	}
 
 	if ($save) {

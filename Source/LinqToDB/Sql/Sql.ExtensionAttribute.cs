@@ -326,7 +326,7 @@ namespace LinqToDB
 						}
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' bot found", argName));
+					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
 				}
 
 				public ISqlExpression GetExpression(int index)
@@ -348,7 +348,7 @@ namespace LinqToDB
 						}
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' bot found", argName));
+					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
 				}
 
 				public ISqlExpression ConvertToSqlExpression()

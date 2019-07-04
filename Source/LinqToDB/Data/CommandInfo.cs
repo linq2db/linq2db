@@ -118,7 +118,7 @@ namespace LinqToDB.Data
 		#region Query with object reader
 
 		/// <summary>
-		/// Executes command using <see cref="StoredProcedure"/> command type and returns results as collection of values, mapped using provided mapping function.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values, mapped using provided mapping function.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
@@ -181,7 +181,7 @@ namespace LinqToDB.Data
 		public async Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync(objectReader, list.Add, cancellationToken);
+			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			return list;
 		}
 
@@ -206,7 +206,7 @@ namespace LinqToDB.Data
 		public async Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync(objectReader, list.Add, cancellationToken);
+			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			return list.ToArray();
 		}
 
@@ -232,7 +232,7 @@ namespace LinqToDB.Data
 		/// <returns>Returns task.</returns>
 		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken);
+			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var hasParameters = Parameters?.Length > 0;
 
@@ -241,8 +241,8 @@ namespace LinqToDB.Data
 			if (hasParameters)
 				SetParameters(DataConnection, Parameters);
 
-			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken))
-				while (await rd.ReadAsync(cancellationToken))
+			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					action(objectReader(rd));
 		}
 
@@ -251,7 +251,7 @@ namespace LinqToDB.Data
 		#region Query
 
 		/// <summary>
-		/// Executes command using <see cref="StoredProcedure"/> command type and returns results as collection of values of specified type.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <returns>Returns collection of query result records.</returns>
@@ -336,7 +336,7 @@ namespace LinqToDB.Data
 		public async Task<List<T>> QueryToListAsync<T>(CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync<T>(list.Add, cancellationToken);
+			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			return list;
 		}
 
@@ -359,7 +359,7 @@ namespace LinqToDB.Data
 		public async Task<T[]> QueryToArrayAsync<T>(CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync<T>(list.Add, cancellationToken);
+			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			return list.ToArray();
 		}
 
@@ -383,7 +383,7 @@ namespace LinqToDB.Data
 		/// <returns>Returns task.</returns>
 		public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken);
+			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var hasParameters = Parameters?.Length > 0;
 
@@ -392,9 +392,9 @@ namespace LinqToDB.Data
 			if (hasParameters)
 				SetParameters(DataConnection, Parameters);
 
-			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken))
+			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
-				if (await rd.ReadAsync(cancellationToken))
+				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
 					var additionalKey = GetCommandAdditionalKey(rd);
 					var objectReader  = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
@@ -420,7 +420,7 @@ namespace LinqToDB.Data
 
 						action(result);
 
-					} while (await rd.ReadAsync(cancellationToken));
+					} while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
 				}
 			}
 		}
@@ -440,7 +440,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command using <see cref="StoredProcedure"/> command type and returns results as collection of values of specified type.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
@@ -454,7 +454,7 @@ namespace LinqToDB.Data
 
 		#region Execute
 		/// <summary>
-		/// Executes command using <see cref="StoredProcedure"/> command type and returns number of affected records.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns number of affected records.
 		/// </summary>
 		/// <returns>Number of records, affected by command execution.</returns>
 		public int ExecuteProc()
@@ -489,7 +489,7 @@ namespace LinqToDB.Data
 		#region Execute async
 
 		/// <summary>
-		/// Executes command using <see cref="StoredProcedure"/> command type asynchronously and returns number of affected records.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
 		/// </summary>
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public Task<int> ExecuteProcAsync()
@@ -499,7 +499,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command using <see cref="StoredProcedure"/> command type asynchronously and returns number of affected records.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
@@ -525,7 +525,7 @@ namespace LinqToDB.Data
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public async Task<int> ExecuteAsync(CancellationToken cancellationToken)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken);
+			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var hasParameters = Parameters?.Length > 0;
 
@@ -534,7 +534,7 @@ namespace LinqToDB.Data
 			if (hasParameters)
 				SetParameters(DataConnection, Parameters);
 
-			var commandResult = await DataConnection.ExecuteNonQueryAsync(cancellationToken);
+			var commandResult = await DataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			if (hasParameters)
 				RebindParameters(DataConnection, Parameters);
@@ -547,7 +547,7 @@ namespace LinqToDB.Data
 		#region Execute scalar
 
 		/// <summary>
-		/// Executes command using <see cref="StoredProcedure"/> command type and returns single value.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns single value.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <returns>Resulting value.</returns>
@@ -646,7 +646,7 @@ namespace LinqToDB.Data
 		/// <returns>Task with resulting value.</returns>
 		public async Task<T> ExecuteAsync<T>(CancellationToken cancellationToken)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken);
+			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var hasParameters = Parameters?.Length > 0;
 
@@ -655,9 +655,9 @@ namespace LinqToDB.Data
 			if (hasParameters)
 				SetParameters(DataConnection, Parameters);
 
-			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken))
+			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
-				if (await rd.ReadAsync(cancellationToken))
+				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
 					var additionalKey = GetCommandAdditionalKey(rd);
 					try
@@ -679,7 +679,7 @@ namespace LinqToDB.Data
 		#region ExecuteReader
 
 		/// <summary>
-		/// Executes command using <see cref="StoredProcedure"/> command type and returns data reader instance.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns data reader instance.
 		/// </summary>
 		/// <returns>Data reader object.</returns>
 		public DataReader ExecuteReaderProc()
@@ -774,7 +774,7 @@ namespace LinqToDB.Data
 		/// <returns>Task with data reader object.</returns>
 		public async Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken);
+			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var hasParameters = Parameters?.Length > 0;
 
@@ -783,12 +783,12 @@ namespace LinqToDB.Data
 			if (hasParameters)
 				SetParameters(DataConnection, Parameters);
 
-			return new DataReaderAsync { CommandInfo = this, Reader = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken) };
+			return new DataReaderAsync { CommandInfo = this, Reader = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext) };
 		}
 
 		internal async Task ExecuteQueryAsync<T>(DbDataReader rd, string sql, Action<T> action, CancellationToken cancellationToken)
 		{
-			if (await rd.ReadAsync(cancellationToken))
+			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
 				var additionalKey = GetCommandAdditionalKey(rd);
 				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
@@ -814,13 +814,13 @@ namespace LinqToDB.Data
 
 					action(result);
 
-				} while (await rd.ReadAsync(cancellationToken));
+				} while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
 			}
 		}
 
 		internal async Task<T> ExecuteScalarAsync<T>(DbDataReader rd, string sql, CancellationToken cancellationToken)
 		{
-			if (await rd.ReadAsync(cancellationToken))
+			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
 				var additionalKey = GetCommandAdditionalKey(rd);
 				try

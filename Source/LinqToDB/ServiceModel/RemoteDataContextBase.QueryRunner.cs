@@ -277,7 +277,7 @@ namespace LinqToDB.ServiceModel
 
 				_client = _dataContext.GetClient();
 
-				var ret = await _client.ExecuteReaderAsync(_dataContext.Configuration, data);
+				var ret = await _client.ExecuteReaderAsync(_dataContext.Configuration, data).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
 				var reader = new ServiceModelDataReader(_dataContext.SerializationMappingSchema, result);
@@ -285,7 +285,7 @@ namespace LinqToDB.ServiceModel
 				return new DataReaderAsync(reader);
 			}
 
-			public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
+			public override Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
@@ -308,10 +308,10 @@ namespace LinqToDB.ServiceModel
 
 				_client = _dataContext.GetClient();
 
-				return await _client.ExecuteScalarAsync(_dataContext.Configuration, data);
+				return _client.ExecuteScalarAsync(_dataContext.Configuration, data);
 			}
 
-			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
+			public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 			{
 				string data;
 
@@ -332,12 +332,12 @@ namespace LinqToDB.ServiceModel
 				if (_dataContext._batchCounter > 0)
 				{
 					_dataContext._queryBatch.Add(data);
-					return -1;
+					return Task.FromResult(-1);
 				}
 
 				_client = _dataContext.GetClient();
 
-				return await _client.ExecuteNonQueryAsync(_dataContext.Configuration, data);
+				return _client.ExecuteNonQueryAsync(_dataContext.Configuration, data);
 			}
 		}
 	}

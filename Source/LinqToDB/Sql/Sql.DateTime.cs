@@ -712,7 +712,7 @@ namespace LinqToDB
 				{
 					case Sql.DateParts.Quarter   :
 						part   = DateParts.Month;
-						number = builder.Mul(number, 3);
+						number  = builder.Mul(number, 3);
 						break;
 					case Sql.DateParts.DayOfYear :
 					case Sql.DateParts.WeekDay   :
