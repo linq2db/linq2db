@@ -811,6 +811,14 @@ namespace LinqToDB.Expressions
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
 					return ((UnaryExpression)ex).Operand.Unwrap();
+				case ExpressionType.Constant       :
+					{
+						var c = (ConstantExpression)ex;
+						if (c.Value != null && c.Type != c.Value.GetType())
+							return Expression.Constant(c.Value, c.Value.GetType());
+
+						break;
+					}
 			}
 
 			return ex;
