@@ -807,17 +807,10 @@ namespace LinqToDB.Expressions
 
 			switch (ex.NodeType)
 			{
-				case ExpressionType.Quote          : return ((UnaryExpression)ex).Operand.Unwrap();
+				case ExpressionType.Quote          :
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
-					{
-						var ue = (UnaryExpression)ex;
-
-						if (!ue.Operand.Type.IsEnumEx())
-							return ue.Operand.Unwrap();
-
-						break;
-					}
+					return ((UnaryExpression)ex).Operand.Unwrap();
 			}
 
 			return ex;
@@ -830,18 +823,11 @@ namespace LinqToDB.Expressions
 
 			switch (ex.NodeType)
 			{
-				case ExpressionType.Quote: return ((UnaryExpression)ex).Operand.Unwrap();
+				case ExpressionType.Quote         :
 				case ExpressionType.ConvertChecked:
-				case ExpressionType.Convert:
-				case ExpressionType.TypeAs:
-					{
-						var ue = (UnaryExpression)ex;
-
-						if (!ue.Operand.Type.IsEnumEx())
-							return ue.Operand.Unwrap();
-
-						break;
-					}
+				case ExpressionType.Convert       :
+				case ExpressionType.TypeAs        :
+					return ((UnaryExpression)ex).Operand.Unwrap();
 			}
 
 			return ex;
