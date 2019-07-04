@@ -1291,5 +1291,71 @@ namespace Tests.xUpdate
 				await table.DropAsync();
 			}
 		}
+
+		// Model
+		public class PersonCache
+		{
+			public int            Id             { get; set; }
+			public string         PhoneNumber    { get; set; }
+			public KeyTypes       ClaimedKeyType { get; set; }
+			public DateTimeOffset Updated        { get; set; }
+		}
+
+		[Flags]
+		public enum KeyTypes : byte
+		{
+			RSA = 1,
+			EC  = 2
+		}
+
+		[Test]
+		public void Issue1554Test1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context, ConfigureIssue1554Mappings()))
+			using (var table = db.CreateLocalTable<PersonCache>())
+			{
+				var claimedKeyType = KeyTypes.EC;
+				var now            = DateTimeOffset.Now;
+
+				db.GetTable<PersonCache>().Where(p => p.Id == 0).AsUpdatable()
+					.Set(p => p.ClaimedKeyType, claimedKeyType)
+					.Set(p => p.Updated, now)
+					.Update();
+			}
+		}
+
+		[Test]
+		public void Issue1554Test2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context, ConfigureIssue1554Mappings()))
+			using (var table = db.CreateLocalTable<PersonCache>())
+			{
+				object claimedKeyType = KeyTypes.EC;
+				var    now            = DateTimeOffset.Now;
+
+				db.GetTable<PersonCache>().Where(p => p.Id == 0).AsUpdatable()
+					.Set(p => p.ClaimedKeyType, claimedKeyType)
+					.Set(p => p.Updated, now)
+					.Update();
+			}
+		}
+
+		private static MappingSchema ConfigureIssue1554Mappings()
+		{
+			var ms = new MappingSchema();
+			var builder = ms.GetFluentMappingBuilder();
+
+			// Fluent
+			builder.Entity<PersonCache>()
+				.HasTableName("PersonCaches")
+				.Property(p => p.Id)
+					.IsPrimaryKey()
+					.IsIdentity()
+				.Property(p => p.PhoneNumber)
+					.IsNullable()
+				.Property(p => p.ClaimedKeyType)
+				.Property(p => p.Updated);
+			return ms;
+		}
 	}
 }
