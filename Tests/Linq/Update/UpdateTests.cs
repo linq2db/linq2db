@@ -1335,7 +1335,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue1554Test1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void Issue1554Test1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
 			using (var table = db.CreateLocalTable<PersonCache>())
@@ -1351,7 +1351,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue1554Test2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void Issue1554Test2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
 			using (var table = db.CreateLocalTable<PersonCache>())
@@ -1367,7 +1367,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue1554Test3([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void Issue1554Test3([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
 			using (var table = db.CreateLocalTable<PersonCache>())
@@ -1383,7 +1383,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue1554Test4([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void Issue1554Test4([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
 			using (var table = db.CreateLocalTable<PersonCache>())
@@ -1398,7 +1398,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue1554Test5([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void Issue1554Test5([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
 			using (var table = db.CreateLocalTable<PersonCache>())
@@ -1419,7 +1419,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue1554Test6([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void Issue1554Test6([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
 			using (var table = db.CreateLocalTable<PersonCache>())
@@ -1441,7 +1441,7 @@ namespace Tests.xUpdate
 
 		[ActiveIssue("Not sure if it should work or not")]
 		[Test]
-		public void Issue1554Test7([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void Issue1554Test7([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
 			using (var table = db.CreateLocalTable<PersonCache>())
@@ -1462,7 +1462,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue1554Test8([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void Issue1554Test8([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureIssue1554Mappings()))
 			using (var table = db.CreateLocalTable<PersonCache>())
