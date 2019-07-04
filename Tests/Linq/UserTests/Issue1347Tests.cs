@@ -246,7 +246,7 @@ namespace Tests.UserTests
 		{
 			class LimitedSources : IncludeDataSourcesAttribute
 			{
-				public LimitedSources() : base(ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)
+				public LimitedSources() : base(TestProvName.AllSQLite)
 				{
 				}
 			}

@@ -499,9 +499,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void ParametersInlining(
-			[IncludeDataSources(false, ProviderName.SqlCe)] string context,
-			[Values] bool inline)
+		public void ParametersInlining([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] bool inline)
 		{
 			Query.ClearCaches();
 			var defaultValue = SqlCeConfiguration.InlineFunctionParameters;
@@ -522,5 +520,35 @@ namespace Tests.DataProvider
 				SqlCeConfiguration.InlineFunctionParameters = defaultValue;
 			}
 		}
+
+		[Table(Name = "AllTypes")]
+		public class ImageDataType
+		{
+			[Column(DbType = "int"), PrimaryKey, Identity]
+			public int ID { get; set; }
+			[Column(DataType = DataType.Image), Nullable]
+			public byte[] imageDataType { get; set; } 
+		}
+
+		[Test]
+		public void Issue393Test([IncludeDataSources(ProviderName.SqlCe)] string context)
+		{
+			using (var db = new DataConnection(context))
+			using (db.BeginTransaction())
+			{
+				Random rnd = new Random();
+				var image = new byte[9000];
+				rnd.NextBytes(image);
+
+				var testItem = new ImageDataType { imageDataType = image };
+
+				var id = db.InsertWithInt32Identity(testItem);
+
+				var item = db.GetTable<ImageDataType>().FirstOrDefault(_ => _.ID == id);
+
+				Assert.That(testItem.imageDataType, Is.EqualTo(item.imageDataType));
+			}
+		}
+
 	}
 }

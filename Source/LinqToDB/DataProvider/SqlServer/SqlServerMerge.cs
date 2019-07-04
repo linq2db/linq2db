@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					schemaName   ?? table.SchemaName,
 					tableName    ?? table.TableName).ToString();
 
-				await dataConnection.ExecuteAsync($"SET IDENTITY_INSERT {tblName} ON", token);
+				await dataConnection.ExecuteAsync($"SET IDENTITY_INSERT {tblName} ON", token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			Exception ex = null;
@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			try
 			{
-				ret = await base.MergeAsync(dataConnection, predicate, delete, source, tableName, databaseName, schemaName, token);
+				ret = await base.MergeAsync(dataConnection, predicate, delete, source, tableName, databaseName, schemaName, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 			catch (Exception e)
 			{
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (hasIdentity)
-				await dataConnection.ExecuteAsync($"SET IDENTITY_INSERT {tblName} OFF", token);
+				await dataConnection.ExecuteAsync($"SET IDENTITY_INSERT {tblName} OFF", token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			if (ex != null)
 				throw ex;

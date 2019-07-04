@@ -1,4 +1,6 @@
-﻿DROP TABLE IF EXISTS Doctor
+﻿SET @@global.sql_mode=(SELECT REPLACE(@@global.sql_mode, 'ONLY_FULL_GROUP_BY', ''))
+GO
+DROP TABLE IF EXISTS Doctor
 GO
 DROP TABLE IF EXISTS Patient
 GO
@@ -451,4 +453,29 @@ CREATE PROCEDURE `TestOutputParametersWithoutTableProcedure`(
 BEGIN
 	SELECT 123 INTO aOutParam;
 END
+GO
+
+DROP TABLE IF EXISTS FullTextIndexTest
+GO
+
+CREATE TABLE FullTextIndexTest (
+	id int UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
+	TestField1 TEXT(100),
+	TestField2 TEXT(200),
+	FULLTEXT idx_all (TestField1, TestField2),
+	FULLTEXT idx_field1 (TestField1),
+	FULLTEXT idx_field2 (TestField2)
+)
+-- SKIP MySql57 BEGIN
+-- SKIP MariaDB BEGIN
+-- SKIP MySqlConnector BEGIN
+	ENGINE=MyISAM
+-- SKIP MySql57 END
+-- SKIP MariaDB END
+-- SKIP MySqlConnector END
+;
+GO
+INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('this is text1', 'this is text2');
+INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('looking for something?', 'found it!');
+INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('record not found', 'empty');
 GO

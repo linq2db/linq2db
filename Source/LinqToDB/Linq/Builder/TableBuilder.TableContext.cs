@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -178,7 +179,7 @@ namespace LinqToDB.Linq.Builder
 						if (member.MemberInfo.IsDynamicColumnPropertyEx())
 						{
 							var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedTypeEx());
-							var setter  = new MemberAccessor(typeAcc, member.MemberInfo).SetterExpression;
+							var setter  = new MemberAccessor(typeAcc, member.MemberInfo, EntityDescriptor).SetterExpression;
 
 							exprs.Add(Expression.Invoke(setter, parentObject, ex));
 						}
@@ -245,6 +246,7 @@ namespace LinqToDB.Linq.Builder
 				return _variable = Builder.BuildVariable(expr);
 			}
 
+			[UsedImplicitly]
 			static object OnEntityCreated(IDataContext context, object entity)
 			{
 				var onEntityCreated = ((IEntityServices)context).OnEntityCreated;
@@ -804,7 +806,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region IsExpression
 
-			public IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFor)
+			public virtual IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFor)
 			{
 				switch (requestFor)
 				{
@@ -1246,7 +1248,7 @@ namespace LinqToDB.Linq.Builder
 												Name             = fieldName,
 												PhysicalName     = fieldName,
 												ColumnDescriptor = new ColumnDescriptor(Builder.MappingSchema, new ColumnAttribute(fieldName),
-													new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member))
+													new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member, EntityDescriptor))
 											};
 
 											SqlTable.Add(newField);

@@ -42,6 +42,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue(1685, Configuration = ProviderName.SapHana)]
 		[Test]
 		public void TestAndWithCastAndFunction([DataSources] string context)
 		{

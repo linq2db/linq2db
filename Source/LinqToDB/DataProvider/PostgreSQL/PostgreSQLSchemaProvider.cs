@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "money",                       DataType = typeof(decimal).       AssemblyQualifiedName },
 				new DataTypeInfo { TypeName = "text",                        DataType = typeof(string).        AssemblyQualifiedName },
 				new DataTypeInfo { TypeName = "xml",                         DataType = typeof(string).        AssemblyQualifiedName },
-				
+
 				new DataTypeInfo { TypeName = "bytea",                       DataType = typeof(byte[]).        AssemblyQualifiedName },
 				new DataTypeInfo { TypeName = "uuid",                        DataType = typeof(Guid).          AssemblyQualifiedName },
 
@@ -57,10 +57,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character({0})",                    CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "bpchar",                      DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character({0})",                    CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).       AssemblyQualifiedName, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
-				
+
 				new DataTypeInfo { TypeName = "timestamptz",                 DataType = typeof(DateTimeOffset).AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
 				new DataTypeInfo { TypeName = "timestamp with time zone",    DataType = typeof(DateTimeOffset).AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
-				
+
 				new DataTypeInfo { TypeName = "timestamp",                   DataType = typeof(DateTime).      AssemblyQualifiedName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
 				new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).      AssemblyQualifiedName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
 			}.ToList();
@@ -101,15 +101,23 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var sql = (@"
 				SELECT
-					table_catalog || '.' || table_schema || '.' || table_name            as TableID,
-					table_catalog                                                        as CatalogName,
-					table_schema                                                         as SchemaName,
-					table_name                                                           as TableName,
-					table_schema = 'public'                                              as IsDefaultSchema,
-					table_type = 'VIEW'                                                  as IsView,
-					left(table_schema, 3) = 'pg_' OR table_schema = 'information_schema' as IsProviderSpecific
+					t.table_catalog || '.' || t.table_schema || '.' || t.table_name            as TableID,
+					t.table_catalog                                                            as CatalogName,
+					t.table_schema                                                             as SchemaName,
+					t.table_name                                                               as TableName,
+					t.table_schema = 'public'                                                  as IsDefaultSchema,
+					t.table_type = 'VIEW'                                                      as IsView,
+					(
+						SELECT pgd.description
+						FROM
+							pg_catalog.pg_statio_all_tables as st
+							JOIN pg_catalog.pg_description pgd ON pgd.objoid = st.relid
+						WHERE t.table_schema = st.schemaname AND t.table_name=st.relname
+						LIMIT 1
+					)                                                                          as Description,
+					left(t.table_schema, 3) = 'pg_' OR t.table_schema = 'information_schema'   as IsProviderSpecific
 				FROM
-					information_schema.tables");
+					information_schema.tables t");
 
 			if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
 				sql += @"
@@ -142,22 +150,30 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var sql = @"
 					SELECT
-						table_catalog || '.' || table_schema || '.' || table_name           as TableID,
-						column_name                                                         as Name,
-						is_nullable = 'YES'                                                 as IsNullable,
-						ordinal_position                                                    as Ordinal,
-						data_type                                                           as DataType,
-						character_maximum_length                                            as Length,
+						c.table_catalog || '.' || c.table_schema || '.' || c.table_name           as TableID,
+						c.column_name                                                             as Name,
+						c.is_nullable = 'YES'                                                     as IsNullable,
+						c.ordinal_position                                                        as Ordinal,
+						c.data_type                                                               as DataType,
+						c.character_maximum_length                                                as Length,
 						COALESCE(
-							numeric_precision::integer,
-							datetime_precision::integer,
-							interval_precision::integer)                                    as Precision,
-						numeric_scale                                                       as Scale,
-						is_identity = 'YES' OR COALESCE(column_default ~* 'nextval', false) as IsIdentity,
-						is_generated <> 'NEVER'                                             as SkipOnInsert,
-						is_updatable = 'NO'                                                 as SkipOnUpdate
+							c.numeric_precision::integer,
+							c.datetime_precision::integer,
+							c.interval_precision::integer)                                        as Precision,
+						c.numeric_scale                                                           as Scale,
+						c.is_identity = 'YES' OR COALESCE(c.column_default ~* 'nextval', false)   as IsIdentity,
+						c.is_generated <> 'NEVER'                                                 as SkipOnInsert,
+						c.is_updatable = 'NO'                                                     as SkipOnUpdate,
+						(
+							SELECT pgd.description
+							FROM
+								pg_catalog.pg_statio_all_tables as st
+								JOIN pg_catalog.pg_description pgd ON pgd.objsubid = c.ordinal_position AND pgd.objoid = st.relid
+							WHERE c.table_schema = st.schemaname AND c.table_name=st.relname
+							LIMIT 1
+						)                                                                         as Description
 					FROM
-						information_schema.columns";
+						information_schema.columns as c";
 
 			if (ExcludedSchemas.Count == 0 || IncludedSchemas.Count == 0)
 				sql += @"
@@ -461,7 +477,8 @@ SELECT	r.ROUTINE_CATALOG,
 						// those fields not supported by pgsql on parameter level
 						Precision     = null,
 						Scale         = null,
-						Length        = null
+						Length        = null,
+						IsNullable    = true
 					};
 				}, "SELECT SPECIFIC_CATALOG, SPECIFIC_SCHEMA, SPECIFIC_NAME, ORDINAL_POSITION, PARAMETER_MODE, PARAMETER_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.parameters")
 				// populare return parameters for functions
@@ -480,7 +497,8 @@ SELECT	r.ROUTINE_CATALOG,
 					// not supported by pgsql
 					Precision     = null,
 					Scale         = null,
-					Length        = null
+					Length        = null,
+					IsNullable    = true
 				}, @"SELECT r.SPECIFIC_CATALOG, r.SPECIFIC_SCHEMA, r.SPECIFIC_NAME, r.DATA_TYPE
 	FROM INFORMATION_SCHEMA.ROUTINES r
 		LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname

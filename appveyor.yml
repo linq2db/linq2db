@@ -10,29 +10,8 @@ branches:
     - /dev.*/
 
 environment:
-  assemblyVersion: 2.7.0
-  packageVersion: 2.7.0
-  docfxuser: "ili"
-  docfxmail: "docfx@linq2db.com"
-  docfxsecret:
-    secure: IlfmHXRdUK6v8dX/WqieXQ==
-##  testfilter: TestCategory != FreeText & TestCategory != Ignored & TestCategory != Explicit
-##  #testFilter: TestCategory=Create
-##  testRunner: dotnet
-##  testLogger: trx
-##  testConfiguration: AppVeyor
-##  matrix:
-##    - target: Default
-##      testTargetFramework: net46
-##    - target: Core1
-##      testTargetFramework: netcoreapp1.0
-##      testRunner: dotnet
-##      testFilter: TestCategory != Ignored
-##    - target: Core2
-##      testTargetFramework: netcoreapp2.0
-##      testRunner: dotnet
-##      testFilter: TestCategory != Ignored
-##    - target: DocFx
+  assemblyVersion: 2.8.0
+  packageVersion: 2.8.0
 
 cache:
 - packages -> appveyor.yml
@@ -54,7 +33,6 @@ nuget:
 
 build_script:
 - cmd: msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
-##- ps: .\build.ps1
 
 before_build:
 - ps: |
@@ -63,41 +41,41 @@ before_build:
         $env:packageVersion = "$env:assemblyVersion-rc$env:appveyor_build_number"
     }
 
-    .\Build\AppVeyor.FixVersionProps.ps1  -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
+    .\Build\AppVeyor.FixVersionProps.ps1  -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion
     .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion $env:APPVEYOR_REPO_BRANCH
 
-    $startPath = "$($env:appveyor_build_folder)\Data"
-    $sqlInstance = "(local)\SQL2014"
-    $dbName = "TestData"
-
-    # create database
-    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
-
-    # MySql
     $env:MYSQL_PWD="Password12!"
-    $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
-    iex "& $cmd"
-
-    # PgSql
     $env:PGUSER="postgres"
     $env:PGPASSWORD="Password12!"
+    $sqlPassword = "Password12!"
+    $sqlInstance = "localhost\SQL2014"
+
+    # create databases
+    $dbName = "TestDatanet45"
+    sqlcmd -U sa -P $sqlPassword -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
+    iex "& $cmd"
+    $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
+    iex "& $cmd"
+
+    $dbName = "TestDatacore1"
+    sqlcmd -U sa -P $sqlPassword -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
+    iex "& $cmd"
+    $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
+    iex "& $cmd"
+
+    $dbName = "TestDatacore2"
+    sqlcmd -U sa -P $sqlPassword -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
+    iex "& $cmd"
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
     iex "& $cmd"
 
     # Access ACE provider
-    (New-Object Net.WebClient).DownloadFile("https://download.microsoft.com/download/f/d/8/fd8c20d8-e38a-48b6-8691-542403b91da1/AccessDatabaseEngine.exe", "$env:appveyor_build_folder\AccessDatabaseEngine.exe")
-    .\AccessDatabaseEngine.exe /quiet
+    #(New-Object Net.WebClient).DownloadFile("https://download.microsoft.com/download/2/4/3/24375141-E08D-4803-AB0E-10F2E3A07AAA/AccessDatabaseEngine.exe", "$env:appveyor_build_folder\AccessDatabaseEngine.exe")
+    #.\AccessDatabaseEngine.exe /quiet
 
-    # docfx build & deploy
-    if ($env:docfxsecret)
-    {
-      $gitDeploy = $env:APPVEYOR_REPO_BRANCH -eq "master"
-      #.\Build\AppVeyor.DocFx.ps1 $env:docfxuser $env:docfxsecret $env:docfxmail $gitDeploy
-    }
-    else
-    {
-      Write-Host docfx build skipped... cosmic rays?...
-    }
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 - cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2014 -i "Data\Create Scripts\Northwind.sql" > nul
 
@@ -116,7 +94,7 @@ test_script:
 
 artifacts:
 - path: \**\linq2db*.nupkg
-- path: \**\*.trx
+- path: \**\*_test_results.*
 
 deploy:
 - provider: NuGet

@@ -37,9 +37,9 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InvocationTestLocal([SQLiteDataSources] string context, [Values(1, 2)] int param)
+		public void InvocationTestLocal([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
 		{
-			Expression<Func<SampleClass, bool>> predicate = c => c.Value > param;
+			Expression<Func<SampleClass,bool>> predicate = c => c.Value > param;
 			var sampleData = GenerateData();
 
 			using (var db = GetDataContext(context))
@@ -52,12 +52,12 @@ namespace Tests.Playground
 					where predicate.Compile()(t)
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
 		[Test]
-		public void CompileTestLocal([SQLiteDataSources] string context, [Values(1, 2)] int param)
+		public void CompileTestLocal([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
 		{
 			Expression<Func<SampleClass, bool>> predicate = c => c.Value > param;
 			var sampleData = GenerateData();
@@ -73,12 +73,12 @@ namespace Tests.Playground
 					from t2 in sampleData.Where(predicate.Compile())
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
 		[Test]
-		public void NonCompileTestLocal([SQLiteDataSources] string context, [Values(1, 2)] int param)
+		public void NonCompileTestLocal([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
 		{
 			Expression<Func<SampleClass, bool>> predicate = c => c.Value > param;
 			var sampleData = GenerateData();
@@ -94,12 +94,12 @@ namespace Tests.Playground
 					from t2 in sampleData.Where(predicate.Compile())
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
 		[Test]
-		public void InvocationTestFunction([SQLiteDataSources] string context, [Values(1, 2)] int param)
+		public void InvocationTestFunction([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
 		{
 			var sampleData = GenerateData();
 
@@ -113,12 +113,12 @@ namespace Tests.Playground
 					where GetTestPredicate(param).Compile()(t)
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
 		[Test]
-		public void LocalInvocation([SQLiteDataSources] string context, [Values(2, 3)] int param)
+		public void LocalInvocation([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(2, 3)] int param)
 		{
 			var sampleData = GenerateData();
 
@@ -134,12 +134,12 @@ namespace Tests.Playground
 					where ids.Where(i => i < param).GroupBy(i => i).Select(i => i.Key).Contains(t.Id)
 					select t;
 
-				AreEqual(expected, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(expected, query);
 			}
 		}
 
 		[Test]
-		public void InvocationTestByInvoke([SQLiteDataSources] string context, [Values(1, 2)] int param)
+		public void InvocationTestByInvoke([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
 		{
 			var sampleData = GenerateData();
 
@@ -158,7 +158,7 @@ namespace Tests.Playground
 					sd.Value = compiled(param, sd.Value);
 				}
 
-				AreEqual(sampleData, query, ComparerBuilder<SampleClass>.GetEqualityComparer());
+				AreEqualWithComparer(sampleData, query);
 			}
 		}
 

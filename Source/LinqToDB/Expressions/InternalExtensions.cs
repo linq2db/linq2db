@@ -437,11 +437,27 @@ namespace LinqToDB.Expressions
 					return arr.Any(a => a != null) ? arr : null;
 				});
 
+			bool DefaultCompareArguments(Expression arg1, Expression arg2)
+			{
+				if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(arg1.Type))
+				{
+					if (arg1.NodeType == ExpressionType.Constant && arg2.NodeType == ExpressionType.Constant)
+					{
+						var query1 = ((Sql.IQueryableContainer)arg1.EvaluateExpression()).Query;
+						var query2 = ((Sql.IQueryableContainer)arg2.EvaluateExpression()).Query;
+						return EqualsTo(query1.Expression, query2.Expression, info);
+					}
+				}
+				if (!arg1.EqualsTo(arg2, info))
+						return false;
+				return true;
+			}
+
 			if (dependentParameters == null)
 			{
 				for (var i = 0; i < expr1.Arguments.Count; i++)
 				{
-					if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+					if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i]))
 						return false;
 				}
 			}
@@ -457,8 +473,10 @@ namespace LinqToDB.Expressions
 							return false;
 					}
 					else
-						if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+					{
+						if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i]))
 							return false;
+					}
 				}
 			}
 
@@ -965,6 +983,13 @@ namespace LinqToDB.Expressions
 			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions);
 		}
 
+		public static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)
+		{
+			var type = method.Method.DeclaringType;
+
+			return type == typeof(AsyncExtensions);
+		}
+
 		public static bool IsAggregate(this MethodCallExpression methodCall, MappingSchema mapping)
 		{
 			if (methodCall.IsQueryable(AggregationBuilder.MethodNames))
@@ -989,6 +1014,16 @@ namespace LinqToDB.Expressions
 			if (method.IsQueryable())
 				foreach (var name in names)
 					if (method.Method.Name == name)
+						return true;
+
+			return false;
+		}
+
+		public static bool IsAsyncExtension(this MethodCallExpression method, params string[] names)
+		{
+			if (method.IsAsyncExtension())
+				foreach (var name in names)
+					if (method.Method.Name == name + "Async")
 						return true;
 
 			return false;

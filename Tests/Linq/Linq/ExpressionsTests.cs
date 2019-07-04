@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Linq;
-
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -16,6 +16,37 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ExpressionsTests : TestBase
 	{
+		[Sql.Expression("{0} << {1}", Precedence = Precedence.Primary)]
+		public static long Shl(long v, int s) => v << s;
+
+		[Sql.Expression("{0} >> {1}", Precedence = Precedence.Primary)]
+		public static long Shr(long v, int s) => v >> s;
+
+		static ExpressionsTests()
+		{
+			Expressions.MapBinary((long v, int s) => v << s, (v, s) => Shl(v, s));
+			Expressions.MapBinary((long v, int s) => v >> s, (v, s) => Shr(v, s));
+			Expressions.MapBinary((int  v, int s) => v << s, (v, s) => Shl(v, s));
+			Expressions.MapBinary((int  v, int s) => v >> s, (v, s) => Shr(v, s));
+		}
+
+		[Test]
+		public void MapOperator([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from p in db.Parent
+					where p.ParentID >> 1 > 0
+					select p;
+
+				var expected = from p in Parent
+					where p.ParentID >> 1 > 0
+					select p;
+
+				AreEqual(expected, query);
+			}
+		}
+		
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
 		[Test]
@@ -89,7 +120,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression5([DataSources(ProviderName.SqlCe, ProviderName.Firebird)] string context)
+		public void MethodExpression5([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var n = 2;
 
@@ -135,7 +166,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression7([DataSources(ProviderName.SqlCe, ProviderName.Firebird)] string context)
+		public void MethodExpression7([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var n = 2;
 
@@ -179,9 +210,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression9([IncludeDataSources(
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void MethodExpression9([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 				AreEqual(
@@ -200,9 +229,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression10([IncludeDataSources(
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-			string context)
+		public void MethodExpression10([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 				AreEqual(
@@ -431,7 +458,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void ToLowerInvariantTest([DataSources] string context)
 		{
@@ -480,6 +506,266 @@ namespace Tests.Linq
 					   Parent.SelectMany(p => p.Children.Where(c => c.ChildID == 22).SelectMany(c => c.GrandChildren)),
 					db.Parent.SelectMany(p => p.GrandChildrenByID(22)));
 			}
+		}
+
+		[ExpressionMethod(nameof(WrapExpression))]
+		public static T Wrap<T>(T value)
+		{
+			return value;
+		}
+
+		private static Expression<Func<T, T>> WrapExpression<T>()
+		{
+			return value => value;
+		}
+
+		[ActiveIssue(Details = "InvalidOperationException : Code supposed to be unreachable")]
+		[Test]
+		public void ExpressionCompilerCrash([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => Wrap<IList<int>>(new int[] { 1, 2, 3 }).Contains(p.ID)).ToList();
+			}
+		}
+
+		[Test]
+		public void ExpressionCompilerNoCrash([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => Wrap<int[]>(new int[] { 1, 2, 3 }).Contains(p.ID)).ToList();
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck1([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// NULL == NULL
+				Assert.True(db.Parent
+					.Any(p => p.ParentID == 2 && p.Value1 == Noop(FirstIfNullOrSecondAsNumber(null, "-1"))));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// NULL == NULL
+				Assert.True(db.Parent
+					.Any(p => p.ParentID == 2 && Noop(FirstIfNullOrSecondAsNumber(null, "-1")) == p.Value1));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck3([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// 3 == 3
+				Assert.True(db.Parent
+					.Any(p => p.ParentID == 3 && p.Value1 == Noop(FirstIfNullOrSecondAsNumber("", "3"))));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck4([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// 3 == 3
+				Assert.True(db.Parent
+					.Any(p => p.ParentID == 3 && Noop(FirstIfNullOrSecondAsNumber("", "3")) == p.Value1));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck5([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// 3 != NULL
+				Assert.True(db.Parent
+					.Any(p => p.ParentID == 3 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber(null, "-1"))));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck6([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// NULL != 3
+				Assert.True(db.Parent
+					.Any(p => p.ParentID == 3 && Noop(FirstIfNullOrSecondAsNumber(null, "-1")) != p.Value1));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck7([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// NULL != 4
+				Assert.True(db.Parent
+					.Any(p => p.ParentID == 2 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber("4", "4"))));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck8([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// 4 != NULL
+				Assert.True(db.Parent
+					.Any(p => p.ParentID == 2 && Noop(FirstIfNullOrSecondAsNumber("4", "4")) != p.Value1));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck9([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// 5 != 6
+				Assert.True(db.Parent
+					.Any(p => p.ParentID == 5 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber("not5", "6"))));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck10([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// 6 != 5
+				Assert.True(db.Parent
+					.Any(p => p.ParentID == 5 && Noop(FirstIfNullOrSecondAsNumber("not5", "6")) != p.Value1));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck21([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// NULL == NULL
+				Assert.True(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 1 && p.intDataType == Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "-1"))));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck22([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// NULL == NULL
+				Assert.True(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 1 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "-1")) == p.intDataType));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck23([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// 7777777 == 7777777
+				Assert.True(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 2 && p.intDataType == Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "7777777"))));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck24([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// 7777777 == 7777777
+				Assert.True(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "7777777")) == p.intDataType));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck25([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// 7777777 != NULL
+				Assert.True(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 2 && p.intDataType != Noop(FirstIfNullOrSecondAsNumber(p.char20DataType, "1"))));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck26([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// NULL != 7777777
+				Assert.True(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.char20DataType, "1")) != p.intDataType));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck27([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// 7777777 != 1
+				Assert.True(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 2 && p.intDataType != Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "1"))));
+			}
+		}
+
+		[Test]
+		public void CompareWithNullCheck28([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// 1 != 7777777
+				Assert.True(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "1")) != p.intDataType));
+			}
+		}
+
+		[LinqToDB.Mapping.Table("AllTypes")]
+		class AllTypes
+		{
+			[LinqToDB.Mapping.Column] public int    ID              { get; set; }
+			[LinqToDB.Mapping.Column] public int?   intDataType     { get; set; }
+			[LinqToDB.Mapping.Column] public string varcharDataType { get; set; }
+			[LinqToDB.Mapping.Column] public string char20DataType  { get; set; }
+		}
+
+		[Sql.Expression("COALESCE({0}, {0})", ServerSideOnly = true)]
+		public static int? Noop(int? value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		[ExpressionMethod(nameof(Func2Expr))]
+		public static int? FirstIfNullOrSecondAsNumber(string value, string intValue)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<string, string, int?>> Func2Expr()
+		{
+			return (value, intValue) => Func3(value, intValue);
+		}
+
+		[Sql.Expression("CASE WHEN {0} IS NULL THEN NULL ELSE CAST({1} AS INT) END", ServerSideOnly = true)]
+		private static int? Func3(string value, string intValue)
+		{
+			throw new InvalidOperationException();
 		}
 	}
 

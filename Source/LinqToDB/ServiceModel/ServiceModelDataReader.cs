@@ -136,7 +136,7 @@ namespace LinqToDB.ServiceModel
 
 		public DateTime GetDateTime(int i)
 		{
-			return DateTime.Parse(GetFieldValue(i), CultureInfo.InvariantCulture);
+			return DateTime.FromBinary(long.Parse(GetFieldValue(i), CultureInfo.InvariantCulture));
 		}
 
 		public decimal GetDecimal(int i)
@@ -225,11 +225,11 @@ namespace LinqToDB.ServiceModel
 				case TypeCode.Double   : return double.  Parse(value, CultureInfo.InvariantCulture);
 				case TypeCode.Decimal  : return decimal. Parse(value, CultureInfo.InvariantCulture);
 				case TypeCode.Single   : return float.   Parse(value, CultureInfo.InvariantCulture);
-				case TypeCode.DateTime : return DateTime.Parse(value, CultureInfo.InvariantCulture);
+				case TypeCode.DateTime : return DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture));
 			}
 
 			if (type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?))
-				return DateTimeOffset.Parse(value, CultureInfo.InvariantCulture);
+				return new DateTimeOffset(long.Parse(value, CultureInfo.InvariantCulture), TimeSpan.Zero);
 
 			return Converter.ChangeType(value, type, _mappingSchema);
 		}

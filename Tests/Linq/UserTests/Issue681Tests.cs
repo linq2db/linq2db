@@ -24,6 +24,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue("Already fixed in linked server feature", Configuration = ProviderName.SapHana)]
 		public void TestTableNameWithSchema([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

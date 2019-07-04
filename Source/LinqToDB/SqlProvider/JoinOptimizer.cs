@@ -45,7 +45,7 @@ namespace LinqToDB.SqlProvider
 					for (var si = 0; si < j.Table.Joins.Count; si++)
 					{
 						var sj = j.Table.Joins[si];
-						if ((sj.JoinType == JoinType.Inner || sj.JoinType == JoinType.Left)
+						if ((sj.JoinType == JoinType.Inner || sj.JoinType == JoinType.Left || sj.JoinType == JoinType.CrossApply || sj.JoinType == JoinType.OuterApply)
 							&& table != j.Table && !HasDependencyWithParent(j, sj))
 						{
 							table.Joins.Insert(i + 1, sj);

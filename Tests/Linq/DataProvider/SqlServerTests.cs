@@ -38,30 +38,8 @@ namespace Tests.DataProvider
 		}
 #endif
 
-		[AttributeUsage(AttributeTargets.Parameter)]
-		class AllSqlServerDataContextAttribute : IncludeDataSourcesAttribute
-		{
-			public AllSqlServerDataContextAttribute(bool includeLinqService = false)
-				: base(includeLinqService,
-					ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
-					ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)
-			{
-			}
-		}
-
-		[AttributeUsage(AttributeTargets.Parameter)]
-		class SqlServerDataContextAttribute : IncludeDataSourcesAttribute
-		{
-			public SqlServerDataContextAttribute(bool includeLinqService = false)
-				: base(includeLinqService,
-					ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
-					TestProvName.SqlAzure)
-			{
-			}
-		}
-
 		[Test]
-		public void TestParameters([AllSqlServerDataContext] string context)
+		public void TestParameters([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -75,7 +53,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDataTypes([AllSqlServerDataContext] string context)
+		public void TestDataTypes([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -124,7 +102,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDataTypes2([SqlServerDataContext] string context)
+		public void TestDataTypes2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -189,7 +167,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestNumerics([AllSqlServerDataContext] string context)
+		public void TestNumerics([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -239,7 +217,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDate([SqlServerDataContext] string context)
+		public void TestDate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -253,7 +231,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestSmallDateTime([AllSqlServerDataContext] string context)
+		public void TestSmallDateTime([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -268,7 +246,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDateTime([AllSqlServerDataContext] string context)
+		public void TestDateTime([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -284,7 +262,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDateTime2([SqlServerDataContext] string context)
+		public void TestDateTime2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -300,7 +278,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDateTimeOffset([SqlServerDataContext] string context)
+		public void TestDateTimeOffset([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -347,7 +325,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTimeSpan([SqlServerDataContext] string context)
+		public void TestTimeSpan([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -364,7 +342,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestChar([AllSqlServerDataContext] string context)
+		public void TestChar([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -410,7 +388,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestString([AllSqlServerDataContext] string context)
+		public void TestString([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -481,7 +459,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestBinary([AllSqlServerDataContext] string context)
+		public void TestBinary([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var arr1 = new byte[] {       48, 57 };
 			var arr2 = new byte[] { 0, 0, 48, 57 };
@@ -515,7 +493,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestSqlTypes([AllSqlServerDataContext] string context)
+		public void TestSqlTypes([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -561,7 +539,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestGuid([AllSqlServerDataContext] string context)
+		public void TestGuid([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -581,7 +559,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTimestamp([AllSqlServerDataContext] string context)
+		public void TestTimestamp([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -596,7 +574,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestSqlVariant([AllSqlServerDataContext] string context)
+		public void TestSqlVariant([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -611,7 +589,7 @@ namespace Tests.DataProvider
 
 #if !NETSTANDARD1_6
 		[Test]
-		public void TestHierarchyID([SqlServerDataContext] string context)
+		public void TestHierarchyID([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -627,7 +605,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestGeometry([SqlServerDataContext] string context)
+		public void TestGeometry([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -646,7 +624,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestGeography([SqlServerDataContext] string context)
+		public void TestGeography([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -666,7 +644,7 @@ namespace Tests.DataProvider
 #endif
 
 		[Test]
-		public void TestXml([AllSqlServerDataContext] string context)
+		public void TestXml([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -696,7 +674,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestEnum1([AllSqlServerDataContext] string context)
+		public void TestEnum1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -711,7 +689,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestEnum2([AllSqlServerDataContext] string context)
+		public void TestEnum2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -738,7 +716,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void BulkCopyLinqTypesMultipleRows([AllSqlServerDataContext] string context)
+		public void BulkCopyLinqTypesMultipleRows([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -765,7 +743,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void BulkCopyLinqTypesProviderSpecific([AllSqlServerDataContext] string context)
+		public void BulkCopyLinqTypesProviderSpecific([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -948,13 +926,13 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void BulkCopyAllTypesMultipleRows([AllSqlServerDataContext] string context)
+		public void BulkCopyAllTypesMultipleRows([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			BulkCopyAllTypes(context, BulkCopyType.MultipleRows);
 		}
 
 		[Test]
-		public void BulkCopyAllTypesProviderSpecific([AllSqlServerDataContext] string context)
+		public void BulkCopyAllTypesProviderSpecific([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			BulkCopyAllTypes(context, BulkCopyType.ProviderSpecific);
 		}
@@ -1061,20 +1039,20 @@ namespace Tests.DataProvider
 
 #if !NETSTANDARD1_6
 		[Test]
-		public void BulkCopyAllTypes2MultipleRows([SqlServerDataContext] string context)
+		public void BulkCopyAllTypes2MultipleRows([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			BulkCopyAllTypes2(context, BulkCopyType.MultipleRows);
 		}
 
 		[Test]
-		public void BulkCopyAllTypes2ProviderSpecific([SqlServerDataContext] string context)
+		public void BulkCopyAllTypes2ProviderSpecific([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			BulkCopyAllTypes2(context, BulkCopyType.ProviderSpecific);
 		}
 #endif
 
 		[Test]
-		public void CreateAllTypes([AllSqlServerDataContext] string context)
+		public void CreateAllTypes([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -1104,7 +1082,7 @@ namespace Tests.DataProvider
 
 #if !NETSTANDARD1_6
 		[Test]
-		public void CreateAllTypes2([SqlServerDataContext] string context)
+		public void CreateAllTypes2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -1139,7 +1117,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void CreateTempTable([AllSqlServerDataContext] string context)
+		public void CreateTempTable([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -1150,7 +1128,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void CreateTempTable2([AllSqlServerDataContext] string context)
+		public void CreateTempTable2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db1 = new DataConnection(context))
 			using (var db2 = new DataConnection(context))
@@ -1169,7 +1147,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void OverflowTest([AllSqlServerDataContext] string context)
+		public void OverflowTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var func = SqlServerTools.DataReaderGetDecimal;
 			try
@@ -1222,7 +1200,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void OverflowTest2([AllSqlServerDataContext] string context)
+		public void OverflowTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var func = SqlServerTools.DataReaderGetDecimal;
 
@@ -1242,7 +1220,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void SelectTableWithHintTest([AllSqlServerDataContext] string context)
+		public void SelectTableWithHintTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1251,7 +1229,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void UpdateTableWithHintTest([AllSqlServerDataContext] string context)
+		public void UpdateTableWithHintTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1261,7 +1239,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void InOutProcedureTest([AllSqlServerDataContext] string context)
+		public void InOutProcedureTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1298,7 +1276,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async Task InOutProcedureTestAsync([AllSqlServerDataContext] string context)
+		public async Task InOutProcedureTestAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1336,7 +1314,7 @@ namespace Tests.DataProvider
 
 #if !NETSTANDARD1_6
 		[Test]
-		public void TestIssue1144([AllSqlServerDataContext] string context)
+		public void TestIssue1144([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1348,5 +1326,72 @@ namespace Tests.DataProvider
 			}
 		}
 #endif
+		[Table("Issue1613")]
+		private class Issue1613Table
+		{
+			[Column("dt"), Nullable] 
+			public DateTimeOffset? DateTimeOffset { get; set; }
+		}
+
+		private static Issue1613Table[] GenerateData()
+		{
+			var sampleData = new[]
+			{
+				new Issue1613Table { DateTimeOffset = null },
+				new Issue1613Table { DateTimeOffset = DateTimeOffset.Now.AddDays(1) },
+				new Issue1613Table { DateTimeOffset = DateTimeOffset.Now.AddDays(2) },
+				new Issue1613Table { DateTimeOffset = DateTimeOffset.Now.AddDays(3) },
+				new Issue1613Table { DateTimeOffset = DateTimeOffset.Now.AddDays(4) }
+			};
+			return sampleData;
+		}
+
+		[Test]
+		public void Issue1613Test1([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(GenerateData()))
+			{ 
+
+				var query1 = table.GroupBy(x => x.DateTimeOffset).Select(g => g.Key).ToList();
+				var query2 = table.Select(r => r.DateTimeOffset).ToList();
+
+				Assert.AreEqual(5, query1.Count);
+				Assert.AreEqual(5, query2.Count);
+				Assert.AreEqual(query1, query2);
+			}
+		}
+		
+		[Test, ActiveIssue(1666)]
+		public void Issue1613Test2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(GenerateData()))
+			{ 
+
+				var query1 = table.GroupBy(x => x.DateTimeOffset.Value.Date).Select(g => g.Key).ToList();
+				var query2 = table.Select(r => r.DateTimeOffset.Value.Date).ToList();
+
+				Assert.AreEqual(5, query1.Count);
+				Assert.AreEqual(5, query2.Count);
+				Assert.AreEqual(query1, query2);
+			}
+		}
+
+		[Test, ActiveIssue(1666)]
+		public void Issue1613Test3([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(GenerateData()))
+			{ 
+
+				var query1 = table.GroupBy(x => x.DateTimeOffset.Value.TimeOfDay).Select(g => g.Key).ToList();
+				var query2 = table.Select(r => r.DateTimeOffset.Value.TimeOfDay).ToList();
+
+				Assert.AreEqual(5, query1.Count);
+				Assert.AreEqual(5, query2.Count);
+				Assert.AreEqual(query1, query2);
+			}
+		}
 	}
 }

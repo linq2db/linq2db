@@ -215,9 +215,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest1([DataSources(
-			ProviderName.SqlCe, ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
-			string context)
+		public void LetTest1([DataSources(ProviderName.SqlCe, ProviderName.Informix, TestProvName.AllSybase, ProviderName.SapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -235,10 +233,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest2([DataSources(
-			ProviderName.SqlCe, ProviderName.Informix, ProviderName.Sybase, ProviderName.
-			SybaseManaged, ProviderName.SybaseManaged, ProviderName.SapHana)]
-			string context)
+		public void LetTest2([DataSources(ProviderName.SqlCe, ProviderName.Informix, TestProvName.AllSybase, ProviderName.SapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -256,9 +251,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest3([DataSources(
-			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
-			string context)
+		public void LetTest3([DataSources(ProviderName.Informix, TestProvName.AllSybase, ProviderName.SapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -274,7 +267,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest4([DataSources(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)] string context)
+		public void LetTest4([DataSources(ProviderName.Informix, ProviderName.SapHana)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -305,9 +298,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest5([DataSources(
-			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
-			string context)
+		public void LetTest5([DataSources(ProviderName.Informix, TestProvName.AllSybase, ProviderName.SapHana)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -338,9 +329,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest6([DataSources(
-			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
-			string context)
+		public void LetTest6([DataSources(ProviderName.Informix, TestProvName.AllSybase, ProviderName.SapHana)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
@@ -377,9 +366,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest7([DataSources(
-			ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SapHana)]
-			string context)
+		public void LetTest7([DataSources(ProviderName.Informix, TestProvName.AllSybase, ProviderName.SapHana)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -413,7 +400,6 @@ namespace Tests.Linq
 					).Where(t => t.ParentID > 0).Take(5000));
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void LetTest8([DataSources] string context)
 		{
@@ -445,7 +431,6 @@ namespace Tests.Linq
 					});
 		}
 
-		[ActiveIssue(Configurations = new[] { ProviderName.SapHana })]
 		[Test]
 		public void LetTest9([DataSources] string context)
 		{

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Linq;
 using System.Globalization;
 using System.Linq;
@@ -23,6 +22,7 @@ namespace LinqToDB.Mapping
 	using Metadata;
 	using SqlProvider;
 	using SqlQuery;
+	using Common.Internal.Cache;
 
 	/// <summary>
 	/// Mapping schema.
@@ -53,8 +53,12 @@ namespace LinqToDB.Mapping
 		/// Creates mapping schema for specified configuration name.
 		/// </summary>
 		/// <param name="configuration">Mapping schema configuration name.
-		/// <see cref="ProviderName"/> for standard names.</param>
-		public MappingSchema(string configuration/* ??? */)
+		/// <see cref="ProviderName"/> for standard names.
+		/// </param>
+		/// <remarks>Schema name should be unique for mapping schemas with different mappings.
+		/// Using same name could lead to incorrect mapping used when mapping schemas with same name define different
+		/// mappings for same type.</remarks>
+		public MappingSchema(string configuration)
 			: this(configuration, null)
 		{
 		}
@@ -67,6 +71,9 @@ namespace LinqToDB.Mapping
 		/// <param name="configuration">Mapping schema configuration name.
 		/// <see cref="ProviderName"/> for standard names.</param>
 		/// <param name="schemas">Base mapping schemas.</param>
+		/// <remarks>Schema name should be unique for mapping schemas with different mappings.
+		/// Using same name could lead to incorrect mapping used when mapping schemas with same name define different
+		/// mappings for same type.</remarks>
 		public MappingSchema(string configuration, params MappingSchema[] schemas)
 		{
 			if (configuration.IsNullOrEmpty() && (schemas == null || schemas.Length == 0))
@@ -460,7 +467,7 @@ namespace LinqToDB.Mapping
 			DbDataType                      fromType,
 			DbDataType                      toType,
 			[JetBrains.Annotations.NotNull] LambdaExpression expr,
-			bool addNullCheck = true)
+			bool                            addNullCheck = true)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
@@ -576,17 +583,18 @@ namespace LinqToDB.Mapping
 		}
 
 		static bool IsSimple (ref DbDataType type) 
-			=> type.DataType == DataType.Undefined && string.IsNullOrEmpty(type.DbType);
+			=> type.DataType == DataType.Undefined && string.IsNullOrEmpty(type.DbType) && type.Length == null;
 
-		static DbDataType Simplify(ref DbDataType type)
+		static void Simplify(ref DbDataType type)
 		{
 			if (!string.IsNullOrEmpty(type.DbType))
-				return type.WithDbType(null);
+				type = type.WithDbType(null);
 
 			if (type.DataType != DataType.Undefined)
-				return type.WithDataType(DataType.Undefined);
+				type = type.WithDataType(DataType.Undefined);
 
-			return type;
+			if (type.Length != null)
+				type = type.WithLength(null);
 		}
 
 		internal ConvertInfo.LambdaInfo GetConverter(DbDataType from, DbDataType to, bool create)
@@ -603,9 +611,9 @@ namespace LinqToDB.Mapping
 				}
 
 				if (!IsSimple(ref from))
-					from = Simplify(ref from);
+					Simplify(ref from);
 				else if (!IsSimple(ref to))
-					to = Simplify(ref to);
+					Simplify(ref to);
 				else break;
 
 			} while (true);
@@ -956,17 +964,23 @@ namespace LinqToDB.Mapping
 		/// <param name="type">Attributes owner type.</param>
 		/// <param name="configGetter">Attribute configuration name provider.</param>
 		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
+		/// <param name="exactForConfiguration">If <c>true</c> - only associated to configuration attributes will be returned.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, Func<T,string> configGetter, bool inherit = true)
+		public T[] GetAttributes<T>(Type type, Func<T,string> configGetter, bool inherit = true, 
+			bool exactForConfiguration = false)
 			where T : Attribute
 		{
 			var list  = new List<T>();
 			var attrs = GetAttributes<T>(type, inherit);
 
 			foreach (var c in ConfigurationList)
+			{
 				foreach (var a in attrs)
 					if (configGetter(a) == c)
 						list.Add(a);
+				if (exactForConfiguration && list.Count > 0)
+					return list.ToArray();
+			}
 
 			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
 		}
@@ -980,17 +994,23 @@ namespace LinqToDB.Mapping
 		/// <param name="memberInfo">Attributes owner member.</param>
 		/// <param name="configGetter">Attribute configuration name provider.</param>
 		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
+		/// <param name="exactForConfiguration">If <c>true</c> - only associated to configuration attributes will be returned.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true, 
+			bool exactForConfiguration = false)
 			where T : Attribute
 		{
 			var list  = new List<T>();
 			var attrs = GetAttributes<T>(type, memberInfo, inherit);
 
 			foreach (var c in ConfigurationList)
+			{
 				foreach (var a in attrs)
 					if (configGetter(a) == c)
 						list.Add(a);
+				if (exactForConfiguration && list.Count > 0)
+					return list.ToArray();
+			}
 
 			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
 		}
@@ -1398,9 +1418,7 @@ namespace LinqToDB.Mapping
 			if (_mapValues == null)
 				_mapValues = new ConcurrentDictionary<Type,MapValue[]>();
 
-			MapValue[] mapValues;
-
-			if (_mapValues.TryGetValue(type, out mapValues))
+			if (_mapValues.TryGetValue(type, out var mapValues))
 				return mapValues;
 
 			var underlyingType = type.ToNullableUnderlying();
@@ -1461,6 +1479,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public Action<MappingSchema, IEntityChangeDescriptor> EntityDescriptorCreatedCallback { get; set; }
 
+		internal static MemoryCache EntityDescriptorsCache { get; } = new MemoryCache(new MemoryCacheOptions());
+
 		/// <summary>
 		/// Returns mapped entity descriptor.
 		/// </summary>
@@ -1468,25 +1488,55 @@ namespace LinqToDB.Mapping
 		/// <returns>Mapping descriptor.</returns>
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
-			return Schemas[0].GetEntityDescriptor(this, type);
+			var key = new { Type = type, ConfigurationID };
+			var ed = EntityDescriptorsCache.GetOrCreate(key,
+				o =>
+				{
+					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					var edNew = new EntityDescriptor(this, type);
+					EntityDescriptorCreatedCallback?.Invoke(this, edNew);
+					return edNew;
+				});
+
+			return ed;
 		}
 
-		// TODO: V2 - do we need it??
+		// TODO: V3 cleanup
 		/// <summary>
-		/// Returns types for cached <see cref="EntityDescriptor" />s.
+		/// Enumerates types, registered by FluentMetadataBuilder.
 		/// </summary>
-		/// <seealso cref="GetEntityDescriptor(Type)" />
 		/// <returns>
-		/// Mapping types.
+		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
+		[Obsolete("Use 'GetDefinedTypes() method instead'")]
 		public Type[] GetEntites()
 		{
-			return Schemas[0].GetEntites();
+			return GetDefinedTypes();
+		}
+
+		/// <summary>
+		/// Enumerates types registered by FluentMetadataBuilder.
+		/// </summary>
+		/// <returns>
+		/// Returns array with all types, mapped by fluent mappings.
+		/// </returns>
+		public Type[] GetDefinedTypes()
+		{
+			return Schemas.SelectMany(s => s.GetRegisteredTypes()).ToArray();
+		}
+
+		/// <summary>
+		/// Clears EntityDescriptor cache.
+		/// </summary>
+		public static void ClearCache()
+		{
+			EntityDescriptorsCache.Compact(1);
 		}
 
 		internal void ResetEntityDescriptor(Type type)
 		{
-			Schemas[0].ResetEntityDescriptor(type);
+			var key = new { Type = type, ConfigurationID };
+			EntityDescriptorsCache.Remove(key);
 		}
 
 		#endregion
@@ -1521,5 +1571,17 @@ namespace LinqToDB.Mapping
 		}
 
 		#endregion
+
+		internal IEnumerable<T> SortByConfiguration<T>(Func<T, string> configGetter, IEnumerable<T> values)
+		{
+			return values
+				.Select(val => new
+				{
+					Value = val,
+					Order = Array.IndexOf(ConfigurationList, configGetter(val)) == -1 ? ConfigurationList.Length : Array.IndexOf(ConfigurationList, configGetter(val))
+				})
+				.OrderBy(_ => _.Order)
+				.Select(_ => _.Value);
+		}
 	}
 }

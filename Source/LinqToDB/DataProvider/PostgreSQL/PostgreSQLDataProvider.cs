@@ -140,6 +140,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlCircleType     = npgSql.GetType("NpgsqlTypes.NpgsqlCircle"     , true);
 			NpgsqlPolygonType    = npgSql.GetType("NpgsqlTypes.NpgsqlPolygon"    , true);
 			NpgsqlDbType         = npgSql.GetType("NpgsqlTypes.NpgsqlDbType"     , true);
+			NpgsqlRange          = npgSql.GetType("NpgsqlTypes.NpgsqlRange`1"    , false);
 
 			// https://www.postgresql.org/docs/current/static/datatype.html
 			// not all types are supported now
@@ -304,6 +305,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AddUdtType(NpgsqlCircleType);
 			AddUdtType(NpgsqlPolygonType);
 			AddUdtType(NpgsqlLineType);
+			AddUdtType(NpgsqlRange);
 
 			if (_npgsqlTimeStampTZ != null)
 			{
@@ -344,6 +346,45 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						Expression.New(
 							MemberHelper.ConstructorOf(() => new DateTimeOffset(new DateTime())),
 							expr), p));
+			}			
+			
+			if (NpgsqlRange != null)
+			{
+				void SetRangeConversion<T>(string fromDbType = null, DataType fromDataType = DataType.Undefined, string toDbType = null, DataType toDataType = DataType.Undefined)
+				{
+					var rangeType  = NpgsqlRange.MakeGenericType(typeof(T));
+					var fromType   = new DbDataType(rangeType, fromDataType, fromDbType);
+					var toType     = new DbDataType(typeof(DataParameter), toDataType, toDbType);
+					var rangeParam = Expression.Parameter(rangeType, "p");
+
+					MappingSchema.SetConvertExpression(fromType, toType,
+						Expression.Lambda(
+							Expression.New(
+								MemberHelper.ConstructorOf(
+									() => new DataParameter("", null, DataType.Undefined, toDbType)),
+								Expression.Constant(""),
+								Expression.Convert(rangeParam, typeof(object)),
+								Expression.Constant(toDataType),
+								Expression.Constant(toDbType, typeof(string))
+							)
+							, rangeParam)
+					);
+				}
+
+				SetRangeConversion<byte>();
+				SetRangeConversion<int>();
+				SetRangeConversion<double>();
+				SetRangeConversion<float>();
+				SetRangeConversion<decimal>();
+
+				SetRangeConversion<DateTime>(fromDbType: "daterange", toDbType: "daterange");
+
+				SetRangeConversion<DateTime>(fromDbType: "tsrange", toDbType: "tsrange");
+				SetRangeConversion<DateTime>(toDbType: "tsrange");
+
+				SetRangeConversion<DateTime>(fromDbType: "tstzrange", toDbType: "tstzrange");
+
+				SetRangeConversion<DateTimeOffset>("tstzrange");
 			}
 		}
 
@@ -405,17 +446,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 #endif
 
-		static Action<IDbDataParameter> _setMoney;
-		static Action<IDbDataParameter> _setVarBinary;
-		static Action<IDbDataParameter> _setBoolean;
-		static Action<IDbDataParameter> _setXml;
-		static Action<IDbDataParameter> _setText;
-		static Action<IDbDataParameter> _setBit;
-		static Action<IDbDataParameter> _setHstore;
-		static Action<IDbDataParameter> _setJsonb;
-		static Action<IDbDataParameter> _setJson;
+		Action<IDbDataParameter> _setMoney;
+		Action<IDbDataParameter> _setVarBinary;
+		Action<IDbDataParameter> _setBoolean;
+		Action<IDbDataParameter> _setXml;
+		Action<IDbDataParameter> _setText;
+		Action<IDbDataParameter> _setBit;
+		Action<IDbDataParameter> _setHstore;
+		Action<IDbDataParameter> _setJsonb;
+		Action<IDbDataParameter> _setJson;
 
-		static Action<IDbDataParameter, object> _setNativeParameterType;
+		Action<IDbDataParameter, object> _setNativeParameterType;
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
@@ -431,25 +472,26 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			switch (dataType.DataType)
 			{
-				case DataType.SByte      : parameter.DbType = DbType.Int16;            break;
-				case DataType.UInt16     : parameter.DbType = DbType.Int32;            break;
-				case DataType.UInt32     : parameter.DbType = DbType.Int64;            break;
-				case DataType.UInt64     : parameter.DbType = DbType.Decimal;          break;
-				case DataType.DateTime2  : parameter.DbType = DbType.DateTime;         break;
-				case DataType.VarNumeric : parameter.DbType = DbType.Decimal;          break;
-				case DataType.Decimal    : parameter.DbType = DbType.Decimal;          break;
-				case DataType.Money      : if (_setMoney     != null) _setMoney(parameter);     else base.SetParameterType(parameter, dataType); break;
-				case DataType.Image      :
-				case DataType.Binary     :
-				case DataType.VarBinary  : if (_setVarBinary != null) _setVarBinary(parameter); else base.SetParameterType(parameter, dataType); break;
-				case DataType.Boolean    : if (_setBoolean   != null) _setBoolean(parameter);   else base.SetParameterType(parameter, dataType); break;
-				case DataType.Xml        : if (_setXml       != null) _setXml(parameter);       else base.SetParameterType(parameter, dataType); break;
-				case DataType.Text       :
-				case DataType.NText      : if (_setText      != null) _setText(parameter);      else base.SetParameterType(parameter, dataType); break;
-				case DataType.BitArray   : if (_setBit       != null) _setBit(parameter);       else base.SetParameterType(parameter, dataType); break;
-				case DataType.Dictionary : if (_setHstore    != null) _setHstore(parameter);    else base.SetParameterType(parameter, dataType); break;
-				case DataType.Json       : if (_setJson      != null) _setJson(parameter);      else base.SetParameterType(parameter, dataType); break;
-				case DataType.BinaryJson : if (_setJsonb     != null) _setJsonb(parameter);     else base.SetParameterType(parameter, dataType); break;
+				case DataType.SByte          : parameter.DbType = DbType.Int16;            break;
+				case DataType.UInt16         : parameter.DbType = DbType.Int32;            break;
+				case DataType.UInt32         : parameter.DbType = DbType.Int64;            break;
+				case DataType.UInt64         : parameter.DbType = DbType.Decimal;          break;
+				case DataType.DateTime2      : parameter.DbType = DbType.DateTime;         break;
+				case DataType.DateTimeOffset : parameter.DbType = DbType.DateTimeOffset;   break;
+				case DataType.VarNumeric     : parameter.DbType = DbType.Decimal;          break;
+				case DataType.Decimal        : parameter.DbType = DbType.Decimal;          break;
+				case DataType.Money          : if (_setMoney     != null) _setMoney(parameter);     else base.SetParameterType(parameter, dataType); break;
+				case DataType.Image          :
+				case DataType.Binary         :
+				case DataType.VarBinary      : if (_setVarBinary != null) _setVarBinary(parameter); else base.SetParameterType(parameter, dataType); break;
+				case DataType.Boolean        : if (_setBoolean   != null) _setBoolean(parameter);   else base.SetParameterType(parameter, dataType); break;
+				case DataType.Xml            : if (_setXml       != null) _setXml(parameter);       else base.SetParameterType(parameter, dataType); break;
+				case DataType.Text           :
+				case DataType.NText          : if (_setText      != null) _setText(parameter);      else base.SetParameterType(parameter, dataType); break;
+				case DataType.BitArray       : if (_setBit       != null) _setBit(parameter);       else base.SetParameterType(parameter, dataType); break;
+				case DataType.Dictionary     : if (_setHstore    != null) _setHstore(parameter);    else base.SetParameterType(parameter, dataType); break;
+				case DataType.Json           : if (_setJson      != null) _setJson(parameter);      else base.SetParameterType(parameter, dataType); break;
+				case DataType.BinaryJson     : if (_setJsonb     != null) _setJsonb(parameter);     else base.SetParameterType(parameter, dataType); break;
 				default :
 				{
 					if (_setNativeParameterType != null && !string.IsNullOrEmpty(dataType.DbType))

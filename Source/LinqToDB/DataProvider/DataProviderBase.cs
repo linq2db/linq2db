@@ -102,7 +102,7 @@ namespace LinqToDB.DataProvider
 		public    abstract ISqlBuilder   CreateSqlBuilder();
 		public    abstract ISqlOptimizer GetSqlOptimizer ();
 
-		public virtual void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters)
+		public virtual void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters)
 		{
 			dataConnection.Command.CommandType = commandType;
 
@@ -505,7 +505,7 @@ namespace LinqToDB.DataProvider
 			if (builder.NoopCommand)
 				return 0;
 
-			return await dataConnection.ExecuteAsync(cmd, token, builder.Parameters);
+			return await dataConnection.ExecuteAsync(cmd, token, builder.Parameters).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(

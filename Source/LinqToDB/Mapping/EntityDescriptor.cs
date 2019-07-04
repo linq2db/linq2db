@@ -8,6 +8,8 @@ namespace LinqToDB.Mapping
 	using Extensions;
 	using Linq;
 	using Reflection;
+	using System.Linq.Expressions;
+	using System.Reflection;
 
 	/// <summary>
 	/// Stores mapping entity descriptor.
@@ -21,13 +23,16 @@ namespace LinqToDB.Mapping
 		/// <param name="type">Mapping class type.</param>
 		public EntityDescriptor(MappingSchema mappingSchema, Type type)
 		{
-			TypeAccessor = TypeAccessor.GetAccessor(type);
-			Associations = new List<AssociationDescriptor>();
-			Columns = new List<ColumnDescriptor>();
+			MappingSchema = mappingSchema;
+			TypeAccessor  = TypeAccessor.GetAccessor(type);
+			Associations  = new List<AssociationDescriptor>();
+			Columns       = new List<ColumnDescriptor>();
 
-			Init(mappingSchema);
-			InitInheritanceMapping(mappingSchema);
+			Init();
+			InitInheritanceMapping();
 		}
+
+		internal MappingSchema MappingSchema { get; }
 
 		/// <summary>
 		/// Gets or sets mapping type accessor.
@@ -83,9 +88,9 @@ namespace LinqToDB.Mapping
 		public bool IsColumnAttributeRequired { get; private set; }
 
 		/// <summary>
-		/// Gets the dynamic columns store descriptor.
+		/// Gets flags for which operation values are skipped.
 		/// </summary>
-		public ColumnDescriptor DynamicColumnsStore { get; private set; }
+		public SkipModification SkipModificationFlags { get; private set; }
 
 		/// <summary>
 		/// Gets list of column descriptors for current entity.
@@ -131,9 +136,9 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		internal bool HasComplexColumns { get; private set; }
 
-		void Init(MappingSchema mappingSchema)
+		void Init()
 		{
-			var ta = mappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
+			var ta = MappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
 
 			if (ta != null)
 			{
@@ -151,13 +156,15 @@ namespace LinqToDB.Mapping
 					TableName = TableName.Substring(1);
 			}
 
+			InitializeDynamicColumnsAccessors();
+
 			var attrs = new List<ColumnAttribute>();
 			var members = TypeAccessor.Members.Concat(
-				mappingSchema.GetDynamicColumns(ObjectType).Select(dc => new MemberAccessor(TypeAccessor, dc)));
+				MappingSchema.GetDynamicColumns(ObjectType).Select(dc => new MemberAccessor(TypeAccessor, dc, this)));
 
 			foreach (var member in members)
 			{
-				var aa = mappingSchema.GetAttribute<AssociationAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var aa = MappingSchema.GetAttribute<AssociationAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
 				if (aa != null)
 				{
@@ -168,7 +175,7 @@ namespace LinqToDB.Mapping
 					continue;
 				}
 
-				var ca = mappingSchema.GetAttribute<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var ca = MappingSchema.GetAttribute<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
 				if (ca != null)
 				{
@@ -180,23 +187,23 @@ namespace LinqToDB.Mapping
 						}
 						else
 						{
-							var cd = new ColumnDescriptor(mappingSchema, ca, member);
+							var cd = new ColumnDescriptor(MappingSchema, ca, member);
 							AddColumn(cd);
 							_columnNames.Add(member.Name, cd);
 						}
 					}
 				}
 				else if (
-					!IsColumnAttributeRequired && mappingSchema.IsScalarType(member.Type) ||
-					mappingSchema.GetAttribute<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null ||
-					mappingSchema.GetAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null)
+					!IsColumnAttributeRequired && MappingSchema.IsScalarType(member.Type) ||
+					MappingSchema.GetAttribute<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null ||
+					MappingSchema.GetAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null)
 				{
-					var cd = new ColumnDescriptor(mappingSchema, new ColumnAttribute(), member);
+					var cd = new ColumnDescriptor(MappingSchema, new ColumnAttribute(), member);
 					AddColumn(cd);
 					_columnNames.Add(member.Name, cd);
 				}
 
-				var caa = mappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var caa = MappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
 				if (caa != null)
 				{
@@ -206,29 +213,25 @@ namespace LinqToDB.Mapping
 					Aliases.Add(member.Name, caa.MemberName);
 				}
 
-				var ma = mappingSchema.GetAttribute<ExpressionMethodAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var ma = MappingSchema.GetAttribute<ExpressionMethodAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 				if (ma != null && ma.IsColumn)
 				{
 					if (CalculatedMembers == null)
 						CalculatedMembers = new List<MemberAccessor>();
 					CalculatedMembers.Add(member);
 				}
-
-				// dynamic columns store property
-				var dcsProp = mappingSchema.GetAttribute<DynamicColumnsStoreAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
-
-				if (dcsProp != null)
-					DynamicColumnsStore = new ColumnDescriptor(mappingSchema, new ColumnAttribute(member.Name), member);
 			}
 
-			var typeColumnAttrs = mappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, a => a.Configuration);
+			var typeColumnAttrs = MappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, a => a.Configuration);
 
 			foreach (var attr in typeColumnAttrs.Concat(attrs))
 				if (attr.IsColumn)
-					SetColumn(attr, mappingSchema);
+					SetColumn(attr);
+
+			SkipModificationFlags = Columns.Aggregate(SkipModification.None, (s, c) => s | c.SkipModificationFlags);
 		}
 
-		void SetColumn(ColumnAttribute attr, MappingSchema mappingSchema)
+		void SetColumn(ColumnAttribute attr)
 		{
 			if (attr.MemberName == null)
 				throw new LinqToDBException($"The Column attribute of the '{TypeAccessor.Type}' type must have MemberName.");
@@ -236,7 +239,7 @@ namespace LinqToDB.Mapping
 			if (attr.MemberName.IndexOf('.') < 0)
 			{
 				var ex = TypeAccessor[attr.MemberName];
-				var cd = new ColumnDescriptor(mappingSchema, attr, ex);
+				var cd = new ColumnDescriptor(MappingSchema, attr, ex);
 
 				if (_columnNames.Remove(attr.MemberName))
 					Columns.RemoveAll(c => c.MemberName == attr.MemberName);
@@ -246,7 +249,7 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var cd = new ColumnDescriptor(mappingSchema, attr, new MemberAccessor(TypeAccessor, attr.MemberName));
+				var cd = new ColumnDescriptor(MappingSchema, attr, new MemberAccessor(TypeAccessor, attr.MemberName, this));
 
 				if (!string.IsNullOrWhiteSpace(attr.MemberName))
 				{
@@ -278,9 +281,9 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-		internal void InitInheritanceMapping(MappingSchema mappingSchema)
+		internal void InitInheritanceMapping()
 		{
-			var mappingAttrs = mappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType, a => a.Configuration, false);
+			var mappingAttrs = MappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType, a => a.Configuration, false);
 			var result = new List<InheritanceMapping>(mappingAttrs.Length);
 
 			if (mappingAttrs.Length > 0)
@@ -296,7 +299,7 @@ namespace LinqToDB.Mapping
 
 					var ed = mapping.Type.Equals(ObjectType)
 						? this
-						: mappingSchema.GetEntityDescriptor(mapping.Type);
+						: MappingSchema.GetEntityDescriptor(mapping.Type);
 
 					//foreach (var column in this.Columns)
 					//{
@@ -338,5 +341,198 @@ namespace LinqToDB.Mapping
 			if (columnDescriptor.MemberAccessor.IsComplex)
 				HasComplexColumns = true;
 		}
+
+		#region Dynamic Columns
+		/// <summary>
+		/// Gets the dynamic columns store descriptor.
+		/// </summary>
+		public ColumnDescriptor   DynamicColumnsStore { get; private set; }
+
+		/// <summary>
+		/// Gets or sets optional dynamic column value getter expression with following signature:
+		/// <code>
+		/// object Getter(TEntity entity, string propertyName, object defaultValue);
+		/// </code>
+		/// </summary>
+		internal LambdaExpression DynamicColumnGetter { get; private set; }
+
+		/// <summary>
+		/// Gets or sets optional dynamic column value setter expression with following signature:
+		/// <code>
+		/// void Setter(TEntity entity, string propertyName, object value);
+		/// </code>
+		/// </summary>
+		internal LambdaExpression DynamicColumnSetter { get; private set; }
+
+		private void InitializeDynamicColumnsAccessors()
+		{
+			// initialize dynamic columns store accessors
+			var dynamicStoreAttributes = new List<IConfigurationProvider>();
+			var accessors = MappingSchema.GetAttribute<DynamicColumnAccessorAttribute>(TypeAccessor.Type, attr => attr.Configuration);
+			if (accessors != null)
+			{
+				dynamicStoreAttributes.Add(accessors);
+			}
+			var storeMembers = new Dictionary<DynamicColumnsStoreAttribute, MemberAccessor>();
+
+			foreach (var member in TypeAccessor.Members)
+			{
+				// dynamic columns store property
+				var dcsProp = MappingSchema.GetAttribute<DynamicColumnsStoreAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+
+				if (dcsProp != null)
+				{
+					dynamicStoreAttributes.Add(dcsProp);
+					storeMembers.Add(dcsProp, member);
+				}
+			}
+
+			if (dynamicStoreAttributes.Count > 0)
+			{
+				IConfigurationProvider dynamicStoreAttribute;
+				if (dynamicStoreAttributes.Count > 1)
+				{
+					var orderedAttributes = MappingSchema.SortByConfiguration(attr => attr.Configuration, dynamicStoreAttributes).ToArray();
+
+					if (orderedAttributes[1].Configuration == orderedAttributes[0].Configuration)
+						throw new LinqToDBException($"Multiple dynamic store configuration attributes with same configuration found for {TypeAccessor.Type}");
+
+					dynamicStoreAttribute = orderedAttributes[0];
+				}
+				else
+					dynamicStoreAttribute = dynamicStoreAttributes[0];
+
+				var objParam          = Expression.Parameter(TypeAccessor.Type, "obj");
+				var propNameParam     = Expression.Parameter(typeof(string), "propertyName");
+				var defaultValueParam = Expression.Parameter(typeof(object), "defaultValue");
+				var valueParam        = Expression.Parameter(typeof(object), "value");
+
+				if (dynamicStoreAttribute is DynamicColumnsStoreAttribute storeAttribute)
+				{
+					var member          = storeMembers[storeAttribute];
+					DynamicColumnsStore = new ColumnDescriptor(MappingSchema, new ColumnAttribute(member.Name), member);
+
+					// getter expression
+					var storageType = member.MemberInfo.GetMemberType();
+					var storedType  = storageType.GetGenericArguments()[1];
+					var outVar      = Expression.Variable(storedType);
+
+					var tryGetValueMethodInfo = storageType.GetMethod("TryGetValue");
+
+					if (tryGetValueMethodInfo == null)
+						throw new LinqToDBException("Storage property do not have method 'TryGetValue'");
+
+					// get value via "Item" accessor; we're not null-checking
+					DynamicColumnGetter =
+						Expression.Lambda(
+							Expression.Block(
+								new[] { outVar },
+								Expression.IfThen(
+									Expression.Not(
+										Expression.Call(
+											Expression.MakeMemberAccess(
+												objParam,
+												member.MemberInfo),
+											tryGetValueMethodInfo,
+											propNameParam,
+											outVar)),
+									Expression.Assign(outVar, defaultValueParam)),
+								outVar),
+							objParam,
+							propNameParam,
+							defaultValueParam);
+
+					// if null, create new dictionary; then assign value
+					DynamicColumnSetter =
+						Expression.Lambda(
+							Expression.Block(
+								Expression.IfThen(
+									Expression.ReferenceEqual(
+										Expression.MakeMemberAccess(objParam, member.MemberInfo),
+										Expression.Constant(null)),
+									Expression.Assign(
+										Expression.MakeMemberAccess(objParam, member.MemberInfo),
+										Expression.New(typeof(Dictionary<string, object>)))),
+								Expression.Assign(
+									Expression.Property(
+										Expression.MakeMemberAccess(objParam, member.MemberInfo),
+										"Item",
+										propNameParam),
+									Expression.Convert(valueParam, typeof(object)))),
+							objParam,
+							propNameParam,
+							valueParam);
+				}
+				else
+				{
+					var accessorsAttribute = (DynamicColumnAccessorAttribute)dynamicStoreAttribute;
+
+					if (accessorsAttribute.GetterMethod != null)
+					{
+						var mi = TypeAccessor.Type.GetMethod(accessorsAttribute.GetterMethod, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+						if (mi.IsStatic)
+							DynamicColumnGetter =
+								Expression.Lambda(
+									Expression.Call(
+										mi,
+										objParam,
+										propNameParam,
+										defaultValueParam),
+									objParam,
+									propNameParam,
+									defaultValueParam);
+						else
+							DynamicColumnGetter =
+								Expression.Lambda(
+									Expression.Call(
+										objParam,
+										mi,
+										propNameParam,
+										defaultValueParam),
+									objParam,
+									propNameParam,
+									defaultValueParam);
+					}
+					else if (accessorsAttribute.GetterExpressionMethod != null)
+						DynamicColumnGetter = TypeAccessor.Type.GetExpressionFromExpressionMember<LambdaExpression>(accessorsAttribute.GetterExpressionMethod);
+					else
+						DynamicColumnGetter = accessorsAttribute.GetterExpression;
+
+					if (accessorsAttribute.SetterMethod != null)
+					{
+						var mi = TypeAccessor.Type.GetMethod(accessorsAttribute.SetterMethod, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+						if (mi.IsStatic)
+							DynamicColumnSetter =
+								Expression.Lambda(
+									Expression.Call(
+										mi,
+										objParam,
+										propNameParam,
+										valueParam),
+									objParam,
+									propNameParam,
+									valueParam);
+						else
+							DynamicColumnSetter =
+								Expression.Lambda(
+									Expression.Call(
+										objParam,
+										mi,
+										propNameParam,
+										valueParam),
+									objParam,
+									propNameParam,
+									valueParam);
+					}
+					else if (accessorsAttribute.SetterExpressionMethod != null)
+						DynamicColumnSetter = TypeAccessor.Type.GetExpressionFromExpressionMember<LambdaExpression>(accessorsAttribute.SetterExpressionMethod);
+					else
+						DynamicColumnSetter = accessorsAttribute.SetterExpression;
+				}
+			}
+		}
+		#endregion
 	}
 }

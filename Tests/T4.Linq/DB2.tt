@@ -4,6 +4,7 @@
 <#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.DB2.ttinclude" #>
 <#
 	NamespaceName = "DB2DataContext";
+	DataContextName = "TESTDATADB";
 
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;

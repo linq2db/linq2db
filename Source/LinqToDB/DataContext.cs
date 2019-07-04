@@ -58,6 +58,22 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Creates data context using specified database provider and connection string.
+		/// </summary>
+		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
+		/// <param name="connectionString">Database connection string to use for connection with database.</param>
+		public DataContext([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString)
+		{
+			if (providerName     == null) throw new ArgumentNullException(nameof(providerName));
+			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+			var dataProvider = DataConnection.GetDataProvider(providerName, connectionString);
+			DataProvider     = dataProvider ?? throw new LinqToDBException($"DataProvider '{providerName}' not found.");
+			ContextID        = DataProvider.Name;
+			ConnectionString = connectionString;
+			MappingSchema    = DataProvider.MappingSchema;
+		}
+
+		/// <summary>
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
 		public string        ConfigurationString { get; private set; }
@@ -265,9 +281,9 @@ namespace LinqToDB
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
-				dc._dataConnection = _dataConnection.Transaction != null ?
-					new DataConnection(DataProvider, _dataConnection.Transaction) :
-					new DataConnection(DataProvider, _dataConnection.Connection);
+				dc._dataConnection = _dataConnection.TransactionAsync != null ?
+					new DataConnection(DataProvider, _dataConnection.TransactionAsync) :
+					new DataConnection(DataProvider, _dataConnection.EnsureConnection());
 
 			dc.QueryHints.    AddRange(QueryHints);
 			dc.NextQueryHints.AddRange(NextQueryHints);
@@ -352,7 +368,7 @@ namespace LinqToDB
 		{
 			var dct = new DataContextTransaction(this);
 
-			await dct.BeginTransactionAsync(level);
+			await dct.BeginTransactionAsync(level).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return dct;
 		}
@@ -368,7 +384,7 @@ namespace LinqToDB
 		{
 			var dct = new DataContextTransaction(this);
 
-			await dct.BeginTransactionAsync();
+			await dct.BeginTransactionAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return dct;
 		}

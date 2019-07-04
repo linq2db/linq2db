@@ -1,12 +1,11 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
-		<Version>2.6.0.0</Version>
-		<PackageVersion>2.6.0</PackageVersion>
+		<Version>2.8.0.0</Version>
 
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</Authors>
 		<Company>linq2db.net</Company>
-		<Copyright>2002-2018 linq2db.net</Copyright>
+		<Copyright>2002-2019 linq2db.net</Copyright>
 		<RepositoryUrl>https://github.com/linq2db/linq2db</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 

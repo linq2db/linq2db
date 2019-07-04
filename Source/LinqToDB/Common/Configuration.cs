@@ -6,6 +6,7 @@ namespace LinqToDB.Common
 {
 	using Data;
 	using Data.RetryPolicy;
+	using System.Threading.Tasks;
 
 	/// <summary>
 	/// Contains global linq2db settings.
@@ -33,6 +34,12 @@ namespace LinqToDB.Common
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public static bool AvoidSpecificDataProviderAPI;
+
+		/// <summary>
+		/// Defines value to pass to <see cref="Task.ConfigureAwait(bool)"/> method for all linq2db internal await operations.
+		/// Default value: <c>true</c>.
+		/// </summary>
+		public static bool ContinueOnCapturedContext = true;
 
 		public static class Data
 		{
@@ -178,6 +185,12 @@ namespace LinqToDB.Common
 			public static bool DisableQueryCache;
 
 			/// <summary>
+			/// Specifies timeout when query will be evicted from cache since last execution of query.
+			/// Default value is 1 hour.
+			/// </summary>
+			public static TimeSpan CacheSlidingExpiration = TimeSpan.FromHours(1);
+
+			/// <summary>
 			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
 			/// </summary>
 			public static bool PreferApply = true;
@@ -279,7 +292,7 @@ namespace LinqToDB.Common
 			/// <para>
 			/// Default value: <c>"a_{0}"</c>.
 			/// </para>
-			/// <example> 
+			/// <example>
 			/// In the following query
 			/// <code>
 			/// var query = from child in db.Child

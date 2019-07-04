@@ -429,6 +429,36 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Adds option for skipping values for column on current entity during insert.
+		/// </summary>
+		/// <param name="func">Column member getter expression.</param>
+		/// <param name="values">Values that should be skipped during insert.</param>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<T> HasSkipValuesOnInsert(Expression<Func<T, object>> func, params object[] values)
+		{
+			return SetAttribute(func,
+			                    true,
+			                    _ => new SkipValuesOnInsertAttribute(values) { Configuration = Configuration },
+			                    (_, a) => { },
+			                    a => a.Configuration);
+		}
+
+		/// <summary>
+		/// Adds option for skipping values for column on current entity during update.
+		/// </summary>
+		/// <param name="func">Column member getter expression.</param>
+		/// <param name="values">Values that should be skipped during update.</param>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<T> HasSkipValuesOnUpdate(Expression<Func<T, object>> func, params object[] values)
+		{
+			return SetAttribute(func,
+			                    true,
+			                    _ => new SkipValuesOnUpdateAttribute(values) { Configuration = Configuration },
+			                    (_, a) => { },
+			                    a => a.Configuration);
+		}
+
+		/// <summary>
 		/// Sets database table name for current entity.
 		/// </summary>
 		/// <param name="tableName">Table name.</param>
@@ -496,6 +526,38 @@ namespace LinqToDB.Mapping
 
 			return this;
 		}
+
+		#region Dynamic Properties
+		/// <summary>
+		/// Adds dynamic columns store dictionary member mapping to current entity.
+		/// </summary>
+		/// <param name="func">Column mapping property or field getter expression.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public EntityMappingBuilder<T> DynamicColumnsStore(Expression<Func<T, object>> func)
+		{
+			Member(func)
+				.HasAttribute(new DynamicColumnsStoreAttribute() { Configuration = Configuration });
+
+			return this;
+		}
+
+		public EntityMappingBuilder<T> DynamicPropertyAccessors(
+			Expression<Func<T, string, object, object>> getter,
+			Expression<Action<T, string, object>> setter)
+		{
+			_builder.HasAttribute(
+				typeof(T),
+				new DynamicColumnAccessorAttribute()
+				{
+					GetterExpression = getter,
+					SetterExpression = setter,
+					Configuration = Configuration
+				});
+
+			return this;
+		}
+
+		#endregion
 
 		EntityMappingBuilder<T> SetTable(Action<TableAttribute> setColumn)
 		{

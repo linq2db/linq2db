@@ -178,7 +178,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void AssociationProjectionTest([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationProjectionTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -220,7 +220,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void AssociationObjectTest([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationObjectTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -269,7 +269,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationObjectTest2([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void AssociationObjectTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -286,7 +286,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationLoadWithTest([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationLoadWithTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -304,7 +304,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyTest([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationOneToManyTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -336,7 +336,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyTest2([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationOneToManyTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -360,7 +360,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyTest3([IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void AssociationOneToManyTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -384,7 +384,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyLazy([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void AssociationOneToManyLazy([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -407,7 +407,7 @@ AS RETURN
 		}
 
 		[Test]
-		public void AssociationOneToManyLazyProjection([IncludeDataSources(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void AssociationOneToManyLazyProjection([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var (entities, others) = GenerateEntities();
 
@@ -437,8 +437,71 @@ AS RETURN
 					OtherFromSql  = e.OtherFromSql
 				});
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+				AreEqualWithComparer(expected, result);
 				DropFunction(db);
+			}
+		}
+
+
+		public class SomeTableType
+		{
+			public int Value { get; set; }
+		}
+
+		[Table("FewNumberEntity")]
+		public class FewNumberEntity
+		{
+			[Column]
+			public int Id { get; set; }
+			[Column]
+			public int UserId { get; set; }
+		}
+
+		[Table("LargeNumberEntity")]
+		public class LargeNumberEntity
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(GetSomeValue), CanBeNull = false)]
+			public SomeTableType SomeValue { get; set; }
+
+			private static Expression<Func<LargeNumberEntity, IDataContext, IQueryable<SomeTableType>>> GetSomeValue()
+			{
+				return (t, db) => db.FromSql<SomeTableType>($@"SELECT 
+	COUNT(*) as [Value] 
+FROM 
+	[dbo].[SomeTable] [st] WITH(NOLOCK) 
+WHERE 
+	[st].[LargeNumberEntityId]={t.Id}");
+			}
+		}
+
+		[Test]
+		public void AssociationFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
+			using (db.CreateLocalTable<FewNumberEntity>())
+			using (db.CreateLocalTable<LargeNumberEntity>())
+			{
+				var tasksQuery = db.GetTable<LargeNumberEntity>();
+
+				var filtered = db.GetTable<FewNumberEntity>().Where(x => x.UserId == 123);
+
+				var final = filtered.InnerJoin(tasksQuery, (x, y) => x.Id == y.Id, (x, y) => y);
+
+				var q = final.Select(x => new
+				{
+					x.Id,
+					x.SomeValue.Value
+				});
+
+				var select = q.GetSelectQuery();
+
+				// Ensure that cross apply inlined in query
+				Assert.AreEqual(2, select.Select.From.Tables[0].Joins.Count);
+
+				Console.WriteLine(q.ToString());
 			}
 		}
 

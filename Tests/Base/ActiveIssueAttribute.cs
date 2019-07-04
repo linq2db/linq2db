@@ -17,6 +17,7 @@ namespace Tests
 	public class ActiveIssueAttribute : CombiningStrategyAttribute, ITestBuilder, IApplyToTest
 	{
 		readonly string _issue;
+		string[] _configurations;
 
 		/// <summary>
 		/// Marks test or fixture to run explicit due to active issue.
@@ -56,7 +57,27 @@ namespace Tests
 		/// Gets or sets configuration names, to which this attribute should be applied.
 		/// Applied only to tests marked with attributes, based on <see cref="DataSourcesBaseAttribute"/>.
 		/// </summary>
-		public string[] Configurations { get; set; }
+		public string[] Configurations
+		{
+			get => _configurations;
+			set
+			{
+				_configurations = value.SelectMany(p => p.Split(',').Select(_ => _.Trim())).ToArray();
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets comma-separated configuration names, to which this attribute should be applied.
+		/// Applied only to tests marked with attributes, based on <see cref="DataSourcesBaseAttribute"/>.
+		/// </summary>
+		public string Configuration
+		{
+			get => string.Join(",", _configurations);
+			set
+			{
+				_configurations = value.Split(',').Select(_ => _.Trim()).ToArray();
+			}
+		}
 
 		/// <summary>
 		/// Gets or sets flag if this attribute should be skipped for LinqOverWcf test.

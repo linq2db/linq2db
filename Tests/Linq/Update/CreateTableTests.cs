@@ -23,7 +23,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CreateTable1([DataSources(ProviderName.OracleNative)] string context)
+		public void CreateTable1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -45,7 +45,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task CreateTable1Async([DataSources(ProviderName.OracleNative)] string context)
+		public async Task CreateTable1Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -67,10 +67,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CreateLocalTempTable1([IncludeDataSources(false,
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
-			string context)
+		public void CreateLocalTempTable1([IncludeDataSources(TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -87,7 +84,9 @@ namespace Tests.xUpdate
 					{
 						case ProviderName.SqlServer2008 :
 						case ProviderName.SqlServer2012 :
-						case ProviderName.SqlServer2014 : db.DropTable<TestTable>("#" + tableName); break;
+						case ProviderName.SqlServer2014 :
+						case ProviderName.SqlServer2017 :
+						case TestProvName.SqlAzure      : db.DropTable<TestTable>("#" + tableName); break;
 						default                         : db.DropTable<TestTable>(tableName);       break;
 					}
 				}
@@ -102,6 +101,8 @@ namespace Tests.xUpdate
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
+					case ProviderName.SqlServer2017 :
+					case TestProvName.SqlAzure      :
 						table = db.CreateTable<TestTable>("#" + tableName);
 						break;
 					case ProviderName.DB2 :
@@ -118,10 +119,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task CreateLocalTempTable1Async([IncludeDataSources(false,
-			ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
+		public async Task CreateLocalTempTable1Async([IncludeDataSources(
+			TestProvName.AllSQLite,
+			TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -139,7 +139,9 @@ namespace Tests.xUpdate
 					{
 						case ProviderName.SqlServer2008 :
 						case ProviderName.SqlServer2012 :
-						case ProviderName.SqlServer2014 : await db.DropTableAsync<TestTable>("#" + tableName); break;
+						case ProviderName.SqlServer2014 :
+						case ProviderName.SqlServer2017 :
+						case TestProvName.SqlAzure      : await db.DropTableAsync<TestTable>("#" + tableName); break;
 						default                         : await db.DropTableAsync<TestTable>(tableName);       break;
 					}
 				}
@@ -154,6 +156,8 @@ namespace Tests.xUpdate
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
+					case ProviderName.SqlServer2017 :
+					case TestProvName.SqlAzure      :
 						table = await db.CreateTableAsync<TestTable>("#" + tableName);
 						break;
 					case ProviderName.DB2 :

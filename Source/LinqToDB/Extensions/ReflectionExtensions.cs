@@ -205,6 +205,37 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
+		public static MethodInfo GetPublicInstanceMethodEx(this Type type, string name, params Type[] types)
+		{
+#if NETSTANDARD1_6
+			// https://github.com/dotnet/corefx/issues/12921
+			return type.GetMethodsEx().FirstOrDefault(mi =>
+			{
+				var res = !mi.IsStatic && mi.IsPublic && mi.Name == name;
+				if (!res)
+					return res;
+
+				var pars = mi.GetParameters().Select(_ => _.ParameterType).ToArray();
+
+				if (types.Length == 0 && pars.Length == 0)
+					return true;
+
+				if (pars.Length != types.Length)
+					return false;
+
+				for (var i = 0; i < types.Length; i++)
+				{
+					if (types[i] != pars[i])
+						return false;
+				}
+
+				return true;
+			});
+#else
+			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Public, null, types, null);
+#endif
+		}
+
 		public static MethodInfo GetMethodEx(this Type type, string name)
 		{
 			return type.GetMethod(name);
@@ -680,6 +711,51 @@ namespace LinqToDB.Extensions
 			}
 
 			return false;
+		}
+
+		/// <summary>
+		/// Determines whether the <paramref name="type"/> derives from the specified <paramref name="check"/>.
+		/// </summary>
+		/// <remarks>
+		/// This method also returns false if <paramref name="type"/> and the <paramref name="check"/> are equal.
+		/// </remarks>
+		/// <param name="type">The type to test.</param>
+		/// <param name="check">The type to compare with. </param>
+		/// <returns>
+		/// true if the <paramref name="type"/> derives from <paramref name="check"/>; otherwise, false.
+		/// </returns>
+		[Pure]
+		internal static bool IsSubClassOf([NotNull] this Type type, [NotNull] Type check)
+		{
+			if (type  == null) throw new ArgumentNullException(nameof(type));
+			if (check == null) throw new ArgumentNullException(nameof(check));
+
+			if (type == check)
+				return false;
+
+			while (true)
+			{
+				if (check.IsInterfaceEx())
+					// ReSharper disable once LoopCanBeConvertedToQuery
+					foreach (var interfaceType in type.GetInterfaces())
+						if (interfaceType == check || interfaceType.IsSubClassOf(check))
+							return true;
+
+				if (type.IsGenericTypeEx() && !type.IsGenericTypeDefinitionEx())
+				{
+					var definition = type.GetGenericTypeDefinition();
+					if (definition == check || definition.IsSubClassOf(check))
+						return true;
+				}
+
+				type = type.BaseTypeEx();
+
+				if (type == null)
+					return false;
+
+				if (type == check)
+					return true;
+			}
 		}
 
 		public static Type GetGenericType([NotNull] this Type genericType, Type type)

@@ -112,7 +112,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithConditionDeleteWithConditionUpdate([MergeDataContextSource(
-			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
 			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Informix,
 			ProviderName.SapHana, ProviderName.Firebird, ProviderName.Sybase)]
 			string context)
@@ -155,7 +155,7 @@ namespace Tests.xUpdate
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void InsertUpdateBySourceWithConditionDeleteBySource(
-			[MergeBySourceDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -195,7 +195,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void InsertDeleteUpdateBySource([MergeBySourceDataContextSource] string context)
+		public void InsertDeleteUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -239,7 +239,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertWithConditionInsertUpdateWithConditionDeleteWithConditionDelete([MergeDataContextSource(
-			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
 			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 			string context)
@@ -312,7 +312,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateWithConditionUpdate([MergeDataContextSource(
 			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
 			TestProvName.SqlAzure, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -412,7 +412,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithDeleteWithDeleteCondition(
-			[MergeUpdateWithDeleteDataContextSource] string context)
+			[IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -477,7 +477,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertUpdateWithDelete([MergeUpdateWithDeleteDataContextSource] string context)
+		public void InsertUpdateWithDelete([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -693,7 +693,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateWithDeleteInsert([MergeUpdateWithDeleteDataContextSource] string context)
+		public void UpdateWithDeleteInsert([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

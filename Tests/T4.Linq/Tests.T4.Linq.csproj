@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
+		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -50,6 +51,12 @@
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>MySql.tt</DependentUpon>
+		</Compile>
+
+		<Compile Update="MySqlConnector.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>MySqlConnector.tt</DependentUpon>
 		</Compile>
 
 		<Compile Update="Oracle.generated.cs">
@@ -132,6 +139,10 @@
 		  <Generator>TextTemplatingFileGenerator</Generator>
 		  <LastGenOutput>MariaDB.generated.cs</LastGenOutput>
 		</None>
+		<None Update="MySqlConnector.tt">
+		  <LastGenOutput>MySqlConnector.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 		<None Update="MySql.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>MySql.generated.cs</LastGenOutput>
@@ -184,7 +195,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net46'">
-		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
+		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 
 		<None Update="SqlServer.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>

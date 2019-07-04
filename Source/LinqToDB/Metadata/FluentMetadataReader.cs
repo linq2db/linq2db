@@ -87,5 +87,16 @@ namespace LinqToDB.Metadata
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
 			=> _dynamicColumns.TryGetValue(type, out var dynamicColumns) ? dynamicColumns.Keys.ToArray() : new MemberInfo[0];
+
+		/// <summary>
+		/// Gets all types, registered by  by current fluent mapper.
+		/// </summary>
+		/// <returns>
+		/// Returns array with all types, mapped by current fluent mapper.
+		/// </returns>
+		public Type[] GetRegisteredTypes()
+		{
+			return _types.Keys.ToArray();
+		}
 	}
 }

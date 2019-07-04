@@ -14,9 +14,7 @@ namespace Tests.UserTests
 	public class Issue264Tests : TestBase
 	{
 		[Test]
-		public void Test1([IncludeDataSources(false,
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void Test1([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -33,9 +31,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([IncludeDataSources(false,
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void Test2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -52,9 +48,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test3([IncludeDataSources(false,
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void Test3([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -71,9 +65,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestWorkaround([IncludeDataSources(false,
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-			string context)
+		public void TestWorkaround([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{

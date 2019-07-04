@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using Extensions;
 	using SqlQuery;
 
 	class CountBuilder : MethodCallBuilder
@@ -12,13 +13,16 @@ namespace LinqToDB.Linq.Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable(MethodNames);
+			return methodCall.IsQueryable(MethodNames) || methodCall.IsAsyncExtension(MethodNames);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var returnType = methodCall.Method.ReturnType;
 			var sequence   = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
+			var returnType = methodCall.Method.ReturnType;
+
+			if (methodCall.IsAsyncExtension())
+				returnType = returnType.GetGenericArgumentsEx()[0];
 
 			if (sequence.SelectQuery != buildInfo.SelectQuery)
 			{

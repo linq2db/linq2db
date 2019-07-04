@@ -27,6 +27,13 @@ namespace Tests.Model
 			public string Value;
 		}
 
+		public class SequenceCustomNamingTest
+		{
+			[Identity, SequenceName("SequenceCustomNamingTest__seq__", Schema = "test_schema")]
+			public int ID;
+			public string Value;
+		}
+
 		[Table(Schema = "test_schema")]
 		public class TestSchemaIdentity
 		{

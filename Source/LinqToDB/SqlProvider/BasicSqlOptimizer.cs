@@ -9,6 +9,7 @@ namespace LinqToDB.SqlProvider
 	using Common;
 	using Extensions;
 	using SqlQuery;
+	using Mapping;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -83,27 +84,37 @@ namespace LinqToDB.SqlProvider
 			{
 				var foundCte  = new Dictionary<CteClause, HashSet<CteClause>>();
 
+				void RegisterDependency(CteClause cteClause)
+				{
+					if (foundCte.ContainsKey(cteClause))
+						return;
+
+					var dependsOn = new HashSet<CteClause>();
+					new QueryVisitor().Visit(cteClause.Body, ce =>
+					{
+						if (ce.ElementType == QueryElementType.SqlCteTable)
+						{
+							var subCte = ((SqlCteTable)ce).Cte;
+							dependsOn.Add(subCte);
+						}
+
+					});
+					// self-reference is allowed, so we do not need to add dependency
+					dependsOn.Remove(cteClause);
+					foundCte.Add(cteClause, dependsOn);
+
+					foreach (var clause in dependsOn)
+					{
+						RegisterDependency(clause);
+					}
+				}
+
 				new QueryVisitor().Visit(select.SelectQuery, e =>
 					{
 						if (e.ElementType == QueryElementType.SqlCteTable)
 						{
 							var cte = ((SqlCteTable)e).Cte;
-							if (!foundCte.ContainsKey(cte))
-							{
-								var dependsOn = new HashSet<CteClause>();
-								new QueryVisitor().Visit(cte.Body, ce =>
-								{
-									if (ce.ElementType == QueryElementType.SqlCteTable)
-									{
-										var subCte = ((SqlCteTable)ce).Cte;
-										dependsOn.Add(subCte);
-									}
-
-								});
-								// self-reference is allowed, so we do not need to add dependency
-								dependsOn.Remove(cte);
-								foundCte.Add(cte, dependsOn);
-							}
+							RegisterDependency(cte);
 						}
 					}
 				);
@@ -115,14 +126,6 @@ namespace LinqToDB.SqlProvider
 					// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
 					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
 						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
-
-					// append missing CTE's from dependencies
-					var hasSet = new HashSet<CteClause>(foundCte.Values.SelectMany(hs => hs));
-					foreach (var clause in hasSet)
-					{
-						if (!foundCte.ContainsKey(clause))
-							foundCte.Add(clause, new HashSet<CteClause>());
-					}
 
 					var ordered = TopoSorting.TopoSort(foundCte.Keys, i => foundCte[i]).ToList();
 
@@ -174,7 +177,7 @@ namespace LinqToDB.SqlProvider
 
 					// Check if subquery where clause does not have ORs.
 					//
-					SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+					subQuery.Where.SearchCondition = SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 					var allAnd = true;
 
@@ -352,7 +355,7 @@ namespace LinqToDB.SqlProvider
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
-						SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+						subQuery.Where.SearchCondition = SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 						var isCount      = false;
 						var isAggregated = false;
@@ -756,9 +759,10 @@ namespace LinqToDB.SqlProvider
 
 								for (var i = 0; i < parms.Length - 1; i += 2)
 								{
-									if (parms[i] is SqlValue value)
+									var boolValue = SelectQueryOptimizer.GetBoolValue(parms[i]);
+									if (boolValue != null)
 									{
-										if ((bool)value.Value == false)
+										if (boolValue == false)
 										{
 											var newParms = new ISqlExpression[parms.Length - 2];
 
@@ -813,8 +817,10 @@ namespace LinqToDB.SqlProvider
 				#endregion
 
 				case QueryElementType.SearchCondition :
-					SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression);
+				{
+					expression = SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression);
 					break;
+				}
 
 				case QueryElementType.SqlExpression   :
 				{
@@ -860,6 +866,7 @@ namespace LinqToDB.SqlProvider
 							{
 								parameterExpr2.DataType = field.DataType;
 								parameterExpr2.DbType   = field.DbType;
+								parameterExpr2.DbSize   = field.Length;
 							}
 						}
 
@@ -874,6 +881,7 @@ namespace LinqToDB.SqlProvider
 							{
 								parameterExpr1.DataType = field.DataType;
 								parameterExpr1.DbType   = field.DbType;
+								parameterExpr1.DbSize   = field.Length;
 							}
 						}
 
@@ -911,8 +919,8 @@ namespace LinqToDB.SqlProvider
 										if (expr1 is SqlParameter || expr2 is SqlParameter)
 											selectQuery.IsParameterDependent = true;
 										else
-											if (expr1 is SqlColumn || expr1 is SqlField)
-											if (expr2 is SqlColumn || expr2 is SqlField)
+											if (expr1 is SqlColumn || expr1 is SqlField || expr1 is SqlExpression)
+											if (expr2 is SqlColumn || expr2 is SqlField || expr2 is SqlExpression)
 												predicate = ConvertEqualPredicate(ex);
 									}
 
@@ -963,6 +971,7 @@ namespace LinqToDB.SqlProvider
 			if (expr.Operator == SqlPredicate.Operator.Equal)
 				cond
 					.Expr(expr1).IsNull.    And .Expr(expr2).IsNull. Or
+					// TODO: why it is commented? without it expression will return UNKNOWN instead of FALSE
 					/*.Expr(expr1).IsNotNull. And .Expr(expr2).IsNotNull. And */.Expr(expr1).Equal.Expr(expr2);
 			else
 				cond
@@ -1469,6 +1478,23 @@ namespace LinqToDB.SqlProvider
 					new JoinOptimizer().OptimizeJoins(statement, query);
 				return element;
 			});
+		}
+
+		#endregion
+
+		#region Optimizing Statement
+
+		public virtual SqlStatement OptimizeStatement(SqlStatement statement)
+		{
+			statement = new QueryVisitor().Convert(statement, e =>
+			{
+				if (e is ISqlExpression sqlExpression)
+					e = ConvertExpression(sqlExpression);
+
+				return e;
+			});
+
+			return statement;
 		}
 
 		#endregion

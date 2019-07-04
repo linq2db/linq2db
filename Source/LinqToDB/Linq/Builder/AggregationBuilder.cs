@@ -2,6 +2,7 @@
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -24,7 +25,10 @@ namespace LinqToDB.Linq.Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsAggregate(builder.MappingSchema);
+			if (methodCall.IsQueryable(MethodNames) || methodCall.IsAsyncExtension(MethodNames))
+				return true;
+
+			return false;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -48,58 +52,28 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
-			var attr    = GetAggregateDefinition(methodCall, builder.MappingSchema);
 
-			ISqlExpression sqlExpression = null;
+			var methodName = methodCall.Method.Name.Replace("Async", "");
 
-			if (attr != null)
+			var sql = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
+
+			if (sql.Length == 1 && sql[0] is SelectQuery query)
 			{
-				sqlExpression = attr.GetExpression(builder.MappingSchema, sequence.SelectQuery, methodCall, e =>
+				if (query.Select.Columns.Count == 1)
 				{
-					var ex = e.Unwrap();
-
-					var l = ex as LambdaExpression;
-					if (l != null)
-					{
-						var p = sequence.Parent;
-						var ctx = new ExpressionContext(buildInfo.Parent, sequence, l);
-
-						var res = builder.ConvertToSql(ctx, l.Body, true);
-
-						builder.ReplaceParent(ctx, p);
-						return res;
-					}
-					return builder.ConvertToSql(context, ex, true);
-				});
-			}
-
-			if (sqlExpression == null)
-			{
-				var sql = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
-
-				if (sql.Length == 1 && sql[0] is SelectQuery)
-				{
-					var query = (SelectQuery)sql[0];
-
-					if (query.Select.Columns.Count == 1)
-					{
-						var join = query.OuterApply();
-						context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-						sql[0] = query.Select.Columns[0];
-					}
+					var join = query.OuterApply();
+					context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+					sql[0] = query.Select.Columns[0];
 				}
-
-				if (attr != null)
-					sqlExpression = attr.GetExpression(methodCall.Method, sql);
-				else
-					sqlExpression = new SqlFunction(methodCall.Type, methodCall.Method.Name, true, sql);
 			}
+
+			ISqlExpression sqlExpression = new SqlFunction(methodCall.Type, methodName, true, sql);
 
 			if (sqlExpression == null)
 				throw new LinqToDBException("Invalid Aggregate function implementation");
 
 			context.Sql        = context.SelectQuery;
-			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodCall.Method.Name);
+			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodName);
 
 			return context;
 		}
@@ -117,6 +91,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				_returnType = methodCall.Method.ReturnType;
 				_methodName = methodCall.Method.Name;
+
+				if (_returnType.IsGenericTypeEx() && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
+				{
+					_returnType = _returnType.GetGenericArgumentsEx()[0];
+					_methodName = _methodName.Replace("Async", "");
+				}
 			}
 
 			readonly string    _methodName;

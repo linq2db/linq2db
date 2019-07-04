@@ -22,16 +22,8 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SelectQuery));
+			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
-
-			outerContext = new SubQueryContext(outerContext);
-			innerContext = new SubQueryContext(innerContext);
-
-			var selector = (LambdaExpression)methodCall.Arguments[methodCall.Arguments.Count - 1].Unwrap();
-
-			outerContext.SetAlias(selector.Parameters[0].Name);
-			innerContext.SetAlias(selector.Parameters[1].Name);
 
 			JoinType joinType;
 			var conditionIndex = 2;
@@ -59,6 +51,20 @@ namespace LinqToDB.Linq.Builder
 
 					break;
 			}
+
+			if (joinType == JoinType.Right || joinType == JoinType.Full)
+				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, null);
+			outerContext = new SubQueryContext(outerContext);
+
+
+			if (joinType == JoinType.Left || joinType == JoinType.Full)
+				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, null);
+			innerContext = new SubQueryContext(innerContext);
+
+			var selector = (LambdaExpression)methodCall.Arguments[methodCall.Arguments.Count - 1].Unwrap();
+
+			outerContext.SetAlias(selector.Parameters[0].Name);
+			innerContext.SetAlias(selector.Parameters[1].Name);
 
 			if (conditionIndex != -1)
 			{

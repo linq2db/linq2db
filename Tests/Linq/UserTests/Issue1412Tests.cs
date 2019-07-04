@@ -152,7 +152,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var typeId = Guid.NewGuid();
 
@@ -179,7 +179,7 @@ namespace Tests.UserTests
 				var actual   = qryUnion.ToArray();
 				var expected = staticResult.ToArray();
 
-				AreEqual(expected, actual, ComparerBuilder<WmsResourceCombinedDTO>.GetEqualityComparer());
+				AreEqualWithComparer(expected, actual);
 			}
 		}
 	}
