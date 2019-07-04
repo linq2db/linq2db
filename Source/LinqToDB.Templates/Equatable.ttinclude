@@ -12,7 +12,7 @@ public static bool DefaultEquatable = true;
 
 void EquatableImpl()
 {
-	foreach (Class cl in GetTreeNodes(Model).OfType<Class>().Where(c => c.IsEquatable))
+	foreach (Class cl in GetTreeNodes(Model).OfType<Class>().Where(c => c.IsEquatable && !c.IsStatic))
 	{
 		var props = GetTreeNodes(cl).OfType<Property>().ToList();
 		if (props.Count > 0)
