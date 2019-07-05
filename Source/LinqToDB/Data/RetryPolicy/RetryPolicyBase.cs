@@ -162,12 +162,12 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 			if (Suspended)
 			{
-				await operation(cancellationToken);
+				await operation(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				return;
 			}
 
 			OnFirstExecution();
-			await ExecuteImplementationAsync(async ct => { await operation(ct); return 0; }, cancellationToken);
+			await ExecuteImplementationAsync(async ct => { await operation(ct).ConfigureAwait(Configuration.ContinueOnCapturedContext); return 0; }, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		async Task<TResult> ExecuteImplementationAsync<TResult>(
@@ -184,7 +184,7 @@ namespace LinqToDB.Data.RetryPolicy
 				try
 				{
 					Suspended = true;
-					var result = await operation(cancellationToken);
+					var result = await operation(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					Suspended = false;
 					return result;
 				}
@@ -204,7 +204,7 @@ namespace LinqToDB.Data.RetryPolicy
 					OnRetry();
 				}
 
-				await TaskEx.Delay(delay.Value, cancellationToken);
+				await TaskEx.Delay(delay.Value, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 
