@@ -814,9 +814,9 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Constant       :
 					{
 						var c = (ConstantExpression)ex;
+
 						if (c.Value != null && c.Type != c.Value.GetType())
 							return Expression.Constant(c.Value, c.Value.GetType());
-
 						break;
 					}
 			}
@@ -831,14 +831,11 @@ namespace LinqToDB.Expressions
 
 			switch (ex.NodeType)
 			{
-				case ExpressionType.Quote         :
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Convert       :
-				case ExpressionType.TypeAs        :
+				case ExpressionType.TypeAs:
 					return ((UnaryExpression)ex).Operand.Unwrap();
 			}
 
-			return ex;
+			return ex.Unwrap();
 		}
 
 		public static Expression SkipPathThrough(this Expression expr)
