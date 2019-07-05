@@ -947,22 +947,17 @@ namespace Tests.Linq
 			public int Id { get; set; }
 		}
 
-		public class Group
-		{
-			public int Id { get; set; }
-		}
-
 		public class Lookup
 		{
-			public int    Id { get; set; }
+			public int    Id   { get; set; }
 			public string Type { get; set; }
 		}
 
 		public class Resource
 		{
-			public int  Id { get; set; }
+			public int  Id                 { get; set; }
 			public int  AssociatedObjectId { get; set; }
-			public int? AssociationTypeId { get; set; }
+			public int? AssociationTypeId  { get; set; }
 
 			[Association(
 				ThisKey      = nameof(AssociationTypeId),
@@ -976,20 +971,13 @@ namespace Tests.Linq
 
 			[Association(QueryExpressionMethod = nameof(UserExpression))]
 			public User User { get; set; }
-
-			public static Expression<Func<Resource, IDataContext, IQueryable<Group>>> GroupExpression =>
-				(r, db) => db.GetTable<Group>().Where(c => r.AssociationTypeCode.Type == "gr" && c.Id == r.AssociatedObjectId);
-
-			[Association(QueryExpressionMethod = nameof(GroupExpression))]
-			public Group Group { get; set; }
 		}
 
-		[Test, ActiveIssue(1614)]
-		public void Issue1614Test([DataSources] string context)
+		[Test]
+		public void Issue1614Test([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<User>())
-			using (db.CreateLocalTable<Group>())
 			using (db.CreateLocalTable<Resource>())
 			using (db.CreateLocalTable<Lookup>())
 			{
