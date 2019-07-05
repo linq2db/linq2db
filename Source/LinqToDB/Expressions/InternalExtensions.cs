@@ -807,15 +807,16 @@ namespace LinqToDB.Expressions
 
 			switch (ex.NodeType)
 			{
-				case ExpressionType.Quote          : return ((UnaryExpression)ex).Operand.Unwrap();
+				case ExpressionType.Quote          :
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
+					return ((UnaryExpression)ex).Operand.Unwrap();
+				case ExpressionType.Constant       :
 					{
-						var ue = (UnaryExpression)ex;
+						var c = (ConstantExpression)ex;
 
-						if (!ue.Operand.Type.IsEnumEx())
-							return ue.Operand.Unwrap();
-
+						if (c.Value != null && c.Type != c.Value.GetType())
+							return Expression.Constant(c.Value, c.Value.GetType());
 						break;
 					}
 			}
@@ -830,21 +831,11 @@ namespace LinqToDB.Expressions
 
 			switch (ex.NodeType)
 			{
-				case ExpressionType.Quote: return ((UnaryExpression)ex).Operand.Unwrap();
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Convert:
 				case ExpressionType.TypeAs:
-					{
-						var ue = (UnaryExpression)ex;
-
-						if (!ue.Operand.Type.IsEnumEx())
-							return ue.Operand.Unwrap();
-
-						break;
-					}
+					return ((UnaryExpression)ex).Operand.Unwrap();
 			}
 
-			return ex;
+			return ex.Unwrap();
 		}
 
 		public static Expression SkipPathThrough(this Expression expr)
