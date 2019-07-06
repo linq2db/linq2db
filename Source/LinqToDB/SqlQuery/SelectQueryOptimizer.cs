@@ -462,10 +462,13 @@ namespace LinqToDB.SqlQuery
 			{
 				var cond = searchCondition.Conditions[i];
 				var newCond = cond;
+
+				// binary operation optimizations
 				if (cond.Predicate.ElementType == QueryElementType.ExprExprPredicate)
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)cond.Predicate;
 
+					// !(A op B) => A !op B
 					if (cond.IsNot)
 					{
 						SqlPredicate.Operator op;
@@ -487,6 +490,7 @@ namespace LinqToDB.SqlQuery
 						newCond  = new SqlCondition(false, exprExpr);
 					}
 
+					// val1 ==/!= val2 => true/false
 					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
 					     exprExpr.Operator == SqlPredicate.Operator.NotEqual)
 					    && exprExpr.Expr1 is SqlValue value1 && value1.Value != null 
@@ -498,6 +502,8 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
+				// !true => false
+				// !false => true
 				if (newCond.Predicate.ElementType == QueryElementType.ExprPredicate)
 				{
 					var expr = (SqlPredicate.Expr)newCond.Predicate;
@@ -518,8 +524,10 @@ namespace LinqToDB.SqlQuery
 				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 				{
 					var expr = (SqlPredicate.Expr)cond.Predicate;
+					// try reduce to true/false value
 					var boolValue = GetBoolValue(expr.Expr1);
 
+					// if reduced
 					if (boolValue != null)
 					{
 						var isTrue = cond.IsNot ? !boolValue.Value : boolValue.Value;
@@ -530,13 +538,15 @@ namespace LinqToDB.SqlQuery
 						{
 							if ((leftIsOr == true || leftIsOr == null) && (rightIsOr == true || rightIsOr == null))
 							{
+								// OR(..., true, ...) => true
 								ClearAll();
 								break;
 							}
 
+							// A AND true => A
 							EnsureCopy();
 							searchCondition.Conditions.RemoveAt(i);
-							if (leftIsOr== false && rightIsOr != null)
+							if (leftIsOr == false && rightIsOr != null)
 								searchCondition.Conditions[i - 1].IsOr = rightIsOr.Value;
 							--i;
 						}
@@ -544,12 +554,14 @@ namespace LinqToDB.SqlQuery
 						{
 							if (leftIsOr == false)
 							{
+								// A AND false => false
 								EnsureCopy();
 								searchCondition.Conditions.RemoveAt(i - 1);
 								--i;
 							}
 							else if (rightIsOr == false)
 							{
+								// false AND B => false
 								EnsureCopy();
 								searchCondition.Conditions[i].IsOr = searchCondition.Conditions[i + 1].IsOr;
 								searchCondition.Conditions.RemoveAt(i + 1);
@@ -559,6 +571,9 @@ namespace LinqToDB.SqlQuery
 							{
 								if (rightIsOr != null || leftIsOr != null)
 								{
+									// A OR false => A
+									// false OR B => B
+									// A OR false OR B => A OR B
 									EnsureCopy();
 									searchCondition.Conditions.RemoveAt(i);
 									if (leftIsOr != null && rightIsOr != null)
@@ -567,11 +582,11 @@ namespace LinqToDB.SqlQuery
 								}
 							}
 						}
-
 					}
 				}
 				else if (cond.Predicate is SqlSearchCondition sc)
 				{
+					// optimize sub-expression
 					var newSc = OptimizeSearchCondition(sc);
 					if (!ReferenceEquals(newSc, sc))
 					{
@@ -580,6 +595,8 @@ namespace LinqToDB.SqlQuery
 						sc = newSc;
 					}
 
+					// (empty) => true
+					// NOT(empty) => false
 					if (sc.Conditions.Count == 0)
 					{
 						EnsureCopy();
@@ -591,6 +608,10 @@ namespace LinqToDB.SqlQuery
 					else if (sc.Conditions.Count == 1)
 					{
 						// reduce nesting
+						//  ( A) =>  A
+						//  (!A) => !A
+						// !( A) => !A
+						// !(!A) =>  A
 						EnsureCopy();
 
 						var isNot = searchCondition.Conditions[i].IsNot;
@@ -602,6 +623,47 @@ namespace LinqToDB.SqlQuery
 						searchCondition.Conditions[i] = inlineCondition;
 
 						--i;
+					}
+					else if (searchCondition.Conditions.Count == 1)
+					{
+						//  (expr) =>  expr
+						// !(expr) => !expr
+						EnsureCopy();
+						var negate = cond.IsNot;
+						searchCondition.Conditions.Clear();
+						for (var j = 0; j < sc.Conditions.Count; j++)
+						{
+							var scCon = sc.Conditions[j];
+							searchCondition.Conditions.Add(new SqlCondition(scCon.IsNot ^ cond.IsNot, scCon.Predicate, scCon.IsOr ^ cond.IsNot));
+						}
+						--i;
+					}
+					else if (i > 0 && !searchCondition.Conditions[i].IsNot
+						&& (searchCondition.Conditions.Count == i + 1 || searchCondition.Conditions[i - 1].IsOr == cond.IsOr))
+					{
+						// A and AND(...) [AND ...] => A and ... [AND ...]
+						// A  or  OR(...) [ OR ...] => A  or ... [ OR ...]
+						bool? isOr = searchCondition.Conditions[i - 1].IsOr;
+						for (var j = 0; j < sc.Conditions.Count - 1; j++)
+						{
+							if (sc.Conditions[j].IsOr != isOr)
+							{
+								isOr = null;
+								break;
+							}
+						}
+
+						if (isOr != null)
+						{
+							EnsureCopy();
+							searchCondition.Conditions.RemoveAt(i);
+							for (var j = sc.Conditions.Count - 1; j >= 0; j--)
+							{
+								var scCon = sc.Conditions[j];
+								searchCondition.Conditions.Insert(i, new SqlCondition(scCon.IsNot, scCon.Predicate, scCon.IsOr));
+							}
+							--i;
+						}
 					}
 				}
 			}
