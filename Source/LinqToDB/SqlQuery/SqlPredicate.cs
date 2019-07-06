@@ -62,6 +62,20 @@ namespace LinqToDB.SqlQuery
 			{
 				Expr1.ToString(sb, dic);
 			}
+
+			public override bool Equals(ISqlPredicate other)
+			{
+				return other is Expr e
+					&& Precedence == e.Precedence
+					&& Expr1.Equals(e.Expr1);
+			}
+
+			public override int GetHashCode()
+			{
+				var hashCode = Precedence.GetHashCode();
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr1.GetHashCode());
+				return hashCode;
+			}
 		}
 
 		public class NotExpr : Expr
@@ -92,6 +106,20 @@ namespace LinqToDB.SqlQuery
 				if (IsNot) sb.Append("NOT (");
 				base.ToString(sb, dic);
 				if (IsNot) sb.Append(")");
+			}
+
+			public override bool Equals(ISqlPredicate other)
+			{
+				return other is NotExpr e
+					&& base.Equals(e)
+					&& IsNot == e.IsNot;
+			}
+
+			public override int GetHashCode()
+			{
+				var hashCode = base.GetHashCode();
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ IsNot.GetHashCode());
+				return hashCode;
 			}
 		}
 
@@ -154,6 +182,22 @@ namespace LinqToDB.SqlQuery
 
 				Expr2.ToString(sb, dic);
 			}
+
+			public override bool Equals(ISqlPredicate other)
+			{
+				return other is ExprExpr e
+					&& base.Equals(e)
+					&& Operator == e.Operator
+					&& Expr2.Equals(e.Expr2);
+			}
+
+			public override int GetHashCode()
+			{
+				var hashCode = base.GetHashCode();
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Operator.GetHashCode());
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr2.GetHashCode());
+				return hashCode;
+			}
 		}
 
 		// string_expression [ NOT ] LIKE string_expression [ ESCAPE 'escape_character' ]
@@ -207,6 +251,24 @@ namespace LinqToDB.SqlQuery
 					Escape.ToString(sb, dic);
 				}
 			}
+
+			public override bool Equals(ISqlPredicate other)
+			{
+				return other is Like e
+					&& base.Equals(e)
+					&& Expr2.Equals(e.Expr2)
+					&& ((Escape == null && e.Escape == null) || Escape.Equals(e.Escape));
+			}
+
+			public override int GetHashCode()
+			{
+				var hashCode = base.GetHashCode();
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr2.GetHashCode());
+				if (Escape != null)
+					hashCode = unchecked(hashCode + (hashCode * 397) ^ Escape.GetHashCode());
+
+				return hashCode;
+			}
 		}
 
 		// expression [ NOT ] BETWEEN expression AND expression
@@ -258,6 +320,22 @@ namespace LinqToDB.SqlQuery
 				sb.Append(" AND ");
 				Expr3.ToString(sb, dic);
 			}
+
+			public override bool Equals(ISqlPredicate other)
+			{
+				return other is Between e
+					&& base.Equals(e)
+					&& Expr2.Equals(e.Expr2)
+					&& Expr3.Equals(e.Expr3);
+			}
+
+			public override int GetHashCode()
+			{
+				var hashCode = base.GetHashCode();
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr2.GetHashCode());
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr3.GetHashCode());
+				return hashCode;
+			}
 		}
 
 		// expression IS [ NOT ] NULL
@@ -290,6 +368,12 @@ namespace LinqToDB.SqlQuery
 			}
 
 			public override QueryElementType ElementType => QueryElementType.IsNullPredicate;
+
+			public override bool Equals(ISqlPredicate other)
+			{
+				return other is IsNull e
+					&& base.Equals(e);
+			}
 		}
 
 		// expression [ NOT ] IN ( subquery | expression [ ,...n ] )
@@ -335,6 +419,20 @@ namespace LinqToDB.SqlQuery
 
 				((IQueryElement)SubQuery).ToString(sb, dic);
 				sb.Append(")");
+			}
+
+			public override bool Equals(ISqlPredicate other)
+			{
+				return other is InSubQuery e
+					&& base.Equals(e)
+					&& SubQuery.Equals(e.SubQuery);
+			}
+
+			public override int GetHashCode()
+			{
+				var hashCode = base.GetHashCode();
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ SubQuery.GetHashCode());
+				return hashCode;
 			}
 		}
 
@@ -399,6 +497,21 @@ namespace LinqToDB.SqlQuery
 
 				sb.Append(")");
 			}
+
+			public override bool Equals(ISqlPredicate other)
+			{
+				return other is InList e
+					&& base.Equals(e)
+					&& Enumerable.SequenceEqual(Values, e.Values);
+			}
+
+			public override int GetHashCode()
+			{
+				var hashCode = base.GetHashCode();
+				for (var i = 0; i < Values.Count; i++)
+					hashCode = unchecked(hashCode + (hashCode * 397) ^ Values[i].GetHashCode());
+				return hashCode;
+			}
 		}
 
 		// CONTAINS ( { column | * } , '< contains_search_condition >' )
@@ -440,6 +553,17 @@ namespace LinqToDB.SqlQuery
 			{
 				((IQueryElement)Function).ToString(sb, dic);
 			}
+
+			public override bool Equals(ISqlPredicate other)
+			{
+				return other is FuncLike f
+					&& Function.Equals(f.Function);
+			}
+
+			public override int GetHashCode()
+			{
+				return Function.GetHashCode();
+			}
 		}
 
 		#region Overrides
@@ -460,10 +584,16 @@ namespace LinqToDB.SqlQuery
 			Precedence = precedence;
 		}
 
+		public override bool Equals(object obj)
+		{
+			return Equals(obj as ISqlPredicate);
+		}
+
 		#region IPredicate Members
 
 		public             int               Precedence { get; }
 
+		public    abstract bool              Equals(ISqlPredicate other);
 		public    abstract bool              CanBeNull  { get; }
 		protected abstract ICloneableElement Clone    (Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone);
 		protected abstract void              Walk     (WalkOptions options, Func<ISqlExpression,ISqlExpression> action);

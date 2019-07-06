@@ -86,6 +86,15 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
+		#region IEquatable<ISqlPredicate> Members
+
+		bool IEquatable<ISqlPredicate>.Equals(ISqlPredicate other)
+		{
+			return this == other;
+		}
+
+		#endregion
+
 		#region IEquatable<ISqlExpression> Members
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)

@@ -1505,7 +1505,7 @@ namespace Tests.Linq
 					query);
 
 				// remote context doesn't have access to final SQL
-				//if (!context.EndsWith(".LinqService"))
+				if (!context.EndsWith(".LinqService"))
 				{
 					var sql = query.ToString();
 					Assert.False(sql.Contains("IS NULL"), sql);
@@ -1526,7 +1526,7 @@ namespace Tests.Linq
 					query);
 
 				// remote context doesn't have access to final SQL
-				//if (!context.EndsWith(".LinqService"))
+				if (!context.EndsWith(".LinqService"))
 				{
 					var sql = query.ToString();
 					Assert.AreEqual(1, Regex.Matches(sql, "IS NULL").Count, sql);

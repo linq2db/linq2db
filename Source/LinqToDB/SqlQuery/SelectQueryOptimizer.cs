@@ -500,6 +500,20 @@ namespace LinqToDB.SqlQuery
 						newCond = new SqlCondition(newCond.IsNot, new SqlPredicate.Expr(new SqlValue(
 							(value1.Value.Equals(value2.Value) == (exprExpr.Operator == SqlPredicate.Operator.Equal)))));
 					}
+
+					// TODO: v3(?) instead of normalizing predicates in optimizer, remove them from linq2db, so no
+					// normalization needed
+					// use uniform is_null predicates
+					// val == null => is_null(val)
+					// val != null => is_not_null(val)
+					else if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
+						      exprExpr.Operator == SqlPredicate.Operator.NotEqual)
+						&& (   exprExpr.Expr1 is SqlValue v1 && v1.Value == null
+							|| exprExpr.Expr2 is SqlValue v2 && v2.Value == null))
+					{
+						var isLeft = exprExpr.Expr1 is SqlValue v && v.Value == null;
+						newCond = new SqlCondition(false, new SqlPredicate.IsNull(isLeft ? exprExpr.Expr2 : exprExpr.Expr1, exprExpr.Operator == SqlPredicate.Operator.NotEqual), cond.IsOr);
+					}
 				}
 
 				// !true => false
@@ -511,6 +525,13 @@ namespace LinqToDB.SqlQuery
 					if (cond.IsNot && expr.Expr1 is SqlValue sqlValue && sqlValue.Value is bool b)
 					{
 						newCond = new SqlCondition(false, new SqlPredicate.Expr(new SqlValue(!b)));
+					}
+
+					// NOT(A IS NULL) => A IS NOT NULL
+					// NOT(A IS NOT NULL) => A IS NULL
+					else if (cond.IsNot && expr is SqlPredicate.IsNull isNull)
+					{
+						newCond = new SqlCondition(false, new SqlPredicate.IsNull(isNull.Expr1, !isNull.IsNot), cond.IsOr);
 					}
 				}
 
@@ -549,6 +570,7 @@ namespace LinqToDB.SqlQuery
 							if (leftIsOr == false && rightIsOr != null)
 								searchCondition.Conditions[i - 1].IsOr = rightIsOr.Value;
 							--i;
+							continue;
 						}
 						else
 						{
@@ -558,6 +580,7 @@ namespace LinqToDB.SqlQuery
 								EnsureCopy();
 								searchCondition.Conditions.RemoveAt(i - 1);
 								--i;
+								continue;
 							}
 							else if (rightIsOr == false)
 							{
@@ -566,6 +589,7 @@ namespace LinqToDB.SqlQuery
 								searchCondition.Conditions[i].IsOr = searchCondition.Conditions[i + 1].IsOr;
 								searchCondition.Conditions.RemoveAt(i + 1);
 								--i;
+								continue;
 							}
 							else
 							{
@@ -579,6 +603,7 @@ namespace LinqToDB.SqlQuery
 									if (leftIsOr != null && rightIsOr != null)
 										searchCondition.Conditions[i - 1].IsOr = rightIsOr.Value;
 									--i;
+									continue;
 								}
 							}
 						}
@@ -604,6 +629,7 @@ namespace LinqToDB.SqlQuery
 						searchCondition.Conditions[i] =
 							new SqlCondition(false, inlinePredicate, searchCondition.Conditions[i].IsOr);
 						--i;
+						continue;
 					}
 					else if (sc.Conditions.Count == 1)
 					{
@@ -623,6 +649,7 @@ namespace LinqToDB.SqlQuery
 						searchCondition.Conditions[i] = inlineCondition;
 
 						--i;
+						continue;
 					}
 					else if (searchCondition.Conditions.Count == 1)
 					{
@@ -636,7 +663,9 @@ namespace LinqToDB.SqlQuery
 							var scCon = sc.Conditions[j];
 							searchCondition.Conditions.Add(new SqlCondition(scCon.IsNot ^ cond.IsNot, scCon.Predicate, scCon.IsOr ^ cond.IsNot));
 						}
+
 						--i;
+						continue;
 					}
 					else if (i > 0 && !searchCondition.Conditions[i].IsNot
 						&& (searchCondition.Conditions.Count == i + 1 || searchCondition.Conditions[i - 1].IsOr == cond.IsOr))
@@ -663,7 +692,56 @@ namespace LinqToDB.SqlQuery
 								searchCondition.Conditions.Insert(i, new SqlCondition(scCon.IsNot, scCon.Predicate, scCon.IsOr));
 							}
 							--i;
+							continue;
 						}
+					}
+				}
+
+				// remove duplicates
+				// A and ... and A [and ...] => A and ... [and ...]
+				// A  or ...  or A [ or ...] => A and ... [ or ...]
+				if (i > 0 && (searchCondition.Conditions.Count == i + 1 || searchCondition.Conditions[i - 1].IsOr == cond.IsOr))
+				{
+					var isOr = searchCondition.Conditions[i - 1].IsOr;
+
+					for (var j = i - 1; j >= 0; j--)
+					{
+						var scCon = searchCondition.Conditions[j];
+						if (scCon.IsOr != isOr)
+							break;
+
+						if (scCon.IsNot == cond.IsNot && scCon.Predicate.Equals(cond.Predicate))
+						{
+							EnsureCopy();
+							searchCondition.Conditions.RemoveAt(i);
+							--i;
+							continue;
+						}
+					}
+				}
+
+				// A and (NOT(A) or B) => A and B
+				if (i > 0)
+				{
+					var to = -1;
+					if (i == searchCondition.Conditions.Count - 1 && !searchCondition.Conditions[i - 1].IsOr)
+						to = i - 1;
+					else if (!searchCondition.Conditions[i - 1].IsOr && searchCondition.Conditions[i].IsOr)
+						to = i;
+
+					var from = 0;
+					if (i != -1)
+					{
+						for (var j = to; j >= 0; j--)
+						{
+							if (searchCondition.Conditions[j].IsOr)
+							{
+								from = j + 1;
+								break;
+							}
+						}
+
+						// TODO: optimization
 					}
 				}
 			}
