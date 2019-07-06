@@ -1492,5 +1492,26 @@ namespace Tests.Linq
 					Assert.AreEqual(flag == null ? 0 : 1, Regex.Matches(sql, " AND ").Count);
 			}
 		}
+
+		[Test]
+		public void Issue1767([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent.Where(p => p.Value1 != null && p.Value1 != 1);
+
+				AreEqual(
+					db.Parent.AsEnumerable().Where(p => p.Value1 != null && p.Value1 != 1),
+					query);
+
+				// remote context doesn't have access to final SQL
+				//if (!context.EndsWith(".LinqService"))
+				{
+					var sql = query.ToString();
+					Assert.False(sql.Contains("IS NULL"), sql);
+					Assert.True(sql.Contains("IS NOT NULL"), sql);
+				}
+			}
+		}
 	}
 }
