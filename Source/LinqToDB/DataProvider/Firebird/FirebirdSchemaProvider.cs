@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.Firebird
 				{
 					TableID         = catalog + '.' + t.Field<string>("TABLE_SCHEMA") + '.' + name,
 					CatalogName     = catalog,
-					SchemaName      = null, //schema,
+					SchemaName      = schema,
 					TableName       = name,
 					IsDefaultSchema = schema == "SYSDBA",
 					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW",
@@ -118,7 +118,7 @@ namespace LinqToDB.DataProvider.Firebird
 				{
 					ProcedureID         = catalog + "." + schema + "." + name,
 					CatalogName         = catalog,
-					SchemaName          = null, //schema,
+					SchemaName          = schema, //schema,
 					ProcedureName       = name,
 					IsDefaultSchema     = schema.IsNullOrEmpty(),
 					ProcedureDefinition = p.Field<string>("SOURCE")

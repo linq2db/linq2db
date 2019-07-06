@@ -13473,40 +13473,6 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region PrdGlobalEccCvMARAproc
-
-		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this DataConnection dataConnection)
-		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new PrdGlobalEccCvMARAprocResult
-				{
-					id      = Converter.ChangeTypeTo<int?>  (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
-				},
-				"\"TESTHANA\".\"prd.global.ecc/CV_MARAproc\"");
-		}
-
-		public partial class PrdGlobalEccCvMARAprocResult
-		{
-			               public int?   id      { get; set; }
-			[Column("id")] public string Column2 { get; set; }
-		}
-
-		#endregion
-
-		#region DROPEXISTINGVIEW
-
-		public static int DROPEXISTINGVIEW0(this DataConnection dataConnection, string VIEWNAME, string SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGVIEW\"",
-				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
-				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
-		}
-
-		#endregion
-
 		#region PersonSelectByKey
 
 		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this DataConnection dataConnection, int? ID)
@@ -13691,6 +13657,40 @@ namespace SapHanaDataContext
 		public static int AddIssue792Record(this DataConnection dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"AddIssue792Record\"");
+		}
+
+		#endregion
+
+		#region PrdGlobalEccCvMARAproc
+
+		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this DataConnection dataConnection)
+		{
+			var ms = dataConnection.MappingSchema;
+
+			return dataConnection.QueryProc(dataReader =>
+				new PrdGlobalEccCvMARAprocResult
+				{
+					id      = Converter.ChangeTypeTo<int?>  (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
+				},
+				"\"TESTHANA\".\"prd.global.ecc/CV_MARAproc\"");
+		}
+
+		public partial class PrdGlobalEccCvMARAprocResult
+		{
+			               public int?   id      { get; set; }
+			[Column("id")] public string Column2 { get; set; }
+		}
+
+		#endregion
+
+		#region DROPEXISTINGVIEW
+
+		public static int DROPEXISTINGVIEW0(this DataConnection dataConnection, string VIEWNAME, string SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGVIEW\"",
+				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
+				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
 		}
 
 		#endregion
@@ -15367,17 +15367,6 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region AfllangWrapperProcedureDrop
-
-		public static int AfllangWrapperProcedureDrop(this DataConnection dataConnection, string SCHEMA_NAME, string PROCEDURE_NAME)
-		{
-			return dataConnection.ExecuteProc("\"SYS\".\"AFLLANG_WRAPPER_PROCEDURE_DROP\"",
-				new DataParameter("SCHEMA_NAME",    SCHEMA_NAME,    DataType.NVarChar),
-				new DataParameter("PROCEDURE_NAME", PROCEDURE_NAME, DataType.NVarChar));
-		}
-
-		#endregion
-
 		#region AflpmOnlineRegistrationCleanup
 
 		public static int AflpmOnlineRegistrationCleanup(this DataConnection dataConnection)
@@ -15393,6 +15382,17 @@ namespace SapHanaDataContext
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"AFLPM_ERASER\"",
 				new DataParameter("PROC", PROC, DataType.VarChar));
+		}
+
+		#endregion
+
+		#region AfllangWrapperProcedureDrop
+
+		public static int AfllangWrapperProcedureDrop(this DataConnection dataConnection, string SCHEMA_NAME, string PROCEDURE_NAME)
+		{
+			return dataConnection.ExecuteProc("\"SYS\".\"AFLLANG_WRAPPER_PROCEDURE_DROP\"",
+				new DataParameter("SCHEMA_NAME",    SCHEMA_NAME,    DataType.NVarChar),
+				new DataParameter("PROCEDURE_NAME", PROCEDURE_NAME, DataType.NVarChar));
 		}
 
 		#endregion

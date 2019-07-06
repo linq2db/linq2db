@@ -82,13 +82,13 @@ namespace LinqToDB.DataProvider.SapHana
 
 				return new TableInfo
 				{
-					CatalogName = null,
-					Description = comments,
+					CatalogName     = null,
+					Description     = comments,
 					IsDefaultSchema = schemaName == DefaultSchema,
-					IsView = !isTable,
-					SchemaName = schemaName,
-					TableID = schemaName + '.' + tableName,
-					TableName = tableName
+					IsView          = !isTable,
+					SchemaName      = schemaName,
+					TableID         = schemaName + '.' + tableName,
+					TableName       = tableName
 				};
 			}, GetTablesQuery());
 
@@ -271,15 +271,15 @@ namespace LinqToDB.DataProvider.SapHana
 				var definition = rd.IsDBNull(4) ? null : rd.GetString(4);
 				return new ProcedureInfo
 				{
-					ProcedureID = String.Concat(schema, '.', procedure),
-					CatalogName = null,
+					ProcedureID         = string.Concat(schema, '.', procedure),
+					CatalogName         = null,
 					IsAggregateFunction = false,
-					IsDefaultSchema = schema == DefaultSchema,
-					IsFunction = isFunction,
-					IsTableFunction = isTableFunction,
+					IsDefaultSchema     = schema == DefaultSchema,
+					IsFunction          = isFunction,
+					IsTableFunction     = isTableFunction,
 					ProcedureDefinition = definition,
-					ProcedureName = procedure,
-					SchemaName = schema
+					ProcedureName       = procedure,
+					SchemaName          = schema
 				};
 			}, @"
 				SELECT
@@ -570,13 +570,13 @@ namespace LinqToDB.DataProvider.SapHana
 				var tableName = x.GetString(1);
 				return new TableInfo
 				{
-					CatalogName = null,
-					Description = x.IsDBNull(2) ? null : x.GetString(2),
+					CatalogName     = null,
+					Description     = x.IsDBNull(2) ? null : x.GetString(2),
 					IsDefaultSchema = schemaName == DefaultSchema,
-					IsView = true,
-					SchemaName = schemaName,
-					TableID = schemaName + '.' + tableName,
-					TableName = tableName
+					IsView          = true,
+					SchemaName      = schemaName,
+					TableID         = schemaName + '.' + tableName,
+					TableName       = tableName
 				};
 			}, @"
 				SELECT 
