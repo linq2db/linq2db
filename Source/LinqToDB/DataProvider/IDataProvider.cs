@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider
 		MappingSchema      MappingSchema         { get; }
 		SqlProviderFlags   SqlProviderFlags      { get; }
 		IDbConnection      CreateConnection      (string connectionString);
-		ISqlBuilder        CreateSqlBuilder      ();
+		ISqlBuilder        CreateSqlBuilder      (MappingSchema mappingSchema);
 		ISqlOptimizer      GetSqlOptimizer       ();
 		/// <summary>
 		/// Initializes <see cref="DataConnection.Command"/> object.

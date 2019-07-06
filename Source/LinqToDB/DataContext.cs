@@ -246,7 +246,7 @@ namespace LinqToDB
 			}
 		}
 
-		Func<ISqlBuilder>   IDataContext.CreateSqlProvider => DataProvider.CreateSqlBuilder;
+		Func<ISqlBuilder>   IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema);
 		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer   => DataProvider.GetSqlOptimizer;
 		Type                IDataContext.DataReaderType    => DataProvider.DataReaderType;
 		SqlProviderFlags    IDataContext.SqlProviderFlags  => DataProvider.SqlProviderFlags;

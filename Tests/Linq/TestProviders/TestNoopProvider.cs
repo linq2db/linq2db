@@ -823,7 +823,7 @@ namespace Tests
 			// Just for triggering of static constructor
 		}
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
 			return new TestNoopSqlBuilder();
 		}
