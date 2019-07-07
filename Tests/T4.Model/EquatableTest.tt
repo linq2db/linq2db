@@ -1,47 +1,21 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                    #>
-<#@ output extension=".generated.cs"                                           #>
-<#@ include file="..\..\Source\LinqToDB.Templates\T4Model.ttinclude"           #>
-<#@ include file="..\..\Source\LinqToDB.Templates\Equatable.ttinclude"         #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                         #>
+<#@ output extension=".generated.cs"                                                #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\System.Data.SQLite.dll" #>
+<#@ include file="..\T4.Linq\Shared.ttinclude"                                      #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SQLite.ttinclude"        #>
+<#@ include file="..\..\Source\LinqToDB.Templates\Equatable.ttinclude"              #>
 <#
-	Model.Namespaces[0].Name = "Tests.T4.Model";
+	NamespaceName = "SQLiteDataContext";
 
-	Model.Usings.Add("System.Collections.Generic");
+	GenerateAssociationExtensions = true;
 
-	Model.Namespaces[0].Types.Add(new Class
-	{
-		Name    = "TestComparerClass1",
-		Members =
-		{
-			new Property
-			{
-				TypeBuilder = () => "string",
-				Name        = "Field1"
-			},
-			new Property
-			{
-				TypeBuilder = () => "long",
-				Name        = "Field2"
-			}
-		}
-	});
+	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+	LoadSQLiteMetadata(solutionsPath + @"\Data\", "TestData.sqlite");
 
-	Model.Namespaces[0].Types.Add(new Class
-	{
-		Name    = "TestComparerClass2",
-		Members =
-		{
-			new Property
-			{
-				TypeBuilder = () => "int",
-				Name        = "Field1"
-			},
-			new Property
-			{
-				TypeBuilder = () => "DateTime",
-				Name        = "Field2"
-			}
-		}
-	});
+	foreach (var t in Tables.Values)
+		foreach (var fk in t.ForeignKeys.Values)
+			if (fk.MemberName.Length == 0 || char.IsDigit(fk.MemberName[0]))
+				fk.MemberName = "FK_" + fk.MemberName;
 
 	GenerateModel();
 #>
