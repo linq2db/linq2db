@@ -1,8 +1,10 @@
 ﻿namespace Tests.Linq
 {
+	using System;
 	using System.Linq;
 
 	using LinqToDB;
+	using LinqToDB.Mapping;
 	using NUnit.Framework;
 
 	[TestFixture]
@@ -1264,5 +1266,226 @@
 			}
 		}
 
+		[Table]
+		class Position
+		{
+			[Column] public int  Group { get; set; }
+			[Column] public int  Order { get; set; }
+			[Column] public int? Id    { get; set; }
+
+			public static Position[] TestData = new []
+			{
+				new Position() { Id = 5,    Group = 7, Order = 10 },
+				new Position() { Id = 6,    Group = 7, Order = 20 },
+				new Position() { Id = null, Group = 7, Order = 30 },
+				new Position() { Id = null, Group = 7, Order = 40 }
+			};
+		}
+
+		// Tests that default LAG behavior matches RESPECT NULLS as per spec, so we don't need to generate RESPECT NULLS token
+		// TODO: needs sqllite 3.25
+		// TODO: needs mysql 8.0/mariadb 10.2
+		// also syntax should be altered (mariadb doesn't support defaults, mysql supports Sql.Nulls.Ignore in other place)
+		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql })]
+		[Test]
+		public void Issue1732Lag([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			ProviderName.Access,
+			ProviderName.Firebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Position.TestData))
+			{
+				var group = 7;
+
+				var q =
+					from p in db.GetTable<Position>()
+					where p.Group == @group
+					select new
+					{
+						Id         = p.Id,
+						PreviousId = (int?)Sql.Ext.Lag(p.Id, Sql.Nulls.Respect, 1, -1).Over().OrderBy(p.Order).ToValue(),
+
+					};
+
+				var res = q.ToArray();
+
+				Assert.AreEqual(4, res.Length);
+
+				// BTW, order from original query behaves differently for
+				// Oracle, PostgreSQL, DB2 vs Informix, SQL Server
+				Assert.AreEqual(5, res[0].Id);
+				Assert.AreEqual(-1, res[0].PreviousId);
+				Assert.AreEqual(6, res[1].Id);
+				Assert.AreEqual(5, res[1].PreviousId);
+				Assert.IsNull(res[2].Id);
+				Assert.AreEqual(6, res[2].PreviousId);
+				Assert.IsNull(res[3].Id);
+				Assert.IsNull(res[3].PreviousId);
+			}
+		}
+
+		// TODO: needs sqllite 3.25
+		// TODO: needs mysql 8.0/mariadb 10.2
+		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql })]
+		[Test]
+		public void Issue1732Lead([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			ProviderName.Access,
+			ProviderName.Firebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Position.TestData))
+			{
+				var group = 7;
+
+				var q =
+					from p in db.GetTable<Position>()
+					where p.Group == @group
+					select new
+					{
+						Id         = p.Id,
+						PreviousId = (int?)Sql.Ext.Lead(p.Id, Sql.Nulls.Respect, 1, -1).Over().OrderBy(p.Order).ToValue(),
+
+					};
+
+				var res = q.ToArray();
+
+				Assert.AreEqual(4, res.Length);
+
+				Assert.AreEqual(5, res[0].Id);
+				Assert.AreEqual(6, res[0].PreviousId);
+				Assert.AreEqual(6, res[1].Id);
+				Assert.IsNull(res[1].PreviousId);
+				Assert.IsNull(res[2].Id);
+				Assert.IsNull(res[2].PreviousId);
+				Assert.IsNull(res[3].Id);
+				Assert.AreEqual(-1, res[3].PreviousId);
+			}
+		}
+
+		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql })]
+		[Test]
+		public void Issue1732FirstValue([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			ProviderName.Access,
+			ProviderName.Firebird)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Position.TestData))
+			{
+				var group = 7;
+
+				var q =
+					from p in db.GetTable<Position>()
+					where p.Group == @group
+					select new
+					{
+						Id         = p.Id,
+						PreviousId = (int?)Sql.Ext.FirstValue(p.Id, Sql.Nulls.Respect).Over().OrderByDesc(p.Order).ToValue(),
+
+					};
+
+				var res = q.ToArray();
+
+				Assert.AreEqual(4, res.Length);
+
+				Assert.IsNull(res[0].Id);
+				Assert.IsNull(res[0].PreviousId);
+				Assert.IsNull(res[1].Id);
+				Assert.IsNull(res[1].PreviousId);
+				Assert.AreEqual(6, res[2].Id);
+				Assert.IsNull(res[2].PreviousId);
+				Assert.AreEqual(5, res[3].Id);
+				Assert.IsNull(res[3].PreviousId);
+			}
+		}
+
+		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql })]
+		[Test]
+		public void Issue1732LastValue([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			ProviderName.Access,
+			ProviderName.Firebird)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Position.TestData))
+			{
+				var group = 7;
+
+				var q =
+					from p in db.GetTable<Position>()
+					where p.Group == @group
+					select new
+					{
+						Id         = p.Id,
+						PreviousId = (int?)Sql.Ext.LastValue(p.Id, Sql.Nulls.Respect).Over().OrderBy(p.Order).ToValue(),
+
+					};
+
+				var res = q.ToArray();
+
+				Assert.AreEqual(4, res.Length);
+
+				Assert.AreEqual(5, res[0].Id);
+				Assert.AreEqual(5, res[0].PreviousId);
+				Assert.AreEqual(6, res[1].Id);
+				Assert.AreEqual(6, res[1].PreviousId);
+				Assert.IsNull(res[2].Id);
+				Assert.IsNull(res[2].PreviousId);
+				Assert.IsNull(res[3].Id);
+				Assert.IsNull(res[3].PreviousId);
+			}
+		}
+
+		// TODO: pgsql/SAP HANA doesn't support FROM clause
+		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, ProviderName.SapHana })]
+		[Test]
+		public void Issue1732NthValue([DataSources(
+			TestProvName.AllSqlServer,
+			TestProvName.AllSybase,
+			TestProvName.AllPostgreSQL,
+			ProviderName.Informix,
+			ProviderName.SqlCe,
+			ProviderName.Access,
+			ProviderName.Firebird)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Position.TestData))
+			{
+				var group = 7;
+
+				var q =
+					from p in db.GetTable<Position>()
+					where p.Group == @group
+					select new
+					{
+						Id         = p.Id,
+						PreviousId = (int?)Sql.Ext.NthValue(p.Id, 2, Sql.From.First, Sql.Nulls.Respect).Over().OrderByDesc(p.Order).ToValue(),
+
+					};
+
+				var res = q.ToArray();
+
+				Assert.AreEqual(4, res.Length);
+
+				Assert.IsNull(res[0].Id);
+				Assert.IsNull(res[0].PreviousId);
+				Assert.IsNull(res[1].Id);
+				Assert.IsNull(res[1].PreviousId);
+				Assert.AreEqual(6, res[2].Id);
+				Assert.IsNull(res[2].PreviousId);
+				Assert.AreEqual(5, res[3].Id);
+				Assert.IsNull(res[3].PreviousId);
+			}
+		}
 	}
 }
