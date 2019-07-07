@@ -17,5 +17,19 @@
 			if (fk.MemberName.Length == 0 || char.IsDigit(fk.MemberName[0]))
 				fk.MemberName = "FK_" + fk.MemberName;
 
+	EqualityComparerFieldName = "equalityComparer";
+
+	EqualityPropertiesFilter = (cl, prop) =>
+	{
+		var filter = EqualityPropertiesFilterDefault(cl, prop);
+
+		if (cl.Name == "FKTestPosition")
+		{
+			return filter && prop.Name != "Company";
+		}
+
+		return filter;
+	};
+
 	GenerateModel();
 #>

@@ -85,19 +85,16 @@ namespace SQLiteDataContext
 
 		#region IEquatable support
 
-		private static IEqualityComparer<AllType> EqualityComparer
-		{
-			get { return ComparerBuilder.GetEqualityComparer<AllType>(c => c.ID); }
-		}
+		private static readonly IEqualityComparer<AllType> equalityComparer = ComparerBuilder.GetEqualityComparer<AllType>(c => c.ID);
 
 		public bool Equals(AllType other)
 		{
-			return EqualityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other);
 		}
 
 		public override int GetHashCode()
 		{
-			return EqualityComparer.GetHashCode(this);
+			return equalityComparer.GetHashCode(this);
 		}
 
 		public override bool Equals(object obj)
@@ -137,19 +134,16 @@ namespace SQLiteDataContext
 
 		#region IEquatable support
 
-		private static IEqualityComparer<Doctor> EqualityComparer
-		{
-			get { return ComparerBuilder.GetEqualityComparer<Doctor>(c => c.PersonID); }
-		}
+		private static readonly IEqualityComparer<Doctor> equalityComparer = ComparerBuilder.GetEqualityComparer<Doctor>(c => c.PersonID);
 
 		public bool Equals(Doctor other)
 		{
-			return EqualityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other);
 		}
 
 		public override int GetHashCode()
 		{
-			return EqualityComparer.GetHashCode(this);
+			return equalityComparer.GetHashCode(this);
 		}
 
 		public override bool Equals(object obj)
@@ -180,19 +174,16 @@ namespace SQLiteDataContext
 
 		#region IEquatable support
 
-		private static IEqualityComparer<FKTestPosition> EqualityComparer
-		{
-			get { return ComparerBuilder.GetEqualityComparer<FKTestPosition>(c => c.Company, c => c.Department, c => c.PositionID); }
-		}
+		private static readonly IEqualityComparer<FKTestPosition> equalityComparer = ComparerBuilder.GetEqualityComparer<FKTestPosition>(c => c.Department, c => c.PositionID);
 
 		public bool Equals(FKTestPosition other)
 		{
-			return EqualityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other);
 		}
 
 		public override int GetHashCode()
 		{
-			return EqualityComparer.GetHashCode(this);
+			return equalityComparer.GetHashCode(this);
 		}
 
 		public override bool Equals(object obj)
@@ -290,19 +281,16 @@ namespace SQLiteDataContext
 
 		#region IEquatable support
 
-		private static IEqualityComparer<Patient> EqualityComparer
-		{
-			get { return ComparerBuilder.GetEqualityComparer<Patient>(c => c.PersonID); }
-		}
+		private static readonly IEqualityComparer<Patient> equalityComparer = ComparerBuilder.GetEqualityComparer<Patient>(c => c.PersonID);
 
 		public bool Equals(Patient other)
 		{
-			return EqualityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other);
 		}
 
 		public override int GetHashCode()
 		{
-			return EqualityComparer.GetHashCode(this);
+			return equalityComparer.GetHashCode(this);
 		}
 
 		public override bool Equals(object obj)
@@ -344,19 +332,16 @@ namespace SQLiteDataContext
 
 		#region IEquatable support
 
-		private static IEqualityComparer<Person> EqualityComparer
-		{
-			get { return ComparerBuilder.GetEqualityComparer<Person>(c => c.PersonID); }
-		}
+		private static readonly IEqualityComparer<Person> equalityComparer = ComparerBuilder.GetEqualityComparer<Person>(c => c.PersonID);
 
 		public bool Equals(Person other)
 		{
-			return EqualityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other);
 		}
 
 		public override int GetHashCode()
 		{
-			return EqualityComparer.GetHashCode(this);
+			return equalityComparer.GetHashCode(this);
 		}
 
 		public override bool Equals(object obj)
@@ -389,19 +374,16 @@ namespace SQLiteDataContext
 
 		#region IEquatable support
 
-		private static IEqualityComparer<PrimaryKeyTable> EqualityComparer
-		{
-			get { return ComparerBuilder.GetEqualityComparer<PrimaryKeyTable>(c => c.ID); }
-		}
+		private static readonly IEqualityComparer<PrimaryKeyTable> equalityComparer = ComparerBuilder.GetEqualityComparer<PrimaryKeyTable>(c => c.ID);
 
 		public bool Equals(PrimaryKeyTable other)
 		{
-			return EqualityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other);
 		}
 
 		public override int GetHashCode()
 		{
-			return EqualityComparer.GetHashCode(this);
+			return equalityComparer.GetHashCode(this);
 		}
 
 		public override bool Equals(object obj)
@@ -423,19 +405,16 @@ namespace SQLiteDataContext
 
 		#region IEquatable support
 
-		private static IEqualityComparer<TestIdentity> EqualityComparer
-		{
-			get { return ComparerBuilder.GetEqualityComparer<TestIdentity>(c => c.ID); }
-		}
+		private static readonly IEqualityComparer<TestIdentity> equalityComparer = ComparerBuilder.GetEqualityComparer<TestIdentity>(c => c.ID);
 
 		public bool Equals(TestIdentity other)
 		{
-			return EqualityComparer.Equals(this, other);
+			return equalityComparer.Equals(this, other);
 		}
 
 		public override int GetHashCode()
 		{
-			return EqualityComparer.GetHashCode(this);
+			return equalityComparer.GetHashCode(this);
 		}
 
 		public override bool Equals(object obj)

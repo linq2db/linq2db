@@ -10,24 +10,12 @@
 #><#+
 public static bool DefaultEquatable = true;
 
-Func<Class, Property, bool> EqualityPropertiesFilter = (cl, prop) => true;
+string EqualityComparerFieldName = "_comparer";
+
+static Func<Class, Property, bool> EqualityPropertiesFilter = EqualityPropertiesFilterDefault;
 
 void EquatableImpl()
 {
-	EqualityPropertiesFilter = (cl, prop) =>
-	{
-		if (!(cl is Table))
-			return false;
-
-		if (prop is ForeignKey)
-			return false;
-
-		if (prop is Column col)
-			return col.IsPrimaryKey;
-
-		return false;
-	};
-
 	foreach (Class cl in GetTreeNodes(Model).OfType<Class>().Where(c => c.IsEquatable && !c.IsStatic))
 	{
 		var props = GetTreeNodes(cl).OfType<Property>().Where(p => EqualityPropertiesFilter(cl, p)).ToList();
@@ -54,15 +42,13 @@ void EquatableImpl()
 							IsCompact = false,
 							Members   =
 							{
-								new Property(() => $"IEqualityComparer<{className}>", "EqualityComparer",
-									() => new[]
-									{
-										$"ComparerBuilder.GetEqualityComparer<{className}>({comparerProperties});"
-									})
-									{
-										AccessModifier = AccessModifier.Private,
-										IsStatic = true
-									},
+								new Field(() => $"IEqualityComparer<{className}>", EqualityComparerFieldName)
+								{
+									InitValue      = $"ComparerBuilder.GetEqualityComparer<{className}>({comparerProperties})",
+									AccessModifier = AccessModifier.Private,
+									IsStatic       = true,
+									IsReadonly     = true
+								},
 
 								new Method(() => "bool", "Equals",
 									new Func<string>[]
@@ -71,13 +57,13 @@ void EquatableImpl()
 									},
 									() => new[]
 									{
-										$"return EqualityComparer.Equals(this, other);"
+										$"return {EqualityComparerFieldName}.Equals(this, other);"
 									}),
 
 								new Method(() => "int", "GetHashCode", null,
 									() => new[]
 									{
-										$"return EqualityComparer.GetHashCode(this);"
+										$"return {EqualityComparerFieldName}.GetHashCode(this);"
 									})
 									{
 										IsOverride = true
@@ -111,5 +97,10 @@ void EquatableImpl()
 partial class Class
 {
 	public bool IsEquatable = DefaultEquatable;
+}
+
+static bool EqualityPropertiesFilterDefault(Class cl, Property prop)
+{
+	return cl is Table && prop is Column col && col.IsPrimaryKey;
 }
 #>
