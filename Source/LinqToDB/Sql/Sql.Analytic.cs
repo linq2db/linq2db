@@ -108,9 +108,9 @@ namespace LinqToDB
 			switch (nulls)
 			{
 				case Sql.Nulls.None :
-					break;
 				case Sql.Nulls.Respect :
-					return "RESPECT NULLS";
+					// no need to add RESPECT NULLS, as it is default behavior and token itself supported only by Oracle and Informix
+					break;
 				case Sql.Nulls.Ignore :
 					return "IGNORE NULLS";
 				default :
