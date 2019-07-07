@@ -407,3 +407,39 @@ public class Parameter
 	public string   DataType;
 }
 ```
+## IEquatable interface implementation
+
+There is the `Equatable.ttinclude` template that uses to implement `IEquatable<T>` interface.
+
+This template adds some extra properties and options:
+```c#
+partial class Class
+{
+	// Determines whether need to implement IEquatable interface for this Class
+	public bool IsEquatable = DefaultEquatable;
+}
+
+// Default value for IsEquatable property
+public static bool DefaultEquatable = true;
+
+// Properties filter option to select equality members
+Func<Class, Property, bool> EqualityPropertiesFilter = (cl, prop) => true;
+
+// Default implementation of the EqualityPropertiesFilter option
+EqualityPropertiesFilter = (cl, prop) =>
+{
+	// Don't generate equality for non-table classes (e.g. data manager class)
+	if (!(cl is Table))
+		return false;
+
+	// Don't generate equality for associations
+	if (prop is ForeignKey)
+		return false;
+
+	// Compare only primary key members
+	if (prop is Column col)
+		return col.IsPrimaryKey;
+
+	return false;
+};
+```
