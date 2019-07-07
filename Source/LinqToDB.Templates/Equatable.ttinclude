@@ -19,13 +19,13 @@ void EquatableImpl()
 		if (!(cl is Table))
 			return false;
 
-		if (prop is ForeignKey fk)
+		if (prop is ForeignKey)
 			return false;
 
 		if (prop is Column col)
 			return col.IsPrimaryKey;
 
-		return true;
+		return false;
 	};
 
 	foreach (Class cl in GetTreeNodes(Model).OfType<Class>().Where(c => c.IsEquatable && !c.IsStatic))
