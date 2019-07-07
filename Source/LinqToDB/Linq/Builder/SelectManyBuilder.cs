@@ -24,17 +24,17 @@ namespace LinqToDB.Linq.Builder
 			var collectionSelector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var resultSelector     = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
-			if (sequence.SelectQuery.HasUnion || !sequence.SelectQuery.IsSimple)
-				sequence = new SubQueryContext(sequence);
-
 			var expr           = collectionSelector.Body.Unwrap();
 			DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty = null;
 			if (expr is MethodCallExpression mc && AllJoinsBuilder.IsMatchingMethod(mc, true))
 			{
 				defaultIfEmpty = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
+				sequence       = new SubQueryContext(defaultIfEmpty);
+
 				defaultIfEmpty.Disabled = true;
-				sequence = new SubQueryContext(defaultIfEmpty);
 			}
+			else
+				sequence = new SubQueryContext(sequence);
 
 			var context        = new SelectManyContext(buildInfo.Parent, collectionSelector, sequence);
 			context.SetAlias(collectionSelector.Parameters[0].Name);
