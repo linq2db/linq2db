@@ -53,7 +53,7 @@ void EquatableImpl()
 								new Method(() => "bool", "Equals",
 									new Func<string>[]
 									{
-										() => $"{className} other"
+										() => $"{new ModelType(className, true, true).ToTypeName()} other"
 									},
 									() => new[]
 									{
@@ -76,7 +76,7 @@ void EquatableImpl()
 									},
 									() => new[]
 									{
-										$"if (!(obj is {className} other))", "\treturn false;", string.Empty,
+										$"if (!(obj is {new ModelType(className, true, true).ToTypeName()} other))", "\treturn false;", string.Empty,
 										"// use IEquatable implementation",
 										"return Equals(other);"
 									})
