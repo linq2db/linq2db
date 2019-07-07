@@ -24,7 +24,7 @@ namespace Tests.T4.Model
 
 		private static IEqualityComparer<TestComparerClass1> EqualityComparer
 		{
-			get { return ComparerBuilder.GetEqualityComparer<TestComparerClass1>(); }
+			get { return ComparerBuilder.GetEqualityComparer<TestComparerClass1>(c => c.Field1, c => c.Field2); }
 		}
 
 		public bool Equals(TestComparerClass1 other)
@@ -59,7 +59,7 @@ namespace Tests.T4.Model
 
 		private static IEqualityComparer<TestComparerClass2> EqualityComparer
 		{
-			get { return ComparerBuilder.GetEqualityComparer<TestComparerClass2>(); }
+			get { return ComparerBuilder.GetEqualityComparer<TestComparerClass2>(c => c.Field1, c => c.Field2); }
 		}
 
 		public bool Equals(TestComparerClass2 other)

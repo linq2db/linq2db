@@ -10,21 +10,25 @@
 #><#+
 public static bool DefaultEquatable = true;
 
+Func<Class, Property, bool> EqualityPropertiesFilter = (cl, prop) => true;
+
 void EquatableImpl()
 {
 	foreach (Class cl in GetTreeNodes(Model).OfType<Class>().Where(c => c.IsEquatable && !c.IsStatic))
 	{
-		var props = GetTreeNodes(cl).OfType<Property>().ToList();
+		var props = GetTreeNodes(cl).OfType<Property>().Where(p => EqualityPropertiesFilter(cl, p)).ToList();
 		if (props.Count > 0)
 		{
 			var className = cl.Name;
 
 			if (!cl.Interfaces.Contains($"IEquatable<{className}>"))
 			{
+				cl.Interfaces.Add($"IEquatable<{className}>");
+
 				if (!Model.Usings.Contains("LinqToDB.Tools.Comparers"))
 					Model.Usings.Add("LinqToDB.Tools.Comparers");
 
-				cl.Interfaces.Add($"IEquatable<{className}>");
+				var comparerProperties = string.Join(", ", props.Select(p => $"c => c.{p.Name}"));
 
 				cl.Members.Add(new MemberGroup
 				{
@@ -39,7 +43,7 @@ void EquatableImpl()
 								new Property(() => $"IEqualityComparer<{className}>", "EqualityComparer",
 									() => new[]
 									{
-										$"ComparerBuilder.GetEqualityComparer<{className}>();"
+										$"ComparerBuilder.GetEqualityComparer<{className}>({comparerProperties});"
 									})
 									{
 										AccessModifier = AccessModifier.Private,
@@ -80,7 +84,7 @@ void EquatableImpl()
 										IsOverride = true
 									}
 							}
-						},
+						}
 					}
 				});
 			}
