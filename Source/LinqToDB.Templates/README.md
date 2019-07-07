@@ -422,24 +422,17 @@ partial class Class
 // Default value for IsEquatable property
 public static bool DefaultEquatable = true;
 
+// Default field name for equality comparer field
+string EqualityComparerFieldName = "_comparer";
+
 // Properties filter option to select equality members
-Func<Class, Property, bool> EqualityPropertiesFilter = (cl, prop) => true;
+static Func<Class, Property, bool> EqualityPropertiesFilter = EqualityPropertiesFilterDefault;
 
 // Default implementation of the EqualityPropertiesFilter option
-EqualityPropertiesFilter = (cl, prop) =>
+static bool EqualityPropertiesFilterDefault(Class cl, Property prop)
 {
-	// Don't generate equality for non-table classes (e.g. data manager class)
-	if (!(cl is Table))
-		return false;
-
-	// Don't generate equality for associations
-	if (prop is ForeignKey)
-		return false;
-
+	// Don't generate equality for non-table classes (e.g. data manager class) and associations
 	// Compare only primary key members
-	if (prop is Column col)
-		return col.IsPrimaryKey;
-
-	return false;
-};
+	return cl is Table && prop is Column col && col.IsPrimaryKey;
+}
 ```
