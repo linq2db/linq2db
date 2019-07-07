@@ -150,20 +150,24 @@ SchemaDataContextTypeName       = "DataContext"
 
 /* Table mappings configuration */
 // (string) Specify base class (or comma-separated list of class and/or interfaces) for table mappings
-BaseEntityClass               = null;
+BaseEntityClass                    = null;
 // Enables generation of TableAttribute.Database property using database name, returned by schema loader
-GenerateDatabaseName          = false;
+GenerateDatabaseName               = false;
 // Enables generation of TableAttribute.Database property with provided name value.
 // (string) If set, overrides GenerateDatabaseName behavior
-DatabaseName                  = null;
+DatabaseName                       = null;
 // Enables generation of TableAttribute.Schema property for default schema
-IncludeDefaultSchema          = true;
+IncludeDefaultSchema               = true;
 // Enables generation of mappings for views
-GenerateViews                 = true;
+GenerateViews                      = true;
 // Enables prefixing mapping classes for tables in non-default schema with schema name
 // E.g. MySchema.MyTable -> MySchema_MyTable
 // Applicable only if GenerateSchemaAsType = false
-PrefixTableMappingWithSchema  = true;
+PrefixTableMappingWithSchema       = true;
+// Enables prefixing mapping classes for tables in default schema with schema name
+// E.g. dbo.MyTable -> dbo_MyTable
+// Applicable only if IncludeDefaultSchema = true && GenerateSchemaAsType = false && PrefixTableMappingWithSchema = true
+PrefixTableMappingForDefaultSchema = false;
 
 /* Columns comfiguration */
 // Enables compact generation of column properties
