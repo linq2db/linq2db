@@ -14,6 +14,20 @@ Func<Class, Property, bool> EqualityPropertiesFilter = (cl, prop) => true;
 
 void EquatableImpl()
 {
+	EqualityPropertiesFilter = (cl, prop) =>
+	{
+		if (!(cl is Table))
+			return false;
+
+		if (prop is ForeignKey fk)
+			return false;
+
+		if (prop is Column col)
+			return col.IsPrimaryKey;
+
+		return true;
+	};
+
 	foreach (Class cl in GetTreeNodes(Model).OfType<Class>().Where(c => c.IsEquatable && !c.IsStatic))
 	{
 		var props = GetTreeNodes(cl).OfType<Property>().Where(p => EqualityPropertiesFilter(cl, p)).ToList();
