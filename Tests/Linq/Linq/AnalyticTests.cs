@@ -1487,5 +1487,134 @@
 				Assert.IsNull(res[3].PreviousId);
 			}
 		}
+
+		[Table]
+		class Issue1799Table1
+		{
+			[Column] public int      EventUser { get; set; }
+			[Column] public int      ProcessID { get; set; }
+			[Column] public DateTime EventTime { get; set; }
+		}
+
+		[Table]
+		class Issue1799Table2
+		{
+			[Column] public int UserId        { get; set; }
+			[Column] public string UserGroups { get; set; }
+		}
+
+		[Table]
+		class Issue1799Table3
+		{
+			[Column] public int    ProcessID   { get; set; }
+			[Column] public string ProcessName { get; set; }
+		}
+
+		// TODO: various issues like old db version, minute datepart translation
+		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, ProviderName.Informix })]
+		[Test]
+		public void Issue1799Test1([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			ProviderName.Access,
+			ProviderName.Firebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Issue1799Table1>())
+			using (db.CreateLocalTable<Issue1799Table2>())
+			using (db.CreateLocalTable<Issue1799Table3>())
+			{
+				var query =
+					from x in db.GetTable<Issue1799Table1>()
+					select new
+					{
+						User = x.EventUser,
+						Proc = x.ProcessID,
+						Diff = Sql.DateDiff(
+							Sql.DateParts.Minute,
+							Sql.Ext
+								.Lag(x.EventTime, Sql.Nulls.None)
+								.Over()
+								.PartitionBy(x.EventUser, x.ProcessID)
+								.OrderBy(x.EventTime)
+								.ToValue(),
+							x.EventTime),
+					};
+
+				query = query.Where(q => q.Diff > 0 && q.Diff <= 5);
+
+				var finalQuery = from q in query
+								 from u in db.GetTable<Issue1799Table2>().InnerJoin(u => u.UserId == q.User)
+								 from p in db.GetTable<Issue1799Table3>().InnerJoin(p => p.ProcessID == q.Proc)
+								 group q by new { q.User, u.UserGroups, p.ProcessName }
+								 into g
+								 select new
+								 {
+									g.Key.User,
+									g.Key.ProcessName,
+									g.Key.UserGroups,
+									Sum = g.Sum(e => e.Diff) / 60
+								 };
+
+				finalQuery
+					.Take(10)
+					.ToList();
+			}
+		}
+
+		// TODO: various issues like old db version, minute datepart translation
+		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, ProviderName.Informix })]
+		[Test]
+		public void Issue1799Test2([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			ProviderName.Access,
+			ProviderName.Firebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Issue1799Table1>())
+			using (db.CreateLocalTable<Issue1799Table2>())
+			using (db.CreateLocalTable<Issue1799Table3>())
+			{
+				var query =
+					from x in db.GetTable<Issue1799Table1>()
+					select new
+					{
+						User = x.EventUser,
+						Proc = x.ProcessID,
+						Diff = Sql.DateDiff(
+							Sql.DateParts.Minute,
+							Sql.Ext
+								.Lag(x.EventTime, Sql.Nulls.None)
+								.Over()
+								.PartitionBy(x.EventUser, x.ProcessID)
+								.OrderBy(x.EventTime)
+								.ToValue(),
+							x.EventTime),
+					};
+
+				// this part removed
+				//query = query.Where(q => q.Diff > 0 && q.Diff <= 5);
+
+				var finalQuery = from q in query
+								 from u in db.GetTable<Issue1799Table2>().InnerJoin(u => u.UserId == q.User)
+								 from p in db.GetTable<Issue1799Table3>().InnerJoin(p => p.ProcessID == q.Proc)
+								 group q by new { q.User, u.UserGroups, p.ProcessName }
+								 into g
+								 select new
+								 {
+									 g.Key.User,
+									 g.Key.ProcessName,
+									 g.Key.UserGroups,
+									 Sum = g.Sum(e => e.Diff) / 60
+								 };
+
+				finalQuery
+					.Take(10)
+					.ToList();
+			}
+		}
 	}
 }
