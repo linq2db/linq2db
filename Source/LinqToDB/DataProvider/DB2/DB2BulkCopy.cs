@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			if (dataConnection.Transaction == null)
 			{
-				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
+				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 				var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 				var tableName  = GetTableName(sqlBuilder, options, table);
 

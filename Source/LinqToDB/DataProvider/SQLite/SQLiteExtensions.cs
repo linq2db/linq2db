@@ -536,7 +536,7 @@ namespace LinqToDB.DataProvider.SQLite
 			var parameterTokens = new string[ed.Columns.Count];
 			var parameters = new DataParameter[ed.Columns.Count];
 
-			var sqlBuilder = dc.DataProvider.CreateSqlBuilder();
+			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema);
 
 			for (var i = 0; i < ed.Columns.Count; i++)
 			{

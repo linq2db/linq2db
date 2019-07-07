@@ -42,7 +42,7 @@ namespace LinqToDB
 
 		#region DatePart
 
-		class DatePartBuilder : Sql.IExtensionCallBuilder
+		internal class DatePartBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -708,24 +708,23 @@ namespace LinqToDB
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
 
-				ISqlExpression partSql = null;
 				switch (part)
 				{
 					case Sql.DateParts.Quarter   :
-						partSql = new SqlValue(Sql.DateParts.Month);
-						number  = builder.Mul(number, 3);
+						part   = DateParts.Month;
+						number = builder.Mul(number, 3);
 						break;
 					case Sql.DateParts.DayOfYear :
 					case Sql.DateParts.WeekDay   :
-						partSql = new SqlValue(Sql.DateParts.Day);
+						part   = DateParts.Day;
 						break;
 					case Sql.DateParts.Week      :
-						partSql = new SqlValue(Sql.DateParts.Day);
+						part   = DateParts.Day;
 						number = builder.Mul(number, 7);
 						break;
 				}
 
-				partSql = partSql ?? new SqlValue(part);
+				var partSql = new SqlExpression(part.ToString());
 
 				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd", partSql, number, date);
 			}

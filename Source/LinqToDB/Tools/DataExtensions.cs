@@ -36,7 +36,7 @@ namespace LinqToDB.Tools
 
 					if (sequenceName != null)
 					{
-						var sql       = context.DataProvider.CreateSqlBuilder().GetReserveSequenceValuesSql(sourceList.Count, sequenceName);
+						var sql       = context.DataProvider.CreateSqlBuilder(context.MappingSchema).GetReserveSequenceValuesSql(sourceList.Count, sequenceName);
 						var sequences = context.Query<object>(sql).ToList();
 
 						for (var i = 0; i < sourceList.Count; i++)
@@ -48,7 +48,7 @@ namespace LinqToDB.Tools
 					}
 					else
 					{
-						var sql      = context.DataProvider.CreateSqlBuilder().GetMaxValueSql(entityDescriptor, column);
+						var sql      = context.DataProvider.CreateSqlBuilder(context.MappingSchema).GetMaxValueSql(entityDescriptor, column);
 						var maxValue = context.Execute<object>(sql);
 
 						if (maxValue == null || maxValue == DBNull.Value)

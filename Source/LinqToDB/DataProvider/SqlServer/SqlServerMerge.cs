@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (hasIdentity)
 			{
-				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
+				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 
 				tblName = sqlBuilder.ConvertTableName(new StringBuilder(),
 					databaseName ?? table.DatabaseName,
@@ -61,7 +61,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (hasIdentity)
 			{
-				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
+				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 
 				tblName = sqlBuilder.ConvertTableName(new StringBuilder(),
 					databaseName ?? table.DatabaseName,

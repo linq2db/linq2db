@@ -1058,7 +1058,7 @@ namespace LinqToDB.Data
 		{
 			if (queryHints?.Count > 0)
 			{
-				var sqlProvider = DataProvider.CreateSqlBuilder();
+				var sqlProvider = DataProvider.CreateSqlBuilder(MappingSchema);
 				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
 				queryHints.Clear();
 			}
