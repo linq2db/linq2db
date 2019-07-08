@@ -88,7 +88,7 @@ namespace LinqToDB.Linq
 		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
 		{
 			var value = await GetQuery(ref expression, false).GetElementAsync(
-				DataContext, expression, Parameters, Preambles, token);
+				DataContext, expression, Parameters, Preambles, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return (TResult)value;
 		}

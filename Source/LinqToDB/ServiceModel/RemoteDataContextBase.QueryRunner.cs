@@ -248,7 +248,7 @@ namespace LinqToDB.ServiceModel
 					LinqServiceSerializer.Serialize(
 						q,
 						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
-						QueryHints));
+						QueryHints)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				var result = LinqServiceSerializer.DeserializeResult(ret);
 				var reader = new ServiceModelDataReader(_dataContext.MappingSchema, result);
@@ -273,7 +273,7 @@ namespace LinqToDB.ServiceModel
 					_dataContext.Configuration,
 					LinqServiceSerializer.Serialize(
 						q,
-						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), QueryHints));
+						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), QueryHints)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 
 			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
@@ -296,7 +296,7 @@ namespace LinqToDB.ServiceModel
 
 				_client = _dataContext.GetClient();
 
-				return await _client.ExecuteNonQueryAsync(_dataContext.Configuration, data);
+				return await _client.ExecuteNonQueryAsync(_dataContext.Configuration, data).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 	}

@@ -103,7 +103,7 @@ namespace LinqToDB.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db);
 
-			return (T)(await query.GetElementAsync(db, _expression, parameters, preambles, default));
+			return (T)await query.GetElementAsync(db, _expression, parameters, preambles, default).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 	}
 }

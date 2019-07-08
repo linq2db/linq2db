@@ -99,7 +99,7 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected abstract IDbConnection CreateConnectionInternal (string connectionString);
-		public    abstract ISqlBuilder   CreateSqlBuilder();
+		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema mappingSchema);
 		public    abstract ISqlOptimizer GetSqlOptimizer ();
 
 		public virtual void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters)
@@ -505,7 +505,7 @@ namespace LinqToDB.DataProvider
 			if (builder.NoopCommand)
 				return 0;
 
-			return await dataConnection.ExecuteAsync(cmd, token, builder.Parameters);
+			return await dataConnection.ExecuteAsync(cmd, token, builder.Parameters).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(

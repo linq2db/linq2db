@@ -99,7 +99,7 @@ HashSet<string> KeyWords = new HashSet<string>
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
-	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
+	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 
 	var sp = dataConnection.DataProvider.GetSchemaProvider();
 	var db = sp.GetSchema(dataConnection, GetSchemaOptions);
@@ -129,7 +129,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 			{
 				TableSchema             = t,
 				IsDefaultSchema         = t.IsDefaultSchema,
-				Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.SchemaName)? null : t.SchemaName,
+				Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.SchemaName) ? null : t.SchemaName,
 				BaseClass               = BaseEntityClass,
 				TableName               = t.TableName,
 				TypeName                = t.TypeName,

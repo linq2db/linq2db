@@ -318,7 +318,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Cast not unwrapped (SelectContext.ProcessScalar() => NotImplementedException : The method or operation is not implemented.)")]
+		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.SapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithCastAndHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -353,7 +353,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "HasValue not converted to IS NOT NULL check")]
+		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.SapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{

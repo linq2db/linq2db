@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ma = (MemberExpression)expr;
 
-						if (ma.Member.IsNullableValueMember() || ma.Member.IsNullableHasValueMember())
+						if (ma.Member.IsNullableValueMember())
 							return true;
 
 						if (Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member) != null)
@@ -1373,15 +1373,20 @@ namespace LinqToDB.Linq.Builder
 			var lambda = Expression.Lambda<Func<object>>(Expression.Convert(expr, typeof(object)));
 			var v      = lambda.Compile()();
 
-			if (v != null && v.GetType().IsEnumEx())
+			if (v != null && MappingSchema.ValueToSqlConverter.CanConvert(v.GetType()))
+				value = new SqlValue(v);
+			else
 			{
-				var attrs = v.GetType().GetCustomAttributesEx(typeof(Sql.EnumAttribute), true);
+				if (v != null && v.GetType().IsEnumEx())
+				{
+					var attrs = v.GetType().GetCustomAttributesEx(typeof(Sql.EnumAttribute), true);
 
-				if (attrs.Length == 0)
-					v = MappingSchema.EnumToValue((Enum)v);
+					if (attrs.Length == 0)
+						v = MappingSchema.EnumToValue((Enum)v);
+				}
+
+				value = MappingSchema.GetSqlValue(expr.Type, v);
 			}
-
-			value = MappingSchema.GetSqlValue(expr.Type, v);
 
 			_constants.Add(expr, value);
 
@@ -1624,14 +1629,6 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess :
 					{
 						var e = (MemberExpression)expression;
-
-						if (e.Member.Name == "HasValue" &&
-							e.Member.DeclaringType.IsGenericTypeEx() &&
-							e.Member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>))
-						{
-							var expr = ConvertToSql(context, e.Expression);
-							return Convert(context, new SqlPredicate.IsNull(expr, true));
-						}
 
 						var attr = GetExpressionAttribute(e.Member);
 

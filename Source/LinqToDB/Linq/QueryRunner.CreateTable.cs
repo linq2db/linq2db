@@ -70,7 +70,7 @@ namespace LinqToDB.Linq
 
 				SetNonQueryQuery(query);
 
-				await query.GetElementAsync(dataContext, Expression.Constant(null), null, null, token);
+				await query.GetElementAsync(dataContext, Expression.Constant(null), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				ITable<T> table = new Table<T>(dataContext);
 

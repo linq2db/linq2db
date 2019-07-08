@@ -800,25 +800,6 @@ namespace LinqToDB.Linq
 
 			#endregion
 
-			#region HasValue
-
-			{ M(() => ((Boolean?)  null).HasValue ), N(() => L<Boolean?,  bool>  ((Boolean?  v)  => v != null)) },
-			{ M(() => ((Byte?)     null).HasValue ), N(() => L<Byte?,     bool>  ((Byte?     v)  => v != null)) },
-			{ M(() => ((Char?)     null).HasValue ), N(() => L<Char?,     bool>  ((Char?     v)  => v != null)) },
-			{ M(() => ((DateTime?) null).HasValue ), N(() => L<DateTime?, bool>  ((DateTime? v)  => v != null)) },
-			{ M(() => ((Decimal?)  null).HasValue ), N(() => L<Decimal?,  bool>  ((Decimal?  v)  => v != null)) },
-			{ M(() => ((Double?)   null).HasValue ), N(() => L<Double?,   bool>  ((Double?   v)  => v != null)) },
-			{ M(() => ((Int16?)    null).HasValue ), N(() => L<Int16?,    bool>  ((Int16?    v)  => v != null)) },
-			{ M(() => ((Int32?)    null).HasValue ), N(() => L<Int32?,    bool>  ((Int32?    v)  => v != null)) },
-			{ M(() => ((Int64?)    null).HasValue ), N(() => L<Int64?,    bool>  ((Int64?    v)  => v != null)) },
-			{ M(() => ((SByte?)    null).HasValue ), N(() => L<SByte?,    bool>  ((SByte?    v)  => v != null)) },
-			{ M(() => ((Single?)   null).HasValue ), N(() => L<Single?,   bool>  ((Single?   v)  => v != null)) },
-			{ M(() => ((UInt16?)   null).HasValue ), N(() => L<UInt16?,   bool>  ((UInt16?   v)  => v != null)) },
-			{ M(() => ((UInt32?)   null).HasValue ), N(() => L<UInt32?,   bool>  ((UInt32?   v)  => v != null)) },
-			{ M(() => ((UInt64?)   null).HasValue ), N(() => L<UInt64?,   bool>  ((UInt64?   v)  => v != null)) },
-
-			#endregion
-
 			#region ToInt64
 
 			{ M(() => Convert.ToInt64((Boolean)true)), N(() => L<Boolean, Int64>(p0 => Sql.ConvertTo<Int64>.From(p0))) },
@@ -1726,7 +1707,21 @@ namespace LinqToDB.Linq
 
 		// SqlServer
 		//
-		[Sql.Function]
+		class DateAddBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var partStr = Sql.DatePartBuilder.DatePartToStr(part);
+				var number  = builder.GetExpression("number");
+				var days    = builder.GetExpression("days");
+
+				builder.ResultExpression = new SqlQuery.SqlFunction(typeof(DateTime?), builder.Expression,
+					new SqlQuery.SqlExpression(partStr, SqlQuery.Precedence.Primary), number, days);
+			}
+		}
+
+		[Sql.Extension("DateAdd", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilder))]
 		public static DateTime? DateAdd(Sql.DateParts part, int? number, int? days)
 		{
 			return days == null ? null : Sql.DateAdd(part, number, new DateTime(1900, 1, days.Value + 1));

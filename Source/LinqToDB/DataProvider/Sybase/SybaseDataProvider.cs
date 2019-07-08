@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.Sybase
 			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
-			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+			SetField<IDataReader,DateTime>("time", (r,i) => GetDateTimeAsTime(r, i));
 
 			_sqlOptimizer = new SybaseSqlOptimizer(SqlProviderFlags);
 		}
@@ -54,7 +54,7 @@ namespace LinqToDB.DataProvider.Sybase
 		public override string DbFactoryProviderName => "Sybase.Data.AseClient";
 #endif
 
-		static DateTime GetDateTime(IDataReader dr, int idx)
+		static DateTime GetDateTimeAsTime(IDataReader dr, int idx)
 		{
 			var value = dr.GetDateTime(idx);
 
@@ -101,9 +101,9 @@ namespace LinqToDB.DataProvider.Sybase
 
 		#region Overrides
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SybaseSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+			return new SybaseSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 		}
 
 		static class MappingSchemaInstance
@@ -141,7 +141,7 @@ namespace LinqToDB.DataProvider.Sybase
 					break;
 
 				case DataType.Time       :
-					if (value is TimeSpan) value = new DateTime(1900, 1, 1) + (TimeSpan)value;
+					if (value is TimeSpan ts) value = new DateTime(1900, 1, 1) + ts;
 					break;
 
 				case DataType.Xml        :
