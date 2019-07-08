@@ -37,10 +37,10 @@ namespace LinqToDB.Data.DbCommandProcessor
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DbDataReader ExecuteReaderExt(this IDbCommand cmd, CommandBehavior commandBehavior) =>
-			Instance == null ? cmd.ExecuteReaderExt(commandBehavior) : Instance.ExecuteReader((DbCommand)cmd, commandBehavior);
+			Instance == null ? ((DbCommand)cmd).ExecuteReader(commandBehavior) : Instance.ExecuteReader((DbCommand)cmd, commandBehavior);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Task<DbDataReader> ExecuteReaderExtAsync(this DbCommand cmd, CommandBehavior commandBehavior, CancellationToken token) =>
-			Instance == null ? cmd.ExecuteReaderExtAsync(commandBehavior, token) : Instance.ExecuteReaderAsync(cmd, commandBehavior, token);
+			Instance == null ? cmd.ExecuteReaderAsync(commandBehavior, token) : Instance.ExecuteReaderAsync(cmd, commandBehavior, token);
 	}
 }
