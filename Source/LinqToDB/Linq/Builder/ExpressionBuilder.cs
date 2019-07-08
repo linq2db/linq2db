@@ -39,6 +39,7 @@ namespace LinqToDB.Linq.Builder
 			new DistinctBuilder            (),
 			new FirstSingleBuilder         (),
 			new AggregationBuilder         (),
+			new MethodChainBuilder         (),
 			new ScalarSelectBuilder        (),
 			new CountBuilder               (),
 			new PassThroughBuilder         (),
@@ -64,6 +65,7 @@ namespace LinqToDB.Linq.Builder
 			new WithTableExpressionBuilder (),
 			new ContextParser              (),
 			new MergeContextParser         (),
+			new ArrayBuilder               (),
 			new AsSubQueryBuilder          (),
 			new HasUniqueKeyBuilder        (),
 		};
@@ -381,6 +383,99 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		internal static Expression ExpandExpression(Expression expression)
+		{
+			if (Configuration.Linq.UseBinaryAggregateExpression)
+				expression = AggregateExpression(expression);
+
+			return expression.Transform(expr =>
+			{
+				switch (expr.NodeType)
+				{
+					case ExpressionType.Call:
+						{
+							var mc = (MethodCallExpression)expr;
+
+							List<Expression> newArgs = null;
+							for (var index = 0; index < mc.Arguments.Count; index++)
+							{
+								var arg = mc.Arguments[index];
+								Expression newArg = null;
+								if (typeof(LambdaExpression).IsSameOrParentOf(arg.Type))
+								{
+									var argUnwrapped = arg.Unwrap();
+									if (argUnwrapped.NodeType == ExpressionType.MemberAccess ||
+									    argUnwrapped.NodeType == ExpressionType.Call)
+									{
+										if (argUnwrapped.EvaluateExpression() is LambdaExpression lambda)
+											newArg = ExpandExpression(lambda);
+									}
+								}
+
+								if (newArg == null)
+									newArgs?.Add(arg);
+								else
+								{
+									if (newArgs == null)
+										newArgs = new List<Expression>(mc.Arguments.Take(index));
+									newArgs.Add(newArg);
+								}
+							}
+
+							if (newArgs != null)
+							{
+								mc = mc.Update(mc.Object, newArgs);
+							}
+
+
+							if (mc.Method.Name == "Compile" && typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
+							{
+								if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
+								{
+									return ExpandExpression(lambda);
+								}
+							}
+
+							return mc;
+						}
+
+					case ExpressionType.Invoke:
+						{
+							var invocation = (InvocationExpression)expr;
+							if (invocation.Expression.NodeType == ExpressionType.Call)
+							{
+								var mc = (MethodCallExpression)invocation.Expression;
+								if (mc.Method.Name == "Compile" &&
+								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
+								{
+									if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
+									{
+										var map = new Dictionary<Expression, Expression>();
+										for (int i = 0; i < invocation.Arguments.Count; i++)
+										{
+											map.Add(lambda.Parameters[i], invocation.Arguments[i]);
+										}
+
+										var newBody = lambda.Body.Transform(se =>
+										{
+											if (se.NodeType == ExpressionType.Parameter &&
+											    map.TryGetValue(se, out var newExpr))
+												return newExpr;
+											return se;
+										});
+
+										return ExpandExpression(newBody);
+									}
+								}
+							}
+							break;
+						}
+				}
+
+				return expr;
+			});
+		}
+
 		Expression ConvertParameters(Expression expression)
 		{
 			return expression.Transform(expr =>
@@ -421,7 +516,14 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var me = (MemberExpression)expr;
-							var l  = ConvertMethodExpression(me.Member.ReflectedTypeEx(), me.Member);
+
+							if (me.Member.IsNullableHasValueMember())
+							{
+								var obj = ExposeExpression(me.Expression);
+								return Expression.NotEqual(obj, Expression.Constant(null, obj.Type));
+							}
+
+							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedTypeEx(), me.Member);
 
 							if (l != null)
 							{
@@ -458,6 +560,21 @@ namespace LinqToDB.Linq.Builder
 							break;
 						}
 
+					case ExpressionType.Convert:
+						{
+							var ex = (UnaryExpression)expr;
+							if (ex.Method != null)
+							{
+								var l = ConvertMethodExpression(ex.Method.DeclaringType, ex.Method);
+								if (l != null)
+								{
+									var exposed = l.GetBody(ex.Operand);
+									return ExposeExpression(exposed);
+								}
+							}
+							break;
+						}
+
 					case ExpressionType.Constant :
 						{
 							var c = (ConstantExpression)expr;
@@ -479,52 +596,6 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							break;
-						}
-
-					case ExpressionType.Call:
-						{
-							var mc = (MethodCallExpression)expr;
-
-							List<Expression> newArgs = null;
-							for (var index = 0; index < mc.Arguments.Count; index++)
-							{
-								var arg = mc.Arguments[index];
-								Expression newArg = null;
-								if (typeof(LambdaExpression).IsSameOrParentOf(arg.Type))
-								{
-									var argUnwrapped = arg.Unwrap();
-									if (argUnwrapped.NodeType == ExpressionType.MemberAccess ||
-									    argUnwrapped.NodeType == ExpressionType.Call)
-									{
-										newArg = argUnwrapped.EvaluateExpression() as LambdaExpression;
-									}
-								}
-
-								if (newArg == null)
-									newArgs?.Add(arg);
-								else
-								{
-									if (newArgs == null)
-										newArgs = new List<Expression>(mc.Arguments.Take(index));
-									newArgs.Add(newArg);
-								}
-							}
-
-							if (newArgs != null)
-							{
-								mc = mc.Update(mc.Object, newArgs);
-							}
-
-
-							if (mc.Method.Name == "Compile" && typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType))
-							{
-								if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
-								{
-									return lambda;
-								}
-							}
-							
-							return mc;
 						}
 
 					case ExpressionType.Invoke:
@@ -625,7 +696,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 						{
-							var ex = ConvertIQueriable(expr);
+							var ex = ConvertIQueryable(expr);
 
 							if (!ReferenceEquals(ex, expr))
 								return new TransformInfo(ConvertExpressionTree(ex));
@@ -638,32 +709,42 @@ namespace LinqToDB.Linq.Builder
 					{
 						var call = (MethodCallExpression)expr;
 
-						if (call.IsQueryable())
+						if (call.IsQueryable() || call.IsAsyncExtension())
 						{
 							switch (call.Method.Name)
 							{
-								case "Where"              : return new TransformInfo(ConvertWhere     (call));
-								case "GroupBy"            : return new TransformInfo(ConvertGroupBy   (call));
-								case "SelectMany"         : return new TransformInfo(ConvertSelectMany(call));
-								case "Select"             : return new TransformInfo(ConvertSelect    (call));
-								case "LongCount"          :
-								case "Count"              :
-								case "Single"             :
-								case "SingleOrDefault"    :
-								case "First"              :
-								case "FirstOrDefault"     : return new TransformInfo(ConvertPredicate (call));
-								case "Min"                :
-								case "Max"                : return new TransformInfo(ConvertSelector  (call, true));
-								case "Sum"                :
-								case "Average"            : return new TransformInfo(ConvertSelector  (call, false));
-								case "ElementAt"          :
-								case "ElementAtOrDefault" : return new TransformInfo(ConvertElementAt (call));
-								case "LoadWith"           : return new TransformInfo(expr, true);
+								case "Where"                : return new TransformInfo(ConvertWhere         (call));
+								case "GroupBy"              : return new TransformInfo(ConvertGroupBy       (call));
+								case "SelectMany"           : return new TransformInfo(ConvertSelectMany    (call));
+								case "Select"               : return new TransformInfo(ConvertSelect        (call));
+								case "LongCount"            :
+								case "Count"                :
+								case "Single"               :
+								case "SingleOrDefault"      :
+								case "First"                :
+								case "FirstOrDefault"       : return new TransformInfo(ConvertPredicate     (call));
+								case "LongCountAsync"       :
+								case "CountAsync"           :
+								case "SingleAsync"          :
+								case "SingleOrDefaultAsync" :
+								case "FirstAsync"           :
+								case "FirstOrDefaultAsync"  : return new TransformInfo(ConvertPredicateAsync(call));
+								case "Min"                  :
+								case "Max"                  : return new TransformInfo(ConvertSelector      (call, true));
+								case "Sum"                  :
+								case "Average"              : return new TransformInfo(ConvertSelector      (call, false));
+								case "MinAsync"             :
+								case "MaxAsync"             : return new TransformInfo(ConvertSelectorAsync (call, true));
+								case "SumAsync"             :
+								case "AverageAsync"         : return new TransformInfo(ConvertSelectorAsync (call, false));
+								case "ElementAt"            :
+								case "ElementAtOrDefault"   : return new TransformInfo(ConvertElementAt     (call));
+								case "LoadWith"             : return new TransformInfo(expr, true);
 							}
 						}
 						else
 						{
-							var l = ConvertMethodExpression(call.Method.ReflectedTypeEx(), call.Method);
+							var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedTypeEx(), call.Method);
 
 							if (l != null)
 								return new TransformInfo(OptimizeExpression(ConvertMethod(call, l)));
@@ -674,7 +755,7 @@ namespace LinqToDB.Linq.Builder
 
 								if (attr == null)
 								{
-									var ex = ConvertIQueriable(expr);
+									var ex = ConvertIQueryable(expr);
 
 									if (!ReferenceEquals(ex, expr))
 										return new TransformInfo(ConvertExpressionTree(ex));
@@ -771,7 +852,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var param    = Expression.Parameter(call.Type, "p");
 			var selector = expr.Transform(e => e == call ? param : e);
-			var method   = GetQueriableMethodInfo(call, (m, _) => m.Name == call.Method.Name && m.GetParameters().Length == 1);
+			var method   = GetQueryableMethodInfo(call, (m, _) => m.Name == call.Method.Name && m.GetParameters().Length == 1);
 			var select   = call.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods
 					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
@@ -1244,7 +1325,7 @@ namespace LinqToDB.Linq.Builder
 			public Expression AddElementSelectorQ()
 			{
 				Expression<Func<IQueryable<TSource>,IEnumerable<TCollection>,IQueryable<TCollection>>> func = (source,col) => source
-					.SelectMany(colParam => col, (s,c) => c)
+					.SelectMany(cp => col, (s,c) => c)
 					;
 
 				var body   = func.Body.Unwrap();
@@ -1256,7 +1337,7 @@ namespace LinqToDB.Linq.Builder
 			public Expression AddElementSelectorE()
 			{
 				Expression<Func<IEnumerable<TSource>,IEnumerable<TCollection>,IEnumerable<TCollection>>> func = (source,col) => source
-					.SelectMany(colParam => col, (s,c) => c)
+					.SelectMany(cp => col, (s,c) => c)
 					;
 
 				var body   = func.Body.Unwrap();
@@ -1318,7 +1399,7 @@ namespace LinqToDB.Linq.Builder
 			if (method.Arguments.Count != 2)
 				return method;
 
-			var cm = GetQueriableMethodInfo(method, (m,_) => m.Name == method.Method.Name && m.GetParameters().Length == 1);
+			var cm = GetQueryableMethodInfo(method, (m,_) => m.Name == method.Method.Name && m.GetParameters().Length == 1);
 			var wm = GetMethodInfo(method, "Where");
 
 			var argType = method.Method.GetGenericArguments()[0];
@@ -1330,6 +1411,26 @@ namespace LinqToDB.Linq.Builder
 				Expression.Call(null, wm,
 					OptimizeExpression(method.Arguments[0]),
 					OptimizeExpression(method.Arguments[1])));
+		}
+
+		Expression ConvertPredicateAsync(MethodCallExpression method)
+		{
+			if (method.Arguments.Count != 3)
+				return method;
+
+			var cm = typeof(AsyncExtensions).GetMethodsEx().First(m => m.Name == method.Method.Name && m.GetParameters().Length == 2);
+			var wm = GetMethodInfo(method, "Where");
+
+			var argType = method.Method.GetGenericArguments()[0];
+
+			wm = wm.MakeGenericMethod(argType);
+			cm = cm.MakeGenericMethod(argType);
+
+			return Expression.Call(null, cm,
+				Expression.Call(null, wm,
+					OptimizeExpression(method.Arguments[0]),
+					OptimizeExpression(method.Arguments[1])),
+				OptimizeExpression(method.Arguments[2]));
 		}
 
 		#endregion
@@ -1345,7 +1446,7 @@ namespace LinqToDB.Linq.Builder
 
 			var types = GetMethodGenericTypes(method);
 			var sm    = GetMethodInfo(method, "Select");
-			var cm    = GetQueriableMethodInfo(method, (m,isDefault) =>
+			var cm    = GetQueryableMethodInfo(method, (m,isDefault) =>
 			{
 				if (m.Name == method.Method.Name)
 				{
@@ -1375,6 +1476,48 @@ namespace LinqToDB.Linq.Builder
 				OptimizeExpression(Expression.Call(null, sm,
 					method.Arguments[0],
 					method.Arguments[1])));
+		}
+
+		Expression ConvertSelectorAsync(MethodCallExpression method, bool isGeneric)
+		{
+			if (method.Arguments.Count != 3)
+				return method;
+
+			isGeneric = isGeneric && method.Method.DeclaringType == typeof(AsyncExtensions);
+
+			var types = GetMethodGenericTypes(method);
+			var sm    = GetMethodInfo(method, "Select");
+			var cm    = typeof(AsyncExtensions).GetMethodsEx().First(m =>
+			{
+				if (m.Name == method.Method.Name)
+				{
+					var ps = m.GetParameters();
+
+					if (ps.Length == 2)
+					{
+						if (isGeneric)
+							return true;
+
+						var ts = ps[0].ParameterType.GetGenericArgumentsEx();
+						return ts[0] == types[1];// || isDefault && ts[0].IsGenericParameter;
+					}
+				}
+
+				return false;
+			});
+
+			var argType = types[0];
+
+			sm = sm.MakeGenericMethod(argType, types[1]);
+
+			if (cm.IsGenericMethodDefinition)
+				cm = cm.MakeGenericMethod(types[1]);
+
+			return Expression.Call(null, cm,
+				OptimizeExpression(Expression.Call(null, sm,
+					method.Arguments[0],
+					method.Arguments[1])),
+				OptimizeExpression(method.Arguments[2]));
 		}
 
 		#endregion
@@ -1412,9 +1555,9 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region ConvertIQueriable
+		#region ConvertIQueryable
 
-		Expression ConvertIQueriable(Expression expression)
+		Expression ConvertIQueryable(Expression expression)
 		{
 			if (expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
 			{
@@ -1476,13 +1619,13 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				skipMethod = GetQueriableMethodInfo(method, (mi,_) => mi.Name == "Skip");
+				skipMethod = GetQueryableMethodInfo(method, (mi,_) => mi.Name == "Skip");
 			}
 
 			skipMethod = skipMethod.MakeGenericMethod(sourceType);
 
 			var methodName  = method.Method.Name == "ElementAt" ? "First" : "FirstOrDefault";
-			var firstMethod = GetQueriableMethodInfo(method, (mi,_) => mi.Name == methodName && mi.GetParameters().Length == 1);
+			var firstMethod = GetQueryableMethodInfo(method, (mi,_) => mi.Name == methodName && mi.GetParameters().Length == 1);
 
 			firstMethod = firstMethod.MakeGenericMethod(sourceType);
 
@@ -1493,7 +1636,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		MethodInfo GetQueriableMethodInfo(MethodCallExpression method, [InstantHandle] Func<MethodInfo,bool,bool> predicate)
+		MethodInfo GetQueryableMethodInfo(MethodCallExpression method, [InstantHandle] Func<MethodInfo,bool,bool> predicate)
 		{
 			return method.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods.FirstOrDefault(m => predicate(m, false)) ?? EnumerableMethods.First(m => predicate(m, true)):

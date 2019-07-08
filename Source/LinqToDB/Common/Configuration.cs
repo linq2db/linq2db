@@ -6,6 +6,7 @@ namespace LinqToDB.Common
 {
 	using Data;
 	using Data.RetryPolicy;
+	using System.Threading.Tasks;
 
 	/// <summary>
 	/// Contains global linq2db settings.
@@ -27,11 +28,18 @@ namespace LinqToDB.Common
 		public static bool UseEnumValueNameForStringColumns = true;
 
 		/// <summary>
-		/// If <c>true</c> - data providers will try to use standard ADO.NET interfaces instead of provider-specific functionality when possible. This option could be usefull if you need to intercept
+		/// If <c>true</c> - data providers will try to use standard ADO.NET interfaces instead of provider-specific functionality when possible.
+		/// This option could be useful if you need to intercept
 		/// database calls using tools such as <a href="https://github.com/MiniProfiler/dotnet">MiniProfiler</a>.
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public static bool AvoidSpecificDataProviderAPI;
+
+		/// <summary>
+		/// Defines value to pass to <see cref="Task.ConfigureAwait(bool)"/> method for all linq2db internal await operations.
+		/// Default value: <c>true</c>.
+		/// </summary>
+		public static bool ContinueOnCapturedContext = true;
 
 		public static class Data
 		{
@@ -71,7 +79,7 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Enables generation of test class for each LINQ query, executed while this option is enabled.
-			/// This option could be usefull for issue reporting, when you need to provide reproduceable case.
+			/// This option could be useful for issue reporting, when you need to provide reproducible case.
 			/// Test file will be placed to <c>linq2db</c> subfolder of temp folder and exact file path will be logged
 			/// to data connection tracing infrastructure.
 			/// See <see cref="DataConnection.TraceSwitch"/> for more details.
@@ -89,7 +97,7 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, System.Linq.Expressions.Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, System.Linq.Expressions.Expression{Func{TSource, TKey}})"/> calls:
 			/// - if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;
-			/// - if <c>false</c> - OrdredBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
+			/// - if <c>false</c> - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool DoNotClearOrderBys;
@@ -105,7 +113,7 @@ namespace LinqToDB.Common
 			public static bool OptimizeJoins = true;
 
 			/// <summary>
-			/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparasions.
+			/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
 			/// This affects: Equal, NotEqual, Not Contains
 			/// Default value: <c>true</c>.
 			/// </summary>
@@ -152,7 +160,7 @@ namespace LinqToDB.Common
 
 #pragma warning disable 1574
 			/// <summary>
-			/// Used to optimize huge logical operations with large number of operands like expr1.and.axpr2...and.exprN into balanced tree.
+			/// Used to optimize huge logical operations with large number of operands like expr1.and.expr2...and.exprN into balanced tree.
 			/// Without this option, such conditions could lead to <seealso cref="StackOverflowException"/>.
 			/// Default value: <c>false</c>.
 			/// </summary>
@@ -177,13 +185,19 @@ namespace LinqToDB.Common
 			public static bool DisableQueryCache;
 
 			/// <summary>
+			/// Specifies timeout when query will be evicted from cache since last execution of query.
+			/// Default value is 1 hour.
+			/// </summary>
+			public static TimeSpan CacheSlidingExpiration = TimeSpan.FromHours(1);
+
+			/// <summary>
 			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
 			/// </summary>
 			public static bool PreferApply = true;
 
 			/// <summary>
 			/// Allows SQL generation to automatically transform
-			/// <code>SELECT DICTINCT value FROM Table ORDER BY date</code>
+			/// <code>SELECT DISTINCT value FROM Table ORDER BY date</code>
 			/// Into GROUP BY equivalent if syntax is not supported
 			/// </summary>
 			public static bool KeepDistinctOrdered = true;
@@ -232,8 +246,8 @@ namespace LinqToDB.Common
 			/// </summary>
 			public static bool UseDefaultPolicy
 			{
-				get { return Factory == DefaultRetryPolicyFactory.GetRetryPolicy; }
-				set { Factory = value ? DefaultRetryPolicyFactory.GetRetryPolicy : (Func<DataConnection,IRetryPolicy>)null; }
+				get => Factory == DefaultRetryPolicyFactory.GetRetryPolicy;
+				set => Factory = value ? DefaultRetryPolicyFactory.GetRetryPolicy : (Func<DataConnection,IRetryPolicy>)null;
 			}
 
 			/// <summary>
@@ -265,6 +279,77 @@ namespace LinqToDB.Common
 			/// Default value: 1 second.
 			/// </summary>
 			public static TimeSpan DefaultCoefficient = TimeSpan.FromSeconds(1);
+		}
+
+		/// <summary>
+		/// SQL generation global settings.
+		/// </summary>
+		[PublicAPI]
+		public static class Sql
+		{
+			/// <summary>
+			/// Format for association alias.
+			/// <para>
+			/// Default value: <c>"a_{0}"</c>.
+			/// </para>
+			/// <example>
+			/// In the following query
+			/// <code>
+			/// var query = from child in db.Child
+			///    select new
+			///    {
+			///       child.ChildID,
+			///       child.Parent.Value1
+			///    };
+			/// </code>
+			/// for association <c>Parent</c> will be generated association <c>A_Parent</c> in resulting SQL.
+			/// <code>
+			/// SELECT
+			///	   [child].[ChildID],
+			///	   [a_Parent].[Value1]
+			/// FROM
+			///	   [Child] [child]
+			///       LEFT JOIN [Parent] [a_Parent] ON ([child].[ParentID] = [a_Parent].[ParentID])
+			/// </code>
+			/// </example>
+			/// <remarks>
+			/// Set this value to <c>null</c> to disable special alias generation queries.
+			/// </remarks>
+			/// </summary>
+			public static string AssociationAlias { get; set; } = "a_{0}";
+
+			/// <summary>
+			/// Indicates whether SQL Builder should generate aliases for final projection.
+			/// It is not required for correct query processing but simplifies SQL analysis.
+			/// <para>
+			/// Default value: <c>false</c>.
+			/// </para>
+			/// <example>
+			/// For the query
+			/// <code>
+			/// var query = from child in db.Child
+			///	   select new
+			///	   {
+			///       TrackId = child.ChildID,
+			///	   };
+			/// </code>
+			/// When property is <c>true</c>
+			/// <code>
+			/// SELECT
+			///	   [child].[ChildID] as [TrackId]
+			/// FROM
+			///	   [Child] [child]
+			/// </code>
+			/// Otherwise alias will be removed
+			/// <code>
+			/// SELECT
+			///	   [child].[ChildID]
+			/// FROM
+			///	   [Child] [child]
+			/// </code>
+			/// </example>
+			/// </summary>
+			public static bool GenerateFinalAliases { get; set; } = false;
 		}
 	}
 }

@@ -207,8 +207,8 @@ WHERE
 	" + GetSchemaFilter("TABSCHEMA"))
 				.SelectMany(fk =>
 				{
-					var thisTable    = _columns.Where(c => c.TableID == fk.thisTable). OrderByDescending(c => c.Length).ToList();
-					var otherTable   = _columns.Where(c => c.TableID == fk.otherTable).OrderByDescending(c => c.Length).ToList();
+					var thisTable    = _columns.Where(c => c.TableID == fk.thisTable). OrderByDescending(c => c.Name.Length).ToList();
+					var otherTable   = _columns.Where(c => c.TableID == fk.otherTable).OrderByDescending(c => c.Name.Length).ToList();
 					var thisColumns  = fk.thisColumns. Trim();
 					var otherColumns = fk.otherColumns.Trim();
 
@@ -217,13 +217,10 @@ WHERE
 					for (var i = 0; thisColumns.Length > 0; i++)
 					{
 						var thisColumn  = thisTable. FirstOrDefault(c => thisColumns. StartsWith(c.Name));
-						if (thisColumn  == null)
-							continue;
-
 						var otherColumn = otherTable.FirstOrDefault(c => otherColumns.StartsWith(c.Name));
-						if (otherColumn == null)
-							continue;
 
+						if (thisColumn == null || otherColumn == null)
+							break;
 
 						list.Add(new ForeignKeyInfo
 						{
@@ -244,7 +241,7 @@ WHERE
 				.ToList();
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale)
+		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
 		{
 			var type = DataTypes.FirstOrDefault(dt => dt.TypeName == columnType);
 
@@ -279,7 +276,7 @@ WHERE
 				}
 			}
 
-			return base.GetDbType(columnType, dataType, length, prec, scale);
+			return base.GetDbType(columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
 
 		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
@@ -435,7 +432,8 @@ WHERE
 						Ordinal       = ConvertTo<int>.From(rd["ORDINAL"]),
 						IsIn          = mode.Contains("IN"),
 						IsOut         = mode.Contains("OUT"),
-						IsResult      = false
+						IsResult      = false,
+						IsNullable    = true
 					};
 
 					var ci = new ColumnInfo { DataType = ppi.DataType };

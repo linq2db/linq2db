@@ -3,26 +3,27 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Linq;
-using LinqToDB.Common;
 
 namespace LinqToDB.Reflection
 {
+	using Common;
 	using Expressions;
 	using Extensions;
 	using Mapping;
 
 	public class MemberAccessor
 	{
-		static readonly ConstructorInfo ArgumentExceptionConstructorInfo = typeof(ArgumentException).GetConstructor(new[] {typeof(string)}) ??
-					            throw new Exception($"Can not retrieve information about constructor for {nameof(ArgumentException)}");
+		static readonly ConstructorInfo ArgumentExceptionConstructorInfo =
+			typeof(ArgumentException).GetConstructor(new[] {typeof(string)}) ??
+				throw new Exception($"Can not retrieve information about constructor for {nameof(ArgumentException)}");
 
-		internal MemberAccessor(TypeAccessor typeAccessor, string memberName)
+		internal MemberAccessor(TypeAccessor typeAccessor, string memberName, EntityDescriptor ed)
 		{
 			TypeAccessor = typeAccessor;
 
 			if (memberName.IndexOf('.') < 0)
 			{
-				SetSimple(Expression.PropertyOrField(Expression.Constant(null, typeAccessor.Type), memberName).Member);
+				SetSimple(Expression.PropertyOrField(Expression.Constant(null, typeAccessor.Type), memberName).Member, ed);
 			}
 			else
 			{
@@ -62,7 +63,7 @@ namespace LinqToDB.Reflection
 							var info = infos[i];
 							var next = Expression.MakeMemberAccess(ex, info.member);
 
-							if (i == infos.Length - 1) 
+							if (i == infos.Length - 1)
 								return Expression.Assign(ret, next);
 
 							if (next.Type.IsClassEx() || next.Type.IsNullable())
@@ -70,10 +71,10 @@ namespace LinqToDB.Reflection
 								var local = Expression.Variable(next.Type);
 
 								return Expression.Block(
-									new[] { local }, 
+									new[] { local },
 									Expression.Assign(local, next) as Expression,
 									Expression.IfThen(
-										Expression.NotEqual(local, Expression.Constant(null)), 
+										Expression.NotEqual(local, Expression.Constant(null)),
 										MakeGetter(local, i + 1)));
 							}
 
@@ -82,7 +83,7 @@ namespace LinqToDB.Reflection
 
 						expr = Expression.Block(
 							new[] { ret },
-							Expression.Assign(ret, new DefaultValueExpression(MappingSchema.Default, Type)),
+							Expression.Assign(ret, new DefaultValueExpression(ed?.MappingSchema ?? MappingSchema.Default, Type)),
 							MakeGetter(objParam, 0),
 							ret);
 					}
@@ -164,7 +165,7 @@ namespace LinqToDB.Reflection
 
 						SetterExpression = Expression.Lambda(
 							Expression.Block(
-								new[] { fakeParam }, 
+								new[] { fakeParam },
 								Expression.Assign(fakeParam, Expression.Constant(0))),
 							objParam,
 							valueParam);
@@ -175,15 +176,15 @@ namespace LinqToDB.Reflection
 			SetExpressions();
 		}
 
-		public MemberAccessor(TypeAccessor typeAccessor, MemberInfo memberInfo)
+		public MemberAccessor(TypeAccessor typeAccessor, MemberInfo memberInfo, EntityDescriptor ed)
 		{
 			TypeAccessor = typeAccessor;
 
-			SetSimple(memberInfo);
+			SetSimple(memberInfo, ed);
 			SetExpressions();
 		}
 
-		void SetSimple(MemberInfo memberInfo)
+		void SetSimple(MemberInfo memberInfo, EntityDescriptor ed)
 		{
 			MemberInfo = memberInfo;
 			Type       = MemberInfo is PropertyInfo propertyInfo ? propertyInfo.PropertyType : ((FieldInfo)MemberInfo).FieldType;
@@ -201,88 +202,58 @@ namespace LinqToDB.Reflection
 
 			var objParam   = Expression.Parameter(TypeAccessor.Type, "obj");
 			var valueParam = Expression.Parameter(Type, "value");
+			var getterType = typeof(Func<,>).MakeGenericType(TypeAccessor.Type, Type);
+			var setterType = typeof(Action<,>).MakeGenericType(TypeAccessor.Type, Type);
 
 			if (HasGetter && memberInfo.IsDynamicColumnPropertyEx())
 			{
 				IsComplex = true;
 
-				if (TypeAccessor.DynamicColumnsStoreAccessor != null)
+				if (ed?.DynamicColumnGetter != null)
 				{
-					// get value via "Item" accessor; we're not null-checking
-
-					var storageType = TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo.GetMemberType();
-					var storedType  = storageType.GetGenericArguments()[1];
-					var outVar      = Expression.Variable(storedType);
-					var resultVar   = Expression.Variable(Type);
-
-					MethodInfo tryGetValueMethodInfo = storageType.GetMethod("TryGetValue");
-
-					if (tryGetValueMethodInfo == null)
-						throw new LinqToDBException("Storage property do not have method 'TryGetValue'");
-
-					GetterExpression =
-						Expression.Lambda(
-							Expression.Block(
-								new[] { outVar, resultVar },
-								Expression.IfThenElse(
-									Expression.Call(
-										Expression.MakeMemberAccess(objParam,
-											TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
-										tryGetValueMethodInfo,
-										Expression.Constant(memberInfo.Name), outVar),
-									Expression.Assign(resultVar, Expression.Convert(outVar, Type)),
-									Expression.Assign(resultVar,
-										new DefaultValueExpression(MappingSchema.Default, Type))
-								),
-								resultVar
-							),
-							objParam);
+					GetterExpression = Expression.Lambda(
+						getterType,
+						Expression.Convert(
+							ed.DynamicColumnGetter.GetBody(
+								objParam,
+								Expression.Constant(memberInfo.Name),
+								Expression.Convert(new DefaultValueExpression(ed.MappingSchema, Type), typeof(object))),
+							Type),
+						objParam);
 				}
 				else
 					// dynamic columns store was not provided, throw exception when accessed
+					// @mace_windu: why not throw it immediately? Fail fast
 					GetterExpression = Expression.Lambda(
-						Expression.Throw(
-							Expression.New(
-								ArgumentExceptionConstructorInfo,
-								Expression.Constant("Tried getting dynamic column value, without setting dynamic column store on type."))),
+						getterType,
+						Expression.Call(_throwOnDynamicStoreMissingMethod.MakeGenericMethod(Type)),
 						objParam);
 			}
 			else if (HasGetter)
-			{
-				GetterExpression = Expression.Lambda(Expression.MakeMemberAccess(objParam, memberInfo), objParam);
-			}
+				GetterExpression = Expression.Lambda(getterType, Expression.MakeMemberAccess(objParam, memberInfo), objParam);
 			else
-			{
-				GetterExpression = Expression.Lambda(new DefaultValueExpression(MappingSchema.Default, Type), objParam);
-			}
+				GetterExpression = Expression.Lambda(getterType, new DefaultValueExpression(ed?.MappingSchema ?? MappingSchema.Default, Type), objParam);
 
 			if (HasSetter && memberInfo.IsDynamicColumnPropertyEx())
 			{
 				IsComplex = true;
 
-				if (TypeAccessor.DynamicColumnsStoreAccessor != null)
-					// if null, create new dictionary; then assign value
-					SetterExpression =
-						Expression.Lambda(
-							Expression.Block(
-								Expression.IfThen(
-									Expression.ReferenceEqual(
-										Expression.MakeMemberAccess(objParam, TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
-										Expression.Constant(null)),
-									Expression.Assign(
-										Expression.MakeMemberAccess(objParam, TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
-										Expression.New(typeof(Dictionary<string, object>)))),
-								Expression.Assign(
-									Expression.Property(
-										Expression.MakeMemberAccess(objParam, TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
-										"Item",
-										Expression.Constant(memberInfo.Name)),
-									Expression.Convert(valueParam, typeof(object)))),
+				if (ed?.DynamicColumnSetter != null)
+				{
+					SetterExpression = Expression.Lambda(
+						setterType,
+						ed.DynamicColumnSetter.GetBody(
 							objParam,
-							valueParam);
+							Expression.Constant(memberInfo.Name),
+							valueParam),
+						objParam,
+						valueParam);
+				}
 				else
 					// dynamic columns store was not provided, throw exception when accessed
-					GetterExpression = Expression.Lambda(
+					// @mace_windu: why not throw it immediately? Fail fast
+					SetterExpression = Expression.Lambda(
+						setterType,
 						Expression.Block(
 							Expression.Throw(
 								Expression.New(
@@ -295,17 +266,17 @@ namespace LinqToDB.Reflection
 
 			}
 			else if (HasSetter)
-			{
 				SetterExpression = Expression.Lambda(
+					setterType,
 					Expression.Assign(Expression.MakeMemberAccess(objParam, memberInfo), valueParam),
 					objParam,
 					valueParam);
-			}
 			else
 			{
 				var fakeParam = Expression.Parameter(typeof(int));
 
 				SetterExpression = Expression.Lambda(
+					setterType,
 					Expression.Block(
 						new[] { fakeParam },
 						new Expression[] { Expression.Assign(fakeParam, Expression.Constant(0)) }),
@@ -333,6 +304,13 @@ namespace LinqToDB.Reflection
 
 				Setter = setter.Compile();
 			}
+		}
+
+		static MethodInfo _throwOnDynamicStoreMissingMethod = MemberHelper.MethodOf(() => ThrowOnDynamicStoreMissing<int>()).GetGenericMethodDefinition();
+		static T ThrowOnDynamicStoreMissing<T>()
+		{
+			throw new ArgumentException("Tried getting dynamic column value, without setting dynamic column store on type.");
+
 		}
 
 		#region Public Properties

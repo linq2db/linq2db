@@ -68,20 +68,19 @@ namespace Tests.UserTests
 			public LastInChain Container { get; set; }
 		}
 
-		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
-		[Test, DataContextSource]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				using (db.CreateLocalTable<Task>())
-				using (db.CreateLocalTable<TaskStage>())
+				using (var t  = db.CreateLocalTable<Task>())
+				using (var ts = db.CreateLocalTable<TaskStage>())
 				{
-					db.Insert(new Task { Id = 1 });
-					db.Insert(new Task { Id = 2 });
-					db.Insert(new TaskStage { Id = 2, TaskId = 1, Actual = true });
+					db.Insert(new Task      { Id = 1 }, t.TableName);
+					db.Insert(new Task      { Id = 2 }, t.TableName);
+					db.Insert(new TaskStage { Id = 2, TaskId = 1, Actual = true }, ts.TableName);
 
-					var query = db.GetTable<Task>()
+					var query = t
 							.GroupBy(it => new GroupByWrapper()
 							{
 								GroupByContainer = new LastInChain()
@@ -101,11 +100,13 @@ namespace Tests.UserTests
 										.Sum(_ => (_.ActualStage == null)? null: (int?)_.ActualStage.Id)
 								}
 							});
-					var res = query.ToArray();
+					var res = query.AsEnumerable().OrderBy(_ => _.GroupByContainer.Value).ToArray();
 
-					Assert.AreEqual(2, res.Length);
+					Assert.AreEqual (2, res.Length);
 					Assert.IsNotNull(res[0].Container);
-					Assert.AreEqual(2, res[0].Container.Value);
+					Assert.AreEqual (2, res[0].Container.Value);
+					Assert.IsNotNull(res[1].Container);
+					Assert.IsNull   (res[1].Container.Value);
 				}
 			}
 		}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
-
+using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -61,6 +62,41 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Start new transaction asynchronously with default isolation level.
+		/// If underlying connection already has transaction, it will be rolled back.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+		{
+			var db = DataContext.GetDataConnection();
+
+			await db.BeginTransactionAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			if (_transactionCounter == 0)
+				DataContext.LockDbManagerCounter++;
+
+			_transactionCounter++;
+		}
+
+		/// <summary>
+		/// Start new transaction asynchronously with specified isolation level.
+		/// If underlying connection already has transaction, it will be rolled back.
+		/// </summary>
+		/// <param name="level">Transaction isolation level.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		public async Task BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
+		{
+			var db = DataContext.GetDataConnection();
+
+			await db.BeginTransactionAsync(level).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			if (_transactionCounter == 0)
+				DataContext.LockDbManagerCounter++;
+
+			_transactionCounter++;
+		}
+
+		/// <summary>
 		/// Commits started transaction.
 		/// </summary>
 		public void CommitTransaction()
@@ -91,6 +127,54 @@ namespace LinqToDB
 				var db = DataContext.GetDataConnection();
 
 				db.RollbackTransaction();
+
+				_transactionCounter--;
+
+				if (_transactionCounter == 0)
+				{
+					DataContext.LockDbManagerCounter--;
+					DataContext.ReleaseQuery();
+				}
+			}
+		}
+
+		/// <summary>
+		/// Commits started transaction.
+		/// If underlying provider doesn't support asynchonous commit, it will be performed synchonously.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Asynchronous operation completion task.</returns>
+		public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+		{
+			if (_transactionCounter > 0)
+			{
+				var db = DataContext.GetDataConnection();
+
+				await db.CommitTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				_transactionCounter--;
+
+				if (_transactionCounter == 0)
+				{
+					DataContext.LockDbManagerCounter--;
+					DataContext.ReleaseQuery();
+				}
+			}
+		}
+
+		/// <summary>
+		/// Rollbacks started transaction asynchonously.
+		/// If underlying provider doesn't support asynchonous rollback, it will be performed synchonously.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Asynchronous operation completion task.</returns>
+		public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+		{
+			if (_transactionCounter > 0)
+			{
+				var db = DataContext.GetDataConnection();
+
+				await db.RollbackTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				_transactionCounter--;
 

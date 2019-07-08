@@ -13,6 +13,7 @@ namespace LinqToDB.Linq
 	using Async;
 	using Builder;
 	using Common;
+	using Common.Internal.Cache;
 	using Data;
 	using Extensions;
 	using LinqToDB.Expressions;
@@ -20,6 +21,21 @@ namespace LinqToDB.Linq
 
 	static partial class QueryRunner
 	{
+		public static class Cache<T>
+		{
+			static Cache()
+			{
+				Query.CacheCleaners.Add(ClearCache);
+			}
+
+			public static void ClearCache()
+			{
+				QueryCache.Compact(1);
+			}
+
+			internal static MemoryCache QueryCache { get; } = new MemoryCache(new MemoryCacheOptions());
+		}
+
 		#region Mapper
 
 		class Mapper<T>
@@ -55,27 +71,7 @@ namespace LinqToDB.Linq
 				{
 					return _mapper(queryRunner, dataReader);
 				}
-				catch (FormatException ex)
-				{
-					if (_isFaulted)
-						throw;
-
-					if (DataConnection.TraceSwitch.TraceInfo)
-						DataConnection.WriteTraceLine(
-							$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
-							DataConnection.TraceSwitch.DisplayName);
-
-					var qr = QueryRunner;
-					if (qr != null)
-						qr.MapperExpression = _mapperExpression;
-
-					_mapper = _expression.Compile();
-
-					_isFaulted = true;
-
-					return _mapper(queryRunner, dataReader);
-				}
-				catch (InvalidCastException ex)
+				catch (Exception ex) when (ex is FormatException || ex is InvalidCastException || ex is LinqToDBConvertException)
 				{
 					if (_isFaulted)
 						throw;
@@ -123,7 +119,10 @@ namespace LinqToDB.Linq
 					runtime.Select(p => new ParameterAccessor(Expression.Constant(p.Value), (e, o) => p.Value,
 						(e, o) => p.DataType != DataType.Undefined || p.Value == null
 							? p.DataType
-							: query.MappingSchema.GetDataType(p.Value.GetType()).DataType, p))
+							: query.MappingSchema.GetDataType(p.Value.GetType()).DataType,
+						(e, o) => p.DbType,
+						(e, o) => p.DbSize,
+						p))
 				);
 
 				sql.Parameters = parameters.ToList();
@@ -207,6 +206,17 @@ namespace LinqToDB.Linq
 
 				if (dataType != DataType.Undefined)
 					p.SqlParameter.DataType = dataType;
+
+				var dbType = p.DbTypeAccessor(expression, parameters);
+
+				if (!string.IsNullOrEmpty(dbType))
+					p.SqlParameter.DbType = dbType;
+
+				var size = p.SizeAccessor(expression, parameters);
+
+				if (size != null)
+					p.SqlParameter.DbSize = size;
+
 			}
 		}
 
@@ -223,19 +233,23 @@ namespace LinqToDB.Linq
 			getter = field.ColumnDescriptor.MemberAccessor.GetterExpression.GetBody(getter);
 
 			Expression dataTypeExpression = Expression.Constant(DataType.Undefined);
+			Expression dbTypeExpression   = Expression.Constant(null, typeof(string));
+			Expression dbSizeExpression   = Expression.Constant(field.Length, typeof(int?));
 
-			var expr = dataContext.MappingSchema.GetConvertExpression(field.SystemType, typeof(DataParameter), createDefault: false);
+			var convertExpression = dataContext.MappingSchema.GetConvertExpression(new DbDataType(field.SystemType, field.DataType, field.DbType, field.Length),
+				new DbDataType(typeof(DataParameter), field.DataType, field.DbType, field.Length), createDefault: false);
 
-			if (expr != null)
+			if (convertExpression != null)
 			{
-				var body = expr.GetBody(getter);
-
+				var body           = convertExpression.GetBody(getter);
 				getter             = Expression.PropertyOrField(body, "Value");
 				dataTypeExpression = Expression.PropertyOrField(body, "DataType");
+				dbTypeExpression   = Expression.PropertyOrField(body, "DbType");
+				dbSizeExpression   = Expression.PropertyOrField(body, "Size");
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, getter, dataTypeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
+				dataContext, getter, dataTypeExpression, dbTypeExpression, dbSizeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'), expr: convertExpression);
 
 			return param;
 		}
@@ -331,8 +345,9 @@ namespace LinqToDB.Linq
 				{
 					while (dr.Read())
 					{
-						yield return mapper.Map(runner, dr);
+						var value = mapper.Map(runner, dr);
 						runner.RowsCount++;
+						yield return value;
 					}
 				}
 			}
@@ -360,16 +375,16 @@ namespace LinqToDB.Linq
 				{
 					mapper.QueryRunner = runner;
 
-					using (var dr = await runner.ExecuteReaderAsync(cancellationToken))
+					using (var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
 						var skip = skipAction?.Invoke(expression, ps) ?? 0;
 
-						while (skip-- > 0 && await dr.ReadAsync(cancellationToken))
+						while (skip-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 							{}
 
 						var take = takeAction?.Invoke(expression, ps) ?? int.MaxValue;
 
-						while (take-- > 0 && await dr.ReadAsync(cancellationToken))
+						while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
 							runner.RowsCount++;
 							if (!func(mapper.Map(runner, dr.DataReader)))
@@ -429,20 +444,20 @@ namespace LinqToDB.Linq
 
 					_mapper.QueryRunner = _queryRunner;
 
-					_dataReader = await _queryRunner.ExecuteReaderAsync(cancellationToken);
+					_dataReader = await _queryRunner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					var skip = _skipAction?.Invoke(_expression, _ps) ?? 0;
 
 					while (skip-- > 0)
 					{
-						if (!await _dataReader.ReadAsync(cancellationToken))
+						if (!await _dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 							return false;
 					}
 
 					_take = _takeAction?.Invoke(_expression, _ps) ?? int.MaxValue;
 				}
 
-				if (_take-- > 0 && await _dataReader.ReadAsync(cancellationToken))
+				if (_take-- > 0 && await _dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
 					_queryRunner.RowsCount++;
 
@@ -672,9 +687,9 @@ namespace LinqToDB.Linq
 				{
 					mapper.QueryRunner = runner;
 
-					using (var dr = await runner.ExecuteReaderAsync(cancellationToken))
+					using (var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
-						if (await dr.ReadAsync(cancellationToken))
+						if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
 							runner.RowsCount++;
 
@@ -724,7 +739,7 @@ namespace LinqToDB.Linq
 			CancellationToken cancellationToken)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
-				return await runner.ExecuteScalarAsync(cancellationToken);
+				return await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion
@@ -758,7 +773,7 @@ namespace LinqToDB.Linq
 			CancellationToken cancellationToken)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
-				return await runner.ExecuteNonQueryAsync(cancellationToken);
+				return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion
@@ -802,14 +817,14 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
-				var n = await runner.ExecuteNonQueryAsync(cancellationToken);
+				var n = await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (n != 0)
 					return n;
 
 				runner.QueryNumber = 1;
 
-				return await runner.ExecuteNonQueryAsync(cancellationToken);
+				return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 
@@ -854,14 +869,14 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
-				var n = await runner.ExecuteScalarAsync(cancellationToken);
+				var n = await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (n != null)
 					return 0;
 
 				runner.QueryNumber = 1;
 
-				return await runner.ExecuteNonQueryAsync(cancellationToken);
+				return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 

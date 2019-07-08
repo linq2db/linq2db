@@ -1,11 +1,3 @@
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -13,14 +5,22 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	class PostgreSQLBulkCopy : BasicBulkCopy
 	{
-		private readonly PostgreSQLDataProvider _dataProvider;
-		private readonly Type                   _connectionType;
+		readonly PostgreSQLDataProvider _dataProvider;
+		readonly Type                   _connectionType;
 
-		private static readonly ConcurrentDictionary<object, object> _rowWriterCache = new ConcurrentDictionary<object, object>();
+		static readonly ConcurrentDictionary<object, object> _rowWriterCache = new ConcurrentDictionary<object, object>();
 
 		public PostgreSQLBulkCopy(PostgreSQLDataProvider dataProvider, Type connectionType)
 		{
@@ -28,26 +28,27 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_connectionType = connectionType;
 		}
 
-		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return MultipleRowsCopy1(dataConnection, options, source);
+			return MultipleRowsCopy1(table, options, source);
 		}
 
-		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (!(table?.DataContext is DataConnection dataConnection))
+				throw new ArgumentNullException(nameof(dataConnection));
 
 			var connection = dataConnection.Connection;
 
 			if (connection == null)
-				return MultipleRowsCopy(dataConnection, options, source);
+				return MultipleRowsCopy(table, options, source);
 
 			if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOfEx(_connectionType)))
-				return MultipleRowsCopy(dataConnection, options, source);
+				return MultipleRowsCopy(table, options, source);
 
-			var sqlBuilder   = _dataProvider.CreateSqlBuilder();
+			var sqlBuilder   = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			var ed           = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName    = GetTableName(sqlBuilder, options, ed);
+			var tableName    = GetTableName(sqlBuilder, options, table);
 			var columns      = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
 			var writerType   = _connectionType.AssemblyEx().GetType("Npgsql.NpgsqlBinaryImporter", true);
 
@@ -70,7 +71,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			// https://github.com/npgsql/npgsql/issues/1646
 			// npgsql 4.0 will revert logic by removing explicit Cancel() and add explicit Complete()
-			var hasCancel = writer.GetType().GetMethod("Cancel") != null;
+			var hasCancel   = writer.GetType().GetMethod("Cancel")   != null;
 			var hasComplete = writer.GetType().GetMethod("Complete") != null;
 			try
 			{
@@ -121,10 +122,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return rowsCopied;
 		}
 
-		private Action<MappingSchema, object, ColumnDescriptor[], TEntity> BuildRowWriter<TEntity>(
-			Type writerType,
-			ColumnDescriptor[] columns,
-			MappingSchema mappingSchema)
+		Action<MappingSchema, object, ColumnDescriptor[], TEntity> BuildRowWriter<TEntity>(
+			Type writerType, ColumnDescriptor[] columns, MappingSchema mappingSchema)
 		{
 			var pMapping    = Expression.Parameter(typeof(MappingSchema));
 			var pWriter     = Expression.Parameter(typeof(object));
@@ -132,12 +131,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			var pEntity     = Expression.Parameter(typeof(TEntity));
 
 			var writerVar   = Expression.Variable(writerType);
-			var exprs       = new List<Expression>();
+			var exprs       = new List<Expression>
+			{
+				Expression.Assign(writerVar, Expression.Convert(pWriter, writerType)),
+				Expression.Call(writerVar, "StartRow", Array<Type>.Empty)
+			};
 
-			exprs.Add(Expression.Assign(writerVar, Expression.Convert(pWriter, writerType)));
-			exprs.Add(Expression.Call(writerVar, "StartRow", Array<Type>.Empty));
-
-			var builder = (BasicSqlBuilder)_dataProvider.CreateSqlBuilder();
+			var builder = (BasicSqlBuilder)_dataProvider.CreateSqlBuilder(mappingSchema);
 
 			for (var i = 0; i < columns.Length; i++)
 			{

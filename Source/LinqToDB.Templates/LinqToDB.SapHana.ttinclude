@@ -7,10 +7,10 @@
 	GenerateProviderSpecificTable = t =>
 	{
 		var method = new Method(
-			String.Format("ITable<{0}>", t.TypeName),
+			() => string.Format("ITable<{0}>", t.TypeName),
 			t.DataContextPropertyName,
-			t.Parameters.Select(p => p.ParameterType + " " + p.ParameterName),
-			new []
+			t.Parameters.Select(p => (Func<string>)(() => p.Type.ToTypeName() + " " + p.ParameterName)),
+			() => new []
 			{
 				String.Concat("return GetTable<",t.TypeName,">(this, (MethodInfo) MethodBase.GetCurrentMethod(),"),
 				String.Join(",", t.Parameters.Select(p => p.ParameterName)),
@@ -40,7 +40,7 @@
 				Description             = t.Description,
 				Columns                 = t.Columns.ToDictionary(
 				c => c.ColumnName,
-				c => new Column
+				c => new Column(new ModelType(c.MemberType, !IsValueType(c.MemberType), c.IsNullable))
 				{
 					ColumnName      = c.ColumnName,
 					ColumnType      = c.ColumnType,
@@ -49,7 +49,6 @@
 					IsPrimaryKey    = c.IsPrimaryKey,
 					PrimaryKeyOrder = c.PrimaryKeyOrder,
 					MemberName      = CheckType(c.SystemType, c.MemberName),
-					Type            = c.MemberType,
 					SkipOnInsert    = c.SkipOnInsert,
 					SkipOnUpdate    = c.SkipOnUpdate,
 					Description     = c.Description,
@@ -66,6 +65,7 @@
 					ParameterType = pr.ParameterType,
 					SystemType    = pr.SystemType,
 					DataType      = pr.DataType.ToString(),
+					IsNullable    = pr.IsNullable
 				})
 				.ToList()
 			};
@@ -94,13 +94,13 @@
 
 	void LoadSapHanaMetadata(string connectionString)
 	{
-		var dataConnection = GetSapHanaConnection(connectionString);
-		LoadMetadata(dataConnection);
+		using (var dataConnection = GetSapHanaConnection(connectionString))
+			LoadMetadata(dataConnection);
 	}
 
 	void LoadSapHanaMetadata(string server, string schema, string uid, string password)
 	{
-		var dataConnection = GetSapHanaConnection(server, schema, uid, password);
-		LoadMetadata(dataConnection);
+		using (var dataConnection = GetSapHanaConnection(server, schema, uid, password))
+			LoadMetadata(dataConnection);
 	}
 #>

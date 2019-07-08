@@ -8,9 +8,8 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	[TestFixture]
+	[Order(10000)]
 	public class TruncateTableTests : TestBase
 	{
 		[Table]
@@ -21,8 +20,8 @@ namespace Tests.xUpdate
 			[Column]             public decimal Field1;
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
-		public void TruncateTableTest(string context)
+		[Test]
+		public void TruncateTableTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -41,9 +40,9 @@ namespace Tests.xUpdate
 			[Column]                       public decimal Field1;
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SapHana)]
-		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.Informix)]
-		public void TruncateIdentityTest(string context)
+		[Test]
+		public void TruncateIdentityTest([DataSources(ProviderName.Informix, ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -71,8 +70,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
-		public void TruncateIdentityNoResetTest(string context)
+		[Test]
+		public void TruncateIdentityNoResetTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

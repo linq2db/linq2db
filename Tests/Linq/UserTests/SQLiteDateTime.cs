@@ -55,16 +55,16 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)]
-		public void TestSql(string context)
+		[Test]
+		public void TestSql([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			var query1 = GetSql(context);
 			var query2 = GetSql(context);
 			var query3 = GetSql(context);
 
-			Debug.WriteLine(query1);
-			Debug.WriteLine(query2);
-			Debug.WriteLine(query3);
+			Console.WriteLine(query1);
+			Console.WriteLine(query2);
+			Console.WriteLine(query3);
 
 			Assert.AreEqual(query1, query2);
 		}

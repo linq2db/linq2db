@@ -4,6 +4,9 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -16,48 +19,42 @@ using LinqToDB.Mapping;
 
 namespace FirebirdDataContext
 {
-	/// <summary>
-	/// Database       : TestData
-	/// Data Source    : DBHost
-	/// Server Version : WI-V2.5.1.26351 Firebird 2.5/tcp (DBHost)/P12
-	/// </summary>
-	public partial class TestDataDB : LinqToDB.Data.DataConnection
+	public partial class TESTDB25DB : LinqToDB.Data.DataConnection
 	{
 		public ITable<ALLTYPE>           ALLTYPES           { get { return this.GetTable<ALLTYPE>(); } }
 		public ITable<CamelCaseName>     CamelCaseNames     { get { return this.GetTable<CamelCaseName>(); } }
 		public ITable<CHILD>             Children           { get { return this.GetTable<CHILD>(); } }
-		public ITable<DATATYPETEST>      DATATYPETESTs      { get { return this.GetTable<DATATYPETEST>(); } }
-		public ITable<DOCTOR>            DOCTORs            { get { return this.GetTable<DOCTOR>(); } }
-		public ITable<DUAL>              DUALs              { get { return this.GetTable<DUAL>(); } }
-		public ITable<GRANDCHILD>        GRANDCHILDs        { get { return this.GetTable<GRANDCHILD>(); } }
-		public ITable<INHERITANCECHILD>  INHERITANCECHILDs  { get { return this.GetTable<INHERITANCECHILD>(); } }
-		public ITable<INHERITANCEPARENT> INHERITANCEPARENTs { get { return this.GetTable<INHERITANCEPARENT>(); } }
+		public ITable<DATATYPETEST>      Datatypetests      { get { return this.GetTable<DATATYPETEST>(); } }
+		public ITable<DOCTOR>            Doctors            { get { return this.GetTable<DOCTOR>(); } }
+		public ITable<DUAL>              Duals              { get { return this.GetTable<DUAL>(); } }
+		public ITable<GRANDCHILD>        Grandchilds        { get { return this.GetTable<GRANDCHILD>(); } }
+		public ITable<INHERITANCECHILD>  Inheritancechilds  { get { return this.GetTable<INHERITANCECHILD>(); } }
+		public ITable<INHERITANCEPARENT> Inheritanceparents { get { return this.GetTable<INHERITANCEPARENT>(); } }
 		public ITable<LINQDATATYPE>      LINQDATATYPES      { get { return this.GetTable<LINQDATATYPE>(); } }
-		public ITable<PARENT>            PARENTs            { get { return this.GetTable<PARENT>(); } }
-		public ITable<Parent564>         Parent564          { get { return this.GetTable<Parent564>(); } }
-		public ITable<PARENT564>         PARENT564          { get { return this.GetTable<PARENT564>(); } }
-		public ITable<PATIENT>           PATIENTs           { get { return this.GetTable<PATIENT>(); } }
+		public ITable<PARENT>            Parents            { get { return this.GetTable<PARENT>(); } }
+		public ITable<PATIENT>           Patients           { get { return this.GetTable<PATIENT>(); } }
 		public ITable<PERSON>            People             { get { return this.GetTable<PERSON>(); } }
-		public ITable<PERSONVIEW>        PERSONVIEWs        { get { return this.GetTable<PERSONVIEW>(); } }
-		public ITable<SEQUENCETEST>      SEQUENCETESTs      { get { return this.GetTable<SEQUENCETEST>(); } }
-		public ITable<TESTIDENTITY>      TESTIDENTITies     { get { return this.GetTable<TESTIDENTITY>(); } }
+		public ITable<PERSONVIEW>        Personviews        { get { return this.GetTable<PERSONVIEW>(); } }
+		public ITable<SEQUENCETEST>      Sequencetests      { get { return this.GetTable<SEQUENCETEST>(); } }
+		public ITable<TESTIDENTITY>      Testidentities     { get { return this.GetTable<TESTIDENTITY>(); } }
 		public ITable<TESTMERGE1>        TESTMERGE1         { get { return this.GetTable<TESTMERGE1>(); } }
 		public ITable<TESTMERGE2>        TESTMERGE2         { get { return this.GetTable<TESTMERGE2>(); } }
-		public ITable<TestTable>         TestTables         { get { return this.GetTable<TestTable>(); } }
-		public ITable<TESTTABLE>         TESTTABLEs         { get { return this.GetTable<TESTTABLE>(); } }
 
-		public TestDataDB()
+		public TESTDB25DB()
 		{
 			InitDataContext();
+			InitMappingSchema();
 		}
 
-		public TestDataDB(string configuration)
+		public TESTDB25DB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
+			InitMappingSchema();
 		}
 
-		partial void InitDataContext();
+		partial void InitDataContext  ();
+		partial void InitMappingSchema();
 	}
 
 	[Table("ALLTYPES")]
@@ -83,12 +80,12 @@ namespace FirebirdDataContext
 	[Table("\"CamelCaseName\"")]
 	public partial class CamelCaseName
 	{
-		[Column(@"\""Id\""",     DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    Id    { get; set; } // integer
-		[Column(                 DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME1 { get; set; } // varchar(20)
-		[Column(@"\""Name2\""",  DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string Name2 { get; set; } // varchar(20)
-		[Column(                 DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME3 { get; set; } // varchar(20)
-		[Column(@"\""_NAME4\""", DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME4 { get; set; } // varchar(20)
-		[Column(@"\""NAME 5\""", DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME5 { get; set; } // varchar(20)
+		[Column("\"Id\"",     DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    Id    { get; set; } // integer
+		[Column(              DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME1 { get; set; } // varchar(20)
+		[Column("\"Name2\"",  DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string Name2 { get; set; } // varchar(20)
+		[Column(              DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME3 { get; set; } // varchar(20)
+		[Column("\"_NAME4\"", DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME4 { get; set; } // varchar(20)
+		[Column("\"NAME 5\"", DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME5 { get; set; } // varchar(20)
 	}
 
 	[Table("CHILD")]
@@ -101,28 +98,28 @@ namespace FirebirdDataContext
 	[Table("DATATYPETEST")]
 	public partial class DATATYPETEST
 	{
-		[Column(              DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),            PrimaryKey,  NotNull] public int       DATATYPEID { get; set; } // integer
-		[Column(@"BINARY_",   DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    BINARY     { get; set; } // blob
-		[Column(@"BOOLEAN_",  DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     BOOLEAN    { get; set; } // char(1)
-		[Column(@"BYTE_",     DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    BYTE       { get; set; } // smallint
-		[Column(@"BYTES_",    DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    BYTES      { get; set; } // blob
-		[Column(@"CHAR_",     DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     CHAR       { get; set; } // char(1)
-		[Column(@"DATETIME_", DbType="timestamp",        DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),               Nullable         ] public DateTime? DATETIME   { get; set; } // timestamp
-		[Column(@"DECIMAL_",  DbType="decimal(10,2)",    DataType=DataType.Decimal,  Length=8, Precision=10, Scale=2),              Nullable         ] public decimal?  DECIMAL    { get; set; } // decimal(10,2)
-		[Column(@"DOUBLE_",   DbType="double precision", DataType=DataType.Double,   Length=8, Precision=0, Scale=0),               Nullable         ] public double?   DOUBLE     { get; set; } // double precision
-		[Column(@"GUID_",     DbType="char(38)",         DataType=DataType.NChar,    Length=38, Precision=0, Scale=0),              Nullable         ] public string    GUID       { get; set; } // char(38)
-		[Column(@"INT16_",    DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    INT16      { get; set; } // smallint
-		[Column(@"INT32_",    DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      INT32      { get; set; } // integer
-		[Column(@"INT64_",    DbType="numeric(11,0)",    DataType=DataType.Decimal,  Length=8, Precision=11, Scale=0),              Nullable         ] public decimal?  INT64      { get; set; } // numeric(11,0)
-		[Column(@"MONEY_",    DbType="decimal(18,4)",    DataType=DataType.Decimal,  Length=8, Precision=18, Scale=4),              Nullable         ] public decimal?  MONEY      { get; set; } // decimal(18,4)
-		[Column(@"SBYTE_",    DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    SBYTE      { get; set; } // smallint
-		[Column(@"SINGLE_",   DbType="float",            DataType=DataType.Single,   Length=4, Precision=0, Scale=0),               Nullable         ] public float?    SINGLE     { get; set; } // float
-		[Column(@"STREAM_",   DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    STREAM     { get; set; } // blob
-		[Column(@"STRING_",   DbType="varchar(50)",      DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              Nullable         ] public string    STRING     { get; set; } // varchar(50)
-		[Column(@"UINT16_",   DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    UINT16     { get; set; } // smallint
-		[Column(@"UINT32_",   DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      UINT32     { get; set; } // integer
-		[Column(@"UINT64_",   DbType="numeric(11,0)",    DataType=DataType.Decimal,  Length=8, Precision=11, Scale=0),              Nullable         ] public decimal?  UINT64     { get; set; } // numeric(11,0)
-		[Column(@"XML_",      DbType="char(1000)",       DataType=DataType.NChar,    Length=1000, Precision=0, Scale=0),            Nullable         ] public string    XML        { get; set; } // char(1000)
+		[Column(             DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),            PrimaryKey,  NotNull] public int       DATATYPEID { get; set; } // integer
+		[Column("BINARY_",   DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    Binary     { get; set; } // blob
+		[Column("BOOLEAN_",  DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     Boolean    { get; set; } // char(1)
+		[Column("BYTE_",     DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    Byte       { get; set; } // smallint
+		[Column("BYTES_",    DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    Bytes      { get; set; } // blob
+		[Column("CHAR_",     DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     Char       { get; set; } // char(1)
+		[Column("DATETIME_", DbType="timestamp",        DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),               Nullable         ] public DateTime? Datetime   { get; set; } // timestamp
+		[Column("DECIMAL_",  DbType="decimal(10,2)",    DataType=DataType.Decimal,  Length=8, Precision=10, Scale=2),              Nullable         ] public decimal?  Decimal    { get; set; } // decimal(10,2)
+		[Column("DOUBLE_",   DbType="double precision", DataType=DataType.Double,   Length=8, Precision=0, Scale=0),               Nullable         ] public double?   Double     { get; set; } // double precision
+		[Column("GUID_",     DbType="char(38)",         DataType=DataType.NChar,    Length=38, Precision=0, Scale=0),              Nullable         ] public string    Guid       { get; set; } // char(38)
+		[Column("INT16_",    DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    INT16      { get; set; } // smallint
+		[Column("INT32_",    DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      INT32      { get; set; } // integer
+		[Column("INT64_",    DbType="numeric(11,0)",    DataType=DataType.Decimal,  Length=8, Precision=11, Scale=0),              Nullable         ] public decimal?  INT64      { get; set; } // numeric(11,0)
+		[Column("MONEY_",    DbType="decimal(18,4)",    DataType=DataType.Decimal,  Length=8, Precision=18, Scale=4),              Nullable         ] public decimal?  Money      { get; set; } // decimal(18,4)
+		[Column("SBYTE_",    DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    Sbyte      { get; set; } // smallint
+		[Column("SINGLE_",   DbType="float",            DataType=DataType.Single,   Length=4, Precision=0, Scale=0),               Nullable         ] public float?    Single     { get; set; } // float
+		[Column("STREAM_",   DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    Stream     { get; set; } // blob
+		[Column("STRING_",   DbType="varchar(50)",      DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              Nullable         ] public string    String     { get; set; } // varchar(50)
+		[Column("UINT16_",   DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    UINT16     { get; set; } // smallint
+		[Column("UINT32_",   DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      UINT32     { get; set; } // integer
+		[Column("UINT64_",   DbType="numeric(11,0)",    DataType=DataType.Decimal,  Length=8, Precision=11, Scale=0),              Nullable         ] public decimal?  UINT64     { get; set; } // numeric(11,0)
+		[Column("XML_",      DbType="char(1000)",       DataType=DataType.NChar,    Length=1000, Precision=0, Scale=0),            Nullable         ] public string    Xml        { get; set; } // char(1000)
 	}
 
 	[Table("DOCTOR")]
@@ -196,24 +193,6 @@ namespace FirebirdDataContext
 		[Column(DbType="integer", DataType=DataType.Int32, Length=4, Precision=0, Scale=0), Nullable] public int? VALUE1   { get; set; } // integer
 	}
 
-	[Table("\"Parent564\"")]
-	public partial class Parent564
-	{
-		[Column(@"\""Id\""",          DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    Id          { get; set; } // integer
-		[Column(@"\""Type\""",        DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string Type        { get; set; } // varchar(255)
-		[Column(@"\""StringValue\""", DbType="varchar(20)",  DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),     Nullable         ] public string StringValue { get; set; } // varchar(20)
-		[Column(@"\""IntValue\""",    DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   IntValue    { get; set; } // integer
-	}
-
-	[Table("PARENT564")]
-	public partial class PARENT564
-	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    ID          { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string TYPE        { get; set; } // varchar(255)
-		[Column(DbType="varchar(20)",  DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),     Nullable         ] public string STRINGVALUE { get; set; } // varchar(20)
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),      Nullable         ] public int?   INTVALUE    { get; set; } // integer
-	}
-
 	[Table("PATIENT")]
 	public partial class PATIENT
 	{
@@ -223,10 +202,10 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_16953
+		/// INTEG_15177
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_16953", BackReferenceName="INTEG")]
-		public PERSON INTEG { get; set; }
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_15177", BackReferenceName="INTEG")]
+		public PERSON PERSON { get; set; }
 
 		#endregion
 	}
@@ -249,7 +228,7 @@ namespace FirebirdDataContext
 		public DOCTOR DOCTOR { get; set; }
 
 		/// <summary>
-		/// INTEG_16953_BackReference
+		/// INTEG_15177_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public PATIENT INTEG { get; set; }
@@ -270,8 +249,8 @@ namespace FirebirdDataContext
 	[Table("SEQUENCETEST")]
 	public partial class SEQUENCETEST
 	{
-		[Column(           DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey, NotNull] public int    ID    { get; set; } // integer
-		[Column(@"VALUE_", DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),             NotNull] public string VALUE { get; set; } // varchar(50)
+		[Column(          DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey, NotNull] public int    ID    { get; set; } // integer
+		[Column("VALUE_", DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),             NotNull] public string Value { get; set; } // varchar(50)
 	}
 
 	[Table("TESTIDENTITY")]
@@ -334,33 +313,26 @@ namespace FirebirdDataContext
 		[Column(DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      FIELDENUMNUMBER { get; set; } // integer
 	}
 
-	[Table("\"TestTable\"")]
-	public partial class TestTable
+	public static partial class TESTDB25DBStoredProcedures
 	{
-		[Column(                    DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int       ID        { get; set; } // integer
-		[Column(@"\""Field1\""",    DbType="varchar(50)",  DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),     Nullable         ] public string    Field1    { get; set; } // varchar(50)
-		[Column(@"\""Field2\""",    DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string    Field2    { get; set; } // varchar(255)
-		[Column(@"\""CreatedOn\""", DbType="timestamp",    DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),      Nullable         ] public DateTime? CreatedOn { get; set; } // timestamp
-	}
+		#region ADDISSUE792RECORD
 
-	[Table("TESTTABLE")]
-	public partial class TESTTABLE
-	{
-		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int       ID        { get; set; } // integer
-		[Column(DbType="varchar(50)",  DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),     Nullable         ] public string    FIELD1    { get; set; } // varchar(50)
-		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string    FIELD2    { get; set; } // varchar(255)
-		[Column(DbType="timestamp",    DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),      Nullable         ] public DateTime? CREATEDON { get; set; } // timestamp
-	}
+		public static int ADDISSUE792RECORD(this DataConnection dataConnection)
+		{
+			return dataConnection.ExecuteProc("ADDISSUE792RECORD");
+		}
 
-	public static partial class TestDataDBStoredProcedures
-	{
+		#endregion
+
 		#region OUTREFENUMTEST
 
 		public static IEnumerable<OUTREFENUMTESTResult> OUTREFENUMTEST(this DataConnection dataConnection, string STR, string IN_INPUTOUTPUTSTR, out string INPUTOUTPUTSTR, out string OUTPUTSTR)
 		{
 			var ret = dataConnection.QueryProc<OUTREFENUMTESTResult>("OUTREFENUMTEST",
-				new DataParameter("STR",               STR,               DataType.NVarChar),
-				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, DataType.NVarChar));
+				new DataParameter("STR",            STR,            DataType.NVarChar),
+				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, DataType.NVarChar),
+				new DataParameter("INPUTOUTPUTSTR", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("OUTPUTSTR", null,      DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
 			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
 			OUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
@@ -381,10 +353,14 @@ namespace FirebirdDataContext
 		public static IEnumerable<OUTREFTESTResult> OUTREFTEST(this DataConnection dataConnection, int? ID, int? IN_INPUTOUTPUTID, string STR, string IN_INPUTOUTPUTSTR, out int? INPUTOUTPUTID, out string INPUTOUTPUTSTR, out int? OUTPUTID, out string OUTPUTSTR)
 		{
 			var ret = dataConnection.QueryProc<OUTREFTESTResult>("OUTREFTEST",
-				new DataParameter("ID",                ID,                DataType.Int32),
-				new DataParameter("IN_INPUTOUTPUTID",  IN_INPUTOUTPUTID,  DataType.Int32),
-				new DataParameter("STR",               STR,               DataType.NVarChar),
-				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, DataType.NVarChar));
+				new DataParameter("ID",             ID,             DataType.Int32),
+				new DataParameter("IN_INPUTOUTPUTID", IN_INPUTOUTPUTID, DataType.Int32),
+				new DataParameter("STR",            STR,            DataType.NVarChar),
+				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, DataType.NVarChar),
+				new DataParameter("INPUTOUTPUTID", null,  DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("INPUTOUTPUTSTR", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("OUTPUTID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("OUTPUTSTR", null,      DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
 			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
 			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
@@ -404,11 +380,17 @@ namespace FirebirdDataContext
 
 		#endregion
 
-		#region PATIENTSELECTALL
+		#region PatientSelectall
 
-		public static IEnumerable<PATIENTSELECTALLResult> PATIENTSELECTALL(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
+		public static IEnumerable<PatientSELECTALLResult> PatientSelectall(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
 		{
-			var ret = dataConnection.QueryProc<PATIENTSELECTALLResult>("PATIENT_SELECTALL");
+			var ret = dataConnection.QueryProc<PatientSELECTALLResult>("PATIENT_SELECTALL",
+				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("FIRSTNAME", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("LASTNAME", null,   DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 },
+				new DataParameter("DIAGNOSIS", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 256 }).ToList();
 
 			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
 			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
@@ -420,7 +402,7 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
-		public partial class PATIENTSELECTALLResult
+		public partial class PatientSELECTALLResult
 		{
 			public int?   PERSONID   { get; set; }
 			public string FIRSTNAME  { get; set; }
@@ -432,13 +414,17 @@ namespace FirebirdDataContext
 
 		#endregion
 
-		#region PATIENTSELECTBYNAME
+		#region PatientSelectbyname
 
-		public static IEnumerable<PATIENTSELECTBYNAMEResult> PATIENTSELECTBYNAME(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, out int? PERSONID, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
+		public static IEnumerable<PatientSELECTBYNAMEResult> PatientSelectbyname(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, out int? PERSONID, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
 		{
-			var ret = dataConnection.QueryProc<PATIENTSELECTBYNAMEResult>("PATIENT_SELECTBYNAME",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+			var ret = dataConnection.QueryProc<PatientSELECTBYNAMEResult>("PATIENT_SELECTBYNAME",
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
+				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 },
+				new DataParameter("DIAGNOSIS", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 256 }).ToList();
 
 			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
 			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
@@ -448,7 +434,7 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
-		public partial class PATIENTSELECTBYNAMEResult
+		public partial class PatientSELECTBYNAMEResult
 		{
 			public int?   PERSONID   { get; set; }
 			public string MIDDLENAME { get; set; }
@@ -458,9 +444,9 @@ namespace FirebirdDataContext
 
 		#endregion
 
-		#region PERSONDELETE
+		#region PersonDelete
 
-		public static int PERSONDELETE(this DataConnection dataConnection, int? PERSONID)
+		public static int PersonDelete(this DataConnection dataConnection, int? PERSONID)
 		{
 			return dataConnection.ExecuteProc("PERSON_DELETE",
 				new DataParameter("PERSONID", PERSONID, DataType.Int32));
@@ -468,55 +454,62 @@ namespace FirebirdDataContext
 
 		#endregion
 
-		#region PERSONINSERT
+		#region PersonInsert
 
-		public static IEnumerable<PERSONINSERTResult> PERSONINSERT(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static IEnumerable<PersonINSERTResult> PersonInsert(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
-			var ret = dataConnection.QueryProc<PERSONINSERTResult>("PERSON_INSERT",
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+			var ret = dataConnection.QueryProc<PersonINSERTResult>("PERSON_INSERT",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
 				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     DataType.NChar));
+				new DataParameter("GENDER",   GENDER,   DataType.NChar),
+				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
 
 			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
 
 			return ret;
 		}
 
-		public partial class PERSONINSERTResult
+		public partial class PersonINSERTResult
 		{
 			public int? PERSONID { get; set; }
 		}
 
 		#endregion
 
-		#region PERSONINSERTOUTPUTPARAMETER
+		#region PersonInsertOutputparameter
 
-		public static IEnumerable<PERSONINSERTOUTPUTPARAMETERResult> PERSONINSERTOUTPUTPARAMETER(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static IEnumerable<PersonInsertOUTPUTPARAMETERResult> PersonInsertOutputparameter(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
-			var ret = dataConnection.QueryProc<PERSONINSERTOUTPUTPARAMETERResult>("PERSON_INSERT_OUTPUTPARAMETER",
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+			var ret = dataConnection.QueryProc<PersonInsertOUTPUTPARAMETERResult>("PERSON_INSERT_OUTPUTPARAMETER",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
 				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     DataType.NChar));
+				new DataParameter("GENDER",   GENDER,   DataType.NChar),
+				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
 
 			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
 
 			return ret;
 		}
 
-		public partial class PERSONINSERTOUTPUTPARAMETERResult
+		public partial class PersonInsertOUTPUTPARAMETERResult
 		{
 			public int? PERSONID { get; set; }
 		}
 
 		#endregion
 
-		#region PERSONSELECTALL
+		#region PersonSelectall
 
-		public static IEnumerable<PERSONSELECTALLResult> PERSONSELECTALL(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
+		public static IEnumerable<PersonSELECTALLResult> PersonSelectall(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
 		{
-			var ret = dataConnection.QueryProc<PERSONSELECTALLResult>("PERSON_SELECTALL");
+			var ret = dataConnection.QueryProc<PersonSELECTALLResult>("PERSON_SELECTALL",
+				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("FIRSTNAME", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("LASTNAME", null,   DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
 
 			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
 			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
@@ -527,7 +520,7 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
-		public partial class PERSONSELECTALLResult
+		public partial class PersonSELECTALLResult
 		{
 			public int?   PERSONID   { get; set; }
 			public string FIRSTNAME  { get; set; }
@@ -538,12 +531,17 @@ namespace FirebirdDataContext
 
 		#endregion
 
-		#region PERSONSELECTBYKEY
+		#region PersonSelectbykey
 
-		public static IEnumerable<PERSONSELECTBYKEYResult> PERSONSELECTBYKEY(this DataConnection dataConnection, int? ID, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
+		public static IEnumerable<PersonSELECTBYKEYResult> PersonSelectbykey(this DataConnection dataConnection, int? ID, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
 		{
-			var ret = dataConnection.QueryProc<PERSONSELECTBYKEYResult>("PERSON_SELECTBYKEY",
-				new DataParameter("ID", ID, DataType.Int32));
+			var ret = dataConnection.QueryProc<PersonSELECTBYKEYResult>("PERSON_SELECTBYKEY",
+				new DataParameter("ID",         ID,         DataType.Int32),
+				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("FIRSTNAME", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("LASTNAME", null,   DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
 
 			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
 			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
@@ -554,7 +552,7 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
-		public partial class PERSONSELECTBYKEYResult
+		public partial class PersonSELECTBYKEYResult
 		{
 			public int?   PERSONID   { get; set; }
 			public string FIRSTNAME  { get; set; }
@@ -565,13 +563,18 @@ namespace FirebirdDataContext
 
 		#endregion
 
-		#region PERSONSELECTBYNAME
+		#region PersonSelectbyname
 
-		public static IEnumerable<PERSONSELECTBYNAMEResult> PERSONSELECTBYNAME(this DataConnection dataConnection, string IN_FIRSTNAME, string IN_LASTNAME, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
+		public static IEnumerable<PersonSELECTBYNAMEResult> PersonSelectbyname(this DataConnection dataConnection, string IN_FIRSTNAME, string IN_LASTNAME, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
 		{
-			var ret = dataConnection.QueryProc<PERSONSELECTBYNAMEResult>("PERSON_SELECTBYNAME",
+			var ret = dataConnection.QueryProc<PersonSELECTBYNAMEResult>("PERSON_SELECTBYNAME",
 				new DataParameter("IN_FIRSTNAME", IN_FIRSTNAME, DataType.NVarChar),
-				new DataParameter("IN_LASTNAME",  IN_LASTNAME,  DataType.NVarChar));
+				new DataParameter("IN_LASTNAME", IN_LASTNAME, DataType.NVarChar),
+				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("FIRSTNAME", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("LASTNAME", null,   DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
 
 			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
 			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
@@ -582,7 +585,7 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
-		public partial class PERSONSELECTBYNAMEResult
+		public partial class PersonSELECTBYNAMEResult
 		{
 			public int?   PERSONID   { get; set; }
 			public string FIRSTNAME  { get; set; }
@@ -593,9 +596,9 @@ namespace FirebirdDataContext
 
 		#endregion
 
-		#region PERSONUPDATE
+		#region PersonUpdate
 
-		public static int PERSONUPDATE(this DataConnection dataConnection, int? PERSONID, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
+		public static int PersonUpdate(this DataConnection dataConnection, int? PERSONID, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
 		{
 			return dataConnection.ExecuteProc("PERSON_UPDATE",
 				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
@@ -607,11 +610,13 @@ namespace FirebirdDataContext
 
 		#endregion
 
-		#region SCALARDATAREADER
+		#region ScalarDatareader
 
-		public static IEnumerable<SCALARDATAREADERResult> SCALARDATAREADER(this DataConnection dataConnection, out int? INTFIELD, out string STRINGFIELD)
+		public static IEnumerable<ScalarDATAREADERResult> ScalarDatareader(this DataConnection dataConnection, out int? INTFIELD, out string STRINGFIELD)
 		{
-			var ret = dataConnection.QueryProc<SCALARDATAREADERResult>("SCALAR_DATAREADER");
+			var ret = dataConnection.QueryProc<ScalarDATAREADERResult>("SCALAR_DATAREADER",
+				new DataParameter("INTFIELD", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("STRINGFIELD", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
 			INTFIELD    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["INTFIELD"]).   Value);
 			STRINGFIELD = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["STRINGFIELD"]).Value);
@@ -619,7 +624,7 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
-		public partial class SCALARDATAREADERResult
+		public partial class ScalarDATAREADERResult
 		{
 			public int?   INTFIELD    { get; set; }
 			public string STRINGFIELD { get; set; }
@@ -627,11 +632,13 @@ namespace FirebirdDataContext
 
 		#endregion
 
-		#region SCALAROUTPUTPARAMETER
+		#region ScalarOutputparameter
 
-		public static IEnumerable<SCALAROUTPUTPARAMETERResult> SCALAROUTPUTPARAMETER(this DataConnection dataConnection, out int? OUTPUTINT, out string OUTPUTSTRING)
+		public static IEnumerable<ScalarOUTPUTPARAMETERResult> ScalarOutputparameter(this DataConnection dataConnection, out int? OUTPUTINT, out string OUTPUTSTRING)
 		{
-			var ret = dataConnection.QueryProc<SCALAROUTPUTPARAMETERResult>("SCALAR_OUTPUTPARAMETER");
+			var ret = dataConnection.QueryProc<ScalarOUTPUTPARAMETERResult>("SCALAR_OUTPUTPARAMETER",
+				new DataParameter("OUTPUTINT", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("OUTPUTSTRING", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
 			OUTPUTINT    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTINT"]).   Value);
 			OUTPUTSTRING = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTRING"]).Value);
@@ -639,7 +646,7 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
-		public partial class SCALAROUTPUTPARAMETERResult
+		public partial class ScalarOUTPUTPARAMETERResult
 		{
 			public int?   OUTPUTINT    { get; set; }
 			public string OUTPUTSTRING { get; set; }
@@ -647,18 +654,19 @@ namespace FirebirdDataContext
 
 		#endregion
 
-		#region SCALARRETURNPARAMETER
+		#region ScalarReturnparameter
 
-		public static IEnumerable<SCALARRETURNPARAMETERResult> SCALARRETURNPARAMETER(this DataConnection dataConnection, out int? RETURN_VALUE)
+		public static IEnumerable<ScalarRETURNPARAMETERResult> ScalarReturnparameter(this DataConnection dataConnection, out int? RETURN_VALUE)
 		{
-			var ret = dataConnection.QueryProc<SCALARRETURNPARAMETERResult>("SCALAR_RETURNPARAMETER");
+			var ret = dataConnection.QueryProc<ScalarRETURNPARAMETERResult>("SCALAR_RETURNPARAMETER",
+				new DataParameter("RETURN_VALUE", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
 
 			RETURN_VALUE = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["RETURN_VALUE"]).Value);
 
 			return ret;
 		}
 
-		public partial class SCALARRETURNPARAMETERResult
+		public partial class ScalarRETURNPARAMETERResult
 		{
 			public int? RETURN_VALUE { get; set; }
 		}
@@ -704,18 +712,6 @@ namespace FirebirdDataContext
 				t.INHERITANCEPARENTID == INHERITANCEPARENTID);
 		}
 
-		public static Parent564 Find(this ITable<Parent564> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
-		public static PARENT564 Find(this ITable<PARENT564> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
 		public static PATIENT Find(this ITable<PATIENT> table, int PERSONID)
 		{
 			return table.FirstOrDefault(t =>
@@ -751,17 +747,7 @@ namespace FirebirdDataContext
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
-
-		public static TestTable Find(this ITable<TestTable> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
-		public static TESTTABLE Find(this ITable<TESTTABLE> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
 	}
 }
+
+#pragma warning restore 1591

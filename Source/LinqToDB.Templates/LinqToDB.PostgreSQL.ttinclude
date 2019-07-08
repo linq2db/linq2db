@@ -26,7 +26,8 @@ bool GenerateCaseSensitiveNames = false; // Defines whether to generate case sen
 // exception: functions with only one out parameter treat it as return parameter
 void FixRecordResultFunctions()
 {
-	var initMappingSchema = DataContextObject.Members.OfType<Method>().Single(m => m.Name == "InitMappingSchema");
+	var initMappingSchema = new Method(() => "void", "InitMappingSchema") { AccessModifier = AccessModifier.Partial };
+	DataContextObject.Members.Add(initMappingSchema);
 	foreach (var proc in Procedures.Values
 		.Where(p => p.IsFunction && !p.IsAggregateFunction && !p.IsTableFunction && p.ProcParameters.Any(pr => pr.IsOut)))
 	{
@@ -38,22 +39,25 @@ void FixRecordResultFunctions()
 			proc.ProcParameters.Add(new Parameter()
 			{
 				IsResult      = true,
-				ParameterType = result.Name
+				ParameterType = result.Name,
+				IsNullable    = true
 			});
 
 			var mappings = new List<string>();
 			foreach (var outParam in proc.ProcParameters.Where(_ => _.IsOut))
 			{
-				result.Members.Add(new Property(outParam.ParameterType, outParam.ParameterName, null, null));
-				mappings.Add($"{outParam.ParameterName} = ({outParam.ParameterType})tuple[{mappings.Count}]");
+				var type = outParam.Type;
+				result.Members.Add(new Property(type, outParam.ParameterName, null, null));
+				mappings.Add($"{outParam.ParameterName} = ({type.ToTypeName()})tuple[{mappings.Count}]");
 
 				if (outParam.IsIn)
 					outParam.IsOut = false;
 			}
 
 			proc.ProcParameters = proc.ProcParameters.Where(_ => !_.IsOut).ToList();
+			var recordType      = ModelType.Array(ModelType.Create<object>(true), false);
 
-			initMappingSchema.Body.Add($"MappingSchema.SetConvertExpression<object[], {result.Name}>(tuple => new {result.Name}() {{ {string.Join(", ", mappings)} }});");
+			initMappingSchema.BodyBuilders.Add(() => new [] { $"MappingSchema.SetConvertExpression<{recordType.ToTypeName()}, {result.Name}>(tuple => new {result.Name}() {{ {string.Join(", ", mappings)} }});" });
 		}
 		else // one parameter
 		{
@@ -62,7 +66,8 @@ void FixRecordResultFunctions()
 			proc.ProcParameters.Add(new Parameter()
 			{
 				IsResult      = true,
-				ParameterType = param.ParameterType
+				ParameterType = param.ParameterType,
+				IsNullable    = true
 			});
 		}
 	}
@@ -73,7 +78,7 @@ void FixFunctionNames()
 	foreach (var proc in Procedures.Values)
 	{
 		if (proc.ProcedureName.Any(char.IsUpper))
-			proc.ProcedureName = "\\\"" + proc.ProcedureName + "\\\"";
+			proc.ProcedureName = "\"" + proc.ProcedureName + "\"";
 	}
 }
 
@@ -96,7 +101,8 @@ void FixVoidFunctions()
 		{
 			IsResult      = true,
 			ParameterType = "object",
-			SystemType    = typeof(object)
+			SystemType    = typeof(object),
+			IsNullable    = true
 		});
 	}
 }
@@ -108,12 +114,12 @@ void SetCaseSensitiveNames()
 		foreach (var t in Tables.Values)
 		{
 			if (t.TableName.Any(char.IsUpper))
-				t.TableName = "\\\"" + t.TableName + "\\\"";
+				t.TableName = "\"" + t.TableName + "\"";
 
 			foreach (var c in t.Columns.Values)
 			{
 				if (c.ColumnName.Any(char.IsUpper))
-					c.ColumnName = "\\\"" + c.ColumnName + "\\\"";
+					c.ColumnName = "\"" + c.ColumnName + "\"";
 			}
 		}
 	}
@@ -131,13 +137,13 @@ LinqToDB.Data.DataConnection GetPostgreSQLConnection(string server, string port,
 
 void LoadPostgreSQLMetadata(string connectionString)
 {
-	var dataConnection = GetPostgreSQLConnection(connectionString);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetPostgreSQLConnection(connectionString))
+		LoadMetadata(dataConnection);
 }
 
 void LoadPostgreSQLMetadata(string server, string port, string database, string uid, string password)
 {
-	var dataConnection = GetPostgreSQLConnection(server, port, database, uid, password);
-	LoadMetadata(dataConnection);
+	using (var dataConnection = GetPostgreSQLConnection(server, port, database, uid, password))
+		LoadMetadata(dataConnection);
 }
 #>

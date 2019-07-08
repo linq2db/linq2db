@@ -23,7 +23,7 @@ namespace LinqToDB.SqlQuery
 			get => SelectQuery.IsParameterDependent;
 			set => SelectQuery.IsParameterDependent = value;
 		}
-		
+
 		public SqlTable       Table { get; set; }
 		public ISqlExpression Top   { get; set; }
 
@@ -40,6 +40,9 @@ namespace LinqToDB.SqlQuery
 			if (Table != null)
 				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
 
+			if (With != null)
+				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
+
 			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 
 			objectTree.Add(this, clone);
@@ -47,11 +50,11 @@ namespace LinqToDB.SqlQuery
 			return clone;
 		}
 
-		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			With?.Walk(skipColumns, func);
-			Table = ((ISqlExpressionWalkable)Table)?.Walk(skipColumns, func) as SqlTable;
-			SelectQuery = (SelectQuery)SelectQuery.Walk(skipColumns, func);
+			With?.Walk(options, func);
+			Table = ((ISqlExpressionWalkable)Table)?.Walk(options, func) as SqlTable;
+			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
 
 			return null;
 		}

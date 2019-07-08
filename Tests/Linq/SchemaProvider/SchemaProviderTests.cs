@@ -2,28 +2,48 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+
 using NUnit.Framework;
 
 namespace Tests.SchemaProvider
 {
-	using LinqToDB;
-	using LinqToDB.Data;
-	using LinqToDB.DataProvider.SqlServer;
-	using LinqToDB.Mapping;
-	using LinqToDB.SchemaProvider;
-
 	[TestFixture]
 	public class SchemaProviderTests : TestBase
 	{
-		[Test, DataContextSource(false, ProviderName.SQLiteMS
-#if NETSTANDARD2_0
-			, ProviderName.MySql, TestProvName.MySql57
-#endif
-			)]
-		public void Test(string context)
+		// only tests that GetSchema call doesn't fail to detect incorrect calls to default implementation
+		// or other failures
+		// doesn't test that actual data returned
+		[ActiveIssue(Configuration = ProviderName.SQLiteMS, Details = "NotSupportedException")]
+		[Test]
+		public void TestApiImplemented([DataSources(false)] string context)
 		{
-			SqlServerTools.ResolveSqlTypes("");
+			using (var db = new DataConnection(context))
+			{
+				var options = new GetSchemaOptions()
+				{
+					GetProcedures = true,
+					GetTables     = true
+				};
 
+				options = TestUtils.GetDefaultSchemaOptions(context, options);
+
+				var p = db.DataProvider.GetSchemaProvider();
+				p.GetSchema(db, options);
+			}
+		}
+
+		[Test]
+		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
+//#if NETSTANDARD2_0
+//				, ProviderName.MySql
+//#endif
+			)]
+			string context)
+		{
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
@@ -41,12 +61,12 @@ namespace Tests.SchemaProvider
 					tableNames.Add(tableName);
 
 					var columnNames = new HashSet<string>();
-					foreach (var schemaColumm in schemaTable.Columns)
+					foreach (var schemaColumn in schemaTable.Columns)
 					{
-						if(columnNames.Contains(schemaColumm.ColumnName))
-							Assert.Fail("Not unique column {0} for table {1}.{2}", schemaColumm.ColumnName, schemaTable.SchemaName, schemaTable.TableName);
+						if(columnNames.Contains(schemaColumn.ColumnName))
+							Assert.Fail("Not unique column {0} for table {1}.{2}", schemaColumn.ColumnName, schemaTable.SchemaName, schemaTable.TableName);
 
-						columnNames.Add(schemaColumm.ColumnName);
+						columnNames.Add(schemaColumn.ColumnName);
 					}
 				}
 
@@ -67,6 +87,7 @@ namespace Tests.SchemaProvider
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
+					case ProviderName.SqlServer2017 :
 					case TestProvName.SqlAzure      :
 						{
 							var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
@@ -89,6 +110,7 @@ namespace Tests.SchemaProvider
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
+					case ProviderName.SqlServer2017 :
 					case TestProvName.SqlAzure      :
 						{
 							var tbl = dbSchema.Tables.Single(at => at.TableName == "AllTypes");
@@ -126,8 +148,8 @@ namespace Tests.SchemaProvider
 			//Assert.That(schemaTable.ForeignKeys.Count >= e.Associations.Count);
 		}
 
-		[Test, NorthwindDataContext(false, true)]
-		public void NorthwindTest(string context)
+		[Test]
+		public void NorthwindTest([NorthwindDataContext(false, true)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -140,8 +162,8 @@ namespace Tests.SchemaProvider
 
 #if !NETSTANDARD2_0
 
-		[Test, IncludeDataContextSource(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void MySqlTest(string context)
+		[Test]
+		public void MySqlTest([IncludeDataSources(TestProvName.AllMySqlData)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -159,8 +181,9 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void MySqlPKTest(string context)
+		[Test]
+		public void MySqlPKTest([IncludeDataSources(TestProvName.AllMySqlData)]
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -181,8 +204,8 @@ namespace Tests.SchemaProvider
 			[PrimaryKey(2)] public int ID2;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]
-		public void PostgreSQLTest(string context)
+		[Test]
+		public void PostgreSQLTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -201,8 +224,8 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.DB2)]
-		public void DB2Test(string context)
+		[Test]
+		public void DB2Test([IncludeDataSources(ProviderName.DB2)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -223,12 +246,13 @@ namespace Tests.SchemaProvider
 			Assert.AreEqual("_1", SchemaProviderBase.ToValidName("\t1\t"));
 		}
 
-		[Test, DataContextSource(false, ProviderName.SQLiteMS
-#if NETSTANDARD2_0
-			, ProviderName.MySql, TestProvName.MySql57
-#endif
+		[Test]
+		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
+//#if NETSTANDARD2_0
+//				, ProviderName.MySql, TestProvName.MySql57
+//#endif
 			)]
-		public void IncludeExcludeCatalogTest(string context)
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -244,12 +268,13 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.SQLiteMS
-#if NETSTANDARD2_0
-			, ProviderName.MySql, TestProvName.MySql57
-#endif
+		[Test]
+		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
+//#if NETSTANDARD2_0
+//				, ProviderName.MySql, TestProvName.MySql57
+//#endif
 			)]
-		public void IncludeExcludeSchemaTest(string context)
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -269,8 +294,9 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)]
-		public void SchemaProviderNormalizeName(string context)
+		[Test]
+		public void SchemaProviderNormalizeName([IncludeDataSources(ProviderName.SQLiteClassic)]
+			string context)
 		{
 			using (var db = new DataConnection(context, "Data Source=:memory:;"))
 			{
@@ -308,12 +334,13 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.SQLiteMS
-#if NETSTANDARD2_0
-			, ProviderName.MySql, TestProvName.MySql57
-#endif
+		[Test]
+		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
+//#if NETSTANDARD2_0
+//				, ProviderName.MySql
+//#endif
 			)]
-		public void PrimaryForeignKeyTest(string context)
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -334,9 +361,8 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(false,
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void ForeignKeyMemberNameTest1(string context)
+		[Test]
+		public void ForeignKeyMemberNameTest1([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -351,12 +377,13 @@ namespace Tests.SchemaProvider
 				table = s.Tables.Single(t => t.TableName == "TestSchemaB");
 				fks   = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();
 
-				Assert.That(fks, Is.EqualTo(new[] { "OriginTestSchemaA", "TargetTestSchemaA", "Target_Test_Schema_A" }));
+				AreEqual(fks, new[] { "OriginTestSchemaA", "TargetTestSchemaA", "Target_Test_Schema_A" }, _ => _);
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, TestProvName.Northwind)]
-		public void ForeignKeyMemberNameTest2(string context)
+		[Test]
+		public void ForeignKeyMemberNameTest2([IncludeDataSources(TestProvName.Northwind)]
+			string context)
 		{
 			using (var db = new DataConnection(context))
 			{

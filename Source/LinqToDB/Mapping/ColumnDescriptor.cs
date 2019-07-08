@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -30,12 +32,12 @@ namespace LinqToDB.Mapping
 			if (MemberInfo.IsFieldEx())
 			{
 				var fieldInfo = (FieldInfo)MemberInfo;
-				MemberType = fieldInfo.FieldType;
+				MemberType    = fieldInfo.FieldType;
 			}
 			else if (MemberInfo.IsPropertyEx())
 			{
 				var propertyInfo = (PropertyInfo)MemberInfo;
-				MemberType = propertyInfo.PropertyType;
+				MemberType       = propertyInfo.PropertyType;
 			}
 
 			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;
@@ -130,6 +132,13 @@ namespace LinqToDB.Mapping
 					if (DataType == DataType.Undefined && a.DataType.HasValue)
 						DataType = a.DataType.Value;
 				}
+			}
+
+			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			if (skipValueAttributes != null && skipValueAttributes.Length > 0)
+			{
+				SkipBaseAttributes    = skipValueAttributes;
+				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
 			}
 		}
 
@@ -239,6 +248,45 @@ namespace LinqToDB.Mapping
 		public bool           SkipOnInsert    { get; private set; }
 
 		/// <summary>
+		/// Gets whether the column has specific values that should be skipped on insert.
+		/// </summary>
+		public bool           HasValuesToSkipOnInsert => SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Insert) != 0) ?? false;
+
+		/// <summary>
+		/// Gets whether the column has specific values that should be skipped on update.
+		/// </summary>
+		public bool           HasValuesToSkipOnUpdate => SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Update) != 0) ?? false;
+
+		/// <summary>
+		/// Gets whether the column has specific values that should be skipped on insert.
+		/// </summary>
+		private SkipBaseAttribute[] SkipBaseAttributes { get; }
+
+		/// <summary>
+		/// Gets flags for which operation values are skipped.
+		/// </summary>
+		public SkipModification SkipModificationFlags { get; }
+
+		/// <summary> 
+		/// Checks if the passed object has values that should bes skipped based on the given flags. 
+		/// </summary>
+		/// <param name="obj">The object containing the values for the operation.</param>
+		/// <param name="descriptor"><see cref="EntityDescriptor"/> of the current instance.</param>
+		/// <param name="flags">The flags that specify which operation should be checked.</param>
+		/// <returns><c>true</c> if object contains values that should be skipped. </returns>
+		public virtual bool ShouldSkip(object obj, EntityDescriptor descriptor, SkipModification flags)
+		{
+			if (SkipBaseAttributes == null)
+				return false;
+	
+			foreach (var skipBaseAttribute in SkipBaseAttributes)
+				if ((skipBaseAttribute.Affects & flags) != 0 && skipBaseAttribute.ShouldSkip(obj, descriptor, this))
+					return true;
+
+			return false;
+		}
+
+		/// <summary>
 		/// Gets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
 		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string)"/>
@@ -317,7 +365,9 @@ namespace LinqToDB.Mapping
 				var objParam   = Expression.Parameter(typeof(object), "obj");
 				var getterExpr = MemberAccessor.GetterExpression.GetBody(Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type));
 
-				var expr = mappingSchema.GetConvertExpression(MemberType, typeof(DataParameter), createDefault : false);
+				var expr = mappingSchema.GetConvertExpression(
+					new DbDataType(MemberType, DataType, DbType, Length), 
+					new DbDataType(typeof(DataParameter), DataType, DbType, Length), createDefault : false);
 
 				if (expr != null)
 				{

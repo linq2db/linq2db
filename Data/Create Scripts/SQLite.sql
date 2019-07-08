@@ -40,7 +40,7 @@ CREATE TABLE Person
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    'M');
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M');
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F');
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M');
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M');
 
 --
 -- Doctor Table Extension
@@ -142,7 +142,7 @@ GO
 INSERT INTO AllTypes
 (
 	bigintDataType, numericDataType, bitDataType, smallintDataType, decimalDataType,
-	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType, 
+	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType,
 	datetimeDataType,
 	charDataType, varcharDataType, textDataType, ncharDataType, nvarcharDataType, ntextDataType,
 	objectDataType
@@ -185,7 +185,7 @@ CREATE TABLE ForeignKeyTable
 (
 	PrimaryKeyTableID integer      NOT NULL,
 	Name              nvarchar(50) NOT NULL,
-	-- Test: the foreign key targets the parent table without a column 
+	-- Test: the foreign key targets the parent table without a column
 	-- reference.  This should automatically match against the primary key
 	-- of the target table.
 	CONSTRAINT FK_ForeignKeyTable_PrimaryKeyTable FOREIGN KEY(PrimaryKeyTableID) REFERENCES PrimaryKeyTable ON DELETE CASCADE
@@ -203,7 +203,7 @@ CREATE TABLE FKTestPosition
 	PositionID   integer      NOT NULL,
 	Name         nvarchar(50) NOT NULL,
 	PRIMARY KEY(Company, Department, PositionID),
-	-- Test: one level deeper, this should link to both fields in the 
+	-- Test: one level deeper, this should link to both fields in the
 	-- primary key of the FKTestDepartment table
 	CONSTRAINT FK_Position_Department FOREIGN KEY(Company, Department) REFERENCES FKTestDepartment ON DELETE CASCADE
 	-- A simpler foreign key for the above would be:
@@ -274,3 +274,21 @@ CREATE TABLE TEST_T4_CASING
 	snake_case            INT    NOT NULL,
 	camelCase             INT    NOT NULL
 );
+
+DROP TABLE IF EXISTS FTS3_TABLE;
+CREATE VIRTUAL TABLE FTS3_TABLE USING FTS3(text1 TEXT, text2 TEXT);
+
+DROP TABLE IF EXISTS FTS4_TABLE;
+CREATE VIRTUAL TABLE FTS4_TABLE USING FTS4(text1 TEXT, text2 TEXT);
+
+INSERT INTO FTS3_TABLE(text1, text2) VALUES('this is text1', 'this is text2');
+INSERT INTO FTS3_TABLE(text1, text2) VALUES('looking for something?', 'found it!');
+INSERT INTO FTS3_TABLE(text1, text2) VALUES('record not found', 'empty');
+INSERT INTO FTS3_TABLE(text1, text2) VALUES('for snippet testing', 'During 30 Nov-1 Dec, 2-3oC drops. Cool in the upper portion, minimum temperature 14-16oC and cool elsewhere, minimum temperature 17-20oC. Cold to very cold on mountaintops, minimum temperature 6-12oC. Northeasterly winds 15-30 km/hr. After that, temperature increases. Northeasterly winds 15-30 km/hr.');
+
+INSERT INTO FTS4_TABLE(text1, text2) VALUES('this is text1', 'this is text2');
+INSERT INTO FTS4_TABLE(text1, text2) VALUES('looking for something?', 'found it!');
+INSERT INTO FTS4_TABLE(text1, text2) VALUES('record not found', 'empty');
+INSERT INTO FTS4_TABLE(text1, text2) VALUES('for snippet testing', 'During 30 Nov-1 Dec, 2-3oC drops. Cool in the upper portion, minimum temperature 14-16oC and cool elsewhere, minimum temperature 17-20oC. Cold to very cold on mountaintops, minimum temperature 6-12oC. Northeasterly winds 15-30 km/hr. After that, temperature increases. Northeasterly winds 15-30 km/hr.');
+
+

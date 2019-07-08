@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -393,6 +394,25 @@ namespace LinqToDB.Expressions
 					return eq1.EqualsTo(eq2, info);
 				}
 			}
+			else if (expr1.Value is IEnumerable list1 && expr2.Value is IEnumerable list2)
+			{
+				var enum1 = list1.GetEnumerator();
+				var enum2 = list2.GetEnumerator();
+				using (enum1 as IDisposable)
+				using (enum2 as IDisposable)
+				{
+					while (enum1.MoveNext())
+					{
+						if (!enum2.MoveNext() || !object.Equals(enum1.Current, enum2.Current))
+							return false;
+					}
+
+					if (enum2.MoveNext())
+						return false;
+				}
+
+				return true;
+			}
 
 			return !info.CompareConstantValues || expr1.Value == expr2.Value;
 		}
@@ -417,11 +437,27 @@ namespace LinqToDB.Expressions
 					return arr.Any(a => a != null) ? arr : null;
 				});
 
+			bool DefaultCompareArguments(Expression arg1, Expression arg2)
+			{
+				if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(arg1.Type))
+				{
+					if (arg1.NodeType == ExpressionType.Constant && arg2.NodeType == ExpressionType.Constant)
+					{
+						var query1 = ((Sql.IQueryableContainer)arg1.EvaluateExpression()).Query;
+						var query2 = ((Sql.IQueryableContainer)arg2.EvaluateExpression()).Query;
+						return EqualsTo(query1.Expression, query2.Expression, info);
+					}
+				}
+				if (!arg1.EqualsTo(arg2, info))
+						return false;
+				return true;
+			}
+
 			if (dependentParameters == null)
 			{
 				for (var i = 0; i < expr1.Arguments.Count; i++)
 				{
-					if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+					if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i]))
 						return false;
 				}
 			}
@@ -433,15 +469,14 @@ namespace LinqToDB.Expressions
 
 					if (dependentAttribute != null)
 					{
-						var obj1 = expr1.Arguments[i].EvaluateExpression();
-						var obj2 = expr2.Arguments[i].EvaluateExpression();
-
-						if (!dependentAttribute.ObjectsEqual(obj1, obj2))
+						if (!dependentAttribute.ExpressionsEqual(expr1.Arguments[i], expr2.Arguments[i], (e1, e2) => e1.EqualsTo(e2, info)))
 							return false;
 					}
 					else
-						if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+					{
+						if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i]))
 							return false;
+					}
 				}
 			}
 
@@ -772,15 +807,16 @@ namespace LinqToDB.Expressions
 
 			switch (ex.NodeType)
 			{
-				case ExpressionType.Quote          : return ((UnaryExpression)ex).Operand.Unwrap();
+				case ExpressionType.Quote          :
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
+					return ((UnaryExpression)ex).Operand.Unwrap();
+				case ExpressionType.Constant       :
 					{
-						var ue = (UnaryExpression)ex;
+						var c = (ConstantExpression)ex;
 
-						if (!ue.Operand.Type.IsEnumEx())
-							return ue.Operand.Unwrap();
-
+						if (c.Value != null && c.Type != c.Value.GetType())
+							return Expression.Constant(c.Value, c.Value.GetType());
 						break;
 					}
 			}
@@ -795,21 +831,11 @@ namespace LinqToDB.Expressions
 
 			switch (ex.NodeType)
 			{
-				case ExpressionType.Quote: return ((UnaryExpression)ex).Operand.Unwrap();
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Convert:
 				case ExpressionType.TypeAs:
-					{
-						var ue = (UnaryExpression)ex;
-
-						if (!ue.Operand.Type.IsEnumEx())
-							return ue.Operand.Unwrap();
-
-						break;
-					}
+					return ((UnaryExpression)ex).Operand.Unwrap();
 			}
 
-			return ex;
+			return ex.Unwrap();
 		}
 
 		public static Expression SkipPathThrough(this Expression expr)
@@ -948,6 +974,13 @@ namespace LinqToDB.Expressions
 			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions);
 		}
 
+		public static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)
+		{
+			var type = method.Method.DeclaringType;
+
+			return type == typeof(AsyncExtensions);
+		}
+
 		public static bool IsAggregate(this MethodCallExpression methodCall, MappingSchema mapping)
 		{
 			if (methodCall.IsQueryable(AggregationBuilder.MethodNames))
@@ -972,6 +1005,16 @@ namespace LinqToDB.Expressions
 			if (method.IsQueryable())
 				foreach (var name in names)
 					if (method.Method.Name == name)
+						return true;
+
+			return false;
+		}
+
+		public static bool IsAsyncExtension(this MethodCallExpression method, params string[] names)
+		{
+			if (method.IsAsyncExtension())
+				foreach (var name in names)
+					if (method.Method.Name == name + "Async")
 						return true;
 
 			return false;
@@ -1028,6 +1071,20 @@ namespace LinqToDB.Expressions
 			return expression;
 		}
 
+		/// <summary>
+		/// Returns part of expression based on its level.
+		/// </summary>
+		/// <param name="expression">Base expression that needs decomposition.</param>
+		/// <param name="mapping">Maping schema.</param>
+		/// <param name="level">Level that should be to be extracted.</param>
+		/// <returns>Exstracted expression.</returns>
+		/// <example>
+		/// This sample shows what method returns for expression [c.ParentId].
+		/// <code>
+		/// expression.GetLevelExpression(mapping, 0) == [c]
+		/// expression.GetLevelExpression(mapping, 1) == [c.ParentId]
+		/// </code>
+		/// </example>
 		public static Expression GetLevelExpression(this Expression expression, MappingSchema mapping, int level)
 		{
 			var current = 0;

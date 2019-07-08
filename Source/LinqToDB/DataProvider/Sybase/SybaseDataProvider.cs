@@ -8,9 +8,9 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	using Data;
 	using Mapping;
+	using Common;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Collections.Concurrent;
 
 	public class SybaseDataProvider : DynamicDataProviderBase
 	{
@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.Sybase
 			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
-			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+			SetField<IDataReader,DateTime>("time", (r,i) => GetDateTimeAsTime(r, i));
 
 			_sqlOptimizer = new SybaseSqlOptimizer(SqlProviderFlags);
 		}
@@ -54,7 +54,7 @@ namespace LinqToDB.DataProvider.Sybase
 		public override string DbFactoryProviderName => "Sybase.Data.AseClient";
 #endif
 
-		static DateTime GetDateTime(IDataReader dr, int idx)
+		static DateTime GetDateTimeAsTime(IDataReader dr, int idx)
 		{
 			var value = dr.GetDateTime(idx);
 
@@ -101,9 +101,9 @@ namespace LinqToDB.DataProvider.Sybase
 
 		#region Overrides
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SybaseSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+			return new SybaseSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 		}
 
 		static class MappingSchemaInstance
@@ -130,22 +130,22 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 #endif
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.SByte      :
-					dataType = DataType.Int16;
+					dataType = dataType.WithDataType(DataType.Int16);
 					if (value is sbyte)
 						value = (short)(sbyte)value;
 					break;
 
 				case DataType.Time       :
-					if (value is TimeSpan) value = new DateTime(1900, 1, 1) + (TimeSpan)value;
+					if (value is TimeSpan ts) value = new DateTime(1900, 1, 1) + ts;
 					break;
 
 				case DataType.Xml        :
-					dataType = DataType.NVarChar;
+					dataType = dataType.WithDataType(DataType.NVarChar);
 						 if (value is XDocument)   value = value.ToString();
 					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
 					break;
@@ -153,22 +153,22 @@ namespace LinqToDB.DataProvider.Sybase
 				case DataType.Guid       :
 					if (value != null)
 						value = value.ToString();
-					dataType = DataType.Char;
+					dataType = dataType.WithDataType(DataType.Char);
 					parameter.Size = 36;
 					break;
 
 				case DataType.Undefined  :
 					if (value == null)
-						dataType = DataType.Char;
+						dataType = dataType.WithDataType(DataType.Char);
 					break;
 			}
 
 			base.SetParameter(parameter, "@" + name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal;          break;
 				case DataType.UInt16        : _setUInt16(parameter);                      break;
@@ -187,7 +187,7 @@ namespace LinqToDB.DataProvider.Sybase
 				case DataType.SmallDateTime : _setSmallDateTime(parameter);               break;
 				case DataType.Timestamp     : _setTimestamp(parameter);                   break;
 				case DataType.DateTime2     :
-					base.SetParameterType(parameter, DataType.DateTime);
+					base.SetParameterType(parameter, dataType.WithDataType(DataType.DateTime));
 					                                                                      break;
 
 				default                     : base.SetParameterType(parameter, dataType); break;
@@ -199,11 +199,11 @@ namespace LinqToDB.DataProvider.Sybase
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new SybaseBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}

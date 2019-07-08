@@ -2,12 +2,14 @@
 del *.nupkg
 
 ..\Redist\NuGet Pack linq2db.nuspec
+..\Redist\NuGet Pack linq2db.Tools.nuspec
 
 ..\Redist\NuGet Pack linq2db.Access.nuspec
 ..\Redist\NuGet Pack linq2db.DB2.nuspec
 ..\Redist\NuGet Pack linq2db.Firebird.nuspec
 ..\Redist\NuGet Pack linq2db.Informix.nuspec
 ..\Redist\NuGet Pack linq2db.MySql.nuspec
+..\Redist\NuGet Pack linq2db.MySqlConnector.nuspec
 ..\Redist\NuGet Pack linq2db.Oracle.Managed.nuspec
 ..\Redist\NuGet Pack linq2db.Oracle.Unmanaged.nuspec
 ..\Redist\NuGet Pack linq2db.PostgreSQL.nuspec

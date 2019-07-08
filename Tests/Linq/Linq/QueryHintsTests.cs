@@ -4,6 +4,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -11,8 +12,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class QueryHintsTests : TestBase
 	{
-		[Test, DataContextSource(ProviderName.Access, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void Comment(string context)
+		[Test]
+		public void Comment([DataSources(ProviderName.Access, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -55,8 +56,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
-		public void Option1(string context)
+		[Test]
+		public void Option1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -82,8 +83,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
-		public void Option2(string context)
+		[Test]
+		public void Option2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

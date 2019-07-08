@@ -20,7 +20,8 @@ namespace LinqToDB.Linq.Builder
 			Association,
 			TableFunctionAttribute,
 			AsCteMethod,
-			CteConstant
+			CteConstant,
+			FromSqlMethod
 		}
 
 		static BuildContextType FindBuildContext(ExpressionBuilder builder, BuildInfo buildInfo, out IBuildContext parentContext)
@@ -35,10 +36,18 @@ namespace LinqToDB.Linq.Builder
 					{
 						var c = (ConstantExpression)expression;
 
-						if (c.Value is IQueryable)
+						if (c.Value is IQueryable queryable)
 						{
 							if (typeof(CteTable<>).IsSameOrParentOf(c.Value.GetType()))
 								return BuildContextType.CteConstant;
+
+							// Avoid collision with ArrayBuilder
+							var elementType = queryable.ElementType;
+							if (builder.MappingSchema.IsScalarType(elementType) && typeof(EnumerableQuery<>).IsSameOrParentOf(c.Value.GetType()))
+								break;
+
+							if (queryable.Expression.NodeType == ExpressionType.NewArrayInit)
+								break;
 
 							return BuildContextType.TableConstant;
 						}
@@ -59,6 +68,9 @@ namespace LinqToDB.Linq.Builder
 
 							case "AsCte":
 								return BuildContextType.AsCteMethod;
+
+							case "FromSql":
+								return BuildContextType.FromSqlMethod;
 						}
 
 						var attr = builder.GetTableFunctionAttribute(mc.Method);
@@ -127,6 +139,7 @@ namespace LinqToDB.Linq.Builder
 				case BuildContextType.TableFunctionAttribute : return new TableContext    (builder, buildInfo);
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
 				case BuildContextType.CteConstant            : return BuildCteContextTable(builder, buildInfo);
+				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable(builder, buildInfo);
 			}
 
 			throw new InvalidOperationException();

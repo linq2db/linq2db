@@ -58,6 +58,22 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Creates data context using specified database provider and connection string.
+		/// </summary>
+		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
+		/// <param name="connectionString">Database connection string to use for connection with database.</param>
+		public DataContext([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString)
+		{
+			if (providerName     == null) throw new ArgumentNullException(nameof(providerName));
+			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+			var dataProvider = DataConnection.GetDataProvider(providerName, connectionString);
+			DataProvider     = dataProvider ?? throw new LinqToDBException($"DataProvider '{providerName}' not found.");
+			ContextID        = DataProvider.Name;
+			ConnectionString = connectionString;
+			MappingSchema    = DataProvider.MappingSchema;
+		}
+
+		/// <summary>
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
 		public string        ConfigurationString { get; private set; }
@@ -230,7 +246,7 @@ namespace LinqToDB
 			}
 		}
 
-		Func<ISqlBuilder>   IDataContext.CreateSqlProvider => DataProvider.CreateSqlBuilder;
+		Func<ISqlBuilder>   IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema);
 		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer   => DataProvider.GetSqlOptimizer;
 		Type                IDataContext.DataReaderType    => DataProvider.DataReaderType;
 		SqlProviderFlags    IDataContext.SqlProviderFlags  => DataProvider.SqlProviderFlags;
@@ -265,9 +281,9 @@ namespace LinqToDB
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
-				dc._dataConnection = _dataConnection.Transaction != null ?
-					new DataConnection(DataProvider, _dataConnection.Transaction) :
-					new DataConnection(DataProvider, _dataConnection.Connection);
+				dc._dataConnection = _dataConnection.TransactionAsync != null ?
+					new DataConnection(DataProvider, _dataConnection.TransactionAsync) :
+					new DataConnection(DataProvider, _dataConnection.EnsureConnection());
 
 			dc.QueryHints.    AddRange(QueryHints);
 			dc.NextQueryHints.AddRange(NextQueryHints);
@@ -337,6 +353,38 @@ namespace LinqToDB
 			var dct = new DataContextTransaction(this);
 
 			dct.BeginTransaction();
+
+			return dct;
+		}
+
+		/// <summary>
+		/// Starts new transaction asynchronously for current context with specified isolation level.
+		/// If connection already has transaction, it will be rolled back.
+		/// </summary>
+		/// <param name="level">Transaction isolation level.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Database transaction object.</returns>
+		public virtual async Task<DataContextTransaction> BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
+		{
+			var dct = new DataContextTransaction(this);
+
+			await dct.BeginTransactionAsync(level).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			return dct;
+		}
+
+		/// <summary>
+		/// Starts new transaction asynchronously for current context with default isolation level.
+		/// If connection already has transaction, it will be rolled back.
+		/// </summary>
+		/// <param name="autoCommitOnDispose">Not supported, see <a href="https://github.com/linq2db/linq2db/issues/104">issue</a>.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Database transaction object.</returns>
+		public virtual async Task<DataContextTransaction> BeginTransactionAsync(bool autoCommitOnDispose = true, CancellationToken cancellationToken = default)
+		{
+			var dct = new DataContextTransaction(this);
+
+			await dct.BeginTransactionAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return dct;
 		}

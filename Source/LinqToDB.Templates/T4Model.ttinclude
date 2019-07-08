@@ -2,18 +2,21 @@
 <#@ import namespace="System"                     #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Linq"                #>
+<#@ import namespace="System.Text"                #>
 <#+
 static Action<GeneratedTextTransformation,string> WriteComment    = (tt,s) => tt.WriteLine("//{0}", s);
 
 Action BeforeGenerateModel = () => {};
 
-bool GenerateProcedureErrors = true;
+bool GenerateProcedureErrors             = true;
+
+static bool EnableNullableReferenceTypes = false;
+static bool AddNullablePragma            = false;
+static Func<string, bool> IsValueType    = IsValueTypeDefault;
 
 void GenerateModel()
 {
 	Model.SetTree();
-
-	BeforeGenerateModel();
 
 	if (GenerationEnvironment.Length > 0 && GenerationEnvironment.ToString().Trim().Length == 0)
 		GenerationEnvironment.Length = 0;
@@ -25,7 +28,20 @@ void GenerateModel()
 	WriteComment(this, " </auto-generated>");
 	WriteComment(this, "---------------------------------------------------------------------------------------------------");
 
+	WriteLine("");
+	WriteLine("#pragma warning disable 1591");
+	if (AddNullablePragma)
+		WriteLine($"#nullable {(EnableNullableReferenceTypes ? "enable" : "disable")}");
+	WriteLine("");
+
+	BeforeGenerateModel();
+
 	Model.Render(this);
+
+	WriteLine("");
+	if (AddNullablePragma)
+		WriteLine($"#nullable restore");
+	WriteLine("#pragma warning restore 1591");
 }
 
 void Trim()
@@ -235,6 +251,7 @@ public partial class Class : TypeBase
 	public bool               IsStatic         = false;
 	public List<string>       Interfaces       = new List<string>();
 	public List<IClassMember> Members          = new List<IClassMember>();
+	public bool               DisableNullable  = false;
 
 	public Class()
 	{
@@ -249,6 +266,9 @@ public partial class Class : TypeBase
 	public override void Render(GeneratedTextTransformation tt)
 	{
 		BeginConditional(tt);
+
+		if (DisableNullable && EnableNullableReferenceTypes)
+			tt.WriteLine("#nullable disable");
 
 		foreach (var c in Comment)
 			tt.WriteLine("//" + c);
@@ -350,6 +370,9 @@ public partial class Class : TypeBase
 		tt.PopIndent();
 		WriteEndClass(tt);
 
+		if (DisableNullable && EnableNullableReferenceTypes)
+			tt.WriteLine("#nullable enable");
+
 		EndConditional(tt);
 	}
 
@@ -373,7 +396,7 @@ public abstract partial class MemberBase : IClassMember
 	public string          ID;
 	public AccessModifier  AccessModifier = AccessModifier.Public;
 	public string          Name;
-	public string          Type;
+	public Func<string>    TypeBuilder;
 	public List<string>    Comment = new List<string>();
 	public string          EndLineComment;
 	public List<Attribute> Attributes = new List<Attribute>();
@@ -386,6 +409,14 @@ public abstract partial class MemberBase : IClassMember
 	public int NameLen;
 	public int ParamLen;
 	public int BodyLen;
+
+	public string Type
+	{
+		get { return TypeBuilder?.Invoke(); }
+		set { TypeBuilder = () => value;    }
+	}
+
+	public string BuildType() { return TypeBuilder?.Invoke(); }
 
 	public virtual  int  CalcModifierLen() { return 0; }
 	public abstract int  CalcBodyLen    ();
@@ -474,7 +505,7 @@ public partial class MemberGroup : MemberBase
 				foreach (var m in allMembers)
 					m.ModifierLen = max;
 
-				max = allMembers.Max(m => (m.Type ?? "").Length);
+				max = allMembers.Max(m => (m.BuildType() ?? "").Length);
 				foreach (var m in allMembers)
 					m.TypeLen = max;
 
@@ -815,9 +846,9 @@ static Action<GeneratedTextTransformation,Field> WriteField = (tt,f) =>
 		(f.IsReadonly ? " readonly" : "") ;
 
 	tt.Write("{0}{1}{2}{3} {4}{5} {6}",
-		am,     LenDiff(f.AccessModifierLen, am),
-		mdf,    LenDiff(f.ModifierLen,       mdf),
-		f.Type, LenDiff(f.TypeLen,           f.Type),
+		am,            LenDiff(f.AccessModifierLen, am),
+		mdf,           LenDiff(f.ModifierLen,       mdf),
+		f.BuildType(), LenDiff(f.TypeLen,           f.BuildType()),
 		f.Name);
 
 	if (f.InitValue != null)
@@ -847,9 +878,15 @@ public partial class Field : MemberBase
 	{
 	}
 
-	public Field(string type, string name)
+	public Field(ModelType type, string name)
 	{
-		Type = type;
+		TypeBuilder = () => type.ToTypeName();
+		Name = name;
+	}
+
+	public Field(Func<string> typeBuilder, string name)
+	{
+		TypeBuilder = typeBuilder;
 		Name = name;
 	}
 
@@ -877,9 +914,9 @@ static Action<GeneratedTextTransformation,Event> WriteEvent = (tt,m) =>
 		" event";
 
 	tt.Write("{0}{1}{2}{3} {4}{5} {6};",
-		am,     LenDiff(m.AccessModifierLen, am),
-		mdf,    LenDiff(m.ModifierLen,       mdf),
-		m.Type, LenDiff(m.TypeLen,           m.Type),
+		am,            LenDiff(m.AccessModifierLen, am),
+		mdf,           LenDiff(m.ModifierLen,       mdf),
+		m.BuildType(), LenDiff(m.TypeLen,           m.BuildType()),
 		m.Name);
 
 	if (!string.IsNullOrEmpty(m.EndLineComment))
@@ -901,9 +938,21 @@ public partial class Event : MemberBase
 	{
 	}
 
-	public Event(string type, string name)
+	public Event(Type eventType, string name, bool nullable)
 	{
-		Type = type;
+		TypeBuilder = () => new ModelType(eventType, nullable).ToTypeName();
+		Name = name;
+	}
+
+	public Event(string eventType, string name, bool nullable)
+	{
+		TypeBuilder = () => new ModelType(eventType, true, nullable).ToTypeName();
+		Name = name;
+	}
+
+	public Event(Func<string> typeBuilder, string name)
+	{
+		TypeBuilder = typeBuilder;
 		Name = name;
 	}
 
@@ -930,9 +979,9 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 	var mdf = p.IsAbstract ? " abstract" : p.IsVirtual ? " virtual" : p.IsOverride ? " override" : p.IsStatic ? " static" : "";
 
 	tt.Write("{0}{1}{2}{3} {4}{5} {6}",
-		am,     LenDiff(p.AccessModifierLen, am),
-		mdf,    LenDiff(p.ModifierLen,       mdf),
-		p.Type, LenDiff(p.TypeLen,           p.Type),
+		am,            LenDiff(p.AccessModifierLen, am),
+		mdf,           LenDiff(p.ModifierLen,       mdf),
+		p.BuildType(), LenDiff(p.TypeLen,           p.BuildType()),
 		p.Name);
 
 	Action writeComment = () =>
@@ -985,7 +1034,7 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 			if (p.HasGetter)
 			{
 				tt.Write("get { ");
-				foreach (var t in p.GetBody)
+				foreach (var t in p.BuildGetBody())
 					tt.Write("{0} ", t);
 				tt.Write("} ");
 			}
@@ -993,7 +1042,7 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 			if (p.HasSetter)
 			{
 				tt.Write("set { ");
-				foreach (var t in p.SetBody)
+				foreach (var t in p.BuildSetBody())
 					tt.Write("{0} ", t);
 				tt.Write("} ");
 			}
@@ -1013,9 +1062,10 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 
 			if (p.HasGetter)
 			{
-				if (p.GetBody.Count == 1)
+				var getBody = p.BuildGetBody().ToArray();
+				if (getBody.Length == 1)
 				{
-					tt.WriteLine("get {{ {0} }}", p.GetBody[0]);
+					tt.WriteLine("get {{ {0} }}", getBody[0]);
 				}
 				else
 				{
@@ -1023,7 +1073,7 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 					tt.WriteLine("{");
 					tt.PushIndent("\t");
 
-					foreach (var t in p.GetBody)
+					foreach (var t in getBody)
 						tt.WriteLine(t);
 
 					tt.PopIndent();
@@ -1033,9 +1083,10 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 
 			if (p.HasSetter)
 			{
-				if (p.SetBody.Count == 1)
+				var setBody = p.BuildSetBody().ToArray();
+				if (setBody.Length == 1)
 				{
-					tt.WriteLine("set {{ {0} }}", p.SetBody[0]);
+					tt.WriteLine("set {{ {0} }}", setBody[0]);
 				}
 				else
 				{
@@ -1043,7 +1094,7 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 					tt.WriteLine("{");
 					tt.PushIndent("\t");
 
-					foreach (var t in p.SetBody)
+					foreach (var t in setBody)
 						tt.WriteLine(t);
 
 					tt.PopIndent();
@@ -1067,8 +1118,8 @@ public partial class Property : MemberBase
 	public bool         IsStatic;
 	public bool         HasGetter = true;
 	public bool         HasSetter = true;
-	public List<string> GetBody   = new List<string>();
-	public List<string> SetBody   = new List<string>();
+	public List<Func<IEnumerable<string>>> GetBodyBuilders = new List<Func<IEnumerable<string>>>();
+	public List<Func<IEnumerable<string>>> SetBodyBuilders = new List<Func<IEnumerable<string>>>();
 
 	public int GetterLen = 5;
 	public int SetterLen = 5;
@@ -1077,12 +1128,26 @@ public partial class Property : MemberBase
 	{
 	}
 
-	public Property(string type, string name, IEnumerable<string> getBody = null, IEnumerable<string> setBody = null)
+	public Property(ModelType type, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
 	{
-		Type = type;
+		TypeBuilder = () => type.ToTypeName();
+		Name        = name;
+
+		InitBody(getBodyBuilder, setBodyBuilder);
+	}
+
+	public Property(bool disableNullable, Func<string> typeBuilder, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
+		: this(typeBuilder, name, getBodyBuilder, setBodyBuilder)
+	{
+		DisableNullable = disableNullable;
+	}
+
+	public Property(Func<string> typeBuilder, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
+	{
+		TypeBuilder = typeBuilder;
 		Name = name;
 
-		InitBody(getBody, setBody);
+		InitBody(getBodyBuilder, setBodyBuilder);
 	}
 
 	public override int CalcModifierLen()
@@ -1100,7 +1165,7 @@ public partial class Property : MemberBase
 		if (HasGetter)
 		{
 			len += " get {".Length;
-			foreach (var t in GetBody)
+			foreach (var t in BuildGetBody())
 				len += 1 + t.Length;
 			len += " }".Length;
 		}
@@ -1108,7 +1173,7 @@ public partial class Property : MemberBase
 		if (HasSetter)
 		{
 			len += " set {".Length;
-			foreach (var t in SetBody)
+			foreach (var t in BuildSetBody())
 				len += 1 + t.Length;
 			len += " }".Length;
 		}
@@ -1120,43 +1185,76 @@ public partial class Property : MemberBase
 
 	public override void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
-		if (!IsAuto && HasGetter && GetBody.Count == 1)
+		if (!IsAuto && HasGetter)
 		{
-			var t = GetBody[GetBody.Count - 1];
-
-			if (!t.StartsWith("return"))
+			var getBody = BuildGetBody().ToArray();
+			if (getBody.Length == 1)
 			{
-				t = "return " + t;
+				var t = getBody[0];
 
-				if (!t.EndsWith(";"))
-					t += ";";
+				if (!t.StartsWith("return"))
+				{
+					t = "return " + t;
 
-				GetBody[GetBody.Count - 1] = t;
+					if (!t.EndsWith(";"))
+						t += ";";
+
+					GetBodyBuilders.Clear();
+					GetBodyBuilders.Add(() => new [] { t });
+				}
 			}
 		}
 
 		WriteProperty(tt, this, isCompact);
 	}
 
-	public Property InitBody(IEnumerable<string> getBody = null, IEnumerable<string> setBody = null)
+	public Property InitBody(Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
 	{
-		IsAuto = getBody == null && setBody == null;
+		IsAuto = getBodyBuilder == null && setBodyBuilder == null;
 
-		if (getBody != null) GetBody.AddRange(getBody);
-		if (setBody != null) SetBody.AddRange(setBody);
+		if (getBodyBuilder != null) GetBodyBuilders.Add(getBodyBuilder);
+		if (setBodyBuilder != null) SetBodyBuilders.Add(setBodyBuilder);
 
 		if (!IsAuto)
 		{
-			HasGetter = getBody != null;
-			HasSetter = setBody != null;
+			HasGetter = getBodyBuilder != null;
+			HasSetter = setBodyBuilder != null;
 		}
 
 		return this;
 	}
 
-	public Property InitGetter(params string[] getBody)
+	public Property InitGetter(Func<IEnumerable<string>> getBodyBuilder)
 	{
-		return InitBody(getBody, null);
+		return InitBody(getBodyBuilder, null);
+	}
+
+	public IEnumerable<string> BuildGetBody()
+	{
+		return GetBodyBuilders.SelectMany(builder => builder?.Invoke() ?? Array.Empty<string>());
+	}
+
+	public IEnumerable<string> BuildSetBody()
+	{
+		return SetBodyBuilders.SelectMany(builder => builder?.Invoke() ?? Array.Empty<string>());
+	}
+	
+	protected virtual bool DisableNullable { get; }
+
+	public override void BeginConditional(GeneratedTextTransformation tt, bool isCompact)
+	{
+		base.BeginConditional(tt, isCompact);
+
+		if (DisableNullable && EnableNullableReferenceTypes)
+			tt.WriteLine("#nullable disable");
+	}
+
+	public override void EndConditional(GeneratedTextTransformation tt, bool isCompact)
+	{
+		if (DisableNullable && EnableNullableReferenceTypes)
+			tt.WriteLine("#nullable enable");
+
+		base.EndConditional(tt, isCompact);
 	}
 }
 
@@ -1178,11 +1276,11 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 	}
 
 	tt.Write("{0}{1}{2}{3}{4}{5}{6}{7}{8} {9}{10}",
-		am1,    LenDiff(len1, am1),
-		mdf,    LenDiff(mlen, mdf),
-		am2,    LenDiff(len2, am2),
-		m.Type == null ? "" : " ",
-		m.Type, LenDiff(m.TypeLen,     m.Type ?? ""),
+		am1,           LenDiff(len1, am1),
+		mdf,           LenDiff(mlen, mdf),
+		am2,           LenDiff(len2, am2),
+		m.BuildType() == null ? "" : " ",
+		m.BuildType(), LenDiff(m.TypeLen,     m.BuildType() ?? ""),
 		m.Name,
 		m.GenericArguments.Count > 0 ? $"<{string.Join(", ", m.GenericArguments)}>" : string.Empty);
 
@@ -1201,11 +1299,11 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 	{
 		tt.Write("(");
 
-		for (int i = 0; i < m.Parameters.Count; i++)
+		for (int i = 0; i < m.ParameterBuilders.Count; i++)
 		{
 			if (i > 0)
 				tt.Write(", ");
-			tt.Write(m.Parameters[i]);
+			tt.Write(m.ParameterBuilders[i]());
 		}
 
 		tt.Write(")");
@@ -1240,7 +1338,7 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 
 			tt.Write(" {");
 
-			foreach (var t in m.Body)
+			foreach (var t in m.BuildBody())
 				tt.Write(" {0}", t);
 
 			tt.Write(" }");
@@ -1263,7 +1361,7 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 		tt.WriteLine("{");
 		tt.PushIndent("\t");
 
-		foreach (var t in m.Body)
+		foreach (var t in m.BuildBody())
 		{
 			if (t.Length > 1 && t[0] == '#')
 			{
@@ -1284,22 +1382,36 @@ public partial class Method : MemberBase
 	public bool         IsVirtual;
 	public bool         IsOverride;
 	public bool         IsStatic;
-	public List<string> GenericArguments = new List<string>();
-	public List<string> AfterSignature   = new List<string>();
-	public List<string> Parameters       = new List<string>();
-	public List<string> Body             = new List<string>();
+	public List<string> GenericArguments        = new List<string>();
+	public List<string> AfterSignature          = new List<string>();
+	public List<Func<string>> ParameterBuilders = new List<Func<string>>();
+	public List<Func<IEnumerable<string>>> BodyBuilders = new List<Func<IEnumerable<string>>>();
 
 	public Method()
 	{
 	}
 
-	public Method(string type, string name, IEnumerable<string> parameters = null, IEnumerable<string> body = null)
+	public Method(Func<string> typeBuilder, string name, IEnumerable<Func<string>> parameterBuilders = null, params Func<IEnumerable<string>>[] bodyBuilders)
 	{
-		Type = type;
+		TypeBuilder = typeBuilder;
 		Name = name;
 
-		if (parameters != null) Parameters.AddRange(parameters);
-		if (body       != null) Body.      AddRange(body);
+		if (parameterBuilders  != null) ParameterBuilders.AddRange(parameterBuilders);
+		if (bodyBuilders       != null) BodyBuilders.AddRange(bodyBuilders);
+	}
+
+	public static Method Create(string type, string name, IEnumerable<string> parameters = null, IEnumerable<string> body = null)
+	{
+		return new Method(
+			() => type,
+			name,
+			parameters?.Select<string,Func<string>>((string p) => () => p),
+			body?.Select<string,Func<IEnumerable<string>>>(p => () => new[] { p }).ToArray());
+	}
+
+	public IEnumerable<string> BuildBody()
+	{
+		return BodyBuilders.SelectMany(builder => builder?.Invoke() ?? Array.Empty<string>());
 	}
 
 	public override int CalcModifierLen()
@@ -1317,7 +1429,7 @@ public partial class Method : MemberBase
 
 		var len = " {".Length;
 
-		foreach (var t in Body)
+		foreach (var t in BuildBody())
 			len += 1 + t.Length;
 
 		len += " }".Length;
@@ -1327,7 +1439,7 @@ public partial class Method : MemberBase
 
 	public override int CalcParamLen()
 	{
-		return Parameters.Sum(p => p.Length + 2);
+		return ParameterBuilders.Sum(p => p().Length + 2);
 	}
 
 	public override void Render(GeneratedTextTransformation tt, bool isCompact)
@@ -1482,4 +1594,239 @@ void SetPropertyValue(Property propertyObject, string propertyName, object value
 	if (SetPropertyValueAction != null)
 		SetPropertyValueAction(propertyObject, propertyName, value);
 }
+
+static string ToStringLiteral(string value)
+{
+	if (value == null)
+		return "null";
+
+	var sb = new StringBuilder("\"");
+
+	foreach (var chr in value)
+	{
+		switch (chr)
+		{
+			case '\t':     sb.Append("\\t");            break;
+			case '\n':     sb.Append("\\n");            break;
+			case '\r':     sb.Append("\\r");            break;
+			case '\\':     sb.Append("\\\\");           break;
+			case '"' :     sb.Append("\\\"");           break;
+			case '\0':     sb.Append("\\0");            break;
+			case '\u0085':
+			case '\u2028':
+			case '\u2029':
+					 sb.Append($"\\u{(ushort)chr:X4}"); break;
+			default: sb.Append(chr);                    break;
+		}
+	}
+
+	sb.Append('"');
+
+	return sb.ToString();
+}
+
+public class ModelType
+{
+	private readonly IList<ModelType> _arguments = new List<ModelType>();
+
+	public static ModelType Create<TType>(bool referenceNullable)
+	{
+		return Create(typeof(TType), referenceNullable);
+	}
+
+	public static ModelType Create(Type type, bool referenceNullable)
+	{
+		if (type.IsArray)
+			return Array(Create(type.GetElementType(), false), referenceNullable);
+
+		return new ModelType(type, referenceNullable);
+	}
+
+	public static ModelType Array(ModelType elementType, bool referenceNullable)
+	{
+		return new ModelType(elementType, referenceNullable);
+	}
+
+	public ModelType(Type type, bool nullable, params ModelType[] typeArguments)
+	{
+		if (type.IsConstructedGenericType)
+		{
+			if (typeArguments != null && typeArguments.Length > 0)
+				throw new ArgumentException($"{type} must be open generic type or {typeArguments} should be empty");
+
+			if (!_aliasedTypes.ContainsKey(type))
+				_arguments = new List<ModelType>(type.GetGenericArguments().Select(a => new ModelType(a, /* we don't have type info here */ false)));
+		}
+
+		Type        = type;
+		IsReference = !type.IsValueType;
+		IsNullable  = nullable || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>));
+		if (typeArguments != null && typeArguments.Length > 0)
+			_arguments = new List<ModelType>(typeArguments);
+	}
+
+	public ModelType(string type, bool referenceType, bool isNullable, params ModelType[] typeArguments)
+	{
+		TypeName    = type;
+		IsReference = referenceType;
+		IsNullable  = isNullable;
+
+		if (typeArguments != null && typeArguments.Length > 0)
+			_arguments = new List<ModelType>(typeArguments);
+	}
+
+	// array constructor
+	public ModelType(ModelType elementType, bool isNullable)
+	{
+		ElementType = elementType;
+		IsReference = true;
+		IsNullable  = isNullable;
+		IsArray     = true;
+	}
+
+	public Type      Type        { get; }
+	public string    TypeName    { get; }
+	public ModelType ElementType { get; }
+	public bool      IsReference { get; }
+	public bool      IsNullable  { get; }
+	public bool      IsArray     { get; }
+
+	public IEnumerable<ModelType> Arguments => _arguments ?? System.Array.Empty<ModelType>();
+
+	private static readonly IDictionary<Type, string> _aliasedTypes = new Dictionary<Type, string>()
+	{
+		{ typeof(bool),     "bool" },
+		{ typeof(byte),     "byte" },
+		{ typeof(sbyte),    "sbyte" },
+		{ typeof(char),     "char" },
+		{ typeof(decimal),  "decimal" },
+		{ typeof(double),   "double" },
+		{ typeof(float),    "float" },
+		{ typeof(int),      "int" },
+		{ typeof(uint),     "uint" },
+		{ typeof(long),     "long" },
+		{ typeof(ulong),    "ulong" },
+		{ typeof(object),   "object" },
+		{ typeof(short),    "short" },
+		{ typeof(ushort),   "ushort" },
+		{ typeof(string),   "string" },
+		{ typeof(bool?),    "bool?" },
+		{ typeof(byte?),    "byte?" },
+		{ typeof(sbyte?),   "sbyte?" },
+		{ typeof(char?),    "char?" },
+		{ typeof(decimal?), "decimal?" },
+		{ typeof(double?),  "double?" },
+		{ typeof(float?),   "float?" },
+		{ typeof(int?),     "int?" },
+		{ typeof(uint?),    "uint?" },
+		{ typeof(long?),    "long?" },
+		{ typeof(ulong?),   "ulong?" },
+		{ typeof(short?),   "short?" },
+		{ typeof(ushort?),  "ushort?" }
+	};
+
+	public string ToTypeName()
+	{
+		var sb = new StringBuilder();
+
+		if (TypeName != null)
+			sb.Append(TypeName);
+		else if (Type != null)
+			sb.Append(_aliasedTypes.ContainsKey(Type) ? _aliasedTypes[Type] : (Type.Name.Substring(0, Type.Name.IndexOf('`') < 0 ? Type.Name.Length : Type.Name.IndexOf('`'))));
+		else
+			sb.Append(ElementType.ToTypeName());
+
+		if (_arguments != null && _arguments.Count > 0)
+		{
+			sb.Append("<");
+			sb.Append(string.Join(", ", _arguments.Select(a => a.ToTypeName())));
+			sb.Append(">");
+		}
+
+		if (IsArray)
+			sb.Append("[]");
+
+		if (EnableNullableReferenceTypes && IsReference && IsNullable)
+			sb.Append("?");
+		
+		return sb.ToString();
+	}
+}
+
+static bool IsValueTypeDefault(string typeName)
+{
+	switch (typeName)
+	{
+		case "bool":
+		case "bool?":
+		case "char":
+		case "char?":
+		case "decimal":
+		case "decimal?":
+		case "int":
+		case "int?":
+		case "uint":
+		case "uint?":
+		case "byte":
+		case "byte?":
+		case "sbyte":
+		case "sbyte?":
+		case "long":
+		case "long?":
+		case "ulong":
+		case "ulong?":
+		case "short":
+		case "short?":
+		case "ushort":
+		case "ushort?":
+		case "float":
+		case "float?":
+		case "double":
+		case "double?":
+		case "DateTime":
+		case "DateTime?":
+		case "DateTimeOffset":
+		case "DateTimeOffset?":
+		case "TimeSpan":
+		case "TimeSpan?":
+		case "Guid":
+		case "Guid?":
+		case "SqlHierarchyId":
+		case "SqlHierarchyId?":
+		case "NpgsqlDate":
+		case "NpgsqlDate?":
+		case "NpgsqlTimeSpan":
+		case "NpgsqlTimeSpan?":
+		case "NpgsqlPoint":
+		case "NpgsqlPoint?":
+		case "NpgsqlLSeg":
+		case "NpgsqlLSeg?":
+		case "NpgsqlBox":
+		case "NpgsqlBox?":
+		case "NpgsqlPath":
+		case "NpgsqlPath?":
+		case "NpgsqlPolygon":
+		case "NpgsqlPolygon?":
+		case "NpgsqlCircle":
+		case "NpgsqlCircle?":
+		case "NpgsqlLine":
+		case "NpgsqlLine?":
+		case "NpgsqlInet":
+		case "NpgsqlInet?":
+			return true;
+		case "object":
+		case "string":
+		case "byte[]":
+		case "BitArray":
+		case "SqlGeography":
+		case "SqlGeometry":
+		case "PhysicalAddress":
+		case "Array":
+		case "DataTable":
+			return false;
+	}
+
+	return typeName.EndsWith("?");
+}
+
 #>

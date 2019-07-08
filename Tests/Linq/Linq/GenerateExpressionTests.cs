@@ -22,8 +22,8 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = false;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void Test1(string context)
+		[Test]
+		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -51,7 +51,7 @@ namespace Tests.Linq
 				Console.WriteLine(test);
 #endif
 
-				result.ToList();
+				var _ = result.ToList();
 			}
 		}
 	}

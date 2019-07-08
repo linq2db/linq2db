@@ -143,9 +143,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildPredicate(ISqlPredicate predicate)
 		{
-			var exprExpr = predicate as SqlPredicate.ExprExpr;
-
-			if (exprExpr != null)
+			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{
 				var leftType  = exprExpr.Expr1.SystemType;
 				var rightType = exprExpr.Expr2.SystemType;
@@ -154,14 +152,14 @@ namespace LinqToDB.DataProvider.SQLite
 					!(exprExpr.Expr1 is IValueContainer && ((IValueContainer)exprExpr.Expr1).Value == null ||
 					  exprExpr.Expr2 is IValueContainer && ((IValueContainer)exprExpr.Expr2).Value == null))
 				{
-					if (leftType != null && !(exprExpr.Expr1 is SqlFunction && ((SqlFunction)exprExpr.Expr1).Name == "$Convert$"))
+					if (leftType != null && !(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == "$Convert$" || func1.Name == "DateTime")))
 					{
 						var l = new SqlFunction(leftType, "$Convert$", SqlDataType.GetDataType(leftType),
 							SqlDataType.GetDataType(leftType), exprExpr.Expr1);
 						exprExpr.Expr1 = l;
 					}
 
-					if (rightType != null && !(exprExpr.Expr2 is SqlFunction && ((SqlFunction)exprExpr.Expr2).Name == "$Convert$"))
+					if (rightType != null && !(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == "$Convert$" || func2.Name == "DateTime")))
 					{
 						var r = new SqlFunction(rightType, "$Convert$", SqlDataType.GetDataType(rightType),
 							SqlDataType.GetDataType(rightType), exprExpr.Expr2);
@@ -183,12 +181,17 @@ namespace LinqToDB.DataProvider.SQLite
 			return sb.Append(table);
 		}
 
-		private static bool IsDateTime(Type type)
+		static bool IsDateTime(Type type)
 		{
 			return    type == typeof(DateTime)
 				   || type == typeof(DateTimeOffset)
 				   || type == typeof(DateTime?)
 				   || type == typeof(DateTimeOffset?);
+		}
+
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
+		{
+			BuildDropTableStatementIfExists(dropTable);
 		}
 	}
 }

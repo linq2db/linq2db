@@ -4,6 +4,9 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -16,10 +19,6 @@ using LinqToDB.Mapping;
 
 namespace SybaseDataActionDataContext
 {
-	/// <summary>
-	/// Database       : TestDataCore
-	/// Server Version : 16.0.2
-	/// </summary>
 	public partial class TestDataCoreDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
@@ -42,15 +41,18 @@ namespace SybaseDataActionDataContext
 		public TestDataCoreDB()
 		{
 			InitDataContext();
+			InitMappingSchema();
 		}
 
 		public TestDataCoreDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
+			InitMappingSchema();
 		}
 
-		partial void InitDataContext();
+		partial void InitDataContext  ();
+		partial void InitMappingSchema();
 	}
 
 	[Table(Schema="dbo", Name="AllTypes")]
@@ -223,10 +225,10 @@ namespace SybaseDataActionDataContext
 		[Column, NotNull    ] public int      seltrig   { get; set; } // int
 		[Column, NotNull    ] public int      ckfirst   { get; set; } // int
 		[Column, NotNull    ] public short    cache     { get; set; } // smallint
-		[Column,    Nullable] public int      audflags  { get; set; } // int
+		[Column,    Nullable] public int?     audflags  { get; set; } // int
 		[Column, NotNull    ] public int      objspare  { get; set; } // int
 		[Column,    Nullable] public byte[]   versionts { get; set; } // binary
-		[Column, NotNull    ] public string   loginame  { get; set; } // varchar
+		[Column,    Nullable] public string   loginame  { get; set; } // varchar
 	}
 
 	[Table(Schema="dbo", Name="sysquerymetrics", IsView=true)]
@@ -376,3 +378,5 @@ namespace SybaseDataActionDataContext
 		}
 	}
 }
+
+#pragma warning restore 1591

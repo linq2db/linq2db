@@ -43,7 +43,7 @@ void NotifyPropertyChangedImpl()
 		}
 
 		var name = prop.Name.Trim();
-		var type = prop.Type.Trim();
+		var type = prop.BuildType().Trim();
 
 		if (gr == null)
 		{
@@ -62,7 +62,7 @@ void NotifyPropertyChangedImpl()
 
 		if (prop.IsAuto)
 		{
-			var field = new Field(type, "_" + ToCamelCase(name))
+			var field = new Field(() => type, "_" + ToCamelCase(name))
 			{
 				AccessModifier       = AccessModifier.Private,
 				InsertBlankLineAfter = false,
@@ -73,12 +73,12 @@ void NotifyPropertyChangedImpl()
 
 			gr.Members.Insert(0, field);
 
-			prop.Name   = " " + name;
-			prop.Type   = " " + type;
-			prop.IsAuto = false;
+			prop.Name        = " " + name;
+			prop.TypeBuilder = () => " " + type;
+			prop.IsAuto      = false;
 
-			if (prop.HasGetter) prop.GetBody.Add("return " + field.Name + ";");
-			if (prop.HasSetter) prop.SetBody.Add(field.Name + " = value;");
+			if (prop.HasGetter) prop.GetBodyBuilders.Add(() => new [] { "return " + field.Name + ";" });
+			if (prop.HasSetter) prop.SetBodyBuilders.Add(() => new [] { field.Name + " = value;" });
 		}
 
 		var methods = new MemberGroup
@@ -86,20 +86,20 @@ void NotifyPropertyChangedImpl()
 			Region  = "INotifyPropertyChanged support",
 			Members =
 			{
-				new Field("const string", "NameOf" + name)
+				new Field(() => "const string", "NameOf" + name)
 				{
-					InitValue      = "\"" + name + "\"",
+					InitValue      = ToStringLiteral(name),
 					AccessModifier = AccessModifier.Public,
 				},
-				new Field("PropertyChangedEventArgs", "_" + ToCamelCase(name) + "ChangedEventArgs")
+				new Field(() => "PropertyChangedEventArgs", "_" + ToCamelCase(name) + "ChangedEventArgs")
 				{
 					InitValue      = "new PropertyChangedEventArgs(NameOf" + name + ")",
 					AccessModifier = AccessModifier.Private,
 					IsStatic       = true,
 					IsReadonly     = true,
 				},
-				new Method("void", "On" + name + "Changed", null,
-					new[] { "OnPropertyChanged(_" + ToCamelCase(name) + "ChangedEventArgs);" })
+				new Method(() => "void", "On" + name + "Changed", null,
+					() => new[] { "OnPropertyChanged(_" + ToCamelCase(name) + "ChangedEventArgs);" })
 				{
 					AccessModifier = AccessModifier.Private
 				}
@@ -118,15 +118,15 @@ void NotifyPropertyChangedImpl()
 				Region  = "INotifyPropertyChanging support",
 				Members =
 				{
-					new Field("PropertyChangingEventArgs", "_" + ToCamelCase(name) + "ChangingEventArgs")
+					new Field(() => "PropertyChangingEventArgs", "_" + ToCamelCase(name) + "ChangingEventArgs")
 					{
 						InitValue      = "new PropertyChangingEventArgs(NameOf" + name + ")",
 						AccessModifier = AccessModifier.Private,
 						IsStatic       = true,
 						IsReadonly     = true,
 					},
-					new Method("void", "On" + name + "Changing", null,
-						new[] { "OnPropertyChanging(_" + ToCamelCase(name) + "ChangingEventArgs);" })
+					new Method(() => "void", "On" + name + "Changing", null,
+						() => new[] { "OnPropertyChanging(_" + ToCamelCase(name) + "ChangingEventArgs);" })
 					{
 						AccessModifier = AccessModifier.Private
 					}
@@ -136,55 +136,57 @@ void NotifyPropertyChangedImpl()
 
 		if (prop.HasSetter)
 		{
-			prop.SetBody = prop.SetBody.Select(s => "\t" + s).ToList();
+			var setBody = prop.BuildSetBody().Select(s => "\t" + s).ToArray();
+			prop.SetBodyBuilders.Clear();
+			prop.SetBodyBuilders.Add(() => setBody);
 
 			string getValue;
 
-			if (prop.GetBody.Count == 1 && prop.GetBody[0].StartsWith("return"))
+			var getBody = prop.BuildGetBody().ToArray();
+			if (getBody.Length == 1 && getBody[0].StartsWith("return"))
 			{
-				getValue = prop.GetBody[0].Substring("return".Length).Trim(' ', '\t', ';');
+				getValue = getBody[0].Substring("return".Length).Trim(' ', '\t', ';');
 			}
 			else
 			{
 				getValue = name;
 			}
 
-			var insSpaces = prop.SetBody.Count > 1;
+			var insSpaces = setBody.Length > 1;
 			var n = 0;
 
-			prop.SetBody.Insert(n++, "if (" + getValue + " != value)");
-			prop.SetBody.Insert(n++, "{");
+			prop.SetBodyBuilders.Insert(n++, () => new [] {"if (" + getValue + " != value)", "{" });
 
 			if (ImplementNotifyPropertyChanging)
 			{
 				foreach (var dp in prop.Dependents)
-					prop.SetBody.Insert(n++, "\tOn" + dp + "Changing();");
-				prop.SetBody.Insert(n++, "");
+					prop.SetBodyBuilders.Insert(n++, () => new [] { "\tOn" + dp + "Changing();" });
+				prop.SetBodyBuilders.Insert(n++, () => new [] { "" });
 			}
 
-			prop.SetBody.Insert(n++, "\tBefore" + name + "Changed(value);");
+			prop.SetBodyBuilders.Insert(n++, () => new [] { "\tBefore" + name + "Changed(value);" });
 
 			if (insSpaces)
 			{
-				prop.SetBody.Insert(3, "");
-				prop.SetBody.Add("");
+				prop.SetBodyBuilders.Insert(3, () => new [] { "" });
+				prop.SetBodyBuilders.Add(() => new [] { "" });
 			}
 
-			prop.SetBody.Add("\tAfter" + name + "Changed();");
-			prop.SetBody.Add("");
+			prop.SetBodyBuilders.Add(() => new [] { "\tAfter" + name + "Changed();" });
+			prop.SetBodyBuilders.Add(() => new [] { "" });
 
 			foreach (var dp in prop.Dependents)
-				prop.SetBody.Add("\tOn" + dp + "Changed();");
+				prop.SetBodyBuilders.Add(() => new [] { "\tOn" + dp + "Changed();" });
 
-			prop.SetBody.Add("}");
+			prop.SetBodyBuilders.Add(() => new [] { "}" });
 
 			methods.Members.Insert(0, new MemberGroup
 			{
 				IsCompact = true,
 				Members   =
 				{
-					new Method("void", "Before" + name + "Changed", new[] { type + " newValue" }) { AccessModifier = AccessModifier.Partial },
-					new Method("void", "After"  + name + "Changed") { AccessModifier = AccessModifier.Partial },
+					new Method(() => "void", "Before" + name + "Changed", new Func<string>[] { () => type + " newValue" }) { AccessModifier = AccessModifier.Partial },
+					new Method(() => "void", "After"  + name + "Changed") { AccessModifier = AccessModifier.Partial },
 				}
 			});
 		}
@@ -212,16 +214,16 @@ void NotifyPropertyChangedImpl()
 					Region  = "INotifyPropertyChanged support",
 					Members =
 					{
-						new Event("PropertyChangedEventHandler", "PropertyChanged")
+						new Event("PropertyChangedEventHandler", "PropertyChanged", true)
 						{
 							IsVirtual  = true,
 							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
 						},
-						new Method("void", "OnPropertyChanged", new[] { "string propertyName" }, OnPropertyChangedBody)
+						new Method(() => "void", "OnPropertyChanged", new Func<string>[] { () => "string propertyName" }, () => OnPropertyChangedBody)
 						{
 							AccessModifier = AccessModifier.Protected
 						},
-						new Method("void", "OnPropertyChanged", new[] { "PropertyChangedEventArgs arg" }, OnPropertyChangedArgBody)
+						new Method(() => "void", "OnPropertyChanged", new Func<string>[] { () => "PropertyChangedEventArgs arg" }, () => OnPropertyChangedArgBody)
 						{
 							AccessModifier = AccessModifier.Protected
 						},
@@ -241,16 +243,16 @@ void NotifyPropertyChangedImpl()
 					Region  = "INotifyPropertyChanging support",
 					Members =
 					{
-						new Event("PropertyChangingEventHandler", "PropertyChanging")
+						new Event("PropertyChangingEventHandler", "PropertyChanging", true)
 						{
 							IsVirtual  = true,
 							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
 						},
-						new Method("void", "OnPropertyChanging", new[] { "string propertyName" }, OnPropertyChangingBody)
+						new Method(() => "void", "OnPropertyChanging", new Func<string>[] { () => "string propertyName" }, () => OnPropertyChangingBody)
 						{
 							AccessModifier = AccessModifier.Protected
 						},
-						new Method("void", "OnPropertyChanging", new[] { "PropertyChangingEventArgs arg" }, OnPropertyChangingArgBody)
+						new Method(() => "void", "OnPropertyChanging", new Func<string>[] { () => "PropertyChangingEventArgs arg" }, () => OnPropertyChangingArgBody)
 						{
 							AccessModifier = AccessModifier.Protected
 						},
@@ -366,8 +368,19 @@ class NotifyingProperty : Property
 		IsNotifying = true;
 	}
 
+	public NotifyingProperty(ModelType type, string name, params string[] dependents)
+		: base(() => type.ToTypeName(), name, null, null)
+	{
+		IsNotifying = true;
+
+		if (dependents.Length == 0)
+			Dependents.Add(name);
+		else
+			Dependents.AddRange(dependents);
+	}
+
 	public NotifyingProperty(string type, string name, params string[] dependents)
-		: base(type, name, null, null)
+		: base(() => type, name, null, null)
 	{
 		IsNotifying = true;
 

@@ -27,7 +27,7 @@ namespace Tests.Tools
 		public Dictionary<string,TestConnection> Connections = new Dictionary<string,TestConnection>();
 	}
 
-	static class SettingsReader
+	public static class SettingsReader
 	{
 		public static TestSettings Deserialize(string configName, string defaultJson, string userJson)
 		{

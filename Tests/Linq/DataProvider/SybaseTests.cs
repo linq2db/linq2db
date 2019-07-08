@@ -16,17 +16,14 @@ namespace Tests.DataProvider
 {
 	using System.Collections.Generic;
 	using System.Globalization;
-
+	using LinqToDB.Tools.Comparers;
 	using Model;
 
 	[TestFixture]
 	public class SybaseTests : TestBase
 	{
-		const string CurrentProvider     = ProviderName.Sybase;
-		const string CurrentProviderCore = ProviderName.SybaseManaged;
-
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestParameters(string context)
+		[Test]
+		public void TestParameters([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -56,8 +53,8 @@ namespace Tests.DataProvider
 			Assert.That(actualValue, Is.EqualTo(expectedValue));
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestDataTypes(string context)
+		[Test]
+		public void TestDataTypes([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -152,8 +149,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType, "bit");
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestNumerics(string context)
+		[Test]
+		public void TestNumerics([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -206,8 +203,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestDate(string context)
+		[Test]
+		public void TestDate([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -220,8 +217,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestSmallDateTime(string context)
+		[Test]
+		public void TestSmallDateTime([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -235,8 +232,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestDateTime(string context)
+		[Test]
+		public void TestDateTime([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -251,8 +248,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestTimeSpan(string context)
+		[Test]
+		public void TestTimeSpan([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -268,8 +265,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestChar(string context)
+		[Test]
+		public void TestChar([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -312,8 +309,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestString(string context)
+		[Test]
+		public void TestString([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -365,14 +362,14 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void TestUnicodeString(
-			[IncludeDataSources(false, CurrentProvider, CurrentProviderCore)] string context,
-			[ValueSource(nameof(StringTestCases))] Tuple<string, string> testCase)
+			[IncludeDataSources(TestProvName.AllSybase)] string context,
+			[ValueSource(nameof(StringTestCases))] Tuple<string,string> testCase)
 		{
 			using (var conn = new DataConnection(context))
 			{
 				var value = testCase.Item1;
 				var literal = testCase.Item2;
-				
+
 				// test raw literals queries
 				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as char)"),               Is.EqualTo(value));
 				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as varchar)"),            Is.EqualTo(value));
@@ -397,8 +394,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestBinary(string context)
+		[Test]
+		public void TestBinary([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			var arr1 = new byte[] { 57, 48        };
 			var arr2 = new byte[] { 57, 48, 0, 0  };
@@ -428,8 +425,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestGuid(string context)
+		[Test]
+		public void TestGuid([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -448,8 +445,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestTimestamp(string context)
+		[Test]
+		public void TestTimestamp([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -460,8 +457,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestXml(string context)
+		[Test]
+		public void TestXml([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -486,8 +483,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestEnum1(string context)
+		[Test]
+		public void TestEnum1([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -498,8 +495,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void TestEnum2(string context)
+		[Test]
+		public void TestEnum2([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -512,8 +509,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
-		public void BulkCopyLinqTypes(string context)
+		[Test]
+		public void BulkCopyLinqTypes([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
@@ -535,6 +532,106 @@ namespace Tests.DataProvider
 
 					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
 				}
+			}
+		}
+
+		[Table]
+		class Issue1707
+		{
+			public static IEqualityComparer<Issue1707> Comparer = ComparerBuilder.GetEqualityComparer<Issue1707>();
+			[Column]
+			public int Id { get; set; }
+
+			[Column]
+			public TimeSpan Time { get; set; }
+
+			[Column(DataType = DataType.Time)]
+			public DateTime Time2 { get; set; }
+
+			[Column]
+			public DateTime DateTime { get; set; }
+
+			[Column]
+			public TimeSpan? TimeN { get; set; }
+
+			[Column(DataType = DataType.Time)]
+			public DateTime? Time2N { get; set; }
+
+			[Column]
+			public DateTime? DateTimeN { get; set; }
+		}
+
+		[ActiveIssue(730, SkipForNonLinqService = true)]
+		[Test]
+		public void Issue1707Test([IncludeDataSources(true, TestProvName.AllSybase)] string context, [Values] bool useParameters)
+		{
+			var testIntervals = new[]
+			{
+				TimeSpan.Zero,
+				TimeSpan.FromMinutes(123),
+				TimeSpan.FromMinutes(-123),
+				TimeSpan.FromMinutes(1567),
+				TimeSpan.FromMinutes(-1567)
+			};
+
+			var start    = new DateTime(1900, 1, 1);
+			var testData = new List<Issue1707>();
+
+			for (var i = 0; i < testIntervals.Length; i++)
+			{
+				var ts = testIntervals[i];
+
+				testData.Add(new Issue1707()
+				{
+					Id        = i + 1,
+					Time      = ts,
+					TimeN     = ts,
+					Time2     = start + ts,
+					Time2N    = start + ts,
+					DateTime  = start + ts,
+					DateTimeN = start + ts
+				});
+			}
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<Issue1707>())
+			{
+				db.InlineParameters = !useParameters;
+
+				foreach (var record in testData)
+				{
+					table.Insert(() => new Issue1707()
+					{
+						Id        = record.Id,
+						Time      = record.Time,
+						TimeN     = record.TimeN,
+						Time2     = record.Time2,
+						Time2N    = record.Time2N,
+						DateTime  = record.DateTime,
+						DateTimeN = record.DateTimeN,
+					});
+				}
+
+				var results = table.OrderBy(_ => _.Id);
+
+				AreEqual(testData.Select(fixRecord), results, Issue1707.Comparer);
+			}
+
+			Issue1707 fixRecord(Issue1707 record)
+			{
+				record.Time   = fixTime(record.Time);
+				record.TimeN  = fixTime(record.TimeN.Value);
+				record.Time2  = new DateTime() + fixTime(record.Time2 - start);
+				record.Time2N = new DateTime() + fixTime(record.Time2N.Value - start);
+
+				return record;
+			}
+
+			TimeSpan fixTime(TimeSpan time)
+			{
+				if (time < TimeSpan.Zero)
+					time = TimeSpan.FromDays(1 - time.Days) + time;
+				return time - TimeSpan.FromDays(time.Days);
 			}
 		}
 	}

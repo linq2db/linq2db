@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.Access
 					Length     = Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]),
 					Precision  = Converter.ChangeTypeTo<int?> (c["NUMERIC_PRECISION"]),
 					Scale      = Converter.ChangeTypeTo<int?> (c["NUMERIC_SCALE"]),
-					IsIdentity = Converter.ChangeTypeTo<int>  (c["COLUMN_FLAGS"]) == 90 && (dt == null || dt.TypeName == null || dt.TypeName.ToLower() != "boolean"),
+					IsIdentity = Converter.ChangeTypeTo<int>  (c["COLUMN_FLAGS"]) == 90 && (dt == null || dt.TypeName == null || (dt.TypeName.ToLower() != "boolean" && dt.TypeName.ToLower() != "bit")),
 				}
 			).ToList();
 		}
@@ -229,7 +229,8 @@ namespace LinqToDB.DataProvider.Access
 						Scale         = scale,
 						Ordinal       = i + 1,
 						IsResult      = false,
-						DataType      = dataType
+						DataType      = dataType,
+						IsNullable    = true
 					});
 				}
 			}

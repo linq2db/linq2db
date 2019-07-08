@@ -24,8 +24,8 @@ namespace Tests.UserTests
 		}
 
 
-		[Test, IncludeDataContextSource(false, ProviderName.Sybase, ProviderName.SybaseManaged)]
-		public void Test(string configuration)
+		[Test]
+		public void Test([IncludeDataSources(TestProvName.AllSybase)] string configuration)
 		{
 			using (var db = new DataConnection(configuration))
 			{

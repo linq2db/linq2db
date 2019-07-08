@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -9,14 +8,14 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using SqlQuery;
+	using Mapping;
+	using Common.Internal.Cache;
 
 	static partial class QueryRunner
 	{
 		public static class InsertOrReplace<T>
 		{
-			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
-
-			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
+			static Query<int> CreateQuery(IDataContext dataContext, EntityDescriptor descriptor, T obj, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
@@ -27,7 +26,7 @@ namespace LinqToDB.Linq
 
 				var sqlQuery = new SelectQuery();
 
-				ParameterAccessor param;
+				ParameterAccessor param = null;
 
 				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery);
 				insertOrUpdateStatement.Insert.Into  = sqlTable;
@@ -46,7 +45,7 @@ namespace LinqToDB.Linq
 				//
 				foreach (var field in sqlTable.Fields.Select(f => f.Value))
 				{
-					if (field.IsInsertable)
+					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj, descriptor, SkipModification.Insert))
 					{
 						if (!supported || !fieldDic.TryGetValue(field, out param))
 						{
@@ -68,7 +67,8 @@ namespace LinqToDB.Linq
 				// Update.
 				//
 				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
-				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys).ToList();
+				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj, descriptor, SkipModification.Update))
+				                     .Except(keys).ToList();
 
 				if (keys.Count == 0)
 					throw new LinqException("InsertOrReplace method requires the '{0}' table to have a primary key.", sqlTable.Name);
@@ -121,9 +121,19 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
-				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type };
-				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schema, type));
+				var type             = GetType<T>(obj, dataContext);
+				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
+				var ei               = Common.Configuration.Linq.DisableQueryCache
+						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
+						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
+					? CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schema, type)
+					: Cache<T>.QueryCache.GetOrCreate(
+					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type },
+					o =>
+					{
+						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return CreateQuery(dataContext, entityDescriptor, obj, tableName, databaseName, schema, type);
+					});
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -133,11 +143,21 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj, dataContext);
-				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type };
-				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName, type));
+				var type             = GetType<T>(obj, dataContext);
+				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
+				var ei               = Common.Configuration.Linq.DisableQueryCache
+						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
+						|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update)
+					? CreateQuery(dataContext, entityDescriptor, obj, tableName, schema, databaseName, type)
+					: Cache<T>.QueryCache.GetOrCreate(
+					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type },
+					o =>
+					{
+						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return CreateQuery(dataContext, entityDescriptor, obj, tableName, schema, databaseName, type);
+					});
 
-				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
+				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				return (int)result;
 			}
@@ -162,6 +182,8 @@ namespace LinqToDB.Linq
 							p.Expression,
 							p.Accessor,
 							p.DataTypeAccessor,
+							p.DbTypeAccessor,
+							p.SizeAccessor,
 							dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null
 						))
 					.Where(p => p.SqlParameter != null)

@@ -12,8 +12,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class DataContextTests : TestBase
 	{
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana)]
-		public void TestContext(string context)
+		[Test]
+		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
 		{
 			var ctx = new DataContext(context);
 
@@ -39,8 +39,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana)]
-		public void TestContextToString(string context)
+		[Test]
+		public void TestContextToString([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
 		{
 			using (var ctx = new DataContext(context))
 			{
@@ -54,13 +54,48 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Issue210(string context)
+		[Test]
+		public void Issue210([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var ctx = new DataContext(context))
 			{
 				ctx.KeepConnectionAlive = true;
 				ctx.KeepConnectionAlive = false;
+			}
+		}
+
+		[Test]
+		public void ProviderConnectionStringConstructorTest1([DataSources(false)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				Assert.Throws(typeof(LinqToDBException), () => new DataContext("BAD", db.ConnectionString));
+			}
+
+		}
+		[Test]
+		public void ProviderConnectionStringConstructorTest2([DataSources(false)] string context)
+		{
+			using (var db  = (TestDataConnection)GetDataContext(context))
+			using (var db1 = new DataContext(db.DataProvider.Name, "BAD"))
+			{
+				Assert.Throws(typeof(ArgumentException), () => db1.GetTable<Child>().ToList());
+			}
+		}
+
+		[Test]
+		[ActiveIssue("Unstable issue with Sybase vs Sybase.Managed DataProvider.Name", Configuration = TestProvName.AllSybase)]
+		public void ProviderConnectionStringConstructorTest3([DataSources(false)] string context)
+		{
+			using (var db  = (TestDataConnection)GetDataContext(context))
+			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString))
+			{
+				Assert.AreEqual(db.DataProvider.Name, db1.DataProvider.Name);
+				Assert.AreEqual(db.ConnectionString , db1.ConnectionString);
+
+				AreEqual(
+					db .GetTable<Child>().OrderBy(_ => _.ChildID).ToList(),
+					db1.GetTable<Child>().OrderBy(_ => _.ChildID).ToList());
 			}
 		}
 	}

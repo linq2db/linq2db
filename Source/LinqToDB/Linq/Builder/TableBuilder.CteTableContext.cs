@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using JetBrains.Annotations;
 
 namespace LinqToDB.Linq.Builder
@@ -97,6 +98,14 @@ namespace LinqToDB.Linq.Builder
 				return _cteQueryContext ?? (_cteQueryContext = Builder.GetCteContext(_cteExpression));
 			}
 
+			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFor)
+			{
+				var queryContext = GetQueryContext();
+				if (queryContext == null)
+					return base.IsExpression(expression, level, requestFor);
+				return queryContext.IsExpression(expression, level, requestFor);
+			}
+
 			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
 			{
 				var queryContext = GetQueryContext();
@@ -118,7 +127,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var expr     = (info.Sql is SqlColumn column) ? column.Expression : info.Sql;
 						var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info))?.Sql;
-						var field    = RegisterCteField(baseInfo, expr, info.Index);
+						var field    = RegisterCteField(baseInfo, expr, info.Index, info.MemberChain.LastOrDefault());
 						return new SqlInfo(info.MemberChain)
 						{
 							Sql = field,
@@ -134,7 +143,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var expr  = context.SelectQuery.Select.Columns[index].Expression;
 					    expr  = expr is SqlColumn column ? column.Expression : expr;
-					var field = RegisterCteField(null, expr, index);
+					var field = RegisterCteField(null, expr, index, null);
 
 					index = SelectQuery.Select.Add(field);
 				}
@@ -142,7 +151,7 @@ namespace LinqToDB.Linq.Builder
 				return base.ConvertToParentIndex(index, context);
 			}
 
-			SqlField RegisterCteField(ISqlExpression baseExpression, [NotNull] ISqlExpression expression, int index)
+			SqlField RegisterCteField(ISqlExpression baseExpression, [NotNull] ISqlExpression expression, int index, MemberInfo member)
 			{
 				if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -151,9 +160,10 @@ namespace LinqToDB.Linq.Builder
 							var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
 
 							var newField = f == null
-								? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull }
+								? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull, Name = member?.Name }
 								: new SqlField(f);
 
+							newField.PhysicalName = newField.Name;
 							return newField;
 						});
 
@@ -184,14 +194,8 @@ namespace LinqToDB.Linq.Builder
 				if (queryContext == null)
 					return base.BuildExpression(expression, level, enforceServerSide);
 
-				ConvertToIndex(null, 0, ConvertFlags.All);
-
-				//TODO: igor-tkachev, review this.
-				var result = Parent == null
-					? queryContext.BuildExpression(expression, level, enforceServerSide)
-					: base.BuildExpression(expression, level, enforceServerSide);
-
-				return result;
+				queryContext.Parent = this;
+				return queryContext.BuildExpression(expression, level, true);
 			}
 
 			public override SqlStatement GetResultStatement()

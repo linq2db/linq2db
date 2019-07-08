@@ -10,6 +10,8 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.SqlServer.Server;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Configuration;
@@ -79,6 +81,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
 			_sqlServer2008SqlOptimizer = new SqlServerSqlOptimizer    (SqlProviderFlags);
 			_sqlServer2012SqlOptimizer = new SqlServer2012SqlOptimizer(SqlProviderFlags);
+			_sqlServer2017SqlOptimizer = new SqlServer2017SqlOptimizer(SqlProviderFlags);
 
 			SetField<IDataReader,decimal>((r,i) => r.GetDecimal(i));
 			SetField<IDataReader,decimal>("money",      (r,i) => SqlServerTools.DataReaderGetMoney  (r, i));
@@ -90,10 +93,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region Public Properties
 
-		public override string ConnectionNamespace { get { return typeof(SqlConnection).Namespace; } }
-		public override Type   DataReaderType      { get { return typeof(SqlDataReader);           } }
+		public override string ConnectionNamespace => typeof(SqlConnection).Namespace;
+		public override Type   DataReaderType      => typeof(SqlDataReader);
 
-		public SqlServerVersion Version { get; private set; }
+		public SqlServerVersion Version { get; }
 
 		#endregion
 
@@ -105,6 +108,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			public static readonly SqlServer2005MappingSchema SqlServer2005MappingSchema = new SqlServer2005MappingSchema();
 			public static readonly SqlServer2008MappingSchema SqlServer2008MappingSchema = new SqlServer2008MappingSchema();
 			public static readonly SqlServer2012MappingSchema SqlServer2012MappingSchema = new SqlServer2012MappingSchema();
+			public static readonly SqlServer2017MappingSchema SqlServer2017MappingSchema = new SqlServer2017MappingSchema();
 		}
 
 		public override MappingSchema MappingSchema
@@ -117,6 +121,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					case SqlServerVersion.v2005 : return MappingSchemaInstance.SqlServer2005MappingSchema;
 					case SqlServerVersion.v2008 : return MappingSchemaInstance.SqlServer2008MappingSchema;
 					case SqlServerVersion.v2012 : return MappingSchemaInstance.SqlServer2012MappingSchema;
+					case SqlServerVersion.v2017 : return MappingSchemaInstance.SqlServer2017MappingSchema;
 				}
 
 				return base.MappingSchema;
@@ -128,14 +133,15 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlConnection(connectionString);
 		}
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
 			switch (Version)
 			{
-				case SqlServerVersion.v2000 : return new SqlServer2000SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
-				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
-				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
-				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2000 : return new SqlServer2000SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2017 : return new SqlServer2017SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 			}
 
 			throw new InvalidOperationException();
@@ -145,6 +151,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		readonly ISqlOptimizer _sqlServer2005SqlOptimizer;
 		readonly ISqlOptimizer _sqlServer2008SqlOptimizer;
 		readonly ISqlOptimizer _sqlServer2012SqlOptimizer;
+		readonly ISqlOptimizer _sqlServer2017SqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
@@ -154,6 +161,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case SqlServerVersion.v2005 : return _sqlServer2005SqlOptimizer;
 				case SqlServerVersion.v2008 : return _sqlServer2008SqlOptimizer;
 				case SqlServerVersion.v2012 : return _sqlServer2012SqlOptimizer;
+				case SqlServerVersion.v2017 : return _sqlServer2017SqlOptimizer;
 			}
 
 			return _sqlServer2008SqlOptimizer;
@@ -180,9 +188,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "IsMarsEnabled" :
 					if (dataConnection.ConnectionString != null)
 					{
-						bool flag;
-
-						if (!_marsFlags.TryGetValue(dataConnection.Connection.ConnectionString, out flag))
+						if (!_marsFlags.TryGetValue(dataConnection.Connection.ConnectionString, out var flag))
 						{
 							flag = dataConnection.Connection.ConnectionString.Split(';')
 								.Select(s => s.Split('='))
@@ -202,37 +208,33 @@ namespace LinqToDB.DataProvider.SqlServer
 			return null;
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Udt        :
 					{
-						string s;
-						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
+						if (value != null && _udtTypes.TryGetValue(value.GetType(), out var s))
 							if (parameter is SqlParameter)
 #if NETSTANDARD1_6
 								((SqlParameter)parameter).TypeName = s;
 #else
 								((SqlParameter)parameter).UdtTypeName = s;
 #endif
-
 					}
 
 					break;
 				case DataType.NText:
-					if (value is DateTimeOffset) value = ((DateTimeOffset)value).ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
-					else if (value is DateTime)
+					     if (value is DateTimeOffset dto) value = dto.ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
+					else if (value is DateTime dt)
 					{
-						var dt = (DateTime)value;
 						value = dt.ToString(
 							dt.Millisecond == 0
 								? "yyyy-MM-ddTHH:mm:ss"
 								: "yyyy-MM-ddTHH:mm:ss.fff");
 					}
-					else if (value is TimeSpan)
+					else if (value is TimeSpan ts)
 					{
-						var ts = (TimeSpan)value;
 						value = ts.ToString(
 							ts.Days > 0
 								? ts.Milliseconds > 0
@@ -243,6 +245,17 @@ namespace LinqToDB.DataProvider.SqlServer
 									: "hh\\:mm\\:ss");
 					}
 					break;
+
+				case DataType.Undefined:
+					if (value is DataTable
+						|| value is DbDataReader
+						|| value is IEnumerable<SqlDataRecord>
+						|| value is IEnumerable<DbDataRecord>)
+					{
+						dataType = dataType.WithDataType(DataType.Structured);
+					}
+
+					break;
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
@@ -252,10 +265,24 @@ namespace LinqToDB.DataProvider.SqlServer
 				// Setting for NVarChar and VarChar constant size. It reduces count of cached plans.
 				switch (param.SqlDbType)
 				{
+					case SqlDbType.Structured:
+						{
+							if (!dataType.DbType.IsNullOrEmpty())
+								param.TypeName = dataType.DbType;
+
+							// TVP doesn't support DBNull
+							if (param.Value is DBNull)
+								param.Value = null;
+
+							break;
+						}
 					case SqlDbType.VarChar:
 						{
-							if (value is string strValue && strValue.Length > 8000)
+							var strValue = value as string;
+							if ((strValue != null && strValue.Length > 8000) || (value != null && strValue == null))
 								param.Size = -1;
+							else if (dataType.Length != null && dataType.Length <= 8000 && (strValue == null || strValue.Length <= dataType.Length))
+								param.Size = dataType.Length.Value;
 							else
 								param.Size = 8000;
 
@@ -263,10 +290,25 @@ namespace LinqToDB.DataProvider.SqlServer
 						}
 					case SqlDbType.NVarChar:
 						{
-							if (value is string strValue && strValue.Length > 4000)
+							var strValue = value as string;
+							if ((strValue != null && strValue.Length > 4000) || (value != null && strValue == null))
 								param.Size = -1;
+							else if (dataType.Length != null && dataType.Length <= 4000 && (strValue == null || strValue.Length <= dataType.Length))
+								param.Size = dataType.Length.Value;
 							else
 								param.Size = 4000;
+
+							break;
+						}
+					case SqlDbType.VarBinary:
+						{
+							var binaryValue = value as byte[];
+							if ((binaryValue != null && binaryValue.Length > 8000) || (value != null && binaryValue == null))
+								param.Size = -1;
+							else if (dataType.Length != null && dataType.Length <= 8000 && (binaryValue == null || binaryValue.Length <= dataType.Length))
+								param.Size = dataType.Length.Value;
+							else
+								param.Size = 8000;
 
 							break;
 						}
@@ -274,12 +316,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.SByte         : parameter.DbType = DbType.Int16;   break;
 				case DataType.UInt16        : parameter.DbType = DbType.Int32;   break;
@@ -305,6 +347,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.SmallDateTime : ((SqlParameter)parameter).SqlDbType = SqlDbType.SmallDateTime; break;
 				case DataType.Timestamp     : ((SqlParameter)parameter).SqlDbType = SqlDbType.Timestamp;     break;
 				case DataType.Xml           : ((SqlParameter)parameter).SqlDbType = SqlDbType.Xml;           break;
+				case DataType.Structured    : ((SqlParameter)parameter).SqlDbType = SqlDbType.Structured;    break;
 				default                     : base.SetParameterType(parameter, dataType);                    break;
 			}
 		}
@@ -349,14 +392,14 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		SqlServerBulkCopy _bulkCopy;
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new SqlServerBulkCopy(this);
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}
@@ -378,7 +421,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection, 
+			DataConnection connection,
 			IMergeable<TTarget, TSource> merge)
 		{
 			return new SqlServerMergeBuilder<TTarget, TSource>(connection, merge);

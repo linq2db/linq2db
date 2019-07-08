@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+﻿using System;
+
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlProvider;
 	using SqlQuery;
@@ -19,7 +21,7 @@
 
 		private void CorrectSkip(SelectQuery selectQuery)
 		{
-			((ISqlExpressionWalkable)selectQuery).Walk(false, e =>
+			((ISqlExpressionWalkable)selectQuery).Walk(new WalkOptions(), e =>
 			{
 				if (e is SelectQuery q && q.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(q) && q.OrderBy.IsEmpty)
 				{
@@ -51,8 +53,8 @@
 		{
 			expr = base.ConvertExpression(expr);
 
-			if (expr is SqlFunction)
-				return ConvertConvertFunction((SqlFunction)expr);
+			if (expr is SqlFunction function)
+				return ConvertConvertFunction(function);
 
 			return expr;
 		}

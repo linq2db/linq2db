@@ -4,17 +4,60 @@ using System.Linq;
 using LinqToDB;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Mapping;
 	using Model;
+	using System.Collections.Generic;
 
 	[TestFixture]
 	public class DateTimeFunctionsTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void GetDate(string context)
+		//This custom comparers allows for an error of 1 millisecond.  
+		public class CustomIntComparer : IEqualityComparer<int>
+		{
+			public bool Equals(int x, int y) => (x >= (y - 1) && x <= (y + 1));
+
+			public int GetHashCode(int x) => 0;
+		}
+
+		public class CustomNullableIntComparer : IEqualityComparer<int?>
+		{
+			public bool Equals(int? x, int? y)
+			{
+				if (!x.HasValue) return false;
+				if (!y.HasValue) return false;
+				return (x.Value >= (y.Value - 1) && x.Value <= (y.Value + 1));
+			}
+
+			public int GetHashCode(int? x) => 0;
+		}
+
+		public class CustomNullableDateTimeComparer : IEqualityComparer<DateTime?>
+		{
+			public bool Equals(DateTime? x, DateTime? y)
+			{
+				if (!x.HasValue) return false;
+				if (!y.HasValue) return false;
+				return x.Value.Between(y.Value.AddMilliseconds(-1), y.Value.AddMilliseconds(1));
+			}
+
+			public int GetHashCode(DateTime? x) => 0;
+		}
+
+		public class CustomDateTimeComparer : IEqualityComparer<DateTime>
+		{
+			public bool Equals(DateTime x, DateTime y)
+			{
+				return x.Between(y.AddMilliseconds(-1), y.AddMilliseconds(1));
+			}
+
+			public int GetHashCode(DateTime x) => 0;
+		}
+
+		[Test]
+		public void GetDate([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -23,8 +66,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CurrentTimestamp(string context)
+		[Test]
+		public void CurrentTimestamp([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -33,8 +76,54 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void CurrentTimestampUpdate(string context)
+		[Test]
+		public void CurrentTimestampUtcClientSide()
+		{
+			var delta = Sql.CurrentTimestampUtc - DateTime.UtcNow;
+			Assert.IsTrue(delta.Between(TimeSpan.FromSeconds(-1), TimeSpan.FromSeconds(1)));
+			Assert.AreEqual(DateTimeKind.Utc, Sql.CurrentTimestampUtc.Kind);
+		}
+
+		[Test]
+		public void CurrentTimestampUtc(
+			[DataSources(ProviderName.Access, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe,
+				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
+
+				var now   = DateTime.UtcNow;
+				var delta = now - dbUtcNow;
+				Assert.IsTrue(
+					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)),
+					$"{now}, {dbUtcNow}, {delta}");
+
+				// we don't set kind
+				Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
+			}
+		}
+
+		[Test]
+		public void CurrentTimestampUtcClientSideParameter(
+			[IncludeDataSources(true, ProviderName.Access, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
+
+				var delta = dbUtcNow - DateTime.UtcNow;
+				Assert.IsTrue(delta.Between(TimeSpan.FromSeconds(-5), TimeSpan.FromSeconds(5)));
+
+				// we don't set kind
+				Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
+			}
+		}
+
+		[Test]
+		public void CurrentTimestampUpdate([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -49,8 +138,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Now(string context)
+		[Test]
+		public void Now([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -59,8 +148,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Parse1(string context)
+		[Test]
+		public void Parse1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -68,8 +157,8 @@ namespace Tests.Linq
 					from d in from t in db.Types select DateTime.Parse(Sql.ConvertTo<string>.From(t.DateTimeValue)) where d.Day > 0 select d.Date);
 		}
 
-		[Test, DataContextSource]
-		public void Parse2(string context)
+		[Test]
+		public void Parse2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -79,8 +168,8 @@ namespace Tests.Linq
 
 		#region DatePart
 
-		[Test, DataContextSource]
-		public void DatePartYear(string context)
+		[Test]
+		public void DatePartYear([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -88,8 +177,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.Year, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartQuarter(string context)
+		[Test]
+		public void DatePartQuarter([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -97,8 +186,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.Quarter, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartMonth(string context)
+		[Test]
+		public void DatePartMonth([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -106,8 +195,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.Month, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartDayOfYear(string context)
+		[Test]
+		public void DatePartDayOfYear([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -115,8 +204,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.DayOfYear, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartDay(string context)
+		[Test]
+		public void DatePartDay([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -124,15 +213,150 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.Day, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartWeek(string context)
+		[Test]
+		public void DatePartWeek([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				(from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.Week, t.DateTimeValue))).ToList();
 		}
 
-		[Test, DataContextSource]
-		public void DatePartWeekDay(string context)
+		[Test]
+		public void DatePartWeekNumberingType([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var dates = new[]
+				{
+					new DateTime(2018, 12, 28),
+					new DateTime(2018, 12, 29),
+					new DateTime(2018, 12, 30),
+					new DateTime(2018, 12, 31),
+					new DateTime(2019, 1, 1),
+					new DateTime(2019, 1, 2),
+					new DateTime(2019, 1, 3),
+					new DateTime(2019, 1, 4),
+					new DateTime(2019, 1, 5),
+					new DateTime(2019, 1, 6),
+					new DateTime(2019, 1, 7),
+					new DateTime(2019, 1, 8)
+				};
+
+				// actually 53 should be 1st week of 2019, but..
+				var isoWeeks              = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var sqliteParodyNumbering = new[] { 52, 52, 52, 53, 0, 0, 0, 0, 0, 0, 1, 1 };
+				var isoProperWeeks        = new[] { 52, 52, 52,  1, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var usWeeks               = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2, 2 };
+				var usWeeksZeroBased      = new[] { 51, 51, 52, 52, 0, 0, 0, 0, 0, 1, 1, 1 };
+				var muslimWeeks           = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2, 2 };
+				var primitive             = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 1, 2 };
+
+				var results = dates
+					.Select(date => db.Select(() => Sql.AsSql(Sql.DatePart(Sql.DateParts.Week, Sql.ToSql(date)))))
+					.AsEnumerable()
+					.Select(_ => _.Value)
+					.ToArray();
+
+				if (isoWeeks.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses ISO week numbering schema");
+				}
+				else if (isoProperWeeks.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses PROPER ISO week numbering schema");
+				}
+				else if (usWeeks.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses US week numbering schema");
+				}
+				else if (muslimWeeks.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses Islamic week numbering schema");
+				}
+				else if (primitive.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses PRIMITIVE week numbering schema");
+				}
+				else if (sqliteParodyNumbering.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses SQLite inhuman numbering logic");
+				}
+				else if (usWeeksZeroBased.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses US 0-based week numbering schema");
+				}
+				else
+				{
+					Assert.Fail($"Context {db.DataProvider.Name} uses unknown week numbering schema");
+				}
+			}
+		}
+
+		[Test]
+		public void DatePartWeekNumberingTypeCSharp()
+		{
+			var dates = new[]
+			{
+					new DateTime(2018, 12, 28),
+					new DateTime(2018, 12, 29),
+					new DateTime(2018, 12, 30),
+					new DateTime(2018, 12, 31),
+					new DateTime(2019, 1, 1),
+					new DateTime(2019, 1, 2),
+					new DateTime(2019, 1, 3),
+					new DateTime(2019, 1, 4),
+					new DateTime(2019, 1, 5),
+					new DateTime(2019, 1, 6),
+					new DateTime(2019, 1, 7),
+					new DateTime(2019, 1, 8)
+				};
+
+				// actually 53 should be 1st week of 2019, but..
+				var isoWeeks              = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var sqliteParodyNumbering = new[] { 52, 52, 52, 53, 0, 0, 0, 0, 0, 0, 1, 1 };
+				var isoProperWeeks        = new[] { 52, 52, 52,  1, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var usWeeks               = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2, 2 };
+				var usWeeksZeroBased      = new[] { 51, 51, 52, 52, 0, 0, 0, 0, 0, 1, 1, 1 };
+				var muslimWeeks           = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2, 2 };
+				var primitive             = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 1, 2 };
+
+			var results = dates.Select(date => Sql.DatePart(Sql.DateParts.Week, date).Value).ToArray();
+
+			if (isoWeeks.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses ISO week numbering schema");
+			}
+			else if (isoProperWeeks.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses PROPER ISO week numbering schema");
+			}
+			else if (usWeeks.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses US week numbering schema");
+			}
+			else if (muslimWeeks.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses Islamic week numbering schema");
+			}
+			else if (primitive.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses PRIMITIVE week numbering schema");
+			}
+			else if (sqliteParodyNumbering.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses SQLite inhuman numbering logic");
+			}
+			else if (usWeeksZeroBased.SequenceEqual(results))
+			{
+				Assert.Pass("Sql.DatePart C# implementation uses US 0-based week numbering schema");
+			}
+			else
+			{
+				Assert.Fail("Sql.DatePart C# implementation uses unknown week numbering schema");
+			}
+		}
+
+		[Test]
+		public void DatePartWeekDay([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -140,8 +364,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.WeekDay, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartHour(string context)
+		[Test]
+		public void DatePartHour([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -149,8 +373,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.Hour, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartMinute(string context)
+		[Test]
+		public void DatePartMinute([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -158,8 +382,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.Minute, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void DatePartSecond(string context)
+		[Test]
+		public void DatePartSecond([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -167,8 +391,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.Second, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void DatePartMillisecond(string context)
+		[Test]
+		public void DatePartMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -176,8 +400,31 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource]
-		public void Year(string context)
+		[Test]
+		public void DatepartDynamic(
+			[DataSources(ProviderName.Informix)] string context, 
+			[Values(
+				Sql.DateParts.Day,
+				Sql.DateParts.Hour,
+				Sql.DateParts.Minute,
+				Sql.DateParts.Month,
+				Sql.DateParts.Year,
+				Sql.DateParts.Second
+				)] Sql.DateParts datepart)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected =
+					from t in Types select Sql.DatePart(datepart, t.DateTimeValue);
+				var result =
+					from t in db.Types select Sql.AsSql(Sql.DatePart(datepart, t.DateTimeValue));
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
+		public void Year([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -185,8 +432,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Year));
 		}
 
-		[Test, DataContextSource]
-		public void Month(string context)
+		[Test]
+		public void Month([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -194,8 +441,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Month));
 		}
 
-		[Test, DataContextSource]
-		public void DayOfYear(string context)
+		[Test]
+		public void DayOfYear([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -203,8 +450,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.DayOfYear));
 		}
 
-		[Test, DataContextSource]
-		public void Day(string context)
+		[Test]
+		public void Day([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -212,8 +459,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Day));
 		}
 
-		[Test, DataContextSource]
-		public void DayOfWeek(string context)
+		[Test]
+		public void DayOfWeek([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -221,8 +468,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.DayOfWeek));
 		}
 
-		[Test, DataContextSource]
-		public void Hour(string context)
+		[Test]
+		public void Hour([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -230,8 +477,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Hour));
 		}
 
-		[Test, DataContextSource]
-		public void Minute(string context)
+		[Test]
+		public void Minute([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -239,8 +486,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Minute));
 		}
 
-		[Test, DataContextSource]
-		public void Second(string context)
+		[Test]
+		public void Second([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -248,17 +495,17 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Second));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void Millisecond(string context)
+		[Test]
+		public void Millisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           t.DateTimeValue.Millisecond,
+					from t in Types select t.DateTimeValue.Millisecond,
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Millisecond));
 		}
 
-		[Test, DataContextSource]
-		public void Date(string context)
+		[Test]
+		public void Date([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -266,40 +513,40 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Date));
 		}
 
-		static TimeSpan TruncMiliseconds(TimeSpan ts)
+		static TimeSpan TruncMilliseconds(TimeSpan ts)
 		{
 			return new TimeSpan(ts.Hours, ts.Minutes, ts.Seconds);
 		}
 
-		static TimeSpan RoundMiliseconds(TimeSpan ts)
+		static TimeSpan RoundMilliseconds(TimeSpan ts)
 		{
 			return new TimeSpan(ts.Hours, ts.Minutes, ts.Seconds + (ts.Milliseconds >= 500 ? 1 : 0));
 		}
 
-		[Test, DataContextSource(TestProvName.MySql57)]
-		public void TimeOfDay1(string context)
+		[Test]
+		public void TimeOfDay1([DataSources(TestProvName.MySql57, ProviderName.MySqlConnector)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select TruncMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
-					from t in db.Types select TruncMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
+					from t in Types select TruncMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
+					from t in db.Types select TruncMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
 		}
 
-		[Test, IncludeDataContextSource(TestProvName.MySql57)]
-		public void TimeOfDay2(string context)
+		[Test]
+		public void TimeOfDay2([IncludeDataSources(TestProvName.MySql57, ProviderName.MySqlConnector)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select RoundMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
-					from t in db.Types select TruncMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
+					from t in Types select RoundMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
+					from t in db.Types select TruncMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
 		}
 
 		#endregion
 
 		#region DateAdd
 
-		[Test, DataContextSource]
-		public void DateAddYear(string context)
+		[Test]
+		public void DateAddYear([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -307,8 +554,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, 11, t.DateTimeValue)).Value.Date);
 		}
 
-		[Test, DataContextSource]
-		public void DateAddQuarter(string context)
+		[Test]
+		public void DateAddQuarter([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -316,8 +563,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Quarter, -1, t.DateTimeValue)).Value.Date);
 		}
 
-		[Test, DataContextSource]
-		public void DateAddMonth(string context)
+		[Test]
+		public void DateAddMonth([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -325,8 +572,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Month, 2, t.DateTimeValue)).Value.Date);
 		}
 
-		[Test, DataContextSource]
-		public void DateAddDayOfYear(string context)
+		[Test]
+		public void DateAddDayOfYear([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -334,8 +581,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.DateTimeValue)).Value.Date);
 		}
 
-		[Test, DataContextSource]
-		public void DateAddDay(string context)
+		[Test]
+		public void DateAddDay([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -343,8 +590,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Day, 5, t.DateTimeValue)).Value.Date);
 		}
 
-		[Test, DataContextSource]
-		public void DateAddWeek(string context)
+		[Test]
+		public void DateAddWeek([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -352,8 +599,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, -1, t.DateTimeValue)).Value.Date);
 		}
 
-		[Test, DataContextSource]
-		public void DateAddWeekDay(string context)
+		[Test]
+		public void DateAddWeekDay([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -361,8 +608,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.DateTimeValue)).Value.Date);
 		}
 
-		[Test, DataContextSource]
-		public void DateAddHour(string context)
+		[Test]
+		public void DateAddHour([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -370,8 +617,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue)).Value.Hour);
 		}
 
-		[Test, DataContextSource]
-		public void DateAddMinute(string context)
+		[Test]
+		public void DateAddMinute([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -379,8 +626,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Minute, 5, t.DateTimeValue)).Value.Minute);
 		}
 
-		[Test, DataContextSource]
-		public void DateAddSecond(string context)
+		[Test]
+		public void DateAddSecond([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -388,15 +635,18 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, 41, t.DateTimeValue)).Value.Second);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void DateAddMillisecond(string context)
+		[Test]
+		public void DateAddMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
-				(from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 41, t.DateTimeValue))).ToList();
+				AreEqual(
+						from t in db.Types select           Sql.DateAdd(Sql.DateParts.Millisecond, 226, t.DateTimeValue),
+						from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 226, t.DateTimeValue)),
+						new CustomNullableDateTimeComparer());
 		}
 
-		[Test, DataContextSource]
-		public void AddYears(string context)
+		[Test]
+		public void AddYears([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -404,8 +654,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddYears(1)).Date);
 		}
 
-		[Test, DataContextSource]
-		public void AddMonths(string context)
+		[Test]
+		public void AddMonths([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -413,8 +663,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMonths(-2)).Date);
 		}
 
-		[Test, DataContextSource]
-		public void AddDays(string context)
+		[Test]
+		public void AddDays([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -422,8 +672,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddDays(5)).Date);
 		}
 
-		[Test, DataContextSource]
-		public void AddHours(string context)
+		[Test]
+		public void AddHours([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -431,8 +681,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(22)).Hour);
 		}
 
-		[Test, DataContextSource]
-		public void AddMinutes(string context)
+		[Test]
+		public void AddMinutes([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -440,8 +690,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMinutes(-8)).Minute);
 		}
 
-		[Test, DataContextSource]
-		public void AddSeconds(string context)
+		[Test]
+		public void AddSeconds([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -449,15 +699,19 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddSeconds(-35)).Second);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void AddMilliseconds(string context)
+		[Test]
+		public void AddMilliseconds([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
-				(from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMilliseconds(221))).ToList();
+				AreEqual(
+					from t in db.Types select (t.DateTimeValue.AddMilliseconds(226)),
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMilliseconds(226)),
+					new CustomDateTimeComparer());
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void AddDaysFromColumnPositive(string context)
+		[Test]
+		public void AddDaysFromColumnPositive([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -475,24 +729,29 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void AddDaysFromColumnNegative(string context)
+		[Test]
+		public void AddDaysFromColumnNegative([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				db.Insert(new LinqDataTypes { ID = 5000, SmallIntValue = -2, DateTimeValue = new DateTime(2018, 01, 03) });
 
-				var result = db.Types
-					.Count(t => t.ID == 5000 && t.DateTimeValue.AddDays(t.SmallIntValue) < new DateTime(2018, 01, 02));
+				try
+				{
+					var result = db.Types
+						.Count(t => t.ID == 5000 && Sql.AsSql(t.DateTimeValue.AddDays(t.SmallIntValue)) < new DateTime(2018, 01, 02));
 
-				Assert.AreEqual(1, result);
-
-				db.Types.Delete(t => t.ID == 5000);
+					Assert.AreEqual(1, result);
+				}
+				finally
+				{
+					db.Types.Delete(t => t.ID == 5000);
+				}
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void AddDaysFromColumn(string context)
+		[Test]
+		public void AddDaysFromColumn([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -503,8 +762,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void AddWeekFromColumn(string context)
+		[Test]
+		public void AddWeekFromColumn([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -514,8 +773,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void AddQuarterFromColumn(string context)
+		[Test]
+		public void AddQuarterFromColumn([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -525,8 +784,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void AddYearFromColumn(string context)
+		[Test]
+		public void AddYearFromColumn([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -536,13 +795,48 @@ namespace Tests.Linq
 			}
 		}
 
+		public static DateTime Truncate(DateTime date, long resolution)
+	    {
+	        return new DateTime(date.Ticks - (date.Ticks % resolution), date.Kind);
+	    }
+
+		[Test]
+		public void AddDynamicFromColumn(
+			[DataSources(ProviderName.Informix)] string context, 
+			[Values(
+				Sql.DateParts.Day, 
+				Sql.DateParts.Hour, 
+				Sql.DateParts.Minute, 
+				Sql.DateParts.Month,
+				Sql.DateParts.Year,
+				Sql.DateParts.Second
+				)] Sql.DateParts datepart)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected =
+					(from t in Types select Sql.DateAdd(datepart, t.SmallIntValue, t.DateTimeValue)).Select(d =>
+						Truncate(d.Value, TimeSpan.TicksPerSecond));
+				var result =
+					(from t in db.Types select Sql.AsSql(Sql.DateAdd(datepart, t.SmallIntValue, t.DateTimeValue)))
+					.ToList().Select(d => Truncate(d.Value, TimeSpan.TicksPerSecond));
+
+				AreEqual(expected, result);
+			}
+		}
+
 		#endregion
 
 		#region DateDiff
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void SubDateDay(string context)
+		[Test]
+		public void SubDateDay(
+			[DataSources(
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -550,9 +844,14 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddHours(100) - t.DateTimeValue).TotalDays));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DateDiffDay(string context)
+		[Test]
+		public void DateDiffDay(
+			[DataSources(
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -560,9 +859,14 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void SubDateHour(string context)
+		[Test]
+		public void SubDateHour(
+			[DataSources(
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -570,9 +874,14 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddHours(100) - t.DateTimeValue).TotalHours));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DateDiffHour(string context)
+		[Test]
+		public void DateDiffHour(
+			[DataSources(
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -580,9 +889,14 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Hour, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void SubDateMinute(string context)
+		[Test]
+		public void SubDateMinute(
+			[DataSources(
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -590,9 +904,14 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalMinutes));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DateDiffMinute(string context)
+		[Test]
+		public void DateDiffMinute(
+			[DataSources(
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -600,9 +919,14 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Minute, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void SubDateSecond(string context)
+		[Test]
+		public void SubDateSecond(
+			[DataSources(
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -610,9 +934,14 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalSeconds));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DateDiffSecond(string context)
+		[Test]
+		public void DateDiffSecond(
+			[DataSources(
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -620,34 +949,77 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Second, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
-			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void SubDateMillisecond(string context)
+		// This test and DateDiffMillisecond could fail for SQLite.MS due to 1 millisecond difference in
+		// expected and returned results
+		// This happen only on following conditions:
+		// - access provider enabled
+		// - tests against run before those tests (at least AddDynamicFromColumn)
+		// Possible reason:
+		// looks like Access runtime modify some C++ runtime options that affect runtime's rounding behavior
+		// used also by SQLite provider's native part
+		[Test]
+		public void SubDateMillisecond(
+			[DataSources(
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllMySql,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           (int)(t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds,
-					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds));
+			{
+				if (context.Contains(ProviderName.SQLiteMS))
+				{
+					AreEqual(
+						from t in Types select (int)(t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds,
+						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds),
+						new CustomIntComparer());
+				}
+				else
+				{
+					AreEqual(
+						from t in Types select (int)(t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds,
+						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds));
+				}
+			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
-			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DateDiffMillisecond(string context)
+		// see SubDateMillisecond commet for SQLite.MS
+		[Test]
+		public void DateDiffMillisecond(
+			[DataSources(
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllMySql,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1)),
-					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1))));
+			{
+				if(context.Contains(ProviderName.SQLiteMS))
+				{
+					AreEqual(
+						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1)),
+						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1))),
+						new CustomNullableIntComparer());
+				}
+				else
+				{
+					AreEqual(
+						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1)),
+						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1))));
+				}
+			}
 		}
 
 		#endregion
 
 		#region MakeDateTime
 
-		[Test, DataContextSource]
-		public void MakeDateTime(string context)
+		[Test]
+		public void MakeDateTime([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -655,8 +1027,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Sql.MakeDateTime(2010, p.ID, 1) where t.Value.Year == 2010 select t);
 		}
 
-		[Test, DataContextSource]
-		public void MakeDateTimeParameters(string context)
+		[Test]
+		public void MakeDateTimeParameters([DataSources] string context)
 		{
 			var year = 2010;
 			using (var db = GetDataContext(context))
@@ -665,8 +1037,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Sql.MakeDateTime(year, p.ID, 1) where t.Value.Year == 2010 select t);
 		}
 
-		[Test, DataContextSource]
-		public void NewDateTime1(string context)
+		[Test]
+		public void NewDateTime1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -674,8 +1046,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select new DateTime(p.DateTimeValue.Year, 10, 1) where t.Month == 10 select t);
 		}
 
-		[Test, DataContextSource]
-		public void NewDateTime2(string context)
+		[Test]
+		public void NewDateTime2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -683,8 +1055,8 @@ namespace Tests.Linq
 					from p in db.Types select new DateTime(p.DateTimeValue.Year, 10, 1));
 		}
 
-		[Test, DataContextSource]
-		public void MakeDateTime2(string context)
+		[Test]
+		public void MakeDateTime2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -692,8 +1064,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select Sql.MakeDateTime(2010, p.ID, 1, 20, 35, 44) where t.Value.Year == 2010 select t);
 		}
 
-		[Test, DataContextSource]
-		public void NewDateTime3(string context)
+		[Test]
+		public void NewDateTime3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -701,8 +1073,8 @@ namespace Tests.Linq
 					from t in from p in db.Types select new DateTime(p.DateTimeValue.Year, 10, 1, 20, 35, 44) where t.Month == 10 select t);
 		}
 
-		[Test, DataContextSource]
-		public void NewDateTime4(string context)
+		[Test]
+		public void NewDateTime4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -710,8 +1082,8 @@ namespace Tests.Linq
 					from p in db.Types select new DateTime(p.DateTimeValue.Year, 10, 1, 20, 35, 44));
 		}
 
-		[Test, DataContextSource]
-		public void NewDateTime5(string context)
+		[Test]
+		public void NewDateTime5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -721,8 +1093,8 @@ namespace Tests.Linq
 
 		#endregion
 
-		[Test, DataContextSource(ProviderName.PostgreSQL)]
-		public void GetDateTest1(string context)
+		[Test]
+		public void GetDateTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -737,12 +1109,12 @@ namespace Tests.Linq
 					group v by v into g
 					select new { g.Key, Count = g.Count() };
 
-				countByDates.Take(5).ToList();
+				var _ = countByDates.Take(5).ToList();
 			}
 		}
 
-		[Test, DataContextSource]
-		public void GetDateTest2(string context)
+		[Test]
+		public void GetDateTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -757,14 +1129,20 @@ namespace Tests.Linq
 					group v by v into g
 					select new { g.Key, Count = g.Count() };
 
-				countByDates.Take(5).ToList();
+				var _ = countByDates.Take(5).ToList();
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
-			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
-		public void DateTimeSum(string context)
+		[Test]
+		public void DateTimeSum(
+			[DataSources(
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllMySql,
+				TestProvName.AllSQLite,
+				ProviderName.Access)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -791,5 +1169,51 @@ namespace Tests.Linq
 					});
 			}
 		}
+
+		[Test]
+		public void Issue1615Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var datePart = Sql.DateParts.Day;
+				AreEqual(
+					from t in    Types select           Sql.DateAdd(datePart, 5, t.DateTimeValue). Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(datePart, 5, t.DateTimeValue)).Value.Date);
+			}
+		}
+
+		[Table("Transactions")]
+		private class Transaction
+		{
+			[PrimaryKey] public int TransactionId { get; set; }
+			[Column]public DateTimeOffset TransactionDate { get; set; }
+		}
+
+		[Test]
+		[ActiveIssue(1666)]
+		public void GroupByDateTimeOffsetDateTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (db.CreateLocalTable<Transaction>())
+				{
+					db.Insert(new Transaction() { TransactionId = 1, TransactionDate = DateTime.Now });
+					db.Insert(new Transaction() { TransactionId = 2, TransactionDate = DateTime.Now.AddMinutes(-1) });
+					db.Insert(new Transaction() { TransactionId = 3, TransactionDate = DateTime.Now.AddMinutes(-2) });
+					db.Insert(new Transaction() { TransactionId = 4, TransactionDate = DateTime.Now.AddDays(-1) });
+					db.Insert(new Transaction() { TransactionId = 5, TransactionDate = DateTime.Now.AddDays(-2) });
+
+					var expected = db.GetTable<Transaction>().ToList()
+																.GroupBy(d => d.TransactionDate.Date)
+																.Select(x => new { x.Key, Count = x.Count() })
+																.OrderBy(x => x.Key);
+					var actual   = db.GetTable<Transaction>().GroupBy(d => d.TransactionDate.Date)
+																.Select(x => new { x.Key, Count = x.Count() })
+																.OrderBy(x => x.Key);
+					Assert.That(actual, Is.EqualTo(expected));
+				}
+			}
+		}
+
 	}
 }

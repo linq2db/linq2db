@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -70,11 +71,11 @@ namespace LinqToDB.ServiceModel
 					case TypeCode.Decimal  : return ((decimal) value).ToString(CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return ((double)  value).ToString(CultureInfo.InvariantCulture);
 					case TypeCode.Single   : return ((float)   value).ToString(CultureInfo.InvariantCulture);
-					case TypeCode.DateTime : return ((DateTime)value).ToString("o");
+					case TypeCode.DateTime : return ((DateTime)value).ToBinary().ToString(CultureInfo.InvariantCulture);
 				}
 
 				if (type == typeof(DateTimeOffset))
-					return ((DateTimeOffset)value).ToString("o");
+					return  ((DateTimeOffset)value).UtcTicks.ToString(CultureInfo.InvariantCulture);
 
 				return Converter.ChangeTypeTo<string>(value);
 			}
@@ -499,11 +500,11 @@ namespace LinqToDB.ServiceModel
 					case TypeCode.Decimal  : return decimal. Parse(str, CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return double.  Parse(str, CultureInfo.InvariantCulture);
 					case TypeCode.Single   : return float.   Parse(str, CultureInfo.InvariantCulture);
-					case TypeCode.DateTime : return DateTime.ParseExact(str, "o", CultureInfo.InvariantCulture);
+					case TypeCode.DateTime : return DateTime.FromBinary(long.Parse(str, CultureInfo.InvariantCulture));
 				}
 
 				if (type == typeof(DateTimeOffset))
-					return DateTimeOffset.ParseExact(str, "o", CultureInfo.InvariantCulture);
+					return new DateTimeOffset(long.Parse(str, CultureInfo.InvariantCulture), TimeSpan.Zero);
 
 				return Converter.ChangeType(str, type);
 			}
@@ -522,8 +523,23 @@ namespace LinqToDB.ServiceModel
 					if (str == "System.Data.Linq.Binary")
 						return typeof(System.Data.Linq.Binary);
 
-					type = LinqService.TypeResolver(str);
+					try
+					{
+						foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+						{
+							type = assembly.GetType(str);
+							if (type != null)
+								break;
+						}
+					}
+					catch
+					{
+						// ignore errors
+					}
 
+					if (type == null)
+					{
+					type = LinqService.TypeResolver(str);
 					if (type == null)
 					{
 						if (Configuration.LinqService.ThrowUnresolvedTypeException)
@@ -536,6 +552,7 @@ namespace LinqToDB.ServiceModel
 							$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.",
 							"LinqServiceSerializer");
 					}
+				}
 				}
 
 				return type;
@@ -625,6 +642,7 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlTable            : GetType(((SqlTable)           e).ObjectType); break;
 					case QueryElementType.SqlCteTable         : GetType(((SqlCteTable)        e).ObjectType); break;
 					case QueryElementType.CteClause           : GetType(((CteClause)          e).ObjectType); break;
+					case QueryElementType.SqlRawSqlTable      : GetType(((SqlRawSqlTable)     e).ObjectType); break;
 				}
 
 				ObjectIndices.Add(e, ++Index);
@@ -665,6 +683,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Scale);
 							Append(elem.CreateFormat);
 							Append(elem.CreateOrder);
+							AppendDelayed(elem.Table);
 
 							break;
 						}
@@ -689,6 +708,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
 							Append((int)elem.DataType);
+							Append(elem.DbType);
 							Append(elem.DbSize);
 							Append(elem.LikeStart);
 							Append(elem.LikeEnd);
@@ -741,6 +761,11 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlValue :
 						{
 							var elem = (SqlValue)e;
+
+							Append((int)elem.ValueType.DataType);
+							Append(elem.ValueType.DbType);
+							Append(elem.ValueType.Length);
+
 							Append(elem.SystemType, elem.Value);
 							break;
 						}
@@ -750,6 +775,7 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlDataType)e;
 
 							Append((int)elem.DataType);
+							Append(elem.DbType);
 							Append(elem.Type);
 							Append(elem.Length);
 							Append(elem.Precision);
@@ -821,6 +847,35 @@ namespace LinqToDB.ServiceModel
 
 							foreach (var field in elem.Fields)
 								Append(ObjectIndices[field.Value]);
+
+							break;
+						}
+
+					case QueryElementType.SqlRawSqlTable :
+						{
+							var elem = (SqlRawSqlTable)e;
+
+							Append(elem.SourceID);
+							Append(elem.Alias);
+							Append(elem.ObjectType);
+
+							Append(ObjectIndices[elem.All]);
+							Append(elem.Fields.Count);
+
+							foreach (var field in elem.Fields)
+								Append(ObjectIndices[field.Value]);
+
+							Append(elem.SQL);
+
+							if (elem.Parameters == null)
+								Append(0);
+							else
+							{
+								Append(elem.Parameters.Length);
+
+								foreach (var expr in elem.Parameters)
+									Append(ObjectIndices[expr]);
+							}
 
 							break;
 						}
@@ -1007,6 +1062,8 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsDistinct);
 							Append(elem.SkipValue);
 							Append(elem.TakeValue);
+							Append((int?)elem.TakeHints);
+
 							Append(elem.Columns);
 
 							break;
@@ -1142,6 +1199,7 @@ namespace LinqToDB.ServiceModel
 
 						Append(elem.Table);
 						Append(elem.Parameters);
+						Append(elem.IfExists);
 
 						break;
 					}
@@ -1284,7 +1342,8 @@ namespace LinqToDB.ServiceModel
 							var createFormat     = ReadString();
 							var createOrder      = ReadNullableInt();
 
-							obj = new SqlField
+							SqlField field;
+							obj = field = new SqlField
 							{
 								SystemType      = systemType,
 								Name            = name,
@@ -1301,8 +1360,13 @@ namespace LinqToDB.ServiceModel
 								Precision       = precision,
 								Scale           = scale,
 								CreateFormat    = createFormat,
-								CreateOrder     = createOrder,
+								CreateOrder     = createOrder
 							};
+
+							ReadDelayedObject(table =>
+							{
+								field.Table = table as ISqlTableSource;
+							});
 
 							break;
 						}
@@ -1324,8 +1388,9 @@ namespace LinqToDB.ServiceModel
 						{
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
-							var dbType           = (DataType)ReadInt();
-							var dbSize           = ReadInt();
+							var dataType         = (DataType)ReadInt();
+							var dbType           = ReadString();
+							var dbSize           = ReadNullableInt();
 							var likeStart        = ReadString();
 							var likeEnd          = ReadString();
 							var replaceLike      = ReadBool();
@@ -1336,7 +1401,8 @@ namespace LinqToDB.ServiceModel
 							obj = new SqlParameter(systemType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
-								DataType         = dbType,
+								DataType         = dataType,
+								DbType           = dbType,
 								DbSize           = dbSize,
 								LikeStart        = likeStart,
 								LikeEnd          = likeEnd,
@@ -1373,23 +1439,28 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlValue :
 						{
+							var dataType   = (DataType)ReadInt();
+							var dbType     = ReadString();
+							var length     = ReadNullableInt();
+
 							var systemType = Read<Type>();
 							var value      = ReadValue(systemType);
 
-							obj = new SqlValue(systemType, value);
+							obj = new SqlValue(new DbDataType(systemType, dataType, dbType, length), value);
 
 							break;
 						}
 
 					case QueryElementType.SqlDataType :
 						{
-							var dbType     = (DataType)ReadInt();
+							var dataType   = (DataType)ReadInt();
+							var dbType     = ReadString();
 							var systemType = Read<Type>();
 							var length     = ReadNullableInt();
 							var precision  = ReadNullableInt();
 							var scale      = ReadNullableInt();
 
-							obj = new SqlDataType(dbType, systemType, length, precision, scale);
+							obj = new SqlDataType(dataType, systemType, length, precision, scale, dbType);
 
 							break;
 						}
@@ -1464,6 +1535,27 @@ namespace LinqToDB.ServiceModel
 								new SqlCteTable(sourceID, alias, flds, cte);
 
 							obj = cteTable;
+
+							break;
+						}
+
+					case QueryElementType.SqlRawSqlTable :
+						{
+							var sourceID           = ReadInt();
+							var alias              = ReadString();
+							var objectType         = Read<Type>();
+
+							var all    = Read<SqlField>();
+							var fields = ReadArray<SqlField>();
+							var flds   = new SqlField[fields.Length + 1];
+
+							flds[0] = all;
+							Array.Copy(fields, 0, flds, 1, fields.Length);
+
+							var sql        = ReadString();
+							var parameters = ReadArray<ISqlExpression>();
+
+							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, parameters);
 
 							break;
 						}
@@ -1657,9 +1749,10 @@ namespace LinqToDB.ServiceModel
 							var isDistinct = ReadBool();
 							var skipValue  = Read<ISqlExpression>();
 							var takeValue  = Read<ISqlExpression>();
+							var takeHints  = (TakeHints?)ReadNullableInt();
 							var columns    = ReadArray<SqlColumn>();
 
-							obj = new SqlSelectClause(isDistinct, takeValue, skipValue, columns);
+							obj = new SqlSelectClause(isDistinct, takeValue, takeHints, skipValue, columns);
 
 							break;
 						}
@@ -1815,8 +1908,9 @@ namespace LinqToDB.ServiceModel
 					{
 						var table      = Read<SqlTable>();
 						var parameters = ReadArray<SqlParameter>();
+						var ifExists   = ReadBool();
 
-						obj = _statement = new SqlDropTableStatement
+						obj = _statement = new SqlDropTableStatement(ifExists)
 						{
 							Table = table,
 						};

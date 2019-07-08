@@ -18,8 +18,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class LoadWithTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void LoadWith1(string context)
+		[Test]
+		public void LoadWith1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -33,8 +33,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LoadWith2(string context)
+		[Test]
+		public void LoadWith2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -49,8 +49,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LoadWith3(string context)
+		[Test]
+		public void LoadWith3([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -85,8 +85,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LoadWith4(string context)
+		[Test]
+		public void LoadWith4([DataSources] string context)
 		{
 			MappingSchema.Default.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
 
@@ -107,8 +107,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LoadWith5(string context)
+		[Test]
+		public void LoadWith5([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -129,8 +129,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LoadWith6(string context)
+		[Test]
+		public void LoadWith6([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -151,8 +151,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
-		public void LoadWith7(string context)
+		[Test]
+		public void LoadWith7([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -173,8 +173,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void LoadWith8(string context)
+		[Test]
+		public void LoadWith8([DataSources(ProviderName.Access)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -191,8 +191,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void LoadWith9(string context)
+		[Test]
+		public void LoadWith9([DataSources(ProviderName.Access)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -208,11 +208,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
+		[Test]
 //#if !NETSTANDARD1_6
 //		[Timeout(15000)]
 //#endif
-		public void LoadWith10(string context)
+		public void LoadWith10([DataSources(ProviderName.Access)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -224,16 +224,15 @@ namespace Tests.Linq
 
 				for (var i = 0; i < 100; i++)
 				{
-					var list = q.ToList();
+					var _ = q.ToList();
 				}
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access)]
-		public void LoadWith11(string context)
+		[Test]
+		public void LoadWith11([DataSources(ProviderName.Access)] string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =

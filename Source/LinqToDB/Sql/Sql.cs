@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -14,7 +15,6 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using Common;
 	using Extensions;
 	using Expressions;
 	using Linq;
@@ -25,24 +25,40 @@ namespace LinqToDB
 	{
 		#region Common Functions
 
-		[Sql.Expression("*", ServerSideOnly = true)]
+		/// <summary>
+		/// Generates '*'.
+		/// </summary>
+		/// <returns></returns>
+		[Sql.Expression("*", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Primary)]
 		public static object[] AllColumns()
 		{
 			throw new LinqException("'AllColumns' is only server-side method.");
 		}
 
+		/// <summary>
+		/// Enforces generating SQL even if an expression can be calculated locally.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="obj">Expression to generate SQL.</param>
+		/// <returns>Returns 'obj'.</returns>
 		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0, ServerSideOnly = true)]
+		[Sql.Expression("{0}", 0, ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T AsSql<T>(T obj)
 		{
 			return obj;
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0, ServerSideOnly = true, InlineParameters = true)]
+		[Sql.Expression("{0}", 0, ServerSideOnly = true, InlineParameters = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T ToSql<T>(T obj)
 		{
 			return obj;
+		}
+
+		[Sql.Extension("{array, ', '}", ServerSideOnly = true)]
+		internal static T[] Spread<T>([ExprParameter] T[] array)
+		{
+			throw new InvalidOperationException();
 		}
 
 		[CLSCompliant(false)]
@@ -67,7 +83,7 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0)]
+		[Sql.Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T? ToNullable<T>(T value)
 			where T : struct
 		{
@@ -76,27 +92,27 @@ namespace LinqToDB
 
 		[Obsolete("Use ToNotNullable instead.")]
 		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0)]
+		[Sql.Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T ConvertNullable<T>(T? value)
 			where T : struct
 		{
-			return value ?? default(T);
+			return value ?? default;
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0)]
+		[Sql.Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T ToNotNull<T>(T? value)
 			where T : struct
 		{
-			return value ?? default(T);
+			return value ?? default;
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0)]
+		[Sql.Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T ToNotNullable<T>(T? value)
 			where T : struct
 		{
-			return value ?? default(T);
+			return value ?? default;
 		}
 
 		[Sql.Expression("{0} BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
@@ -152,7 +168,7 @@ namespace LinqToDB
 
 		class NoConvertBuilder : Sql.IExtensionCallBuilder
 		{
-			private static readonly MethodInfo _method = MethodHelper.GetMethodInfo(Sql.ConvertRemover<int, int>, 0).GetGenericMethodDefinition();
+			private static readonly MethodInfo _method = MethodHelper.GetMethodInfo(ConvertRemover<int, int>, 0).GetGenericMethodDefinition();
 
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -177,8 +193,7 @@ namespace LinqToDB
 				var sqlExpr = builder.ConvertExpressionToSql(newExpr);
 				sqlExpr     = new QueryVisitor().Convert(sqlExpr, e =>
 				{
-					var func = e as SqlFunction;
-					if (func != null && func.Name == "$Convert_Remover$")
+					if (e is SqlFunction func && func.Name == "$Convert_Remover$")
 					{
 						return func.Parameters[0];
 					}
@@ -189,7 +204,7 @@ namespace LinqToDB
 			}
 		}
 
-		[Sql.Extension("", BuilderType = typeof(NoConvertBuilder), ServerSideOnly = true)]
+		[Sql.Extension("", BuilderType = typeof(NoConvertBuilder), ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T NoConvert<T>(T expr)
 		{
 			return expr;
@@ -199,12 +214,12 @@ namespace LinqToDB
 
 		#region Guid Functions
 
-		[Sql.Function  (PN.Oracle,   "Sys_Guid", ServerSideOnly=true)]
-		[Sql.Function  (PN.Firebird, "Gen_Uuid", ServerSideOnly=true)]
-		[Sql.Function  (PN.MySql,    "Uuid",     ServerSideOnly=true)]
-		[Sql.Expression(PN.Sybase,   "NewID(1)", ServerSideOnly=true)]
-		[Sql.Expression(PN.SapHana,  "SYSUUID",  ServerSideOnly=true)]
-		[Sql.Function  (             "NewID",    ServerSideOnly=true)]
+		[Sql.Function  (PN.Oracle,   "Sys_Guid", ServerSideOnly=true, CanBeNull = false)]
+		[Sql.Function  (PN.Firebird, "Gen_Uuid", ServerSideOnly=true, CanBeNull = false)]
+		[Sql.Function  (PN.MySql,    "Uuid",     ServerSideOnly=true, CanBeNull = false)]
+		[Sql.Expression(PN.Sybase,   "NewID(1)", ServerSideOnly=true, CanBeNull = false)]
+		[Sql.Expression(PN.SapHana,  "SYSUUID",  ServerSideOnly=true, CanBeNull = false)]
+		[Sql.Function  (             "NewID",    ServerSideOnly=true, CanBeNull = false)]
 		public static Guid NewGuid()
 		{
 			return Guid.NewGuid();
@@ -215,7 +230,7 @@ namespace LinqToDB
 		#region Convert Functions
 
 		[CLSCompliant(false)]
-		[Sql.Function("Convert", 0, 1, ServerSideOnly = true)]
+		[Sql.Function("Convert", 0, 1, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
 			var dt = Common.ConvertTo<TTo>.From(from);
@@ -223,7 +238,7 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Function("Convert", 0, 1, 2, ServerSideOnly = true)]
+		[Sql.Function("Convert", 0, 1, 2, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert<TTo, TFrom>(TTo to, TFrom from, int format)
 		{
 			var dt = Common.ConvertTo<TTo>.From(from);
@@ -231,7 +246,7 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Function("Convert", 0, 1)]
+		[Sql.Function("Convert", 0, 1, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert2<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -254,7 +269,7 @@ namespace LinqToDB
 			}
 		}
 
-		[Sql.Expression("{0}")]
+		[Sql.Expression("{0}", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static TimeSpan? DateToTime(DateTime? date)
 		{
 			return date == null ? null : (TimeSpan?)new TimeSpan(date.Value.Ticks);
@@ -344,6 +359,7 @@ namespace LinqToDB
 
 		[Sql.Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
 		[Sql.Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
+		[Sql.Property(PN.SqlServer2017, "DateTimeOffset", ServerSideOnly=true)]
 		[Sql.Property(PN.SqlServer2012, "DateTimeOffset", ServerSideOnly=true)]
 		[Sql.Property(PN.SqlServer2008, "DateTimeOffset", ServerSideOnly=true)]
 		[Sql.Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
@@ -397,7 +413,7 @@ namespace LinqToDB
 		[Sql.Expression(PN.DB2LUW,    "CHARACTER_LENGTH({0},CODEUNITS32)", PreferServerSide = true)]
 		public static int? Length(string str)
 		{
-			return str == null ? null : (int?)str.Length;
+			return str?.Length;
 		}
 
 		[Sql.Function  (                                                PreferServerSide = true)]
@@ -437,9 +453,9 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Sql.Function]
-		[Sql.Function(PN.DB2,     "Locate")]
-		[Sql.Function(PN.MySql,   "Locate")]
-		[Sql.Function(PN.SapHana, "Locate", 1, 0)]
+		[Sql.Function(PN.DB2,      "Locate")]
+		[Sql.Function(PN.MySql,    "Locate")]
+		[Sql.Function(PN.SapHana,  "Locate", 1, 0)]
 		[Sql.Function(PN.Firebird, "Position")]
 		public static int? CharIndex(string value, string str)
 		{
@@ -497,14 +513,14 @@ namespace LinqToDB
 			return new string(chars);
 		}
 
-		[Sql.Function(PreferServerSide = true)]
+		[Sql.Function(                      PreferServerSide = true)]
 		[Sql.Function(PN.SQLite, "LeftStr", PreferServerSide = true)]
 		public static string Left(string str, int? length)
 		{
 			return length == null || str == null || str.Length < length? null: str.Substring(1, length.Value);
 		}
 
-		[Sql.Function(PreferServerSide = true)]
+		[Sql.Function(                       PreferServerSide = true)]
 		[Sql.Function(PN.SQLite, "RightStr", PreferServerSide = true)]
 		public static string Right(string str, int? length)
 		{
@@ -571,54 +587,54 @@ namespace LinqToDB
 		[Sql.Function]
 		public static string Trim(string str)
 		{
-			return str == null ? null : str.Trim();
+			return str?.Trim();
 		}
 
 		[Sql.Function("LTrim")]
 		public static string TrimLeft(string str)
 		{
-			return str == null ? null : str.TrimStart();
+			return str?.TrimStart();
 		}
 
 		[Sql.Function("RTrim")]
 		public static string TrimRight(string str)
 		{
-			return str == null ? null : str.TrimEnd();
+			return str?.TrimEnd();
 		}
 
-		[Sql.Expression(PN.DB2, "Strip({0}, B, {1})")]
 		[Sql.Function]
+		[Sql.Expression(PN.DB2, "Strip({0}, B, {1})")]
 		public static string Trim(string str, char? ch)
 		{
 			return str == null || ch == null ? null : str.Trim(ch.Value);
 		}
 
 		[Sql.Expression(PN.DB2, "Strip({0}, L, {1})")]
-		[Sql.Function  (                  "LTrim")]
+		[Sql.Function  (        "LTrim")]
 		public static string TrimLeft(string str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimStart(ch.Value);
 		}
 
 		[Sql.Expression(PN.DB2, "Strip({0}, T, {1})")]
-		[Sql.Function  (                  "RTrim")]
+		[Sql.Function  (        "RTrim")]
 		public static string TrimRight(string str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimEnd(ch.Value);
 		}
 
-		[Sql.Function(ServerSideOnly = true)]
+		[Sql.Function(                    ServerSideOnly = true)]
 		[Sql.Function(PN.Access, "LCase", ServerSideOnly = true)]
 		public static string Lower(string str)
 		{
-			return str == null ? null : str.ToLower();
+			return str?.ToLower();
 		}
 
-		[Sql.Function(ServerSideOnly = true)]
+		[Sql.Function(                    ServerSideOnly = true)]
 		[Sql.Function(PN.Access, "UCase", ServerSideOnly = true)]
 		public static string Upper(string str)
 		{
-			return str == null ? null : str.ToUpper();
+			return str?.ToUpper();
 		}
 
 		class ConcatAttribute : Sql.ExpressionAttribute
@@ -692,26 +708,37 @@ namespace LinqToDB
 
 		#region DateTime Functions
 
-		[Sql.Property(             "CURRENT_TIMESTAMP")]
-		[Sql.Property(PN.Informix, "CURRENT")]
-		[Sql.Property(PN.Access,   "Now")]
+		[Sql.Property(             "CURRENT_TIMESTAMP", CanBeNull = false)]
+		[Sql.Property(PN.Informix, "CURRENT",           CanBeNull = false)]
+		[Sql.Property(PN.Access,   "Now",               CanBeNull = false)]
 		public static DateTime GetDate()
 		{
 			return DateTime.Now;
 		}
 
-		[Sql.Property(             "CURRENT_TIMESTAMP", ServerSideOnly = true)]
-		[Sql.Property(PN.Informix, "CURRENT",           ServerSideOnly = true)]
-		[Sql.Property(PN.Access,   "Now",               ServerSideOnly = true)]
-		[Sql.Function(PN.SqlCe,    "GetDate",           ServerSideOnly = true)]
-		[Sql.Function(PN.Sybase,   "GetDate",           ServerSideOnly = true)]
-		public static DateTime CurrentTimestamp => throw new LinqException("The 'CurrentTimestamp' is server side only property.");
+		[Sql.Property(             "CURRENT_TIMESTAMP", ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Property(PN.Informix, "CURRENT",           ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Property(PN.Access,   "Now",               ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Function(PN.SqlCe,    "GetDate",           ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Function(PN.Sybase,   "GetDate",           ServerSideOnly = true, CanBeNull = false)]
+		public static DateTime CurrentTimestamp => throw new LinqException("'CurrentTimestamp' is server side only property.");
 
-		[Sql.Property(             "CURRENT_TIMESTAMP")]
-		[Sql.Property(PN.Informix, "CURRENT")]
-		[Sql.Property(PN.Access,   "Now")]
-		[Sql.Function(PN.SqlCe,    "GetDate")]
-		[Sql.Function(PN.Sybase,   "GetDate")]
+		[Sql.Function  (PN.SqlServer , "SYSUTCDATETIME"                      , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Function  (PN.Sybase    , "GETUTCDATE"                          , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Expression(PN.SQLite    , "DATETIME('now')"                     , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Function  (PN.MySql     , "UTC_TIMESTAMP"                       , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Expression(PN.PostgreSQL, "timezone('UTC', now())"              , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Expression(PN.DB2       , "CURRENT TIMESTAMP - CURRENT TIMEZONE", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Subtraction)]
+		[Sql.Expression(PN.Oracle    , "SYS_EXTRACT_UTC(SYSTIMESTAMP)"       , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
+		[Sql.Property  (PN.SapHana   , "CURRENT_UTCTIMESTAMP"                , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
+		[Sql.Expression(PN.Informix  , "datetime(1970-01-01 00:00:00) year to second + (dbinfo('utc_current')/86400)::int::char(9)::interval day(9) to day + (mod(dbinfo('utc_current'), 86400))::char(5)::interval second(5) to second", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
+		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;
+
+		[Sql.Property(             "CURRENT_TIMESTAMP", CanBeNull = false)]
+		[Sql.Property(PN.Informix, "CURRENT",           CanBeNull = false)]
+		[Sql.Property(PN.Access,   "Now",               CanBeNull = false)]
+		[Sql.Function(PN.SqlCe,    "GetDate",           CanBeNull = false)]
+		[Sql.Function(PN.Sybase,   "GetDate",           CanBeNull = false)]
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
 		[Sql.Function]
@@ -738,155 +765,7 @@ namespace LinqToDB
 				new DateTime(year.Value, month.Value, day.Value);
 		}
 
-		[Sql.Enum]
-		public enum DateParts
-		{
-			Year        =  0,
-			Quarter     =  1,
-			Month       =  2,
-			DayOfYear   =  3,
-			Day         =  4,
-			Week        =  5,
-			WeekDay     =  6,
-			Hour        =  7,
-			Minute      =  8,
-			Second      =  9,
-			Millisecond = 10,
-		}
-
-		[CLSCompliant(false)]
-		public class DatePartAttribute : Sql.ExpressionAttribute
-		{
-			public DatePartAttribute(string sqlProvider, string expression, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, SqlQuery.Precedence.Primary, false, null, datePartIndex, argIndices)
-			{
-			}
-
-			public DatePartAttribute(string sqlProvider, string expression, bool isExpression, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, SqlQuery.Precedence.Primary, isExpression, null, datePartIndex, argIndices)
-			{
-			}
-
-			public DatePartAttribute(string sqlProvider, string expression, bool isExpression, string[] partMapping, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, SqlQuery.Precedence.Primary, isExpression, partMapping, datePartIndex, argIndices)
-			{
-			}
-
-			public DatePartAttribute(string sqlProvider, string expression, int precedence, bool isExpression, string[] partMapping, int datePartIndex, params int[] argIndices)
-				: base(sqlProvider, expression, argIndices)
-			{
-				_isExpression  = isExpression;
-				_partMapping   = partMapping;
-				_datePartIndex = datePartIndex;
-				Precedence     = precedence;
-			}
-
-			readonly bool     _isExpression;
-			readonly string[] _partMapping;
-			readonly int      _datePartIndex;
-
-			public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
-			{
-				var part = (DateParts)((SqlValue)args[_datePartIndex]).Value;
-				var pstr = _partMapping != null ? _partMapping[(int)part] : part.ToString();
-				var str  = string.Format(Expression, pstr ?? part.ToString());
-				var type = member.GetMemberType();
-
-				return _isExpression ?
-					                new SqlExpression(type, str, Precedence, ConvertArgs(member, args)) :
-					(ISqlExpression)new SqlFunction  (type, str, ConvertArgs(member, args));
-			}
-		}
-
-		[CLSCompliant(false)]
-		[Sql.Function]
-		[Sql.DatePart(PN.Oracle,     "Add{0}",                              false, 0, 2, 1)]
-		[Sql.DatePart(PN.DB2,        "{{1}} + {0}",                         Precedence.Additive, true, new[] { "{0} Year", "({0} * 3) Month", "{0} Month", "{0} Day", "{0} Day", "({0} * 7) Day", "{0} Day", "{0} Hour", "{0} Minute", "{0} Second", "({0} * 1000) Microsecond" }, 0, 1, 2)]
-		[Sql.DatePart(PN.Informix,   "{{1}} + Interval({0}",                Precedence.Additive, true, new[] { "{0}) Year to Year", "{0}) Month to Month * 3", "{0}) Month to Month", "{0}) Day to Day", "{0}) Day to Day", "{0}) Day to Day * 7", "{0}) Day to Day", "{0}) Hour to Hour", "{0}) Minute to Minute", "{0}) Second to Second", null }, 0, 1, 2)]
-		[Sql.DatePart(PN.PostgreSQL, "{{1}} + {{0}} * Interval '1 {0}",     Precedence.Additive, true, new[] { "Year'", "Month' * 3", "Month'", "Day'", "Day'", "Day' * 7", "Day'", "Hour'", "Minute'", "Second'", "Millisecond'" }, 0, 1, 2)]
-		[Sql.DatePart(PN.MySql,      "Date_Add({{1}}, Interval {{0}} {0})", true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
-		[Sql.DatePart(PN.SQLite,     "DateTime({{1}}, {{0}} || ' {0}')",    true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
-		[Sql.DatePart(PN.Access,     "DateAdd({0}, {{0}}, {{1}})",          true, new[] { "'yyyy'", "'q'", "'m'", "'y'", "'d'", "'ww'", "'w'", "'h'", "'n'", "'s'", null }, 0, 1, 2)]
-		[Sql.DatePart(PN.SapHana,    "Add_{0}",                             true, new[] { "Years({1}, {0})", "Months({1}, {0} * 3)", "Months({1}, {0})", "Days({1}, {0})", "Days({1}, {0})", "Days({1}, {0} * 7)", "Days({1}, {0})", "Seconds({1}, {0} * 3600)", "Seconds({1}, {0} * 60)", "Seconds({1}, {0})", null }, 0, 1, 2)]
-		public static DateTime? DateAdd(DateParts part, double? number, DateTime? date)
-		{
-			if (number == null || date == null)
-				return null;
-
-			switch (part)
-			{
-				case DateParts.Year        : return date.Value.AddYears       ((int)number);
-				case DateParts.Quarter     : return date.Value.AddMonths      ((int)number * 3);
-				case DateParts.Month       : return date.Value.AddMonths      ((int)number);
-				case DateParts.DayOfYear   : return date.Value.AddDays        (number.Value);
-				case DateParts.Day         : return date.Value.AddDays        (number.Value);
-				case DateParts.Week        : return date.Value.AddDays        (number.Value * 7);
-				case DateParts.WeekDay     : return date.Value.AddDays        (number.Value);
-				case DateParts.Hour        : return date.Value.AddHours       (number.Value);
-				case DateParts.Minute      : return date.Value.AddMinutes     (number.Value);
-				case DateParts.Second      : return date.Value.AddSeconds     (number.Value);
-				case DateParts.Millisecond : return date.Value.AddMilliseconds(number.Value);
-			}
-
-			throw new InvalidOperationException();
-		}
-
-		[CLSCompliant(false)]
-		[Sql.Function]
-		[Sql.DatePart(PN.DB2,        "{0}",                                         false, new[] { null,     null,  null,   null,      null,   null,  "DayOfWeek", null,     null,   null,   null   }, 0, 1)]
-		[Sql.DatePart(PN.Informix,   "{0}",                                                0, 1)]
-		[Sql.DatePart(PN.MySql,      "Extract({0} from {{0}})",                     true,  0, 1)]
-		[Sql.DatePart(PN.PostgreSQL, "Cast(Floor(Extract({0} from {{0}})) as int)", true,  new[] { null,     null,  null,   "DOY",     null,   null,   "DOW",      null,     null,   null,   null   }, 0, 1)]
-		[Sql.DatePart(PN.Firebird,   "Cast(Floor(Extract({0} from {{0}})) as int)", true,  new[] { null,     null,  null,   "YearDay", null,   null,   null,       null,     null,   null,   null   }, 0, 1)]
-		[Sql.DatePart(PN.SQLite,     "Cast(StrFTime({0}, {{0}}) as int)",           true,  new[] { "'%Y'",   null,  "'%m'", "'%j'",    "'%d'", "'%W'", "'%w'",     "'%H'",   "'%M'", "'%S'", "'%f'" }, 0, 1)]
-		[Sql.DatePart(PN.Access,     "DatePart({0}, {{0}})",                        true,  new[] { "'yyyy'", "'q'", "'m'",  "'y'",     "'d'",  "'ww'", "'w'",      "'h'",    "'n'", "'s'",   null   }, 0, 1)]
-		[Sql.DatePart(PN.SapHana,    "{0}",                                         true,  new[] { "Year({0})",                       "Floor((Month({0})-1) / 3) + 1", "Month({0})",                     "DayOfYear({0})",                "DayOfMonth({0})",               "Week({0})",                     "MOD(Weekday({0}) + 1, 7) + 1",                  "Hour({0})",                       "Minute({0})",                   "Second({0})",                   null },                            0, 1)]
-		[Sql.DatePart(PN.Oracle,     "{0}",                                         true,  new[] { "To_Number(To_Char({0}, 'YYYY'))", "To_Number(To_Char({0}, 'Q'))",  "To_Number(To_Char({0}, 'MM'))", "To_Number(To_Char({0}, 'DDD'))", "To_Number(To_Char({0}, 'DD'))", "To_Number(To_Char({0}, 'WW'))", "Mod(1 + Trunc({0}) - Trunc({0}, 'IW'), 7) + 1", "To_Number(To_Char({0}, 'HH24'))", "To_Number(To_Char({0}, 'MI'))", "To_Number(To_Char({0}, 'SS'))", "To_Number(To_Char({0}, 'FF'))" }, 0, 1)]
-		public static int? DatePart(DateParts part, DateTime? date)
-		{
-			if (date == null)
-				return null;
-
-			switch (part)
-			{
-				case DateParts.Year        : return date.Value.Year;
-				case DateParts.Quarter     : return (date.Value.Month - 1) / 3 + 1;
-				case DateParts.Month       : return date.Value.Month;
-				case DateParts.DayOfYear   : return date.Value.DayOfYear;
-				case DateParts.Day         : return date.Value.Day;
-				case DateParts.Week        : return CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value, CalendarWeekRule.FirstDay, DayOfWeek.Sunday);
-				case DateParts.WeekDay     : return ((int)date.Value.DayOfWeek + 1 + DateFirst + 6) % 7 + 1;
-				case DateParts.Hour        : return date.Value.Hour;
-				case DateParts.Minute      : return date.Value.Minute;
-				case DateParts.Second      : return date.Value.Second;
-				case DateParts.Millisecond : return date.Value.Millisecond;
-			}
-
-			throw new InvalidOperationException();
-		}
-
-		[CLSCompliant(false)]
-		[Sql.Function]
-		[Sql.Function(PN.MySql, "TIMESTAMPDIFF")]
-		[Sql.DatePart(PN.SapHana, "{0}", true, new[] { null, null, null, null, "Days_Between({0}, {1})", null, null, "Seconds_Between({0}, {1}) / 3600", "Seconds_Between({0}, {1}) / 60", "Seconds_Between({0}, {1})", "Nano100_Between({0}, {1}) / 10000" }, 0, 1, 2)]
-		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
-		{
-			if (startDate == null || endDate == null)
-				return null;
-
-			switch (part)
-			{
-				case DateParts.Day         : return (int)(endDate - startDate).Value.TotalDays;
-				case DateParts.Hour        : return (int)(endDate - startDate).Value.TotalHours;
-				case DateParts.Minute      : return (int)(endDate - startDate).Value.TotalMinutes;
-				case DateParts.Second      : return (int)(endDate - startDate).Value.TotalSeconds;
-				case DateParts.Millisecond : return (int)(endDate - startDate).Value.TotalMilliseconds;
-			}
-
-			throw new InvalidOperationException();
-		}
-
-		[Sql.Property("@@DATEFIRST")]
+		[Sql.Property("@@DATEFIRST", CanBeNull = false)]
 		public static int DateFirst => 7;
 
 		[Sql.Function]
@@ -1090,6 +969,7 @@ namespace LinqToDB
 
 		#region Text Functions
 
+		[Obsolete("Use Sql.Ext.SqlServer().FreeText methods")]
 		[Sql.Expression("FREETEXT({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
 		public static bool FreeText(object table, string text)
 		{

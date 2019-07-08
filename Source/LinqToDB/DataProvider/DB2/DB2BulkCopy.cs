@@ -24,17 +24,18 @@ namespace LinqToDB.DataProvider.DB2
 		Action<object,Action<object>>       _bulkCopySubscriber;
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection  dataConnection,
+			[JetBrains.Annotations.NotNull] ITable<T> table,
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
-			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (!(table?.DataContext is DataConnection dataConnection))
+				throw new ArgumentNullException(nameof(dataConnection));
 
 			if (dataConnection.Transaction == null)
 			{
-				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
+				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 				var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-				var tableName  = GetTableName(sqlBuilder, options, descriptor);
+				var tableName  = GetTableName(sqlBuilder, options, table);
 
 				if (_bulkCopyCreator == null)
 				{
@@ -110,15 +111,17 @@ namespace LinqToDB.DataProvider.DB2
 				}
 			}
 
-			return MultipleRowsCopy(dataConnection, options, source);
+			return MultipleRowsCopy(table, options, source);
 		}
 
-		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
-				return MultipleRowsCopy2(dataConnection, options, source, " FROM SYSIBM.SYSDUMMY1");
+			var dataConnection = (DataConnection)table.DataContext;
 
-			return MultipleRowsCopy1(dataConnection, options, source);
+			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
+				return MultipleRowsCopy2(table, options, source, " FROM SYSIBM.SYSDUMMY1");
+
+			return MultipleRowsCopy1(table, options, source);
 		}
 	}
 }

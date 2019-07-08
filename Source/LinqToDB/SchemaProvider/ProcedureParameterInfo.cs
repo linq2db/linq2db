@@ -48,5 +48,21 @@ namespace LinqToDB.SchemaProvider
 		/// Gets or sets return value parameter flag.
 		/// </summary>
 		public bool   IsResult;
+		/// <summary>
+		/// Parameter's user-defined type(UDT) catalog/database.
+		/// </summary>
+		public string UDTCatalog;
+		/// <summary>
+		/// Parameter's user-defined type(UDT) schema/owner.
+		/// </summary>
+		public string UDTSchema;
+		/// <summary>
+		/// Parameter's user-defined type(UDT) name.
+		/// </summary>
+		public string UDTName;
+		/// <summary>
+		/// Gets flag indicating that it is nullable parameter.
+		/// </summary>
+		public bool IsNullable;
 	}
 }

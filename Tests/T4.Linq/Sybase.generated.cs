@@ -4,19 +4,21 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 namespace SybaseDataContext
 {
-	/// <summary>
-	/// Database       : TestData
-	/// Data Source    : DBHost
-	/// Server Version : 16.0.0
-	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
@@ -34,61 +36,65 @@ namespace SybaseDataContext
 		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestMergeIdentity> TestMergeIdentities { get { return this.GetTable<TestMergeIdentity>(); } }
 
 		public TestDataDB()
 		{
 			InitDataContext();
+			InitMappingSchema();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
+			InitMappingSchema();
 		}
 
-		partial void InitDataContext();
+		partial void InitDataContext  ();
+		partial void InitMappingSchema();
 	}
 
 	[Table(Schema="dbo", Name="AllTypes")]
 	public partial class AllType
 	{
-		[Column(),                                                               Identity   ] public int       ID                    { get; set; } // int
-		[Column(@"bigintDataType"),                                                 Nullable] public long?     BigintDataType        { get; set; } // bigint
-		[Column(@"uBigintDataType"),                                                Nullable] public object    UBigintDataType       { get; set; } // ubigint
-		[Column(@"numericDataType"),                                                Nullable] public decimal?  NumericDataType       { get; set; } // numeric(18, 0)
-		[Column(@"bitDataType"),                                                 NotNull    ] public bool      BitDataType           { get; set; } // bit
-		[Column(@"smallintDataType"),                                               Nullable] public short?    SmallintDataType      { get; set; } // smallint
-		[Column(@"uSmallintDataType"),                                              Nullable] public object    USmallintDataType     { get; set; } // usmallint
-		[Column(@"decimalDataType"),                                                Nullable] public decimal?  DecimalDataType       { get; set; } // decimal(18, 0)
-		[Column(@"smallmoneyDataType"),                                             Nullable] public decimal?  SmallmoneyDataType    { get; set; } // smallmoney
-		[Column(@"intDataType"),                                                    Nullable] public int?      IntDataType           { get; set; } // int
-		[Column(@"uIntDataType"),                                                   Nullable] public object    UIntDataType          { get; set; } // uint
-		[Column(@"tinyintDataType"),                                                Nullable] public sbyte?    TinyintDataType       { get; set; } // tinyint
-		[Column(@"moneyDataType"),                                                  Nullable] public decimal?  MoneyDataType         { get; set; } // money
-		[Column(@"floatDataType"),                                                  Nullable] public double?   FloatDataType         { get; set; } // float
-		[Column(@"realDataType"),                                                   Nullable] public float?    RealDataType          { get; set; } // real
-		[Column(@"datetimeDataType"),                                               Nullable] public DateTime? DatetimeDataType      { get; set; } // datetime
-		[Column(@"smalldatetimeDataType"),                                          Nullable] public DateTime? SmalldatetimeDataType { get; set; } // smalldatetime
-		[Column(@"dateDataType"),                                                   Nullable] public object    DateDataType          { get; set; } // date
-		[Column(@"timeDataType"),                                                   Nullable] public object    TimeDataType          { get; set; } // time
-		[Column(@"charDataType"),                                                   Nullable] public char?     CharDataType          { get; set; } // char(1)
-		[Column(@"char20DataType"),                                                 Nullable] public string    Char20DataType        { get; set; } // char(20)
-		[Column(@"varcharDataType"),                                                Nullable] public string    VarcharDataType       { get; set; } // varchar(20)
-		[Column(@"textDataType"),                                                   Nullable] public string    TextDataType          { get; set; } // text
-		[Column(@"ncharDataType"),                                                  Nullable] public string    NcharDataType         { get; set; } // nchar(60)
-		[Column(@"nvarcharDataType"),                                               Nullable] public string    NvarcharDataType      { get; set; } // nvarchar(60)
-		[Column(@"ntextDataType"),                                                  Nullable] public object    NtextDataType         { get; set; } // unitext
-		[Column(@"binaryDataType"),                                                 Nullable] public byte[]    BinaryDataType        { get; set; } // binary(1)
-		[Column(@"varbinaryDataType"),                                              Nullable] public byte[]    VarbinaryDataType     { get; set; } // varbinary(1)
-		[Column(@"imageDataType"),                                                  Nullable] public byte[]    ImageDataType         { get; set; } // image
-		[Column(@"timestampDataType",     SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public byte[]    TimestampDataType     { get; set; } // timestamp
+		[Column(),                                                              Identity   ] public int       ID                    { get; set; } // int
+		[Column("bigintDataType"),                                                 Nullable] public long?     BigintDataType        { get; set; } // bigint
+		[Column("uBigintDataType"),                                                Nullable] public object    UBigintDataType       { get; set; } // ubigint
+		[Column("numericDataType"),                                                Nullable] public decimal?  NumericDataType       { get; set; } // numeric(18, 0)
+		[Column("bitDataType"),                                                 NotNull    ] public bool      BitDataType           { get; set; } // bit
+		[Column("smallintDataType"),                                               Nullable] public short?    SmallintDataType      { get; set; } // smallint
+		[Column("uSmallintDataType"),                                              Nullable] public object    USmallintDataType     { get; set; } // usmallint
+		[Column("decimalDataType"),                                                Nullable] public decimal?  DecimalDataType       { get; set; } // decimal(18, 0)
+		[Column("smallmoneyDataType"),                                             Nullable] public decimal?  SmallmoneyDataType    { get; set; } // smallmoney
+		[Column("intDataType"),                                                    Nullable] public int?      IntDataType           { get; set; } // int
+		[Column("uIntDataType"),                                                   Nullable] public object    UIntDataType          { get; set; } // uint
+		[Column("tinyintDataType"),                                                Nullable] public sbyte?    TinyintDataType       { get; set; } // tinyint
+		[Column("moneyDataType"),                                                  Nullable] public decimal?  MoneyDataType         { get; set; } // money
+		[Column("floatDataType"),                                                  Nullable] public double?   FloatDataType         { get; set; } // float
+		[Column("realDataType"),                                                   Nullable] public float?    RealDataType          { get; set; } // real
+		[Column("datetimeDataType"),                                               Nullable] public DateTime? DatetimeDataType      { get; set; } // datetime
+		[Column("smalldatetimeDataType"),                                          Nullable] public DateTime? SmalldatetimeDataType { get; set; } // smalldatetime
+		[Column("dateDataType"),                                                   Nullable] public object    DateDataType          { get; set; } // date
+		[Column("timeDataType"),                                                   Nullable] public object    TimeDataType          { get; set; } // time
+		[Column("charDataType"),                                                   Nullable] public char?     CharDataType          { get; set; } // char(1)
+		[Column("char20DataType"),                                                 Nullable] public string    Char20DataType        { get; set; } // char(20)
+		[Column("varcharDataType"),                                                Nullable] public string    VarcharDataType       { get; set; } // varchar(20)
+		[Column("textDataType"),                                                   Nullable] public string    TextDataType          { get; set; } // text
+		[Column("ncharDataType"),                                                  Nullable] public string    NcharDataType         { get; set; } // nchar(60)
+		[Column("nvarcharDataType"),                                               Nullable] public string    NvarcharDataType      { get; set; } // nvarchar(60)
+		[Column("ntextDataType"),                                                  Nullable] public object    NtextDataType         { get; set; } // unitext
+		[Column("binaryDataType"),                                                 Nullable] public byte[]    BinaryDataType        { get; set; } // binary(1)
+		[Column("varbinaryDataType"),                                              Nullable] public char?     VarbinaryDataType     { get; set; } // varbinary(1)
+		[Column("imageDataType"),                                                  Nullable] public byte[]    ImageDataType         { get; set; } // image
+		[Column("timestampDataType",     SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public byte[]    TimestampDataType     { get; set; } // timestamp
 	}
 
 	[Table(Schema="dbo", Name="Child")]
 	public partial class Child
 	{
-		[Column, NotNull] public int ParentID { get; set; } // int
-		[Column, NotNull] public int ChildID  { get; set; } // int
+		[Column, Nullable] public int? ParentID { get; set; } // int
+		[Column, Nullable] public int? ChildID  { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="Doctor")]
@@ -111,9 +117,9 @@ namespace SybaseDataContext
 	[Table(Schema="dbo", Name="GrandChild")]
 	public partial class GrandChild
 	{
-		[Column, NotNull] public int ParentID     { get; set; } // int
-		[Column, NotNull] public int ChildID      { get; set; } // int
-		[Column, NotNull] public int GrandChildID { get; set; } // int
+		[Column, Nullable] public int? ParentID     { get; set; } // int
+		[Column, Nullable] public int? ChildID      { get; set; } // int
+		[Column, Nullable] public int? GrandChildID { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="InheritanceChild")]
@@ -152,8 +158,8 @@ namespace SybaseDataContext
 	[Table(Schema="dbo", Name="Parent")]
 	public partial class Parent
 	{
-		[Column, NotNull    ] public int  ParentID { get; set; } // int
-		[Column,    Nullable] public int? Value1   { get; set; } // int
+		[Column, Nullable] public int? ParentID { get; set; } // int
+		[Column, Nullable] public int? Value1   { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="Patient")]
@@ -219,35 +225,35 @@ namespace SybaseDataContext
 		[Column, NotNull    ] public int      seltrig   { get; set; } // int
 		[Column, NotNull    ] public int      ckfirst   { get; set; } // int
 		[Column, NotNull    ] public short    cache     { get; set; } // smallint
-		[Column,    Nullable] public int      audflags  { get; set; } // int
+		[Column,    Nullable] public int?     audflags  { get; set; } // int
 		[Column, NotNull    ] public int      objspare  { get; set; } // int
 		[Column,    Nullable] public byte[]   versionts { get; set; } // binary
-		[Column, NotNull    ] public string   loginame  { get; set; } // varchar
+		[Column,    Nullable] public string   loginame  { get; set; } // varchar
 	}
 
 	[Table(Schema="dbo", Name="sysquerymetrics", IsView=true)]
 	public partial class Sysquerymetric
 	{
-		[Column(@"uid"),       NotNull    ] public int    Uid      { get; set; } // int
-		[Column(@"gid"),       NotNull    ] public int    Gid      { get; set; } // int
-		[Column(@"hashkey"),   NotNull    ] public int    Hashkey  { get; set; } // int
-		[Column(@"id"),        NotNull    ] public int    Id       { get; set; } // int
-		[Column(@"sequence"),  NotNull    ] public short  Sequence { get; set; } // smallint
-		[Column(@"exec_min"),     Nullable] public object ExecMin  { get; set; } // ubigint
-		[Column(@"exec_max"),     Nullable] public object ExecMax  { get; set; } // ubigint
-		[Column(@"exec_avg"),     Nullable] public object ExecAvg  { get; set; } // ubigint
-		[Column(@"elap_min"),     Nullable] public object ElapMin  { get; set; } // ubigint
-		[Column(@"elap_max"),     Nullable] public object ElapMax  { get; set; } // ubigint
-		[Column(@"elap_avg"),     Nullable] public object ElapAvg  { get; set; } // ubigint
-		[Column(@"lio_min"),      Nullable] public object LioMin   { get; set; } // ubigint
-		[Column(@"lio_max"),      Nullable] public object LioMax   { get; set; } // ubigint
-		[Column(@"lio_avg"),      Nullable] public object LioAvg   { get; set; } // ubigint
-		[Column(@"pio_min"),      Nullable] public object PioMin   { get; set; } // ubigint
-		[Column(@"pio_max"),      Nullable] public object PioMax   { get; set; } // ubigint
-		[Column(@"pio_avg"),      Nullable] public object PioAvg   { get; set; } // ubigint
-		[Column(@"cnt"),          Nullable] public object Cnt      { get; set; } // ubigint
-		[Column(@"abort_cnt"),    Nullable] public object AbortCnt { get; set; } // ubigint
-		[Column(@"qtext"),        Nullable] public string Qtext    { get; set; } // varchar(510)
+		[Column("uid"),       NotNull    ] public int    Uid      { get; set; } // int
+		[Column("gid"),       NotNull    ] public int    Gid      { get; set; } // int
+		[Column("hashkey"),   NotNull    ] public int    Hashkey  { get; set; } // int
+		[Column("id"),        NotNull    ] public int    Id       { get; set; } // int
+		[Column("sequence"),  NotNull    ] public short  Sequence { get; set; } // smallint
+		[Column("exec_min"),     Nullable] public object ExecMin  { get; set; } // ubigint
+		[Column("exec_max"),     Nullable] public object ExecMax  { get; set; } // ubigint
+		[Column("exec_avg"),     Nullable] public object ExecAvg  { get; set; } // ubigint
+		[Column("elap_min"),     Nullable] public object ElapMin  { get; set; } // ubigint
+		[Column("elap_max"),     Nullable] public object ElapMax  { get; set; } // ubigint
+		[Column("elap_avg"),     Nullable] public object ElapAvg  { get; set; } // ubigint
+		[Column("lio_min"),      Nullable] public object LioMin   { get; set; } // ubigint
+		[Column("lio_max"),      Nullable] public object LioMax   { get; set; } // ubigint
+		[Column("lio_avg"),      Nullable] public object LioAvg   { get; set; } // ubigint
+		[Column("pio_min"),      Nullable] public object PioMin   { get; set; } // ubigint
+		[Column("pio_max"),      Nullable] public object PioMax   { get; set; } // ubigint
+		[Column("pio_avg"),      Nullable] public object PioAvg   { get; set; } // ubigint
+		[Column("cnt"),          Nullable] public object Cnt      { get; set; } // ubigint
+		[Column("abort_cnt"),    Nullable] public object AbortCnt { get; set; } // ubigint
+		[Column("qtext"),        Nullable] public string Qtext    { get; set; } // varchar(510)
 	}
 
 	[Table(Schema="dbo", Name="TestIdentity")]
@@ -273,7 +279,7 @@ namespace SybaseDataContext
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
-		[Column,        Nullable] public byte[]    FieldBinary     { get; set; } // varbinary(20)
+		[Column,        Nullable] public string    FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public string    FieldGuid       { get; set; } // char(36)
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // decimal(24, 10)
 		[Column,        Nullable] public object    FieldDate       { get; set; } // date
@@ -299,13 +305,20 @@ namespace SybaseDataContext
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
-		[Column,        Nullable] public byte[]    FieldBinary     { get; set; } // varbinary(20)
+		[Column,        Nullable] public string    FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public string    FieldGuid       { get; set; } // char(36)
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // decimal(24, 10)
 		[Column,        Nullable] public object    FieldDate       { get; set; } // date
 		[Column,        Nullable] public object    FieldTime       { get; set; } // time
 		[Column,        Nullable] public string    FieldEnumString { get; set; } // varchar(20)
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // int
+	}
+
+	[Table(Schema="dbo", Name="TestMergeIdentity")]
+	public partial class TestMergeIdentity
+	{
+		[PrimaryKey, Identity] public int  Id    { get; set; } // int
+		[Column,     Nullable] public int? Field { get; set; } // int
 	}
 
 	public static partial class TableExtensions
@@ -357,5 +370,13 @@ namespace SybaseDataContext
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
+
+		public static TestMergeIdentity Find(this ITable<TestMergeIdentity> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
 	}
 }
+
+#pragma warning restore 1591

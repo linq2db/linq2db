@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
-	using Common;
 	using Data;
 	using Linq;
 	using Mapping;
@@ -33,7 +32,7 @@ namespace LinqToDB.DataProvider
 		protected List<DataParameter> Parameters    = new List<DataParameter>();
 		protected List<ColumnInfo>    Columns;
 
-		protected virtual bool IsIdentitySupported { get { return false; } }
+		protected virtual bool IsIdentitySupported => false;
 
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -53,7 +52,7 @@ namespace LinqToDB.DataProvider
 			if (!BuildCommand(dataConnection, predicate, delete, source, tableName, databaseName, schemaName))
 				return 0;
 
-			return await ExecuteAsync(dataConnection, token);
+			return await ExecuteAsync(dataConnection, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -79,7 +78,7 @@ namespace LinqToDB.DataProvider
 			where T : class
 		{
 			var table      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
+			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 
 			Columns = table.Columns
 				.Select(c => new ColumnInfo
@@ -318,7 +317,7 @@ namespace LinqToDB.DataProvider
 		protected virtual bool BuildUsing<T>(DataConnection dataConnection, IEnumerable<T> source)
 		{
 			var table          = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var sqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder();
+			var sqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			var pname          = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 			var valueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
 
@@ -328,7 +327,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine("\tVALUES")
 				;
 
-			var pidx  = 0;
+			var pidx = 0;
 
 			var hasData     = false;
 			var columnTypes = table.Columns
@@ -352,7 +351,7 @@ namespace LinqToDB.DataProvider
 
 						StringBuilder.Append(name);
 						Parameters.Add(new DataParameter(pname == "?" ? pname : "p" + pidx, value,
-							column.DataType));
+							column.DataType, column.DbType) { Size = column.Length });
 					}
 
 					StringBuilder.Append(",");
@@ -401,7 +400,7 @@ namespace LinqToDB.DataProvider
 		protected bool BuildUsing2<T>(DataConnection dataConnection, IEnumerable<T> source, string top, string fromDummyTable)
 		{
 			var table          = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var sqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder();
+			var sqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			var pname          = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 			var valueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
 
@@ -410,7 +409,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine("(")
 				;
 
-			var pidx  = 0;
+			var pidx = 0;
 
 			var hasData     = false;
 			var columnTypes = table.Columns
@@ -438,7 +437,7 @@ namespace LinqToDB.DataProvider
 
 						StringBuilder.Append(name);
 						Parameters.Add(new DataParameter(pname == "?" ? pname : "p" + pidx, value,
-							column.Column.DataType));
+							column.Column.DataType, column.Column.DbType) { Size = column.Column.Length });
 					}
 
 					if (!hasData)

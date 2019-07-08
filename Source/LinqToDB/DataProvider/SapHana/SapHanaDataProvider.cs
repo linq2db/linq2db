@@ -9,7 +9,6 @@ namespace LinqToDB.DataProvider.SapHana
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
-	using System.Data.Common;
 
 	public class SapHanaDataProvider : DynamicDataProviderBase
 	{
@@ -21,15 +20,17 @@ namespace LinqToDB.DataProvider.SapHana
 		protected SapHanaDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.IsParameterOrderDependent = true;
+
 			//supported flags
-			SqlProviderFlags.IsCountSubQuerySupported = true;
+			SqlProviderFlags.IsCountSubQuerySupported  = true;
 
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
 			//when expression returns more than 1 row
 			//mark this as supported, it's better to throw exception
 			//instead of replace with left join, in which case returns incorrect data
-			SqlProviderFlags.IsSubQueryColumnSupported = true;
+			SqlProviderFlags.IsSubQueryColumnSupported  = true;
 
 			SqlProviderFlags.IsTakeSupported            = true;
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
@@ -52,10 +53,10 @@ namespace LinqToDB.DataProvider.SapHana
 		public override string DbFactoryProviderName => "Sap.Data.Hana";
 #endif
 
-		static Action<IDbDataParameter> _setText;
-		static Action<IDbDataParameter> _setNText;
-		static Action<IDbDataParameter> _setBlob;
-		static Action<IDbDataParameter> _setVarBinary;
+		Action<IDbDataParameter> _setText;
+		Action<IDbDataParameter> _setNText;
+		Action<IDbDataParameter> _setBlob;
+		Action<IDbDataParameter> _setVarBinary;
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
@@ -75,9 +76,9 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 #endif
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SapHanaSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+			return new SapHanaSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -87,12 +88,12 @@ namespace LinqToDB.DataProvider.SapHana
 			return _sqlOptimizer;
 		}
 
-		public override Type ConvertParameterType(Type type, DataType dataType)
+		public override Type ConvertParameterType(Type type, DbDataType dataType)
 		{
 			if (type.IsNullable())
 				type = type.ToUnderlying();
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.NChar:
 				case DataType.Char:
@@ -105,19 +106,19 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Boolean:
-					dataType = DataType.Byte;
-					if (value is bool)
-						value = (bool)value ? (byte)1 : (byte)0;
+					dataType = dataType.WithDataType(DataType.Byte);
+					if (value is bool b)
+						value = b ? (byte)1 : (byte)0;
 					break;
 				case DataType.Guid:
 					if (value != null)
 						value = value.ToString();
-					dataType = DataType.Char;
+					dataType = dataType.WithDataType(DataType.Char);
 					parameter.Size = 36;
 					break;
 			}
@@ -125,12 +126,12 @@ namespace LinqToDB.DataProvider.SapHana
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Text  : _setText(parameter);      break;
 				case DataType.Image : _setBlob(parameter);      break;
@@ -141,11 +142,11 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new SapHanaBulkCopy(this, GetConnectionType()).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}
@@ -155,6 +156,12 @@ namespace LinqToDB.DataProvider.SapHana
 			IMergeable<TTarget, TSource> merge)
 		{
 			return new SapHanaMergeBuilder<TTarget, TSource>(connection, merge);
+		}
+
+		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			// provider fails to set AllowDBNull for some results
+			return true;
 		}
 	}
 }

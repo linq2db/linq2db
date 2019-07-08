@@ -92,11 +92,11 @@ namespace LinqToDB.DataProvider.Informix
 
 			if (!Configuration.AvoidSpecificDataProviderAPI)
 			{
-				SetField(typeof(Int64), "BIGINT", "GetBigInt");
+				SetField(typeof(Int64), "BIGINT", "GetBigInt", false);
 
 				SetProviderField(_ifxDecimal,  typeof(decimal),  "GetIfxDecimal");
 				SetProviderField(_ifxDateTime, typeof(DateTime), "GetIfxDateTime");
-				SetProviderField(_ifxTimeSpan, typeof(TimeSpan), "GetIfxTimeSpan");
+				SetProviderField(_ifxTimeSpan, typeof(TimeSpan), "GetIfxTimeSpan", false);
 			}
 
 			var p = Expression.Parameter(typeof(TimeSpan));
@@ -138,9 +138,9 @@ namespace LinqToDB.DataProvider.Informix
 		public override string DbFactoryProviderName => "IBM.Data.Informix";
 #endif
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -159,38 +159,38 @@ namespace LinqToDB.DataProvider.Informix
 
 		Func<TimeSpan,object> _newIfxTimeSpan;
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			if (value is TimeSpan)
+			if (value is TimeSpan ts)
 			{
-				if (dataType != DataType.Int64)
-					value = _newIfxTimeSpan((TimeSpan)value);
+				if (dataType.DataType != DataType.Int64)
+					value = _newIfxTimeSpan(ts);
 			}
-			else if (value is Guid || value == null && dataType == DataType.Guid)
+			else if (value is Guid || value == null && dataType.DataType == DataType.Guid)
 			{
 				value    = value?.ToString();
-				dataType = DataType.Char;
+				dataType = dataType.WithDataType(DataType.Char);
 			}
-			else if (value is bool)
+			else if (value is bool b)
 			{
-				value = (bool)value ? 't' : 'f';
-				dataType = DataType.Char;
+				value = b ? 't' : 'f';
+				dataType = dataType.WithDataType(DataType.Char);
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		static Action<IDbDataParameter> _setText;
+		Action<IDbDataParameter> _setText;
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
-				case DataType.UInt16    : dataType = DataType.Int32;    break;
-				case DataType.UInt32    : dataType = DataType.Int64;    break;
-				case DataType.UInt64    : dataType = DataType.Decimal;  break;
-				case DataType.VarNumeric: dataType = DataType.Decimal;  break;
-				case DataType.DateTime2 : dataType = DataType.DateTime; break;
+				case DataType.UInt16    : dataType = dataType.WithDataType(DataType.Int32);    break;
+				case DataType.UInt32    : dataType = dataType.WithDataType(DataType.Int64);    break;
+				case DataType.UInt64    : dataType = dataType.WithDataType(DataType.Decimal);  break;
+				case DataType.VarNumeric: dataType = dataType.WithDataType(DataType.Decimal);  break;
+				case DataType.DateTime2 : dataType = dataType.WithDataType(DataType.DateTime); break;
 				case DataType.Text      : _setText(parameter); return;
 				case DataType.NText     : _setText(parameter); return;
 			}
@@ -201,11 +201,11 @@ namespace LinqToDB.DataProvider.Informix
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new InformixBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,
-				dataConnection,
+				table,
 				options,
 				source);
 		}

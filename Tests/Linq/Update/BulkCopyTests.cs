@@ -1,16 +1,19 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Tests.Model;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
+	using Model;
 
 	[TestFixture]
+	[Order(10000)]
 	public class BulkCopyTests : TestBase
 	{
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
@@ -101,7 +104,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue("Unsupported column datatype", Configuration = ProviderName.OracleNative)]
+		[ActiveIssue("Unsupported column datatype for BulkCopyType.ProviderSpecific", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void KeepIdentity_SkipOnInsertFalse(
 			[DataSources(false)]string context,
@@ -204,6 +207,20 @@ namespace Tests.xUpdate
 
 			perform();
 			return true;
+		}
+
+		[Test]
+		public void ReuseOptionTest([DataSources(false)]string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.BeginTransaction();
+
+				var options = new BulkCopyOptions();
+
+				db.Parent.BulkCopy(options, new [] { new Parent { ParentID = 111001 } });
+				db.Child. BulkCopy(options, new [] { new Child  { ParentID = 111001 } });
+			}
 		}
 	}
 }

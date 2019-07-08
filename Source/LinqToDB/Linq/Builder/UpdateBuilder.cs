@@ -362,10 +362,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var member = MemberHelper.GetMemberInfo(extract.Body);
 
-			var ext = extract.Body;
-
-			while (ext.NodeType == ExpressionType.Convert || ext.NodeType == ExpressionType.ConvertChecked)
-				ext = ((UnaryExpression)ext).Operand;
+			var ext = extract.Body.Unwrap();
 
 			var rootObject = ext.GetRootObject(builder.MappingSchema);
 
@@ -421,31 +418,55 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext                   select,
 			List<SqlSetExpression> items)
 		{
-			var ext = extract.Body;
+			var ext        = extract.Body.Unwrap();
+			var rootObject = ext.GetRootObject(builder.MappingSchema);
+
+			ISqlExpression columnSql;
+			MemberInfo     member;
+			if (ext.NodeType == ExpressionType.MemberAccess)
+			{
+				var body = (MemberExpression)ext;
+
+				member = body.Member;
+
+				if (!member.IsPropertyEx() && !member.IsFieldEx() || rootObject != extract.Parameters[0])
+					throw new LinqException("Member expression expected for the 'Set' statement.");
+
+				if (member is MethodInfo)
+					member = ((MethodInfo)member).GetPropertyInfo();
+
+				var columnExpr = body;
+				var column     = select.ConvertToSql(columnExpr, 1, ConvertFlags.Field);
+
+				if (column.Length == 0)
+					throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType?.Name, member.Name);
+				columnSql = column[0].Sql;
+			}
+			else
+			{
+				member = MemberHelper.GetMemberInfo(ext);
+				if (member == null)
+					throw new LinqException("Member expression expected for the 'Set' statement.");
+
+				var memberExpr = Expression.MakeMemberAccess(rootObject, member);
+				var column     = select.ConvertToSql(memberExpr, 1, ConvertFlags.Field);
+				if (column.Length == 0)
+					throw new LinqException($"Expression '{ext}' is not a table column.");
+				columnSql = column[0].Sql;
+			}
+
+			var memberType = member.GetMemberType().ToNullableUnderlying();
+			var updateType = update.Type.ToNullableUnderlying();
+			if (memberType.IsEnumEx() && updateType != memberType)
+				update = Expression.Convert(update, member.GetMemberType());
 
 			if (!update.Type.IsConstantable() && !builder.AsParameters.Contains(update))
 				builder.AsParameters.Add(update);
 
-			while (ext.NodeType == ExpressionType.Convert || ext.NodeType == ExpressionType.ConvertChecked)
-				ext = ((UnaryExpression)ext).Operand;
-
-			if (ext.NodeType != ExpressionType.MemberAccess || ext.GetRootObject(builder.MappingSchema) != extract.Parameters[0])
-				throw new LinqException("Member expression expected for the 'Set' statement.");
-
-			var body   = (MemberExpression)ext;
-			var member = body.Member;
-
-			if (member is MethodInfo)
-				member = ((MethodInfo)member).GetPropertyInfo();
-
-			var column = select.ConvertToSql(body, 1, ConvertFlags.Field);
-
-			if (column.Length == 0)
-				throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType?.Name, member.Name);
 
 			var expr = builder.ConvertToSql(select, update);
 
-			items.Add(new SqlSetExpression(column[0].Sql, expr));
+			items.Add(new SqlSetExpression(columnSql, expr));
 		}
 
 		#endregion

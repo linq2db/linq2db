@@ -58,10 +58,7 @@ namespace LinqToDB.DataProvider.Sybase
 				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
-				{
-					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-				}
+					wrap = expr is SqlExpression ex && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
@@ -80,9 +77,20 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime2 : StringBuilder.Append("DateTime");       break;
-				default                 : base.BuildDataType(type, createDbType); break;
+				case DataType.DateTime2 : StringBuilder.Append("DateTime");       return;
+				case DataType.NVarChar:
+					// yep, 5461...
+					if (type.Length == null || type.Length > 5461 || type.Length < 1)
+					{
+						StringBuilder
+							.Append(type.DataType)
+							.Append("(5461)");
+						return;
+					}
+					break;
 			}
+
+			base.BuildDataType(type, createDbType);
 		}
 
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)

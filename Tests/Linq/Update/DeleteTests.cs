@@ -15,10 +15,11 @@ namespace Tests.xUpdate
 	using Model;
 
 	[TestFixture]
+	[Order(10000)]
 	public class DeleteTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Delete1(string context)
+		[Test]
+		public void Delete1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -40,8 +41,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Delete2(string context)
+		[Test]
+		public void Delete2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -63,8 +64,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Delete3(string context)
+		[Test]
+		public void Delete3([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -86,8 +87,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Delete4(string context)
+		[Test]
+		public void Delete4([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -109,8 +110,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Delete5(string context)
+		[Test]
+		public void Delete5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -134,8 +135,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Informix)]
-		public void AlterDelete(string context)
+		[Test]
+		public void AlterDelete([DataSources(false, ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -155,10 +156,19 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana)]
-		public void DeleteMany1(string context)
+		[Test]
+		public void DeleteMany1(
+			[DataSources(
+				ProviderName.Access,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				ProviderName.SqlCe,
+				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -185,11 +195,19 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana
-			)]
-		public void DeleteMany2(string context)
+		[Test]
+		public void DeleteMany2(
+			[DataSources(
+				ProviderName.Access,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
+				ProviderName.SqlCe,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -225,11 +243,19 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana
-			)]
-		public void DeleteMany3(string context)
+		[Test]
+		public void DeleteMany3(
+			[DataSources(
+				ProviderName.Access,
+				ProviderName.DB2,
+				ProviderName.Informix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
+				ProviderName.SqlCe,
+				ProviderName.SapHana)]
+			string context)
 		{
 			var ids = new[] { 1001 };
 
@@ -264,23 +290,20 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access,
-			ProviderName.DB2,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
-			ProviderName.Informix,
-			ProviderName.MySql,
-			TestProvName.MariaDB,
-			TestProvName.MySql57,
-			ProviderName.PostgreSQL,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS,
-			ProviderName.SqlCe,
-			ProviderName.SqlServer2000,
-			ProviderName.SapHana
-			)]
-		public void DeleteTop(string context)
+		[Test]
+		public void DeleteTop(
+			[DataSources(
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
+				ProviderName.Informix,
+				TestProvName.AllMySql,
+				ProviderName.SqlCe,
+				ProviderName.SqlServer2000,
+				ProviderName.SapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -319,8 +342,8 @@ namespace Tests.xUpdate
 			return db.LastQuery;
 		}
 
-		[Test, DataContextSource(false, ProviderName.Informix)]
-		public void ContainsJoin1(string context)
+		[Test]
+		public void ContainsJoin1([DataSources(false, ProviderName.Informix)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -349,8 +372,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Informix)]
-		public void MultipleDelete(string context)
+		[Test]
+		public void MultipleDelete([DataSources(false, ProviderName.Informix)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -373,19 +396,17 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
-		[Test, DataContextSource]
-		public void DeleteByTableName(string context)
+		[Test]
+		public void DeleteByTableName([DataSources] string context)
 		{
-			const string schemaName = null;
-			var tableName  = "xxPerson" + TestUtils.GetNext().ToString();
+			var tableName  = InsertTests.GetTableName(context, "1a");
 
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateTempTable<Person>(tableName, schemaName: schemaName))
+			using (var table = db.CreateLocalTable<Person>(tableName))
 			{
 				var iTable = (ITable<Person>)table;
-				Assert.AreEqual(tableName,  iTable.TableName);
-				Assert.AreEqual(schemaName, iTable.SchemaName);
+				Assert.AreEqual(tableName, iTable.TableName);
+				Assert.AreEqual(null,      iTable.SchemaName);
 
 				var person = new Person()
 				{
@@ -395,27 +416,28 @@ namespace Tests.xUpdate
 				};
 
 				// insert a row into the table
-				db.Insert(person, tableName: tableName, schemaName: schemaName);
+				db.Insert(person, tableName);
 				var newCount = table.Count();
 				Assert.AreEqual(1, newCount);
 
 				var personForDelete = table.Single();
 
-				db.Delete(personForDelete, tableName: tableName, schemaName: schemaName);
+				db.Delete(personForDelete, tableName);
 
 				Assert.AreEqual(0, table.Count());
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
-		[Test, DataContextSource]
-		public async Task DeleteByTableNameAsync(string context)
+		[Test]
+		public async Task DeleteByTableNameAsync([DataSources] string context)
 		{
 			const string schemaName = null;
-			const string tableName  = "xxPerson";
+			var tableName  = InsertTests.GetTableName(context, "30");
 
 			using (var db = GetDataContext(context))
 			{
+				await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists:false);
+
 				try
 				{
 					var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);

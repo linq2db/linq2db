@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider
 {
 	using Data;
 	using Mapping;
+	using Common;
 	using SchemaProvider;
 	using SqlProvider;
 
@@ -20,15 +21,23 @@ namespace LinqToDB.DataProvider
 		MappingSchema      MappingSchema         { get; }
 		SqlProviderFlags   SqlProviderFlags      { get; }
 		IDbConnection      CreateConnection      (string connectionString);
-		ISqlBuilder        CreateSqlBuilder      ();
+		ISqlBuilder        CreateSqlBuilder      (MappingSchema mappingSchema);
 		ISqlOptimizer      GetSqlOptimizer       ();
-		void               InitCommand           (DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters);
+		/// <summary>
+		/// Initializes <see cref="DataConnection.Command"/> object.
+		/// </summary>
+		/// <param name="dataConnection">Data connection instance to initialize with new command.</param>
+		/// <param name="commandType">Type of command.</param>
+		/// <param name="commandText">Command SQL.</param>
+		/// <param name="parameters">Optional list of parameters to add to initialized command.</param>
+		/// <param name="withParameters">Flag to indicate that command has parameters. Used to configure parameters support when method called without parameters and parameters added later to command.</param>
+		void InitCommand           (DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters);
 		void               DisposeCommand        (DataConnection dataConnection);
 		object             GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?              IsDBNullAllowed       (IDataReader reader, int idx);
-		void               SetParameter          (IDbDataParameter parameter, string name, DataType dataType, object value);
-		Type               ConvertParameterType  (Type type, DataType dataType);
+		void               SetParameter          (IDbDataParameter parameter, string name, DbDataType dataType, object value);
+		Type               ConvertParameterType  (Type type, DbDataType dataType);
 		bool               IsCompatibleConnection(IDbConnection connection);
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);
 		/// <summary>
@@ -45,7 +54,7 @@ namespace LinqToDB.DataProvider
 		ISchemaProvider    GetSchemaProvider     ();
 #endif
 
-		BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source);
+		BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source);
 
 		int Merge<T>(
 			DataConnection           dataConnection,

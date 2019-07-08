@@ -1,12 +1,11 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                       #>
-<#@ output extension=".generated.cs"                                              #>
-<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.MySql.ttinclude"       #>
-<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude" #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\MySql.Data.dll"       #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\linq2db.dll"          #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                  #>
+<#@ output extension=".generated.cs"                                         #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.MySql.ttinclude"  #>
+<#@ include file="Shared.ttinclude"                                          #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\MySql.Data.dll"  #>
 <#
 	NamespaceName = "MySqlDataContext";
 
-	LoadMySqlMetadata("DBHost", "TestData", "root", "TestPassword");
+	LoadMySqlMetadata(GetConnectionString("MySql"));
 	GenerateModel();
 #>

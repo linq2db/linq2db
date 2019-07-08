@@ -69,7 +69,7 @@ namespace LinqToDB.Data
 				return new DataConnection(DataProvider, _connection)
 				{
 					MappingSchema    = MappingSchema,
-					Transaction      = Transaction,
+					TransactionAsync = TransactionAsync,
 					IsMarsEnabled    = IsMarsEnabled,
 					ConnectionString = ConnectionString,
 				};
@@ -79,12 +79,7 @@ namespace LinqToDB.Data
 
 		string IDataContext.ContextID => DataProvider.Name;
 
-		static Func<ISqlBuilder> GetCreateSqlProvider(IDataProvider dp)
-		{
-			return dp.CreateSqlBuilder;
-		}
-
-		Func<ISqlBuilder> IDataContext.CreateSqlProvider => GetCreateSqlProvider(DataProvider);
+		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema);
 
 		static Func<ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
 		{

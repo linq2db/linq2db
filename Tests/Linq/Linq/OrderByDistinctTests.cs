@@ -1,7 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -58,9 +61,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByDistinctTestOrdering(
-			[DataSources(ProviderName.SqlCe)] 
-			string context)
+		public void OrderByDistinctTestOrdering([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var testData = GetUniqueTestData();
 
@@ -180,9 +181,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByDistinctTest(
-			[DataSources(ProviderName.SqlCe)] 
-			string context)
+		public void OrderByDistinctTest([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var testData = GetTestData();
 
@@ -238,9 +237,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByDistinctFailTest(
-			[IncludeDataSources(ProviderName.SqlCe)] 
-			string context)
+		public void OrderByDistinctFailTest([IncludeDataSources(true, ProviderName.SqlCe)] string context)
 		{
 			var testData = GetTestData();
 
@@ -261,9 +258,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByExpressionDistinctTests(
-			[DataSources(ProviderName.SqlCe)] 
-			string context)
+		public void OrderByExpressionDistinctTests([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var testData = GetTestData();
 
@@ -297,7 +292,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void OrderByDistinctNoTransformTests(
-			[DataSources(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
+			[DataSources(TestProvName.AllFirebird, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
 			string context)
 		{
 			var testData = GetTestData();
@@ -327,7 +322,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void OrderByDistinctPartialTransformTests(
-			[DataSources(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
+			[DataSources(TestProvName.AllFirebird, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
 			string context)
 		{
 			var testData = GetTestData();
@@ -364,9 +359,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByUnionOptimization(
-			[DataSources(ProviderName.SqlCe)] 
-			string context)
+		public void OrderByUnionOptimization([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var testData = GetTestData();
 
@@ -415,9 +408,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderBySubQuery(
-			[DataSources(ProviderName.SqlCe)] 
-			string context)
+		public void OrderBySubQuery([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var testData = GetTestData();
 
@@ -454,11 +445,9 @@ namespace Tests.Linq
 
 		}
 
-		
+
 		[Test]
-		public void DoubleOrderBy(
-			[DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)] 
-			string context)
+		public void DoubleOrderBy([DataSources(TestProvName.AllSybase)] string context)
 		{
 			var testData = GetTestData();
 

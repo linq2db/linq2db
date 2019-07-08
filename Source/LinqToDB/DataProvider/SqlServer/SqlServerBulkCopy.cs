@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Linq;
+
 using LinqToDB.Configuration;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -21,21 +21,20 @@ namespace LinqToDB.DataProvider.SqlServer
 		readonly SqlServerDataProvider _dataProvider;
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection,
+			[JetBrains.Annotations.NotNull] ITable<T> table,
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
-			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+			if (!(table?.DataContext is DataConnection dataConnection))
+				throw new ArgumentNullException(nameof(dataConnection));
 
-			if (dataConnection.Connection is DbConnection)
+			if (dataConnection.Connection is DbConnection dbConnection)
 			{
-				var connection = Proxy.GetUnderlyingObject((DbConnection)dataConnection.Connection) as SqlConnection;
-
-				if (connection != null)
+				if (Proxy.GetUnderlyingObject(dbConnection) is SqlConnection connection)
 				{
 					var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 					var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-					var sb      = _dataProvider.CreateSqlBuilder();
+					var sb      = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 					var rd      = new BulkCopyReader(_dataProvider, dataConnection.MappingSchema, columns, source);
 					var sqlopt  = SqlBulkCopyOptions.Default;
 					var rc      = new BulkCopyRowsCopied();
@@ -65,9 +64,8 @@ namespace LinqToDB.DataProvider.SqlServer
 						if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
 						if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-						var sqlBuilder = _dataProvider.CreateSqlBuilder();
-						var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-						var tableName  = GetTableName(sqlBuilder, options, descriptor);
+						var sqlBuilder = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+						var tableName  = GetTableName(sqlBuilder, options, table);
 
 						bc.DestinationTableName = tableName;
 
@@ -94,28 +92,28 @@ namespace LinqToDB.DataProvider.SqlServer
 				}
 			}
 
-			return MultipleRowsCopy(dataConnection, options, source);
+			return MultipleRowsCopy(table, options, source);
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			BulkCopyRowsCopied ret;
 
-			var helper = new MultipleRowsHelper<T>(dataConnection, options);
+			var helper = new MultipleRowsHelper<T>(table, options);
 
 			if (options.KeepIdentity == true)
-				dataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
+				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
 
-			switch (((SqlServerDataProvider)dataConnection.DataProvider).Version)
+			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
 			{
 				case SqlServerVersion.v2000 :
-				case SqlServerVersion.v2005 : ret = MultipleRowsCopy2(helper, dataConnection, options, source, ""); break;
-				default                     : ret = MultipleRowsCopy1(helper, dataConnection, options, source);     break;
+				case SqlServerVersion.v2005 : ret = MultipleRowsCopy2(helper, source, ""); break;
+				default                     : ret = MultipleRowsCopy1(helper, source);     break;
 			}
 
 			if (options.KeepIdentity == true)
-				dataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
+				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
 
 			return ret;
 		}

@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using NUnit.Framework;
@@ -21,8 +25,8 @@ namespace Tests.Data
 	[TestFixture]
 	public class DataConnectionTests : TestBase
 	{
-		[Test, NorthwindDataContext]
-		public void Test1(string context)
+		[Test]
+		public void Test1([NorthwindDataContext] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider = DataConnection.GetDataProvider(context);
@@ -44,14 +48,15 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, IncludeDataContextSource(
+		[Test]
+		public void Test3([IncludeDataSources(
 			ProviderName.SqlServer,
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2008 + ".1",
 			ProviderName.SqlServer2005,
 			ProviderName.SqlServer2005 + ".1",
 			ProviderName.Access)]
-		public void Test3(string context)
+			string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -83,8 +88,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, DataContextSource(false)]
-		public void CloneTest(string context)
+		[Test]
+		public void CloneTest([DataSources(false)] string context)
 		{
 			using (var con = new DataConnection(context))
 			{
@@ -96,9 +101,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, IncludeDataContextSource(false,
-			 ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void GetDataProviderTest(string context)
+		[Test]
+		public void GetDataProviderTest([IncludeDataSources(ProviderName.DB2, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 
@@ -190,6 +194,24 @@ namespace Tests.Data
 
 					break;
 				}
+
+				case ProviderName.SqlServer2017:
+					{
+						dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2017", connectionString);
+
+						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+
+						var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+
+						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2017));
+
+						dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+						sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+
+						Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2017));
+
+						break;
+					}
 			}
 		}
 
@@ -244,5 +266,172 @@ namespace Tests.Data
 				await conn.SelectAsync(() => 1);
 			}
 		}
+
+		// informix connection limits interfere with test
+		[Test]
+		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
+		public void MultipleConnectionsTest([DataSources(ProviderName.Informix)] string context)
+		{
+			var exceptions = new ConcurrentBag<Exception>();
+
+			var threads = Enumerable
+				.Range(1, 10)
+				.Select(n => new Thread(() =>
+				{
+					try
+					{
+						using (var db = GetDataContext(context))
+							db.Parent.ToList();
+					}
+					catch (Exception e)
+					{
+						exceptions.Add(e);
+					}
+				}))
+				.ToArray();
+
+			foreach (var thread in threads) thread.Start();
+			foreach (var thread in threads) thread.Join();
+
+			if (exceptions.Count > 0)
+				throw new AggregateException(exceptions);
+		}
+
+		[Test]
+		public async Task DataConnectionCloseAsync([DataSources(false)] string context)
+		{
+			var db = new DataConnection(context);
+
+			try
+			{
+				await db.GetTable<Parent>().ToListAsync();
+			}
+			finally
+			{
+				var tid = Thread.CurrentThread.ManagedThreadId;
+
+				await db.CloseAsync();
+
+				db.Dispose();
+
+				if (tid == Thread.CurrentThread.ManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
+
+		[Test]
+		public async Task DataConnectionDisposeAsync([DataSources(false)] string context)
+		{
+			var db = new DataConnection(context);
+
+			try
+			{
+				await db.GetTable<Parent>().ToListAsync();
+			}
+			finally
+			{
+				var tid = Thread.CurrentThread.ManagedThreadId;
+
+				await db.DisposeAsync();
+
+				if (tid == Thread.CurrentThread.ManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
+
+		[Test]
+		public void TestOnBeforeConnectionOpenEvent()
+		{
+			var open = false;
+			var openAsync = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnBeforeConnectionOpen += (dc, cn) =>
+				{
+					if (cn.State == ConnectionState.Closed)
+						open = true;
+				};
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() =>
+				{
+					if (cn.State == ConnectionState.Closed)
+						openAsync = true;
+				});
+				Assert.False(open);
+				Assert.False(openAsync);
+				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.True(open);
+				Assert.False(openAsync);
+			}
+		}
+
+		[Test]
+		public async Task TestAsyncOnBeforeConnectionOpenEvent()
+		{
+			var open = false;
+			var openAsync = false;
+			using (var conn = new DataConnection())
+			{
+				conn.OnBeforeConnectionOpen += (dc, cn) =>
+					{
+						if (cn.State == ConnectionState.Closed)
+							open = true;
+					};
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => 
+						{
+							if (cn.State == ConnectionState.Closed)
+								openAsync = true;
+						});
+				Assert.False(open);
+				Assert.False(openAsync);
+				await conn.SelectAsync(() => 1);
+				Assert.False(open);
+				Assert.True(openAsync);
+			}
+		}
+
+		[Test]
+		[Category("SkipCI")]
+		public void CommandTimeoutTest([IncludeDataSources(ProviderName.SqlServer2014)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var forUpdate = db.Person.First();
+				db.QueryHints.Add("WAITFOR DELAY '00:01';");
+				var start = DateTimeOffset.Now;
+				try
+				{
+					db.Update(forUpdate);
+				}
+				catch { }
+				finally
+				{
+					var time = DateTimeOffset.Now - start;
+					Assert.True(time >= TimeSpan.FromSeconds(30));
+					Assert.True(time < TimeSpan.FromSeconds(32));
+				}
+
+				start = DateTimeOffset.Now;
+				try
+				{
+					db.CommandTimeout = 10;
+					db.Update(forUpdate);
+				}
+				catch { }
+				finally
+				{
+					var time = DateTimeOffset.Now - start;
+					Assert.True(time >= TimeSpan.FromSeconds(10));
+					Assert.True(time < TimeSpan.FromSeconds(12));
+				}
+
+				start = DateTimeOffset.Now;
+				db.CommandTimeout = 0;
+				db.Update(forUpdate);
+				var time2 = DateTimeOffset.Now - start;
+				Assert.True(time2 >= TimeSpan.FromSeconds(60));
+				Assert.True(time2 < TimeSpan.FromSeconds(62));
+			}
+		}
+
 	}
 }

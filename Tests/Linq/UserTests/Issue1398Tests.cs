@@ -55,8 +55,9 @@ namespace Tests.UserTests
 			public int Value { get; set; }
 		}
 
-		[Test, DataContextSource(false, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void TestInsert(string context)
+		[Category("SkipCI")] // not enough mysql connections on AppVeyor
+		[Test]
+		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, ProviderName.Informix)] string context)
 		{
 			const int recordsCount = 20;
 
@@ -85,8 +86,10 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SybaseManaged, ProviderName.Informix)]
-		public void TestMerge(string context)
+		[Test]
+		public void TestMerge([MergeDataContextSource(
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SybaseManaged, ProviderName.Informix)]
+			string context)
 		{
 			const int repeatsCount = 20;
 			var rnd = new Random();

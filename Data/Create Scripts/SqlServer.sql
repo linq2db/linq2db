@@ -1,4 +1,13 @@
-﻿IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Doctor') AND type in (N'U'))
+﻿IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.SameTableName') AND type IN (N'U'))
+BEGIN DROP TABLE dbo.SameTableName END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.TestSchema_SameTableName') AND type IN (N'U'))
+BEGIN DROP TABLE dbo.TestSchema_SameTableName END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.SameTableName') AND type IN (N'U'))
+BEGIN DROP TABLE TestSchema.SameTableName END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Doctor') AND type in (N'U'))
 BEGIN DROP TABLE Doctor END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Patient') AND type in (N'U'))
@@ -9,6 +18,10 @@ BEGIN DROP TABLE InheritanceParent END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('InheritanceChild') AND type in (N'U'))
 BEGIN DROP TABLE InheritanceChild END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'TestProcedure' AND schema_id = SCHEMA_ID('TestSchema'))
+	DROP PROCEDURE TestSchema.TestProcedure
+GO
 
 CREATE TABLE InheritanceParent
 (
@@ -52,7 +65,7 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 GO
-INSERT INTO Person (FirstName, LastName, Gender) VALUES (N'Jürgen', N'König',   'M')
+INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES (N'Jürgen', N'König', 'Ko', 'M')
 GO
 -- Doctor Table Extension
 
@@ -314,6 +327,28 @@ GO
 GRANT EXEC ON Person_SelectByName TO PUBLIC
 GO
 
+-- VariableResults
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'VariableResults')
+BEGIN DROP Procedure VariableResults END
+GO
+CREATE PROCEDURE VariableResults
+	@ReturnFullRow bit = 1
+AS
+BEGIN
+	IF @ReturnFullRow = 1
+	BEGIN
+		SELECT
+			1      as Code,
+			'Val1' as Value1,
+			'Val2' as Value2
+	END
+	ELSE
+		SELECT
+			'v' as Value1,
+			2   as Code
+END
+GO
 
 -- OutRefTest
 
@@ -423,6 +458,7 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2008 BEGIN
 -- SKIP SqlServer.2012 BEGIN
 -- SKIP SqlServer.2014 BEGIN
+-- SKIP SqlServer.2017 BEGIN
 -- SKIP SqlAzure.2012 BEGIN
 	datetime2DataType        varchar(50)       NULL,
 	datetimeoffsetDataType   varchar(50)       NULL,
@@ -439,6 +475,7 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2008 END
 -- SKIP SqlServer.2012 END
 -- SKIP SqlServer.2014 END
+-- SKIP SqlServer.2017 END
 -- SKIP SqlAzure.2012 END
 
 ) ON [PRIMARY]
@@ -620,6 +657,7 @@ GO
 -- SKIP SqlServer.2008 BEGIN
 -- SKIP SqlServer.2012 BEGIN
 -- SKIP SqlServer.2014 BEGIN
+-- SKIP SqlServer.2017 BEGIN
 -- SKIP SqlAzure.2012 BEGIN
 CREATE TABLE LinqDataTypes
 (
@@ -639,6 +677,7 @@ GO
 -- SKIP SqlAzure.2012 END
 -- SKIP SqlServer.2012 END
 -- SKIP SqlServer.2014 END
+-- SKIP SqlServer.2017 END
 -- SKIP SqlServer.2008 END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestIdentity') AND type in (N'U'))
@@ -962,4 +1001,58 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Column description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'COLUMN',@level2name=N'id'
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Index description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'INDEX',@level2name=N'PK_Issue1144'
 
+GO
+CREATE TABLE dbo.SameTableName
+(
+	id	INT
+)
+GO
+CREATE TABLE dbo.TestSchema_SameTableName
+(
+	id	INT
+)
+GO
+CREATE TABLE TestSchema.SameTableName
+(
+	id	INT
+)
+GO
+-- SKIP SqlServer.2005 BEGIN
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.Issue1115') AND type in (N'U'))
+BEGIN DROP TABLE dbo.Issue1115 END
+GO
+
+CREATE TABLE Issue1115
+(
+	id    hierarchyid    NOT NULL CONSTRAINT PK_Issue1115 PRIMARY KEY CLUSTERED
+
+)
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'TableTypeTestProc')
+DROP PROC TableTypeTestProc
+GO
+IF EXISTS (SELECT * FROM sys.types WHERE name = 'TestTableType')
+DROP TYPE TestTableType
+GO
+CREATE TYPE TestTableType AS TABLE
+(
+	Id   INT,
+	Name NVARCHAR(10)
+)
+GO
+CREATE PROC TableTypeTestProc (
+	@table TestTableType READONLY
+)
+AS
+BEGIN
+	SELECT * FROM @table AS Result
+END
+GO
+-- SKIP SqlServer.2005 END
+CREATE PROCEDURE TestSchema.TestProcedure
+AS
+BEGIN
+	SELECT 1
+END
 GO

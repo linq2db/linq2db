@@ -15,6 +15,7 @@ using System.Xml.Linq;
 namespace LinqToDB.DataProvider
 {
 	using Data;
+	using Common;
 	using Expressions;
 	using Mapping;
 	using SchemaProvider;
@@ -98,10 +99,10 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected abstract IDbConnection CreateConnectionInternal (string connectionString);
-		public    abstract ISqlBuilder   CreateSqlBuilder();
+		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema mappingSchema);
 		public    abstract ISqlOptimizer GetSqlOptimizer ();
 
-		public virtual void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters)
+		public virtual void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters)
 		{
 			dataConnection.Command.CommandType = commandType;
 
@@ -272,9 +273,9 @@ namespace LinqToDB.DataProvider
 
 		#region SetParameter
 
-		public virtual void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public virtual void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Char      :
 				case DataType.NChar     :
@@ -324,9 +325,9 @@ namespace LinqToDB.DataProvider
 			parameter.Value = value ?? DBNull.Value;
 		}
 
-		public virtual Type ConvertParameterType(Type type, DataType dataType)
+		public virtual Type ConvertParameterType(Type type, DbDataType dataType)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Char      :
 				case DataType.NChar     :
@@ -359,11 +360,11 @@ namespace LinqToDB.DataProvider
 		public abstract ISchemaProvider GetSchemaProvider     ();
 #endif
 
-		protected virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected virtual void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			DbType dbType;
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Char           : dbType = DbType.AnsiStringFixedLength; break;
 				case DataType.VarChar        : dbType = DbType.AnsiString;            break;
@@ -446,9 +447,9 @@ namespace LinqToDB.DataProvider
 
 		#region BulkCopy
 
-		public virtual BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public virtual BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, dataConnection, options, source);
+			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, table, options, source);
 		}
 
 		#endregion
@@ -504,7 +505,7 @@ namespace LinqToDB.DataProvider
 			if (builder.NoopCommand)
 				return 0;
 
-			return await dataConnection.ExecuteAsync(cmd, token, builder.Parameters);
+			return await dataConnection.ExecuteAsync(cmd, token, builder.Parameters).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(

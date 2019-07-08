@@ -51,11 +51,10 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
-			List<Attribute> attrs;
+			if (memberInfo.DeclaringType != type)
+				memberInfo = type.GetMemberEx(memberInfo) ?? memberInfo;
 
-			var got = _members.TryGetValue(memberInfo, out attrs);
-
-			if (got)
+			if (_members.TryGetValue(memberInfo, out var attrs))
 				return attrs.OfType<T>().ToArray();
 
 			if (inherit == false)
@@ -88,5 +87,16 @@ namespace LinqToDB.Metadata
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
 			=> _dynamicColumns.TryGetValue(type, out var dynamicColumns) ? dynamicColumns.Keys.ToArray() : new MemberInfo[0];
+
+		/// <summary>
+		/// Gets all types, registered by  by current fluent mapper.
+		/// </summary>
+		/// <returns>
+		/// Returns array with all types, mapped by current fluent mapper.
+		/// </returns>
+		public Type[] GetRegisteredTypes()
+		{
+			return _types.Keys.ToArray();
+		}
 	}
 }
