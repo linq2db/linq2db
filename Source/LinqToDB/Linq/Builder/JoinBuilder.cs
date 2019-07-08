@@ -404,17 +404,29 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
+//				var detailType = Lambda.Parameters[1].Type;
+//
+//				var isEagerLoading = expression.Type == detailType;
+//
+//				if (isEagerLoading)
+//				{
+//					var loadingExpression1 = EagerLoading.GenerateDetailsExpression(this, Builder.MappingSchema,
+//						expression,
+//						new HashSet<ParameterExpression>());
+//
+//					return loadingExpression1;
+//				}
+
 				if (ReferenceEquals(expression, Lambda.Parameters[1]))
 				{
 					if (_groupExpression == null)
 					{
-						var gtype  = typeof(GroupJoinHelper<,>).MakeGenericType(
-							_innerKeyLambda.Body.Type,
-							_innerKeyLambda.Parameters[0].Type);
+						var loadingExpression = EagerLoading.GenerateDetailsExpression(this, Builder.MappingSchema,
+							expression,
+							new HashSet<ParameterExpression>());
 
-						var helper = (IGroupJoinHelper)Activator.CreateInstance(gtype);
-
-						_groupExpression = helper.GetGroupJoin(this);
+						 _groupExpression = loadingExpression;
+						return _groupExpression;
 					}
 
 					return _groupExpression;

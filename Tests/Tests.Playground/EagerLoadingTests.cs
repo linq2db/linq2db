@@ -312,12 +312,13 @@ namespace Tests.Playground
 		[Test]
 		public void TestRecursive([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var (masterRecords, detailRecords) = GenerateData();
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
 			var masterFilter = 5;
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetail = db.CreateLocalTable(subDetailRecords))
 			{
 				var masterQuery = from master_1 in master
 					where master_1.Id1 > masterFilter
@@ -326,7 +327,7 @@ namespace Tests.Playground
 						master_1.Id1,
 						Details = detail.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
 						{
-							Masters = master.Where(d_b => d_b.Id1 == masterP_1.MasterId).ToArray()
+							SubDetails = subDetail.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray()
 						}).ToArray()
 					};
 
@@ -337,7 +338,7 @@ namespace Tests.Playground
 						master_1.Id1,
 						Details = detailRecords.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
 						{
-							Masters = masterRecords.Where(d_b => d_b.Id1 == masterP_1.MasterId).ToArray()
+							SubDetails = subDetailRecords.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray()
 						}).ToArray()
 					};
 
@@ -385,18 +386,19 @@ namespace Tests.Playground
 		[Test]
 		public void TestSelectMany([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var (masterRecords, detailRecords) = GenerateData();
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetails = db.CreateLocalTable(subDetailRecords))
 			{
 				var query = from m in master.Take(20)
 					from d in detail
 					select new
 					{
 						Detail = d,
-						Masters = master.Where(mm => m.Id1 == d.MasterId).ToArray()
+						SubDetails = subDetails.Where(sd => sd.DetailId == d.DetailId).ToArray()
 					};
 
 				var expectedQuery = from m in masterRecords.Take(20)
@@ -404,7 +406,7 @@ namespace Tests.Playground
 					select new
 					{
 						Detail = d,
-						Masters = masterRecords.Where(mm => m.Id1 == d.MasterId).ToArray()
+						SubDetails = subDetailRecords.Where(sd => sd.DetailId == d.DetailId).ToArray()
 					};
 
 				var result   = query.ToArray();
@@ -437,6 +439,65 @@ namespace Tests.Playground
 					{
 						Detail = d,
 						Masters = masterRecords.Where(mm => m.Id1 == d.MasterId).ToArray()
+					};
+
+				var result   = query.ToArray();
+				var expected = expectedQuery.ToArray();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
+			}
+		}
+
+		[Test]
+		public void TestPureGroupJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = master.Take(20)
+					.GroupJoin(detail, m => m.Id1, d => d.MasterId,
+						(m, d) => new { Master = m, Details = d.ToArray() });
+
+				var expectedQuery = masterRecords.Take(20)
+					.GroupJoin(detailRecords, m => m.Id1, d => d.MasterId,
+						(m, d) => new { Master = m, Details = d.ToArray() });
+
+				var result   = query.ToArray();
+				var expected = expectedQuery.ToArray();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
+			}
+		}
+
+
+		[Test]
+		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.Take(20)
+					join d in detail on m.Id1 equals d.MasterId into j
+					from dd in j
+					select new
+					{
+						Detail = dd,
+						Masters = master.Where(mm => m.Id1 == dd.MasterId).ToArray()
+					};
+
+				var expectedQuery = from m in masterRecords.Take(20)
+					join d in detailRecords on m.Id1 equals d.MasterId into j
+					from dd in j
+					select new
+					{
+						Detail = dd,
+						Masters = masterRecords.Where(mm => m.Id1 == dd.MasterId).ToArray()
 					};
 
 				var result   = query.ToArray();
