@@ -8,11 +8,12 @@
 		};
 	}
 #><#+
-public static bool DefaultEquatable = true;
+
+static bool DefaultEquatable = true;
 
 string EqualityComparerFieldName = "_comparer";
 
-static Func<Class, Property, bool> EqualityPropertiesFilter = EqualityPropertiesFilterDefault;
+Func<Class, Property, bool> EqualityPropertiesFilter = EqualityPropertiesFilterDefault;
 
 void EquatableImpl()
 {

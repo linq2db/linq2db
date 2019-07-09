@@ -13,10 +13,15 @@
 	LoadSQLiteMetadata(solutionsPath + @"\Data\", "TestData.sqlite");
 
 	foreach (var t in Tables.Values)
+	{
 		foreach (var fk in t.ForeignKeys.Values)
 			if (fk.MemberName.Length == 0 || char.IsDigit(fk.MemberName[0]))
 				fk.MemberName = "FK_" + fk.MemberName;
 
+		t.IsEquatable = true;
+	}
+
+	DefaultEquatable = false;
 	EqualityComparerFieldName = "equalityComparer";
 
 	EqualityPropertiesFilter = (cl, prop) =>
