@@ -571,7 +571,7 @@ namespace DataModel
 	{
 		#region CustOrderHist
 
-		public static List<CustOrderHistResult> CustOrderHist(this DataConnection dataConnection, string @CustomerID)
+		public static List<CustOrderHistResult> CustOrderHist(this TestData2014DB dataConnection, string @CustomerID)
 		{
 			return dataConnection.QueryProc<CustOrderHistResult>("[CustOrderHist]",
 				new DataParameter("@CustomerID", @CustomerID, DataType.NChar)).ToList();
@@ -587,7 +587,7 @@ namespace DataModel
 
 		#region CustOrdersDetail
 
-		public static List<CustOrdersDetailResult> CustOrdersDetail(this DataConnection dataConnection, int? @OrderID)
+		public static List<CustOrdersDetailResult> CustOrdersDetail(this TestData2014DB dataConnection, int? @OrderID)
 		{
 			return dataConnection.QueryProc<CustOrdersDetailResult>("[CustOrdersDetail]",
 				new DataParameter("@OrderID", @OrderID, DataType.Int32)).ToList();
@@ -606,7 +606,7 @@ namespace DataModel
 
 		#region CustOrdersOrders
 
-		public static List<CustOrdersOrdersResult> CustOrdersOrders(this DataConnection dataConnection, string @CustomerID)
+		public static List<CustOrdersOrdersResult> CustOrdersOrders(this TestData2014DB dataConnection, string @CustomerID)
 		{
 			return dataConnection.QueryProc<CustOrdersOrdersResult>("[CustOrdersOrders]",
 				new DataParameter("@CustomerID", @CustomerID, DataType.NChar)).ToList();
@@ -624,7 +624,7 @@ namespace DataModel
 
 		#region EmployeeSalesByCountry
 
-		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this TestData2014DB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
 			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Employee Sales by Country]",
 				new DataParameter("@Beginning_Date", @Beginning_Date, DataType.DateTime),
@@ -645,7 +645,7 @@ namespace DataModel
 
 		#region SalesByYear
 
-		public static List<SalesByYearResult> SalesByYear(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<SalesByYearResult> SalesByYear(this TestData2014DB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
 			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]",
 				new DataParameter("@Beginning_Date", @Beginning_Date, DataType.DateTime),
@@ -664,7 +664,7 @@ namespace DataModel
 
 		#region SalesByCategory
 
-		public static List<SalesByCategoryResult> SalesByCategory(this DataConnection dataConnection, string @CategoryName, string @OrdYear)
+		public static List<SalesByCategoryResult> SalesByCategory(this TestData2014DB dataConnection, string @CategoryName, string @OrdYear)
 		{
 			return dataConnection.QueryProc<SalesByCategoryResult>("[SalesByCategory]",
 				new DataParameter("@CategoryName", @CategoryName, DataType.NVarChar),
@@ -681,7 +681,7 @@ namespace DataModel
 
 		#region TenMostExpensiveProducts
 
-		public static List<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this DataConnection dataConnection)
+		public static List<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this TestData2014DB dataConnection)
 		{
 			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Ten Most Expensive Products]").ToList();
 		}
@@ -1564,7 +1564,7 @@ namespace DataModel
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this DataConnection dataConnection)
+		public static int AddIssue792Record(this TestData2014DB dataConnection)
 		{
 			return dataConnection.ExecuteProc("[AddIssue792Record]");
 		}
@@ -1573,7 +1573,7 @@ namespace DataModel
 
 		#region DuplicateColumnNames
 
-		public static List<DuplicateColumnNamesResult> DuplicateColumnNames(this DataConnection dataConnection)
+		public static List<DuplicateColumnNamesResult> DuplicateColumnNames(this TestData2014DB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -1596,7 +1596,7 @@ namespace DataModel
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest(this DataConnection dataConnection, string @str, ref string @outputStr, ref string @inputOutputStr)
+		public static int OutRefEnumTest(this TestData2014DB dataConnection, string @str, ref string @outputStr, ref string @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[OutRefEnumTest]",
 				new DataParameter("@str",            @str,            DataType.VarChar),
@@ -1613,7 +1613,7 @@ namespace DataModel
 
 		#region OutRefTest
 
-		public static int OutRefTest(this DataConnection dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string @str, ref string @outputStr, ref string @inputOutputStr)
+		public static int OutRefTest(this TestData2014DB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string @str, ref string @outputStr, ref string @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[OutRefTest]",
 				new DataParameter("@ID",             @ID,             DataType.Int32),
@@ -1635,7 +1635,7 @@ namespace DataModel
 
 		#region PatientSelectAll
 
-		public static List<PatientSelectAllResult> PatientSelectAll(this DataConnection dataConnection)
+		public static List<PatientSelectAllResult> PatientSelectAll(this TestData2014DB dataConnection)
 		{
 			return dataConnection.QueryProc<PatientSelectAllResult>("[Patient_SelectAll]").ToList();
 		}
@@ -1654,7 +1654,7 @@ namespace DataModel
 
 		#region PatientSelectByName
 
-		public static List<PatientSelectByNameResult> PatientSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static List<PatientSelectByNameResult> PatientSelectByName(this TestData2014DB dataConnection, string @firstName, string @lastName)
 		{
 			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -1675,7 +1675,7 @@ namespace DataModel
 
 		#region PersonDelete
 
-		public static int PersonDelete(this DataConnection dataConnection, int? @PersonID)
+		public static int PersonDelete(this TestData2014DB dataConnection, int? @PersonID)
 		{
 			return dataConnection.ExecuteProc("[Person_Delete]",
 				new DataParameter("@PersonID", @PersonID, DataType.Int32));
@@ -1685,7 +1685,7 @@ namespace DataModel
 
 		#region PersonInsert
 
-		public static List<PersonInsertResult> PersonInsert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
+		public static List<PersonInsertResult> PersonInsert(this TestData2014DB dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
 		{
 			return dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]",
 				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
@@ -1703,7 +1703,7 @@ namespace DataModel
 
 		#region PersonInsertOutputParameter
 
-		public static int PersonInsertOutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
+		public static int PersonInsertOutputParameter(this TestData2014DB dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
 		{
 			var ret = dataConnection.ExecuteProc("[Person_Insert_OutputParameter]",
 				new DataParameter("@FirstName", @FirstName, DataType.NVarChar),
@@ -1721,7 +1721,7 @@ namespace DataModel
 
 		#region PersonSelectAll
 
-		public static List<PersonSelectAllResult> PersonSelectAll(this DataConnection dataConnection)
+		public static List<PersonSelectAllResult> PersonSelectAll(this TestData2014DB dataConnection)
 		{
 			return dataConnection.QueryProc<PersonSelectAllResult>("[Person_SelectAll]").ToList();
 		}
@@ -1739,7 +1739,7 @@ namespace DataModel
 
 		#region PersonSelectByKey
 
-		public static List<PersonSelectByKeyResult> PersonSelectByKey(this DataConnection dataConnection, int? @id)
+		public static List<PersonSelectByKeyResult> PersonSelectByKey(this TestData2014DB dataConnection, int? @id)
 		{
 			return dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]",
 				new DataParameter("@id", @id, DataType.Int32)).ToList();
@@ -1758,7 +1758,7 @@ namespace DataModel
 
 		#region PersonSelectByName
 
-		public static List<PersonSelectByNameResult> PersonSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static List<PersonSelectByNameResult> PersonSelectByName(this TestData2014DB dataConnection, string @firstName, string @lastName)
 		{
 			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -1778,7 +1778,7 @@ namespace DataModel
 
 		#region PersonSelectListByName
 
-		public static List<PersonSelectListByNameResult> PersonSelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static List<PersonSelectListByNameResult> PersonSelectListByName(this TestData2014DB dataConnection, string @firstName, string @lastName)
 		{
 			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -1798,7 +1798,7 @@ namespace DataModel
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this DataConnection dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
+		public static int PersonUpdate(this TestData2014DB dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
 		{
 			return dataConnection.ExecuteProc("[Person_Update]",
 				new DataParameter("@PersonID",   @PersonID,   DataType.Int32),
@@ -1812,7 +1812,7 @@ namespace DataModel
 
 		#region SelectImplicitColumn
 
-		public static List<SelectImplicitColumnResult> SelectImplicitColumn(this DataConnection dataConnection)
+		public static List<SelectImplicitColumnResult> SelectImplicitColumn(this TestData2014DB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -1833,7 +1833,7 @@ namespace DataModel
 
 		#region TableTypeTestProc
 
-		public static List<TableTypeTestProcResult> TableTypeTestProc(this DataConnection dataConnection, DataTable @table)
+		public static List<TableTypeTestProcResult> TableTypeTestProc(this TestData2014DB dataConnection, DataTable @table)
 		{
 			return dataConnection.QueryProc<TableTypeTestProcResult>("[TableTypeTestProc]",
 				new DataParameter("@table", @table, DataType.Structured){ DbType = "[dbo].[TestTableType]" }).ToList();
@@ -1849,7 +1849,7 @@ namespace DataModel
 
 		#region VariableResults
 
-		public static List<VariableResultsResult> VariableResults(this DataConnection dataConnection, bool? @ReturnFullRow)
+		public static List<VariableResultsResult> VariableResults(this TestData2014DB dataConnection, bool? @ReturnFullRow)
 		{
 			return dataConnection.QueryProc<VariableResultsResult>("[VariableResults]",
 				new DataParameter("@ReturnFullRow", @ReturnFullRow, DataType.Boolean)).ToList();
