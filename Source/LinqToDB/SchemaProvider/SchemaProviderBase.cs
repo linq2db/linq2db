@@ -81,7 +81,8 @@ namespace LinqToDB.SchemaProvider
 						(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(t.SchemaName))  &&
 						(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(t.SchemaName))  &&
 						(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(t.CatalogName)) &&
-						(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(t.CatalogName))
+						(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(t.CatalogName)) &&
+						(options.LoadTable == null   ||  options.LoadTable(new LoadTableData(t)))
 					select new TableSchema
 					{
 						ID                 = t.TableID,

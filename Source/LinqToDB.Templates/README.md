@@ -68,6 +68,16 @@ GetSchemaOptions.IncludedCatalogs = null;
 // Option applied only if is is not empty
 GetSchemaOptions.ExcludedCatalogs = null;
 
+// Custom filter for table/view schema load
+// Can be used to exclude views or tables from generation based in their descriptor.
+// This filter especially usefull, when you wan't to exclude table, referenced by other generated
+// tables using associations, or by procedures using excluded table as result. Doing it in filter
+// will automatically prevent associations generation and will trigger generation of procedure-specific
+// result classes.
+// LoadTableData type:
+// https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/SchemaProvider/LoadTableData.cs
+Func<LoadTableData, bool> GetSchemaOptions.LoadTable = null;
+
 // Comparer, used for IncludedSchemas/ExcludedSchemas/IncludedCatalogs/ExcludedCatalogs lookups
 StringComparer                    = StringComparer.OrdinalIgnoreCase;
 
