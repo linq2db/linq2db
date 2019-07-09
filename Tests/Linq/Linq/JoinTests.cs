@@ -4,7 +4,8 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
-
+using LinqToDB.Reflection;
+using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -355,18 +356,23 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin5([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in Parent
-						join ch in Child on p.ParentID equals ch.ParentID into lj1
-					where p.ParentID == 1
-					select lj1.First()
-					,
-					from p in db.Parent
-						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
-					where p.ParentID == 1
-					select lj1.First());
+			{
+				var expectedQuery = from p in Parent
+					join ch in Child on p.ParentID equals ch.ParentID into lj1
+					where p.ParentID >= 1
+					select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
+
+				var actualQuery = from p in db.Parent
+					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					where p.ParentID >= 1
+					select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
+
+				var expected = expectedQuery.ToArray(); 
+				var actual   = actualQuery.ToArray(); 
+
+				AreEqual(expected, actual);
+			}
 		}
 
 		[Test]
@@ -523,11 +529,11 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					join c in Child on p.ParentID equals c.ParentID into g
-					select new { Child = g.FirstOrDefault() }
+					select new { Child = g.OrderBy(c => c.ChildID).FirstOrDefault() }
 					,
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID into g
-					select new { Child = g.FirstOrDefault() });
+					select new { Child = g.OrderBy(c => c.ChildID).FirstOrDefault() });
 		}
 
 		[Test]

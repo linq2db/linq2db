@@ -308,6 +308,11 @@ namespace LinqToDB.Linq.Builder
 				Expression GetGroupJoin(GroupJoinContext context);
 			}
 
+			public override int ConvertToParentIndex(int index, IBuildContext context)
+			{
+				return base.ConvertToParentIndex(index, context);
+			}
+
 			class GroupJoinHelper<TKey,TElement> : IGroupJoinHelper
 			{
 				public Expression GetGroupJoin(GroupJoinContext context)
@@ -404,19 +409,6 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
-//				var detailType = Lambda.Parameters[1].Type;
-//
-//				var isEagerLoading = expression.Type == detailType;
-//
-//				if (isEagerLoading)
-//				{
-//					var loadingExpression1 = EagerLoading.GenerateDetailsExpression(this, Builder.MappingSchema,
-//						expression,
-//						new HashSet<ParameterExpression>());
-//
-//					return loadingExpression1;
-//				}
-
 				if (ReferenceEquals(expression, Lambda.Parameters[1]))
 				{
 					if (_groupExpression == null)
@@ -430,6 +422,15 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					return _groupExpression;
+				}
+
+				if (expression != null && expression.NodeType == ExpressionType.Call)
+				{
+					var loadingExpression = EagerLoading.GenerateDetailsExpression(this, Builder.MappingSchema,
+						expression,
+						new HashSet<ParameterExpression>());
+
+					return loadingExpression;
 				}
 
 				if (expression != null && expression.NodeType == ExpressionType.Call)
@@ -485,6 +486,11 @@ namespace LinqToDB.Linq.Builder
 			public GroupJoinSubQueryContext(IBuildContext subQuery)
 				: base(subQuery)
 			{
+			}
+
+			public override int ConvertToParentIndex(int index, IBuildContext context)
+			{
+				return GroupJoin.ConvertToParentIndex(index, context);
 			}
 
 			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)

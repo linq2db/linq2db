@@ -453,6 +453,7 @@ namespace LinqToDB.Linq.Builder
 
 			Expression          newQueryable = null;
 			ParameterExpression newParam     = null;
+			var                 needsTruncation = false;
 			// Where(Where(q, a => a > 10), b => b.Id > someParam)
 
 			bool IsDepended(Expression expr)
@@ -481,15 +482,16 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.Call:
 						{
 							var mc = (MethodCallExpression)e;
-							if (mc.IsQueryable(false))
+							if (mc.IsQueryable(true))
 							{
 								var depended = mc.Method.Name.In("First", "FirstOrDefault", "Single", "SingleOrDefault",
 									"Skip", "Take");
-								if (depended && !IsDepended(mc.Arguments[0]))
+								needsTruncation = needsTruncation || depended;
+								if (needsTruncation && !IsDepended(mc.Arguments[0]))
 								{ 
 									depended = IsDepended(mc);
 
-									if (depended)
+									if (true)
 									{
 										newQueryable    = mc.Arguments[0];
 										var elementType = GetEnumerableElementType(newQueryable.Type);
@@ -708,7 +710,7 @@ namespace LinqToDB.Linq.Builder
 			ExtractIndepended(initialMainQuery, unchangedDetailQuery, parameters, out var queryableDetail, out var finalExpression, out var replaceParam);
 
 			var foundMembers = new List<Expression>();
-			Expression resultExpression;
+			Expression resultExpression = null;
 
 			var mainParamTransformation = new Dictionary<ParameterExpression, ParameterExpression>();
 
@@ -729,7 +731,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							// remove projection
 							initialMainQuery = mc.Arguments[0];
-							masterObjType = EagerLoading.GetEnumerableElementType(initialMainQuery.Type);
+							masterObjType  = EagerLoading.GetEnumerableElementType(initialMainQuery.Type);
 							masterParam    = Expression.Parameter(masterObjType, GetMasterParamName("newmaster_"));
 
 							var pt = masterParam.Type.ShortDisplayName();
@@ -752,12 +754,10 @@ namespace LinqToDB.Linq.Builder
                     else if (mc.IsQueryable("Join"))
 					{
 						resultExpression = ProcessMethodCallWithLastProjection(builder, mc, selectContext.Sequence[1], 1, queryableDetail, mappingSchema);
-						return resultExpression;
 					}
 					else if (mc.IsQueryable("GroupJoin"))
 					{
 						resultExpression = ProcessMethodCallWithLastProjection(builder, mc, selectContext.Sequence[0], 0, queryableDetail, mappingSchema);
-						return resultExpression;
 					}
 					else if (mc.IsQueryable("SelectMany"))
 					{
@@ -877,7 +877,6 @@ namespace LinqToDB.Linq.Builder
 								new object[]
 									{ builder, masterQueryFinal, detailsQueryLambda, keyCompiledExpression, keySelectLambda });
 
-							return resultExpression;
 						}
 						else
 						{
@@ -968,8 +967,6 @@ namespace LinqToDB.Linq.Builder
 								resultExpression = (Expression)enlistMethod.Invoke(null,
 									new object[]
 										{ builder, masterQueryFinal, detailsQueryLambda, keyCompiledExpression, detailsKeyExpression });
-
-								return resultExpression;
 							}
 							else
 							{
@@ -984,34 +981,36 @@ namespace LinqToDB.Linq.Builder
 
 			}
 
-			var detailsQuery = queryableDetail.Transform(e =>
+			if (resultExpression == null)
 			{
-				if (e.NodeType == ExpressionType.Parameter)
+				var detailsQuery = queryableDetail.Transform(e =>
 				{
-                    if (mainParamTransformation.TryGetValue((ParameterExpression)e, out var replacement1))
-						return replacement1;
-                    if (detailExpressionTransformation.TryGetValue((ParameterExpression)e, out var replacement2))
-						return replacement2;
-				}
+					if (e.NodeType == ExpressionType.Parameter)
+					{
+						if (mainParamTransformation.TryGetValue((ParameterExpression)e, out var replacement1))
+							return replacement1;
+						if (detailExpressionTransformation.TryGetValue((ParameterExpression)e, out var replacement2))
+							return replacement2;
+					}
 
-				return e;
-			});
+					return e;
+				});
 
-			var hasConnection  = !ReferenceEquals(detailsQuery, queryableDetail);
-			hasConnection = true;
+				var hasConnection = !ReferenceEquals(detailsQuery, queryableDetail);
+				hasConnection = true;
 
-			queryableDetail.Visit(e =>
-			{
-				if (e.NodeType == ExpressionType.MemberAccess)
+				queryableDetail.Visit(e =>
 				{
-					var ma = (MemberExpression)e;
-					var root = ma.GetRootObject(context.Builder.MappingSchema);
-					if (root is ParameterExpression mainParam && mainParamTransformation.ContainsKey(mainParam))
-						foundMembers.Add(ma);
-				}
-			});
+					if (e.NodeType == ExpressionType.MemberAccess)
+					{
+						var ma = (MemberExpression)e;
+						var root = ma.GetRootObject(context.Builder.MappingSchema);
+						if (root is ParameterExpression mainParam && mainParamTransformation.ContainsKey(mainParam))
+							foundMembers.Add(ma);
+					}
+				});
 
-			var detailObjType  = GetEnumerableElementType(detailsQuery.Type);
+				var detailObjType = GetEnumerableElementType(detailsQuery.Type);
 
 //			if (hasConnection && !EagerLoading.ValidateEagerLoading(context, mainParamTransformation, ref detailsQuery))
 //			{
@@ -1019,34 +1018,69 @@ namespace LinqToDB.Linq.Builder
 //				return null;
 //			}
 
-			var ienumerableType = typeof(IEnumerable<>).MakeGenericType(detailObjType);
-			if (detailsQuery.Type != ienumerableType)
-				detailsQuery = Expression.Convert(detailsQuery, ienumerableType);
+				var ienumerableType = typeof(IEnumerable<>).MakeGenericType(detailObjType);
+				if (detailsQuery.Type != ienumerableType)
+					detailsQuery = Expression.Convert(detailsQuery, ienumerableType);
 
-			if (!hasConnection)
-			{
-				// detail query has no dependency with master, so load all
-
-				var enlistMethod = EnlistEagerLoadingFunctionalityDetachedMethodInfo.MakeGenericMethod(detailObjType);
-
-				resultExpression = (Expression)enlistMethod.Invoke(null,
-					new object[]
-						{ builder, detailsQuery });
-			}
-			else
-			{
-				Expression keyPath = masterParam;
-				if (context is GroupByBuilder.GroupByContext)
+				if (!hasConnection)
 				{
-					keyPath = Expression.PropertyOrField(keyPath, "Key");
+					// detail query has no dependency with master, so load all
+
+					var enlistMethod =
+						EnlistEagerLoadingFunctionalityDetachedMethodInfo.MakeGenericMethod(detailObjType);
+
+					resultExpression = (Expression)enlistMethod.Invoke(null,
+						new object[]
+							{ builder, detailsQuery });
 				}
-				var preparedKeys = ExtractKeysFromContext(context, keyPath).ToArray();
+				else
+				{
+					Expression keyPath = masterParam;
+					if (IsGroupByContext(context))
+					{
+						keyPath = Expression.PropertyOrField(keyPath, "Key");
+					}
+					else if (IsGroupJoinContext(context))
+					{
+						keyPath = Expression.MakeMemberAccess(masterParam, masterParam.Type.GetProperties().First());
+					}
 
-				resultExpression = GeneratePreambleExpression(preparedKeys, detailExpressionTransformation, masterParam, masterParam, detailsQuery, initialMainQuery, builder);
+					var preparedKeys = ExtractKeysFromContext(context, keyPath).ToArray();
+					if (preparedKeys.Length == 0)
+					{
+						preparedKeys = ExtractKeysFromContext(context, masterParam).ToArray();
+					}
 
+					resultExpression = GeneratePreambleExpression(preparedKeys, detailExpressionTransformation,
+						masterParam, masterParam, detailsQuery, initialMainQuery, builder);
+
+				}
+			}
+			if (replaceParam != null)
+			{
+				resultExpression = finalExpression.Transform(e => e == replaceParam ? resultExpression : e);
+			}
+
+			if (resultExpression.Type != expression.Type)
+			{
+				resultExpression = Expression.Convert(resultExpression, expression.Type);
 			}
 
 			return resultExpression;
+		}
+
+		private static bool IsGroupByContext(IBuildContext context)
+		{
+			while (context is SubQueryContext)
+				context = context.Parent;
+			return context is GroupByBuilder.GroupByContext;
+		}
+
+		private static bool IsGroupJoinContext(IBuildContext context)
+		{
+			while (context is SubQueryContext)
+				context = context.Parent;
+			return context is JoinBuilder.GroupJoinContext;
 		}
 
 		private static Expression GeneratePreambleExpression(KeyInfo[] preparedKeys, Dictionary<Expression, Expression> detailExpressionTransformation,
