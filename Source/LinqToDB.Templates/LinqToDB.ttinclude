@@ -684,6 +684,7 @@ void GenerateTypesFromMetadata()
 		var funcs = new MemberGroup();
 		var tabfs = new MemberGroup { Region = "Table Functions" };
 
+		var currentContext = DataContextObject;
 		foreach (var p in Procedures.Values.Where(
 			proc => proc.IsLoaded || proc.IsFunction && !proc.IsTableFunction ||
 			proc.IsTableFunction && proc.ResultException != null
@@ -771,9 +772,9 @@ void GenerateTypesFromMetadata()
 						: "IEnumerable<" + p.ResultTable.TypeName + ">";
 
 				if (p.IsDefaultSchema || !GenerateSchemaAsType)
-					p.ParameterBuilders.Add(() => $"this { (GenerateProceduresOnTypedContext ? DataContextObject.Name : "DataConnection") } dataConnection");
+					p.ParameterBuilders.Add(() => $"this { (GenerateProceduresOnTypedContext ? currentContext.Name : "DataConnection") } dataConnection");
 				else
-					p.ParameterBuilders.Add(() => "DataConnection dataConnection");
+					p.ParameterBuilders.Add(() => $"{ (GenerateProceduresOnTypedContext ? currentContext.Name : "DataConnection") } dataConnection");
 			}
 
 			if (!p.IsAggregateFunction)

@@ -232,8 +232,7 @@ GenerateProcedureErrors          = true;
 // IMPORTANT: this will lead to load of all procedure results into list and could lead
 // to performance issues on big results
 GenerateProcedureResultAsList    = false;
-// Enables stored procedure methods as extensions on generated context. Otherwise generate
-// them as extensions on DataConnection type
+// Enables stored procedure methods to accept generated context object or DataConnection type
 GenerateProceduresOnTypedContext = true;
 
 /* Other generated functionality */
