@@ -161,6 +161,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
+			// ensure types initialized, otherwise mapping schema will be incomplete
+			GetConnectionType();
+
 			return Version == DB2Version.zOS ?
 				new DB2zOSSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter) as ISqlBuilder:
 				new DB2LUWSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);

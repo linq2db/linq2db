@@ -23,6 +23,54 @@ namespace LinqToDB.DataProvider.DB2
 			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,v) => ConvertTimeToSql    (sb, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+		}
+
+		static void ConvertTimeToSql(StringBuilder stringBuilder, TimeSpan time)
+		{
+			stringBuilder.Append($"'{time:hh\\:mm\\:ss}'");
+		}
+
+		static string GetTimestampFormat(SqlDataType type)
+		{
+			var precision = type.Precision;
+
+			if (precision == null && type.DbType != null)
+			{
+				var dbtype = type.DbType.ToLowerInvariant();
+				if (dbtype.StartsWith("timestamp("))
+				{
+					int fromDbType;
+					if (int.TryParse(dbtype.Substring(10, dbtype.Length - 11), out fromDbType))
+						precision = fromDbType;
+				}
+			}
+
+			precision = precision == null || precision < 0 ? 6 : (precision > 7 ? 7 : precision);
+			switch (precision)
+			{
+				case 0: return "yyyy-MM-dd-HH.mm.ss";
+				case 1: return "yyyy-MM-dd-HH.mm.ss.f";
+				case 2: return "yyyy-MM-dd-HH.mm.ss.ff";
+				case 3: return "yyyy-MM-dd-HH.mm.ss.fff";
+				case 4: return "yyyy-MM-dd-HH.mm.ss.ffff";
+				case 5: return "yyyy-MM-dd-HH.mm.ss.fffff";
+				case 6: return "yyyy-MM-dd-HH.mm.ss.ffffff";
+				case 7: return "yyyy-MM-dd-HH.mm.ss.fffffff";
+			}
+
+			throw new InvalidOperationException();
+		}
+
+		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType type, DateTime value)
+		{
+			stringBuilder.Append("'");
+			if (type.DataType == DataType.Date || "date".Equals(type.DbType, StringComparison.OrdinalIgnoreCase))
+				stringBuilder.Append(value.ToString("yyyy-MM-dd-HH.mm.ss"));
+			else
+				stringBuilder.Append(value.ToString(GetTimestampFormat(type)));
+			stringBuilder.Append("'");
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
