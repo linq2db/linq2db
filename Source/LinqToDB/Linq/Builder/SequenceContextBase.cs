@@ -27,6 +27,7 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 		public string _sqlQueryText => SelectQuery?.SqlText ?? "";
+		public string Path => this.GetPath();
 #endif
 
 		public IBuildContext     Parent      { get; set; }

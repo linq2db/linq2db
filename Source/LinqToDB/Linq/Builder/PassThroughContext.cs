@@ -18,6 +18,7 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 		string IBuildContext._sqlQueryText => Context._sqlQueryText;
+		public string Path => this.GetPath();
 #endif
 
 		public virtual ExpressionBuilder Builder     => Context.Builder;
