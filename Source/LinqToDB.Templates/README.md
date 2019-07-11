@@ -222,16 +222,18 @@ Func<ForeignKey, string> GetAssociationExtensionPluralName
 /* Procedures and functions configuration */
 // Enables use of existing table mappings for procedures and functions that return same results as
 // defined by mapping
-ReplaceSimilarTables          = true;
+ReplaceSimilarTables             = true;
 // If enabled, procedure schema load error will be generated as #error directive and fail build
 // of output file. Useful for initial generation to highlight places, that require review or
 // additional hints for schema loader
 // Also check GetSchemaOptions.LoadProcedure option above
-GenerateProcedureErrors       = true;
+GenerateProcedureErrors          = true;
 // If enabled, methods for procedures that return table will be generated with List<T> return type and
 // IMPORTANT: this will lead to load of all procedure results into list and could lead
 // to performance issues on big results
-GenerateProcedureResultAsList = false;
+GenerateProcedureResultAsList    = false;
+// Enables stored procedure methods to accept generated context object or DataConnection type
+GenerateProceduresOnTypedContext = true;
 
 /* Other generated functionality */
 // Enables generation of Find(pk fields) extension methods for record selection by primary key value
