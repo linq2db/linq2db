@@ -96,7 +96,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 								if (IsDateDataType(func.Parameters[0], "Date"))
 								{
-									if (func.Parameters[1].SystemType.ToUnderlying() == typeof(DateTime))
+									if (func.Parameters[1].SystemType.ToUnderlying() == typeof(DateTime)
+										|| func.Parameters[1].SystemType.ToUnderlying() == typeof(DateTimeOffset))
 									{
 										return new SqlFunction(func.SystemType, "Trunc", func.Parameters[1], new SqlValue("DD"));
 									}
