@@ -214,7 +214,7 @@ namespace Tests.Linq
 			[Sql.Expression("(({2} * ({1} - {0}) / {2}) * {0})", ServerSideOnly = true)]
 			public static int Operation(int item1, int item2, int item3)
 			{
-				return item3 * (item2 - item1) / item3 * item1;
+				return (item3 * (item2 - item1) / item3) * item1;
 			}
 
 		}
@@ -231,7 +231,7 @@ namespace Tests.Linq
 				var query = from child in db.Child
 					select new
 					{
-						Value1 = Sql.AsSql(AdditionalSql.Operation(x3,
+						Value1 = Sql.AsSql(AdditionalSql.Operation(child.ChildID,
 							AdditionalSql.Operation(z2, y10, AdditionalSql.Operation(z2, y10, x3)),
 							AdditionalSql.Operation(z2, y10, x3)))
 					};
@@ -239,7 +239,7 @@ namespace Tests.Linq
 				var expected = from child in Child
 					select new
 					{
-						Value1 = AdditionalSql.Operation(x3,
+						Value1 = AdditionalSql.Operation(child.ChildID,
 							AdditionalSql.Operation(z2, y10, AdditionalSql.Operation(z2, y10, x3)),
 							AdditionalSql.Operation(z2, y10, x3))
 					};
