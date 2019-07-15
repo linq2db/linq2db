@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOfEx(_connectionType)))
 				return MultipleRowsCopy(table, options, source);
 
-			var sqlBuilder   = _dataProvider.CreateSqlBuilder();
+			var sqlBuilder   = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			var ed           = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var tableName    = GetTableName(sqlBuilder, options, table);
 			var columns      = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
@@ -137,7 +137,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				Expression.Call(writerVar, "StartRow", Array<Type>.Empty)
 			};
 
-			var builder = (BasicSqlBuilder)_dataProvider.CreateSqlBuilder();
+			var builder = (BasicSqlBuilder)_dataProvider.CreateSqlBuilder(mappingSchema);
 
 			for (var i = 0; i < columns.Length; i++)
 			{

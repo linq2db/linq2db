@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider
 		{
 			DataConnection = dataConnection;
 			Options        = options;
-			SqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder();
+			SqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			ValueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
 			Descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(entityType);
 			Columns        = Descriptor.Columns

@@ -323,9 +323,9 @@ namespace Tests
 		}
 #endif
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new Npgsql4PostgreSQLSqlBuilder(this, GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+			return new Npgsql4PostgreSQLSqlBuilder(this, GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)

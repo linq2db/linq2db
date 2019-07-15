@@ -160,11 +160,11 @@ namespace LinqToDB.DataProvider.DB2
 		}
 #endif
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
 			return Version == DB2Version.zOS ?
-				new DB2zOSSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter) as ISqlBuilder:
-				new DB2LUWSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+				new DB2zOSSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter) as ISqlBuilder:
+				new DB2LUWSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 		}
 
 		readonly DB2SqlOptimizer _sqlOptimizer;

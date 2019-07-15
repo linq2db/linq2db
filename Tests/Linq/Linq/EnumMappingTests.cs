@@ -1745,11 +1745,11 @@ namespace Tests.Linq
 					}
 					else
 #endif
-						Assert.Throws<LinqToDBConvertException>(() =>
-							db.GetTable<UndefinedValueTest>()
-								.Select(r => new { r.Id, r.TestField })
-								.Where(r => r.Id == RID)
-								.ToList());
+					Assert.Throws<LinqToDBConvertException>(() =>
+						db.GetTable<UndefinedValueTest>()
+							.Select(r => new { r.Id, r.TestField })
+							.Where(r => r.Id == RID)
+							.ToList());
 				}
 			}
 		}
@@ -1793,7 +1793,9 @@ namespace Tests.Linq
 					var res2 = table.Where(e => e.Id == 1).Single();
 
 					Assert.That(item.Id, Is.EqualTo(res.Id));
+					Assert.That(item.SomeText, Is.EqualTo(res.SomeText));
 					Assert.That(item.Id, Is.EqualTo(res2.Id));
+					Assert.That(item.SomeText, Is.EqualTo(res2.SomeText));
 				}
 			}
 		}

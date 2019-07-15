@@ -107,6 +107,12 @@
 		  <DependentUpon>SqlServer.tt</DependentUpon>
 		</Compile>
 
+		<Compile Update="SqlServerAzure.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlServerAzure.tt</DependentUpon>
+		</Compile>
+
 		<Compile Update="Sybase.DataAction.generated.cs">
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
@@ -175,6 +181,10 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>SQLite.generated.cs</LastGenOutput>
 		</None>
+		<None Update="SqlServerAzure.tt">
+		  <LastGenOutput>SqlServerAzure.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 		<None Update="Sybase.DataAction.tt">
 		  <Generator>TextTemplatingFileGenerator</Generator>
 		  <LastGenOutput>Sybase.DataAction.generated.cs</LastGenOutput>
@@ -191,7 +201,9 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' != 'net46'">
 		<None Remove="SqlServer.tt" />
+		<None Remove="SqlServerAzure.tt" />
 		<Compile Remove="SqlServer.generated.cs" />
+		<Compile Remove="SqlServerAzure.generated.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net46'">

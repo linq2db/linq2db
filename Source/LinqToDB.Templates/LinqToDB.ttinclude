@@ -26,7 +26,9 @@ bool   GenerateDbTypes                     = false;
 bool   GenerateSchemaAsType                = false;
 bool   GenerateViews                       = true;
 bool   GenerateProcedureResultAsList       = false;
+bool   GenerateProceduresOnTypedContext    = true;
 bool   PrefixTableMappingWithSchema        = true;
+bool   PrefixTableMappingForDefaultSchema  = false;
 string SchemaNameSuffix                    = "Schema";
 string SchemaDataContextTypeName           = "DataContext";
 
@@ -683,6 +685,7 @@ void GenerateTypesFromMetadata()
 		var funcs = new MemberGroup();
 		var tabfs = new MemberGroup { Region = "Table Functions" };
 
+		var currentContext = DataContextObject;
 		foreach (var p in Procedures.Values.Where(
 			proc => proc.IsLoaded || proc.IsFunction && !proc.IsTableFunction ||
 			proc.IsTableFunction && proc.ResultException != null
@@ -771,9 +774,9 @@ void GenerateTypesFromMetadata()
 						: "IEnumerable<" + p.ResultTable.TypeName + ">";
 
 				if (p.IsDefaultSchema || !GenerateSchemaAsType)
-					p.ParameterBuilders.Add(() => "this DataConnection dataConnection");
+					p.ParameterBuilders.Add(() => $"this { (GenerateProceduresOnTypedContext ? currentContext.Name : "DataConnection") } dataConnection");
 				else
-					p.ParameterBuilders.Add(() => "DataConnection dataConnection");
+					p.ParameterBuilders.Add(() => $"{ (GenerateProceduresOnTypedContext ? currentContext.Name : "DataConnection") } dataConnection");
 			}
 
 			if (!p.IsAggregateFunction)
@@ -1016,7 +1019,7 @@ void MakeMembersNamesUnique(IEnumerable<IClassMember> members, string defaultNam
 	LinqToDB.Common.Utils.MakeUniqueNames(
 		members,
 		reservedNames,
-		m => m is Table tbl ? (tbl.Schema != null && !tbl.IsDefaultSchema && PrefixTableMappingWithSchema ? tbl.Schema + "_" : null) + tbl.Name : (m is TypeBase t ? t.Name : ((MemberBase)m).Name),
+		m => m is Table tbl ? (tbl.Schema != null && (PrefixTableMappingForDefaultSchema || !tbl.IsDefaultSchema) && PrefixTableMappingWithSchema ? tbl.Schema + "_" : null) + tbl.Name : (m is TypeBase t ? t.Name : ((MemberBase)m).Name),
 		(m, newName) =>
 		{
 			if (m is TypeBase t)

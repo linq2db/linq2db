@@ -1371,15 +1371,20 @@ namespace LinqToDB.Linq.Builder
 			var lambda = Expression.Lambda<Func<object>>(Expression.Convert(expr, typeof(object)));
 			var v      = lambda.Compile()();
 
-			if (v != null && v.GetType().IsEnumEx())
+			if (v != null && MappingSchema.ValueToSqlConverter.CanConvert(v.GetType()))
+				value = new SqlValue(v);
+			else
 			{
-				var attrs = v.GetType().GetCustomAttributesEx(typeof(Sql.EnumAttribute), true);
+				if (v != null && v.GetType().IsEnumEx())
+				{
+					var attrs = v.GetType().GetCustomAttributesEx(typeof(Sql.EnumAttribute), true);
 
-				if (attrs.Length == 0)
-					v = MappingSchema.EnumToValue((Enum)v);
+					if (attrs.Length == 0)
+						v = MappingSchema.EnumToValue((Enum)v);
+				}
+
+				value = MappingSchema.GetSqlValue(expr.Type, v);
 			}
-
-			value = MappingSchema.GetSqlValue(expr.Type, v);
 
 			_constants.Add(expr, value);
 

@@ -411,9 +411,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public             bool   IsXmlTypeSupported  => _oracleXmlType != null;
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new OracleSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+			return new OracleSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 		}
 
 		static class MappingSchemaInstance

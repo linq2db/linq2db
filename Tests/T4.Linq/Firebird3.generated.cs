@@ -77,6 +77,7 @@ namespace Firebird3DataContext
 		public ITable<XXPATIENT709>      XXPATIENT709       { get { return this.GetTable<XXPATIENT709>(); } }
 		public ITable<XXPATIENT72>       XXPATIENT72        { get { return this.GetTable<XXPATIENT72>(); } }
 		public ITable<XXPATIENT740>      XXPATIENT740       { get { return this.GetTable<XXPATIENT740>(); } }
+		public ITable<XxpersonF330>      XxpersonF330       { get { return this.GetTable<XxpersonF330>(); } }
 
 		public TESTDB30DB()
 		{
@@ -490,9 +491,9 @@ namespace Firebird3DataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_6852
+		/// INTEG_14797
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_6852", BackReferenceName="INTEG")]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_14797", BackReferenceName="INTEG")]
 		public PERSON PERSON { get; set; }
 
 		#endregion
@@ -516,7 +517,7 @@ namespace Firebird3DataContext
 		public DOCTOR DOCTOR { get; set; }
 
 		/// <summary>
-		/// INTEG_6852_BackReference
+		/// INTEG_14797_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public PATIENT INTEG { get; set; }
@@ -711,6 +712,16 @@ namespace Firebird3DataContext
 	{
 		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID  { get; set; } // integer
 		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string DIAGNOSIS { get; set; } // varchar(255)
+	}
+
+	[Table("XXPERSON_F3_30")]
+	public partial class XxpersonF330
+	{
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),              NotNull] public string FIRSTNAME  { get; set; } // varchar(255)
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int    PERSONID   { get; set; } // integer
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),              NotNull] public string LASTNAME   { get; set; } // varchar(255)
+		[Column(DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string MIDDLENAME { get; set; } // varchar(255)
+		[Column(DbType="char(1)",      DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),                NotNull] public char   GENDER     { get; set; } // char(1)
 	}
 
 	public static partial class TESTDB30DBStoredProcedures
@@ -1371,6 +1382,12 @@ namespace Firebird3DataContext
 		}
 
 		public static XXPATIENT740 Find(this ITable<XXPATIENT740> table, int PERSONID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PERSONID == PERSONID);
+		}
+
+		public static XxpersonF330 Find(this ITable<XxpersonF330> table, int PERSONID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PERSONID == PERSONID);

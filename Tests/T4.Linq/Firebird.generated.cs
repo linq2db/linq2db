@@ -202,9 +202,9 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_7030
+		/// INTEG_15177
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_7030", BackReferenceName="INTEG")]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="INTEG_15177", BackReferenceName="INTEG")]
 		public PERSON PERSON { get; set; }
 
 		#endregion
@@ -228,7 +228,7 @@ namespace FirebirdDataContext
 		public DOCTOR DOCTOR { get; set; }
 
 		/// <summary>
-		/// INTEG_7030_BackReference
+		/// INTEG_15177_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public PATIENT INTEG { get; set; }

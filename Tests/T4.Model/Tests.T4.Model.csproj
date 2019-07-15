@@ -7,6 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
@@ -27,6 +28,17 @@
 			<DependentUpon>EditableModelTest.tt</DependentUpon>
 		</Compile>
 
+		<Compile Update="EquatableTest.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>EquatableTest.tt</DependentUpon>
+		</Compile>
+
+		<None Update="EquatableTest.tt">
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>EquatableTest.generated.cs</LastGenOutput>
+		</None>
+
 		<None Update="ModelTest.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>ModelTest.generated.cs</LastGenOutput>
@@ -41,6 +53,11 @@
 		<None Update="MultipleFiles.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>MultipleFiles.generated.cs</LastGenOutput>
+		</None>
+
+		<None Update="EqualityComparerTest.tt">
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>EqualityComparerTest.generated.cs</LastGenOutput>
 		</None>
 
 		<Compile Update="MultipleFiles.generated.cs">
