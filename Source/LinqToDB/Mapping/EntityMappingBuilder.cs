@@ -510,6 +510,17 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Sets linked server name.
+		/// See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
+		/// <param name="serverName">Linked server name.</param>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<T> HasServerName(string serverName)
+		{
+			return SetTable(a => a.Server = serverName);
+		}
+
+		/// <summary>
 		/// Adds inheritance mapping for specified discriminator value.
 		/// </summary>
 		/// <typeparam name="TS">Discriminator value type.</typeparam>
@@ -526,6 +537,38 @@ namespace LinqToDB.Mapping
 
 			return this;
 		}
+
+		#region Dynamic Properties
+		/// <summary>
+		/// Adds dynamic columns store dictionary member mapping to current entity.
+		/// </summary>
+		/// <param name="func">Column mapping property or field getter expression.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public EntityMappingBuilder<T> DynamicColumnsStore(Expression<Func<T, object>> func)
+		{
+			Member(func)
+				.HasAttribute(new DynamicColumnsStoreAttribute() { Configuration = Configuration });
+
+			return this;
+		}
+
+		public EntityMappingBuilder<T> DynamicPropertyAccessors(
+			Expression<Func<T, string, object, object>> getter,
+			Expression<Action<T, string, object>> setter)
+		{
+			_builder.HasAttribute(
+				typeof(T),
+				new DynamicColumnAccessorAttribute()
+				{
+					GetterExpression = getter,
+					SetterExpression = setter,
+					Configuration = Configuration
+				});
+
+			return this;
+		}
+
+		#endregion
 
 		EntityMappingBuilder<T> SetTable(Action<TableAttribute> setColumn)
 		{
@@ -544,6 +587,7 @@ namespace LinqToDB.Mapping
 					Name                      = a.Name,
 					Schema                    = a.Schema,
 					Database                  = a.Database,
+					Server                    = a.Server,
 					IsColumnAttributeRequired = a.IsColumnAttributeRequired,
 				});
 		}

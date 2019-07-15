@@ -71,14 +71,14 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
 				case DataType.Int16         :
 				case DataType.Int32         :
 				case DataType.Int64         :
-					if (createDbType) goto default;
+					if (forCreateTable) goto default;
 					StringBuilder.Append("Signed");
 					break;
 				case DataType.SByte         :
@@ -86,16 +86,16 @@ namespace LinqToDB.DataProvider.MySql
 				case DataType.UInt16        :
 				case DataType.UInt32        :
 				case DataType.UInt64        :
-					if (createDbType) goto default;
+					if (forCreateTable) goto default;
 					StringBuilder.Append("Unsigned");
 					break;
-				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");                 break;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");                 break;
+				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");                               break;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");                               break;
 				case DataType.DateTime2     :
-				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                      break;
-				case DataType.Boolean       : StringBuilder.Append("Boolean");                       break;
+				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                    break;
+				case DataType.Boolean       : StringBuilder.Append("Boolean");                                     break;
 				case DataType.Double        :
-				case DataType.Single        : base.BuildDataType(SqlDataType.Decimal, createDbType); break;
+				case DataType.Single        : base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable); break;
 				case DataType.VarChar       :
 				case DataType.NVarChar      :
 					// yep, char(0) is allowed
@@ -104,7 +104,7 @@ namespace LinqToDB.DataProvider.MySql
 					else
 						StringBuilder.Append($"Char({type.Length})");
 					break;
-				default: base.BuildDataType(type, createDbType);                                     break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable);                                     break;
 			}
 		}
 
@@ -302,7 +302,7 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 
@@ -329,6 +329,11 @@ namespace LinqToDB.DataProvider.MySql
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			BuildDropTableStatementIfExists(dropTable);
+		}
+
+		protected override void BuildMergeStatement(SqlMergeStatement merge)
+		{
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 	}
 }

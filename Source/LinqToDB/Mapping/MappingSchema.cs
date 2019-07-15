@@ -467,7 +467,7 @@ namespace LinqToDB.Mapping
 			DbDataType                      fromType,
 			DbDataType                      toType,
 			[JetBrains.Annotations.NotNull] LambdaExpression expr,
-			bool addNullCheck = true)
+			bool                            addNullCheck = true)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
@@ -1124,8 +1124,8 @@ namespace LinqToDB.Mapping
 			public DefaultMappingSchema()
 				: base(new MappingSchemaInfo("") { MetadataReader = Metadata.MetadataReader.Default })
 			{
-				AddScalarType(typeof(char),            new SqlDataType(DataType.NChar, typeof(char),  1, null, null));
-				AddScalarType(typeof(char?),           new SqlDataType(DataType.NChar, typeof(char?), 1, null, null));
+				AddScalarType(typeof(char),            new SqlDataType(DataType.NChar, typeof(char),  1, null, null, null));
+				AddScalarType(typeof(char?),           new SqlDataType(DataType.NChar, typeof(char?), 1, null, null, null));
 				AddScalarType(typeof(string),          DataType.NVarChar);
 				AddScalarType(typeof(decimal),         DataType.Decimal);
 				AddScalarType(typeof(decimal?),        DataType.Decimal);
@@ -1324,8 +1324,9 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Returns <c>true</c>, if <paramref name="type"/> type is enum with mapping to <c>null</c> value.
 		/// Initial parameter value, passed to this method is not used.</param>
 		/// <returns>Scalar database type information.</returns>
-		public SqlDataType GetUnderlyingDataType(Type type, ref bool canBeNull)
+		public SqlDataType GetUnderlyingDataType(Type type, out bool canBeNull)
 		{
+			canBeNull   = false;
 			int? length = null;
 
 			var underlyingType = type.ToNullableUnderlying();
@@ -1501,19 +1502,6 @@ namespace LinqToDB.Mapping
 			return ed;
 		}
 
-		// TODO: V3 cleanup
-		/// <summary>
-		/// Enumerates types, registered by FluentMetadataBuilder.
-		/// </summary>
-		/// <returns>
-		/// Returns array with all types, mapped by fluent mappings.
-		/// </returns>
-		[Obsolete("Use 'GetDefinedTypes() method instead'")]
-		public Type[] GetEntites()
-		{
-			return GetDefinedTypes();
-		}
-
 		/// <summary>
 		/// Enumerates types registered by FluentMetadataBuilder.
 		/// </summary>
@@ -1571,5 +1559,17 @@ namespace LinqToDB.Mapping
 		}
 
 		#endregion
+
+		internal IEnumerable<T> SortByConfiguration<T>(Func<T, string> configGetter, IEnumerable<T> values)
+		{
+			return values
+				.Select(val => new
+				{
+					Value = val,
+					Order = Array.IndexOf(ConfigurationList, configGetter(val)) == -1 ? ConfigurationList.Length : Array.IndexOf(ConfigurationList, configGetter(val))
+				})
+				.OrderBy(_ => _.Order)
+				.Select(_ => _.Value);
+		}
 	}
 }

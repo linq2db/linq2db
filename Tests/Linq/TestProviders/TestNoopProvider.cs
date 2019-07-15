@@ -823,9 +823,9 @@ namespace Tests
 			// Just for triggering of static constructor
 		}
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new TestNoopSqlBuilder();
+			return new TestNoopSqlBuilder(MappingSchema.ValueToSqlConverter);
 		}
 
 #if !NETSTANDARD1_6
@@ -852,8 +852,8 @@ namespace Tests
 
 	internal class TestNoopSqlBuilder : BasicSqlBuilder
 	{
-		public TestNoopSqlBuilder()
-			: base(TestNoopSqlOptimizer.Instance, new SqlProviderFlags(), new ValueToSqlConverter())
+		public TestNoopSqlBuilder(ValueToSqlConverter valueToSqlConverter)
+			: base(TestNoopSqlOptimizer.Instance, new SqlProviderFlags(), valueToSqlConverter)
 		{
 		}
 

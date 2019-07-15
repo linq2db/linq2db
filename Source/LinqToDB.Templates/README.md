@@ -68,6 +68,16 @@ GetSchemaOptions.IncludedCatalogs = null;
 // Option applied only if is is not empty
 GetSchemaOptions.ExcludedCatalogs = null;
 
+// Custom filter for table/view schema load
+// Can be used to exclude views or tables from generation based in their descriptor.
+// This filter especially usefull, when you wan't to exclude table, referenced by other generated
+// tables using associations, or by procedures using excluded table as result. Doing it in filter
+// will automatically prevent associations generation and will trigger generation of procedure-specific
+// result classes.
+// LoadTableData type:
+// https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/SchemaProvider/LoadTableData.cs
+Func<LoadTableData, bool> GetSchemaOptions.LoadTable = null;
+
 // Comparer, used for IncludedSchemas/ExcludedSchemas/IncludedCatalogs/ExcludedCatalogs lookups
 StringComparer                    = StringComparer.OrdinalIgnoreCase;
 
@@ -96,6 +106,27 @@ Use the following initialization **before** you call the `LoadMetadata()` method
 /* Global/generic options */
 // Namespace to use for generated model
 NamespaceName                  = "DataModels";
+// Generate #nullable pragma:
+// "#nullable enable" if EnableNullableReferenceTypes is true
+// "#nullable disable" if EnableNullableReferenceTypes is false
+AddNullablePragma              = false;
+// Enables generation of nullable reference type annotations
+EnableNullableReferenceTypes   = false;
+// Disable CS8618 for uninitialized model columns and references of non-nullable reference type
+EnforceModelNullability        = true;
+// Defines method to distinguish value types from reference types by type name
+// used by nullable reference types feature to detect reference types, when only type name available
+// If EnableNullableReferenceTypes enabled, but value type not recognized properly
+// you must provide your own resolver for unresolved types
+// IsValueType = typeName => {
+//    switch (typeName)
+//    {
+//        case "unresolved type name": return true; // or false for reference type
+//        default: return IsValueTypeDefault(typeName);
+//    }
+// };
+// by default resolve unknown types, ending with ? as value types and other types as reference types
+Func<string, boolean> IsValueType = IsValueTypeDefault;
 
 /* Data context configuration */
 // (string) Name of base class for generated data context class.
@@ -110,6 +141,8 @@ DataContextName                = null;
 GenerateConstructors          = true;               // Enforce generating DataContext constructors.
 // (string) Defines name of default configuration to use with default data context constructor
 DefaultConfiguration          = null;
+// Enables generation of data context comment with database name, data source and database version
+GenerateDatabaseInfo          = true;
 
 /* Schemas configuration */
 // Enables generation of mappings for each schema in separate type
@@ -133,6 +166,8 @@ GenerateDatabaseName          = false;
 // Enables generation of TableAttribute.Database property with provided name value.
 // (string) If set, overrides GenerateDatabaseName behavior
 DatabaseName                  = null;
+// Enables generation of TableAttribute.Server property with provided name value.
+ServerName                    = null;
 // Enables generation of TableAttribute.Schema property for default schema
 IncludeDefaultSchema          = true;
 // Enables generation of mappings for views
@@ -141,6 +176,10 @@ GenerateViews                 = true;
 // E.g. MySchema.MyTable -> MySchema_MyTable
 // Applicable only if GenerateSchemaAsType = false
 PrefixTableMappingWithSchema  = true;
+// Enables prefixing mapping classes for tables in default schema with schema name
+// E.g. dbo.MyTable -> dbo_MyTable
+// Applicable only if IncludeDefaultSchema = true && GenerateSchemaAsType = false && PrefixTableMappingWithSchema = true
+PrefixTableMappingForDefaultSchema = false;
 
 /* Columns comfiguration */
 // Enables compact generation of column properties
@@ -195,6 +234,8 @@ GenerateProcedureErrors       = true;
 // IMPORTANT: this will lead to load of all procedure results into list and could lead
 // to performance issues on big results
 GenerateProcedureResultAsList = false;
+// Enables stored procedure methods to accept generated context object or DataConnection type
+GenerateProceduresOnTypedContext = true;
 
 /* Other generated functionality */
 // Enables generation of Find(pk fields) extension methods for record selection by primary key value
@@ -382,5 +423,34 @@ public class Parameter
 	public string   ParameterType;
 	public Type     SystemType;
 	public string   DataType;
+}
+```
+## IEquatable interface implementation (Equatable.ttinclude)
+
+There is `Equatable.ttinclude` template that could be used to implement `IEquatable<T>` interface.
+
+This template has following options:
+```c#
+partial class Class
+{
+	// Determines whether need to implement IEquatable interface for this class
+	public bool IsEquatable = DefaultEquatable;
+}
+
+// Default value for Class.IsEquatable property
+bool DefaultEquatable = true;
+
+// Default field name for equality comparer implementation
+string EqualityComparerFieldName = "_comparer";
+
+// Properties filter option to select equality members
+Func<Class, Property, bool> EqualityPropertiesFilter = EqualityPropertiesFilterDefault;
+
+// Default implementation of the EqualityPropertiesFilter option
+static bool EqualityPropertiesFilterDefault(Class cl, Property prop)
+{
+	// Don't generate equality for non-table classes (e.g. data manager class) and associations
+	// Compare only by primary keys
+	return cl is Table && prop is Column col && col.IsPrimaryKey;
 }
 ```

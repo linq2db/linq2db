@@ -66,7 +66,7 @@ namespace LinqToDB.Data
 			{
 				SetCommand(false);
 
-				var sqlProvider = _preparedQuery.SqlProvider ?? _dataConnection.DataProvider.CreateSqlBuilder();
+				var sqlProvider = _preparedQuery.SqlProvider ?? _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema);
 
 				var sb = new StringBuilder();
 
@@ -99,7 +99,7 @@ namespace LinqToDB.Data
 
 						var sql = sb.ToString();
 
-						var sqlBuilder = _dataConnection.DataProvider.CreateSqlBuilder();
+						var sqlBuilder = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema);
 						sql = sqlBuilder.ApplyQueryHints(sql, _preparedQuery.QueryHints);
 
 						sb = new StringBuilder(sql);
@@ -159,7 +159,10 @@ namespace LinqToDB.Data
 					 };
 				}
 
+				// before processing query we correct parameters
 				var sql    = query.Statement.ProcessParameters(dataConnection.MappingSchema);
+
+				// custom query handling
 				var newSql = dataConnection.ProcessQuery(sql);
 
 				if (!object.ReferenceEquals(sql, newSql))
@@ -168,7 +171,9 @@ namespace LinqToDB.Data
 					sql.IsParameterDependent = true;
 				}
 
-				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder();
+				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+
+				sql = dataConnection.DataProvider.GetSqlOptimizer().OptimizeStatement(sql, dataConnection.MappingSchema);
 
 				var cc = sqlProvider.CommandCount(sql);
 				var sb = new StringBuilder();
@@ -280,9 +285,11 @@ namespace LinqToDB.Data
 			{
 				SetCommand(true);
 
-				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints);
+				var hasParameters = _preparedQuery.Parameters?.Length > 0;
 
-				if (_preparedQuery.Parameters != null)
+				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, hasParameters);
+
+				if (hasParameters)
 					foreach (var p in _preparedQuery.Parameters)
 						_dataConnection.Command.Parameters.Add(p);
 			}
@@ -293,9 +300,11 @@ namespace LinqToDB.Data
 			{
 				if (preparedQuery.Commands.Length == 1)
 				{
-					dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints);
+					var hasParameters = preparedQuery.Parameters?.Length > 0;
 
-					if (preparedQuery.Parameters != null)
+					dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints, hasParameters);
+
+					if (hasParameters)
 						foreach (var p in preparedQuery.Parameters)
 							dataConnection.Command.Parameters.Add(p);
 
@@ -306,9 +315,11 @@ namespace LinqToDB.Data
 
 				for (var i = 0; i < preparedQuery.Commands.Length; i++)
 				{
-					dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[i], null, i == 0 ? preparedQuery.QueryHints : null);
+					var hasParameters = i == 0 && preparedQuery.Parameters?.Length > 0;
 
-					if (i == 0 && preparedQuery.Parameters != null)
+					dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[i], null, i == 0 ? preparedQuery.QueryHints : null, hasParameters);
+
+					if (hasParameters)
 						foreach (var p in preparedQuery.Parameters)
 							dataConnection.Command.Parameters.Add(p);
 
@@ -387,7 +398,7 @@ namespace LinqToDB.Data
 
 				dataConnection.ExecuteNonQuery();
 
-				dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[1], null, null);
+				dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[1], null, null, false);
 
 				return dataConnection.ExecuteScalar();
 			}
@@ -398,9 +409,11 @@ namespace LinqToDB.Data
 
 				GetParameters(dataConnection, context, preparedQuery);
 
-				dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints);
+				var hasParameters = preparedQuery.Parameters?.Length > 0;
 
-				if (preparedQuery.Parameters != null)
+				dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints, hasParameters);
+
+				if (hasParameters)
 					foreach (var p in preparedQuery.Parameters)
 						dataConnection.Command.Parameters.Add(p);
 
@@ -423,9 +436,11 @@ namespace LinqToDB.Data
 
 				GetParameters(dataConnection, context, preparedQuery);
 
-				dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints);
+				var hasParameters = preparedQuery.Parameters?.Length > 0;
 
-				if (preparedQuery.Parameters != null)
+				dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints, hasParameters);
+
+				if (hasParameters)
 					foreach (var p in preparedQuery.Parameters)
 						dataConnection.Command.Parameters.Add(p);
 
@@ -436,9 +451,11 @@ namespace LinqToDB.Data
 			{
 				SetCommand(true);
 
-				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints);
+				var hasParameters = _preparedQuery.Parameters?.Length > 0;
 
-				if (_preparedQuery.Parameters != null)
+				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, hasParameters);
+
+				if (hasParameters)
 					foreach (var p in _preparedQuery.Parameters)
 						_dataConnection.Command.Parameters.Add(p);
 
@@ -475,17 +492,19 @@ namespace LinqToDB.Data
 			{
 				_isAsync = true;
 
-				await _dataConnection.EnsureConnectionAsync(cancellationToken);
+				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				base.SetCommand(true);
 
-				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints);
+				var hasParameters = _preparedQuery.Parameters?.Length > 0;
 
-				if (_preparedQuery.Parameters != null)
+				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, hasParameters);
+
+				if (hasParameters)
 					foreach (var p in _preparedQuery.Parameters)
 						_dataConnection.Command.Parameters.Add(p);
 
-				var dataReader = await _dataConnection.ExecuteReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken);
+				var dataReader = await _dataConnection.ExecuteReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				return new DataReaderAsync(dataReader);
 			}
@@ -494,28 +513,32 @@ namespace LinqToDB.Data
 			{
 				_isAsync = true;
 
-				await _dataConnection.EnsureConnectionAsync(cancellationToken);
+				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				base.SetCommand(true);
 
 				if (_preparedQuery.Commands.Length == 1)
 				{
-					_dataConnection.InitCommand(
-						CommandType.Text, _preparedQuery.Commands[0], null, _preparedQuery.QueryHints);
+					var hasParameters = _preparedQuery.Parameters?.Length > 0;
 
-					if (_preparedQuery.Parameters != null)
+					_dataConnection.InitCommand(
+						CommandType.Text, _preparedQuery.Commands[0], null, _preparedQuery.QueryHints, hasParameters);
+
+					if (hasParameters)
 						foreach (var p in _preparedQuery.Parameters)
 							_dataConnection.Command.Parameters.Add(p);
 
-					return await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+					return await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 
 				for (var i = 0; i < _preparedQuery.Commands.Length; i++)
 				{
-					_dataConnection.InitCommand(
-						CommandType.Text, _preparedQuery.Commands[i], null, i == 0 ? _preparedQuery.QueryHints : null);
+					var hasParameters = i == 0 && _preparedQuery.Parameters?.Length > 0;
 
-					if (i == 0 && _preparedQuery.Parameters != null)
+					_dataConnection.InitCommand(
+						CommandType.Text, _preparedQuery.Commands[i], null, i == 0 ? _preparedQuery.QueryHints : null, hasParameters);
+
+					if (hasParameters)
 						foreach (var p in _preparedQuery.Parameters)
 							_dataConnection.Command.Parameters.Add(p);
 
@@ -523,7 +546,7 @@ namespace LinqToDB.Data
 					{
 						try
 						{
-							await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+							await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						}
 						catch
 						{
@@ -531,7 +554,7 @@ namespace LinqToDB.Data
 					}
 					else
 					{
-						await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+						await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					}
 				}
 
@@ -542,7 +565,7 @@ namespace LinqToDB.Data
 			{
 				_isAsync = true;
 
-				await _dataConnection.EnsureConnectionAsync(cancellationToken);
+				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				SetCommand();
 
@@ -568,19 +591,19 @@ namespace LinqToDB.Data
 					{
 						// так сделано потому, что фаерберд провайдер не возвращает никаких параметров через ExecuteReader
 						// остальные провайдеры должны поддерживать такой режим
-						await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+						await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 						return idparam.Value;
 					}
 
-					return await _dataConnection.ExecuteScalarAsync(cancellationToken);
+					return await _dataConnection.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 
-				await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+				await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[1], null, null);
+				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[1], null, null, false);
 
-				return await _dataConnection.ExecuteScalarAsync(cancellationToken);
+				return await _dataConnection.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 	}

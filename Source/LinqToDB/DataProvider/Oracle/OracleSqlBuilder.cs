@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using System.Text;
 
-	class OracleSqlBuilder : BasicSqlBuilder
+	partial class OracleSqlBuilder : BasicSqlBuilder
 	{
 		public OracleSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -209,7 +209,7 @@ namespace LinqToDB.DataProvider.Oracle
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -222,6 +222,12 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Byte           : StringBuilder.Append("Number(3)");                 break;
 				case DataType.Money          : StringBuilder.Append("Number(19,4)");              break;
 				case DataType.SmallMoney     : StringBuilder.Append("Number(10,4)");              break;
+				case DataType.VarChar        :
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+						StringBuilder.Append("VarChar(4000)");
+					else
+						StringBuilder.Append($"VarChar({type.Length})");
+					break;
 				case DataType.NVarChar       :
 					if (type.Length == null || type.Length > 4000 || type.Length < 1)
 						StringBuilder.Append("VarChar2(4000)");
@@ -239,7 +245,7 @@ namespace LinqToDB.DataProvider.Oracle
 					else
 						StringBuilder.Append("Raw(").Append(type.Length).Append(")");
 					break;
-				default: base.BuildDataType(type, createDbType);                                  break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable);                    break;
 			}
 		}
 
@@ -575,14 +581,20 @@ END;",
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
+			if (server != null && server.Length == 0) server = null;
 			if (schema != null && schema.Length == 0) schema = null;
 
 			if (schema != null)
 				sb.Append(schema).Append(".");
 
-			return sb.Append(table);
+			sb.Append(table);
+
+			if (server != null)
+				sb.Append("@").Append(server);
+
+			return sb;
 		}
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)

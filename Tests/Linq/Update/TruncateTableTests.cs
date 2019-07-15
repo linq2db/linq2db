@@ -40,7 +40,7 @@ namespace Tests.xUpdate
 			[Column]                       public decimal Field1;
 		}
 
-		[ActiveIssue(":NEW as parameter", Configurations = new[] { ProviderName.OracleNative })]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void TruncateIdentityTest([DataSources(ProviderName.Informix, ProviderName.SapHana)]
 			string context)
@@ -71,8 +71,8 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		public void TruncateIdentityNoResetTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

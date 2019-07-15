@@ -323,9 +323,9 @@ namespace Tests
 		}
 #endif
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new Npgsql4PostgreSQLSqlBuilder(this, GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+			return new Npgsql4PostgreSQLSqlBuilder(this, GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
@@ -445,7 +445,7 @@ namespace Tests
 			return new Npgsql4PostgreSQLSqlBuilder(_provider, SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			if (type.Type != null)
 			{
@@ -471,7 +471,7 @@ namespace Tests
 				}
 			}
 
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 	}
 }

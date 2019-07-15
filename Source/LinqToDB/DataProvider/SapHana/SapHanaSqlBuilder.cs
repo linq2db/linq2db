@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using SqlQuery;
 	using SqlProvider;
 
-	class SapHanaSqlBuilder : BasicSqlBuilder
+	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
 		public SapHanaSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -81,7 +81,7 @@ namespace LinqToDB.DataProvider.SapHana
 			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider.SapHana
 					}
 					break;
 			}
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
@@ -179,6 +179,7 @@ namespace LinqToDB.DataProvider.SapHana
 						return "\"" + value + "\"";
 					}
 
+				case ConvertType.NameToServer     :
 				case ConvertType.NameToDatabase   :
 				case ConvertType.NameToSchema     :
 				case ConvertType.NameToQueryTable :
@@ -267,17 +268,22 @@ namespace LinqToDB.DataProvider.SapHana
 				ConvertCase(systemType, parameters, start + 2));
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
-			if (database != null && database.Length == 0) database = null;
-			if (schema    != null && schema.   Length == 0) schema    = null;
+			if (server   != null && server.Length == 0) server = null;
+			if (schema   != null && schema.Length == 0) schema = null;
 
-			// "db..table" syntax not supported:
-			// <table_name> ::= [[<database_name>.]<schema.name>.]<identifier>
-			if (database != null && schema == null)
-				throw new LinqToDBException("SAP HANA requires schema name if database name provided.");
+			// <table_name> ::= [[<linked_server_name>.]<schema_name>.]<identifier>
+			if (server != null && schema == null)
+				throw new LinqToDBException("You must specify schema name for linked server queries.");
 
-			return base.BuildTableName(sb, database, schema, table);
+			if (server != null)
+				sb.Append(server).Append(".");
+
+			if (schema != null)
+				sb.Append(schema).Append(".");
+
+			return sb.Append(table);
 		}
 	}
 }

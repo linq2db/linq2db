@@ -40,7 +40,12 @@ namespace Tests.xUpdate
 			};
 
 			public MergeDataContextSourceAttribute(params string[] except)
-				: base(false, Unsupported.Concat(except).ToArray())
+				: base(true, Unsupported.Concat(except).ToArray())
+			{
+			}
+
+			public MergeDataContextSourceAttribute(bool includeLinqService, params string[] except)
+				: base(includeLinqService, Unsupported.Concat(except).ToArray())
 			{
 			}
 		}
@@ -60,7 +65,12 @@ namespace Tests.xUpdate
 			};
 
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
-				: base(false, Supported.Except(except).ToArray())
+				: base(true, Supported.Except(except).ToArray())
+			{
+			}
+
+			public IdentityInsertMergeDataContextSourceAttribute(bool includeLinqService, params string[] except)
+				: base(includeLinqService, Supported.Except(except).ToArray())
 			{
 			}
 		}
@@ -205,9 +215,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestDataGenerationTest([DataSources(false)] string context)
+		public void TestDataGenerationTest([DataSources] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -231,10 +241,11 @@ namespace Tests.xUpdate
 
 		private void AssertRowCount(int expected, int actual, string context)
 		{
+			var provider = GetProviderName(context, out var _);
 			// another sybase quirk, nothing surprising
-			if (context == ProviderName.Sybase || context == ProviderName.SybaseManaged)
+			if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
 				Assert.LessOrEqual(expected, actual);
-			else if (context == ProviderName.OracleNative && actual == -1)
+			else if (provider == ProviderName.OracleNative && actual == -1)
 			{ }
 			else
 				Assert.AreEqual(expected, actual);

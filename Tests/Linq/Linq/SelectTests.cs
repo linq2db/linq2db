@@ -549,6 +549,7 @@ namespace Tests.Linq
 			public string FirstName;
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void ObjectFactoryTest([DataSources] string context)
 		{
@@ -837,7 +838,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1202)]
 		[Test, Parallelizable(ParallelScope.None)]
 		public void SelectReverseNullPropagationWhereTest([DataSources] string context)
 		{
@@ -1041,7 +1041,7 @@ namespace Tests.Linq
 				var result = query.ToArray();
 
 				Assert.NotNull(result[0].Child1);
-				Assert.NotNull(result[1].Child1);
+				Assert.IsNull (result[1].Child1);
 
 				Assert.NotNull(result[0].Child2);
 				Assert.AreEqual(1,         result[0].Child2.Id);
@@ -1054,9 +1054,7 @@ namespace Tests.Linq
 				Assert.AreEqual("Generated", result[1].Child3.Value);
 
 				Assert.Null(result[0].Child4);
-				Assert.NotNull(result[1].Child4);
-				Assert.AreEqual(0,    result[1].Child4.Id);
-				Assert.AreEqual(null, result[1].Child4.Value);
+				Assert.IsNull(result[1].Child4);
 			}
 		}
 
@@ -1092,5 +1090,156 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value.Value));
+
+				Assert.AreEqual(value, result);
+			}
+		}
+
+		[Test]
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value.Value) : (int?)null);
+
+				Assert.AreEqual(value, result);
+			}
+		}
+
+		[Test]
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
+
+				Assert.AreEqual(value, result);
+			}
+		}
+
+		[Test]
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
+
+				Assert.AreEqual(value, result);
+			}
+		}
+
+		[Table("Parent")]
+		public class Parent1788
+		{
+			[Column]
+			public int Value1 { get; }
+		}
+
+		//https://github.com/linq2db/linq2db/issues/1788
+		[ActiveIssue(1788)]
+		[Test]
+		public void Issue1788Test1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = from p in db.GetTable<Parent1788>()
+							   select new
+							   {
+								   f1 = Sql.ToNullable(p.Value1).HasValue,
+								   f2 = Sql.ToNullable(p.Value1)
+							   };
+
+				AreEqual(
+					from p in db.Parent.AsEnumerable()
+					select new
+					{
+						f1 = p.Value1.HasValue,
+						f2 = p.Value1
+					},
+					results);
+			}
+		}
+
+		[ActiveIssue(1788)]
+		[Test]
+		public void Issue1788Test2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = from p in db.GetTable<Parent1788>()
+							  select new
+							  {
+								  f1 = Sql.ToNullable(p.Value1) != null,
+								  f2 = Sql.ToNullable(p.Value1)
+							  };
+
+				AreEqual(
+					from p in db.Parent.AsEnumerable()
+					select new
+					{
+						f1 = p.Value1 != null,
+						f2 = p.Value1
+					},
+					results);
+			}
+		}
+
+		[Test]
+		public void Issue1788Test3([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = from p in db.GetTable<Parent1788>()
+							  select new
+							  {
+#pragma warning disable 472
+								  f1 = ((int?)p.Value1) != null,
+#pragma warning restore 472
+								  f2 = (int?)p.Value1
+							  };
+
+				AreEqual(
+					from p in db.Parent.AsEnumerable()
+					select new
+					{
+						f1 = p.Value1 != null,
+						f2 = p.Value1
+					},
+					results);
+			}
+		}
+
+		[Test]
+		public void Issue1788Test4([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = from p in db.GetTable<Parent1788>()
+							  select new
+							  {
+								  f1 = ((int?)p.Value1).HasValue,
+								  f2 = (int?)p.Value1
+							  };
+
+				AreEqual(
+					from p in db.Parent.AsEnumerable()
+					select new
+					{
+						f1 = p.Value1 != null,
+						f2 = p.Value1
+					},
+					results);
+			}
+		}
 	}
 }

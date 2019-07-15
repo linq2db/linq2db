@@ -47,7 +47,6 @@ namespace Tests.UserTests
 			public int IntValue { get; set; }
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void Test([DataSources(false)] string context)
 		{

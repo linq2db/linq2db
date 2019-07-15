@@ -72,6 +72,18 @@ namespace LinqToDB.SqlQuery
 				(Value == null && value.Value == null || Value != null && Value.Equals(value.Value));
 		}
 
+		public override int GetHashCode()
+		{
+			var hashCode = 17;
+
+			if (SystemType != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
+			if (Value != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Value.GetHashCode());
+
+			return hashCode;
+		}
+
 		#endregion
 
 		#region ISqlExpression Members

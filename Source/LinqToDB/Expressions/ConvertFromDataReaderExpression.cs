@@ -117,7 +117,7 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
-		class ColumnReader
+		internal class ColumnReader
 		{
 			public ColumnReader(IDataContext dataContext, MappingSchema mappingSchema, Type columnType, int columnIndex)
 			{

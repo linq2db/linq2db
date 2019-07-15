@@ -20,7 +20,7 @@ namespace Tests.UserTests
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 
 				var schema = schemaProvider.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-
+				
 				Assert.IsNotNull(schema);
 			}
 		}

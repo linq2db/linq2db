@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.DB2
 	using Data;
 	using Common;
 	using Extensions;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -159,11 +160,11 @@ namespace LinqToDB.DataProvider.DB2
 		}
 #endif
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
 			return Version == DB2Version.zOS ?
-				new DB2zOSSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter) as ISqlBuilder:
-				new DB2LUWSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+				new DB2zOSSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter) as ISqlBuilder:
+				new DB2LUWSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 		}
 
 		readonly DB2SqlOptimizer _sqlOptimizer;
@@ -173,10 +174,10 @@ namespace LinqToDB.DataProvider.DB2
 			return _sqlOptimizer;
 		}
 
-		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters)
+		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters)
 		{
 			dataConnection.DisposeCommand();
-			base.InitCommand(dataConnection, commandType, commandText, parameters);
+			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
 		}
 
 		Action<IDbDataParameter> _setBlob;
@@ -217,8 +218,8 @@ namespace LinqToDB.DataProvider.DB2
 						{
 							value    = b ? 1 : 0;
 							dataType = dataType.WithDataType(DataType.Int16);
-						}
-						break;
+					}
+					break;
 					}
 				case DataType.Guid       :
 					{
@@ -266,35 +267,6 @@ namespace LinqToDB.DataProvider.DB2
 				table,
 				options,
 				source);
-		}
-
-		#endregion
-
-		#region Merge
-
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
-		{
-			if (delete)
-				throw new LinqToDBException("DB2 MERGE statement does not support DELETE by source.");
-
-			return new DB2Merge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-		}
-
-		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-		{
-			if (delete)
-				throw new LinqToDBException("DB2 MERGE statement does not support DELETE by source.");
-
-			return new DB2Merge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
-		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new DB2MergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		#endregion

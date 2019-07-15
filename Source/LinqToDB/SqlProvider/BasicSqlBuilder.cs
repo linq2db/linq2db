@@ -13,7 +13,7 @@ namespace LinqToDB.SqlProvider
 	using Mapping;
 	using SqlQuery;
 
-	public abstract class BasicSqlBuilder : ISqlBuilder
+	public abstract partial class BasicSqlBuilder : ISqlBuilder
 	{
 		#region Init
 
@@ -62,11 +62,6 @@ namespace LinqToDB.SqlProvider
 		#endregion
 
 		#region BuildSql
-
-		internal void BuildSqlWithAliases(int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0)
-		{
-			BuildSql(commandNumber, statement, sb, startIndent, false);
-		}
 
 		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0)
 		{
@@ -160,15 +155,16 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (Statement.QueryType)
 			{
-				case QueryType.Select        : BuildSelectQuery           ((SqlSelectStatement)Statement);                     break;
-				case QueryType.Delete        : BuildDeleteQuery           ((SqlDeleteStatement)Statement);                     break;
+				case QueryType.Select        : BuildSelectQuery           ((SqlSelectStatement)Statement);                                            break;
+				case QueryType.Delete        : BuildDeleteQuery           ((SqlDeleteStatement)Statement);                                            break;
 				case QueryType.Update        : BuildUpdateQuery           (Statement, Statement.SelectQuery, ((SqlUpdateStatement)Statement).Update); break;
-				case QueryType.Insert        : BuildInsertQuery           (Statement, ((SqlInsertStatement)Statement).Insert, false); break;
-				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery   ((SqlInsertOrUpdateStatement)Statement);             break;
-				case QueryType.CreateTable   : BuildCreateTableStatement  ((SqlCreateTableStatement)Statement);                break;
-				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                  break;
-				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);              break;
-				default                      : BuildUnknownQuery();        break;
+				case QueryType.Insert        : BuildInsertQuery           (Statement, ((SqlInsertStatement)Statement).Insert, false);                 break;
+				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery   ((SqlInsertOrUpdateStatement)Statement);                                    break;
+				case QueryType.CreateTable   : BuildCreateTableStatement  ((SqlCreateTableStatement)Statement);                                       break;
+				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                                         break;
+				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);                                     break;
+				case QueryType.Merge         : BuildMergeStatement        ((SqlMergeStatement)Statement);                                             break;
+				default                      : BuildUnknownQuery();                                                                                   break;
 			}
 		}
 
@@ -291,16 +287,18 @@ namespace LinqToDB.SqlProvider
 			throw new SqlException("Unknown query type '{0}'.", Statement.QueryType);
 		}
 
-		public virtual StringBuilder ConvertTableName(StringBuilder sb, string database, string schema, string table)
+		public virtual StringBuilder ConvertTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
+			if (server   != null) server   = Convert(server,   ConvertType.NameToServer).    ToString();
 			if (database != null) database = Convert(database, ConvertType.NameToDatabase).  ToString();
 			if (schema   != null) schema   = Convert(schema,   ConvertType.NameToSchema).    ToString();
 			if (table    != null) table    = Convert(table,    ConvertType.NameToQueryTable).ToString();
 
-			return BuildTableName(sb, database, schema, table);
+			return BuildTableName(sb, server, database, schema, table);
 		}
 
 		public virtual StringBuilder BuildTableName(StringBuilder sb,
+			string server,
 			string database,
 			string schema,
 			[JetBrains.Annotations.NotNull] string table)
@@ -356,7 +354,7 @@ namespace LinqToDB.SqlProvider
 					AppendIndent();
 				}
 
-				ConvertTableName(StringBuilder, null, null, cte.Name);
+				ConvertTableName(StringBuilder, null, null, null, cte.Name);
 
 				if (cte.Fields.Count > 3)
 				{
@@ -516,13 +514,6 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		internal virtual void BuildUpdateSetHelper(SqlUpdateStatement updateStatement, StringBuilder sb)
-		{
-			Statement     = updateStatement;
-			StringBuilder = sb;
-			BuildUpdateSet(updateStatement.SelectQuery, updateStatement.Update);
-		}
-
 		protected virtual void BuildUpdateSet(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
 			AppendIndent()
@@ -569,13 +560,6 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOutputSubclause(SqlStatement statement, SqlInsertClause insertClause)
 		{
-		}
-
-		internal virtual void BuildInsertClauseHelper(SqlStatement statement, StringBuilder sb)
-		{
-			Statement     = statement;
-			StringBuilder = sb;
-			BuildInsertClause(statement, statement.RequireInsertClause(), null, false, false);
 		}
 
 		protected virtual void BuildInsertClause(SqlStatement statement, SqlInsertClause insertClause, string insertText, bool appendTableName, bool addAlias)
@@ -1192,13 +1176,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCreateTableFieldType(SqlField field)
 		{
-			BuildDataType(new SqlDataType(
-				field.DataType,
-				field.SystemType,
-				field.Length,
-				field.Precision,
-				field.Scale),
-				true);
+			BuildDataType(new SqlDataType(field), true);
 		}
 
 		protected virtual void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
@@ -1282,22 +1260,23 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (table.ElementType)
 			{
-				case QueryElementType.SqlTable   :
-				case QueryElementType.TableSource:
+				case QueryElementType.SqlTable        :
+				case QueryElementType.TableSource     :
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
-				case QueryElementType.SqlQuery   :
+				case QueryElementType.SqlQuery        :
 					StringBuilder.Append("(").AppendLine();
 					BuildSqlBuilder((SelectQuery)table, Indent + 1, false);
 					AppendIndent().Append(")");
 					break;
 
-				case QueryElementType.SqlCteTable  :
+				case QueryElementType.SqlCteTable     :
+				case QueryElementType.MergeSourceTable:
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
-				case QueryElementType.SqlRawSqlTable :
+				case QueryElementType.SqlRawSqlTable  :
 
 					var rawSqlTable = (SqlRawSqlTable)table;
 
@@ -1318,8 +1297,8 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
-				default                          :
-					throw new InvalidOperationException();
+				default:
+					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
 		}
 
@@ -1649,12 +1628,6 @@ namespace LinqToDB.SqlProvider
 		#region Builders
 
 		#region BuildSearchCondition
-		internal virtual void BuildSearchCondition(SqlStatement statement, SqlSearchCondition condition, StringBuilder sb)
-		{
-			Statement     = statement;
-			StringBuilder = sb;
-			BuildWhereSearchCondition(statement.EnsureQuery(), condition);
-		}
 
 		protected virtual void BuildWhereSearchCondition(SelectQuery selectQuery, SqlSearchCondition condition)
 		{
@@ -1802,7 +1775,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				default:
-					throw new InvalidOperationException();
+					throw new InvalidOperationException($"Unexpected predicate type {predicate.ElementType}");
 			}
 		}
 
@@ -1909,14 +1882,7 @@ namespace LinqToDB.SqlProvider
 									if (value is ISqlExpression expression)
 										BuildExpression(expression);
 									else
-										BuildValue(
-											new SqlDataType(
-												field.DataType,
-												field.SystemType,
-												field.Length,
-												field.Precision,
-												field.Scale),
-											value);
+										BuildValue(new SqlDataType(field), value);
 
 									StringBuilder.Append(", ");
 								}
@@ -1948,14 +1914,7 @@ namespace LinqToDB.SqlProvider
 										else
 										{
 											StringBuilder.Append(" = ");
-											BuildValue(
-												new SqlDataType(
-													field.DataType,
-													field.SystemType,
-													field.Length,
-													field.Precision,
-													field.Scale),
-												value);
+											BuildValue(new SqlDataType(field), value);
 										}
 
 										StringBuilder.Append(" AND ");
@@ -2044,19 +2003,14 @@ namespace LinqToDB.SqlProvider
 							{
 								var field = (SqlField)predicate.Expr1;
 
-								sqlDataType = new SqlDataType(
-									field.DataType,
-									field.SystemType,
-									field.Length,
-									field.Precision,
-									field.Scale);
+								sqlDataType = new SqlDataType(field);
 							}
 							break;
 
 						case QueryElementType.SqlParameter:
 							{
 								var p = (SqlParameter)predicate.Expr1;
-								sqlDataType = new SqlDataType(p.DataType, p.SystemType, 0, 0, 0);
+								sqlDataType = new SqlDataType(p);
 							}
 
 							break;
@@ -2287,7 +2241,7 @@ namespace LinqToDB.SqlProvider
 						}
 						else
 						{
-							BuildValue(new SqlDataType(parm.DataType, parm.SystemType, parm.DbSize, 0, 0, parm.DbType), parm.Value);
+							BuildValue(new SqlDataType(parm), parm.Value);
 						}
 					}
 
@@ -2312,7 +2266,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				default:
-					throw new InvalidOperationException();
+					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
 			}
 
 			return StringBuilder;
@@ -2385,6 +2339,15 @@ namespace LinqToDB.SqlProvider
 		{
 			var dummy = false;
 			BuildExpression(precedence, expr, null, ref dummy);
+		}
+
+		protected virtual void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
+		{
+			StringBuilder.Append("CAST(");
+			BuildExpression(value);
+			StringBuilder.Append(" AS ");
+			BuildDataType(dataType, false);
+			StringBuilder.Append(")");
 		}
 
 		#endregion
@@ -2502,8 +2465,21 @@ namespace LinqToDB.SqlProvider
 		#endregion
 
 		#region BuildDataType
+		protected void BuildDataType(SqlDataType type, bool forCreateTable)
+		{
+			if (!string.IsNullOrEmpty(type.DbType))
+				StringBuilder.Append(type.DbType);
+			else
+			{
+				if (type.DataType == DataType.Undefined)
+					// give some hint to user that it is expected situation and he need to fix something on his side
+					throw new LinqToDBException("Database type cannot be determined automatically and must be specified explicitly");
 
-		protected virtual void BuildDataType(SqlDataType type, bool createDbType)
+				BuildDataTypeFromDataType(type, forCreateTable);
+			}
+		}
+
+		protected virtual void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -2518,15 +2494,9 @@ namespace LinqToDB.SqlProvider
 				case DataType.Int32  : StringBuilder.Append("Int");      return;
 				case DataType.Int64  : StringBuilder.Append("BigInt");   return;
 				case DataType.Boolean: StringBuilder.Append("Bit");      return;
-				case DataType.Undefined:
-					// give some hint to user that it is expected situation and he need to fix something on his side
-					throw new LinqToDBException("Database type cannot be determined automatically and must be specified explicitly");
 			}
 
-			if (!string.IsNullOrEmpty(type.DbType))
-				StringBuilder.Append(type.DbType);
-			else
-				StringBuilder.Append(type.DataType);
+			StringBuilder.Append(type.DataType);
 
 			if (type.Length > 0)
 				StringBuilder.Append('(').Append(type.Length).Append(')');
@@ -2942,15 +2912,20 @@ namespace LinqToDB.SqlProvider
 					var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
 					return alias != "$" ? alias : null;
 
-				case QueryElementType.SqlTable:
+				case QueryElementType.SqlTable        :
+				case QueryElementType.SqlCteTable     :
 					return ((SqlTable)table).Alias;
-
-				case QueryElementType.SqlCteTable:
-					return ((SqlTable)table).Alias;
+				case QueryElementType.MergeSourceTable:
+					return null;
 
 				default:
-					throw new InvalidOperationException();
+					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
+		}
+
+		protected virtual string GetTableServerName(SqlTable table)
+		{
+			return table.Server == null ? null : Convert(table.Server, ConvertType.NameToServer).ToString();
 		}
 
 		protected virtual string GetTableDatabaseName(SqlTable table)
@@ -2982,13 +2957,14 @@ namespace LinqToDB.SqlProvider
 					{
 						var tbl = (SqlTable)table;
 
+						var server       = GetTableServerName  (tbl);
 						var database     = GetTableDatabaseName(tbl);
 						var schema       = GetTableSchemaName  (tbl);
 						var physicalName = GetTablePhysicalName(tbl);
 
 						var sb = new StringBuilder();
 
-						BuildTableName(sb, database, schema, physicalName);
+						BuildTableName(sb, server, database, schema, physicalName);
 
 						if (!ignoreTableExpression && tbl.SqlTableType == SqlTableType.Expression)
 						{
@@ -3043,10 +3019,13 @@ namespace LinqToDB.SqlProvider
 					return GetPhysicalTableName(((SqlTableSource)table).Source, alias);
 
 				case QueryElementType.SqlCteTable:
-					return GetTablePhysicalName((SqlCteTable)table);
+					return GetTablePhysicalName((SqlTable)table);
+
+				case QueryElementType.MergeSourceTable:
+					return Convert(((SqlMergeSourceTable)table).Name, ConvertType.NameToQueryTable).ToString();
 
 				default:
-					throw new InvalidOperationException();
+					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
 		}
 
@@ -3209,7 +3188,8 @@ namespace LinqToDB.SqlProvider
 					sb.Append("SET     ");
 					PrintParameterName(sb, p);
 					sb.Append(" = ");
-					ValueToSqlConverter.Convert(sb, p.Value);
+					if (!ValueToSqlConverter.TryConvert(sb, p.Value))
+						sb.Append(p.Value);
 					sb.AppendLine();
 				}
 
@@ -3243,6 +3223,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual string GetMaxValueSql(EntityDescriptor entity, ColumnDescriptor column)
 		{
+			var server   = entity.ServerName;
 			var database = entity.DatabaseName;
 			var schema   = entity.SchemaName;
 			var table    = entity.TableName;
@@ -3250,6 +3231,7 @@ namespace LinqToDB.SqlProvider
 			var columnName = Convert(column.ColumnName, ConvertType.NameToQueryField);
 			var tableName  = BuildTableName(
 				new StringBuilder(),
+				server   == null ? null : Convert(server,   ConvertType.NameToServer).    ToString(),
 				database == null ? null : Convert(database, ConvertType.NameToDatabase).  ToString(),
 				schema   == null ? null : Convert(schema,   ConvertType.NameToSchema).    ToString(),
 				table    == null ? null : Convert(table,    ConvertType.NameToQueryTable).ToString())

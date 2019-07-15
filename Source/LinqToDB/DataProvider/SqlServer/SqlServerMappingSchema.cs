@@ -53,6 +53,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(SqlString?),   SqlString.  Null, true, DataType.NVarChar);
 			AddScalarType(typeof(SqlXml),       SqlXml.     Null, true, DataType.Xml);
 
+			AddScalarType(typeof(DateTime),  DataType.DateTime);
+			AddScalarType(typeof(DateTime?), DataType.DateTime);
+
 			try
 			{
 				foreach (var typeInfo in new[]

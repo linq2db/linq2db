@@ -22,7 +22,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlTable(
-			int id, string name, string alias, string database, string schema, string physicalName, Type objectType,
+			int id, string name, string alias, string server, string database, string schema, string physicalName, Type objectType,
 			SequenceNameAttribute[] sequenceAttributes,
 			SqlField[]              fields,
 			SqlTableType            sqlTableType,
@@ -31,6 +31,7 @@ namespace LinqToDB.SqlQuery
 			SourceID           = id;
 			Name               = name;
 			Alias              = alias;
+			Server             = server;
 			Database           = database;
 			Schema             = schema;
 			PhysicalName       = physicalName;
@@ -66,6 +67,7 @@ namespace LinqToDB.SqlQuery
 
 			var ed = mappingSchema.GetEntityDescriptor(objectType);
 
+			Server       = ed.ServerName;
 			Database     = ed.DatabaseName;
 			Schema       = ed.SchemaName;
 			Name         = ed.TableName;
@@ -84,11 +86,10 @@ namespace LinqToDB.SqlQuery
 
 					if (dataType.DataType == DataType.Undefined)
 					{
-						var  canBeNull = field.CanBeNull;
+						dataType = mappingSchema.GetUnderlyingDataType(field.SystemType, out var canBeNull);
 
-						dataType = mappingSchema.GetUnderlyingDataType(field.SystemType, ref canBeNull);
-
-						field.CanBeNull = canBeNull;
+						if (canBeNull)
+							field.CanBeNull = true;
 					}
 
 					field.DataType = dataType.DataType;
@@ -145,6 +146,7 @@ namespace LinqToDB.SqlQuery
 			: this()
 		{
 			Alias              = table.Alias;
+			Server             = table.Server;
 			Database           = table.Database;
 			Schema             = table.Schema;
 			Name               = table.Name;
@@ -163,6 +165,7 @@ namespace LinqToDB.SqlQuery
 			: this()
 		{
 			Alias              = table.Alias;
+			Server             = table.Server;
 			Database           = table.Database;
 			Schema             = table.Schema;
 			Name               = table.Name;
@@ -200,6 +203,7 @@ namespace LinqToDB.SqlQuery
 
 		public virtual string           Name           { get; set; }
 		public         string           Alias          { get; set; }
+		public         string           Server         { get; set; }
 		public         string           Database       { get; set; }
 		public         string           Schema         { get; set; }
 		public         Type             ObjectType     { get; set; }
@@ -284,6 +288,7 @@ namespace LinqToDB.SqlQuery
 				{
 					Name               = Name,
 					Alias              = Alias,
+					Server             = Server,
 					Database           = Database,
 					Schema             = Schema,
 					PhysicalName       = PhysicalName,
@@ -321,6 +326,7 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
+			if (Server   != null) sb.Append($"[{Server}].");
 			if (Database != null) sb.Append($"[{Database}].");
 			if (Schema   != null) sb.Append($"[{Schema}].");
 			return sb.Append($"[{Name}]");

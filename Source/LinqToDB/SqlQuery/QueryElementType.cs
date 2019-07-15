@@ -45,15 +45,20 @@ namespace LinqToDB.SqlQuery
 		CteClause,
 		SqlCteTable,
 		SqlRawSqlTable,
+		SqlValuesTable,
 
 		SelectStatement,
 		InsertStatement,
 		InsertOrUpdateStatement,
 		UpdateStatement,
 		DeleteStatement,
+		MergeStatement,
 
 		CreateTableStatement,
 		DropTableStatement,
 		TruncateTableStatement,
+
+		MergeSourceTable,
+		MergeOperationClause,
 	}
 }

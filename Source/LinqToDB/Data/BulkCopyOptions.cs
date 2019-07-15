@@ -26,6 +26,7 @@ namespace LinqToDB.Data
 			KeepNulls              = options.KeepNulls;
 			FireTriggers           = options.FireTriggers;
 			UseInternalTransaction = options.UseInternalTransaction;
+			ServerName             = options.ServerName;
 			DatabaseName           = options.DatabaseName;
 			SchemaName             = options.SchemaName;
 			TableName              = options.TableName;
@@ -56,6 +57,12 @@ namespace LinqToDB.Data
 		public bool?        FireTriggers           { get; set; }
 		public bool?        UseInternalTransaction { get; set; }
 
+		/// <summary>
+		/// Gets or sets explicit name of target server instead of one, configured for copied entity in mapping schema.
+		/// See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// Also note that it is not supported by provider-specific insert method.
+		/// </summary>
+		public string       ServerName             { get; set; }
 		/// <summary>
 		/// Gets or sets explicit name of target database instead of one, configured for copied entity in mapping schema.
 		/// See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.

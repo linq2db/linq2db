@@ -233,17 +233,21 @@ namespace Tests
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 		const int IP = 22654;
 		static bool _isHostOpen;
+		static LinqService _service;
 #endif
 
-		static void OpenHost()
+		static void OpenHost(MappingSchema ms)
 		{
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 			if (_isHostOpen)
+			{
+				_service.MappingSchema = ms;
 				return;
+			}
 
 			_isHostOpen = true;
 
-			var host = new ServiceHost(new LinqService { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
+			var host = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
 
 			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
 			host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
@@ -320,7 +324,7 @@ namespace Tests
 			if (configuration.EndsWith(".LinqService"))
 			{
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
-				OpenHost();
+				OpenHost(ms);
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 				var dx  = new TestServiceModelDataContext(IP) { Configuration = str };
@@ -917,9 +921,9 @@ namespace Tests
 			return data;
 		}
 
-		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
+		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false)
 		{
-			AreEqual(t => t, expected, result, EqualityComparer<T>.Default);
+			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty);
 		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, Func<IEnumerable<T>, IEnumerable<T>> sort)
@@ -947,9 +951,9 @@ namespace Tests
 			AreEqual(fixSelector, expected, result, EqualityComparer<T>.Default);
 		}
 
-		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
+		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
 		{
-			AreEqual<T>(fixSelector, expected, result, comparer, null);
+			AreEqual<T>(fixSelector, expected, result, comparer, null, allowEmpty);
 		}
 
 		protected void AreEqual<T>(
@@ -957,7 +961,8 @@ namespace Tests
 			IEnumerable<T> expected,
 			IEnumerable<T> result,
 			IEqualityComparer<T> comparer,
-			Func<IEnumerable<T>, IEnumerable<T>> sort)
+			Func<IEnumerable<T>, IEnumerable<T>> sort,
+			bool allowEmpty = false)
 		{
 			var resultList   = result.  Select(fixSelector).ToList();
 			var expectedList = expected.Select(fixSelector).ToList();
@@ -968,7 +973,8 @@ namespace Tests
 				expectedList = sort(expectedList).ToList();
 			}
 
-			Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
+			if (!allowEmpty)
+				Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
 			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
 			var exceptExpectedList = resultList.  Except(expectedList, comparer).ToList();
@@ -1044,6 +1050,12 @@ namespace Tests
 		protected List<LinqDataTypes> GetTypes(string context)
 		{
 			return DataCache<LinqDataTypes>.Get(context);
+		}
+
+		protected string GetProviderName(string context, out bool isLinqService)
+		{
+			isLinqService = context.EndsWith(".LinqService");
+			return context.Replace(".LinqService", "");
 		}
 	}
 

@@ -83,26 +83,6 @@ namespace LinqToDB.SqlQuery
 					return null;
 				});
 
-				if (statement != this)
-				{
-					statement.Parameters.Clear();
-
-					new QueryVisitor().VisitAll(statement, expr =>
-					{
-						switch (expr.ElementType)
-						{
-							case QueryElementType.SqlParameter :
-								{
-									var p = (SqlParameter)expr;
-									if (p.IsQueryParameter)
-										statement.Parameters.Add(p);
-
-									break;
-								}
-						}
-					});
-				}
-
 				return statement;
 			}
 
@@ -111,6 +91,7 @@ namespace LinqToDB.SqlQuery
 
 		public void CollectParameters()
 		{
+			var alreadyAdded = new HashSet<SqlParameter>();
 			Parameters.Clear();
 
 			new QueryVisitor().VisitAll(this, expr =>
@@ -120,7 +101,7 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlParameter :
 						{
 							var p = (SqlParameter)expr;
-							if (p.IsQueryParameter)
+							if (p.IsQueryParameter && alreadyAdded.Add(p))
 								Parameters.Add(p);
 
 							break;
@@ -359,6 +340,31 @@ namespace LinqToDB.SqlQuery
 			{
 				switch (expr.ElementType)
 				{
+					case QueryElementType.MergeSourceTable:
+						{
+							var source = (SqlMergeSourceTable)expr;
+
+							Utils.MakeUniqueNames(
+								source.SourceFields,
+								n => !ReservedWords.IsReserved(n),
+								f => f.PhysicalName,
+								(f, n) => { f.PhysicalName = n; },
+								f =>
+								{
+									var a = f.PhysicalName;
+									return a.IsNullOrEmpty()
+										? "c1"
+										: a + (a.EndsWith("_") ? string.Empty : "_") + "1";
+								},
+								StringComparer.OrdinalIgnoreCase);
+
+							// copy aliases to source query fields
+							if (source.SourceQuery != null)
+								for (var i = 0; i < source.SourceFields.Count; i++)
+									source.SourceQuery.Select.Columns[i].Alias = source.SourceFields[i].PhysicalName;
+
+							break;
+						}
 					case QueryElementType.SqlQuery:
 						{
 							var query = (SelectQuery)expr;

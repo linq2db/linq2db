@@ -35,7 +35,8 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			SetCharFieldToType<char>("NChar", (r, i) => DataTools.GetChar(r, i));
 
-			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("NChar",    (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("NVarChar", (r,i) => r.GetString(i).TrimEnd(' '));
 
 			_sqlOptimizer = new SqlCeSqlOptimizer(SqlProviderFlags);
 		}
@@ -91,9 +92,9 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		#region Overrides
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SqlCeSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+			return new SqlCeSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

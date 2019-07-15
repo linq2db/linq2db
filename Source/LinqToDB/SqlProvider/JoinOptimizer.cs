@@ -26,6 +26,7 @@ namespace LinqToDB.SqlProvider
 				   table1              != null
 				&& table2              != null
 				&& table1.ObjectType   == table2.ObjectType
+				&& table1.Server       == table2.Server
 				&& table1.Database     == table2.Database
 				&& table1.Schema       == table2.Schema
 				&& table1.Name         == table2.Name

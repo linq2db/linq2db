@@ -26,11 +26,12 @@ namespace LinqToDB.SqlQuery
 			SkipValue  = (ISqlExpression)clone.SkipValue?.Clone(objectTree, doClone);
 		}
 
-		internal SqlSelectClause(bool isDistinct, ISqlExpression takeValue, ISqlExpression skipValue, IEnumerable<SqlColumn> columns)
+		internal SqlSelectClause(bool isDistinct, ISqlExpression takeValue, TakeHints? takeHints, ISqlExpression skipValue, IEnumerable<SqlColumn> columns)
 			: base(null)
 		{
 			IsDistinct = isDistinct;
 			TakeValue  = takeValue;
+			TakeHints  = takeHints;
 			SkipValue  = skipValue;
 			Columns.AddRange(columns);
 		}
@@ -238,11 +239,6 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region Distinct
-
-		public SqlSelectClause Distinct
-		{
-			get { IsDistinct = true; return this; }
-		}
 
 		public bool IsDistinct { get; set; }
 

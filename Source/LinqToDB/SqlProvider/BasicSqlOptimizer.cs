@@ -9,6 +9,7 @@ namespace LinqToDB.SqlProvider
 	using Common;
 	using Extensions;
 	using SqlQuery;
+	using Mapping;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -175,7 +176,7 @@ namespace LinqToDB.SqlProvider
 
 					// Check if subquery where clause does not have ORs.
 					//
-					SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+					subQuery.Where.SearchCondition = SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 					var allAnd = true;
 
@@ -227,7 +228,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-						if (QueryVisitor.Find(cond, CheckTable) == null)
+						if (new QueryVisitor().Find(cond, CheckTable) == null)
 							continue;
 
 						var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -343,7 +344,7 @@ namespace LinqToDB.SqlProvider
 								levelTables.Add(source);
 						});
 
-						if (SqlProviderFlags.IsSubQueryColumnSupported && QueryVisitor.Find(subQuery, CheckTable) == null)
+						if (SqlProviderFlags.IsSubQueryColumnSupported && new QueryVisitor().Find(subQuery, CheckTable) == null)
 							continue;
 
 						// Join should not have ParentSelect, while SubQuery has
@@ -353,7 +354,7 @@ namespace LinqToDB.SqlProvider
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
-						SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+						subQuery.Where.SearchCondition = SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 						var isCount      = false;
 						var isAggregated = false;
@@ -395,7 +396,7 @@ namespace LinqToDB.SqlProvider
 						{
 							var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-							if (QueryVisitor.Find(cond, CheckTable) == null)
+							if (new QueryVisitor().Find(cond, CheckTable) == null)
 								continue;
 
 							var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -757,9 +758,10 @@ namespace LinqToDB.SqlProvider
 
 								for (var i = 0; i < parms.Length - 1; i += 2)
 								{
-									if (parms[i] is SqlValue value)
+									var boolValue = SelectQueryOptimizer.GetBoolValue(parms[i]);
+									if (boolValue != null)
 									{
-										if ((bool)value.Value == false)
+										if (boolValue == false)
 										{
 											var newParms = new ISqlExpression[parms.Length - 2];
 
@@ -814,8 +816,10 @@ namespace LinqToDB.SqlProvider
 				#endregion
 
 				case QueryElementType.SearchCondition :
-					SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression);
+				{
+					expression = SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression);
 					break;
+				}
 
 				case QueryElementType.SqlExpression   :
 				{
@@ -914,8 +918,8 @@ namespace LinqToDB.SqlProvider
 										if (expr1 is SqlParameter || expr2 is SqlParameter)
 											selectQuery.IsParameterDependent = true;
 										else
-											if (expr1 is SqlColumn || expr1 is SqlField)
-											if (expr2 is SqlColumn || expr2 is SqlField)
+											if (expr1 is SqlColumn || expr1 is SqlField || expr1 is SqlExpression)
+											if (expr2 is SqlColumn || expr2 is SqlField || expr2 is SqlExpression)
 												predicate = ConvertEqualPredicate(ex);
 									}
 
@@ -966,6 +970,7 @@ namespace LinqToDB.SqlProvider
 			if (expr.Operator == SqlPredicate.Operator.Equal)
 				cond
 					.Expr(expr1).IsNull.    And .Expr(expr2).IsNull. Or
+					// TODO: why it is commented? without it expression will return UNKNOWN instead of FALSE
 					/*.Expr(expr1).IsNotNull. And .Expr(expr2).IsNotNull. And */.Expr(expr1).Equal.Expr(expr2);
 			else
 				cond
@@ -1300,8 +1305,8 @@ namespace LinqToDB.SqlProvider
 					var table = updateStatement.Update.Table ?? (SqlTable)updateStatement.SelectQuery.From.Tables[0].Source;
 
 					if (updateStatement.Update.Table != null)
-						if (QueryVisitor.Find(updateStatement.SelectQuery.From, t => t == table) == null)
-							table = (SqlTable)QueryVisitor.Find(updateStatement.SelectQuery.From,
+						if (new QueryVisitor().Find(updateStatement.SelectQuery.From, t => t == table) == null)
+							table = (SqlTable)new QueryVisitor().Find(updateStatement.SelectQuery.From,
 								ex => ex is SqlTable sqlTable && sqlTable.ObjectType == table.ObjectType) ?? table;
 
 					var copy = new SqlTable(table);
@@ -1472,6 +1477,23 @@ namespace LinqToDB.SqlProvider
 					new JoinOptimizer().OptimizeJoins(statement, query);
 				return element;
 			});
+		}
+
+		#endregion
+
+		#region Optimizing Statement
+
+		public virtual SqlStatement OptimizeStatement(SqlStatement statement)
+		{
+			statement = new QueryVisitor().Convert(statement, e =>
+			{
+				if (e is ISqlExpression sqlExpression)
+					e = ConvertExpression(sqlExpression);
+
+				return e;
+			});
+
+			return statement;
 		}
 
 		#endregion

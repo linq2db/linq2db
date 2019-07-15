@@ -68,7 +68,6 @@ namespace Tests.xUpdate
 
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
-						|| context == ProviderName.Oracle
 						|| context == ProviderName.OracleNative
 						|| context == ProviderName.OracleManaged;
 
@@ -138,7 +137,6 @@ namespace Tests.xUpdate
 
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
-						|| context == ProviderName.Oracle
 						|| context == ProviderName.OracleNative
 						|| context == ProviderName.OracleManaged;
 

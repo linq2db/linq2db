@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider.SapHana
 				if (options.MaxBatchSize.HasValue)    dbc.BatchSize = options.MaxBatchSize.Value;
 				if (options.BulkCopyTimeout.HasValue) dbc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-				var sqlBuilder = _dataProvider.CreateSqlBuilder();
+				var sqlBuilder = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 				var tableName  = GetTableName(sqlBuilder, options, table);
 
 				dbc.DestinationTableName = tableName;

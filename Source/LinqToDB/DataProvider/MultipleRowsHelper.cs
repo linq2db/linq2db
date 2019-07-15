@@ -25,13 +25,13 @@ namespace LinqToDB.DataProvider
 		{
 			DataConnection = dataConnection;
 			Options        = options;
-			SqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder();
+			SqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			ValueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
 			Descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(entityType);
 			Columns        = Descriptor.Columns
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.KeepIdentity == true)
 				.ToArray();
-			ColumnTypes    = Columns.Select(c => new SqlDataType(c.DataType, c.MemberType, c.Length, c.Precision, c.Scale)).ToArray();
+			ColumnTypes    = Columns.Select(c => new SqlDataType(c)).ToArray();
 			ParameterName  = SqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 			BatchSize      = Math.Max(10, Options.MaxBatchSize ?? 1000);
 		}

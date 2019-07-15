@@ -481,6 +481,22 @@ namespace Tests.Linq
 					).Any());
 		}
 
+		[ActiveIssue(
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				ProviderName.Informix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllSQLite,
+				ProviderName.SapHana,
+				ProviderName.SqlServer2000,
+				TestProvName.AllSybase
+			},
+			SkipForNonLinqService = true,
+			Details = "Test generates really SQL")]
 		[Test]
 		public void LetTest11([DataSources] string context)
 		{

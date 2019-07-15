@@ -35,6 +35,11 @@ namespace LinqToDB.Mapping
 		string DatabaseName { get; set; }
 
 		/// <summary>
+		/// Gets or sets optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
+		string ServerName { get; set; }
+
+		/// <summary>
 		/// Gets list of change interfaces for column descriptors for current entity.
 		/// </summary>
 		IEnumerable<IColumnChangeDescriptor> Columns { get; }

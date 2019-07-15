@@ -190,6 +190,36 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildLikePredicate(predicate);
 		}
 
+		public override StringBuilder BuildTableName(StringBuilder sb,
+			string server,
+			string database,
+			string schema,
+			[JetBrains.Annotations.NotNull] string table)
+		{
+			if (table == null) throw new ArgumentNullException(nameof(table));
+
+			if (server   != null && server  .Length == 0) server   = null;
+			if (database != null && database.Length == 0) database = null;
+			if (schema   != null && schema.  Length == 0) schema   = null;
+
+			if(server != null)
+			{
+				// all components required for linked-server syntax by SQL server
+				if (database == null || schema == null)
+					throw new LinqToDBException("You must specify both schema and database names explicitly for linked server query");
+
+				sb.Append(server).Append(".").Append(database).Append(".").Append(schema).Append(".");
+			}
+			else if(database != null)
+			{
+				if (schema == null) sb.Append(database).Append("..");
+				else sb.Append(database).Append(".").Append(schema).Append(".");
+			}
+			else if (schema != null) sb.Append(schema).Append(".");
+
+			return sb.Append(table);
+		}
+
 		public override object Convert(object value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -211,6 +241,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						return SqlServerTools.QuoteIdentifier(name);
 					}
 
+				case ConvertType.NameToServer:
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
@@ -291,7 +322,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -333,7 +364,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					return;
 			}
 
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		protected override string GetTypeName(IDbDataParameter parameter)
@@ -359,6 +390,13 @@ namespace LinqToDB.DataProvider.SqlServer
 				StringBuilder.Append("TRUNCATE TABLE ");
 			else
 				StringBuilder.Append("DELETE FROM ");
+		}
+
+		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
+		{
+			StringBuilder.Append($"SET IDENTITY_INSERT ");
+			BuildTableName(table, true, false);
+			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
 	}
 }

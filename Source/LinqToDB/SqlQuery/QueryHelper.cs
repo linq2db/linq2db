@@ -53,7 +53,7 @@ namespace LinqToDB.SqlQuery
 		public static SqlJoinedTable FindJoin(this SelectQuery query,
 			Func<SqlJoinedTable, bool> match)
 		{
-			return QueryVisitor.Find(query, e =>
+			return new QueryVisitor().Find(query, e =>
 			{
 				if (e.ElementType == QueryElementType.JoinedTable)
 				{
@@ -253,7 +253,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
- 		static SqlField GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
+		static SqlField GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
 		{
 			switch (expression)
 			{
@@ -276,6 +276,7 @@ namespace LinqToDB.SqlQuery
 				   table1              != null
 				&& table2              != null
 				&& table1.ObjectType   == table2.ObjectType
+				&& table1.Server       == table2.Server
 				&& table1.Database     == table2.Database
 				&& table1.Schema       == table2.Schema
 				&& table1.Name         == table2.Name

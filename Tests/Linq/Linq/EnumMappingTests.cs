@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+using System.ServiceModel;
+#endif
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -1719,6 +1722,8 @@ namespace Tests.Linq
 		[Test]
 		public void EnumMappingReadUndefinedValue([DataSources] string context)
 		{
+			GetProviderName(context, out var isLinqService);
+
 			using (var db = GetDataContext(context))
 			{
 				using (new Cleaner(db))
@@ -1729,6 +1734,17 @@ namespace Tests.Linq
 						TestField = 5
 					});
 
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+					if (isLinqService)
+					{
+						Assert.Throws<FaultException<ExceptionDetail>>(() =>
+							db.GetTable<UndefinedValueTest>()
+								.Select(r => new { r.Id, r.TestField })
+								.Where(r => r.Id == RID)
+								.ToList());
+					}
+					else
+#endif
 					Assert.Throws<LinqToDBConvertException>(() =>
 						db.GetTable<UndefinedValueTest>()
 							.Select(r => new { r.Id, r.TestField })
@@ -1755,8 +1771,10 @@ namespace Tests.Linq
 		[Sql.Expression("{0} = {1}", InlineParameters = true, ServerSideOnly = true, IsPredicate = true)]
 		public static bool SomeComparison(string column, Issue1622Enum value) => throw new InvalidOperationException();
 
+		// Sybase disabled due to https://github.com/nunit/nunit/issues/3296
+		// because it breaks test run, which is very annoying
 		[Test, ActiveIssue(1622)]
-		public void Issue1622Test([DataSources] string context)
+		public void Issue1622Test([DataSources(ProviderName.Sybase)] string context)
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{
@@ -1775,7 +1793,9 @@ namespace Tests.Linq
 					var res2 = table.Where(e => e.Id == 1).Single();
 
 					Assert.That(item.Id, Is.EqualTo(res.Id));
+					Assert.That(item.SomeText, Is.EqualTo(res.SomeText));
 					Assert.That(item.Id, Is.EqualTo(res2.Id));
+					Assert.That(item.SomeText, Is.EqualTo(res2.SomeText));
 				}
 			}
 		}
