@@ -520,6 +520,16 @@ namespace LinqToDB.Linq.Builder
 				queryableExpression = newQueryable;
 				replaceParam        = newParam;
 			}
+			else
+			{
+				if (!typeof(List<>).IsSameOrParentOf(queryableExpression.Type))
+				{
+					var elementType = GetEnumerableElementType(queryableExpression.Type);
+					replaceParam    = Expression.Parameter(typeof(List<>).MakeGenericType(elementType), "replacement");
+					finalExpression = Expression.Call(
+						_asQueryableMethodInfo.MakeGenericMethod(elementType), replaceParam);
+				}
+			}
 
 		}
 
@@ -1059,11 +1069,6 @@ namespace LinqToDB.Linq.Builder
 			if (replaceParam != null)
 			{
 				resultExpression = finalExpression.Transform(e => e == replaceParam ? resultExpression : e);
-			}
-
-			if (resultExpression.Type != expression.Type)
-			{
-				resultExpression = Expression.Convert(resultExpression, expression.Type);
 			}
 
 			return resultExpression;
