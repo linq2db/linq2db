@@ -437,11 +437,27 @@ namespace LinqToDB.Expressions
 					return arr.Any(a => a != null) ? arr : null;
 				});
 
+			bool DefaultCompareArguments(Expression arg1, Expression arg2)
+			{
+				if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(arg1.Type))
+				{
+					if (arg1.NodeType == ExpressionType.Constant && arg2.NodeType == ExpressionType.Constant)
+					{
+						var query1 = ((Sql.IQueryableContainer)arg1.EvaluateExpression()).Query;
+						var query2 = ((Sql.IQueryableContainer)arg2.EvaluateExpression()).Query;
+						return EqualsTo(query1.Expression, query2.Expression, info);
+					}
+				}
+				if (!arg1.EqualsTo(arg2, info))
+						return false;
+				return true;
+			}
+
 			if (dependentParameters == null)
 			{
 				for (var i = 0; i < expr1.Arguments.Count; i++)
 				{
-					if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+					if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i]))
 						return false;
 				}
 			}
@@ -457,8 +473,10 @@ namespace LinqToDB.Expressions
 							return false;
 					}
 					else
-						if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+					{
+						if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i]))
 							return false;
+					}
 				}
 			}
 
@@ -789,15 +807,16 @@ namespace LinqToDB.Expressions
 
 			switch (ex.NodeType)
 			{
-				case ExpressionType.Quote          : return ((UnaryExpression)ex).Operand.Unwrap();
+				case ExpressionType.Quote          :
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
+					return ((UnaryExpression)ex).Operand.Unwrap();
+				case ExpressionType.Constant       :
 					{
-						var ue = (UnaryExpression)ex;
+						var c = (ConstantExpression)ex;
 
-						if (!ue.Operand.Type.IsEnumEx())
-							return ue.Operand.Unwrap();
-
+						if (c.Value != null && c.Type != c.Value.GetType())
+							return Expression.Constant(c.Value, c.Value.GetType());
 						break;
 					}
 			}
@@ -812,21 +831,11 @@ namespace LinqToDB.Expressions
 
 			switch (ex.NodeType)
 			{
-				case ExpressionType.Quote: return ((UnaryExpression)ex).Operand.Unwrap();
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Convert:
 				case ExpressionType.TypeAs:
-					{
-						var ue = (UnaryExpression)ex;
-
-						if (!ue.Operand.Type.IsEnumEx())
-							return ue.Operand.Unwrap();
-
-						break;
-					}
+					return ((UnaryExpression)ex).Operand.Unwrap();
 			}
 
-			return ex;
+			return ex.Unwrap();
 		}
 
 		public static Expression SkipPathThrough(this Expression expr)

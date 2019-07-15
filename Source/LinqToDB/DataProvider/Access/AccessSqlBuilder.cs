@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.Access
 				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
 				StringBuilder
 					.Append(" ALTER COLUMN ")
 					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
@@ -335,12 +335,12 @@ namespace LinqToDB.DataProvider.Access
 			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime2 : StringBuilder.Append("timestamp");      break;
-				default                 : base.BuildDataType(type, createDbType); break;
+				case DataType.DateTime2 : StringBuilder.Append("timestamp");                    break;
+				default                 : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 			}
 		}
 
@@ -409,7 +409,7 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 
@@ -422,6 +422,11 @@ namespace LinqToDB.DataProvider.Access
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.OleDb.OleDbParameter)parameter).OleDbType.ToString();
+		}
+
+		protected override void BuildMergeStatement(SqlMergeStatement merge)
+		{
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 	}
 }

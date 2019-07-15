@@ -42,7 +42,7 @@ namespace LinqToDB
 
 		#region DatePart
 
-		class DatePartBuilder : Sql.IExtensionCallBuilder
+		internal class DatePartBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -261,14 +261,14 @@ namespace LinqToDB
 							var param = builder.GetExpression("date");
 							builder.ResultExpression = builder.Inc(
 								builder.Sub<int>(
-									new SqlFunction(null, "Mdy",
-										new SqlFunction(null, "Month", param),
-										new SqlFunction(null, "Day", param),
-										new SqlFunction(null, "Year", param)),
-									new SqlFunction(null, "Mdy",
+									new SqlFunction(typeof(DateTime?), "Mdy",
+										new SqlFunction(typeof(int?), "Month", param),
+										new SqlFunction(typeof(int?), "Day",   param),
+										new SqlFunction(typeof(int?), "Year",  param)),
+									new SqlFunction(typeof(DateTime?), "Mdy",
 										new SqlValue(1),
 										new SqlValue(1),
-										new SqlFunction(null, "Year", param)))
+										new SqlFunction(typeof(int?), "Year", param)))
 							);
 							return;
 						}
@@ -439,7 +439,7 @@ namespace LinqToDB
 				var partStr = DatePartBuilder.DatePartToStr(part);
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
-				builder.ResultExpression = new SqlFunction(typeof(int), builder.Expression,
+				builder.ResultExpression = new SqlFunction(typeof(DateTime?), builder.Expression,
 					new SqlExpression(partStr, Precedence.Primary), number, date);
 			}
 		}
@@ -451,28 +451,26 @@ namespace LinqToDB
 				var part    = builder.GetValue<Sql.DateParts>("part");
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
+
+				string expStr;
 				switch (part)
 				{
-					case Sql.DateParts.Year  : 
-						builder.ResultExpression = new SqlFunction(typeof(DateTime?), "Add_Months", date, builder.Mul(number, 12));
-						break;
-					case Sql.DateParts.Quarter : 
-						builder.ResultExpression = new SqlFunction(typeof(DateTime?), "Add_Months", date, builder.Mul(number, 3));
-						break;
-					case Sql.DateParts.Month : 
-						builder.ResultExpression = new SqlFunction(typeof(DateTime?), "Add_Months", builder.GetExpression("date"), builder.GetExpression("number"));
-						break;
+					case Sql.DateParts.Year        : expStr = "{0} + {1} * INTERVAL '1' YEAR"      ; break;
+					case Sql.DateParts.Quarter     : expStr = "{0} + {1} * INTERVAL '3' MONTH"     ; break;
+					case Sql.DateParts.Month       : expStr = "{0} + {1} * INTERVAL '1' MONTH"     ; break;
 					case Sql.DateParts.DayOfYear   :
 					case Sql.DateParts.WeekDay     :
-					case Sql.DateParts.Day         : builder.ResultExpression = builder.Add<DateTime>(date, number);                                   break;
-					case Sql.DateParts.Week        : builder.ResultExpression = builder.Add<DateTime>(date, builder.Mul(number,                   7)); break;
-					case Sql.DateParts.Hour        : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number,                  24)); break;
-					case Sql.DateParts.Minute      : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number,             60 * 24)); break;
-					case Sql.DateParts.Second      : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number,        60 * 60 * 24)); break;
-					case Sql.DateParts.Millisecond : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number, 1000 * 60 * 60 * 24)); break;	
+					case Sql.DateParts.Day         : expStr = "{0} + {1} * INTERVAL '1' DAY"       ; break;
+					case Sql.DateParts.Week        : expStr = "{0} + {1} * INTERVAL '7' DAY"       ; break;
+					case Sql.DateParts.Hour        : expStr = "{0} + {1} * INTERVAL '1' HOUR"      ; break;
+					case Sql.DateParts.Minute      : expStr = "{0} + {1} * INTERVAL '1' MINUTE"    ; break;
+					case Sql.DateParts.Second      : expStr = "{0} + {1} * INTERVAL '1' SECOND"    ; break;
+					case Sql.DateParts.Millisecond : expStr = "{0} + {1} * INTERVAL '0.001' SECOND"; break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
+
+				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Additive, date, number);
 			}
 		}
 
@@ -606,32 +604,25 @@ namespace LinqToDB
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
 
-				string expStr;
+				string expStr = "strftime('%Y-%m-%d %H:%M:%f', {0},";
 				switch (part)
 				{
-					case Sql.DateParts.Year        : expStr = "{0} || ' Year'"; break;
-					case Sql.DateParts.Quarter     : 
-						expStr = "({0}) || ' Month'"; 
-						number = builder.Mul(number, 3);
-						break;
-					case Sql.DateParts.Month       : expStr = "{0} || ' Month'"; break;
+					case Sql.DateParts.Year        : expStr +=            "{1} || ' Year')"; break;
+					case Sql.DateParts.Quarter     : expStr +=       "({1}*3) || ' Month')"; break;
+					case Sql.DateParts.Month       : expStr +=           "{1} || ' Month')"; break;
 					case Sql.DateParts.DayOfYear   : 
 					case Sql.DateParts.WeekDay     : 
-					case Sql.DateParts.Day         : expStr = "{0} || ' Day'";          break;
-					case Sql.DateParts.Week        : 
-						expStr = "({0}) || ' Day'"; 
-						number = builder.Mul(number, 7);
-						break;
-					case Sql.DateParts.Hour        : expStr = "{0} || ' Hour'"; break;
-					case Sql.DateParts.Minute      : expStr = "{0} || ' Minute'"; break;
-					case Sql.DateParts.Second      : expStr = "{0} || ' Second'"; break;
-					case Sql.DateParts.Millisecond : expStr = "{0} || ' Millisecond'"; break;
+					case Sql.DateParts.Day         : expStr +=             "{1} || ' Day')"; break;
+					case Sql.DateParts.Week        : expStr +=         "({1}*7) || ' Day')"; break;
+					case Sql.DateParts.Hour        : expStr +=            "{1} || ' Hour')"; break;
+					case Sql.DateParts.Minute      : expStr +=          "{1} || ' Minute')"; break;
+					case Sql.DateParts.Second      : expStr +=          "{1} || ' Second')"; break;
+					case Sql.DateParts.Millisecond : expStr += "({1}/1000.0) || ' Second')"; break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
 
-				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateTime", date,
-					new SqlExpression(expStr, Precedence.Additive, number));
+				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, date, number);
 			}
 		}
 
@@ -714,24 +705,23 @@ namespace LinqToDB
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
 
-				ISqlExpression partSql = null;
 				switch (part)
 				{
 					case Sql.DateParts.Quarter   :
-						partSql = new SqlValue(Sql.DateParts.Month);
+						part   = DateParts.Month;
 						number  = builder.Mul(number, 3);
 						break;
 					case Sql.DateParts.DayOfYear :
 					case Sql.DateParts.WeekDay   :
-						partSql = new SqlValue(Sql.DateParts.Day);
+						part   = DateParts.Day;
 						break;
 					case Sql.DateParts.Week      :
-						partSql = new SqlValue(Sql.DateParts.Day);
+						part   = DateParts.Day;
 						number = builder.Mul(number, 7);
 						break;
 				}
 
-				partSql = partSql ?? new SqlValue(part);
+				var partSql = new SqlExpression(part.ToString());
 
 				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd", partSql, number, date);
 			}
@@ -860,11 +850,36 @@ namespace LinqToDB
 			}
 		}
 
+		class DateDiffBuilderSQLite : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var part = builder.GetValue<Sql.DateParts>(0);
+				var startDate = builder.GetExpression(1);
+				var endDate = builder.GetExpression(2);
+
+				var expStr = "round((julianday({1}) - julianday({0}))";
+				switch (part)
+				{
+					case DateParts.Day:         expStr += ")";          break;
+					case DateParts.Hour:        expStr += " * 24)";       break;
+					case DateParts.Minute:      expStr += " * 1440)";     break;
+					case DateParts.Second:      expStr += " * 86400)";    break;
+					case DateParts.Millisecond: expStr += " * 86400000)"; break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate );
+			}
+		}
+
 		[CLSCompliant(false)]
 		[Sql.Extension(            "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
 		[Sql.Extension(PN.MySql,   "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
 		[Sql.Extension(PN.DB2,     "",              BuilderType = typeof(DateDiffBuilderDB2))]
 		[Sql.Extension(PN.SapHana, "",              BuilderType = typeof(DateDiffBuilderSapHana))]
+		[Sql.Extension(PN.SQLite,  "",              BuilderType = typeof(DateDiffBuilderSQLite))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)

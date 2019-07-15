@@ -41,14 +41,16 @@ namespace LinqToDB
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
 			string tableName    = null,
 			string databaseName = null,
-			string schemaName   = null)
+			string schemaName   = null,
+			string serverName   = null)
 		{
 			if (db == null) throw new ArgumentNullException(nameof(db));
 
-			_table = db.CreateTable<T>(tableName, databaseName, schemaName);
+			_table = db.CreateTable<T>(tableName, databaseName, schemaName, serverName: serverName);
 		}
 
 		/// <summary>
@@ -60,17 +62,19 @@ namespace LinqToDB
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
 			[JetBrains.Annotations.NotNull] IEnumerable<T> items,
 			BulkCopyOptions options = null,
 			string tableName    = null,
 			string databaseName = null,
-			string schemaName   = null)
+			string schemaName   = null,
+			string serverName   = null)
 		{
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
-			_table = db.CreateTable<T>(tableName, databaseName, schemaName);
+			_table = db.CreateTable<T>(tableName, databaseName, schemaName, serverName: serverName);
 			Copy(items, options);
 		}
 
@@ -83,17 +87,19 @@ namespace LinqToDB
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
 			string tableName,
 			[JetBrains.Annotations.NotNull] IEnumerable<T> items,
 			BulkCopyOptions options = null,
 			string databaseName = null,
-			string schemaName   = null)
+			string schemaName   = null,
+			string serverName   = null)
 		{
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
-			_table = db.CreateTable<T>(tableName, databaseName, schemaName);
+			_table = db.CreateTable<T>(tableName, databaseName, schemaName, serverName: serverName);
 			Copy(items, options);
 		}
 
@@ -106,17 +112,19 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
-			string tableName    = null,
-			string databaseName = null,
-			string schemaName   = null,
-			Action<ITable<T>> action = null)
+			string tableName         = null,
+			string databaseName      = null,
+			string schemaName        = null,
+			Action<ITable<T>> action = null,
+			string serverName        = null)
 		{
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
-			_table = db.CreateTable<T>(tableName, databaseName, schemaName);
+			_table = db.CreateTable<T>(tableName, databaseName, schemaName, serverName: serverName);
 			action?.Invoke(_table);
 			Insert(items);
 		}
@@ -130,17 +138,19 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
 			string tableName,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
-			string databaseName = null,
-			string schemaName   = null,
-			Action<ITable<T>> action = null)
+			string databaseName      = null,
+			string schemaName        = null,
+			Action<ITable<T>> action = null,
+			string serverName        = null)
 		{
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
-			_table = db.CreateTable<T>(tableName, databaseName, schemaName);
+			_table = db.CreateTable<T>(tableName, databaseName, schemaName, serverName: serverName);
 			action?.Invoke(_table);
 			Insert(items);
 		}
@@ -208,6 +218,7 @@ namespace LinqToDB
 
 		#region ITable<T> implementation
 
+		public string ServerName   => _table.ServerName;
 		public string DatabaseName => _table.DatabaseName;
 		public string SchemaName   => _table.SchemaName;
 		public string TableName    => _table.TableName;
@@ -220,6 +231,11 @@ namespace LinqToDB
 		#endregion
 
 		#region ITableMutable<T> implementation
+
+		ITable<T> ITableMutable<T>.ChangeServerName(string serverName)
+		{
+			return ((ITableMutable<T>)_table).ChangeServerName(serverName);
+		}
 
 		ITable<T> ITableMutable<T>.ChangeDatabaseName(string databaseName)
 		{
@@ -341,14 +357,16 @@ namespace LinqToDB
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			string tableName    = null,
 			string databaseName = null,
-			string schemaName   = null)
+			string schemaName   = null,
+			string serverName   = null)
 		{
-			return new TempTable<T>(db, tableName, databaseName, schemaName);
+			return new TempTable<T>(db, tableName, databaseName, schemaName, serverName);
 		}
 
 		/// <summary>
@@ -361,6 +379,7 @@ namespace LinqToDB
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
@@ -368,9 +387,10 @@ namespace LinqToDB
 			BulkCopyOptions options = null,
 			string tableName    = null,
 			string databaseName = null,
-			string schemaName   = null)
+			string schemaName   = null,
+			string serverName   = null)
 		{
-			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName);
+			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName, serverName);
 		}
 
 		/// <summary>
@@ -383,6 +403,7 @@ namespace LinqToDB
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
@@ -390,9 +411,10 @@ namespace LinqToDB
 			[JetBrains.Annotations.NotNull] IEnumerable<T> items,
 			BulkCopyOptions options = null,
 			string databaseName = null,
-			string schemaName   = null)
+			string schemaName   = null,
+			string serverName   = null)
 		{
-			return new TempTable<T>(db, tableName, items, options, databaseName, schemaName);
+			return new TempTable<T>(db, tableName, items, options, databaseName, schemaName, serverName);
 		}
 
 		/// <summary>
@@ -405,16 +427,18 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
-			string tableName    = null,
-			string databaseName = null,
-			string schemaName   = null,
-			Action<ITable<T>> action = null)
+			string tableName         = null,
+			string databaseName      = null,
+			string schemaName        = null,
+			Action<ITable<T>> action = null,
+			string serverName        = null)
 		{
-			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action);
+			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action, serverName);
 		}
 
 		/// <summary>
@@ -429,21 +453,23 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
 			[JetBrains.Annotations.NotNull] Action<EntityMappingBuilder<T>> setTable,
-			string tableName    = null,
-			string databaseName = null,
-			string schemaName   = null,
-			Action<ITable<T>> action = null)
+			string tableName         = null,
+			string databaseName      = null,
+			string schemaName        = null,
+			Action<ITable<T>> action = null,
+			string serverName        = null)
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
 			setTable(db.MappingSchema.GetFluentMappingBuilder().Entity<T>());
 
-			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action);
+			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action, serverName);
 		}
 
 		/// <summary>
@@ -456,16 +482,18 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] string tableName,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
-			string databaseName = null,
-			string schemaName   = null,
-			Action<ITable<T>> action = null)
+			string databaseName      = null,
+			string schemaName        = null,
+			Action<ITable<T>> action = null,
+			string serverName        = null)
 		{
-			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action);
+			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action, serverName);
 		}
 
 		/// <summary>
@@ -480,21 +508,23 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] string tableName,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
 			[JetBrains.Annotations.NotNull] Action<EntityMappingBuilder<T>> setTable,
-			string databaseName = null,
-			string schemaName   = null,
-			Action<ITable<T>> action = null)
+			string databaseName      = null,
+			string schemaName        = null,
+			Action<ITable<T>> action = null,
+			string serverName        = null)
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
 			setTable(db.MappingSchema.GetFluentMappingBuilder().Entity<T>());
 
-			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action);
+			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action, serverName);
 		}
 	}
 }

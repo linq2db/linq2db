@@ -41,6 +41,10 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 			else
 			{
+				// to match logic for values as parameters
+				if (value < TimeSpan.Zero)
+					value = TimeSpan.FromDays(1 - value.Days) + value;
+
 				var format = "hh\\:mm\\:ss\\.fff";
 
 				stringBuilder

@@ -14,6 +14,28 @@ namespace Tests.SchemaProvider
 	[TestFixture]
 	public class SchemaProviderTests : TestBase
 	{
+		// only tests that GetSchema call doesn't fail to detect incorrect calls to default implementation
+		// or other failures
+		// doesn't test that actual data returned
+		[ActiveIssue(Configuration = ProviderName.SQLiteMS, Details = "NotSupportedException")]
+		[Test]
+		public void TestApiImplemented([DataSources(false)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var options = new GetSchemaOptions()
+				{
+					GetProcedures = true,
+					GetTables     = true
+				};
+
+				options = TestUtils.GetDefaultSchemaOptions(context, options);
+
+				var p = db.DataProvider.GetSchemaProvider();
+				p.GetSchema(db, options);
+			}
+		}
+
 		[Test]
 		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
 //#if NETSTANDARD2_0
@@ -65,6 +87,7 @@ namespace Tests.SchemaProvider
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
+					case ProviderName.SqlServer2017 :
 					case TestProvName.SqlAzure      :
 						{
 							var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
@@ -87,6 +110,7 @@ namespace Tests.SchemaProvider
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
+					case ProviderName.SqlServer2017 :
 					case TestProvName.SqlAzure      :
 						{
 							var tbl = dbSchema.Tables.Single(at => at.TableName == "AllTypes");

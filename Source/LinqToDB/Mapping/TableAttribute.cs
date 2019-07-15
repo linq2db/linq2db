@@ -52,6 +52,11 @@ namespace LinqToDB.Mapping
 		public string Database                  { get; set; }
 
 		/// <summary>
+		/// Gets or sets optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
+		public string Server                    { get; set; }
+
+		/// <summary>
 		/// Gets or sets column mapping rules for current class or interface.
 		/// If <c>true</c>, properties and fields should be marked with one of those attributes to be used for mapping:
 		/// - <see cref="ColumnAttribute"/>;

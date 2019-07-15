@@ -350,20 +350,22 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			
 			if (NpgsqlRange != null)
 			{
-				void SetRangeConversion<T>(string dbType = null)
+				void SetRangeConversion<T>(string fromDbType = null, DataType fromDataType = DataType.Undefined, string toDbType = null, DataType toDataType = DataType.Undefined)
 				{
-					var rangeType = NpgsqlRange.MakeGenericType(typeof(T));
+					var rangeType  = NpgsqlRange.MakeGenericType(typeof(T));
+					var fromType   = new DbDataType(rangeType, fromDataType, fromDbType);
+					var toType     = new DbDataType(typeof(DataParameter), toDataType, toDbType);
 					var rangeParam = Expression.Parameter(rangeType, "p");
 
-					MappingSchema.SetConvertExpression(rangeType, typeof(DataParameter),
+					MappingSchema.SetConvertExpression(fromType, toType,
 						Expression.Lambda(
 							Expression.New(
 								MemberHelper.ConstructorOf(
-									() => new DataParameter("", null, DataType.Undefined, dbType)),
+									() => new DataParameter("", null, DataType.Undefined, toDbType)),
 								Expression.Constant(""),
 								Expression.Convert(rangeParam, typeof(object)),
-								Expression.Constant(DataType.Undefined),
-								Expression.Constant(dbType, typeof(string))
+								Expression.Constant(toDataType),
+								Expression.Constant(toDbType, typeof(string))
 							)
 							, rangeParam)
 					);
@@ -374,7 +376,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				SetRangeConversion<double>();
 				SetRangeConversion<float>();
 				SetRangeConversion<decimal>();
-				SetRangeConversion<DateTime>("tstzrange");
+
+				SetRangeConversion<DateTime>(fromDbType: "daterange", toDbType: "daterange");
+
+				SetRangeConversion<DateTime>(fromDbType: "tsrange", toDbType: "tsrange");
+				SetRangeConversion<DateTime>(toDbType: "tsrange");
+
+				SetRangeConversion<DateTime>(fromDbType: "tstzrange", toDbType: "tstzrange");
+
 				SetRangeConversion<DateTimeOffset>("tstzrange");
 			}
 		}
@@ -411,9 +420,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override string ConnectionTypeName  => "Npgsql.NpgsqlConnection, Npgsql";
 		protected override string DataReaderTypeName  => "Npgsql.NpgsqlDataReader, Npgsql";
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new PostgreSQLSqlBuilder(this, GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+			return new PostgreSQLSqlBuilder(this, GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -437,27 +446,23 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 #endif
 
-		static Action<IDbDataParameter> _setMoney;
-		static Action<IDbDataParameter> _setVarBinary;
-		static Action<IDbDataParameter> _setBoolean;
-		static Action<IDbDataParameter> _setXml;
-		static Action<IDbDataParameter> _setText;
-		static Action<IDbDataParameter> _setBit;
-		static Action<IDbDataParameter> _setHstore;
-		static Action<IDbDataParameter> _setJsonb;
-		static Action<IDbDataParameter> _setJson;
+		Action<IDbDataParameter> _setMoney;
+		Action<IDbDataParameter> _setVarBinary;
+		Action<IDbDataParameter> _setBoolean;
+		Action<IDbDataParameter> _setXml;
+		Action<IDbDataParameter> _setText;
+		Action<IDbDataParameter> _setBit;
+		Action<IDbDataParameter> _setHstore;
+		Action<IDbDataParameter> _setJsonb;
+		Action<IDbDataParameter> _setJson;
 
-		static Action<IDbDataParameter, object> _setNativeParameterType;
+		Action<IDbDataParameter, object> _setNativeParameterType;
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			if (value is IDictionary && dataType.DataType == DataType.Undefined)
 			{
 				dataType = dataType.WithDataType(DataType.Dictionary);
-			}
-			else if (value is DateTime dateTime && dateTime.Kind == DateTimeKind.Utc)
-			{
-				dataType = dataType.WithDataType(DataType.DateTimeOffset);
 			}
 
 			base.SetParameter(parameter, name, dataType, value);

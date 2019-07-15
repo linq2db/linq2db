@@ -53,6 +53,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(SqlString?),   SqlString.  Null, true, DataType.NVarChar);
 			AddScalarType(typeof(SqlXml),       SqlXml.     Null, true, DataType.Xml);
 
+			AddScalarType(typeof(DateTime),  DataType.DateTime);
+			AddScalarType(typeof(DateTime?), DataType.DateTime);
+
 			try
 			{
 				foreach (var typeInfo in new[]
@@ -278,6 +281,20 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		public SqlServer2012MappingSchema()
 			: base(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance)
+		{
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+		}
+
+		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		{
+			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+		}
+	}
+
+	public class SqlServer2017MappingSchema : MappingSchema
+	{
+		public SqlServer2017MappingSchema()
+			: base(ProviderName.SqlServer2017, SqlServerMappingSchema.Instance)
 		{
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
 		}

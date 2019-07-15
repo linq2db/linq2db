@@ -8,6 +8,8 @@ using JetBrains.Annotations;
 namespace LinqToDB.Expressions
 {
 	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
+	using System.Reflection;
 
 	public static class Extensions
 	{
@@ -944,6 +946,18 @@ namespace LinqToDB.Expressions
 				e == lambda.Parameters[1] ? exprToReplaceParameter2 : e);
 		}
 
+		/// <summary>
+		/// Returns the body of <paramref name="lambda"/> but replaces the first three parameters of
+		/// that lambda expression with the given replace expressions.
+		/// </summary>
+		public static Expression GetBody(this LambdaExpression lambda, Expression exprToReplaceParameter1, Expression exprToReplaceParameter2, Expression exprToReplaceParameter3)
+		{
+			return Transform(lambda.Body, e =>
+				e == lambda.Parameters[0] ? exprToReplaceParameter1 :
+				e == lambda.Parameters[1] ? exprToReplaceParameter2 :
+				e == lambda.Parameters[2] ? exprToReplaceParameter3 : e);
+		}
+
 		static IEnumerable<T> Transform<T>(ICollection<T> source, Func<T,T> func)
 			where T : class
 		{
@@ -1689,5 +1703,22 @@ namespace LinqToDB.Expressions
 		}
 
 		#endregion
+
+		private static readonly MethodInfo _sqlProperty = typeof(Sql).GetMethodEx("Property").GetGenericMethodDefinition();
+
+		public static Expression GetMemberGetter(MemberInfo mi, Expression obj)
+		{
+#if !NETSTANDARD1_6
+			if (mi is DynamicColumnInfo)
+			{
+				return Expression.Call(
+					_sqlProperty.MakeGenericMethod(mi.GetMemberType()),
+					obj,
+					Expression.Constant(mi.Name));
+			}
+			else
+#endif
+				return Expression.PropertyOrField(obj, mi.Name);
+		}
 	}
 }

@@ -117,7 +117,7 @@ namespace Tests.Playground
 		    }
 
 		    [Test]
-		    public void UpdateTest([DataSources(ProviderName.Access)] string context)
+		    public void UpdateTest([DataSources(ProviderName.Access, ProviderName.SqlCe)] string context)
 		    {
 			    using (var db = GetDataContext(context))
 			    using (db.CreateLocalTable<billing_Devtype>())

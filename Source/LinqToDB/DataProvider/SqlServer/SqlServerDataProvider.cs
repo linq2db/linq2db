@@ -21,6 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using LinqToDB.Linq;
 
 	public class SqlServerDataProvider : DataProviderBase
 	{
@@ -82,6 +83,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
 			_sqlServer2008SqlOptimizer = new SqlServerSqlOptimizer    (SqlProviderFlags);
 			_sqlServer2012SqlOptimizer = new SqlServer2012SqlOptimizer(SqlProviderFlags);
+			_sqlServer2017SqlOptimizer = new SqlServer2017SqlOptimizer(SqlProviderFlags);
 
 			SetField<IDataReader,decimal>((r,i) => r.GetDecimal(i));
 			SetField<IDataReader,decimal>("money",      (r,i) => SqlServerTools.DataReaderGetMoney  (r, i));
@@ -108,6 +110,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			public static readonly SqlServer2005MappingSchema SqlServer2005MappingSchema = new SqlServer2005MappingSchema();
 			public static readonly SqlServer2008MappingSchema SqlServer2008MappingSchema = new SqlServer2008MappingSchema();
 			public static readonly SqlServer2012MappingSchema SqlServer2012MappingSchema = new SqlServer2012MappingSchema();
+			public static readonly SqlServer2017MappingSchema SqlServer2017MappingSchema = new SqlServer2017MappingSchema();
 		}
 
 		public override MappingSchema MappingSchema
@@ -120,6 +123,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					case SqlServerVersion.v2005 : return MappingSchemaInstance.SqlServer2005MappingSchema;
 					case SqlServerVersion.v2008 : return MappingSchemaInstance.SqlServer2008MappingSchema;
 					case SqlServerVersion.v2012 : return MappingSchemaInstance.SqlServer2012MappingSchema;
+					case SqlServerVersion.v2017 : return MappingSchemaInstance.SqlServer2017MappingSchema;
 				}
 
 				return base.MappingSchema;
@@ -131,14 +135,15 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlConnection(connectionString);
 		}
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
 			switch (Version)
 			{
-				case SqlServerVersion.v2000 : return new SqlServer2000SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
-				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
-				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
-				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2000 : return new SqlServer2000SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2017 : return new SqlServer2017SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 			}
 
 			throw new InvalidOperationException();
@@ -148,6 +153,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		readonly ISqlOptimizer _sqlServer2005SqlOptimizer;
 		readonly ISqlOptimizer _sqlServer2008SqlOptimizer;
 		readonly ISqlOptimizer _sqlServer2012SqlOptimizer;
+		readonly ISqlOptimizer _sqlServer2017SqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
@@ -157,6 +163,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case SqlServerVersion.v2005 : return _sqlServer2005SqlOptimizer;
 				case SqlServerVersion.v2008 : return _sqlServer2008SqlOptimizer;
 				case SqlServerVersion.v2012 : return _sqlServer2012SqlOptimizer;
+				case SqlServerVersion.v2017 : return _sqlServer2017SqlOptimizer;
 			}
 
 			return _sqlServer2008SqlOptimizer;
@@ -323,6 +330,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.UInt32        : parameter.DbType = DbType.Int64;   break;
 				case DataType.UInt64        : parameter.DbType = DbType.Decimal; break;
 				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal; break;
+				case DataType.DateTime      :
 				case DataType.DateTime2     :
 					parameter.DbType =
 						Version == SqlServerVersion.v2000 || Version == SqlServerVersion.v2005 ?
@@ -397,29 +405,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				table,
 				options,
 				source);
-		}
-
-		#endregion
-
-		#region Merge
-
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
-		{
-			return new SqlServerMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-		}
-
-		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-		{
-			return new SqlServerMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
-		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new SqlServerMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		#endregion

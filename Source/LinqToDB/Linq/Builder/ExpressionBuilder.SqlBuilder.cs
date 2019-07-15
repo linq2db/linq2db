@@ -74,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ma = (MemberExpression)expr;
 
-						if (ma.Member.IsNullableValueMember() || ma.Member.IsNullableHasValueMember())
+						if (ma.Member.IsNullableValueMember())
 							return true;
 
 						if (Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member) != null)
@@ -516,6 +516,36 @@ namespace LinqToDB.Linq.Builder
 
 							break;
 						}
+
+					default:
+						{
+							if (e is BinaryExpression binary)
+							{
+								var l = Expressions.ConvertBinary(MappingSchema, binary);
+								if (l != null)
+								{
+									var body = l.Body.Unwrap();
+									var expr = body.Transform(wpi =>
+									{
+										if (wpi.NodeType == ExpressionType.Parameter)
+										{
+											if (l.Parameters[0] == wpi)
+												return binary.Left;
+											if (l.Parameters[1] == wpi)
+												return binary.Right;
+										}
+
+										return wpi;
+									});
+
+									if (expr.Type != e.Type)
+										expr = new ChangeTypeExpression(expr, e.Type);
+
+									return new TransformInfo(ConvertExpression(expr));
+								}
+							}
+							break;
+						}
 				}
 
 				return new TransformInfo(e);
@@ -667,6 +697,42 @@ namespace LinqToDB.Linq.Builder
 		{
 			var expr = ConvertExpression(expression);
 			return ConvertToSql(context, expr);
+		}
+
+		public ISqlExpression ConvertToExtensionSql(IBuildContext context, Expression expression)
+		{
+			expression = expression.Unwrap();
+
+			if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(expression.Type))
+			{
+				Expression preparedExpression;
+				if (expression.NodeType == ExpressionType.Call)
+					preparedExpression = ((MethodCallExpression)expression).Arguments[0];
+				else 
+					preparedExpression = ((Sql.IQueryableContainer)expression.EvaluateExpression()).Query.Expression;
+				return ConvertToExtensionSql(context, preparedExpression);
+			}
+
+			if (expression is LambdaExpression lambda)
+			{
+				var saveParent = context.Parent;
+				ExpressionContext exprCtx;
+				if (context is SelectContext sc)
+					exprCtx = new ExpressionContext(context, sc.Sequence, lambda);
+				else
+					exprCtx = new ExpressionContext(context.Parent, context, lambda);
+				var result = ConvertToSql(exprCtx, lambda.Body);
+				ReplaceParent(context.Parent, saveParent);
+				if (!(result is SqlField field) || field.Table.All != field)
+					return result;
+				result = context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
+				return result;
+			}
+
+			if (!MappingSchema.IsScalarType(expression.Type) && typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
+				return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
+
+			return ConvertToSql(context, expression);
 		}
 
 		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression, bool unwrap = false)
@@ -848,7 +914,7 @@ namespace LinqToDB.Linq.Builder
 						if (attr != null)
 						{
 							var converted = attr.GetExpression(DataContext, context.SelectQuery, ma,
-								e => ConvertToSql(context, e));
+								e => ConvertToExtensionSql(context, e));
 
 							if (converted == null)
 							{
@@ -945,7 +1011,7 @@ namespace LinqToDB.Linq.Builder
 							if (attr.InlineParameters)
 								DataContext.InlineParameters = true;
 
-							var sqlExpression = attr.GetExpression(DataContext, context.SelectQuery, e, _ => ConvertToSql(context, _));
+							var sqlExpression = attr.GetExpression(DataContext, context.SelectQuery, e, _ => ConvertToExtensionSql(context, _));
 							if (sqlExpression != null)
 								return Convert(context, sqlExpression);
 
@@ -1305,15 +1371,20 @@ namespace LinqToDB.Linq.Builder
 			var lambda = Expression.Lambda<Func<object>>(Expression.Convert(expr, typeof(object)));
 			var v      = lambda.Compile()();
 
-			if (v != null && v.GetType().IsEnumEx())
+			if (v != null && MappingSchema.ValueToSqlConverter.CanConvert(v.GetType()))
+				value = new SqlValue(v);
+			else
 			{
-				var attrs = v.GetType().GetCustomAttributesEx(typeof(Sql.EnumAttribute), true);
+				if (v != null && v.GetType().IsEnumEx())
+				{
+					var attrs = v.GetType().GetCustomAttributesEx(typeof(Sql.EnumAttribute), true);
 
-				if (attrs.Length == 0)
-					v = MappingSchema.EnumToValue((Enum)v);
+					if (attrs.Length == 0)
+						v = MappingSchema.EnumToValue((Enum)v);
+				}
+
+				value = MappingSchema.GetSqlValue(expr.Type, v);
 			}
-
-			value = MappingSchema.GetSqlValue(expr.Type, v);
 
 			_constants.Add(expr, value);
 
@@ -1556,14 +1627,6 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess :
 					{
 						var e = (MemberExpression)expression;
-
-						if (e.Member.Name == "HasValue" &&
-							e.Member.DeclaringType.IsGenericTypeEx() &&
-							e.Member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>))
-						{
-							var expr = ConvertToSql(context, e.Expression);
-							return Convert(context, new SqlPredicate.IsNull(expr, true));
-						}
 
 						var attr = GetExpressionAttribute(e.Member);
 
@@ -2125,7 +2188,7 @@ namespace LinqToDB.Linq.Builder
 			var dbType     = baseType.DbType;
 			var length     = baseType.Length;
 
-			QueryVisitor.Find(expr, e =>
+			new QueryVisitor().Find(expr, e =>
 			{
 				switch (e.ElementType)
 				{
@@ -2799,8 +2862,8 @@ namespace LinqToDB.Linq.Builder
 					var expr1 = exprExpr != null ? exprExpr.Expr1 : inList.Expr1;
 					var expr2 = exprExpr?.Expr2;
 
-					var nullValue1 =                 QueryVisitor.Find(expr1, _ => _ is IValueContainer);
-					var nullValue2 = expr2 != null ? QueryVisitor.Find(expr2, _ => _ is IValueContainer) : null;
+					var nullValue1 =                 new QueryVisitor().Find(expr1, _ => _ is IValueContainer);
+					var nullValue2 = expr2 != null ? new QueryVisitor().Find(expr2, _ => _ is IValueContainer) : null;
 
 					var hasNullValue =
 						   nullValue1 != null && ((IValueContainer) nullValue1).Value == null
@@ -2808,8 +2871,8 @@ namespace LinqToDB.Linq.Builder
 
 					if (!hasNullValue)
 					{
-						var expr1IsField =                  expr1.CanBeNull && QueryVisitor.Find(expr1, _ => _.ElementType == QueryElementType.SqlField) != null;
-						var expr2IsField = expr2 != null && expr2.CanBeNull && QueryVisitor.Find(expr2, _ => _.ElementType == QueryElementType.SqlField) != null;
+						var expr1IsField =                  expr1.CanBeNull && new QueryVisitor().Find(expr1, _ => _.ElementType == QueryElementType.SqlField) != null;
+						var expr2IsField = expr2 != null && expr2.CanBeNull && new QueryVisitor().Find(expr2, _ => _.ElementType == QueryElementType.SqlField) != null;
 
 						var nullableField = expr1IsField
 							? expr1
@@ -3039,7 +3102,7 @@ namespace LinqToDB.Linq.Builder
 					if (conditional.Test.NodeType == ExpressionType.NotEqual)
 					{
 						var binary = (BinaryExpression)conditional.Test;
-						if (IsNullConstant(binary.Right))
+						if (IsNullConstant(binary.Right) || IsNullConstant(binary.Left))
 						{
 							if (IsNullConstant(conditional.IfFalse))
 							{
@@ -3050,7 +3113,7 @@ namespace LinqToDB.Linq.Builder
 					else if (conditional.Test.NodeType == ExpressionType.Equal)
 					{
 						var binary = (BinaryExpression)conditional.Test;
-						if (IsNullConstant(binary.Right))
+						if (IsNullConstant(binary.Right) || IsNullConstant(binary.Left))
 						{
 							if (IsNullConstant(conditional.IfTrue))
 							{

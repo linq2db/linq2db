@@ -23,7 +23,6 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		public void CreateTable1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -46,7 +45,6 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		public async Task CreateTable1Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -87,6 +85,7 @@ namespace Tests.xUpdate
 						case ProviderName.SqlServer2008 :
 						case ProviderName.SqlServer2012 :
 						case ProviderName.SqlServer2014 :
+						case ProviderName.SqlServer2017 :
 						case TestProvName.SqlAzure      : db.DropTable<TestTable>("#" + tableName); break;
 						default                         : db.DropTable<TestTable>(tableName);       break;
 					}
@@ -102,6 +101,7 @@ namespace Tests.xUpdate
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
+					case ProviderName.SqlServer2017 :
 					case TestProvName.SqlAzure      :
 						table = db.CreateTable<TestTable>("#" + tableName);
 						break;
@@ -140,6 +140,7 @@ namespace Tests.xUpdate
 						case ProviderName.SqlServer2008 :
 						case ProviderName.SqlServer2012 :
 						case ProviderName.SqlServer2014 :
+						case ProviderName.SqlServer2017 :
 						case TestProvName.SqlAzure      : await db.DropTableAsync<TestTable>("#" + tableName); break;
 						default                         : await db.DropTableAsync<TestTable>(tableName);       break;
 					}
@@ -155,6 +156,7 @@ namespace Tests.xUpdate
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
+					case ProviderName.SqlServer2017 :
 					case TestProvName.SqlAzure      :
 						table = await db.CreateTableAsync<TestTable>("#" + tableName);
 						break;

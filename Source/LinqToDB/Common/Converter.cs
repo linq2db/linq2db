@@ -107,10 +107,10 @@ namespace LinqToDB.Common
 					DefaultValue.GetValue(conversionType) :
 					mappingSchema.GetDefaultValue(conversionType);
 
-			if (value.GetType() == conversionType)
+			var from = value.GetType();
+			if (from == conversionType)
 				return value;
 
-			var from = value.GetType();
 			var to   = conversionType;
 			var key  = new { from, to };
 
@@ -120,9 +120,10 @@ namespace LinqToDB.Common
 
 			if (!converters.TryGetValue(key, out l))
 			{
-				var li =
-					ConvertInfo.Default.Get   (               value.GetType(), to) ??
-					ConvertInfo.Default.Create(mappingSchema, value.GetType(), to);
+				var li = mappingSchema != null
+					? mappingSchema.GetConverter(new DbDataType(from), new DbDataType(to), true)
+					: (ConvertInfo.Default.Get    (from, to) ??
+						ConvertInfo.Default.Create(mappingSchema, from, to));
 
 				var b  = li.CheckNullLambda.Body;
 				var ps = li.CheckNullLambda.Parameters;

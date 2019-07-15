@@ -24,27 +24,37 @@ namespace LinqToDB.Linq.Builder
 			var collectionSelector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var resultSelector     = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
-			if (sequence.SelectQuery.HasUnion || !sequence.SelectQuery.IsSimple)
+			var expr           = collectionSelector.Body.Unwrap();
+			DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty = null;
+			if (expr is MethodCallExpression mc && AllJoinsBuilder.IsMatchingMethod(mc, true))
 			{
-				sequence = new SubQueryContext(sequence);
+				defaultIfEmpty = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
+				sequence       = new SubQueryContext(defaultIfEmpty);
+
+				defaultIfEmpty.Disabled = true;
 			}
+			else if (sequence.SelectQuery.HasUnion || !sequence.SelectQuery.IsSimple || sequence.GetType() == typeof(SelectContext))
+				// TODO: we should create subquery unconditionally and let optimizer remove it later if it is not needed,
+				// but right now it breaks at least association builder so it is not a small change
+				sequence = new SubQueryContext(sequence);
 
 			var context        = new SelectManyContext(buildInfo.Parent, collectionSelector, sequence);
 			context.SetAlias(collectionSelector.Parameters[0].Name);
-
-			var expr           = collectionSelector.Body.Unwrap();
 
 			var collectionInfo = new BuildInfo(context, expr, new SelectQuery());
 			var collection     = builder.BuildSequence(collectionInfo);
 			if (resultSelector.Parameters.Count > 1)
 				collection.SetAlias(resultSelector.Parameters[1].Name);
 
+			if (defaultIfEmpty != null && (collectionInfo.JoinType == JoinType.Right || collectionInfo.JoinType == JoinType.Full))
+				defaultIfEmpty.Disabled = false;
+
 			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext || collectionInfo.JoinType == JoinType.Left;
 			var sql            = collection.SelectQuery;
 
 			var sequenceTables = new HashSet<ISqlTableSource>(sequence.SelectQuery.From.Tables[0].GetTables());
-			var newQuery       = null != QueryVisitor.Find(sql, e => e == collectionInfo.SelectQuery);
-			var crossApply     = null != QueryVisitor.Find(sql, e =>
+			var newQuery       = null != new QueryVisitor().Find(sql, e => e == collectionInfo.SelectQuery);
+			var crossApply     = null != new QueryVisitor().Find(sql, e =>
 				e.ElementType == QueryElementType.TableSource && sequenceTables.Contains((ISqlTableSource)e)  ||
 				e.ElementType == QueryElementType.SqlField    && sequenceTables.Contains(((SqlField)e).Table) ||
 				e.ElementType == QueryElementType.Column      && sequenceTables.Contains(((SqlColumn)e).Parent));
@@ -119,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 
 				bool ContainsTable(ISqlTableSource tbl, IQueryElement qe)
 				{
-					return null != QueryVisitor.Find(qe, e =>
+					return null != new QueryVisitor().Find(qe, e =>
 						e == tbl ||
 						e.ElementType == QueryElementType.SqlField && tbl == ((SqlField) e).Table ||
 						e.ElementType == QueryElementType.Column   && tbl == ((SqlColumn)e).Parent);
@@ -178,7 +188,7 @@ namespace LinqToDB.Linq.Builder
 				if (collection.Parent is TableBuilder.TableContext collectionParent &&
 					collectionInfo.IsAssociationBuilt)
 				{
-					var ts = (SqlTableSource)QueryVisitor.Find(sequence.SelectQuery.From, e =>
+					var ts = (SqlTableSource)new QueryVisitor().Find(sequence.SelectQuery.From, e =>
 					{
 						if (e.ElementType == QueryElementType.TableSource)
 						{

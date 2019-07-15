@@ -23,6 +23,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		static readonly SqlServerDataProvider _sqlServerDataProvider2005 = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005);
 		static readonly SqlServerDataProvider _sqlServerDataProvider2008 = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008);
 		static readonly SqlServerDataProvider _sqlServerDataProvider2012 = new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012);
+		static readonly SqlServerDataProvider _sqlServerDataProvider2017 = new SqlServerDataProvider(ProviderName.SqlServer2017, SqlServerVersion.v2017);
 
 		public static bool AutoDetectProvider { get; set; }
 
@@ -32,6 +33,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			DataConnection.AddDataProvider(ProviderName.SqlServer,     _sqlServerDataProvider2008);
 			DataConnection.AddDataProvider(ProviderName.SqlServer2014, _sqlServerDataProvider2012);
+			DataConnection.AddDataProvider(_sqlServerDataProvider2017);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2012);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2008);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2005);
@@ -107,9 +109,11 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "SqlServer2014"         :
 				case "SqlServer.2014"        :
 				case "SqlServer2016"         :
-				case "SqlServer.2016"        :
+				case "SqlServer.2016"        : return _sqlServerDataProvider2012;
 				case "SqlServer2017"         :
-				case "SqlServer.2017"        : return _sqlServerDataProvider2012;
+				case "SqlServer.2017"        :
+				case "SqlServer2019"         :
+				case "SqlServer.2019"        : return _sqlServerDataProvider2017;
 
 				case "SqlServer"             :
 				case "System.Data.SqlClient" :
@@ -120,7 +124,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (css.Name.Contains("2012")) return _sqlServerDataProvider2012;
 					if (css.Name.Contains("2014")) return _sqlServerDataProvider2012;
 					if (css.Name.Contains("2016")) return _sqlServerDataProvider2012;
-					if (css.Name.Contains("2017")) return _sqlServerDataProvider2012;
+					if (css.Name.Contains("2017")) return _sqlServerDataProvider2017;
+					if (css.Name.Contains("2019")) return _sqlServerDataProvider2017;
 
 					if (AutoDetectProvider)
 					{
@@ -142,6 +147,8 @@ namespace LinqToDB.DataProvider.SqlServer
 										cmd.CommandText = "SELECT compatibility_level FROM sys.databases WHERE name = db_name()";
 										var level = Converter.ChangeTypeTo<int>(cmd.ExecuteScalar());
 
+										if (level >= 140)
+											return _sqlServerDataProvider2017;
 										if (level >= 110)
 											return _sqlServerDataProvider2012;
 										if (level >= 100)
@@ -158,9 +165,10 @@ namespace LinqToDB.DataProvider.SqlServer
 											case 10 : return _sqlServerDataProvider2008;
 											case 11 : return _sqlServerDataProvider2012;
 											case 12 : return _sqlServerDataProvider2012;
+											case 14 : return _sqlServerDataProvider2017;
 											default :
-												if (version > 12)
-													return _sqlServerDataProvider2012;
+												if (version > 14)
+													return _sqlServerDataProvider2017;
 												return _sqlServerDataProvider2008;
 										}
 									}
@@ -189,6 +197,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case SqlServerVersion.v2000 : return _sqlServerDataProvider2000;
 				case SqlServerVersion.v2005 : return _sqlServerDataProvider2005;
 				case SqlServerVersion.v2012 : return _sqlServerDataProvider2012;
+				case SqlServerVersion.v2017 : return _sqlServerDataProvider2017;
 			}
 
 			return _sqlServerDataProvider2008;
@@ -200,6 +209,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlServerDataProvider2005.AddUdtType(type, udtName);
 			_sqlServerDataProvider2008.AddUdtType(type, udtName);
 			_sqlServerDataProvider2012.AddUdtType(type, udtName);
+			_sqlServerDataProvider2017.AddUdtType(type, udtName);
 		}
 
 		public static void AddUdtType<T>(string udtName, T nullValue, DataType dataType = DataType.Undefined)
@@ -208,6 +218,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlServerDataProvider2005.AddUdtType(udtName, nullValue, dataType);
 			_sqlServerDataProvider2008.AddUdtType(udtName, nullValue, dataType);
 			_sqlServerDataProvider2012.AddUdtType(udtName, nullValue, dataType);
+			_sqlServerDataProvider2017.AddUdtType(udtName, nullValue, dataType);
 		}
 
 		public static void ResolveSqlTypes([NotNull] string path)
@@ -247,6 +258,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case SqlServerVersion.v2000 : return new DataConnection(_sqlServerDataProvider2000, connectionString);
 				case SqlServerVersion.v2005 : return new DataConnection(_sqlServerDataProvider2005, connectionString);
 				case SqlServerVersion.v2012 : return new DataConnection(_sqlServerDataProvider2012, connectionString);
+				case SqlServerVersion.v2017 : return new DataConnection(_sqlServerDataProvider2017, connectionString);
 			}
 
 			return new DataConnection(_sqlServerDataProvider2008, connectionString);
@@ -259,6 +271,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case SqlServerVersion.v2000 : return new DataConnection(_sqlServerDataProvider2000, connection);
 				case SqlServerVersion.v2005 : return new DataConnection(_sqlServerDataProvider2005, connection);
 				case SqlServerVersion.v2012 : return new DataConnection(_sqlServerDataProvider2012, connection);
+				case SqlServerVersion.v2017 : return new DataConnection(_sqlServerDataProvider2017, connection);
 			}
 
 			return new DataConnection(_sqlServerDataProvider2008, connection);
@@ -271,6 +284,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case SqlServerVersion.v2000 : return new DataConnection(_sqlServerDataProvider2000, transaction);
 				case SqlServerVersion.v2005 : return new DataConnection(_sqlServerDataProvider2005, transaction);
 				case SqlServerVersion.v2012 : return new DataConnection(_sqlServerDataProvider2012, transaction);
+				case SqlServerVersion.v2017 : return new DataConnection(_sqlServerDataProvider2017, transaction);
 			}
 
 			return new DataConnection(_sqlServerDataProvider2008, transaction);
@@ -304,15 +318,6 @@ namespace LinqToDB.DataProvider.SqlServer
 					NotifyAfter        = notifyAfter,
 					RowsCopiedCallback = rowsCopiedCallback,
 				}, source);
-		}
-
-		#endregion
-
-		#region Extensions
-
-		public static void SetIdentityInsert<T>(this DataConnection dataConnection, ITable<T> table, bool isOn)
-		{
-			dataConnection.Execute("SET IDENTITY_INSERT ");
 		}
 
 		#endregion

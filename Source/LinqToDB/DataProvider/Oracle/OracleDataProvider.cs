@@ -14,6 +14,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Data;
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 	using Tools;
@@ -286,10 +287,11 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				// ((OracleCommand)dataConnection.Command).BindByName = true;
 
-				var p = Expression.Parameter(typeof(DataConnection), "dataConnection");
+				var p     = Expression.Parameter(typeof(DataConnection), "dataConnection");
+				var pbind = Expression.Parameter(typeof(bool), "value");
 
 				_setBindByName =
-					Expression.Lambda<Action<DataConnection>>(
+					Expression.Lambda<Action<DataConnection, bool>>(
 						Expression.Assign(
 							Expression.PropertyOrField(
 								Expression.Convert(
@@ -298,8 +300,9 @@ namespace LinqToDB.DataProvider.Oracle
 										Expression.Convert(Expression.PropertyOrField(p, "Command"), typeof(DbCommand))),
 									connectionType.AssemblyEx().GetType(AssemblyName + ".Client.OracleCommand", true)),
 								"BindByName"),
-							Expression.Constant(true)),
-							p
+							pbind),
+							p,
+							pbind
 					).Compile();
 			}
 
@@ -409,9 +412,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public             bool   IsXmlTypeSupported  => _oracleXmlType != null;
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new OracleSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+			return new OracleSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 		}
 
 		static class MappingSchemaInstance
@@ -438,25 +441,23 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 #endif
 
-		Action<DataConnection> _setBindByName;
+		Action<DataConnection, bool> _setBindByName;
 
-		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters)
+		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters)
 		{
 			dataConnection.DisposeCommand();
 
 			if (_setBindByName == null)
 				EnsureConnection();
 
-			//if (Name == ProviderName.OracleNative)
-				_setBindByName(dataConnection);
+			// binding disabled for native provider without parameters to reduce changes to fail when SQL contains
+			// parameter-like token.
+			// This is mostly issue with triggers creation, because they can have record tokens like :NEW
+			// incorectly identified by native provider as parameter
+			var bind = Name != ProviderName.OracleNative || parameters?.Length > 0 || withParameters;
+			_setBindByName(dataConnection, bind);
 
-//			if (Name == ProviderName.OracleNative)
-//			{
-//				dynamic cmd = Proxy.GetUnderlyingObject((DbCommand)dataConnection.Command);
-//				cmd.BindByName = true;
-//			}
-
-			base.InitCommand(dataConnection, commandType, commandText, parameters);
+			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
 
 			if (parameters != null)
 				foreach (var parameter in parameters)
@@ -619,35 +620,6 @@ namespace LinqToDB.DataProvider.Oracle
 				table,
 				options,
 				source);
-		}
-
-		#endregion
-
-		#region Merge
-
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
-		{
-			if (delete)
-				throw new LinqToDBException("Oracle MERGE statement does not support DELETE by source.");
-
-			return new OracleMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-		}
-
-		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-		{
-			if (delete)
-				throw new LinqToDBException("Oracle MERGE statement does not support DELETE by source.");
-
-			return new OracleMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
-		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new OracleMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		#endregion

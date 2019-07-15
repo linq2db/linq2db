@@ -39,6 +39,7 @@ namespace LinqToDB.Linq.Builder
 			new DistinctBuilder            (),
 			new FirstSingleBuilder         (),
 			new AggregationBuilder         (),
+			new MethodChainBuilder         (),
 			new ScalarSelectBuilder        (),
 			new CountBuilder               (),
 			new PassThroughBuilder         (),
@@ -62,8 +63,19 @@ namespace LinqToDB.Linq.Builder
 			new TruncateBuilder            (),
 			new ChangeTypeExpressionBuilder(),
 			new WithTableExpressionBuilder (),
+			new MergeBuilder                             (),
+			new MergeBuilder.InsertWhenNotMatched        (),
+			new MergeBuilder.UpdateWhenMatched           (),
+			new MergeBuilder.UpdateWhenMatchedThenDelete (),
+			new MergeBuilder.UpdateWhenNotMatchedBySource(),
+			new MergeBuilder.DeleteWhenMatched           (),
+			new MergeBuilder.DeleteWhenNotMatchedBySource(),
+			new MergeBuilder.On                          (),
+			new MergeBuilder.Merge                       (),
+			new MergeBuilder.MergeInto                   (),
+			new MergeBuilder.Using                       (),
+			new MergeBuilder.UsingTarget                 (),
 			new ContextParser              (),
-			new MergeContextParser         (),
 			new ArrayBuilder               ()
 		};
 
@@ -513,6 +525,13 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var me = (MemberExpression)expr;
+
+							if (me.Member.IsNullableHasValueMember())
+							{
+								var obj = ExposeExpression(me.Expression);
+								return Expression.NotEqual(obj, Expression.Constant(null, obj.Type));
+							}
+
 							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedTypeEx(), me.Member);
 
 							if (l != null)
@@ -771,29 +790,29 @@ namespace LinqToDB.Linq.Builder
 
 				if (!string.IsNullOrEmpty(attr.MethodName))
 				{
-					Expression expr;
+				Expression expr;
 
-					if (mi is MethodInfo method && method.IsGenericMethod)
-					{
-						var args  = method.GetGenericArguments();
-						var names = args.Select(t => (object)t.Name).ToArray();
-						var name  = string.Format(attr.MethodName, names);
+				if (mi is MethodInfo method && method.IsGenericMethod)
+				{
+					var args  = method.GetGenericArguments();
+					var names = args.Select(t => (object)t.Name).ToArray();
+					var name  = string.Format(attr.MethodName, names);
 
-						expr = Expression.Call(
-							mi.DeclaringType,
-							name,
-							name != attr.MethodName ? Array<Type>.Empty : args);
-					}
-					else
-					{
-						expr = Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty);
-					}
+					expr = Expression.Call(
+						mi.DeclaringType,
+						name,
+						name != attr.MethodName ? Array<Type>.Empty : args);
+				}
+				else
+				{
+					expr = Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty);
+				}
 
 					var call = Expression.Lambda<Func<LambdaExpression>>(Expression.Convert(expr,
 						typeof(LambdaExpression)));
 
-					return call.Compile()();
-				}
+				return call.Compile()();
+			}
 			}
 
 			return null;

@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlProvider;
 	using System.Globalization;
 
-	class InformixSqlBuilder : BasicSqlBuilder
+	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
 		public InformixSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.Informix
 				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
 				StringBuilder
 					.Append(" MODIFY ")
 					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
@@ -116,7 +116,7 @@ namespace LinqToDB.DataProvider.Informix
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -152,7 +152,7 @@ namespace LinqToDB.DataProvider.Informix
 					break;
 			}
 
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
 		/// <summary>
@@ -236,15 +236,24 @@ namespace LinqToDB.DataProvider.Informix
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
+			if (server   != null && server  .Length == 0) server   = null;
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
 
-			// TODO: FQN could also contain server name, but we don't have such API for now
-			// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
+			if (server != null && database == null)
+				throw new LinqToDBException("You must specify database for linked server query");
+
 			if (database != null)
-				sb.Append(database).Append(":");
+				sb.Append(database);
+
+			if (server != null)
+				sb.Append("@").Append(server);
+
+			if (database != null)
+				sb.Append(":");
 
 			if (schema != null)
 				sb.Append(schema).Append(".");
@@ -256,6 +265,13 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			dynamic p = parameter;
 			return p.IfxType.ToString();
+		}
+
+		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
+		{
+			BuildExpression(value);
+			StringBuilder.Append("::");
+			BuildDataType(dataType, false);
 		}
 	}
 }

@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Common;
 	using Data;
 	using Extensions;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 
@@ -54,10 +55,10 @@ namespace LinqToDB.DataProvider.SapHana
 		public override string DbFactoryProviderName => "Sap.Data.Hana";
 #endif
 
-		static Action<IDbDataParameter> _setText;
-		static Action<IDbDataParameter> _setNText;
-		static Action<IDbDataParameter> _setBlob;
-		static Action<IDbDataParameter> _setVarBinary;
+		Action<IDbDataParameter> _setText;
+		Action<IDbDataParameter> _setNText;
+		Action<IDbDataParameter> _setBlob;
+		Action<IDbDataParameter> _setVarBinary;
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
@@ -77,9 +78,9 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 #endif
 
-		public override ISqlBuilder CreateSqlBuilder()
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SapHanaSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+			return new SapHanaSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -150,13 +151,6 @@ namespace LinqToDB.DataProvider.SapHana
 				table,
 				options,
 				source);
-		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new SapHanaMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)

@@ -176,6 +176,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void Scalar3([DataSources] string context)
 		{
@@ -187,6 +188,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void Scalar31([DataSources] string context)
 		{
@@ -243,6 +245,148 @@ namespace Tests.Linq
 				{
 					f1 = db.Parent.Select(p => p.Value1).FirstOrDefault()
 				});
+			}
+		}
+
+		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.SapHana, }, Details = "missing TOP in subquery")]
+		[Test]
+		public void SubQueryWithCastAndHasValue([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db
+					.Parent
+					.Where(_ =>
+						db
+							.Parent
+							.Select(r => (int?)r.Value1)
+							.FirstOrDefault()
+							.HasValue)
+					.ToList();
+			}
+		}
+
+		// Informix actually can use TOP in subqueries when wrapped into another select: https://stackoverflow.com/a/22656180
+		// Looks like SAP HANA2 support TOP in subqueries. We to introduce HANA provider versions
+		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.SapHana, }, Details = "missing TOP in subquery")]
+		[Test]
+		public void SubQueryWithCast([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db
+					.Parent
+					.Where(_ =>
+						db
+							.Parent
+							.Select(r => (int?)r.Value1)
+							.FirstOrDefault() != null)
+					.ToList();
+			}
+		}
+
+		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.SapHana, }, Details = "missing TOP in subquery")]
+		[Test]
+		public void SubQueryWithHasValue([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db
+					.Parent
+					.Where(_ =>
+						db
+							.Parent
+							.Select(r => r.Value1)
+							.FirstOrDefault()
+							.HasValue)
+					.ToList();
+			}
+		}
+
+		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.SapHana, }, Details = "missing TOP in subquery")]
+		[Test]
+		public void SubQueryWithoutCastAndHasValue([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db
+					.Parent
+					.Where(_ =>
+						db
+							.Parent
+							.Select(r => r.Value1)
+							.FirstOrDefault() != null)
+					.ToList();
+			}
+		}
+
+		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.SapHana, }, Details = "missing TOP in subquery")]
+		[Test]
+		public void SubQueryWithCastAndHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db
+					.Parent
+					.Where(_ =>
+						db
+							.Types2
+							.Select(r => (Guid?)r.GuidValue)
+							.FirstOrDefault()
+							.HasValue)
+					.ToList();
+			}
+		}
+
+		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.SapHana, }, Details = "missing TOP in subquery")]
+		[Test]
+		public void SubQueryWithCastByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db
+					.Parent
+					.Where(_ =>
+						db
+							.Types2
+							.Select(r => (Guid?)r.GuidValue)
+							.FirstOrDefault() != null)
+					.ToList();
+			}
+		}
+
+		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.SapHana, }, Details = "missing TOP in subquery")]
+		[Test]
+		public void SubQueryWithHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db
+					.Parent
+					.Where(_ =>
+						db
+							.Types2
+							.Select(r => r.GuidValue)
+							.FirstOrDefault()
+							.HasValue)
+					.ToList();
+			}
+		}
+
+		[ActiveIssue(Configurations = new[] { ProviderName.Informix, ProviderName.SapHana, }, Details = "missing TOP in subquery")]
+		[Test]
+		public void SubQueryWithoutCastAndHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db
+					.Parent
+					.Where(_ =>
+						db
+							.Types2
+							.Select(r => r.GuidValue)
+							.FirstOrDefault() != null)
+					.ToList();
 			}
 		}
 	}

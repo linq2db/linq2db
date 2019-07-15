@@ -246,7 +246,7 @@ namespace LinqToDB
 			}
 		}
 
-		Func<ISqlBuilder>   IDataContext.CreateSqlProvider => DataProvider.CreateSqlBuilder;
+		Func<ISqlBuilder>   IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema);
 		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer   => DataProvider.GetSqlOptimizer;
 		Type                IDataContext.DataReaderType    => DataProvider.DataReaderType;
 		SqlProviderFlags    IDataContext.SqlProviderFlags  => DataProvider.SqlProviderFlags;
@@ -368,7 +368,7 @@ namespace LinqToDB
 		{
 			var dct = new DataContextTransaction(this);
 
-			await dct.BeginTransactionAsync(level);
+			await dct.BeginTransactionAsync(level).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return dct;
 		}
@@ -384,7 +384,7 @@ namespace LinqToDB
 		{
 			var dct = new DataContextTransaction(this);
 
-			await dct.BeginTransactionAsync();
+			await dct.BeginTransactionAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return dct;
 		}

@@ -13,6 +13,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
+	using System.Text.RegularExpressions;
 
 	[TestFixture]
 	public class WhereTests : TestBase
@@ -1437,6 +1438,58 @@ namespace Tests.Linq
 					select p.FirstName into nm
 					where !(nm.Length == 0)
 					select new { nm });
+			}
+		}
+
+		[Test]
+		public void Issue1755Test1([DataSources] string context, [Values(1, 2)] int id, [Values(null, true, false)] bool? flag)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = (from c in db.Parent
+							   where c.ParentID == id
+								   && (!flag.HasValue || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+							   select c);
+
+				var sql = results.ToString();
+
+				AreEqual(
+					from c in db.Parent.AsEnumerable()
+					where c.ParentID == id
+						&& (!flag.HasValue || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+					select c,
+					results,
+					true);
+
+				// remote context doesn't have access to final SQL
+				if (!context.EndsWith(".LinqService"))
+					Assert.AreEqual(flag == null ? 0 : 1, Regex.Matches(sql, " AND ").Count);
+			}
+		}
+
+		[Test]
+		public void Issue1755Test2([DataSources] string context, [Values(1, 2)] int id, [Values(null, true, false)] bool? flag)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = (from c in db.Parent
+							   where c.ParentID == id
+								   && (flag == null || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+							   select c);
+
+				var sql = results.ToString();
+
+				AreEqual(
+					from c in db.Parent.AsEnumerable()
+					where c.ParentID == id
+						&& (flag == null || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+					select c,
+					results,
+					true);
+
+				// remote context doesn't have access to final SQL
+				if (!context.EndsWith(".LinqService"))
+					Assert.AreEqual(flag == null ? 0 : 1, Regex.Matches(sql, " AND ").Count);
 			}
 		}
 	}

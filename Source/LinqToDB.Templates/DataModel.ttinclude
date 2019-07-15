@@ -20,12 +20,14 @@ string   NamespaceName
 	set { Model.Namespace.Name = value; }
 }
 
+string   ServerName                    = null;
 string   DatabaseName                  = null;
 string   DataContextName               = null;
 string   BaseDataContextClass          = null;
 string   BaseEntityClass               = null;
 string   OneToManyAssociationType      = "IEnumerable<{0}>";
 
+bool     GenerateDatabaseInfo          = true;
 bool     GenerateDatabaseName          = false;
 bool     GenerateConstructors          = true;
 string   DefaultConfiguration          = null;
@@ -43,6 +45,7 @@ bool PluralizeDataContextPropertyNames   = true;
 bool SingularizeDataContextPropertyNames = false;
 
 bool NormalizeNames                      = true;
+static bool EnforceModelNullability      = true;
 
 private Func<string, bool, string> _toValidName;
 Func<string, bool, string> ToValidName
@@ -85,19 +88,19 @@ static Func<ProcedureSchema,ColumnSchema,string> ConvertProcedureColumnMemberTyp
 
 HashSet<string> KeyWords = new HashSet<string>
 {
-	"abstract", "as",       "base",     "bool",    "break",     "byte",     "case",       "catch",     "char",    "checked",
-	"class",    "const",    "continue", "decimal", "default",   "delegate", "do",         "double",    "else",    "enum",
-	"event",    "explicit", "extern",   "false",   "finally",   "fixed",    "float",      "for",       "foreach", "goto",
-	"if",       "implicit", "in",       "int",     "interface", "internal", "is",         "lock",      "long",    "new",
-	"null",     "object",   "operator", "out",     "override",  "params",   "private",    "protected", "public",  "readonly",
-	"ref",      "return",   "sbyte",    "sealed",  "short",     "sizeof",   "stackalloc", "static",    "struct",  "switch",
-	"this",     "throw",    "true",     "try",     "typeof",    "uint",     "ulong",      "unchecked", "unsafe",  "ushort",
+	"abstract", "as",       "base",     "bool",    "break",     "byte",      "case",       "catch",     "char",    "checked",
+	"class",    "const",    "continue", "decimal", "default",   "delegate",  "do",         "double",    "else",    "enum",
+	"event",    "explicit", "extern",   "false",   "finally",   "fixed",     "float",      "for",       "foreach", "goto",
+	"if",       "implicit", "in",       "int",     "interface", "internal",  "is",         "lock",      "long",    "new",
+	"null",     "object",   "operator", "out",     "override",  "params",    "private",    "protected", "public",  "readonly",
+	"ref",      "return",   "sbyte",    "sealed",  "short",     "sizeof",    "stackalloc", "static",    "struct",  "switch",
+	"this",     "throw",    "true",     "try",     "typeof",    "uint",      "ulong",      "unchecked", "unsafe",  "ushort",
 	"using",    "virtual",  "volatile", "void",    "while",     "namespace", "string"
 };
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
-	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
+	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 
 	var sp = dataConnection.DataProvider.GetSchemaProvider();
 	var db = sp.GetSchema(dataConnection, GetSchemaOptions);
@@ -108,11 +111,14 @@ void LoadServerMetadata(DataConnection dataConnection)
 	if (DataContextName == null)
 		DataContextObject.Name = DataContextName = ToValidName(db.Database, true) + "DB";
 
-	DataContextObject.Comment.Add("/ <summary>");
-	DataContextObject.Comment.Add("/ Database       : " + db.Database);
-	DataContextObject.Comment.Add("/ Data Source    : " + db.DataSource);
-	DataContextObject.Comment.Add("/ Server Version : " + db.ServerVersion);
-	DataContextObject.Comment.Add("/ </summary>");
+	if (GenerateDatabaseInfo)
+	{
+		DataContextObject.Comment.Add("/ <summary>");
+		DataContextObject.Comment.Add("/ Database       : " + db.Database);
+		DataContextObject.Comment.Add("/ Data Source    : " + db.DataSource);
+		DataContextObject.Comment.Add("/ Server Version : " + db.ServerVersion);
+		DataContextObject.Comment.Add("/ </summary>");
+	}
 
 	var tables = db.Tables
 		.Where(t => !t.IsProviderSpecific)
@@ -124,7 +130,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 			{
 				TableSchema             = t,
 				IsDefaultSchema         = t.IsDefaultSchema,
-				Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.SchemaName)? null : t.SchemaName,
+				Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.SchemaName) ? null : t.SchemaName,
 				BaseClass               = BaseEntityClass,
 				TableName               = t.TableName,
 				TypeName                = t.TypeName,
@@ -134,7 +140,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 				Description             = t.Description,
 				Columns                 = t.Columns.ToDictionary(
 					c => c.ColumnName,
-					c => new Column
+					c => new Column(new ModelType(ConvertTableColumnMemberType(t, c), !IsValueType(ConvertTableColumnMemberType(t, c)), c.IsNullable))
 					{
 						ColumnName      = c.ColumnName,
 						ColumnType      = c.ColumnType,
@@ -147,7 +153,6 @@ void LoadServerMetadata(DataConnection dataConnection)
 						IsPrimaryKey    = c.IsPrimaryKey,
 						PrimaryKeyOrder = c.PrimaryKeyOrder,
 						MemberName      = CheckType(c.SystemType, c.MemberName),
-						TypeBuilder     = () => ConvertTableColumnMemberType(t, c),
 						SkipOnInsert    = c.SkipOnInsert,
 						SkipOnUpdate    = c.SkipOnUpdate,
 						Description     = c.Description,
@@ -275,7 +280,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 						Columns  = ToDictionary(
 							p.ResultTable.Columns,
 							c => c.ColumnName,
-							c => new Column
+							c => new Column(new ModelType(ConvertProcedureColumnMemberType(p, c), !IsValueType(ConvertProcedureColumnMemberType(p, c)), c.IsNullable))
 							{
 								ColumnName      = c.ColumnName,
 								ColumnType      = c.ColumnType,
@@ -284,7 +289,6 @@ void LoadServerMetadata(DataConnection dataConnection)
 								IsPrimaryKey    = c.IsPrimaryKey,
 								PrimaryKeyOrder = c.PrimaryKeyOrder,
 								MemberName      = CheckColumnName(CheckType(c.SystemType, c.MemberName)),
-								TypeBuilder     = () => ConvertProcedureColumnMemberType(p, c),
 								SkipOnInsert    = c.SkipOnInsert,
 								SkipOnUpdate    = c.SkipOnUpdate,
 								Description     = c.Description,
@@ -313,6 +317,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 						ParameterType = pr.ParameterType,
 						SystemType    = pr.SystemType,
 						DataType      = pr.DataType.ToString(),
+						IsNullable    = pr.IsNullable
 					})
 					.ToList(),
 			}
@@ -484,7 +489,7 @@ void LoadMetadata(DataConnection dataConnection)
 
 	foreach (var proc in Procedures.Values)
 	{
-	    proc.Name = ConvertToCompilable(proc.Name, false);
+		proc.Name = ConvertToCompilable(proc.Name, false);
 
 		if (KeyWords.Contains(proc.Name))
 			proc.Name = "@" + proc.Name;
@@ -510,7 +515,13 @@ string SuggestNoDuplicate(IEnumerable<string> currentNames, string newName, stri
 		if (names.Contains(result))
 		{
 			var counter = 0;
-			var number = string.Concat(result.Reverse().Take(6).TakeWhile(c => Char.IsDigit(c)).Reverse());
+
+			// get last 6 digits
+			var idx = result.Length;
+			while (idx > 0 && idx > result.Length - 6 && char.IsDigit(result[idx - 1]))
+				idx--;
+			var number = result.Substring(idx);
+
 			if (!string.IsNullOrEmpty(number))
 			{
 				if (int.TryParse(number, out counter))
@@ -721,6 +732,16 @@ public partial class Table : Class
 
 public partial class Column : Property
 {
+	public Column()
+	{
+	}
+
+	public Column(ModelType type)
+	{
+		ModelType = type;
+		TypeBuilder = () => ModelType.ToTypeName();
+	}
+
 	public string    ColumnName; // Column name in database
 	public bool      IsNullable;
 	public bool      IsIdentity;
@@ -744,6 +765,10 @@ public partial class Column : Property
 		get { return Name;  }
 		set { Name = value; }
 	}
+
+	public ModelType ModelType { get; }
+
+	protected override bool DisableNullable => EnableNullableReferenceTypes && EnforceModelNullability && ModelType != null && ModelType.IsReference && !ModelType.IsNullable;
 }
 
 public enum AssociationType
@@ -789,6 +814,8 @@ public partial class ForeignKey : Property
 			}
 		}
 	}
+
+	protected override bool DisableNullable => EnableNullableReferenceTypes && EnforceModelNullability && (!CanBeNull || AssociationType == AssociationType.OneToMany);
 }
 
 public partial class Procedure : Method
@@ -818,8 +845,11 @@ public class Parameter
 
 	public string   ParameterName { get; set; }
 	public string   ParameterType { get; set; }
+	public bool     IsNullable    { get; set; }
 	public Type     SystemType    { get; set; }
 	public string   DataType      { get; set; }
+
+	public ModelType Type => new ModelType(ParameterType, !IsValueType(ParameterType), IsNullable);
 }
 
 private int _counter = 0;

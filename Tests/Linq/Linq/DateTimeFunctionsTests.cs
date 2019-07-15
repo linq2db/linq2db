@@ -14,6 +14,48 @@ namespace Tests.Linq
 	[TestFixture]
 	public class DateTimeFunctionsTests : TestBase
 	{
+		//This custom comparers allows for an error of 1 millisecond.  
+		public class CustomIntComparer : IEqualityComparer<int>
+		{
+			public bool Equals(int x, int y) => (x >= (y - 1) && x <= (y + 1));
+
+			public int GetHashCode(int x) => 0;
+		}
+
+		public class CustomNullableIntComparer : IEqualityComparer<int?>
+		{
+			public bool Equals(int? x, int? y)
+			{
+				if (!x.HasValue) return false;
+				if (!y.HasValue) return false;
+				return (x.Value >= (y.Value - 1) && x.Value <= (y.Value + 1));
+			}
+
+			public int GetHashCode(int? x) => 0;
+		}
+
+		public class CustomNullableDateTimeComparer : IEqualityComparer<DateTime?>
+		{
+			public bool Equals(DateTime? x, DateTime? y)
+			{
+				if (!x.HasValue) return false;
+				if (!y.HasValue) return false;
+				return x.Value.Between(y.Value.AddMilliseconds(-1), y.Value.AddMilliseconds(1));
+			}
+
+			public int GetHashCode(DateTime? x) => 0;
+		}
+
+		public class CustomDateTimeComparer : IEqualityComparer<DateTime>
+		{
+			public bool Equals(DateTime x, DateTime y)
+			{
+				return x.Between(y.AddMilliseconds(-1), y.AddMilliseconds(1));
+			}
+
+			public int GetHashCode(DateTime x) => 0;
+		}
+
 		[Test]
 		public void GetDate([DataSources] string context)
 		{
@@ -96,6 +138,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void Now([DataSources] string context)
 		{
@@ -597,7 +640,10 @@ namespace Tests.Linq
 		public void DateAddMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
-				(from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 41, t.DateTimeValue))).ToList();
+				AreEqual(
+						from t in db.Types select           Sql.DateAdd(Sql.DateParts.Millisecond, 226, t.DateTimeValue),
+						from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 226, t.DateTimeValue)),
+						new CustomNullableDateTimeComparer());
 		}
 
 		[Test]
@@ -659,7 +705,10 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-				(from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMilliseconds(221))).ToList();
+				AreEqual(
+					from t in db.Types select (t.DateTimeValue.AddMilliseconds(226)),
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMilliseconds(226)),
+					new CustomDateTimeComparer());
 		}
 
 		[Test]
@@ -688,12 +737,17 @@ namespace Tests.Linq
 			{
 				db.Insert(new LinqDataTypes { ID = 5000, SmallIntValue = -2, DateTimeValue = new DateTime(2018, 01, 03) });
 
-				var result = db.Types
-					.Count(t => t.ID == 5000 && Sql.AsSql(t.DateTimeValue.AddDays(t.SmallIntValue)) < new DateTime(2018, 01, 02));
+				try
+				{
+					var result = db.Types
+						.Count(t => t.ID == 5000 && Sql.AsSql(t.DateTimeValue.AddDays(t.SmallIntValue)) < new DateTime(2018, 01, 02));
 
-				Assert.AreEqual(1, result);
-
-				db.Types.Delete(t => t.ID == 5000);
+					Assert.AreEqual(1, result);
+				}
+				finally
+				{
+					db.Types.Delete(t => t.ID == 5000);
+				}
 			}
 		}
 
@@ -782,7 +836,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -798,7 +851,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -814,7 +866,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -830,7 +881,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -846,7 +896,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -862,7 +911,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -878,7 +926,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -894,7 +941,6 @@ namespace Tests.Linq
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.Access)]
 			string context)
 		{
@@ -904,38 +950,69 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Second, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
+		// This test and DateDiffMillisecond could fail for SQLite.MS due to 1 millisecond difference in
+		// expected and returned results
+		// This happen only on following conditions:
+		// - access provider enabled
+		// - tests against run before those tests (at least AddDynamicFromColumn)
+		// Possible reason:
+		// looks like Access runtime modify some C++ runtime options that affect runtime's rounding behavior
+		// used also by SQLite provider's native part
 		[Test]
 		public void SubDateMillisecond(
 			[DataSources(
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
 				ProviderName.Access)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           (int)(t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds,
-					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds));
+			{
+				if (context.Contains(ProviderName.SQLiteMS))
+				{
+					AreEqual(
+						from t in Types select (int)(t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds,
+						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds),
+						new CustomIntComparer());
+				}
+				else
+				{
+					AreEqual(
+						from t in Types select (int)(t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds,
+						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds));
+				}
+			}
 		}
 
+		// see SubDateMillisecond commet for SQLite.MS
 		[Test]
 		public void DateDiffMillisecond(
 			[DataSources(
 				ProviderName.Informix,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
 				ProviderName.Access)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1)),
-					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1))));
+			{
+				if(context.Contains(ProviderName.SQLiteMS))
+				{
+					AreEqual(
+						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1)),
+						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1))),
+						new CustomNullableIntComparer());
+				}
+				else
+				{
+					AreEqual(
+						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1)),
+						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1))));
+				}
+			}
 		}
 
 		#endregion
@@ -1017,6 +1094,7 @@ namespace Tests.Linq
 
 		#endregion
 
+		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
 		[Test]
 		public void GetDateTest1([DataSources] string context)
 		{
@@ -1094,7 +1172,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, ActiveIssue(1615)]
+		[Test]
 		public void Issue1615Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1105,39 +1183,5 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(datePart, 5, t.DateTimeValue)).Value.Date);
 			}
 		}
-
-		[Table("Transactions")]
-		private class Transaction
-		{
-			[PrimaryKey] public int TransactionId { get; set; }
-			[Column]public DateTimeOffset TransactionDate { get; set; }
-		}
-
-		[Test]
-		[ActiveIssue(1666)]
-		public void GroupByDateTimeOffsetDateTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				using (db.CreateLocalTable<Transaction>())
-				{
-					db.Insert(new Transaction() { TransactionId = 1, TransactionDate = DateTime.Now });
-					db.Insert(new Transaction() { TransactionId = 2, TransactionDate = DateTime.Now.AddMinutes(-1) });
-					db.Insert(new Transaction() { TransactionId = 3, TransactionDate = DateTime.Now.AddMinutes(-2) });
-					db.Insert(new Transaction() { TransactionId = 4, TransactionDate = DateTime.Now.AddDays(-1) });
-					db.Insert(new Transaction() { TransactionId = 5, TransactionDate = DateTime.Now.AddDays(-2) });
-
-					var expected = db.GetTable<Transaction>().ToList()
-																.GroupBy(d => d.TransactionDate.Date)
-																.Select(x => new { x.Key, Count = x.Count() })
-																.OrderBy(x => x.Key);
-					var actual   = db.GetTable<Transaction>().GroupBy(d => d.TransactionDate.Date)
-																.Select(x => new { x.Key, Count = x.Count() })
-																.OrderBy(x => x.Key);
-					Assert.That(actual, Is.EqualTo(expected));
-				}
-			}
-		}
-
 	}
 }

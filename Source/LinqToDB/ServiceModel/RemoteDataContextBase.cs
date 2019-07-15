@@ -92,7 +92,17 @@ namespace LinqToDB.ServiceModel
 		public  MappingSchema  MappingSchema
 		{
 			get => _mappingSchema ?? (_mappingSchema = GetConfigurationInfo().MappingSchema);
-			set => _mappingSchema = value;
+			set
+			{
+				_mappingSchema = value;
+				_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema);
+			}
+		}
+
+		private  MappingSchema _serializationMappingSchema;
+		internal MappingSchema SerializationMappingSchema
+		{
+			get => _serializationMappingSchema ?? (_serializationMappingSchema = new SerializationMappingSchema(MappingSchema));
 		}
 
 		public  bool InlineParameters { get; set; }
@@ -276,7 +286,7 @@ namespace LinqToDB.ServiceModel
 
 				try
 				{
-					var data = LinqServiceSerializer.Serialize(_queryBatch.ToArray());
+					var data = LinqServiceSerializer.Serialize(SerializationMappingSchema, _queryBatch.ToArray());
 					client.ExecuteBatch(Configuration, data);
 				}
 				finally
@@ -300,8 +310,8 @@ namespace LinqToDB.ServiceModel
 
 				try
 				{
-					var data = LinqServiceSerializer.Serialize(_queryBatch.ToArray());
-					await client.ExecuteBatchAsync(Configuration, data);
+					var data = LinqServiceSerializer.Serialize(SerializationMappingSchema, _queryBatch.ToArray());
+					await client.ExecuteBatchAsync(Configuration, data).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 				finally
 				{

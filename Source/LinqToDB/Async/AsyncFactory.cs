@@ -92,7 +92,7 @@ namespace LinqToDB.Async
 		private static async Task<IAsyncDbTransaction> Wrap<TTransaction>(Task<TTransaction> transaction)
 			where TTransaction: IDbTransaction
 		{
-			return Create(await transaction);
+			return Create(await transaction.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
 
 		private static Func<IDbTransaction, IAsyncDbTransaction> TransactionFactory(Type type)
