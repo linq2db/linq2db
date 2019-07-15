@@ -138,7 +138,7 @@ namespace LinqToDB.Linq
 
 		private static bool HasQueryParameters(ISqlExpression expr)
 		{
-			var hasParameters  = null != QueryVisitor.Find(expr,
+			var hasParameters  = null != new QueryVisitor().Find(expr,
 				el => el.ElementType == QueryElementType.SqlParameter &&
 				      ((SqlParameter)el).IsQueryParameter);
 

@@ -2716,7 +2716,7 @@ namespace LinqToDB.SqlQuery
 						var s = (SqlSelectStatement)element;
 						var selectQuery = s.SelectQuery != null ? (SelectQuery)  ConvertImmutableInternal(s.SelectQuery, action) : null;
 						var with        = s.With        != null ? (SqlWithClause)ConvertImmutableInternal(s.With,        action) : null;
-						var ps          = ConvertSafe(s.Parameters, action);
+						var ps          = ConvertSafe(s.Parameters);
 
 						if (ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
 							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
@@ -2737,7 +2737,7 @@ namespace LinqToDB.SqlQuery
 						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertImmutableInternal(s.SelectQuery, action) : null;
 						var insert      = s.Insert      != null ? (SqlInsertClause)ConvertImmutableInternal(s.Insert,      action) : null;
 						var with        = s.With        != null ? (SqlWithClause)  ConvertImmutableInternal(s.With,        action) : null;
-						var ps          = ConvertSafe(s.Parameters, action);
+						var ps          = ConvertSafe(s.Parameters);
 
 						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
 							ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
@@ -2759,7 +2759,7 @@ namespace LinqToDB.SqlQuery
 						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertImmutableInternal(s.SelectQuery, action) : null;
 						var update      = s.Update      != null ? (SqlUpdateClause)ConvertImmutableInternal(s.Update,      action) : null;
 						var with        = s.With        != null ? (SqlWithClause)  ConvertImmutableInternal(s.With,        action) : null;
-						var ps          = ConvertSafe(s.Parameters, action);
+						var ps          = ConvertSafe(s.Parameters);
 
 						if (update      != null && !ReferenceEquals(s.Update,      update)       ||
 							ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
@@ -2783,7 +2783,7 @@ namespace LinqToDB.SqlQuery
 						var insert      = s.Insert      != null ? (SqlInsertClause)ConvertImmutableInternal(s.Insert,      action) : null;
 						var update      = s.Update      != null ? (SqlUpdateClause)ConvertImmutableInternal(s.Update,      action) : null;
 						var with        = s.With        != null ? (SqlWithClause)  ConvertImmutableInternal(s.With,        action) : null;
-						var ps          = ConvertSafe(s.Parameters, action);
+						var ps          = ConvertSafe(s.Parameters);
 
 						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
 							update      != null && !ReferenceEquals(s.Update,      update)       ||
@@ -2807,7 +2807,7 @@ namespace LinqToDB.SqlQuery
 						var table       = s.Table       != null ? (SqlTable)      ConvertImmutableInternal(s.Table,       action) : null;
 						var top         = s.Top         != null ? (ISqlExpression)ConvertImmutableInternal(s.Top,         action) : null;
 						var with        = s.With        != null ? (SqlWithClause) ConvertImmutableInternal(s.With,        action) : null;
-						var ps          = ConvertSafe(s.Parameters, action);
+						var ps          = ConvertSafe(s.Parameters);
 
 						if (table       != null && !ReferenceEquals(s.Table,       table)       ||
 							top         != null && !ReferenceEquals(s.Top,         top)         ||
@@ -2834,7 +2834,7 @@ namespace LinqToDB.SqlQuery
 					{
 						var s  = (SqlCreateTableStatement)element;
 						var t  = s.Table != null ? (SqlTable)ConvertImmutableInternal(s.Table, action) : null;
-						var ps = ConvertSafe(s.Parameters, action);
+						var ps = ConvertSafe(s.Parameters);
 
 						if (t  != null && !ReferenceEquals(s.Table, t) ||
 							ps != null && !ReferenceEquals(s.Parameters,  ps))
@@ -2853,7 +2853,7 @@ namespace LinqToDB.SqlQuery
 					{
 						var s  = (SqlDropTableStatement)element;
 						var t  = s.Table != null ? (SqlTable)ConvertImmutableInternal(s.Table, action) : null;
-						var ps = ConvertImmutableSafe(s.Parameters, action);
+						var ps = ConvertImmutableSafe(s.Parameters);
 
 						if (t  != null && !ReferenceEquals(s.Table, t) ||
 							ps != null && !ReferenceEquals(s.Parameters,  ps))
@@ -2886,7 +2886,7 @@ namespace LinqToDB.SqlQuery
 							take != null && !ReferenceEquals(sc.TakeValue, take) ||
 							skip != null && !ReferenceEquals(sc.SkipValue, skip))
 						{
-							newElement = new SqlSelectClause(sc.IsDistinct, take ?? sc.TakeValue, skip ?? sc.SkipValue, cols ?? sc.Columns);
+							newElement = new SqlSelectClause(sc.IsDistinct, take ?? sc.TakeValue, sc.TakeHints, skip ?? sc.SkipValue, cols ?? sc.Columns);
 							((SqlSelectClause)newElement).SetSqlQuery(sc.SelectQuery);
 						}
 
@@ -3073,10 +3073,10 @@ namespace LinqToDB.SqlQuery
 			return arr2;
 		}
 
-		List<T> ConvertImmutableSafe<T>(List<T> list, Func<IQueryElement, IQueryElement> action)
+		List<T> ConvertImmutableSafe<T>(List<T> list)
 			where T : class, IQueryElement
 		{
-			return ConvertSafe(list, action, null);
+			return ConvertSafe(list, null);
 		}
 
 		List<T> ConvertImmutableSafe<T>(List<T> list1, Func<IQueryElement, IQueryElement> action, Clone<T> clone)
@@ -3087,7 +3087,7 @@ namespace LinqToDB.SqlQuery
 			for (var i = 0; i < list1.Count; i++)
 			{
 				var elem1 = list1[i];
-				var elem2 = ConvertInternal(elem1, action) as T;
+				var elem2 = ConvertInternal(elem1) as T;
 
 				if (elem2 != null && !ReferenceEquals(elem1, elem2))
 				{
