@@ -68,6 +68,16 @@ GetSchemaOptions.IncludedCatalogs = null;
 // Option applied only if is is not empty
 GetSchemaOptions.ExcludedCatalogs = null;
 
+// Custom filter for table/view schema load
+// Can be used to exclude views or tables from generation based in their descriptor.
+// This filter especially usefull, when you wan't to exclude table, referenced by other generated
+// tables using associations, or by procedures using excluded table as result. Doing it in filter
+// will automatically prevent associations generation and will trigger generation of procedure-specific
+// result classes.
+// LoadTableData type:
+// https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/SchemaProvider/LoadTableData.cs
+Func<LoadTableData, bool> GetSchemaOptions.LoadTable = null;
+
 // Comparer, used for IncludedSchemas/ExcludedSchemas/IncludedCatalogs/ExcludedCatalogs lookups
 StringComparer                    = StringComparer.OrdinalIgnoreCase;
 
@@ -212,16 +222,18 @@ Func<ForeignKey, string> GetAssociationExtensionPluralName
 /* Procedures and functions configuration */
 // Enables use of existing table mappings for procedures and functions that return same results as
 // defined by mapping
-ReplaceSimilarTables          = true;
+ReplaceSimilarTables             = true;
 // If enabled, procedure schema load error will be generated as #error directive and fail build
 // of output file. Useful for initial generation to highlight places, that require review or
 // additional hints for schema loader
 // Also check GetSchemaOptions.LoadProcedure option above
-GenerateProcedureErrors       = true;
+GenerateProcedureErrors          = true;
 // If enabled, methods for procedures that return table will be generated with List<T> return type and
 // IMPORTANT: this will lead to load of all procedure results into list and could lead
 // to performance issues on big results
-GenerateProcedureResultAsList = false;
+GenerateProcedureResultAsList    = false;
+// Enables stored procedure methods to accept generated context object or DataConnection type
+GenerateProceduresOnTypedContext = true;
 
 /* Other generated functionality */
 // Enables generation of Find(pk fields) extension methods for record selection by primary key value
@@ -409,5 +421,34 @@ public class Parameter
 	public string   ParameterType;
 	public Type     SystemType;
 	public string   DataType;
+}
+```
+## IEquatable interface implementation (Equatable.ttinclude)
+
+There is `Equatable.ttinclude` template that could be used to implement `IEquatable<T>` interface.
+
+This template has following options:
+```c#
+partial class Class
+{
+	// Determines whether need to implement IEquatable interface for this class
+	public bool IsEquatable = DefaultEquatable;
+}
+
+// Default value for Class.IsEquatable property
+bool DefaultEquatable = true;
+
+// Default field name for equality comparer implementation
+string EqualityComparerFieldName = "_comparer";
+
+// Properties filter option to select equality members
+Func<Class, Property, bool> EqualityPropertiesFilter = EqualityPropertiesFilterDefault;
+
+// Default implementation of the EqualityPropertiesFilter option
+static bool EqualityPropertiesFilterDefault(Class cl, Property prop)
+{
+	// Don't generate equality for non-table classes (e.g. data manager class) and associations
+	// Compare only by primary keys
+	return cl is Table && prop is Column col && col.IsPrimaryKey;
 }
 ```

@@ -31,6 +31,9 @@
 	SchemaNameMapping.Add("TestSchema", "MySchema");
 
 	GenerateProcedureResultAsList = true;
+
+	GetSchemaOptions.LoadTable = t => t.Name != "Products" && t.Name != "Person";
+	
 	LoadSqlServerMetadata(GetConnectionString("Northwind"));
 
 	Tables["Order Details"].Columns["OrderID"]. MemberName = "ID";
