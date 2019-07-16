@@ -3030,6 +3030,137 @@ namespace LinqToDB.SqlQuery
 						}
 						break;
 					}
+
+				case QueryElementType.MergeStatement:
+					{
+						var merge = (SqlMergeStatement)element;
+
+						var target     = (SqlTableSource)ConvertImmutableInternal(merge.Target);
+						var source     = (SqlMergeSourceTable)ConvertImmutableInternal(merge.Source);
+						var on         = (SqlSearchCondition)ConvertImmutableInternal(merge.On);
+						var operations = ConvertImmutableSafe(merge.Operations);
+
+						if (target     != null && !ReferenceEquals(merge.Target, target) ||
+							source     != null && !ReferenceEquals(merge.Source, source) ||
+							on         != null && !ReferenceEquals(merge.On, on) ||
+							operations != null && !ReferenceEquals(merge.Operations, operations))
+							newElement = new SqlMergeStatement(
+								merge.Hint,
+								target ?? merge.Target,
+								source ?? merge.Source,
+								on ?? merge.On,
+								operations ?? merge.Operations);
+
+						break;
+					}
+
+				case QueryElementType.MergeSourceTable:
+					{
+						var source = (SqlMergeSourceTable)element;
+
+						var enumerableSource = (SqlValuesTable)ConvertImmutableInternal(source.SourceEnumerable);
+						var querySource      = (SelectQuery)ConvertImmutableInternal(source.SourceQuery);
+						var fields           = ConvertImmutableSafe(source.SourceFields);
+
+						if (enumerableSource != null && !ReferenceEquals(source.SourceEnumerable, enumerableSource) ||
+							querySource      != null && !ReferenceEquals(source.SourceQuery, querySource)           ||
+							fields           != null && !ReferenceEquals(source.SourceFields, fields))
+							newElement = new SqlMergeSourceTable(
+								source.SourceID,
+								enumerableSource ?? source.SourceEnumerable,
+								querySource ?? source.SourceQuery,
+								fields ?? source.SourceFields);
+
+							break;
+						}
+
+				case QueryElementType.SqlValuesTable:
+					{
+						var table = (SqlValuesTable)element;
+
+						var covertedRows = new List<IList<ISqlExpression>>();
+						var rowsConverted = false;
+
+						foreach (var row in table.Rows)
+						{
+							var convertedRow = ConvertImmutableSafe(row);
+							rowsConverted    = rowsConverted || (row != null && !ReferenceEquals(convertedRow, row));
+
+							covertedRows.Add(convertedRow ?? row);
+						}
+
+						var fields1 = ToArray(table.Fields);
+						var fields2 = ConvertImmutable(fields1, f => new SqlField(f));
+
+						var fieldsConverted = fields2 != null && !ReferenceEquals(fields1, fields2);
+
+						if (fieldsConverted || rowsConverted)
+							if (!fieldsConverted)
+							{
+								fields2 = fields1;
+
+								for (var i = 0; i < fields2.Length; i++)
+								{
+									var field = fields2[i];
+
+									fields2[i] = new SqlField(field);
+
+									_visitedElements[field] = fields2[i];
+								}
+							}
+
+						newElement = new SqlValuesTable(fields2, rowsConverted ? covertedRows : table.Rows);
+
+						break;
+					}
+
+				case QueryElementType.MergeOperationClause:
+					{
+						var operation = (SqlMergeOperationClause)element;
+
+						var where       = (SqlSearchCondition)ConvertImmutableInternal(operation.Where);
+						var whereDelete = (SqlSearchCondition)ConvertImmutableInternal(operation.WhereDelete);
+						var items       = ConvertImmutableSafe(operation.Items);
+
+						if (where       != null && !ReferenceEquals(operation.Where, where)             ||
+							whereDelete != null && !ReferenceEquals(operation.WhereDelete, whereDelete) ||
+							items       != null && !ReferenceEquals(operation.Items, items))
+							newElement = new SqlMergeOperationClause(
+								operation.OperationType,
+								where ?? operation.Where,
+								whereDelete ?? operation.WhereDelete,
+								items ?? operation.Items);
+
+						break;
+					}
+
+				case QueryElementType.TruncateTableStatement:
+					{
+						var truncate = (SqlTruncateTableStatement)element;
+
+						if (truncate.Table != null)
+						{
+							var table = (SqlTable)ConvertImmutableInternal(truncate.Table);
+
+							if (table != null && !ReferenceEquals(truncate.Table, table))
+								newElement = new SqlTruncateTableStatement()
+								{
+									Table = table,
+									ResetIdentity = truncate.ResetIdentity
+								};
+						}
+
+						break;
+					}
+
+				case QueryElementType.SqlField    :
+				case QueryElementType.SqlParameter:
+				case QueryElementType.SqlValue    :
+				case QueryElementType.SqlDataType :
+					break;
+
+				default:
+					throw new InvalidOperationException($"ConvertImmutable visitor not implemented for element {element.ElementType}");
 			}
 
 			newElement = newElement == null ? _convert(element) : (_convert(newElement) ?? newElement);
@@ -3074,13 +3205,13 @@ namespace LinqToDB.SqlQuery
 			return arr2;
 		}
 
-		List<T> ConvertImmutableSafe<T>(List<T> list)
+		List<T> ConvertImmutableSafe<T>(IList<T> list)
 			where T : class, IQueryElement
 		{
 			return ConvertImmutableSafe(list, null);
 		}
 
-		List<T> ConvertImmutableSafe<T>(List<T> list1, Clone<T> clone)
+		List<T> ConvertImmutableSafe<T>(IList<T> list1, Clone<T> clone)
 			where T : class, IQueryElement
 		{
 			List<T> list2 = null;
@@ -3088,7 +3219,7 @@ namespace LinqToDB.SqlQuery
 			for (var i = 0; i < list1.Count; i++)
 			{
 				var elem1 = list1[i];
-				var elem2 = ConvertInternal(elem1) as T;
+				var elem2 = ConvertImmutableInternal(elem1) as T;
 
 				if (elem2 != null && !ReferenceEquals(elem1, elem2))
 				{
