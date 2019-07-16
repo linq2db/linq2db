@@ -2316,7 +2316,8 @@ namespace LinqToDB.SqlQuery
 			where T : class, IQueryElement
 		{
 			_visitedElements.Clear();
-			return (T)ConvertImmutableInternal(element, action) ?? element;
+			_convert = action;
+			return (T)ConvertImmutableInternal(element) ?? element;
 		}
 
 		T CloneElement<T>(T element)
@@ -2379,7 +2380,7 @@ namespace LinqToDB.SqlQuery
 				_visitedElements[element] = newElement;
 		}
 
-		IQueryElement ConvertImmutableInternal(IQueryElement element, Func<IQueryElement,IQueryElement> action)
+		IQueryElement ConvertImmutableInternal(IQueryElement element)
 		{
 			if (element == null)
 				return null;
@@ -2396,7 +2397,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlFunction:
 					{
 						var func  = (SqlFunction)element;
-						var parms = ConvertImmutable(func.Parameters, action);
+						var parms = ConvertImmutable(func.Parameters);
 
 						if (parms != null && !ReferenceEquals(parms, func.Parameters))
 							newElement = new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
@@ -2407,7 +2408,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlExpression:
 					{
 						var expr      = (SqlExpression)element;
-						var parameter = ConvertImmutable(expr.Parameters, action);
+						var parameter = ConvertImmutable(expr.Parameters);
 
 						if (parameter != null && !ReferenceEquals(parameter, expr.Parameters))
 							newElement = new SqlExpression(expr.SystemType, expr.Expr, expr.Precedence, parameter);
@@ -2418,8 +2419,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlBinaryExpression:
 					{
 						var bexpr = (SqlBinaryExpression)element;
-						var expr1 = (ISqlExpression)ConvertImmutableInternal(bexpr.Expr1, action);
-						var expr2 = (ISqlExpression)ConvertImmutableInternal(bexpr.Expr2, action);
+						var expr1 = (ISqlExpression)ConvertImmutableInternal(bexpr.Expr1);
+						var expr2 = (ISqlExpression)ConvertImmutableInternal(bexpr.Expr2);
 
 						if (expr1 != null && !ReferenceEquals(expr1, bexpr.Expr1) ||
 							expr2 != null && !ReferenceEquals(expr2, bexpr.Expr2))
@@ -2431,7 +2432,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlTable:
 					{
 						var table    = (SqlTable)element;
-						var newTable = (SqlTable)action(table);
+						var newTable = (SqlTable)_convert(table);
 						if (!ReferenceEquals(newTable, table))
 						{
 							AddVisited(table.All, newTable.All);
@@ -2451,8 +2452,8 @@ namespace LinqToDB.SqlQuery
 					{
 						var table = (SqlCteTable)element;
 						var targs = table.TableArguments == null || table.TableArguments.Length == 0 ?
-							null : ConvertImmutable(table.TableArguments, action);
-						var cte = ConvertImmutable(table.Cte, action);
+							null : ConvertImmutable(table.TableArguments);
+						var cte = (CteClause)ConvertImmutableInternal(table.Cte);
 
 						var ta = targs != null && !ReferenceEquals(table.TableArguments, targs);
 						var ce = cte   != null && !ReferenceEquals(table.Cte, cte);
@@ -2473,7 +2474,7 @@ namespace LinqToDB.SqlQuery
 							AddVisited(((SqlCteTable)newElement).All, table.All);
 						}
 
-						var newTable = (SqlCteTable)action(table);
+						var newTable = (SqlCteTable)_convert(table);
 						if (!ReferenceEquals(newTable, table))
 						{
 							AddVisited(table.All, newTable.All);
@@ -2492,7 +2493,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.Column:
 					{
 						var col  = (SqlColumn)element;
-						var expr = (ISqlExpression)ConvertImmutableInternal(col.Expression, action);
+						var expr = (ISqlExpression)ConvertImmutableInternal(col.Expression);
 
 						if (expr != null && !ReferenceEquals(expr, col.Expression))
 							newElement = new SqlColumn(col.Parent, expr, col.RawAlias);
@@ -2503,8 +2504,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.TableSource:
 					{
 						var table  = (SqlTableSource)element;
-						var source = (ISqlTableSource)ConvertImmutableInternal(table.Source, action);
-						var joins  = ConvertImmutable(table.Joins, action);
+						var source = (ISqlTableSource)ConvertImmutableInternal(table.Source);
+						var joins  = ConvertImmutable(table.Joins);
 
 						if (source != null && !ReferenceEquals(source, table.Source) ||
 							joins  != null && !ReferenceEquals(table.Joins, joins))
@@ -2516,8 +2517,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.JoinedTable:
 					{
 						var join  = (SqlJoinedTable)element;
-						var table = (SqlTableSource)    ConvertImmutableInternal(join.Table,     action);
-						var cond  = (SqlSearchCondition)ConvertImmutableInternal(join.Condition, action);
+						var table = (SqlTableSource)    ConvertImmutableInternal(join.Table    );
+						var cond  = (SqlSearchCondition)ConvertImmutableInternal(join.Condition);
 
 						if (table != null && !ReferenceEquals(table, join.Table) ||
 							cond  != null && !ReferenceEquals(cond,  join.Condition))
@@ -2529,7 +2530,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SearchCondition:
 					{
 						var sc    = (SqlSearchCondition)element;
-						var conds = ConvertImmutable(sc.Conditions, action);
+						var conds = ConvertImmutable(sc.Conditions);
 
 						if (conds != null && !ReferenceEquals(sc.Conditions, conds))
 							newElement = new SqlSearchCondition(conds);
@@ -2540,7 +2541,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.Condition:
 					{
 						var c = (SqlCondition)element;
-						var p = (ISqlPredicate)ConvertImmutableInternal(c.Predicate, action);
+						var p = (ISqlPredicate)ConvertImmutableInternal(c.Predicate);
 
 						if (p != null && !ReferenceEquals(c.Predicate, p))
 							newElement = new SqlCondition(c.IsNot, p, c.IsOr);
@@ -2551,7 +2552,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.ExprPredicate:
 					{
 						var p = (SqlPredicate.Expr)element;
-						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1, action);
+						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
 
 						if (e != null && !ReferenceEquals(p.Expr1, e))
 							newElement = new SqlPredicate.Expr(e, p.Precedence);
@@ -2562,7 +2563,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.NotExprPredicate:
 					{
 						var p = (SqlPredicate.NotExpr)element;
-						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1, action);
+						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
 
 						if (e != null && !ReferenceEquals(p.Expr1, e))
 							newElement = new SqlPredicate.NotExpr(e, p.IsNot, p.Precedence);
@@ -2573,8 +2574,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.ExprExprPredicate:
 					{
 						var p  = (SqlPredicate.ExprExpr)element;
-						var e1 = (ISqlExpression)ConvertImmutableInternal(p.Expr1, action);
-						var e2 = (ISqlExpression)ConvertImmutableInternal(p.Expr2, action);
+						var e1 = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
+						var e2 = (ISqlExpression)ConvertImmutableInternal(p.Expr2);
 
 						if (e1 != null && !ReferenceEquals(p.Expr1, e1) || e2 != null && !ReferenceEquals(p.Expr2, e2))
 							newElement = new SqlPredicate.ExprExpr(e1 ?? p.Expr1, p.Operator, e2 ?? p.Expr2);
@@ -2585,9 +2586,9 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.LikePredicate:
 					{
 						var p  = (SqlPredicate.Like)element;
-						var e1 = (ISqlExpression)ConvertImmutableInternal(p.Expr1,  action);
-						var e2 = (ISqlExpression)ConvertImmutableInternal(p.Expr2,  action);
-						var es = (ISqlExpression)ConvertImmutableInternal(p.Escape, action);
+						var e1 = (ISqlExpression)ConvertImmutableInternal(p.Expr1 );
+						var e2 = (ISqlExpression)ConvertImmutableInternal(p.Expr2 );
+						var es = (ISqlExpression)ConvertImmutableInternal(p.Escape);
 
 						if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
 							e2 != null && !ReferenceEquals(p.Expr2, e2) ||
@@ -2600,9 +2601,9 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.BetweenPredicate:
 					{
 						var p = (SqlPredicate.Between)element;
-						var e1 = (ISqlExpression)ConvertImmutableInternal(p.Expr1, action);
-						var e2 = (ISqlExpression)ConvertImmutableInternal(p.Expr2, action);
-						var e3 = (ISqlExpression)ConvertImmutableInternal(p.Expr3, action);
+						var e1 = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
+						var e2 = (ISqlExpression)ConvertImmutableInternal(p.Expr2);
+						var e3 = (ISqlExpression)ConvertImmutableInternal(p.Expr3);
 
 						if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
 							e2 != null && !ReferenceEquals(p.Expr2, e2) ||
@@ -2615,7 +2616,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.IsNullPredicate:
 					{
 						var p = (SqlPredicate.IsNull)element;
-						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1, action);
+						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
 
 						if (e != null && !ReferenceEquals(p.Expr1, e))
 							newElement = new SqlPredicate.IsNull(e, p.IsNot);
@@ -2626,8 +2627,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.InSubQueryPredicate:
 					{
 						var p = (SqlPredicate.InSubQuery)element;
-						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1,    action);
-						var q = (SelectQuery)ConvertImmutableInternal(p.SubQuery, action);
+						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
+						var q = (SelectQuery)ConvertImmutableInternal(p.SubQuery);
 
 						if (e != null && !ReferenceEquals(p.Expr1, e) || q != null && !ReferenceEquals(p.SubQuery, q))
 							newElement = new SqlPredicate.InSubQuery(e ?? p.Expr1, p.IsNot, q ?? p.SubQuery);
@@ -2638,8 +2639,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.InListPredicate:
 					{
 						var p = (SqlPredicate.InList)element;
-						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1,    action);
-						var v = ConvertImmutable(p.Values, action);
+						var e = (ISqlExpression)ConvertImmutableInternal(p.Expr1);
+						var v = ConvertImmutable(p.Values);
 
 						if (e != null && !ReferenceEquals(p.Expr1, e) || v != null && !ReferenceEquals(p.Values, v))
 							newElement = new SqlPredicate.InList(e ?? p.Expr1, p.IsNot, v ?? p.Values);
@@ -2650,7 +2651,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.FuncLikePredicate:
 					{
 						var p = (SqlPredicate.FuncLike)element;
-						var f = (SqlFunction)ConvertImmutableInternal(p.Function, action);
+						var f = (SqlFunction)ConvertImmutableInternal(p.Function);
 
 						if (f != null && !ReferenceEquals(p.Function, f))
 							newElement = new SqlPredicate.FuncLike(f);
@@ -2661,8 +2662,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SetExpression:
 					{
 						var s = (SqlSetExpression)element;
-						var c = (ISqlExpression)ConvertImmutableInternal(s.Column,     action);
-						var e = (ISqlExpression)ConvertImmutableInternal(s.Expression, action);
+						var c = (ISqlExpression)ConvertImmutableInternal(s.Column    );
+						var e = (ISqlExpression)ConvertImmutableInternal(s.Expression);
 
 						if (c != null && !ReferenceEquals(s.Column, c) || e != null && !ReferenceEquals(s.Expression, e))
 							newElement = new SqlSetExpression(c ?? s.Column, e ?? s.Expression);
@@ -2673,8 +2674,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.InsertClause:
 					{
 						var s = (SqlInsertClause)element;
-						var t = s.Into != null ? (SqlTable)ConvertImmutableInternal(s.Into, action) : null;
-						var i = ConvertImmutable(s.Items, action);
+						var t = s.Into != null ? (SqlTable)ConvertImmutableInternal(s.Into) : null;
+						var i = ConvertImmutable(s.Items);
 
 						if (t != null && !ReferenceEquals(s.Into, t) || i != null && !ReferenceEquals(s.Items, i))
 						{
@@ -2692,9 +2693,9 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.UpdateClause:
 					{
 						var s = (SqlUpdateClause)element;
-						var t = s.Table != null ? (SqlTable)ConvertImmutableInternal(s.Table, action) : null;
-						var i = ConvertImmutable(s.Items, action);
-						var k = ConvertImmutable(s.Keys,  action);
+						var t = s.Table != null ? (SqlTable)ConvertImmutableInternal(s.Table) : null;
+						var i = ConvertImmutable(s.Items);
+						var k = ConvertImmutable(s.Keys );
 
 						if (t != null && !ReferenceEquals(s.Table, t) ||
 							i != null && !ReferenceEquals(s.Items, i) ||
@@ -2714,9 +2715,9 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SelectStatement:
 					{
 						var s = (SqlSelectStatement)element;
-						var selectQuery = s.SelectQuery != null ? (SelectQuery)  ConvertImmutableInternal(s.SelectQuery, action) : null;
-						var with        = s.With        != null ? (SqlWithClause)ConvertImmutableInternal(s.With,        action) : null;
-						var ps          = ConvertSafe(s.Parameters);
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)  ConvertImmutableInternal(s.SelectQuery) : null;
+						var with        = s.With        != null ? (SqlWithClause)ConvertImmutableInternal(s.With       ) : null;
+						var ps          = ConvertImmutableSafe(s.Parameters);
 
 						if (ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
 							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
@@ -2734,10 +2735,10 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.InsertStatement:
 					{
 						var s = (SqlInsertStatement)element;
-						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertImmutableInternal(s.SelectQuery, action) : null;
-						var insert      = s.Insert      != null ? (SqlInsertClause)ConvertImmutableInternal(s.Insert,      action) : null;
-						var with        = s.With        != null ? (SqlWithClause)  ConvertImmutableInternal(s.With,        action) : null;
-						var ps          = ConvertSafe(s.Parameters);
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertImmutableInternal(s.SelectQuery) : null;
+						var insert      = s.Insert      != null ? (SqlInsertClause)ConvertImmutableInternal(s.Insert     ) : null;
+						var with        = s.With        != null ? (SqlWithClause)  ConvertImmutableInternal(s.With       ) : null;
+						var ps          = ConvertImmutableSafe(s.Parameters);
 
 						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
 							ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
@@ -2756,10 +2757,10 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.UpdateStatement:
 					{
 						var s = (SqlUpdateStatement)element;
-						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertImmutableInternal(s.SelectQuery, action) : null;
-						var update      = s.Update      != null ? (SqlUpdateClause)ConvertImmutableInternal(s.Update,      action) : null;
-						var with        = s.With        != null ? (SqlWithClause)  ConvertImmutableInternal(s.With,        action) : null;
-						var ps          = ConvertSafe(s.Parameters);
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertImmutableInternal(s.SelectQuery) : null;
+						var update      = s.Update      != null ? (SqlUpdateClause)ConvertImmutableInternal(s.Update     ) : null;
+						var with        = s.With        != null ? (SqlWithClause)  ConvertImmutableInternal(s.With       ) : null;
+						var ps          = ConvertImmutableSafe(s.Parameters);
 
 						if (update      != null && !ReferenceEquals(s.Update,      update)       ||
 							ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
@@ -2779,11 +2780,11 @@ namespace LinqToDB.SqlQuery
 					{
 						var s = (SqlInsertOrUpdateStatement)element;
 
-						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertImmutableInternal(s.SelectQuery, action) : null;
-						var insert      = s.Insert      != null ? (SqlInsertClause)ConvertImmutableInternal(s.Insert,      action) : null;
-						var update      = s.Update      != null ? (SqlUpdateClause)ConvertImmutableInternal(s.Update,      action) : null;
-						var with        = s.With        != null ? (SqlWithClause)  ConvertImmutableInternal(s.With,        action) : null;
-						var ps          = ConvertSafe(s.Parameters);
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertImmutableInternal(s.SelectQuery) : null;
+						var insert      = s.Insert      != null ? (SqlInsertClause)ConvertImmutableInternal(s.Insert     ) : null;
+						var update      = s.Update      != null ? (SqlUpdateClause)ConvertImmutableInternal(s.Update     ) : null;
+						var with        = s.With        != null ? (SqlWithClause)  ConvertImmutableInternal(s.With       ) : null;
+						var ps          = ConvertImmutableSafe(s.Parameters);
 
 						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
 							update      != null && !ReferenceEquals(s.Update,      update)       ||
@@ -2803,11 +2804,11 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.DeleteStatement:
 					{
 						var s = (SqlDeleteStatement)element;
-						var selectQuery = s.SelectQuery != null ? (SelectQuery)   ConvertImmutableInternal(s.SelectQuery, action) : null;
-						var table       = s.Table       != null ? (SqlTable)      ConvertImmutableInternal(s.Table,       action) : null;
-						var top         = s.Top         != null ? (ISqlExpression)ConvertImmutableInternal(s.Top,         action) : null;
-						var with        = s.With        != null ? (SqlWithClause) ConvertImmutableInternal(s.With,        action) : null;
-						var ps          = ConvertSafe(s.Parameters);
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)   ConvertImmutableInternal(s.SelectQuery) : null;
+						var table       = s.Table       != null ? (SqlTable)      ConvertImmutableInternal(s.Table      ) : null;
+						var top         = s.Top         != null ? (ISqlExpression)ConvertImmutableInternal(s.Top        ) : null;
+						var with        = s.With        != null ? (SqlWithClause) ConvertImmutableInternal(s.With       ) : null;
+						var ps          = ConvertImmutableSafe(s.Parameters);
 
 						if (table       != null && !ReferenceEquals(s.Table,       table)       ||
 							top         != null && !ReferenceEquals(s.Top,         top)         ||
@@ -2833,8 +2834,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.CreateTableStatement:
 					{
 						var s  = (SqlCreateTableStatement)element;
-						var t  = s.Table != null ? (SqlTable)ConvertImmutableInternal(s.Table, action) : null;
-						var ps = ConvertSafe(s.Parameters);
+						var t  = s.Table != null ? (SqlTable)ConvertImmutableInternal(s.Table) : null;
+						var ps = ConvertImmutableSafe(s.Parameters);
 
 						if (t  != null && !ReferenceEquals(s.Table, t) ||
 							ps != null && !ReferenceEquals(s.Parameters,  ps))
@@ -2852,7 +2853,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.DropTableStatement:
 					{
 						var s  = (SqlDropTableStatement)element;
-						var t  = s.Table != null ? (SqlTable)ConvertImmutableInternal(s.Table, action) : null;
+						var t  = s.Table != null ? (SqlTable)ConvertImmutableInternal(s.Table) : null;
 						var ps = ConvertImmutableSafe(s.Parameters);
 
 						if (t  != null && !ReferenceEquals(s.Table, t) ||
@@ -2871,15 +2872,15 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SelectClause:
 					{
 						var sc   = (SqlSelectClause)element;
-						var cols = ConvertImmutable(sc.Columns, action, column =>
+						var cols = ConvertImmutable(sc.Columns, column =>
 						{
 							var newColumn = new SqlColumn(sc.SelectQuery, column.Expression);
 							_visitedElements.Remove(column);
 							_visitedElements.Add(column, newColumn);
 							return newColumn;
 						});
-						var take = (ISqlExpression)ConvertImmutableInternal(sc.TakeValue, action);
-						var skip = (ISqlExpression)ConvertImmutableInternal(sc.SkipValue, action);
+						var take = (ISqlExpression)ConvertImmutableInternal(sc.TakeValue);
+						var skip = (ISqlExpression)ConvertImmutableInternal(sc.SkipValue);
 
 						if (
 							cols != null && !ReferenceEquals(sc.Columns,   cols) ||
@@ -2896,7 +2897,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.FromClause:
 					{
 						var fc   = (SqlFromClause)element;
-						var ts = ConvertImmutable(fc.Tables, action);
+						var ts = ConvertImmutable(fc.Tables);
 
 						if (ts != null && !ReferenceEquals(fc.Tables, ts))
 						{
@@ -2910,7 +2911,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.WhereClause:
 					{
 						var wc   = (SqlWhereClause)element;
-						var cond = (SqlSearchCondition)ConvertImmutableInternal(wc.SearchCondition, action);
+						var cond = (SqlSearchCondition)ConvertImmutableInternal(wc.SearchCondition);
 
 						if (cond != null && !ReferenceEquals(wc.SearchCondition, cond))
 						{
@@ -2924,7 +2925,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.GroupByClause:
 					{
 						var gc = (SqlGroupByClause)element;
-						var es = ConvertImmutable(gc.Items, action);
+						var es = ConvertImmutable(gc.Items);
 
 						if (es != null && !ReferenceEquals(gc.Items, es))
 						{
@@ -2938,7 +2939,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.OrderByClause:
 					{
 						var oc = (SqlOrderByClause)element;
-						var es = ConvertImmutable(oc.Items, action);
+						var es = ConvertImmutable(oc.Items);
 
 						if (es != null && !ReferenceEquals(oc.Items, es))
 						{
@@ -2952,7 +2953,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.OrderByItem:
 					{
 						var i = (SqlOrderByItem)element;
-						var e = (ISqlExpression)ConvertImmutableInternal(i.Expression, action);
+						var e = (ISqlExpression)ConvertImmutableInternal(i.Expression);
 
 						if (e != null && !ReferenceEquals(i.Expression, e))
 							newElement = new SqlOrderByItem(e, i.IsDescending);
@@ -2963,7 +2964,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.Union:
 					{
 						var u = (SqlUnion)element;
-						var q = (SelectQuery)ConvertImmutableInternal(u.SelectQuery, action);
+						var q = (SelectQuery)ConvertImmutableInternal(u.SelectQuery);
 
 						if (q != null && !ReferenceEquals(u.SelectQuery, q))
 							newElement = new SqlUnion(q, u.IsAll);
@@ -2975,13 +2976,13 @@ namespace LinqToDB.SqlQuery
 					{
 						var q = (SelectQuery)element;
 
-						var fc = (SqlFromClause)   ConvertImmutableInternal(q.From,    action) ?? q.From;
-						var sc = (SqlSelectClause) ConvertImmutableInternal(q.Select,  action) ?? q.Select;
-						var wc = (SqlWhereClause)  ConvertImmutableInternal(q.Where,   action) ?? q.Where;
-						var gc = (SqlGroupByClause)ConvertImmutableInternal(q.GroupBy, action) ?? q.GroupBy;
-						var hc = (SqlWhereClause)  ConvertImmutableInternal(q.Having,  action) ?? q.Having;
-						var oc = (SqlOrderByClause)ConvertImmutableInternal(q.OrderBy, action) ?? q.OrderBy;
-						var us = q.HasUnion ? ConvertImmutable(q.Unions, action) : q.Unions;
+						var fc = (SqlFromClause)   ConvertImmutableInternal(q.From   ) ?? q.From;
+						var sc = (SqlSelectClause) ConvertImmutableInternal(q.Select ) ?? q.Select;
+						var wc = (SqlWhereClause)  ConvertImmutableInternal(q.Where  ) ?? q.Where;
+						var gc = (SqlGroupByClause)ConvertImmutableInternal(q.GroupBy) ?? q.GroupBy;
+						var hc = (SqlWhereClause)  ConvertImmutableInternal(q.Having ) ?? q.Having;
+						var oc = (SqlOrderByClause)ConvertImmutableInternal(q.OrderBy) ?? q.OrderBy;
+						var us = q.HasUnion ? ConvertImmutable(q.Unions) : q.Unions;
 
 						if (   !ReferenceEquals(fc, q.From)
 						    || !ReferenceEquals(sc, q.Select)
@@ -3031,20 +3032,20 @@ namespace LinqToDB.SqlQuery
 					}
 			}
 
-			newElement = newElement == null ? action(element) : (action(newElement) ?? newElement);
+			newElement = newElement == null ? _convert(element) : (_convert(newElement) ?? newElement);
 
 			AddVisited(element, newElement);
 
 			return newElement;
 		}
 
-		T[] ConvertImmutable<T>(T[] arr, Func<IQueryElement, IQueryElement> action)
+		T[] ConvertImmutable<T>(T[] arr)
 			where T : class, IQueryElement
 		{
-			return ConvertImmutable(arr, action, null);
+			return ConvertImmutable(arr, null);
 		}
 
-		T[] ConvertImmutable<T>(T[] arr1, Func<IQueryElement, IQueryElement> action, Clone<T> clone)
+		T[] ConvertImmutable<T>(T[] arr1, Clone<T> clone)
 			where T : class, IQueryElement
 		{
 			T[] arr2 = null;
@@ -3052,7 +3053,7 @@ namespace LinqToDB.SqlQuery
 			for (var i = 0; i < arr1.Length; i++)
 			{
 				var elem1 = arr1[i];
-				var elem2 = (T)ConvertImmutableInternal(elem1, action);
+				var elem2 = (T)ConvertImmutableInternal(elem1);
 
 				if (elem2 != null && !ReferenceEquals(elem1, elem2))
 				{
@@ -3076,10 +3077,10 @@ namespace LinqToDB.SqlQuery
 		List<T> ConvertImmutableSafe<T>(List<T> list)
 			where T : class, IQueryElement
 		{
-			return ConvertSafe(list, null);
+			return ConvertImmutableSafe(list, null);
 		}
 
-		List<T> ConvertImmutableSafe<T>(List<T> list1, Func<IQueryElement, IQueryElement> action, Clone<T> clone)
+		List<T> ConvertImmutableSafe<T>(List<T> list1, Clone<T> clone)
 			where T : class, IQueryElement
 		{
 			List<T> list2 = null;
@@ -3108,13 +3109,13 @@ namespace LinqToDB.SqlQuery
 			return list2;
 		}
 
-		List<T> ConvertImmutable<T>(List<T> list, Func<IQueryElement, IQueryElement> action)
+		List<T> ConvertImmutable<T>(List<T> list)
 			where T : class, IQueryElement
 		{
-			return ConvertImmutable(list, action, null);
+			return ConvertImmutable(list, null);
 		}
 
-		List<T> ConvertImmutable<T>(List<T> list1, Func<IQueryElement, IQueryElement> action, Clone<T> clone)
+		List<T> ConvertImmutable<T>(List<T> list1, Clone<T> clone)
 			where T : class, IQueryElement
 		{
 			List<T> list2 = null;
@@ -3122,7 +3123,7 @@ namespace LinqToDB.SqlQuery
 			for (var i = 0; i < list1.Count; i++)
 			{
 				var elem1 = list1[i];
-				var elem2 = (T)ConvertImmutableInternal(elem1, action);
+				var elem2 = (T)ConvertImmutableInternal(elem1);
 
 				if (elem2 != null && !ReferenceEquals(elem1, elem2))
 				{
