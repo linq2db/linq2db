@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\Build\linq2db.Default.props" />
+	<Import Project="..\..\Build\linq2db.Source.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net451;net46;netcoreapp2.0;netstandard2.0</TargetFrameworks>
+
+		<AssemblyName>linq2db.AspNet</AssemblyName>
+		<RootNamespace>LinqToDB.AspNet</RootNamespace>
+
+		<PackageId>linq2db.AspNet</PackageId>
+
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.AspNet.xml</DocumentationFile>
+		<!--https://github.com/dotnet/project-system/issues/1358-->
+		<TargetFrameworks>$(TargetFrameworks)</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net451' OR '$(TargetFramework)' == 'net46' ">
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.1.1" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
+	</ItemGroup>
+</Project>
