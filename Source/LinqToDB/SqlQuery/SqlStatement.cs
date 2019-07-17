@@ -450,7 +450,7 @@ namespace LinqToDB.SqlQuery
 					allAliases.Add(n);
 					p.Name = n;
 				},
-				ts => ts.Name ?? "p1",
+				p => p.Name.IsNullOrEmpty() ? "p1" : p.Name + "_1",
 				StringComparer.OrdinalIgnoreCase);
 
 			_aliases = allAliases;

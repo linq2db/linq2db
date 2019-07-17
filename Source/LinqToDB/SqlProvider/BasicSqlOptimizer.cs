@@ -73,7 +73,6 @@ namespace LinqToDB.SqlProvider
 				OptimizeJoins(statement);
 
 //statement.EnsureFindTables();
-			statement.SetAliases();
 
 			return statement;
 		}
