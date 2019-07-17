@@ -105,7 +105,7 @@ namespace LinqToDB.Linq
 				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement);
 
 				// normalize parameters
-				if (query.SqlProviderFlags.IsParameterOrderDependent) 
+				if (query.SqlProviderFlags.IsParameterOrderDependent)
 					sql.Statement = NormalizeParameters(sql.Statement, sql.Parameters);
 
 				sql.Statement.SetAliases();

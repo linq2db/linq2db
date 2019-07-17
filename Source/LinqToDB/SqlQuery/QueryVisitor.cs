@@ -2078,6 +2078,7 @@ namespace LinqToDB.SqlQuery
 						var fieldsConverted = fields2 != null && !ReferenceEquals(fields1, fields2);
 
 						if (fieldsConverted || rowsConverted)
+						{
 							if (!fieldsConverted)
 							{
 								fields2 = fields1;
@@ -2093,6 +2094,7 @@ namespace LinqToDB.SqlQuery
 							}
 
 							newElement = new SqlValuesTable(fields2, rowsConverted ? covertedRows : table.Rows);
+						}
 
 						break;
 					}
@@ -3099,6 +3101,7 @@ namespace LinqToDB.SqlQuery
 						var fieldsConverted = fields2 != null && !ReferenceEquals(fields1, fields2);
 
 						if (fieldsConverted || rowsConverted)
+						{
 							if (!fieldsConverted)
 							{
 								fields2 = fields1;
@@ -3113,7 +3116,8 @@ namespace LinqToDB.SqlQuery
 								}
 							}
 
-						newElement = new SqlValuesTable(fields2, rowsConverted ? covertedRows : table.Rows);
+							newElement = new SqlValuesTable(fields2, rowsConverted ? covertedRows : table.Rows);
+						}
 
 						break;
 					}
