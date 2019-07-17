@@ -484,10 +484,10 @@ namespace LinqToDB.Linq.Builder
 							var mc = (MethodCallExpression)e;
 							if (mc.IsQueryable(true))
 							{
-								var depended = mc.Method.Name.In("First", "FirstOrDefault", "Single", "SingleOrDefault",
+								var depended = mc.Method.Name.In("Any", "Sum", "Min", "Max", "Count", "Average", "Distinct", "First", "FirstOrDefault", "Single", "SingleOrDefault",
 									"Skip", "Take");
 								needsTruncation = needsTruncation || depended;
-								if (needsTruncation && !IsDepended(mc.Arguments[0]))
+								if (needsTruncation && (mc.Arguments[0].NodeType != ExpressionType.Call || !IsDepended(mc.Arguments[0])))
 								{ 
 									depended = IsDepended(mc);
 
@@ -754,6 +754,7 @@ namespace LinqToDB.Linq.Builder
 								var ma = FindMemberAccess(masterParam, queryableDetail.Type);
 								if (ma != null)
 								{
+									hasConnectionWithMaster = true;
 									queryableDetail = ma;
 								}
 							}
@@ -1006,8 +1007,7 @@ namespace LinqToDB.Linq.Builder
 					return e;
 				});
 
-				var hasConnection = !ReferenceEquals(detailsQuery, queryableDetail);
-				hasConnection = true;
+				hasConnectionWithMaster = hasConnectionWithMaster || !ReferenceEquals(detailsQuery, queryableDetail);
 
 				queryableDetail.Visit(e =>
 				{
@@ -1032,7 +1032,7 @@ namespace LinqToDB.Linq.Builder
 				if (detailsQuery.Type != ienumerableType)
 					detailsQuery = Expression.Convert(detailsQuery, ienumerableType);
 
-				if (!hasConnection)
+				if (!hasConnectionWithMaster)
 				{
 					// detail query has no dependency with master, so load all
 

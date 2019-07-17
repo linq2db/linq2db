@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 			var context  = new SubQueryContext(outerContext);
 			innerContext = isGroup ? new GroupJoinSubQueryContext(innerContext) : new SubQueryContext(innerContext);
 
-			var join = isGroup ? innerContext.SelectQuery.WeakLeftJoin() : innerContext.SelectQuery.InnerJoin();
+			var join = isGroup ? innerContext.SelectQuery.WeakInnerJoin() : innerContext.SelectQuery.InnerJoin();
 			var sql  = context.SelectQuery;
 
 			sql.From.Tables[0].Joins.Add(join.JoinedTable);

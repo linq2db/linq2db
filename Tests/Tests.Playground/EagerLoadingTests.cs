@@ -74,7 +74,7 @@ namespace Tests.Playground
 			var master = Enumerable.Range(1, 10).Select(i => new MasterClass { Id1 = i, Id2 = i, Value = "Str" + i })
 				.ToArray();
 
-			var detail = master.SelectMany(m => Enumerable.Range(1, m.Id1)
+			var detail = master.SelectMany(m => m.Id1 % 2 == 0 ? Enumerable.Empty<DetailClass>() : Enumerable.Range(1, m.Id1)
 					.Select(i => new DetailClass
 					{
 						DetailId = m.Id1 * 1000 + i,
@@ -487,6 +487,7 @@ namespace Tests.Playground
 					from dd in j
 					select new
 					{
+						Master = m,
 						Detail = dd,
 						Masters = master.Where(mm => m.Id1 == dd.MasterId).ToArray()
 					};
@@ -496,6 +497,7 @@ namespace Tests.Playground
 					from dd in j
 					select new
 					{
+						Master = m,
 						Detail = dd,
 						Masters = masterRecords.Where(mm => m.Id1 == dd.MasterId).ToArray()
 					};
