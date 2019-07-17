@@ -341,6 +341,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for most of providers")]
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,

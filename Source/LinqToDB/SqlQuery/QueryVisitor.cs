@@ -3165,6 +3165,41 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.SqlRawSqlTable:
+					{
+						var table   = (SqlRawSqlTable)element;
+						var fields1 = ToArray(table.Fields);
+						var fields2 = ConvertImmutable(fields1, f => new SqlField(f));
+						var targs   = table.Parameters == null || table.Parameters.Length == 0 ?
+							null : ConvertImmutable(table.Parameters);
+
+						var fe = fields2 != null && !ReferenceEquals(fields1, fields2);
+						var ta = targs != null && !ReferenceEquals(table.Parameters, targs);
+
+						if (fe || ta)
+						{
+							if (!fe)
+							{
+								fields2 = fields1;
+
+								for (var i = 0; i < fields2.Length; i++)
+								{
+									var field = fields2[i];
+
+									fields2[i] = new SqlField(field);
+
+									_visitedElements[field] = fields2[i];
+								}
+							}
+
+							newElement = new SqlRawSqlTable(table, fields2, targs ?? table.Parameters);
+
+							_visitedElements[((SqlRawSqlTable)newElement).All] = table.All;
+						}
+
+						break;
+					}
+
 				case QueryElementType.SqlField    :
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue    :
