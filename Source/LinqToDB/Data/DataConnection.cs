@@ -18,8 +18,6 @@ namespace LinqToDB.Data
 	using Configuration;
 	using DataProvider;
 	using Expressions;
-	using LinqToDB.Async;
-	using LinqToDB.Data.DbCommandProcessor;
 	using Mapping;
 	using RetryPolicy;
 
@@ -29,23 +27,22 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : ICloneable
+	public partial class DataConnection : ICloneable, IEntityServices
 	{
 		#region .ctor
 
 		/// <summary>
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property.
 		/// </summary>
-		public DataConnection() : this((string)null)
+		public DataConnection() : this(new LinqToDbConnectionOptions())
 		{}
 
 		/// <summary>
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property and provided mapping schema.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
-		public DataConnection([JetBrains.Annotations.NotNull] MappingSchema mappingSchema) : this((string)null)
+		public DataConnection([JetBrains.Annotations.NotNull] MappingSchema mappingSchema) : this(new LinqToDbConnectionOptions().UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -55,9 +52,8 @@ namespace LinqToDB.Data
 		/// In case of null, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(string configurationString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
-			: this(configurationString)
+			: this(new LinqToDbConnectionOptions().UseConfigurationString(configurationString).UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -66,20 +62,8 @@ namespace LinqToDB.Data
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
 		/// In case of <c>null</c>, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		public DataConnection(string configurationString)
+			: this(new LinqToDbConnectionOptions().UseConfigurationString(configurationString))
 		{
-			InitConfig();
-
-			ConfigurationString = configurationString ?? DefaultConfiguration;
-
-			if (ConfigurationString == null)
-				throw new LinqToDBException("Configuration string is not provided.");
-
-			var ci = GetConfigurationInfo(ConfigurationString);
-
-			DataProvider     = ci.DataProvider;
-			ConnectionString = ci.ConnectionString;
-			MappingSchema    = DataProvider.MappingSchema;
-			RetryPolicy      = Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null;
 		}
 
 		/// <summary>
@@ -92,9 +76,8 @@ namespace LinqToDB.Data
 				[JetBrains.Annotations.NotNull] string        providerName,
 				[JetBrains.Annotations.NotNull] string        connectionString,
 				[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
-			: this(providerName, connectionString)
+			: this(new LinqToDbConnectionOptions().UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -105,18 +88,8 @@ namespace LinqToDB.Data
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] string providerName,
 			[JetBrains.Annotations.NotNull] string connectionString)
+			: this(new LinqToDbConnectionOptions().UseConnectionString(providerName, connectionString))
 		{
-			if (providerName     == null) throw new ArgumentNullException(nameof(providerName));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
-
-			if (!_dataProviders.TryGetValue(providerName, out var dataProvider))
-				throw new LinqToDBException($"DataProvider '{providerName}' not found.");
-
-			InitConfig();
-
-			DataProvider     = dataProvider;
-			ConnectionString = connectionString;
-			MappingSchema    = DataProvider.MappingSchema;
 		}
 
 		/// <summary>
@@ -129,9 +102,8 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] string        connectionString,
 			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
-			: this(dataProvider, connectionString)
+			: this(new LinqToDbConnectionOptions().UseConnectionString(dataProvider, connectionString).UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -142,12 +114,8 @@ namespace LinqToDB.Data
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] string connectionString)
+			: this(new LinqToDbConnectionOptions().UseConnectionString(dataProvider, connectionString))
 		{
-			InitConfig();
-
-			DataProvider     = dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider));
-			ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-			MappingSchema    = DataProvider.MappingSchema;
 		}
 
 		/// <summary>
@@ -160,9 +128,8 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDataProvider       dataProvider,
 			[JetBrains.Annotations.NotNull] Func<IDbConnection> connectionFactory,
 			[JetBrains.Annotations.NotNull] MappingSchema       mappingSchema)
-			: this(dataProvider, connectionFactory)
+			: this(new LinqToDbConnectionOptions().UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -173,27 +140,8 @@ namespace LinqToDB.Data
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider       dataProvider,
 			[JetBrains.Annotations.NotNull] Func<IDbConnection> connectionFactory)
+			: this(new LinqToDbConnectionOptions().UseConnectionFactory(dataProvider, connectionFactory))
 		{
-			if (dataProvider      == null) throw new ArgumentNullException(nameof(dataProvider));
-			if (connectionFactory == null) throw new ArgumentNullException(nameof(connectionFactory));
-
-			InitConfig();
-
-			DataProvider       = dataProvider;
-			MappingSchema      = DataProvider.MappingSchema;
-
-			_connectionFactory = () =>
-			{
-				var connection = connectionFactory();
-
-				var baseConnection = connection is IAsyncDbConnection asyncConnection ? asyncConnection.Connection : connection;
-
-				if (!Configuration.AvoidSpecificDataProviderAPI && !DataProvider.IsCompatibleConnection(baseConnection))
-					throw new LinqToDBException(
-						$"DataProvider '{DataProvider}' and connection '{baseConnection}' are not compatible.");
-
-				return connection;
-			};
 		}
 
 		/// <summary>
@@ -206,9 +154,8 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] IDbConnection connection,
 			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
-			: this(dataProvider, connection)
+			: this(new LinqToDbConnectionOptions().UseConnection(dataProvider, connection).UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -237,21 +184,8 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] IDbConnection connection,
 			                                bool          disposeConnection)
+			: this(new LinqToDbConnectionOptions().UseConnection(dataProvider, connection, disposeConnection))
 		{
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
-			if (connection   == null) throw new ArgumentNullException(nameof(connection));
-
-			InitConfig();
-
-			_connection = AsyncFactory.Create(connection);
-
-			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(_connection.Connection))
-				throw new LinqToDBException(
-					$"DataProvider '{dataProvider}' and connection '{_connection.Connection}' are not compatible.");
-
-			DataProvider       = dataProvider;
-			MappingSchema      = DataProvider.MappingSchema;
-			_disposeConnection = disposeConnection;
 		}
 
 		/// <summary>
@@ -264,9 +198,8 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDataProvider  dataProvider,
 			[JetBrains.Annotations.NotNull] IDbTransaction transaction,
 			[JetBrains.Annotations.NotNull] MappingSchema  mappingSchema)
-			: this(dataProvider, transaction)
+			: this(new LinqToDbConnectionOptions().UseTransaction(dataProvider, transaction).UseMappingSchema(mappingSchema))
 		{
-			AddMappingSchema(mappingSchema);
 		}
 
 		/// <summary>
@@ -277,25 +210,128 @@ namespace LinqToDB.Data
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider  dataProvider,
 			[JetBrains.Annotations.NotNull] IDbTransaction transaction)
+			: this(new LinqToDbConnectionOptions().UseTransaction(dataProvider, transaction))
 		{
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
-			if (transaction  == null) throw new ArgumentNullException(nameof(transaction));
+		}
 
-			InitConfig();
-
-			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(transaction.Connection))
+		/// <summary>
+		/// Creates database connection object that uses a LinqToDbConnectionOptions to configure the connection.
+		/// </summary>
+		/// <param name="options">Options, setup ahead of time</param>
+		public DataConnection([JetBrains.Annotations.NotNull]LinqToDbConnectionOptions options)
+		{
+			if (options == null)
+				throw new ArgumentNullException(nameof(options));
+			
+			if (!options.IsValidConfigForConnectionType(this))
 				throw new LinqToDBException(
-					$"DataProvider '{dataProvider}' and connection '{transaction.Connection}' are not compatible.");
+					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(LinqToDbConnectionOptions)}<{GetType().Name}>");
+			
+			InitConfig();
+			
+			switch (options.SetupType)
+			{
+				case LinqToDbConnectionOptions.ConnectionSetupType.ConfigurationString:
+				case LinqToDbConnectionOptions.ConnectionSetupType.DefaultConfiguration:
+					{
+						ConfigurationString = options.ConfigurationString ?? DefaultConfiguration;
+						if (ConfigurationString == null)
+							throw new LinqToDBException("Configuration string is not provided.");
+						var ci = GetConfigurationInfo(ConfigurationString);
 
-			DataProvider       = dataProvider;
-			MappingSchema      = DataProvider.MappingSchema;
-			_connection        = transaction.Connection is IAsyncDbConnection asyncDbConection
-				? asyncDbConection
-				: AsyncFactory.Create(transaction.Connection);
-			TransactionAsync   = AsyncFactory.Create(transaction);
-			_closeTransaction  = false;
-			_closeConnection   = false;
-			_disposeConnection = false;
+						DataProvider     = ci.DataProvider;
+						ConnectionString = ci.ConnectionString;
+						MappingSchema    = DataProvider.MappingSchema;
+						RetryPolicy      = Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null;
+
+						break;
+					}
+
+				case LinqToDbConnectionOptions.ConnectionSetupType.ConnectionString:
+					{
+						if (options.ProviderName == null && options.DataProvider == null)
+
+						if (options.DataProvider != null)
+							DataProvider = options.DataProvider;
+						else if (options.ProviderName != null)
+						{
+							DataProvider = GetDataProvider(options.ProviderName, options.ConnectionString);
+							if (DataProvider == null)
+								throw new LinqToDBException($"Unknown provider name '{options.ProviderName}'");
+						}	
+						else
+							throw new LinqToDBException("DataProvider was not specified");
+
+						ConnectionString = options.ConnectionString;
+						MappingSchema    = DataProvider.MappingSchema;
+
+						break;
+					}			
+				
+				case LinqToDbConnectionOptions.ConnectionSetupType.ConnectionFactory:
+					{
+						//copy to tmp variable so that if the factory in options gets changed later we will still use the old one
+						//is this expected?
+						var originalConnectionFactory = options.ConnectionFactory;
+						_connectionFactory = () =>
+						{
+							var connection = originalConnectionFactory();
+
+							if (!Configuration.AvoidSpecificDataProviderAPI
+							    && !DataProvider.IsCompatibleConnection(connection))
+								throw new LinqToDBException(
+									$"DataProvider '{DataProvider}' and connection '{connection}' are not compatible.");
+
+							return connection;
+						};
+
+						break;
+					}			
+				
+				case LinqToDbConnectionOptions.ConnectionSetupType.Connection:
+					{
+						if (!Configuration.AvoidSpecificDataProviderAPI
+						    && !options.DataProvider.IsCompatibleConnection(options.DbConnection))
+							throw new LinqToDBException(
+								$"DataProvider '{options.DataProvider}' and connection '{options.DbConnection}' are not compatible.");
+
+						_connection        = options.DbConnection;
+						_disposeConnection = options.DisposeConnection;
+
+						break;
+					}
+
+				case LinqToDbConnectionOptions.ConnectionSetupType.Transaction:
+					{ 
+						if (!Configuration.AvoidSpecificDataProviderAPI
+						    && !options.DataProvider.IsCompatibleConnection(options.DbTransaction.Connection))
+							throw new LinqToDBException(
+								$"DataProvider '{options.DataProvider}' and connection '{options.DbTransaction.Connection}' are not compatible.");
+
+						_connection        = options.DbTransaction.Connection;
+						Transaction        = options.DbTransaction;
+
+						_closeTransaction  = false;
+						_closeConnection   = false;
+						_disposeConnection = false;
+
+						break;
+					}
+
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+
+			if (options.DataProvider != null)
+			{
+				DataProvider  = options.DataProvider;
+				MappingSchema = DataProvider.MappingSchema;
+			}
+
+			if (options.MappingSchema != null)
+			{
+				AddMappingSchema(options.MappingSchema);
+			}
 		}
 
 		#endregion
@@ -949,39 +985,36 @@ namespace LinqToDB.Data
 		bool                _closeConnection;
 		bool                _disposeConnection = true;
 		bool                _closeTransaction;
-		IAsyncDbConnection  _connection;
+		IDbConnection       _connection;
 		Func<IDbConnection> _connectionFactory;
 
 		/// <summary>
 		/// Gets underlying database connection, used by current connection object.
 		/// </summary>
-		public IDbConnection Connection => EnsureConnection().Connection;
-
-		internal IAsyncDbConnection EnsureConnection()
+		public IDbConnection Connection
 		{
-			if (_connection == null)
+			get
 			{
-				IDbConnection connection;
-				if (_connectionFactory != null)
-					connection = _connectionFactory();
-				else
-					connection = DataProvider.CreateConnection(ConnectionString);
+				if (_connection == null)
+				{
+					if (_connectionFactory != null)
+						_connection = _connectionFactory();
+					else
+						_connection = DataProvider.CreateConnection(ConnectionString);
 
-				_connection = AsyncFactory.Create(connection);
+					if (RetryPolicy != null)
+						_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);
+				}
 
-				if (RetryPolicy != null)
-					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
+				if (_connection.State == ConnectionState.Closed)
+				{
+					_connection.Open();
+					_closeConnection = true;
+					OnConnectionOpened?.Invoke(this, _connection);
+				}
+
+				return _connection;
 			}
-
-			if (_connection.State == ConnectionState.Closed)
-			{
-				OnBeforeConnectionOpen?.Invoke(this, _connection.Connection);
-				_connection.Open();
-				_closeConnection = true;
-				OnConnectionOpened?.Invoke(this, _connection.Connection);
-			}
-
-			return _connection;
 		}
 
 		/// <summary>
@@ -995,16 +1028,6 @@ namespace LinqToDB.Data
 
 		/// <inheritdoc />
 		public Action<EntityCreatedEventArgs> OnEntityCreated    { get; set; }
-
-		/// <summary>
-		/// Event, triggered before connection opened using <see cref="IDbConnection.Open"/> method.
-		/// </summary>
-		public event Action<DataConnection, IDbConnection> OnBeforeConnectionOpen;
-
-		/// <summary>
-		/// Event, triggered before connection opened using <see cref="DbConnection.OpenAsync()"/> methods.
-		/// </summary>
-		public event Func<DataConnection, IDbConnection, CancellationToken, Task> OnBeforeConnectionOpenAsync;
 
 		/// <summary>
 		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> method.
@@ -1025,10 +1048,10 @@ namespace LinqToDB.Data
 
 			DisposeCommand();
 
-			if (TransactionAsync != null && _closeTransaction)
+			if (Transaction != null && _closeTransaction)
 			{
-				TransactionAsync.Dispose();
-				TransactionAsync = null;
+				Transaction.Dispose();
+				Transaction = null;
 			}
 
 			if (_connection != null)
@@ -1054,42 +1077,31 @@ namespace LinqToDB.Data
 		/// </summary>
 		public string LastQuery;
 
-		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints, bool withParameters)
+		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints)
 		{
 			if (queryHints?.Count > 0)
 			{
-				var sqlProvider = DataProvider.CreateSqlBuilder(MappingSchema);
+				var sqlProvider = DataProvider.CreateSqlBuilder();
 				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
 				queryHints.Clear();
 			}
 
-			DataProvider.InitCommand(this, commandType, sql, parameters, withParameters);
+			DataProvider.InitCommand(this, commandType, sql, parameters);
 			LastQuery = Command.CommandText;
 		}
 
 		private int? _commandTimeout;
 		/// <summary>
-		/// Gets or sets command execution timeout in seconds. 
-		/// Negative timeout value means that default timeout will be used.
-		/// 0 timeout value corresponds to infinite timeout.
-		/// By default timeout is not set and default value for current provider used.
+		/// Gets or sets command execution timeout. By default timeout is 0 (infinity).
 		/// </summary>
 		public  int   CommandTimeout
 		{
-			get => _commandTimeout ?? -1;
+			get => _commandTimeout ?? 0;
 			set
 			{
-				if (value < 0)
-				{
-					_commandTimeout = null;
-					DisposeCommand();
-				}
-				else
-				{
-					_commandTimeout = value;
-					if (_command != null)
-						_command.CommandTimeout = value;
-				}
+				_commandTimeout = value;
+				if (_command != null)
+					_command.CommandTimeout = value;
 			}
 		}
 
@@ -1113,7 +1125,7 @@ namespace LinqToDB.Data
 			if (_commandTimeout.HasValue)
 				command.CommandTimeout = _commandTimeout.Value;
 
-			if (TransactionAsync != null)
+			if (Transaction != null)
 				command.Transaction = Transaction;
 
 			return command;
@@ -1135,7 +1147,7 @@ namespace LinqToDB.Data
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				using (DataProvider.ExecuteScope())
-					return Command.ExecuteNonQueryExt();
+					return Command.ExecuteNonQuery();
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -1156,7 +1168,7 @@ namespace LinqToDB.Data
 			{
 				int ret;
 				using (DataProvider.ExecuteScope())
-					ret = Command.ExecuteNonQueryExt();
+					ret = Command.ExecuteNonQuery();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -1195,7 +1207,7 @@ namespace LinqToDB.Data
 		object ExecuteScalar()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return Command.ExecuteScalarExt();
+				return Command.ExecuteScalar();
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -1213,7 +1225,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = Command.ExecuteScalarExt();
+				var ret = Command.ExecuteScalar();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -1257,7 +1269,7 @@ namespace LinqToDB.Data
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				using (DataProvider.ExecuteScope())
-					return Command.ExecuteReaderExt(GetCommandBehavior(commandBehavior));
+					return Command.ExecuteReader(GetCommandBehavior(commandBehavior));
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -1278,7 +1290,7 @@ namespace LinqToDB.Data
 				IDataReader ret;
 
 				using (DataProvider.ExecuteScope())
-					ret = Command.ExecuteReaderExt(GetCommandBehavior(commandBehavior));
+					ret = Command.ExecuteReader(GetCommandBehavior(commandBehavior));
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -1327,12 +1339,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets current transaction, associated with connection.
 		/// </summary>
-		public IDbTransaction Transaction => TransactionAsync?.Transaction;
-
-		/// <summary>
-		/// Async transaction wrapper over <see cref="Transaction"/>.
-		/// </summary>
-		internal IAsyncDbTransaction TransactionAsync { get; private set; }
+		public IDbTransaction Transaction { get; private set; }
 
 		/// <summary>
 		/// Starts new transaction for current connection with default isolation level. If connection already has transaction, it will be rolled back.
@@ -1342,11 +1349,11 @@ namespace LinqToDB.Data
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			TransactionAsync?.Dispose();
+			Transaction?.Dispose();
 
 			// Create new transaction object.
 			//
-			TransactionAsync = AsyncFactory.Create(EnsureConnection().BeginTransaction());
+			Transaction = Connection.BeginTransaction();
 
 			_closeTransaction = true;
 
@@ -1367,11 +1374,11 @@ namespace LinqToDB.Data
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			TransactionAsync?.Dispose();
+			Transaction?.Dispose();
 
 			// Create new transaction object.
 			//
-			TransactionAsync = AsyncFactory.Create(EnsureConnection().BeginTransaction(isolationLevel));
+			Transaction = Connection.BeginTransaction(isolationLevel);
 
 			_closeTransaction = true;
 
@@ -1388,14 +1395,14 @@ namespace LinqToDB.Data
 		/// </summary>
 		public virtual void CommitTransaction()
 		{
-			if (TransactionAsync != null)
+			if (Transaction != null)
 			{
-				TransactionAsync.Commit();
+				Transaction.Commit();
 
 				if (_closeTransaction)
 				{
-					TransactionAsync.Dispose();
-					TransactionAsync = null;
+					Transaction.Dispose();
+					Transaction = null;
 
 					if (_command != null)
 						_command.Transaction = null;
@@ -1408,14 +1415,14 @@ namespace LinqToDB.Data
 		/// </summary>
 		public virtual void RollbackTransaction()
 		{
-			if (TransactionAsync != null)
+			if (Transaction != null)
 			{
-				TransactionAsync.Rollback();
+				Transaction.Rollback();
 
 				if (_closeTransaction)
 				{
-					TransactionAsync.Dispose();
-					TransactionAsync = null;
+					Transaction.Dispose();
+					Transaction = null;
 
 					if (_command != null)
 						_command.Transaction = null;
@@ -1472,7 +1479,7 @@ namespace LinqToDB.Data
 			ConfigurationString = configurationString;
 			DataProvider        = dataProvider;
 			ConnectionString    = connectionString;
-			_connection         = connection != null ? AsyncFactory.Create(connection) : null;
+			_connection         = connection;
 			MappingSchema       = mappingSchema;
 		}
 
@@ -1482,7 +1489,10 @@ namespace LinqToDB.Data
 		/// <returns>Cloned connection.</returns>
 		public object Clone()
 		{
-			var connection = _connection?.TryClone() ?? _connectionFactory?.Invoke();
+			var connection =
+				(_connection == null                 ? null :
+				_connection is ICloneable cloneable ? (IDbConnection)cloneable.Clone() :
+				                                      null) ?? _connectionFactory?.Invoke();
 
 			// https://github.com/linq2db/linq2db/issues/1486
 			// when there is no ConnectionString and provider doesn't support connection cloning
