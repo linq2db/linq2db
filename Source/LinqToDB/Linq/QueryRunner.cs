@@ -176,7 +176,7 @@ namespace LinqToDB.Linq
 									{
 										normalized = (ISqlExpression)normalized.Clone(
 											new Dictionary<ICloneableElement, ICloneableElement>(),
-											c => c == paramExpr);
+											c => true);
 									}
 
 									newExpressions.Add(normalized);
@@ -185,16 +185,12 @@ namespace LinqToDB.Linq
 								return idx;
 							});
 
-						if (newExpr != expr.Expr)
-						{
-							var newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, newExpressions.ToArray());
-							// force re-entrance
-							queryVisitor.VisitedElements.Remove(expr);
-							queryVisitor.VisitedElements.Add(expr, null);
-							return newExpression;
-						}
-
-						return expr;
+						// always create copy
+						var newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, newExpressions.ToArray());
+						// force re-entrance
+						queryVisitor.VisitedElements.Remove(expr);
+						queryVisitor.VisitedElements.Add(expr, null);
+						return newExpression;
 					}
 				}
 				return e;
