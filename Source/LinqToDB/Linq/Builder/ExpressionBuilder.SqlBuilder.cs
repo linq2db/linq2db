@@ -1414,10 +1414,9 @@ namespace LinqToDB.Linq.Builder
 
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
-			if (!DataContext.SqlProviderFlags.IsParameterOrderDependent)
-				foreach (var accessor in _parameters)
-					if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), compareConstantValues: true))
-						p = accessor.Value;
+			foreach (var accessor in _parameters)
+				if (accessor.Key.EqualsTo(expr, new Dictionary<Expression, QueryableAccessor>(), compareConstantValues: true))
+					p = accessor.Value;
 
 			if (p == null)
 			{

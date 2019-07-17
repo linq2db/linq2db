@@ -30,7 +30,6 @@ namespace Tests.Linq
 					from p in db.Parent where p.ParentID > 2 && value && true && !false select p);
 		}
 
-		[ActiveIssue(1685, Configuration = ProviderName.SapHana, SkipForNonLinqService = true, Details = "Fails only for core2 run")]
 		[Test]
 		public void Bool2([DataSources] string context)
 		{

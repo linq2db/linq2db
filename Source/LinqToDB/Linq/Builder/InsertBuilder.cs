@@ -104,6 +104,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			insertStatement.Insert.WithIdentity = methodCall.Method.Name == "InsertWithIdentity";
+
 			sequence.Statement = insertStatement;
 
 			return new InsertContext(buildInfo.Parent, sequence, insertStatement.Insert.WithIdentity);

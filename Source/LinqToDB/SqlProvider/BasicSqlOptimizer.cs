@@ -76,7 +76,6 @@ namespace LinqToDB.SqlProvider
 
 //statement.EnsureFindTables();
 			statement = TransformStatement(statement);
-			statement.SetAliases();
 
 			return statement;
 		}
@@ -1515,7 +1514,7 @@ namespace LinqToDB.SqlProvider
 				{
 					objectTree.Remove(field);
 				} 
-			
+
 				var tableToCompare = QueryHelper.EnumerateAccessibleSources(clonedQuery)
 					.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
 					.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
