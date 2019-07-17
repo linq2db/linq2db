@@ -3044,12 +3044,14 @@ namespace LinqToDB.SqlQuery
 							source     != null && !ReferenceEquals(merge.Source, source) ||
 							on         != null && !ReferenceEquals(merge.On, on) ||
 							operations != null && !ReferenceEquals(merge.Operations, operations))
+						{
 							newElement = new SqlMergeStatement(
 								merge.Hint,
 								target ?? merge.Target,
 								source ?? merge.Source,
 								on ?? merge.On,
 								operations ?? merge.Operations);
+						}
 
 						break;
 					}
@@ -3065,11 +3067,13 @@ namespace LinqToDB.SqlQuery
 						if (enumerableSource != null && !ReferenceEquals(source.SourceEnumerable, enumerableSource) ||
 							querySource      != null && !ReferenceEquals(source.SourceQuery, querySource)           ||
 							fields           != null && !ReferenceEquals(source.SourceFields, fields))
+						{
 							newElement = new SqlMergeSourceTable(
 								source.SourceID,
 								enumerableSource ?? source.SourceEnumerable,
 								querySource ?? source.SourceQuery,
 								fields ?? source.SourceFields);
+						}
 
 							break;
 						}
@@ -3125,11 +3129,13 @@ namespace LinqToDB.SqlQuery
 						if (where       != null && !ReferenceEquals(operation.Where, where)             ||
 							whereDelete != null && !ReferenceEquals(operation.WhereDelete, whereDelete) ||
 							items       != null && !ReferenceEquals(operation.Items, items))
+						{
 							newElement = new SqlMergeOperationClause(
 								operation.OperationType,
 								where ?? operation.Where,
 								whereDelete ?? operation.WhereDelete,
 								items ?? operation.Items);
+						}
 
 						break;
 					}
@@ -3143,11 +3149,13 @@ namespace LinqToDB.SqlQuery
 							var table = (SqlTable)ConvertImmutableInternal(truncate.Table);
 
 							if (table != null && !ReferenceEquals(truncate.Table, table))
+							{
 								newElement = new SqlTruncateTableStatement()
-								{
-									Table = table,
-									ResetIdentity = truncate.ResetIdentity
-								};
+									{
+										Table = table,
+										ResetIdentity = truncate.ResetIdentity
+									};
+							}
 						}
 
 						break;
