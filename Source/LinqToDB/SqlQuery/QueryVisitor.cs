@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.SqlQuery
@@ -2435,7 +2436,20 @@ namespace LinqToDB.SqlQuery
 					{
 						var table    = (SqlTable)element;
 						var newTable = (SqlTable)_convert(table);
-						if (!ReferenceEquals(newTable, table))
+
+						if (ReferenceEquals(newTable, table))
+						{
+							var targs = table.TableArguments == null || table.TableArguments.Length == 0 ?
+								null : ConvertImmutable(table.TableArguments);
+
+							if (targs != null && !ReferenceEquals(table.TableArguments, targs))
+							{
+								var newFields = table.Fields.Values.Select(f => new SqlField(f));
+								newTable = new SqlTable(table, newFields, targs);
+							}
+						}
+
+						if (!ReferenceEquals(table, newTable))
 						{
 							AddVisited(table.All, newTable.All);
 							foreach (var prevField in table.Fields.Values)
@@ -2443,41 +2457,31 @@ namespace LinqToDB.SqlQuery
 								if (newTable.Fields.TryGetValue(prevField.Name, out var newField))
 									AddVisited(prevField, newField);
 							}
-
-							newElement = newTable;
 						}
+
+						newElement = newTable;
 
 						break;
 					}
 
 				case QueryElementType.SqlCteTable:
 					{
-						var table = (SqlCteTable)element;
-						var targs = table.TableArguments == null || table.TableArguments.Length == 0 ?
-							null : ConvertImmutable(table.TableArguments);
-						var cte = (CteClause)ConvertImmutableInternal(table.Cte);
+						var table    = (SqlCteTable)element;
+						var newTable = (SqlCteTable)_convert(table);
 
-						var ta = targs != null && !ReferenceEquals(table.TableArguments, targs);
-						var ce = cte   != null && !ReferenceEquals(table.Cte, cte);
-
-						if (ta || ce)
+						if (ReferenceEquals(newTable, table))
 						{
-							var newFields = new List<SqlField>();
-							foreach (var field in table.Fields.Values)
-							{
-								var newField = new SqlField(field);
-								newFields.Add(newField);
-								AddVisited(field, newField);
-							}
+							var cte   = (CteClause)ConvertImmutableInternal(table.Cte);
+							var ce = cte   != null && !ReferenceEquals(table.Cte, cte);
 
-							newElement = table = new SqlCteTable(table, newFields, cte);
-							((SqlCteTable)newElement).TableArguments = targs;
-							
-							AddVisited(((SqlCteTable)newElement).All, table.All);
+							if (ce)
+							{
+								var newFields = table.Fields.Values.Select(f => new SqlField(f));
+								newTable = new SqlCteTable(table, newFields, cte);
+							}
 						}
 
-						var newTable = (SqlCteTable)_convert(table);
-						if (!ReferenceEquals(newTable, table))
+						if (!ReferenceEquals(table, newTable))
 						{
 							AddVisited(table.All, newTable.All);
 							foreach (var prevField in table.Fields.Values)
@@ -2485,9 +2489,9 @@ namespace LinqToDB.SqlQuery
 								if (newTable.Fields.TryGetValue(prevField.Name, out var newField))
 									AddVisited(prevField, newField);
 							}
-
-							newElement = newTable;
 						}
+
+						newElement = newTable;
 
 						break;
 					}
@@ -3011,6 +3015,8 @@ namespace LinqToDB.SqlQuery
 								hc = new SqlWhereClause  (nq, hc, objTree, e => false);
 							if (ReferenceEquals(oc, q.OrderBy))
 								oc = new SqlOrderByClause(nq, oc, objTree, e => false);
+							if (us == null || ReferenceEquals(us, q.Unions))
+								us = new List<SqlUnion>(us ?? q.Unions);
 
 							AddVisited(q.All, nq.All);
 

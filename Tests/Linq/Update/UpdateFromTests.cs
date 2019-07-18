@@ -128,7 +128,7 @@ namespace Tests.Update
 		}
 
 		[Test, Combinatorial]
-		public void UpdateTestjoin(
+		public void UpdateTestJoin(
 			[DataSources(ProviderName.SqlCe, ProviderName.Informix)]
 			string context)
 		{
@@ -178,7 +178,7 @@ namespace Tests.Update
 		}		
 
 		[Test, Combinatorial]
-		public void UpdateTestjoinSkip(
+		public void UpdateTestJoinSkip(
 			[IncludeDataSources(
 				ProviderName.SqlServer,
 				ProviderName.SqlServer2000,
@@ -239,7 +239,7 @@ namespace Tests.Update
 		}		
 
 		[Test, Combinatorial]
-		public void UpdateTestjoinSkipTake(
+		public void UpdateTestJoinSkipTake(
 			[DataSources(ProviderName.Access, ProviderName.MySql, TestProvName.MySql57, ProviderName.SqlCe)]
 			string context)
 		{
@@ -295,7 +295,7 @@ namespace Tests.Update
 		}		
 
 		[Test, Combinatorial]
-		public void UpdateTestjoinTake(
+		public void UpdateTestJoinTake(
 			[DataSources(ProviderName.Access, ProviderName.MySql, TestProvName.MySql57, ProviderName.SqlCe)]
 			string context)
 		{

@@ -1366,11 +1366,12 @@ namespace LinqToDB.SqlProvider
 							{
 								// we have to create clone
 								tableToUpdate = tableToUpdate.Clone();
+								tableToUpdate.Alias = "$F";
 
 								for (var i = 0; i < statement.Update.Items.Count; i++)
 								{
 									var item = statement.Update.Items[i];
-									var newItem = new QueryVisitor().Convert(item, e =>
+									var newItem = new QueryVisitor().ConvertImmutable(item, e =>
 									{
 										if (e is SqlField field && field.Table == tableToCompare)
 										{

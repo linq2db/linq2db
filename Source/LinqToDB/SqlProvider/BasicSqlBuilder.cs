@@ -2924,13 +2924,17 @@ namespace LinqToDB.SqlProvider
 			switch (table.ElementType)
 			{
 				case QueryElementType.TableSource:
-					var ts    = (SqlTableSource)table;
-					var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
-					return alias != "$" && alias != "$F" ? alias : null;
-
+					{
+						var ts    = (SqlTableSource)table;
+						var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
+						return alias != "$" && alias != "$F" ? alias : null;
+					}
 				case QueryElementType.SqlTable        :
 				case QueryElementType.SqlCteTable     :
-					return ((SqlTable)table).Alias;
+					{
+						var alias = ((SqlTable)table).Alias;
+						return alias != "$" && alias != "$F" ? alias : null;
+					}	
 				case QueryElementType.MergeSourceTable:
 					return null;
 
