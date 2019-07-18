@@ -78,7 +78,7 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestWhere(
-			[DataSources(ProviderName.Access, ProviderName.MySql, TestProvName.MySql57, ProviderName.SqlCe, ProviderName.Informix)]
+			[DataSources(ProviderName.Access, TestProvName.AllMySql, ProviderName.SqlCe, ProviderName.Informix)]
 			string context)
 		{
 			var data = GenerateData();
@@ -240,7 +240,7 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestJoinSkipTake(
-			[DataSources(ProviderName.Access, ProviderName.MySql, TestProvName.MySql57, ProviderName.SqlCe)]
+			[DataSources(ProviderName.Access, TestProvName.AllMySql, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();
@@ -296,7 +296,7 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestJoinTake(
-			[DataSources(ProviderName.Access, ProviderName.MySql, TestProvName.MySql57, ProviderName.SqlCe)]
+			[DataSources(ProviderName.Access, TestProvName.AllMySql, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();
