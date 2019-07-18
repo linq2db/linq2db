@@ -1366,7 +1366,6 @@ namespace LinqToDB.SqlProvider
 							{
 								// we have to create clone
 								tableToUpdate = tableToUpdate.Clone();
-								tableToUpdate.Alias = "$F";
 
 								for (var i = 0; i < statement.Update.Items.Count; i++)
 								{
@@ -1443,6 +1442,9 @@ namespace LinqToDB.SqlProvider
 					statement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
 				}
 			}
+
+			if (tableToUpdate != null)
+				tableToUpdate.Alias = "$F";
 
 			statement.Update.Table = tableToUpdate;
 			statement.SetAliases();
