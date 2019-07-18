@@ -11,6 +11,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
+			// very limited provider, it do not support Window functions.
+			return statement;
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);
