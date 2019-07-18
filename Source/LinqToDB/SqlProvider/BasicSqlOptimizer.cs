@@ -1797,7 +1797,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement OptimizeStatement(SqlStatement statement)
 		{
-			statement = new QueryVisitor().Convert(statement, e =>
+			statement = new QueryVisitor().ConvertImmutable(statement, e =>
 			{
 				if (e is ISqlExpression sqlExpression)
 					e = ConvertExpression(sqlExpression);
