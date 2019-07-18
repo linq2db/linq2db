@@ -3200,6 +3200,62 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.CteClause:
+					{
+						var cte = (CteClause)element;
+
+						if (new QueryVisitor().Find(cte.Body, e => e == cte) == null)
+						{
+							// non-recursive
+							var body   = (SelectQuery)ConvertImmutableInternal(cte.Body);
+							var fields = ConvertImmutableSafe(cte.Fields);
+
+							if (body   != null && !ReferenceEquals(cte.Body, body) ||
+								fields != null && !ReferenceEquals(cte.Fields, fields))
+							{
+								newElement = new CteClause(
+									body ?? cte.Body,
+									fields ?? cte.Fields,
+									cte.ObjectType,
+									cte.IsRecursive,
+									cte.Name);
+							}
+						}
+						else
+						{
+							var newCte = new CteClause(cte.ObjectType, cte.IsRecursive, cte.Name);
+
+							_visitedElements.Add(cte, newCte);
+
+							var body   = (SelectQuery)ConvertImmutableInternal(cte.Body);
+							var fields = ConvertImmutableSafe(cte.Fields);
+
+							newCte.Init(body ?? cte.Body, fields ?? cte.Fields);
+
+							var elem = _convert(newCte) ?? newCte;
+							_visitedElements[cte] = elem;
+
+							return elem;
+						}
+
+						break;
+					}
+
+				case QueryElementType.WithClause:
+					{
+						var with = (SqlWithClause)element;
+
+						var clauses = ConvertImmutableSafe(with.Clauses);
+
+						if (clauses != null && !ReferenceEquals(with.Clauses, clauses))
+							newElement = new SqlWithClause()
+							{
+								Clauses = clauses
+							};
+
+						break;
+					}
+
 				case QueryElementType.SqlField    :
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue    :

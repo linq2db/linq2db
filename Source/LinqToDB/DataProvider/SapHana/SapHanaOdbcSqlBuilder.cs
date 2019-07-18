@@ -129,6 +129,8 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			if (selectQuery.From.Tables.Count == 0)
 				StringBuilder.Append("FROM DUMMY");
+			else
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		public static bool TryConvertParameterSymbol { get; set; }

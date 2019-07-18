@@ -716,7 +716,7 @@ namespace LinqToDB.SqlQuery
 					return resultQuery;
 				} 
 				
-				if (element is SqlField f && correctedTables.TryGetValue(f.Table, out var levelQuery))
+				if (element is SqlField f && f.Table != null && correctedTables.TryGetValue(f.Table, out var levelQuery))
 				{
 					return QueryHelper.NeedColumnForExpression(levelQuery, f, false);
 				} 
