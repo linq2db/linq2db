@@ -767,7 +767,7 @@ namespace Tests.xUpdate
 		{
 #pragma warning disable 649
 			[Column] public int  ParentID;
-			[Column] public bool Value1;
+			[Column] public int? Value1;
 
 			[Association(ThisKey = "ParentID", OtherKey = "ID", CanBeNull = false)]
 			public Table1 Table1;
@@ -795,7 +795,7 @@ namespace Tests.xUpdate
 					.Where (x => ids.Contains(x.ParentID))
 					.Select(x => x.Table1)
 					.Distinct()
-					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1))
+					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1 == 1))
 					.Update();
 
 				var idx = db.LastQuery.IndexOf("INNER JOIN");

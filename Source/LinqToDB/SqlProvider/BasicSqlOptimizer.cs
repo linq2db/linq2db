@@ -1361,28 +1361,6 @@ namespace LinqToDB.SqlProvider
 							tableToCompare = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery)
 								.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
 								.FirstOrDefault(t => t != null && QueryHelper.IsEqualTables(t, tableToUpdate));
-
-							if (ReferenceEquals(tableToUpdate, tableToCompare))
-							{
-								// we have to create clone
-								tableToUpdate = tableToUpdate.Clone();
-
-								for (var i = 0; i < statement.Update.Items.Count; i++)
-								{
-									var item = statement.Update.Items[i];
-									var newItem = new QueryVisitor().ConvertImmutable(item, e =>
-									{
-										if (e is SqlField field && field.Table == tableToCompare)
-										{
-											return tableToUpdate.Fields[field.Name];
-										}
-
-										return e;
-									});
-
-									statement.Update.Items[i] = newItem;
-								}
-							}
 						}
 
 						break;
@@ -1421,6 +1399,34 @@ namespace LinqToDB.SqlProvider
 
 						break;
 					}
+			}
+
+			if (ReferenceEquals(tableToUpdate, tableToCompare))
+			{
+				// we have to create clone
+				tableToUpdate = tableToCompare.Clone();
+
+				var ts = statement.SelectQuery.GetTableSource(tableToCompare);
+
+				for (var i = 0; i < statement.Update.Items.Count; i++)
+				{
+					var item = statement.Update.Items[i];
+					var newItem = new QueryVisitor().ConvertImmutable(item, e =>
+					{
+						if (e is SqlField field && field.Table == tableToCompare)
+						{
+							return tableToUpdate.Fields[field.Name];
+						}
+
+						return e;
+					});
+
+					var updateField = QueryHelper.GetUnderlyingField(newItem.Column);
+					if (updateField != null)
+						newItem.Column = tableToUpdate.Fields[updateField.Name];
+
+					statement.Update.Items[i] = newItem;
+				}
 			}
 
 			if (statement.SelectQuery.From.Tables.Count > 0 && tableToCompare != null)
