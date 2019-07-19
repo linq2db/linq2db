@@ -181,15 +181,8 @@ namespace Tests.Update
 		public void UpdateTestJoinSkip(
 			[IncludeDataSources(
 				ProviderName.SqlServer,
-				ProviderName.SqlServer2000,
-				ProviderName.SqlServer2005,
-				ProviderName.SqlServer2008,
-				ProviderName.SqlServer2012,
-				ProviderName.SqlServer2014,
-				ProviderName.PostgreSQL, 
-				ProviderName.PostgreSQL92, 
-				ProviderName.PostgreSQL93, 
-				ProviderName.PostgreSQL95)]
+				TestProvName.AllSqlServer2005Plus,
+				TestProvName.AllPostgreSQL)]
 			string context)
 		{
 			var data = GenerateData();
@@ -240,7 +233,7 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestJoinSkipTake(
-			[DataSources(ProviderName.Access, TestProvName.AllMySql, ProviderName.SqlCe)]
+			[DataSources(ProviderName.Access, TestProvName.AllSqlServer2005Minus, TestProvName.AllMySql, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();
@@ -296,7 +289,7 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestJoinTake(
-			[DataSources(ProviderName.Access, TestProvName.AllMySql, ProviderName.SqlCe)]
+			[DataSources(ProviderName.Access, TestProvName.AllSqlServer2005Minus, TestProvName.AllMySql, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();
@@ -459,9 +452,5 @@ namespace Tests.Update
 				Assert.AreEqual(1,  updatedValue.Value3);
 			}
 		}		
-
-
-
-
 	}
 }
