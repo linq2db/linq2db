@@ -39,7 +39,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (IsParameterDependent)
 			{
-				var statement = new QueryVisitor().Convert(this, e =>
+				var statement = new QueryVisitor().ConvertImmutable(this, e =>
 				{
 					switch (e.ElementType)
 					{
@@ -91,7 +91,7 @@ namespace LinqToDB.SqlQuery
 							return ConvertInListPredicate(mappingSchema, (SqlPredicate.InList)e);
 					}
 
-					return null;
+					return e;
 				});
 
 				return statement;

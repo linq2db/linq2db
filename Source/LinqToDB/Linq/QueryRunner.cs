@@ -108,8 +108,6 @@ namespace LinqToDB.Linq
 				if (query.SqlProviderFlags.IsParameterOrderDependent)
 					sql.Statement = NormalizeParameters(sql.Statement, sql.Parameters);
 
-				sql.Statement.SetAliases();
-
 				var parameters =
 					sql.Parameters
 						.Select(p => new {p, idx = sql.Statement.Parameters.IndexOf(p.SqlParameter)})

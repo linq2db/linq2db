@@ -1453,7 +1453,6 @@ namespace LinqToDB.SqlProvider
 				tableToUpdate.Alias = "$F";
 
 			statement.Update.Table = tableToUpdate;
-			statement.SetAliases();
 
 			return statement;
 		}

@@ -19,6 +19,8 @@ namespace LinqToDB.SqlProvider
 			// optimizing expressions according to new values
 			newStatement = optimizer.OptimizeStatement(newStatement);
 
+			newStatement.SetAliases();
+
 			// reset parameters
 			newStatement.CollectParameters();
 
