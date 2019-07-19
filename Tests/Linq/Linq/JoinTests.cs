@@ -2517,5 +2517,140 @@ namespace Tests.Linq
 				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
 			}
 		}
+
+		[Table]
+		public class StLink
+		{
+			[PrimaryKey] public int     InId          { get; set; }
+			[Column]     public double? InMaxQuantity { get; set; }
+			[Column]     public double? InMinQuantity { get; set; }
+
+			public static StLink[] Data = new[]
+			{
+				new StLink { InId = 1, InMinQuantity = 1,    InMaxQuantity = 2    },
+				new StLink { InId = 2, InMinQuantity = null, InMaxQuantity = null }
+			};
+		}
+
+		[Table]
+		public class EdtLink
+		{
+			[PrimaryKey] public int     InId          { get; set; }
+			[Column]     public double? InMaxQuantity { get; set; }
+			[Column]     public double? InMinQuantity { get; set; }
+
+			public static EdtLink[] Data = new[]
+			{
+				new EdtLink { InId = 2, InMinQuantity = 3, InMaxQuantity = 4 }
+			};
+		}
+
+		[Test]
+		public void Issue1815([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var stLinks  = db.CreateLocalTable(StLink.Data))
+			using (var edtLinks = db.CreateLocalTable(EdtLink.Data))
+			{
+				var query1 = from l in stLinks
+							 from e in edtLinks.LeftJoin(j => l.InId == j.InId)
+							 select new
+							 {
+								 LinkId = l.InId,
+								 MinQuantity = e == null ? l.InMinQuantity : e.InMinQuantity,
+								 MaxQuantity = e == null ? l.InMaxQuantity : e.InMaxQuantity
+							 };
+
+				var query2 = from q in query1
+							 select new
+							 {
+								 q.LinkId,
+								 q.MinQuantity,
+								 q.MaxQuantity
+							 };
+
+				var r = query2.SingleOrDefault(x => x.LinkId == 1);
+				Assert.IsNotNull(r);
+				Assert.AreEqual(1, r.MinQuantity);
+				Assert.AreEqual(2, r.MaxQuantity);
+
+				var r2 = query2.SingleOrDefault(x => x.LinkId == 2);
+				Assert.IsNotNull(r2);
+				Assert.AreEqual(3, r2.MinQuantity);
+				Assert.AreEqual(4, r2.MaxQuantity);
+			}
+		}
+
+		[Test]
+		public void Issue1815WithServerEvaluation1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var stLinks = db.CreateLocalTable(StLink.Data))
+			using (var edtLinks = db.CreateLocalTable(EdtLink.Data))
+			{
+				var query1 = from l in stLinks
+							 from e in edtLinks.LeftJoin(j => l.InId == j.InId)
+							 select new
+							 {
+								 LinkId = l.InId,
+								 MinQuantity = Sql.AsSql(e == null ? l.InMinQuantity : e.InMinQuantity),
+								 MaxQuantity = Sql.AsSql(e == null ? l.InMaxQuantity : e.InMaxQuantity)
+							 };
+
+				var query2 = from q in query1
+							 select new
+							 {
+								 q.LinkId,
+								 q.MinQuantity,
+								 q.MaxQuantity
+							 };
+
+				var r = query2.SingleOrDefault(x => x.LinkId == 1);
+				Assert.IsNotNull(r);
+				Assert.AreEqual(1, r.MinQuantity);
+				Assert.AreEqual(2, r.MaxQuantity);
+
+				var r2 = query2.SingleOrDefault(x => x.LinkId == 2);
+				Assert.IsNotNull(r2);
+				Assert.AreEqual(3, r2.MinQuantity);
+				Assert.AreEqual(4, r2.MaxQuantity);
+			}
+		}
+
+		[Test]
+		public void Issue1815WithServerEvaluation2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var stLinks = db.CreateLocalTable(StLink.Data))
+			using (var edtLinks = db.CreateLocalTable(EdtLink.Data))
+			{
+				var query1 = from l in stLinks
+							 from e in edtLinks.LeftJoin(j => l.InId == j.InId)
+							 select new
+							 {
+								 LinkId = l.InId,
+								 MinQuantity = e == null ? l.InMinQuantity : e.InMinQuantity,
+								 MaxQuantity = e == null ? l.InMaxQuantity : e.InMaxQuantity
+							 };
+
+				var query2 = from q in query1
+							 select new
+							 {
+								 q.LinkId,
+								 MinQuantity = Sql.AsSql(q.MinQuantity),
+								 MaxQuantity = Sql.AsSql(q.MaxQuantity)
+							 };
+
+				var r = query2.SingleOrDefault(x => x.LinkId == 1);
+				Assert.IsNotNull(r);
+				Assert.AreEqual(1, r.MinQuantity);
+				Assert.AreEqual(2, r.MaxQuantity);
+
+				var r2 = query2.SingleOrDefault(x => x.LinkId == 2);
+				Assert.IsNotNull(r2);
+				Assert.AreEqual(3, r2.MinQuantity);
+				Assert.AreEqual(4, r2.MaxQuantity);
+			}
+		}
 	}
 }
