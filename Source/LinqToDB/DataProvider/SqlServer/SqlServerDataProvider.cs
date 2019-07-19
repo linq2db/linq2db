@@ -6,10 +6,6 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Microsoft.SqlServer.Server;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -21,7 +17,6 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using LinqToDB.Linq;
 
 	public class SqlServerDataProvider : DataProviderBase
 	{
@@ -81,7 +76,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			_sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
 			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
-			_sqlServer2008SqlOptimizer = new SqlServerSqlOptimizer    (SqlProviderFlags);
+			_sqlServer2008SqlOptimizer = new SqlServer2008SqlOptimizer(SqlProviderFlags);
 			_sqlServer2012SqlOptimizer = new SqlServer2012SqlOptimizer(SqlProviderFlags);
 			_sqlServer2017SqlOptimizer = new SqlServer2017SqlOptimizer(SqlProviderFlags);
 
