@@ -107,6 +107,8 @@ namespace LinqToDB.Linq
 				// normalize parameters
 				if (query.SqlProviderFlags.IsParameterOrderDependent)
 					sql.Statement = NormalizeParameters(sql.Statement, sql.Parameters);
+				else
+					sql.Statement.CollectParameters();
 
 				var parameters =
 					sql.Parameters
