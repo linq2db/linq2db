@@ -1291,5 +1291,84 @@ namespace Tests.xUpdate
 				await table.DropAsync();
 			}
 		}
+
+		[Table("gt_s_one")]
+		class UpdateFromJoin
+		{
+			[Column] public string col1 { get; set; }
+			[Column] public string col2 { get; set; }
+			[Column] public string col3 { get; set; }
+			[Column] public string col4 { get; set; }
+			[Column] public string col5 { get; set; }
+			[Column] public string col6 { get; set; }
+
+			public static UpdateFromJoin[] Data = new UpdateFromJoin[]
+			{
+			};
+		}
+
+		[Table("access_mode")]
+		class AccessMode
+		{
+			[PrimaryKey]
+			public int id { get; set; }
+
+			[Column]
+			public string code { get; set; }
+
+			public static AccessMode[] Data = new AccessMode[]
+			{
+			};
+		}
+
+		// https://stackoverflow.com/questions/57115728/
+		[Test]
+		[ActiveIssue(Configurations = new[]
+		{
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.SapHana,
+			ProviderName.SqlCe,
+			TestProvName.AllFirebird,
+			TestProvName.AllOracle,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllSQLite,
+		})]
+		public void TestUpdateFromJoin([DataSources] string context)
+		{
+			using (var db          = GetDataContext(context))
+			using (var gt_s_one    = db.CreateLocalTable(UpdateFromJoin.Data))
+			using (var access_mode = db.CreateLocalTable(AccessMode.Data))
+			{
+				gt_s_one
+					.GroupJoin(
+						access_mode,
+						l => l.col3.Replace("auth.", "").ToUpper(),
+						am => am.code.ToUpper(),
+						(l, am) => new
+						{
+							l,
+							am
+						})
+					.SelectMany(
+						x => x.am.DefaultIfEmpty(),
+						(x1, y1) => new
+						{
+							gt    = x1.l,
+							theAM = y1.id
+						})
+					.Update(
+						gt_s_one,
+						s => new UpdateFromJoin()
+						{
+							col1 = s.gt.col1,
+							col2 = s.gt.col2,
+							col3 = s.gt.col3.Replace("auth.", ""),
+							col4 = s.gt.col4,
+							col5 = s.gt.col3 == "empty" ? "1" : "0",
+							col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
+						});
+			}
+		}
 	}
 }
