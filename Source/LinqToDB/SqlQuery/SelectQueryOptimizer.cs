@@ -692,7 +692,7 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 
-					visitor.VisitAll(join.Condition, TableCollector);
+					visitor.VisitAll(join, TableCollector);
 				}
 			}, new HashSet<SelectQuery>());
 		}
