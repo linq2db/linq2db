@@ -2692,10 +2692,10 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1816v1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var stVersion = db.CreateLocalTable(StVersion.Data))
+			using (var db                        = GetDataContext(context))
+			using (var stVersion                 = db.CreateLocalTable(StVersion.Data))
 			using (var rlStatesTypesAndUserGroup = db.CreateLocalTable(RlStatesTypesAndUserGroup.Data))
-			using (var stMain = db.CreateLocalTable(StMain.Data))
+			using (var stMain                    = db.CreateLocalTable(StMain.Data))
 			{
 				var q = from v in stVersion
 						from t in rlStatesTypesAndUserGroup.Where(r => r.InIdType == v.Main.InIdType).DefaultIfEmpty()
@@ -2704,16 +2704,18 @@ namespace Tests.Linq
 							v.InId,
 							t.InIdState
 						};
+
+				q.ToList();
 			}
 		}
 
 		[Test]
 		public void Issue1816v2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var stVersion = db.CreateLocalTable(StVersion.Data))
+			using (var db                        = GetDataContext(context))
+			using (var stVersion                 = db.CreateLocalTable(StVersion.Data))
 			using (var rlStatesTypesAndUserGroup = db.CreateLocalTable(RlStatesTypesAndUserGroup.Data))
-			using (var stMain = db.CreateLocalTable(StMain.Data))
+			using (var stMain                    = db.CreateLocalTable(StMain.Data))
 			{
 				var q = from v in stVersion
 						from t in rlStatesTypesAndUserGroup.Where(r => r.InIdType == v.Main.InIdType).DefaultIfEmpty()
@@ -2723,6 +2725,8 @@ namespace Tests.Linq
 							t.InIdState,
 							v.Main.InIdType
 						};
+
+				q.ToList();
 			}
 		}
 	}
