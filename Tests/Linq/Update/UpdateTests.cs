@@ -1327,6 +1327,7 @@ namespace Tests.xUpdate
 		{
 			ProviderName.Access,
 			ProviderName.DB2,
+			ProviderName.Informix,
 			ProviderName.SapHana,
 			ProviderName.SqlCe,
 			TestProvName.AllFirebird,
