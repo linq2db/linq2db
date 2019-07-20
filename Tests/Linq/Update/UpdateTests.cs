@@ -1318,7 +1318,7 @@ namespace Tests.xUpdate
 		// https://stackoverflow.com/questions/57115728/
 		[Test]
 		public void TestUpdateFromJoin([DataSources(
-			ProviderName.Access,
+			ProviderName.Access, // access doesn't have Replace mapping
 			ProviderName.SqlCe,
 			ProviderName.Informix)] string context)
 		{
