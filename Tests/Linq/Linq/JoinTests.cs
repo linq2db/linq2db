@@ -2652,5 +2652,82 @@ namespace Tests.Linq
 				Assert.AreEqual(4, r2.MaxQuantity);
 			}
 		}
+
+		[Table("stVersions")]
+		public class StVersion
+		{
+			[Column("inId"), PrimaryKey] public int InId { get; set; }
+			[Column("inIdMain")]         public int InIdMain { get; set; }
+
+			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false, Relationship = Relationship.ManyToOne)]
+			public StMain Main { get; set; }
+
+			public static StVersion[] Data = new StVersion[]
+			{
+			};
+		}
+
+		[Table("rlStatesTypesAndUserGroups")]
+		public class RlStatesTypesAndUserGroup
+		{
+			[Column("inIdState"), PrimaryKey(1)] public int InIdState { get; set; }
+			[Column("inIdType"),  PrimaryKey(2)] public int InIdType { get; set; }
+
+			public static RlStatesTypesAndUserGroup[] Data = new RlStatesTypesAndUserGroup[]
+			{
+			};
+		}
+
+		[Table("stMain")]
+		public class StMain
+		{
+			[Column("inId"), PrimaryKey]  public int InId { get; set; }
+			[Column("inIdType")]          public int InIdType { get; set; }
+
+			public static StMain[] Data = new StMain[]
+			{
+			};
+		}
+
+		[Test]
+		public void Issue1816v1([DataSources] string context)
+		{
+			using (var db                        = GetDataContext(context))
+			using (var stVersion                 = db.CreateLocalTable(StVersion.Data))
+			using (var rlStatesTypesAndUserGroup = db.CreateLocalTable(RlStatesTypesAndUserGroup.Data))
+			using (var stMain                    = db.CreateLocalTable(StMain.Data))
+			{
+				var q = from v in stVersion
+						from t in rlStatesTypesAndUserGroup.Where(r => r.InIdType == v.Main.InIdType).DefaultIfEmpty()
+						select new
+						{
+							v.InId,
+							t.InIdState
+						};
+
+				q.ToList();
+			}
+		}
+
+		[Test]
+		public void Issue1816v2([DataSources] string context)
+		{
+			using (var db                        = GetDataContext(context))
+			using (var stVersion                 = db.CreateLocalTable(StVersion.Data))
+			using (var rlStatesTypesAndUserGroup = db.CreateLocalTable(RlStatesTypesAndUserGroup.Data))
+			using (var stMain                    = db.CreateLocalTable(StMain.Data))
+			{
+				var q = from v in stVersion
+						from t in rlStatesTypesAndUserGroup.Where(r => r.InIdType == v.Main.InIdType).DefaultIfEmpty()
+						select new
+						{
+							v.InId,
+							t.InIdState,
+							v.Main.InIdType
+						};
+
+				q.ToList();
+			}
+		}
 	}
 }
