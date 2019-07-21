@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+﻿using LinqToDB.SqlQuery;
+
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlProvider;
 
@@ -6,6 +8,19 @@
 	{
 		public SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
+			if (statement.IsUpdate())
+				statement = ReplaceTakeSkipWithRowNumber(statement, false);
+			else
+			{
+				statement = ReplaceTakeSkipWithRowNumber(statement, true);
+				CorrectRootSkip(statement.SelectQuery);
+			}
+
+			return base.TransformStatement(statement);
 		}
 	}
 }

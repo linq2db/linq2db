@@ -11,18 +11,14 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			if (statement.IsUpdate())
-				statement = ReplaceTakeSkipWithRowNumber(statement, false);
-			else
-			{
-				statement = ReplaceTakeSkipWithRowNumber(statement, true);
-				CorrectRootSkip(statement.SelectQuery);
-			}
+			statement = ReplaceTakeSkipWithRowNumber(statement, false);
+
+			CorrectRootSkip(statement.SelectQuery);
 
 			return statement;
 		}
 
-		private void CorrectRootSkip(SelectQuery selectQuery)
+		protected void CorrectRootSkip(SelectQuery selectQuery)
 		{
 			if (selectQuery != null && selectQuery.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(selectQuery) && selectQuery.OrderBy.IsEmpty)
 			{
