@@ -269,14 +269,10 @@ namespace LinqToDB.Linq
 #if DEBUG1
 #if NET45
 			var targetFramework = "net45";
-#elif NET45
-			var targetFramework = "net45";
-#elif NETCOREAPP1_0
-			var targetFramework = "netcoreapp1.0";
+#elif NET46
+			var targetFramework = "net46";
 #elif NETCOREAPP2_0
 			var targetFramework = "netcoreapp2.0";
-#elif NETSTANDARD1_6
-			var targetFramework = "netstandard1.6";
 #elif NETSTANDARD2_0
 			var targetFramework = "netstandard2.0";
 #endif
@@ -535,7 +531,7 @@ namespace LinqToDB.Linq
 			{ M(() => "".Replace    (' ',' ') ), N(() => L<String,Char,Char,String>        ((String obj,Char   p0,Char   p1)          => Sql.Replace  (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Trim     (obj))) },
 
-#if NETSTANDARD2_0
+#if NETCOREAPP2_0
 			{ M(() => "".TrimEnd    ()        ), N(() => L<String,String>                  ((String obj)                              =>     TrimRight(obj))) },
 			{ M(() => "".TrimStart  ()        ), N(() => L<String,String>                  ((String obj)                              =>     TrimLeft (obj))) },
 #else

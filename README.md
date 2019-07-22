@@ -2,7 +2,6 @@
 
 [![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db)](https://www.nuget.org/profiles/LinqToDB)
 [![Stack Exchange questions](https://img.shields.io/stackexchange/stackoverflow/t/linq2db.svg?label=stackoverflow)](https://stackoverflow.com/questions/tagged/linq2db) 
-
 [![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg?style=social)](https://twitter.com/linq2db)
 
 LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database. 
@@ -38,11 +37,7 @@ No, this is not the donate link. We do need something really more valuable - you
 
 ## Project Build Status
 
---------------------
-| |Appveyor|Travis
------|-------|--------
-|master|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db/branch/master)|[![Build Status](https://travis-ci.org/linq2db/linq2db.svg?branch=master)](https://travis-ci.org/linq2db/linq2db)
-|latest|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db)| |
+[![Build Status](https://dev.azure.com/linq2db/linq2db/_apis/build/status/linq2db.linq2db?branchName=master)](https://dev.azure.com/linq2db/linq2db/_build/latest?definitionId=1&branchName=master)
 
 ## Feeds
 

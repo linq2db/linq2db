@@ -272,7 +272,6 @@ namespace Tests._Create
 				case ProviderName.SybaseManaged : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestDataCore"); break;
 #endif
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
-				case TestProvName.PostgreSQLLatest: RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
 				case ProviderName.SQLiteClassic : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
 				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;

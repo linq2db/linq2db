@@ -98,7 +98,6 @@ namespace Tests
 				case ProviderName.PostgreSQL95:
 				case TestProvName.PostgreSQL10:
 				case TestProvName.PostgreSQL11:
-				case TestProvName.PostgreSQLLatest:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
@@ -223,7 +222,6 @@ namespace Tests
 				case ProviderName.PostgreSQL95:
 				case TestProvName.PostgreSQL10:
 				case TestProvName.PostgreSQL11:
-				case TestProvName.PostgreSQLLatest:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:

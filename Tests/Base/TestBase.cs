@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0
 using System.ServiceModel;
 using System.ServiceModel.Description;
 #endif
@@ -20,7 +20,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0
 using LinqToDB.ServiceModel;
 #endif
 
@@ -36,21 +36,9 @@ namespace Tests
 	{
 		static TestBase()
 		{
-			Console.WriteLine("Tests started in {0}...",
-#if NETSTANDARD1_6
-				System.IO.Directory.GetCurrentDirectory()
-#else
-				Environment.CurrentDirectory
-#endif
-				);
+			Console.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
 
-			Console.WriteLine("CLR Version: {0}...",
-#if NETSTANDARD1_6
-				System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription
-#else
-				Environment.Version
-#endif
-				);
+			Console.WriteLine("CLR Version: {0}...", Environment.Version);
 
 			var traceCount = 0;
 
@@ -73,7 +61,7 @@ namespace Tests
 //			Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = typeof(TestBase).AssemblyEx().GetPath();
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
@@ -82,11 +70,7 @@ namespace Tests
 			{ }
 #endif
 
-#if NETSTANDARD1_6
-			System.IO.Directory.SetCurrentDirectory(assemblyPath);
-#else
 			Environment.CurrentDirectory = assemblyPath;
-#endif
 
 			var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json");
 			var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json");
@@ -95,16 +79,10 @@ namespace Tests
 			var userDataProvidersJson =
 				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
-#if NETSTANDARD1_6
-			var configName = "CORE1";
-#elif NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETCOREAPP2_0
 			var configName = "CORE2";
 #elif NET46
 			var configName = "NET45";
-#elif NETCOREAPP2_0
-			var configName = "CORE1";
-#elif NETCOREAPP1_0
-			var configName = "CORE2";
 #else
 			var configName = "";
 #error Unknown framework
@@ -155,7 +133,7 @@ namespace Tests
 
 			Console.WriteLine("Connection strings:");
 
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETSTANDARD2_0
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -191,12 +169,12 @@ namespace Tests
 			if (!string.IsNullOrEmpty(defaultConfiguration))
 			{
 				DataConnection.DefaultConfiguration       = defaultConfiguration;
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETSTANDARD2_0
 				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
 #endif
 			}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -230,7 +208,7 @@ namespace Tests
 			return fileName;
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
+#if !NETSTANDARD2_0
 		const int IP = 22654;
 		static bool _isHostOpen;
 		static LinqService _service;
@@ -238,7 +216,7 @@ namespace Tests
 
 		static void OpenHost(MappingSchema ms)
 		{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
+#if !NETSTANDARD2_0
 			if (_isHostOpen)
 			{
 				_service.MappingSchema = ms;
@@ -282,7 +260,7 @@ namespace Tests
 
 		public static readonly List<string> Providers = new List<string>
 		{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0
 			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Informix,
@@ -292,10 +270,8 @@ namespace Tests
 			ProviderName.SqlCe,
 			ProviderName.SQLiteClassic,
 #endif
-#if !NETSTANDARD1_6
 			ProviderName.SybaseManaged,
 			ProviderName.OracleManaged,
-#endif
 			ProviderName.Firebird,
 			TestProvName.Firebird3,
 			ProviderName.SqlServer2008,
@@ -311,7 +287,6 @@ namespace Tests
 			ProviderName.PostgreSQL95,
 			TestProvName.PostgreSQL10,
 			TestProvName.PostgreSQL11,
-			TestProvName.PostgreSQLLatest,
 			ProviderName.MySql,
 			ProviderName.MySqlConnector,
 			TestProvName.MySql57,
@@ -323,7 +298,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
+#if !NETSTANDARD2_0
 				OpenHost(ms);
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);

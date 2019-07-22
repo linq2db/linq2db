@@ -1,12 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<Import Project="..\..\Build\linq2db.Tests.props" />
+
 	<PropertyGroup>
-		<TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
-		<LangVersion>latest</LangVersion>
+		<TargetFrameworks>net46;netstandard2.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Npgsql" Version="3.2.7" />
+		<PackageReference Include="Npgsql" Version="4.0.8" />
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
@@ -75,12 +76,6 @@
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>PostgreSQL.tt</DependentUpon>
-		</Compile>
-
-		<Compile Update="PostgreSQL.Npgsql4.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>PostgreSQL.Npgsql4.tt</DependentUpon>
 		</Compile>
 
 		<Compile Update="SapHana.generated.cs">
@@ -157,10 +152,6 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>Oracle.generated.cs</LastGenOutput>
 		</None>
-		<None Update="PostgreSQL.Npgsql4.tt">
-		  <Generator>TextTemplatingFileGenerator</Generator>
-		  <LastGenOutput>PostgreSQL.Npgsql4.generated.cs</LastGenOutput>
-		</None>
 		<None Update="PostgreSQL.11.tt">
 		  <Generator>TextTemplatingFileGenerator</Generator>
 		  <LastGenOutput>PostgreSQL.11.generated.cs</LastGenOutput>
@@ -212,18 +203,6 @@
 		<None Update="SqlServer.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>SqlServer.generated.cs</LastGenOutput>
-		</None>
-		<None Update="SqlServerTypes\x64\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 </Project>

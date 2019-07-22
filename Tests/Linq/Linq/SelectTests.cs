@@ -457,7 +457,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0
 		[Test]
 		public void ConstractClass([DataSources] string context)
 		{

@@ -32,7 +32,6 @@ namespace Tests.xUpdate
 				ProviderName.PostgreSQL95,
 				TestProvName.PostgreSQL10,
 				TestProvName.PostgreSQL11,
-				TestProvName.PostgreSQLLatest,
 				ProviderName.MySql,
 				ProviderName.MySqlConnector,
 				TestProvName.MySql57,

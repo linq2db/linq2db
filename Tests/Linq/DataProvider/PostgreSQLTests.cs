@@ -853,7 +853,6 @@ namespace Tests.DataProvider
 			// PGSQL10+
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL10)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL11)]
-			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQLLatest)]
 			                                           public PhysicalAddress macaddr8DataType          { get; set; }
 			// json
 			[Column]                                   public string jsonDataType                       { get; set; }
@@ -875,7 +874,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyTest([Values]BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			var macaddr8Supported = context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11) || context.Contains(TestProvName.PostgreSQLLatest);
+			var macaddr8Supported = context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11);
 			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var testData = new[]
@@ -897,8 +896,8 @@ namespace Tests.DataProvider
 					timestampTZDataType = new DateTimeOffset(2011, 3, 22, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
 					dateDataType        = new NpgsqlDate(2010, 5, 30),
 					timeDataType        = new TimeSpan(0, 1, 2, 3, 4),
-					// npgsql4 uses 2/1/1 instead of 1/1/1 as date part
-					timeTZDataType      = new DateTimeOffset(1, 1, !context.Contains(TestProvName.PostgreSQLLatest) ? 1 : 2, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
+					// npgsql4 uses 2/1/1 instead of 1/1/1 as date part in npgsql3
+					timeTZDataType      = new DateTimeOffset(1, 1, 2, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
 					intervalDataType    = TimeSpan.FromTicks(-123456780),
 
 					charDataType        = 'ы',

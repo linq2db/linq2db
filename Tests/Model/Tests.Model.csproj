@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="..\..\Build\linq2db.Default.props" />
 	<Import Project="..\..\Build\linq2db.Tests.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Model</AssemblyName>
 	</PropertyGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' OR '$(TargetFramework)' == 'netcoreapp1.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<Compile Remove="TestServiceModelDataContext.cs" />
 	</ItemGroup>
 </Project>
