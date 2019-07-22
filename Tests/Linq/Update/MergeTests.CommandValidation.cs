@@ -172,7 +172,7 @@ namespace Tests.xUpdate
 
 				IDbConnection IDataProvider.CreateConnection(string connectionString) => throw new NotImplementedException();
 
-				ISqlBuilder IDataProvider.CreateSqlBuilder() => throw new NotImplementedException();
+				ISqlBuilder IDataProvider.CreateSqlBuilder(MappingSchema mappingSchema) => throw new NotImplementedException();
 
 				void IDataProvider.DisposeCommand(DataConnection dataConnection) => throw new NotImplementedException();
 

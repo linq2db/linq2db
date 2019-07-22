@@ -32,7 +32,7 @@ namespace LinqToDB
 			/// Primitive (each 7 days counted as week) numbering schema: DB2, Oracle databases;
 			/// SQLite numbering logic cannot be classified by human being.
 			/// </summary>
-			Week =  5,
+			Week        =  5,
 			WeekDay     =  6,
 			Hour        =  7,
 			Minute      =  8,
@@ -42,7 +42,7 @@ namespace LinqToDB
 
 		#region DatePart
 
-		class DatePartBuilder : Sql.IExtensionCallBuilder
+		internal class DatePartBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -451,29 +451,26 @@ namespace LinqToDB
 				var part    = builder.GetValue<Sql.DateParts>("part");
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
+
+				string expStr;
 				switch (part)
 				{
-					case Sql.DateParts.Year  : 
-						builder.ResultExpression = new SqlFunction(typeof(DateTime?), "Add_Months", date, builder.Mul(number, 12));
-						break;
-					case Sql.DateParts.Quarter : 
-						builder.ResultExpression = new SqlFunction(typeof(DateTime?), "Add_Months", date, builder.Mul(number, 3));
-						break;
-					case Sql.DateParts.Month : 
-						builder.ResultExpression = new SqlFunction(typeof(DateTime?), "Add_Months", builder.GetExpression("date"), builder.GetExpression("number"));
-						break;
+					case Sql.DateParts.Year        : expStr = "{0} + {1} * INTERVAL '1' YEAR"      ; break;
+					case Sql.DateParts.Quarter     : expStr = "{0} + {1} * INTERVAL '3' MONTH"     ; break;
+					case Sql.DateParts.Month       : expStr = "{0} + {1} * INTERVAL '1' MONTH"     ; break;
 					case Sql.DateParts.DayOfYear   :
 					case Sql.DateParts.WeekDay     :
-					case Sql.DateParts.Day         : builder.ResultExpression = builder.Add<DateTime>(date, number);                                   break;
-					case Sql.DateParts.Week        : builder.ResultExpression = builder.Add<DateTime>(date, builder.Mul(number,                   7)); break;
-					case Sql.DateParts.Hour        : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number,                  24)); break;
-					case Sql.DateParts.Minute      : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number,             60 * 24)); break;
-					case Sql.DateParts.Second      : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number,        60 * 60 * 24)); break;
-						// adding number to timestamp instead of adding interval leads to wrong result type and loose of precision
-					case Sql.DateParts.Millisecond : builder.ResultExpression = builder.Add<DateTime>(date, builder.Mul(new SqlExpression("interval '0.001' second", Precedence.Primary), number, typeof(int))); break;	
+					case Sql.DateParts.Day         : expStr = "{0} + {1} * INTERVAL '1' DAY"       ; break;
+					case Sql.DateParts.Week        : expStr = "{0} + {1} * INTERVAL '7' DAY"       ; break;
+					case Sql.DateParts.Hour        : expStr = "{0} + {1} * INTERVAL '1' HOUR"      ; break;
+					case Sql.DateParts.Minute      : expStr = "{0} + {1} * INTERVAL '1' MINUTE"    ; break;
+					case Sql.DateParts.Second      : expStr = "{0} + {1} * INTERVAL '1' SECOND"    ; break;
+					case Sql.DateParts.Millisecond : expStr = "{0} + {1} * INTERVAL '0.001' SECOND"; break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
+
+				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Additive, date, number);
 			}
 		}
 
@@ -708,24 +705,23 @@ namespace LinqToDB
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
 
-				ISqlExpression partSql = null;
 				switch (part)
 				{
 					case Sql.DateParts.Quarter   :
-						partSql = new SqlValue(Sql.DateParts.Month);
-						number  = builder.Mul(number, 3);
+						part   = DateParts.Month;
+						number = builder.Mul(number, 3);
 						break;
 					case Sql.DateParts.DayOfYear :
 					case Sql.DateParts.WeekDay   :
-						partSql = new SqlValue(Sql.DateParts.Day);
+						part   = DateParts.Day;
 						break;
 					case Sql.DateParts.Week      :
-						partSql = new SqlValue(Sql.DateParts.Day);
+						part   = DateParts.Day;
 						number = builder.Mul(number, 7);
 						break;
 				}
 
-				partSql = partSql ?? new SqlValue(part);
+				var partSql = new SqlExpression(part.ToString());
 
 				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd", partSql, number, date);
 			}

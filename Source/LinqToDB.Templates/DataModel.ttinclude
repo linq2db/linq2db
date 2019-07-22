@@ -99,7 +99,7 @@ HashSet<string> KeyWords = new HashSet<string>
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
-	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
+	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 
 	var sp = dataConnection.DataProvider.GetSchemaProvider();
 	var db = sp.GetSchema(dataConnection, GetSchemaOptions);
@@ -129,7 +129,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 			{
 				TableSchema             = t,
 				IsDefaultSchema         = t.IsDefaultSchema,
-				Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.SchemaName)? null : t.SchemaName,
+				Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.SchemaName) ? null : t.SchemaName,
 				BaseClass               = BaseEntityClass,
 				TableName               = t.TableName,
 				TypeName                = t.TypeName,
@@ -488,7 +488,7 @@ void LoadMetadata(DataConnection dataConnection)
 
 	foreach (var proc in Procedures.Values)
 	{
-	    proc.Name = ConvertToCompilable(proc.Name, false);
+		proc.Name = ConvertToCompilable(proc.Name, false);
 
 		if (KeyWords.Contains(proc.Name))
 			proc.Name = "@" + proc.Name;
@@ -514,7 +514,13 @@ string SuggestNoDuplicate(IEnumerable<string> currentNames, string newName, stri
 		if (names.Contains(result))
 		{
 			var counter = 0;
-			var number = string.Concat(result.Reverse().Take(6).TakeWhile(c => Char.IsDigit(c)).Reverse());
+
+			// get last 6 digits
+			var idx = result.Length;
+			while (idx > 0 && idx > result.Length - 6 && char.IsDigit(result[idx - 1]))
+				idx--;
+			var number = result.Substring(idx);
+
 			if (!string.IsNullOrEmpty(number))
 			{
 				if (int.TryParse(number, out counter))

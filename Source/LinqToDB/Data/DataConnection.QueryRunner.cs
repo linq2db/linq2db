@@ -66,7 +66,7 @@ namespace LinqToDB.Data
 			{
 				SetCommand(false);
 
-				var sqlProvider = _preparedQuery.SqlProvider ?? _dataConnection.DataProvider.CreateSqlBuilder();
+				var sqlProvider = _preparedQuery.SqlProvider ?? _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema);
 
 				var sb = new StringBuilder();
 
@@ -99,7 +99,7 @@ namespace LinqToDB.Data
 
 						var sql = sb.ToString();
 
-						var sqlBuilder = _dataConnection.DataProvider.CreateSqlBuilder();
+						var sqlBuilder = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema);
 						sql = sqlBuilder.ApplyQueryHints(sql, _preparedQuery.QueryHints);
 
 						sb = new StringBuilder(sql);
@@ -171,7 +171,7 @@ namespace LinqToDB.Data
 					sql.IsParameterDependent = true;
 				}
 
-				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder();
+				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 
 				sql = dataConnection.DataProvider.GetSqlOptimizer().OptimizeStatement(sql, dataConnection.MappingSchema);
 
@@ -492,7 +492,7 @@ namespace LinqToDB.Data
 			{
 				_isAsync = true;
 
-				await _dataConnection.EnsureConnectionAsync(cancellationToken);
+				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				base.SetCommand(true);
 
@@ -504,7 +504,7 @@ namespace LinqToDB.Data
 					foreach (var p in _preparedQuery.Parameters)
 						_dataConnection.Command.Parameters.Add(p);
 
-				var dataReader = await _dataConnection.ExecuteReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken);
+				var dataReader = await _dataConnection.ExecuteReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				return new DataReaderAsync(dataReader);
 			}
@@ -513,7 +513,7 @@ namespace LinqToDB.Data
 			{
 				_isAsync = true;
 
-				await _dataConnection.EnsureConnectionAsync(cancellationToken);
+				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				base.SetCommand(true);
 
@@ -528,7 +528,7 @@ namespace LinqToDB.Data
 						foreach (var p in _preparedQuery.Parameters)
 							_dataConnection.Command.Parameters.Add(p);
 
-					return await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+					return await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 
 				for (var i = 0; i < _preparedQuery.Commands.Length; i++)
@@ -546,7 +546,7 @@ namespace LinqToDB.Data
 					{
 						try
 						{
-							await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+							await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						}
 						catch
 						{
@@ -554,7 +554,7 @@ namespace LinqToDB.Data
 					}
 					else
 					{
-						await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+						await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					}
 				}
 
@@ -565,7 +565,7 @@ namespace LinqToDB.Data
 			{
 				_isAsync = true;
 
-				await _dataConnection.EnsureConnectionAsync(cancellationToken);
+				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				SetCommand();
 
@@ -591,19 +591,19 @@ namespace LinqToDB.Data
 					{
 						// так сделано потому, что фаерберд провайдер не возвращает никаких параметров через ExecuteReader
 						// остальные провайдеры должны поддерживать такой режим
-						await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+						await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 						return idparam.Value;
 					}
 
-					return await _dataConnection.ExecuteScalarAsync(cancellationToken);
+					return await _dataConnection.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 
-				await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+				await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[1], null, null, false);
 
-				return await _dataConnection.ExecuteScalarAsync(cancellationToken);
+				return await _dataConnection.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 	}

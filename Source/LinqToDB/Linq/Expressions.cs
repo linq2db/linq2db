@@ -615,6 +615,29 @@ namespace LinqToDB.Linq
 
 			#endregion
 
+			#region DateTimeOffset
+
+			{ M(() => DateTimeOffset.Now.Year              ), N(() => L<DateTimeOffset,Int32>                ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Year,        obj).Value    )) },
+			{ M(() => DateTimeOffset.Now.Month             ), N(() => L<DateTimeOffset,Int32>                ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Month,       obj).Value    )) },
+			{ M(() => DateTimeOffset.Now.DayOfYear         ), N(() => L<DateTimeOffset,Int32>                ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.DayOfYear,   obj).Value    )) },
+			{ M(() => DateTimeOffset.Now.Day               ), N(() => L<DateTimeOffset,Int32>                ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Day,         obj).Value    )) },
+			{ M(() => DateTimeOffset.Now.DayOfWeek         ), N(() => L<DateTimeOffset,Int32>                ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.WeekDay,     obj).Value - 1)) },
+			{ M(() => DateTimeOffset.Now.Hour              ), N(() => L<DateTimeOffset,Int32>                ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Hour,        obj).Value    )) },
+			{ M(() => DateTimeOffset.Now.Minute            ), N(() => L<DateTimeOffset,Int32>                ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Minute,      obj).Value    )) },
+			{ M(() => DateTimeOffset.Now.Second            ), N(() => L<DateTimeOffset,Int32>                ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Second,      obj).Value    )) },
+			{ M(() => DateTimeOffset.Now.Millisecond       ), N(() => L<DateTimeOffset,Int32>                ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Millisecond, obj).Value    )) },
+			{ M(() => DateTimeOffset.Now.Date              ), N(() => L<DateTimeOffset,DateTime>             ((DateTimeOffset obj)            => Sql.Convert2(Sql.Date,                  obj)          )) },
+			{ M(() => DateTimeOffset.Now.TimeOfDay         ), N(() => L<DateTimeOffset,TimeSpan>             ((DateTimeOffset obj)            => Sql.DateToTime(Sql.Convert2(Sql.Time,   obj)).Value   )) },
+			{ M(() => DateTimeOffset.Now.AddYears       (0)), N(() => L<DateTimeOffset,Int32,DateTimeOffset> ((DateTimeOffset obj,Int32 p0)   => Sql.DateAdd(Sql.DateParts.Year,        p0, obj).Value )) },
+			{ M(() => DateTimeOffset.Now.AddMonths      (0)), N(() => L<DateTimeOffset,Int32,DateTimeOffset> ((DateTimeOffset obj,Int32 p0)   => Sql.DateAdd(Sql.DateParts.Month,       p0, obj).Value )) },
+			{ M(() => DateTimeOffset.Now.AddDays        (0)), N(() => L<DateTimeOffset,Double,DateTimeOffset>((DateTimeOffset obj,Double p0)  => Sql.DateAdd(Sql.DateParts.Day,         p0, obj).Value )) },
+			{ M(() => DateTimeOffset.Now.AddHours       (0)), N(() => L<DateTimeOffset,Double,DateTimeOffset>((DateTimeOffset obj,Double p0)  => Sql.DateAdd(Sql.DateParts.Hour,        p0, obj).Value )) },
+			{ M(() => DateTimeOffset.Now.AddMinutes     (0)), N(() => L<DateTimeOffset,Double,DateTimeOffset>((DateTimeOffset obj,Double p0)  => Sql.DateAdd(Sql.DateParts.Minute,      p0, obj).Value )) },
+			{ M(() => DateTimeOffset.Now.AddSeconds     (0)), N(() => L<DateTimeOffset,Double,DateTimeOffset>((DateTimeOffset obj,Double p0)  => Sql.DateAdd(Sql.DateParts.Second,      p0, obj).Value )) },
+			{ M(() => DateTimeOffset.Now.AddMilliseconds(0)), N(() => L<DateTimeOffset,Double,DateTimeOffset>((DateTimeOffset obj,Double p0)  => Sql.DateAdd(Sql.DateParts.Millisecond, p0, obj).Value )) },
+
+			#endregion
+
 			#region Parse
 
 			{ M(() => Boolean. Parse("")), N(() => L<String,Boolean> ((String p0) => Sql.ConvertTo<Boolean>. From(p0))) },
@@ -797,25 +820,6 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToDouble((UInt16)  0)  ), N(() => L<UInt16,  Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
 			{ M(() => Convert.ToDouble((UInt32)  0)  ), N(() => L<UInt32,  Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
 			{ M(() => Convert.ToDouble((UInt64)  0)  ), N(() => L<UInt64,  Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
-
-			#endregion
-
-			#region HasValue
-
-			{ M(() => ((Boolean?)  null).HasValue ), N(() => L<Boolean?,  bool>  ((Boolean?  v)  => v != null)) },
-			{ M(() => ((Byte?)     null).HasValue ), N(() => L<Byte?,     bool>  ((Byte?     v)  => v != null)) },
-			{ M(() => ((Char?)     null).HasValue ), N(() => L<Char?,     bool>  ((Char?     v)  => v != null)) },
-			{ M(() => ((DateTime?) null).HasValue ), N(() => L<DateTime?, bool>  ((DateTime? v)  => v != null)) },
-			{ M(() => ((Decimal?)  null).HasValue ), N(() => L<Decimal?,  bool>  ((Decimal?  v)  => v != null)) },
-			{ M(() => ((Double?)   null).HasValue ), N(() => L<Double?,   bool>  ((Double?   v)  => v != null)) },
-			{ M(() => ((Int16?)    null).HasValue ), N(() => L<Int16?,    bool>  ((Int16?    v)  => v != null)) },
-			{ M(() => ((Int32?)    null).HasValue ), N(() => L<Int32?,    bool>  ((Int32?    v)  => v != null)) },
-			{ M(() => ((Int64?)    null).HasValue ), N(() => L<Int64?,    bool>  ((Int64?    v)  => v != null)) },
-			{ M(() => ((SByte?)    null).HasValue ), N(() => L<SByte?,    bool>  ((SByte?    v)  => v != null)) },
-			{ M(() => ((Single?)   null).HasValue ), N(() => L<Single?,   bool>  ((Single?   v)  => v != null)) },
-			{ M(() => ((UInt16?)   null).HasValue ), N(() => L<UInt16?,   bool>  ((UInt16?   v)  => v != null)) },
-			{ M(() => ((UInt32?)   null).HasValue ), N(() => L<UInt32?,   bool>  ((UInt32?   v)  => v != null)) },
-			{ M(() => ((UInt64?)   null).HasValue ), N(() => L<UInt64?,   bool>  ((UInt64?   v)  => v != null)) },
 
 			#endregion
 
@@ -1726,7 +1730,21 @@ namespace LinqToDB.Linq
 
 		// SqlServer
 		//
-		[Sql.Function]
+		class DateAddBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var partStr = Sql.DatePartBuilder.DatePartToStr(part);
+				var number  = builder.GetExpression("number");
+				var days    = builder.GetExpression("days");
+
+				builder.ResultExpression = new SqlQuery.SqlFunction(typeof(DateTime?), builder.Expression,
+					new SqlQuery.SqlExpression(partStr, SqlQuery.Precedence.Primary), number, days);
+			}
+		}
+
+		[Sql.Extension("DateAdd", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilder))]
 		public static DateTime? DateAdd(Sql.DateParts part, int? number, int? days)
 		{
 			return days == null ? null : Sql.DateAdd(part, number, new DateTime(1900, 1, days.Value + 1));
