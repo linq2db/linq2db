@@ -639,7 +639,7 @@ namespace LinqToDB.SqlQuery
 
 			void TableCollector(IQueryElement expr)
 			{
-				if (expr is SqlField field && !tables.Contains(field.Table))
+				if (expr is SqlField field && field.Table != null && field.Table.All != field && !tables.Contains(field.Table))
 					tables.Add(field.Table);
 			}
 
@@ -692,7 +692,7 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 
-					visitor.VisitAll(join.Condition, TableCollector);
+					visitor.VisitAll(join, TableCollector);
 				}
 			}, new HashSet<SelectQuery>());
 		}

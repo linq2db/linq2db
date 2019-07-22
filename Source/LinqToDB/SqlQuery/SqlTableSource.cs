@@ -91,9 +91,10 @@ namespace LinqToDB.SqlQuery
 
 		public void ForEach(Action<SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
 		{
-			action(this);
 			foreach (var join in Joins)
 				join.Table.ForEach(action, visitedQueries);
+
+			action(this);
 
 			if (Source is SelectQuery query && visitedQueries.Contains(query))
 				query.ForEachTable(action, visitedQueries);
