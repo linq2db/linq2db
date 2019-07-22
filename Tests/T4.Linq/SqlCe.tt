@@ -3,7 +3,7 @@
 <#@ include file="Shared.ttinclude"                                         #>
 <#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SqlCe.ttinclude" #>
 <#@ include file="..\..\Source\LinqToDB.Templates\Humanizer.ttinclude"      #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\Humanizer.dll" #>
+<#@ assembly name="$(SolutionDir)Tests\T4.Linq\bin\Debug\net46\Humanizer.dll" #>
 <#
 	NamespaceName = "SqlCeDataContext";
 

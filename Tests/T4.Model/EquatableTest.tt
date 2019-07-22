@@ -5,6 +5,9 @@
 <#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SQLite.ttinclude"        #>
 <#@ include file="..\..\Source\LinqToDB.Templates\Equatable.ttinclude"              #>
 <#
+	AddNullablePragma = true;
+	EnableNullableReferenceTypes = true;
+
 	NamespaceName = "SQLiteDataContext";
 
 	GenerateAssociationExtensions = true;

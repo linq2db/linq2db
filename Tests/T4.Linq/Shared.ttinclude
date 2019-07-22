@@ -2,8 +2,8 @@
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\linq2db.dll"            #>
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\linq2db.Tests.Base.dll" #>
 <#
-	//AddNullablePragma = true;
-	//EnableNullableReferenceTypes = true;
+	AddNullablePragma = true;
+	EnableNullableReferenceTypes = true;
 	GenerateDatabaseInfo = false;
 
 	string GetConnectionString(string config)

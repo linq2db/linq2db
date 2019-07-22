@@ -28,7 +28,6 @@
 	<!-- https://github.com/dotnet/sdk/issues/810 - WPF suport for SDK projects -->
 	<PropertyGroup>
 		<LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
-		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>

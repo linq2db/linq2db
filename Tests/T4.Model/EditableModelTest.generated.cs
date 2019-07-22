@@ -6,6 +6,7 @@
 //---------------------------------------------------------------------------------------------------
 
 #pragma warning disable 1591
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -147,11 +148,11 @@ namespace Tests.T4.Model
 
 		#endregion
 
-		public List<string> Field4;
+		public List<string?>? Field4;
 
-		public List<string> Field5;
+		public List<string>? Field5;
 
-		public List<string> Field6 = new List<string>();
+		public List<string?> Field6 = new List<string?>();
 
 		public List<string> Field7 = new List<string>();
 
@@ -214,4 +215,5 @@ namespace Tests.T4.Model
 	}
 }
 
+#nullable restore
 #pragma warning restore 1591

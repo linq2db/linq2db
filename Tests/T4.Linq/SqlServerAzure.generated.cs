@@ -6,6 +6,7 @@
 //---------------------------------------------------------------------------------------------------
 
 #pragma warning disable 1591
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -109,22 +110,22 @@ namespace TestAzureSQL
 		[Column("datetimeDataType"),                                               Nullable            ] public DateTime?       DatetimeDataType         { get; set; } // datetime
 		[Column("smalldatetimeDataType"),                                          Nullable            ] public DateTime?       SmalldatetimeDataType    { get; set; } // smalldatetime
 		[Column("charDataType"),                                                   Nullable            ] public char?           CharDataType             { get; set; } // char(1)
-		[Column("char20DataType"),                                                 Nullable            ] public string          Char20DataType           { get; set; } // char(20)
-		[Column("varcharDataType"),                                                Nullable            ] public string          VarcharDataType          { get; set; } // varchar(20)
-		[Column("textDataType"),                                                   Nullable            ] public string          TextDataType             { get; set; } // text
-		[Column("ncharDataType"),                                                  Nullable            ] public string          NcharDataType            { get; set; } // nchar(20)
-		[Column("nvarcharDataType"),                                               Nullable            ] public string          NvarcharDataType         { get; set; } // nvarchar(20)
-		[Column("ntextDataType"),                                                  Nullable            ] public string          NtextDataType            { get; set; } // ntext
-		[Column("binaryDataType"),                                                 Nullable            ] public byte[]          BinaryDataType           { get; set; } // binary(1)
-		[Column("varbinaryDataType"),                                              Nullable            ] public byte[]          VarbinaryDataType        { get; set; } // varbinary(1)
-		[Column("imageDataType"),                                                  Nullable            ] public byte[]          ImageDataType            { get; set; } // image
-		[Column("timestampDataType",        SkipOnInsert=true, SkipOnUpdate=true), Nullable            ] public byte[]          TimestampDataType        { get; set; } // timestamp
+		[Column("char20DataType"),                                                 Nullable            ] public string?         Char20DataType           { get; set; } // char(20)
+		[Column("varcharDataType"),                                                Nullable            ] public string?         VarcharDataType          { get; set; } // varchar(20)
+		[Column("textDataType"),                                                   Nullable            ] public string?         TextDataType             { get; set; } // text
+		[Column("ncharDataType"),                                                  Nullable            ] public string?         NcharDataType            { get; set; } // nchar(20)
+		[Column("nvarcharDataType"),                                               Nullable            ] public string?         NvarcharDataType         { get; set; } // nvarchar(20)
+		[Column("ntextDataType"),                                                  Nullable            ] public string?         NtextDataType            { get; set; } // ntext
+		[Column("binaryDataType"),                                                 Nullable            ] public byte[]?         BinaryDataType           { get; set; } // binary(1)
+		[Column("varbinaryDataType"),                                              Nullable            ] public byte[]?         VarbinaryDataType        { get; set; } // varbinary(1)
+		[Column("imageDataType"),                                                  Nullable            ] public byte[]?         ImageDataType            { get; set; } // image
+		[Column("timestampDataType",        SkipOnInsert=true, SkipOnUpdate=true), Nullable            ] public byte[]?         TimestampDataType        { get; set; } // timestamp
 		[Column("uniqueidentifierDataType"),                                       Nullable            ] public Guid?           UniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column("sql_variantDataType"),                                            Nullable            ] public object          SqlVariantDataType       { get; set; } // sql_variant
-		[Column("nvarchar_max_DataType"),                                          Nullable            ] public string          NvarcharMaxDataType      { get; set; } // nvarchar(max)
-		[Column("varchar_max_DataType"),                                           Nullable            ] public string          VarcharMaxDataType       { get; set; } // varchar(max)
-		[Column("varbinary_max_DataType"),                                         Nullable            ] public byte[]          VarbinaryMaxDataType     { get; set; } // varbinary(max)
-		[Column("xmlDataType"),                                                    Nullable            ] public string          XmlDataType              { get; set; } // xml
+		[Column("sql_variantDataType"),                                            Nullable            ] public object?         SqlVariantDataType       { get; set; } // sql_variant
+		[Column("nvarchar_max_DataType"),                                          Nullable            ] public string?         NvarcharMaxDataType      { get; set; } // nvarchar(max)
+		[Column("varchar_max_DataType"),                                           Nullable            ] public string?         VarcharMaxDataType       { get; set; } // varchar(max)
+		[Column("varbinary_max_DataType"),                                         Nullable            ] public byte[]?         VarbinaryMaxDataType     { get; set; } // varbinary(max)
+		[Column("xmlDataType"),                                                    Nullable            ] public string?         XmlDataType              { get; set; } // xml
 		[Column("datetime2DataType"),                                              Nullable            ] public DateTime?       Datetime2DataType        { get; set; } // datetime2(7)
 		[Column("datetimeoffsetDataType"),                                         Nullable            ] public DateTimeOffset? DatetimeoffsetDataType   { get; set; } // datetimeoffset(7)
 		[Column("datetimeoffset0DataType"),                                        Nullable            ] public DateTimeOffset? Datetimeoffset0DataType  { get; set; } // datetimeoffset(0)
@@ -148,8 +149,8 @@ namespace TestAzureSQL
 		[Column("datetime2DataType"),      Nullable            ] public DateTime?       Datetime2DataType      { get; set; } // datetime2(7)
 		[Column("timeDataType"),           Nullable            ] public TimeSpan?       TimeDataType           { get; set; } // time(7)
 		[Column("hierarchyidDataType"),    Nullable            ] public SqlHierarchyId? HierarchyidDataType    { get; set; } // hierarchyid
-		[Column("geographyDataType"),      Nullable            ] public SqlGeography    GeographyDataType      { get; set; } // geography
-		[Column("geometryDataType"),       Nullable            ] public SqlGeometry     GeometryDataType       { get; set; } // geometry
+		[Column("geographyDataType"),      Nullable            ] public SqlGeography?   GeographyDataType      { get; set; } // geography
+		[Column("geometryDataType"),       Nullable            ] public SqlGeometry?    GeometryDataType       { get; set; } // geometry
 	}
 
 	[Table(Schema="dbo", Name="Child")]
@@ -164,9 +165,15 @@ namespace TestAzureSQL
 	public partial class sys_DatabaseFirewallRule
 	{
 		[Column("id"),               Identity] public int      Id             { get; set; } // int
+		#nullable disable
 		[Column("name"),             NotNull ] public string   Name           { get; set; } // nvarchar(128)
+		#nullable enable
+		#nullable disable
 		[Column("start_ip_address"), NotNull ] public string   StartIpAddress { get; set; } // varchar(45)
+		#nullable enable
+		#nullable disable
 		[Column("end_ip_address"),   NotNull ] public string   EndIpAddress   { get; set; } // varchar(45)
+		#nullable enable
 		[Column("create_date"),      NotNull ] public DateTime CreateDate     { get; set; } // datetime
 		[Column("modify_date"),      NotNull ] public DateTime ModifyDate     { get; set; } // datetime
 	}
@@ -185,15 +192,20 @@ namespace TestAzureSQL
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
+		#nullable disable
 		[Column,     NotNull] public string Taxonomy { get; set; } // nvarchar(50)
+		#nullable enable
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
 		public Person Person { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -234,7 +246,7 @@ namespace TestAzureSQL
 		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
 		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public IndexTable2 Patient { get; set; }
+		public IndexTable2? Patient { get; set; }
 
 		#endregion
 	}
@@ -247,11 +259,14 @@ namespace TestAzureSQL
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
 		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
 		public IndexTable Patient2IndexTable { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -259,18 +274,18 @@ namespace TestAzureSQL
 	[Table(Schema="dbo", Name="InheritanceChild")]
 	public partial class InheritanceChild
 	{
-		[PrimaryKey, NotNull    ] public int    InheritanceChildId  { get; set; } // int
-		[Column,     NotNull    ] public int    InheritanceParentId { get; set; } // int
-		[Column,        Nullable] public int?   TypeDiscriminator   { get; set; } // int
-		[Column,        Nullable] public string Name                { get; set; } // nvarchar(50)
+		[PrimaryKey, NotNull    ] public int     InheritanceChildId  { get; set; } // int
+		[Column,     NotNull    ] public int     InheritanceParentId { get; set; } // int
+		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
+		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
 	}
 
 	[Table(Schema="dbo", Name="InheritanceParent")]
 	public partial class InheritanceParent
 	{
-		[PrimaryKey, NotNull    ] public int    InheritanceParentId { get; set; } // int
-		[Column,        Nullable] public int?   TypeDiscriminator   { get; set; } // int
-		[Column,        Nullable] public string Name                { get; set; } // nvarchar(50)
+		[PrimaryKey, NotNull    ] public int     InheritanceParentId { get; set; } // int
+		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
+		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
 	}
 
 	[Table(Schema="dbo", Name="Issue1115")]
@@ -295,11 +310,11 @@ namespace TestAzureSQL
 		[Column(),      Nullable            ] public DateTime? DateTimeValue2 { get; set; } // datetime2(7)
 		[Column(),      Nullable            ] public bool?     BoolValue      { get; set; } // bit
 		[Column(),      Nullable            ] public Guid?     GuidValue      { get; set; } // uniqueidentifier
-		[Column(),      Nullable            ] public byte[]    BinaryValue    { get; set; } // varbinary(5000)
+		[Column(),      Nullable            ] public byte[]?   BinaryValue    { get; set; } // varbinary(5000)
 		[Column(),      Nullable            ] public short?    SmallIntValue  { get; set; } // smallint
 		[Column(),      Nullable            ] public int?      IntValue       { get; set; } // int
 		[Column(),      Nullable            ] public long?     BigIntValue    { get; set; } // bigint
-		[Column(),      Nullable            ] public string    StringValue    { get; set; } // nvarchar(50)
+		[Column(),      Nullable            ] public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 
 	[Table(Schema="dbo", Name="Name.Test")]
@@ -336,15 +351,20 @@ namespace TestAzureSQL
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
+		#nullable disable
 		[Column,     NotNull] public string Diagnosis { get; set; } // nvarchar(256)
+		#nullable enable
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
 		public Person Person { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -352,11 +372,15 @@ namespace TestAzureSQL
 	[Table(Schema="dbo", Name="Person")]
 	public partial class Person
 	{
-		[PrimaryKey, Identity   ] public int    PersonID   { get; set; } // int
-		[Column,     NotNull    ] public string FirstName  { get; set; } // nvarchar(50)
-		[Column,     NotNull    ] public string LastName   { get; set; } // nvarchar(50)
-		[Column,        Nullable] public string MiddleName { get; set; } // nvarchar(50)
-		[Column,     NotNull    ] public char   Gender     { get; set; } // char(1)
+		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // int
+		#nullable disable
+		[Column,     NotNull    ] public string  FirstName  { get; set; } // nvarchar(50)
+		#nullable enable
+		#nullable disable
+		[Column,     NotNull    ] public string  LastName   { get; set; } // nvarchar(50)
+		#nullable enable
+		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(50)
+		[Column,     NotNull    ] public char    Gender     { get; set; } // char(1)
 
 		#region Associations
 
@@ -364,13 +388,13 @@ namespace TestAzureSQL
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Doctor Doctor { get; set; }
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Patient Patient { get; set; }
+		public Patient? Patient { get; set; }
 
 		#endregion
 	}
@@ -411,20 +435,20 @@ namespace TestAzureSQL
 		[Column,        Nullable] public int?            Field5          { get; set; } // int
 		[Column,        Nullable] public long?           FieldInt64      { get; set; } // bigint
 		[Column,        Nullable] public bool?           FieldBoolean    { get; set; } // bit
-		[Column,        Nullable] public string          FieldString     { get; set; } // varchar(20)
-		[Column,        Nullable] public string          FieldNString    { get; set; } // nvarchar(20)
+		[Column,        Nullable] public string?         FieldString     { get; set; } // varchar(20)
+		[Column,        Nullable] public string?         FieldNString    { get; set; } // nvarchar(20)
 		[Column,        Nullable] public char?           FieldChar       { get; set; } // char(1)
 		[Column,        Nullable] public char?           FieldNChar      { get; set; } // nchar(1)
 		[Column,        Nullable] public float?          FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?         FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime?       FieldDateTime   { get; set; } // datetime
 		[Column,        Nullable] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
-		[Column,        Nullable] public byte[]          FieldBinary     { get; set; } // varbinary(20)
+		[Column,        Nullable] public byte[]?         FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
 		[Column,        Nullable] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
 		[Column,        Nullable] public DateTime?       FieldDate       { get; set; } // date
 		[Column,        Nullable] public TimeSpan?       FieldTime       { get; set; } // time(7)
-		[Column,        Nullable] public string          FieldEnumString { get; set; } // varchar(20)
+		[Column,        Nullable] public string?         FieldEnumString { get; set; } // varchar(20)
 		[Column,        Nullable] public int?            FieldEnumNumber { get; set; } // int
 	}
 
@@ -439,20 +463,20 @@ namespace TestAzureSQL
 		[Column,        Nullable] public int?            Field5          { get; set; } // int
 		[Column,        Nullable] public long?           FieldInt64      { get; set; } // bigint
 		[Column,        Nullable] public bool?           FieldBoolean    { get; set; } // bit
-		[Column,        Nullable] public string          FieldString     { get; set; } // varchar(20)
-		[Column,        Nullable] public string          FieldNString    { get; set; } // nvarchar(20)
+		[Column,        Nullable] public string?         FieldString     { get; set; } // varchar(20)
+		[Column,        Nullable] public string?         FieldNString    { get; set; } // nvarchar(20)
 		[Column,        Nullable] public char?           FieldChar       { get; set; } // char(1)
 		[Column,        Nullable] public char?           FieldNChar      { get; set; } // nchar(1)
 		[Column,        Nullable] public float?          FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?         FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime?       FieldDateTime   { get; set; } // datetime
 		[Column,        Nullable] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
-		[Column,        Nullable] public byte[]          FieldBinary     { get; set; } // varbinary(20)
+		[Column,        Nullable] public byte[]?         FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
 		[Column,        Nullable] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
 		[Column,        Nullable] public DateTime?       FieldDate       { get; set; } // date
 		[Column,        Nullable] public TimeSpan?       FieldTime       { get; set; } // time(7)
-		[Column,        Nullable] public string          FieldEnumString { get; set; } // varchar(20)
+		[Column,        Nullable] public string?         FieldEnumString { get; set; } // varchar(20)
 		[Column,        Nullable] public int?            FieldEnumNumber { get; set; } // int
 	}
 
@@ -471,23 +495,30 @@ namespace TestAzureSQL
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference
 		/// </summary>
 		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TestSchema_TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences { get; set; }
 
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference
 		/// </summary>
 		[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYOriginTestSchemaA { get; set; }
 
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference
 		/// </summary>
 		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYTargetTestSchemaA { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -502,23 +533,30 @@ namespace TestAzureSQL
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
 		/// </summary>
 		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
 		public TestSchema_TestSchemaA FKTargetTestSchemaA { get; set; }
 
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
 		/// </summary>
 		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
 		public TestSchema_TestSchemaA OriginTestSchemaA { get; set; }
 
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
 		/// </summary>
 		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
 		public TestSchema_TestSchemaA TargetTestSchemaA { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -537,23 +575,30 @@ namespace TestAzureSQL
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX_BackReference
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TestSchemaY> TestSchemaY { get; set; }
 
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// FK_TestSchemaY_OtherID_BackReference
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TestSchemaY> TestSchemaYOtherIds { get; set; }
 
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX_BackReference
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -567,23 +612,30 @@ namespace TestAzureSQL
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_TestSchemaY_OtherID
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
 		public TestSchemaX FkTestSchemaYOtherID { get; set; }
 
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX
 		/// </summary>
 		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
 		public TestSchemaX ParentTestSchemaX { get; set; }
 
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
 		public TestSchemaX TestSchemaX { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -592,7 +644,7 @@ namespace TestAzureSQL
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this DataConnection dataConnection)
+		public static int AddIssue792Record(this Issue1733DB dataConnection)
 		{
 			return dataConnection.ExecuteProc("[dbo].[AddIssue792Record]");
 		}
@@ -601,7 +653,7 @@ namespace TestAzureSQL
 
 		#region DuplicateColumnNames
 
-		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this DataConnection dataConnection)
+		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this Issue1733DB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -617,22 +669,24 @@ namespace TestAzureSQL
 		public partial class DuplicateColumnNamesResult
 		{
 			               public int    id      { get; set; }
+			#nullable disable
 			[Column("id")] public string Column2 { get; set; }
+			#nullable enable
 		}
 
 		#endregion
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest(this DataConnection dataConnection, string @str, ref string @outputStr, ref string @inputOutputStr)
+		public static int OutRefEnumTest(this Issue1733DB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[dbo].[OutRefEnumTest]",
 				new DataParameter("@str",            @str,            DataType.VarChar),
 				new DataParameter("@outputStr",      @outputStr,      DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
 				new DataParameter("@inputOutputStr", @inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
-			@outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
-			@inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
+			@outputStr      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
+			@inputOutputStr = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
 
 			return ret;
 		}
@@ -641,7 +695,7 @@ namespace TestAzureSQL
 
 		#region OutRefTest
 
-		public static int OutRefTest(this DataConnection dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string @str, ref string @outputStr, ref string @inputOutputStr)
+		public static int OutRefTest(this Issue1733DB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[dbo].[OutRefTest]",
 				new DataParameter("@ID",             @ID,             DataType.Int32),
@@ -651,10 +705,10 @@ namespace TestAzureSQL
 				new DataParameter("@outputStr",      @outputStr,      DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
 				new DataParameter("@inputOutputStr", @inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
-			@outputID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputID"]).      Value);
-			@inputOutputID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputID"]). Value);
-			@outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
-			@inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
+			@outputID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["@outputID"]).      Value);
+			@inputOutputID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputID"]). Value);
+			@outputStr      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
+			@inputOutputStr = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
 
 			return ret;
 		}
@@ -663,26 +717,32 @@ namespace TestAzureSQL
 
 		#region PatientSelectAll
 
-		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this DataConnection dataConnection)
+		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this Issue1733DB dataConnection)
 		{
 			return dataConnection.QueryProc<PatientSelectAllResult>("[dbo].[Patient_SelectAll]");
 		}
 
 		public partial class PatientSelectAllResult
 		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public char   Gender     { get; set; }
-			public string Diagnosis  { get; set; }
+			public int     PersonID   { get; set; }
+			#nullable disable
+			public string  FirstName  { get; set; }
+			#nullable enable
+			#nullable disable
+			public string  LastName   { get; set; }
+			#nullable enable
+			public string? MiddleName { get; set; }
+			public char    Gender     { get; set; }
+			#nullable disable
+			public string  Diagnosis  { get; set; }
+			#nullable enable
 		}
 
 		#endregion
 
 		#region PatientSelectByName
 
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this Issue1733DB dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.QueryProc<PatientSelectByNameResult>("[dbo].[Patient_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -691,19 +751,25 @@ namespace TestAzureSQL
 
 		public partial class PatientSelectByNameResult
 		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public char   Gender     { get; set; }
-			public string Diagnosis  { get; set; }
+			public int     PersonID   { get; set; }
+			#nullable disable
+			public string  FirstName  { get; set; }
+			#nullable enable
+			#nullable disable
+			public string  LastName   { get; set; }
+			#nullable enable
+			public string? MiddleName { get; set; }
+			public char    Gender     { get; set; }
+			#nullable disable
+			public string  Diagnosis  { get; set; }
+			#nullable enable
 		}
 
 		#endregion
 
 		#region PersonDelete
 
-		public static int PersonDelete(this DataConnection dataConnection, int? @PersonID)
+		public static int PersonDelete(this Issue1733DB dataConnection, int? @PersonID)
 		{
 			return dataConnection.ExecuteProc("[dbo].[Person_Delete]",
 				new DataParameter("@PersonID", @PersonID, DataType.Int32));
@@ -713,7 +779,7 @@ namespace TestAzureSQL
 
 		#region PersonInsert
 
-		public static IEnumerable<PersonInsertResult> PersonInsert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
+		public static IEnumerable<PersonInsertResult> PersonInsert(this Issue1733DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			return dataConnection.QueryProc<PersonInsertResult>("[dbo].[Person_Insert]",
 				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
@@ -731,7 +797,7 @@ namespace TestAzureSQL
 
 		#region PersonInsertOutputParameter
 
-		public static int PersonInsertOutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
+		public static int PersonInsertOutputParameter(this Issue1733DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
 		{
 			var ret = dataConnection.ExecuteProc("[dbo].[Person_Insert_OutputParameter]",
 				new DataParameter("@FirstName", @FirstName, DataType.NVarChar),
@@ -749,7 +815,7 @@ namespace TestAzureSQL
 
 		#region PersonSelectAll
 
-		public static IEnumerable<Person> PersonSelectAll(this DataConnection dataConnection)
+		public static IEnumerable<Person> PersonSelectAll(this Issue1733DB dataConnection)
 		{
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectAll]");
 		}
@@ -758,7 +824,7 @@ namespace TestAzureSQL
 
 		#region PersonSelectByKey
 
-		public static IEnumerable<Person> PersonSelectByKey(this DataConnection dataConnection, int? @id)
+		public static IEnumerable<Person> PersonSelectByKey(this Issue1733DB dataConnection, int? @id)
 		{
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectByKey]",
 				new DataParameter("@id", @id, DataType.Int32));
@@ -768,7 +834,7 @@ namespace TestAzureSQL
 
 		#region PersonSelectByName
 
-		public static IEnumerable<Person> PersonSelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static IEnumerable<Person> PersonSelectByName(this Issue1733DB dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -779,7 +845,7 @@ namespace TestAzureSQL
 
 		#region PersonSelectListByName
 
-		public static IEnumerable<Person> PersonSelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		public static IEnumerable<Person> PersonSelectListByName(this Issue1733DB dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectListByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -790,7 +856,7 @@ namespace TestAzureSQL
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this DataConnection dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
+		public static int PersonUpdate(this Issue1733DB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			return dataConnection.ExecuteProc("[dbo].[Person_Update]",
 				new DataParameter("@PersonID",   @PersonID,   DataType.Int32),
@@ -804,7 +870,7 @@ namespace TestAzureSQL
 
 		#region SelectImplicitColumn
 
-		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this DataConnection dataConnection)
+		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this Issue1733DB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -825,7 +891,7 @@ namespace TestAzureSQL
 
 		#region TableTypeTestProc
 
-		public static IEnumerable<TableTypeTestProcResult> TableTypeTestProc(this DataConnection dataConnection, DataTable @table)
+		public static IEnumerable<TableTypeTestProcResult> TableTypeTestProc(this Issue1733DB dataConnection, DataTable? @table)
 		{
 			return dataConnection.QueryProc<TableTypeTestProcResult>("[dbo].[TableTypeTestProc]",
 				new DataParameter("@table", @table, DataType.Structured){ DbType = "[dbo].[TestTableType]" });
@@ -833,15 +899,15 @@ namespace TestAzureSQL
 
 		public partial class TableTypeTestProcResult
 		{
-			public int?   Id   { get; set; }
-			public string Name { get; set; }
+			public int?    Id   { get; set; }
+			public string? Name { get; set; }
 		}
 
 		#endregion
 
 		#region TestProcedure
 
-		public static IEnumerable<TestProcedureResult> TestProcedure(this DataConnection dataConnection)
+		public static IEnumerable<TestProcedureResult> TestProcedure(this Issue1733DB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -862,7 +928,7 @@ namespace TestAzureSQL
 
 		#region VariableResults
 
-		public static IEnumerable<VariableResultsResult> VariableResults(this DataConnection dataConnection, bool? @ReturnFullRow)
+		public static IEnumerable<VariableResultsResult> VariableResults(this Issue1733DB dataConnection, bool? @ReturnFullRow)
 		{
 			return dataConnection.QueryProc<VariableResultsResult>("[dbo].[VariableResults]",
 				new DataParameter("@ReturnFullRow", @ReturnFullRow, DataType.Boolean));
@@ -871,8 +937,12 @@ namespace TestAzureSQL
 		public partial class VariableResultsResult
 		{
 			public int    Code   { get; set; }
+			#nullable disable
 			public string Value1 { get; set; }
+			#nullable enable
+			#nullable disable
 			public string Value2 { get; set; }
+			#nullable enable
 		}
 
 		#endregion
@@ -1040,4 +1110,5 @@ namespace TestAzureSQL
 	}
 }
 
+#nullable restore
 #pragma warning restore 1591

@@ -6,6 +6,7 @@
 //---------------------------------------------------------------------------------------------------
 
 #pragma warning disable 1591
+#nullable enable
 
 using System;
 using System.Collections;
@@ -160,7 +161,7 @@ namespace Tests.T4.Wpf
 #if !SILVERLIGHT
 		[field : NonSerialized]
 #endif
-		public virtual event PropertyChangedEventHandler PropertyChanged;
+		public virtual event PropertyChangedEventHandler? PropertyChanged;
 
 		protected void OnPropertyChanged(string propertyName)
 		{
@@ -269,7 +270,7 @@ namespace Tests.T4.Wpf
 #if !SILVERLIGHT
 		[field : NonSerialized]
 #endif
-		public virtual event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
+		public virtual event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
 
 #if !SILVERLIGHT
 		[field : NonSerialized]
@@ -317,7 +318,7 @@ namespace Tests.T4.Wpf
 			}
 		}
 
-		public IEnumerable GetErrors(string propertyName)
+		public IEnumerable? GetErrors(string? propertyName)
 		{
 			List<string> errors;
 			return propertyName != null && _validationErrors.TryGetValue(propertyName, out errors) ? errors : null;
@@ -332,4 +333,5 @@ namespace Tests.T4.Wpf
 	}
 }
 
+#nullable restore
 #pragma warning restore 1591

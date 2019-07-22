@@ -6,6 +6,7 @@
 //---------------------------------------------------------------------------------------------------
 
 #pragma warning disable 1591
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -890,27 +891,27 @@ namespace SapHanaDataContext
 		[Column("seconddateDataType"),   Nullable            ] public DateTime? SeconddateDataType   { get; set; } // SECONDDATE
 		[Column("timestampDataType"),    Nullable            ] public DateTime? TimestampDataType    { get; set; } // TIMESTAMP
 		[Column("charDataType"),         Nullable            ] public char?     CharDataType         { get; set; } // CHAR(1)
-		[Column("char20DataType"),       Nullable            ] public string    Char20DataType       { get; set; } // CHAR(20)
-		[Column("varcharDataType"),      Nullable            ] public string    VarcharDataType      { get; set; } // VARCHAR(20)
-		[Column("textDataType"),         Nullable            ] public string    TextDataType         { get; set; } // TEXT
-		[Column("shorttextDataType"),    Nullable            ] public string    ShorttextDataType    { get; set; } // SHORTTEXT
+		[Column("char20DataType"),       Nullable            ] public string?   Char20DataType       { get; set; } // CHAR(20)
+		[Column("varcharDataType"),      Nullable            ] public string?   VarcharDataType      { get; set; } // VARCHAR(20)
+		[Column("textDataType"),         Nullable            ] public string?   TextDataType         { get; set; } // TEXT
+		[Column("shorttextDataType"),    Nullable            ] public string?   ShorttextDataType    { get; set; } // SHORTTEXT
 		[Column("ncharDataType"),        Nullable            ] public char?     NcharDataType        { get; set; } // NCHAR(1)
-		[Column("nchar20DataType"),      Nullable            ] public string    Nchar20DataType      { get; set; } // NCHAR(20)
-		[Column("nvarcharDataType"),     Nullable            ] public string    NvarcharDataType     { get; set; } // NVARCHAR(20)
-		[Column("alphanumDataType"),     Nullable            ] public string    AlphanumDataType     { get; set; } // ALPHANUM
-		[Column("binaryDataType"),       Nullable            ] public byte[]    BinaryDataType       { get; set; } // BINARY(10)
-		[Column("varbinaryDataType"),    Nullable            ] public byte[]    VarbinaryDataType    { get; set; } // VARBINARY(10)
-		[Column("blobDataType"),         Nullable            ] public byte[]    BlobDataType         { get; set; } // BLOB
-		[Column("clobDataType"),         Nullable            ] public string    ClobDataType         { get; set; } // CLOB
-		[Column("nclobDataType"),        Nullable            ] public string    NclobDataType        { get; set; } // NCLOB
+		[Column("nchar20DataType"),      Nullable            ] public string?   Nchar20DataType      { get; set; } // NCHAR(20)
+		[Column("nvarcharDataType"),     Nullable            ] public string?   NvarcharDataType     { get; set; } // NVARCHAR(20)
+		[Column("alphanumDataType"),     Nullable            ] public string?   AlphanumDataType     { get; set; } // ALPHANUM
+		[Column("binaryDataType"),       Nullable            ] public byte[]?   BinaryDataType       { get; set; } // BINARY(10)
+		[Column("varbinaryDataType"),    Nullable            ] public byte[]?   VarbinaryDataType    { get; set; } // VARBINARY(10)
+		[Column("blobDataType"),         Nullable            ] public byte[]?   BlobDataType         { get; set; } // BLOB
+		[Column("clobDataType"),         Nullable            ] public string?   ClobDataType         { get; set; } // CLOB
+		[Column("nclobDataType"),        Nullable            ] public string?   NclobDataType        { get; set; } // NCLOB
 	}
 
 	[Table(Schema="TESTHANA", Name="AllTypesGeo")]
 	public partial class AllTypesGeo
 	{
-		[Column(),                     PrimaryKey, Identity] public int    ID                 { get; set; } // INTEGER
-		[Column("dataType"),           Nullable            ] public string DataType           { get; set; } // VARCHAR(20)
-		[Column("stgeometryDataType"), Nullable            ] public object StgeometryDataType { get; set; } // ST_GEOMETRY
+		[Column(),                     PrimaryKey, Identity] public int     ID                 { get; set; } // INTEGER
+		[Column("dataType"),           Nullable            ] public string? DataType           { get; set; } // VARCHAR(20)
+		[Column("stgeometryDataType"), Nullable            ] public object? StgeometryDataType { get; set; } // ST_GEOMETRY
 	}
 
 	/// <summary>
@@ -919,42 +920,46 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="BEST_RECORD_GROUP_MASTER_STATISTICS", IsView=true)]
 	public partial class _SYS_TASK_BestRecordGroupMasterStatistic
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),           NotNull    ] public string SchemaName         { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),           NotNull    ] public string  SchemaName         { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),             NotNull    ] public string TaskName           { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),             NotNull    ] public string  TaskName           { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"),     NotNull    ] public long   TaskExecutionId    { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"),     NotNull    ] public long    TaskExecutionId    { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),           Nullable] public string OperationName      { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),           Nullable] public string? OperationName      { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The total number of records processed
 		/// </summary>
-		[Column("NUM_RECORDS"),              Nullable] public long?  NumRecords         { get; set; } // BIGINT
+		[Column("NUM_RECORDS"),              Nullable] public long?   NumRecords         { get; set; } // BIGINT
 		/// <summary>
 		/// The number of group master records processed
 		/// </summary>
-		[Column("NUM_GROUP_MASTERS"),        Nullable] public long?  NumGroupMasters    { get; set; } // BIGINT
+		[Column("NUM_GROUP_MASTERS"),        Nullable] public long?   NumGroupMasters    { get; set; } // BIGINT
 		/// <summary>
 		/// The number of duplicate records processed
 		/// </summary>
-		[Column("NUM_DUPLICATES"),           Nullable] public long?  NumDuplicates      { get; set; } // BIGINT
+		[Column("NUM_DUPLICATES"),           Nullable] public long?   NumDuplicates      { get; set; } // BIGINT
 		/// <summary>
 		/// The number of surviving records processed
 		/// </summary>
-		[Column("NUM_SURVIVORS"),            Nullable] public long?  NumSurvivors       { get; set; } // BIGINT
+		[Column("NUM_SURVIVORS"),            Nullable] public long?   NumSurvivors       { get; set; } // BIGINT
 		/// <summary>
 		/// The number of non matching records processed
 		/// </summary>
-		[Column("NUM_NON_MATCH_RECORDS"),    Nullable] public long?  NumNonMatchRecords { get; set; } // BIGINT
+		[Column("NUM_NON_MATCH_RECORDS"),    Nullable] public long?   NumNonMatchRecords { get; set; } // BIGINT
 	}
 
 	[Table(Schema="_SYS_TASK", Name="BEST_RECORD_GROUP_MASTER_STATISTICS_")]
@@ -973,105 +978,113 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="BEST_RECORD_RESULTS", IsView=true)]
 	public partial class _SYS_TASK_BestRecordResult
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),         NotNull    ] public string SchemaName        { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),         NotNull    ] public string  SchemaName        { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),           NotNull    ] public string TaskName          { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),           NotNull    ] public string  TaskName          { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"),   NotNull    ] public long   TaskExecutionId   { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"),   NotNull    ] public long    TaskExecutionId   { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),         Nullable] public string OperationName     { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),         Nullable] public string? OperationName     { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The name of the destination table for the operation
 		/// </summary>
-		[Column("DST_TABLE_NAME"),         Nullable] public string DstTableName      { get; set; } // NVARCHAR(128)
+		[Column("DST_TABLE_NAME"),         Nullable] public string? DstTableName      { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The unique ID for the destination row
 		/// </summary>
-		[Column("DST_ROW_ID"),             Nullable] public long?  DstRowId          { get; set; } // BIGINT
+		[Column("DST_ROW_ID"),             Nullable] public long?   DstRowId          { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the destination column in the destination table
 		/// </summary>
-		[Column("DST_COLUMN_NAME"),        Nullable] public string DstColumnName     { get; set; } // NVARCHAR(128)
+		[Column("DST_COLUMN_NAME"),        Nullable] public string? DstColumnName     { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Identifies how the record was updated or if it was newly created
 		/// </summary>
-		[Column("DST_ROW_TYPE"),           Nullable] public char?  DstRowType        { get; set; } // NVARCHAR(1)
+		[Column("DST_ROW_TYPE"),           Nullable] public char?   DstRowType        { get; set; } // NVARCHAR(1)
 		/// <summary>
 		/// The name of the source table for the operation
 		/// </summary>
-		[Column("SRC_TABLE_NAME"),         Nullable] public string SrcTableName      { get; set; } // NVARCHAR(128)
+		[Column("SRC_TABLE_NAME"),         Nullable] public string? SrcTableName      { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The unique ID for the source row
 		/// </summary>
-		[Column("SRC_ROW_ID"),          NotNull    ] public long   SrcRowId          { get; set; } // BIGINT
+		[Column("SRC_ROW_ID"),          NotNull    ] public long    SrcRowId          { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the source column in the source table
 		/// </summary>
-		[Column("SRC_COLUMN_NAME"),        Nullable] public string SrcColumnName     { get; set; } // NVARCHAR(128)
+		[Column("SRC_COLUMN_NAME"),        Nullable] public string? SrcColumnName     { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The name that identifies the best record strategy group
 		/// </summary>
-		[Column("STRATEGY_GROUP_NAME"),    Nullable] public string StrategyGroupName { get; set; } // NVARCHAR(256)
+		[Column("STRATEGY_GROUP_NAME"),    Nullable] public string? StrategyGroupName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// The name that identifies each strategy listed in the strategy group
 		/// </summary>
-		[Column("STRATEGY_NAME"),          Nullable] public string StrategyName      { get; set; } // NVARCHAR(256)
+		[Column("STRATEGY_NAME"),          Nullable] public string? StrategyName      { get; set; } // NVARCHAR(256)
+		#nullable disable
 		/// <summary>
 		/// The name of the rule that updates one or more columns as it is defined in the best record configuration
 		/// </summary>
-		[Column("BEST_RECORD_RULE"),    NotNull    ] public string BestRecordRule    { get; set; } // NVARCHAR(256)
+		[Column("BEST_RECORD_RULE"),    NotNull    ] public string  BestRecordRule    { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The name of the action that updates a column as it is defined in the best record configuration
 		/// </summary>
-		[Column("ACTION_NAME"),            Nullable] public string ActionName        { get; set; } // NVARCHAR(256)
+		[Column("ACTION_NAME"),            Nullable] public string? ActionName        { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// The number of times the column was updated in the best record process
 		/// </summary>
-		[Column("UPDATE_NUM"),          NotNull    ] public int    UpdateNum         { get; set; } // INTEGER
+		[Column("UPDATE_NUM"),          NotNull    ] public int     UpdateNum         { get; set; } // INTEGER
 		/// <summary>
 		/// Identifies how the record was updated in the best record process
 		/// </summary>
-		[Column("OPERATION_TYPE"),         Nullable] public char?  OperationType     { get; set; } // NVARCHAR(1)
+		[Column("OPERATION_TYPE"),         Nullable] public char?   OperationType     { get; set; } // NVARCHAR(1)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="BEST_RECORD_RESULTS_")]
 	public partial class _SYS_TASK_BestRecordResults
 	{
-		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long   TaskExecutionId { get; set; } // BIGINT
-		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int    OperationId     { get; set; } // INTEGER
-		[Column("DST_TABLE_ID"),         Nullable           ] public int?   DstTableId      { get; set; } // INTEGER
-		[Column("DST_ROW_ID"),           Nullable           ] public long?  DstRowId        { get; set; } // BIGINT
-		[Column("DST_COLUMN_ID"),        Nullable           ] public int?   DstColumnId     { get; set; } // INTEGER
-		[Column("DST_ROW_TYPE"),         Nullable           ] public char?  DstRowType      { get; set; } // NVARCHAR(1)
-		[Column("SRC_TABLE_ID"),      PrimaryKey(3), NotNull] public int    SrcTableId      { get; set; } // INTEGER
-		[Column("SRC_ROW_ID"),        PrimaryKey(4), NotNull] public long   SrcRowId        { get; set; } // BIGINT
-		[Column("SRC_COLUMN_ID"),     PrimaryKey(5), NotNull] public int    SrcColumnId     { get; set; } // INTEGER
-		[Column("STRATEGY_GROUP_ID"), PrimaryKey(6), NotNull] public int    StrategyGroupId { get; set; } // INTEGER
-		[Column("STRATEGY_ID"),       PrimaryKey(7), NotNull] public int    StrategyId      { get; set; } // INTEGER
-		[Column("BEST_RECORD_RULE"),  PrimaryKey(8), NotNull] public string BestRecordRule  { get; set; } // NVARCHAR(256)
-		[Column("ACTION_NAME"),          Nullable           ] public string ActionName      { get; set; } // NVARCHAR(256)
-		[Column("UPDATE_NUM"),        PrimaryKey(9), NotNull] public int    UpdateNum       { get; set; } // INTEGER
-		[Column("OPERATION_TYPE"),       Nullable           ] public char?  OperationType   { get; set; } // NVARCHAR(1)
+		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long    TaskExecutionId { get; set; } // BIGINT
+		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int     OperationId     { get; set; } // INTEGER
+		[Column("DST_TABLE_ID"),         Nullable           ] public int?    DstTableId      { get; set; } // INTEGER
+		[Column("DST_ROW_ID"),           Nullable           ] public long?   DstRowId        { get; set; } // BIGINT
+		[Column("DST_COLUMN_ID"),        Nullable           ] public int?    DstColumnId     { get; set; } // INTEGER
+		[Column("DST_ROW_TYPE"),         Nullable           ] public char?   DstRowType      { get; set; } // NVARCHAR(1)
+		[Column("SRC_TABLE_ID"),      PrimaryKey(3), NotNull] public int     SrcTableId      { get; set; } // INTEGER
+		[Column("SRC_ROW_ID"),        PrimaryKey(4), NotNull] public long    SrcRowId        { get; set; } // BIGINT
+		[Column("SRC_COLUMN_ID"),     PrimaryKey(5), NotNull] public int     SrcColumnId     { get; set; } // INTEGER
+		[Column("STRATEGY_GROUP_ID"), PrimaryKey(6), NotNull] public int     StrategyGroupId { get; set; } // INTEGER
+		[Column("STRATEGY_ID"),       PrimaryKey(7), NotNull] public int     StrategyId      { get; set; } // INTEGER
+		#nullable disable
+		[Column("BEST_RECORD_RULE"),  PrimaryKey(8), NotNull] public string  BestRecordRule  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column("ACTION_NAME"),          Nullable           ] public string? ActionName      { get; set; } // NVARCHAR(256)
+		[Column("UPDATE_NUM"),        PrimaryKey(9), NotNull] public int     UpdateNum       { get; set; } // INTEGER
+		[Column("OPERATION_TYPE"),       Nullable           ] public char?   OperationType   { get; set; } // NVARCHAR(1)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="BEST_RECORD_STRATEGIES_")]
 	public partial class _SYS_TASK_BestRecordStrategies
 	{
-		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long   TaskExecutionId { get; set; } // BIGINT
-		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int    OperationId     { get; set; } // INTEGER
-		[Column("STRATEGY_GROUP_ID"), PrimaryKey(3), NotNull] public int    StrategyGroupId { get; set; } // INTEGER
-		[Column("STRATEGY_ID"),       PrimaryKey(4), NotNull] public int    StrategyId      { get; set; } // INTEGER
-		[Column("STRATEGY_ORDER"),       Nullable           ] public int?   StrategyOrder   { get; set; } // INTEGER
-		[Column("STRATEGY_NAME"),        Nullable           ] public string StrategyName    { get; set; } // NVARCHAR(256)
+		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long    TaskExecutionId { get; set; } // BIGINT
+		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int     OperationId     { get; set; } // INTEGER
+		[Column("STRATEGY_GROUP_ID"), PrimaryKey(3), NotNull] public int     StrategyGroupId { get; set; } // INTEGER
+		[Column("STRATEGY_ID"),       PrimaryKey(4), NotNull] public int     StrategyId      { get; set; } // INTEGER
+		[Column("STRATEGY_ORDER"),       Nullable           ] public int?    StrategyOrder   { get; set; } // INTEGER
+		[Column("STRATEGY_NAME"),        Nullable           ] public string? StrategyName    { get; set; } // NVARCHAR(256)
 	}
 
 	/// <summary>
@@ -1080,43 +1093,47 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="BEST_RECORD_STRATEGIES", IsView=true)]
 	public partial class _SYS_TASK_BestRecordSTRATEGy
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),         NotNull    ] public string SchemaName        { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),         NotNull    ] public string  SchemaName        { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),           NotNull    ] public string TaskName          { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),           NotNull    ] public string  TaskName          { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"),   NotNull    ] public long   TaskExecutionId   { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"),   NotNull    ] public long    TaskExecutionId   { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),         Nullable] public string OperationName     { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),         Nullable] public string? OperationName     { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The strategy group name
 		/// </summary>
-		[Column("STRATEGY_GROUP_NAME"),    Nullable] public string StrategyGroupName { get; set; } // NVARCHAR(256)
+		[Column("STRATEGY_GROUP_NAME"),    Nullable] public string? StrategyGroupName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Represents the order of the strategy as it is defined in the list of strategies
 		/// </summary>
-		[Column("STRATEGY_ORDER"),         Nullable] public int?   StrategyOrder     { get; set; } // INTEGER
+		[Column("STRATEGY_ORDER"),         Nullable] public int?    StrategyOrder     { get; set; } // INTEGER
 		/// <summary>
 		/// The name of the strategy as it is defined in the best record configuration
 		/// </summary>
-		[Column("STRATEGY_NAME"),          Nullable] public string StrategyName      { get; set; } // NVARCHAR(256)
+		[Column("STRATEGY_NAME"),          Nullable] public string? StrategyName      { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="BEST_RECORD_STRATEGY_GROUPS_")]
 	public partial class _SYS_TASK_BestRecordStrategyGroups
 	{
-		[Column("TASK_EXECUTION_ID"),   PrimaryKey(1), NotNull] public long   TaskExecutionId   { get; set; } // BIGINT
-		[Column("OPERATION_ID"),        PrimaryKey(2), NotNull] public int    OperationId       { get; set; } // INTEGER
-		[Column("STRATEGY_GROUP_ID"),   PrimaryKey(3), NotNull] public int    StrategyGroupId   { get; set; } // INTEGER
-		[Column("STRATEGY_GROUP_NAME"),    Nullable           ] public string StrategyGroupName { get; set; } // NVARCHAR(256)
+		[Column("TASK_EXECUTION_ID"),   PrimaryKey(1), NotNull] public long    TaskExecutionId   { get; set; } // BIGINT
+		[Column("OPERATION_ID"),        PrimaryKey(2), NotNull] public int     OperationId       { get; set; } // INTEGER
+		[Column("STRATEGY_GROUP_ID"),   PrimaryKey(3), NotNull] public int     StrategyGroupId   { get; set; } // INTEGER
+		[Column("STRATEGY_GROUP_NAME"),    Nullable           ] public string? StrategyGroupName { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="TESTHANA", Name="BulkInsertLowerCaseColumns")]
@@ -1126,8 +1143,8 @@ namespace SapHanaDataContext
 		[Column, Nullable] public decimal?  MoneyValue    { get; set; } // DECIMAL(10, 4)
 		[Column, Nullable] public DateTime? DateTimeValue { get; set; } // TIMESTAMP
 		[Column, Nullable] public byte?     BoolValue     { get; set; } // TINYINT
-		[Column, Nullable] public string    GuidValue     { get; set; } // VARCHAR(36)
-		[Column, Nullable] public byte[]    BinaryValue   { get; set; } // VARBINARY(5000)
+		[Column, Nullable] public string?   GuidValue     { get; set; } // VARCHAR(36)
+		[Column, Nullable] public byte[]?   BinaryValue   { get; set; } // VARBINARY(5000)
 		[Column, Nullable] public short?    SmallIntValue { get; set; } // SMALLINT
 		[Column, Nullable] public int?      IntValue      { get; set; } // INTEGER
 		[Column, Nullable] public long?     BigIntValue   { get; set; } // BIGINT
@@ -1140,8 +1157,8 @@ namespace SapHanaDataContext
 		[Column, Nullable] public decimal?  MONEYVALUE    { get; set; } // DECIMAL(10, 4)
 		[Column, Nullable] public DateTime? DATETIMEVALUE { get; set; } // TIMESTAMP
 		[Column, Nullable] public byte?     BOOLVALUE     { get; set; } // TINYINT
-		[Column, Nullable] public string    GUIDVALUE     { get; set; } // VARCHAR(36)
-		[Column, Nullable] public byte[]    BINARYVALUE   { get; set; } // VARBINARY(5000)
+		[Column, Nullable] public string?   GUIDVALUE     { get; set; } // VARCHAR(36)
+		[Column, Nullable] public byte[]?   BINARYVALUE   { get; set; } // VARBINARY(5000)
 		[Column, Nullable] public short?    SMALLINTVALUE { get; set; } // SMALLINT
 		[Column, Nullable] public int?      INTVALUE      { get; set; } // INTEGER
 		[Column, Nullable] public long?     BIGINTVALUE   { get; set; } // BIGINT
@@ -1151,119 +1168,227 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_CdsAnnotation
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } // NVARCHAR(256)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ANNOTATION_ASSIGNMENT")]
 	public partial class _SYS_RT_CdsAnnotationAssignment
 	{
 		[Column("imageId"),                    PrimaryKey(1), NotNull] public long     ImageId                   { get; set; } // BIGINT
+		#nullable disable
 		[Column("artifactName.schema"),        PrimaryKey(2), NotNull] public string   ArtifactNameSchema        { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("artifactName.name"),          PrimaryKey(3), NotNull] public string   ArtifactNameName          { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("artifactName.componentName"), PrimaryKey(4), NotNull] public string   ArtifactNameComponentName { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),                       PrimaryKey(5), NotNull] public string   Name                      { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),           PrimaryKey(6), NotNull] public string   ExtensionPackage          { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                               NotNull] public DateTime ModifiedUtc               { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                                     NotNull] public string   State                     { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("format"),                                    NotNull] public string   Format                    { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("value"),                                     NotNull] public string   Value                     { get; set; } // NCLOB
+		#nullable enable
+		#nullable disable
 		[Column("checked"),                                   NotNull] public string   @checked                  { get; set; } // NVARCHAR(127)
-		[Column("definition.schema"),             Nullable           ] public string   DefinitionSchema          { get; set; } // NVARCHAR(127)
-		[Column("definition.name"),               Nullable           ] public string   DefinitionName            { get; set; } // NVARCHAR(127)
+		#nullable enable
+		[Column("definition.schema"),             Nullable           ] public string?  DefinitionSchema          { get; set; } // NVARCHAR(127)
+		[Column("definition.name"),               Nullable           ] public string?  DefinitionName            { get; set; } // NVARCHAR(127)
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ANNOTATION_VALUE")]
 	public partial class _SYS_RT_CdsAnnotationValue
 	{
 		[Column("imageId"),               PrimaryKey(1), NotNull] public long     ImageId              { get; set; } // BIGINT
+		#nullable disable
 		[Column("artifactName.schema"),   PrimaryKey(2), NotNull] public string   ArtifactNameSchema   { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("artifactName.name"),     PrimaryKey(3), NotNull] public string   ArtifactNameName     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("annotationName.schema"), PrimaryKey(4), NotNull] public string   AnnotationNameSchema { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("annotationName.name"),   PrimaryKey(5), NotNull] public string   AnnotationNameName   { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),      PrimaryKey(6), NotNull] public string   ExtensionPackage     { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                          NotNull] public DateTime ModifiedUtc          { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                                NotNull] public string   State                { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("valueTree"),                            NotNull] public string   ValueTree            { get; set; } // NCLOB
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ARRAY")]
 	public partial class _SYS_RT_CdsArray
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("isAnonymous"),                      NotNull] public byte     IsAnonymous       { get; set; } // TINYINT
+		#nullable disable
 		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } // NVARCHAR(256)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ARTIFACT")]
 	public partial class _SYS_RT_CdsArtifact
 	{
 		[Column("imageId"),     PrimaryKey(1), NotNull] public long     ImageId     { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),      PrimaryKey(2), NotNull] public string   Schema      { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),        PrimaryKey(3), NotNull] public string   Name        { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                NotNull] public DateTime ModifiedUtc { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                      NotNull] public string   State       { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("kind"),                       NotNull] public string   Kind        { get; set; } // NVARCHAR(127)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ASPECT")]
 	public partial class _SYS_RT_CdsAspect
 	{
 		[Column("imageId"),          PrimaryKey(1), NotNull] public long     ImageId          { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                     NotNull] public DateTime ModifiedUtc      { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                           NotNull] public string   State            { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("definition"),                      NotNull] public string   Definition       { get; set; } // NCLOB
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ASSOCIATION")]
 	public partial class _SYS_RT_CdsAssociation
 	{
 		[Column("imageId"),                 PrimaryKey(1), NotNull] public long     ImageId                { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),                  PrimaryKey(2), NotNull] public string   Schema                 { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),                    PrimaryKey(3), NotNull] public string   Name                   { get; set; } // NVARCHAR(256)
+		#nullable enable
 		[Column("modifiedUtc"),                            NotNull] public DateTime ModifiedUtc            { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                                  NotNull] public string   State                  { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                       NotNull] public string   ExtensionPackage       { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("targetEntityName.schema"),                NotNull] public string   TargetEntityNameSchema { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("targetEntityName.name"),                  NotNull] public string   TargetEntityNameName   { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("sourceCardinalityMax"),       Nullable           ] public int?     SourceCardinalityMax   { get; set; } // INTEGER
 		[Column("targetCardinalityMin"),       Nullable           ] public int?     TargetCardinalityMin   { get; set; } // INTEGER
 		[Column("targetCardinalityMax"),       Nullable           ] public int?     TargetCardinalityMax   { get; set; } // INTEGER
+		#nullable disable
 		[Column("viaEntityName.schema"),                   NotNull] public string   ViaEntityNameSchema    { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("viaEntityName.name"),                     NotNull] public string   ViaEntityNameName      { get; set; } // NVARCHAR(127)
-		[Column("joinCondition"),              Nullable           ] public string   JoinCondition          { get; set; } // NCLOB
-		[Column("associationKind"),            Nullable           ] public string   AssociationKind        { get; set; } // NVARCHAR(127)
+		#nullable enable
+		[Column("joinCondition"),              Nullable           ] public string?  JoinCondition          { get; set; } // NCLOB
+		[Column("associationKind"),            Nullable           ] public string?  AssociationKind        { get; set; } // NVARCHAR(127)
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_CONSTANT")]
 	public partial class _SYS_RT_CdsConstant
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(256)
+		#nullable enable
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } // NVARCHAR(256)
-		[Column("value"),                Nullable           ] public string   Value             { get; set; } // NVARCHAR(5000)
+		#nullable enable
+		[Column("value"),                Nullable           ] public string?  Value             { get; set; } // NVARCHAR(5000)
 		[Column("isEnumValue"),                      NotNull] public byte     IsEnumValue       { get; set; } // TINYINT
 	}
 
@@ -1271,122 +1396,228 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_CdsDependency
 	{
 		[Column("imageId"),     PrimaryKey(1), NotNull] public long     ImageId     { get; set; } // BIGINT
+		#nullable disable
 		[Column("from.schema"), PrimaryKey(2), NotNull] public string   FromSchema  { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("from.name"),   PrimaryKey(3), NotNull] public string   FromName    { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("to.schema"),   PrimaryKey(4), NotNull] public string   ToSchema    { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("to.name"),     PrimaryKey(5), NotNull] public string   ToName      { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                NotNull] public DateTime ModifiedUtc { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                      NotNull] public string   State       { get; set; } // NVARCHAR(10)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_DERIVED_TYPE")]
 	public partial class _SYS_RT_CdsDerivedType
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } // NVARCHAR(256)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ENTITY")]
 	public partial class _SYS_RT_CdsEntity
 	{
 		[Column("imageId"),                PrimaryKey(1), NotNull] public long     ImageId               { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),                 PrimaryKey(2), NotNull] public string   Schema                { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),                   PrimaryKey(3), NotNull] public string   Name                  { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                           NotNull] public DateTime ModifiedUtc           { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                                 NotNull] public string   State                 { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                      NotNull] public string   ExtensionPackage      { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("series.kind"),                           NotNull] public string   SeriesKind            { get; set; } // NVARCHAR(127)
-		[Column("series.definition"),         Nullable           ] public string   SeriesDefinition      { get; set; } // NCLOB
-		[Column("series.queryDefinition"),    Nullable           ] public string   SeriesQueryDefinition { get; set; } // NCLOB
+		#nullable enable
+		[Column("series.definition"),         Nullable           ] public string?  SeriesDefinition      { get; set; } // NCLOB
+		[Column("series.queryDefinition"),    Nullable           ] public string?  SeriesQueryDefinition { get; set; } // NCLOB
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_ENUM")]
 	public partial class _SYS_RT_CdsEnum
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(256)
+		#nullable enable
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("isAnonymous"),                      NotNull] public byte     IsAnonymous       { get; set; } // TINYINT
+		#nullable disable
 		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } // NVARCHAR(256)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_EXPRESSION")]
 	public partial class _SYS_RT_CdsExpression
 	{
 		[Column("imageId"),          PrimaryKey(1), NotNull] public long     ImageId          { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } // NVARCHAR(256)
+		#nullable enable
 		[Column("modifiedUtc"),                     NotNull] public DateTime ModifiedUtc      { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                           NotNull] public string   State            { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } // NVARCHAR(127)
-		[Column("definition"),          Nullable           ] public string   Definition       { get; set; } // NVARCHAR(5000)
+		#nullable enable
+		[Column("definition"),          Nullable           ] public string?  Definition       { get; set; } // NVARCHAR(5000)
+		#nullable disable
 		[Column("kind"),                            NotNull] public string   Kind             { get; set; } // NVARCHAR(127)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_EXT_PKG_DEP")]
 	public partial class _SYS_RT_CdsExtPkgDep
 	{
 		[Column("imageId"),     PrimaryKey(1), NotNull] public long     ImageId     { get; set; } // BIGINT
+		#nullable disable
 		[Column("from.schema"), PrimaryKey(2), NotNull] public string   FromSchema  { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("from.name"),   PrimaryKey(3), NotNull] public string   FromName    { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("to.schema"),   PrimaryKey(4), NotNull] public string   ToSchema    { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("to.name"),     PrimaryKey(5), NotNull] public string   ToName      { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                NotNull] public DateTime ModifiedUtc { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                      NotNull] public string   State       { get; set; } // NVARCHAR(10)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_PARAMETER")]
 	public partial class _SYS_RT_CdsParameter
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("parameterName"),     PrimaryKey(4), NotNull] public string   ParameterName     { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("parameterIndex"),                   NotNull] public int      ParameterIndex    { get; set; } // INTEGER
+		#nullable disable
 		[Column("metaTableSelector"),                NotNull] public string   MetaTableSelector { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.schema"),                    NotNull] public string   TargetSchema      { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.name"),                      NotNull] public string   TargetName        { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("passingMode"),                      NotNull] public string   PassingMode       { get; set; } // NVARCHAR(127)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_RULE")]
 	public partial class _SYS_RT_CdsRule
 	{
 		[Column("imageId"),          PrimaryKey(1), NotNull] public long     ImageId          { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                     NotNull] public DateTime ModifiedUtc      { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                           NotNull] public string   State            { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("definition"),                      NotNull] public string   Definition       { get; set; } // NCLOB
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_SCALAR_TYPE")]
 	public partial class _SYS_RT_CdsScalarType
 	{
 		[Column("imageId"),           PrimaryKey(1), NotNull] public long     ImageId           { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),            PrimaryKey(2), NotNull] public string   Schema            { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),              PrimaryKey(3), NotNull] public string   Name              { get; set; } // NVARCHAR(256)
+		#nullable enable
 		[Column("modifiedUtc"),                      NotNull] public DateTime ModifiedUtc       { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                            NotNull] public string   State             { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                 NotNull] public string   ExtensionPackage  { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("isAnonymous"),                      NotNull] public byte     IsAnonymous       { get; set; } // TINYINT
+		#nullable disable
 		[Column("primitiveTypeName"),                NotNull] public string   PrimitiveTypeName { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("length"),               Nullable           ] public int?     Length            { get; set; } // INTEGER
 		[Column("precision"),            Nullable           ] public int?     Precision         { get; set; } // INTEGER
 		[Column("scale"),                Nullable           ] public int?     Scale             { get; set; } // INTEGER
@@ -1396,38 +1627,62 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_CdsSourceCode
 	{
 		[Column("imageId"),          PrimaryKey(1), NotNull] public long     ImageId          { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                     NotNull] public DateTime ModifiedUtc      { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                           NotNull] public string   State            { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("sourcecode"),                      NotNull] public string   Sourcecode       { get; set; } // NCLOB
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_STATISTICS")]
 	public partial class _SYS_RT_CdsStatistic
 	{
 		[Column("activationUtc"),   PrimaryKey(1), NotNull] public DateTime ActivationUtc   { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("connection"),      PrimaryKey(2), NotNull] public string   Connection      { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("activationPhase"),                NotNull] public string   ActivationPhase { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("statementNo"),     PrimaryKey(3), NotNull] public int      StatementNo     { get; set; } // INTEGER
 		[Column("creationUtc"),     PrimaryKey(4), NotNull] public DateTime CreationUtc     { get; set; } // TIMESTAMP
 		[Column("executionUtc"),    PrimaryKey(5), NotNull] public DateTime ExecutionUtc    { get; set; } // TIMESTAMP
 		[Column("executionNo"),     PrimaryKey(6), NotNull] public int      ExecutionNo     { get; set; } // INTEGER
 		[Column("usecs"),                          NotNull] public int      Usecs           { get; set; } // INTEGER
+		#nullable disable
 		[Column("rawStatement"),                   NotNull] public string   RawStatement    { get; set; } // NVARCHAR(5000)
-		[Column("execStatement"),      Nullable           ] public string   ExecStatement   { get; set; } // NCLOB
+		#nullable enable
+		[Column("execStatement"),      Nullable           ] public string?  ExecStatement   { get; set; } // NCLOB
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_STRUCTURE")]
 	public partial class _SYS_RT_CdsStructure
 	{
 		[Column("imageId"),          PrimaryKey(1), NotNull] public long     ImageId          { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } // NVARCHAR(256)
+		#nullable enable
 		[Column("modifiedUtc"),                     NotNull] public DateTime ModifiedUtc      { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                           NotNull] public string   State            { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("isAnonymous"),                     NotNull] public byte     IsAnonymous      { get; set; } // TINYINT
 	}
 
@@ -1435,32 +1690,58 @@ namespace SapHanaDataContext
 	public partial class _SYS_RT_CdsStructureComponent
 	{
 		[Column("imageId"),            PrimaryKey(1), NotNull] public long     ImageId            { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),             PrimaryKey(2), NotNull] public string   Schema             { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),               PrimaryKey(3), NotNull] public string   Name               { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("componentName"),      PrimaryKey(4), NotNull] public string   ComponentName      { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                       NotNull] public DateTime ModifiedUtc        { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                             NotNull] public string   State              { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                  NotNull] public string   ExtensionPackage   { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("componentIndex"),                    NotNull] public int      ComponentIndex     { get; set; } // INTEGER
+		#nullable disable
 		[Column("metaTableSelector"),                 NotNull] public string   MetaTableSelector  { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.schema"),                     NotNull] public string   TargetSchema       { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("target.name"),                       NotNull] public string   TargetName         { get; set; } // NVARCHAR(256)
+		#nullable enable
 		[Column("target.isNative"),                   NotNull] public byte     TargetIsNative     { get; set; } // TINYINT
 		[Column("isKey"),                             NotNull] public byte     IsKey              { get; set; } // TINYINT
 		[Column("isNullable"),                        NotNull] public byte     IsNullable         { get; set; } // TINYINT
-		[Column("originalDefinition"),    Nullable           ] public string   OriginalDefinition { get; set; } // NVARCHAR(5000)
+		[Column("originalDefinition"),    Nullable           ] public string?  OriginalDefinition { get; set; } // NVARCHAR(5000)
 	}
 
 	[Table(Schema="_SYS_RT", Name="CDS_VIEW")]
 	public partial class _SYS_RT_CdsView
 	{
 		[Column("imageId"),          PrimaryKey(1), NotNull] public long     ImageId          { get; set; } // BIGINT
+		#nullable disable
 		[Column("schema"),           PrimaryKey(2), NotNull] public string   Schema           { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("name"),             PrimaryKey(3), NotNull] public string   Name             { get; set; } // NVARCHAR(127)
+		#nullable enable
 		[Column("modifiedUtc"),                     NotNull] public DateTime ModifiedUtc      { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("state"),                           NotNull] public string   State            { get; set; } // NVARCHAR(10)
+		#nullable enable
+		#nullable disable
 		[Column("extensionPackage"),                NotNull] public string   ExtensionPackage { get; set; } // NVARCHAR(127)
+		#nullable enable
+		#nullable disable
 		[Column("definition"),                      NotNull] public string   Definition       { get; set; } // NCLOB
+		#nullable enable
 	}
 
 	[Table(Schema="TESTHANA", Name="Child")]
@@ -1476,91 +1757,103 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_ADDRESS_RECORD_INFO", IsView=true)]
 	public partial class _SYS_TASK_CleanseAddressRecordInfo0
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),                NotNull    ] public string SchemaName               { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),                NotNull    ] public string  SchemaName               { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),                  NotNull    ] public string TaskName                 { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),                  NotNull    ] public string  TaskName                 { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"),          NotNull    ] public long   TaskExecutionId          { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"),          NotNull    ] public long    TaskExecutionId          { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),                Nullable] public string OperationName            { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),                Nullable] public string? OperationName            { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The name of the table defined in the task plan for an operation
 		/// </summary>
-		[Column("TABLE_NAME"),                    Nullable] public string TableName                { get; set; } // NVARCHAR(128)
+		[Column("TABLE_NAME"),                    Nullable] public string? TableName                { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The unique ID of the row processed for this execution of the task plan
 		/// </summary>
-		[Column("ROW_ID"),                     NotNull    ] public long   RowId                    { get; set; } // BIGINT
+		[Column("ROW_ID"),                     NotNull    ] public long    RowId                    { get; set; } // BIGINT
 		/// <summary>
 		/// An ID to differentiate between multiple entities processed in a row
 		/// </summary>
-		[Column("ENTITY_INSTANCE"),            NotNull    ] public int    EntityInstance           { get; set; } // INTEGER
+		[Column("ENTITY_INSTANCE"),            NotNull    ] public int     EntityInstance           { get; set; } // INTEGER
 		/// <summary>
 		/// A unique ID to identify the occurrence of an entity
 		/// </summary>
-		[Column("ENTITY_INSTANCE_OCCURRENCE"), NotNull    ] public int    EntityInstanceOccurrence { get; set; } // INTEGER
+		[Column("ENTITY_INSTANCE_OCCURRENCE"), NotNull    ] public int     EntityInstanceOccurrence { get; set; } // INTEGER
 		/// <summary>
 		/// The source where the data was produced
 		/// </summary>
-		[Column("DATA_SOURCE"),                   Nullable] public string DataSource               { get; set; } // NVARCHAR(256)
+		[Column("DATA_SOURCE"),                   Nullable] public string? DataSource               { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// The two character country code
 		/// </summary>
-		[Column("ISO_COUNTRY_2CHAR"),             Nullable] public string IsoCountry2char          { get; set; } // NVARCHAR(4)
+		[Column("ISO_COUNTRY_2CHAR"),             Nullable] public string? IsoCountry2char          { get; set; } // NVARCHAR(4)
 		/// <summary>
 		/// A code that represents the type of an address
 		/// </summary>
-		[Column("ASSIGNMENT_TYPE"),               Nullable] public string AssignmentType           { get; set; } // NVARCHAR(4)
+		[Column("ASSIGNMENT_TYPE"),               Nullable] public string? AssignmentType           { get; set; } // NVARCHAR(4)
 		/// <summary>
 		/// A code that specifies the validity of an address
 		/// </summary>
-		[Column("ASSIGNMENT_INFORMATION"),        Nullable] public string AssignmentInformation    { get; set; } // NVARCHAR(4)
+		[Column("ASSIGNMENT_INFORMATION"),        Nullable] public string? AssignmentInformation    { get; set; } // NVARCHAR(4)
 		/// <summary>
 		/// A code that represents the level to which the address matched data in the address reference data
 		/// </summary>
-		[Column("ASSIGNMENT_LEVEL"),              Nullable] public string AssignmentLevel          { get; set; } // NVARCHAR(4)
+		[Column("ASSIGNMENT_LEVEL"),              Nullable] public string? AssignmentLevel          { get; set; } // NVARCHAR(4)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_ADDRESS_RECORD_INFO_")]
 	public partial class _SYS_TASK_CleanseAddressRecordInfo1
 	{
-		[Column("TASK_EXECUTION_ID"),          PrimaryKey(1), NotNull] public long   TaskExecutionId          { get; set; } // BIGINT
-		[Column("OPERATION_ID"),               PrimaryKey(2), NotNull] public int    OperationId              { get; set; } // INTEGER
-		[Column("TABLE_ID"),                   PrimaryKey(3), NotNull] public int    TableId                  { get; set; } // INTEGER
-		[Column("ROW_ID"),                     PrimaryKey(4), NotNull] public long   RowId                    { get; set; } // BIGINT
-		[Column("ENTITY_INSTANCE"),            PrimaryKey(5), NotNull] public int    EntityInstance           { get; set; } // INTEGER
-		[Column("ENTITY_INSTANCE_OCCURRENCE"), PrimaryKey(6), NotNull] public int    EntityInstanceOccurrence { get; set; } // INTEGER
-		[Column("DATA_SOURCE"),                   Nullable           ] public string DataSource               { get; set; } // NVARCHAR(256)
-		[Column("ISO_COUNTRY_2CHAR"),             Nullable           ] public string IsoCountry2char          { get; set; } // NVARCHAR(4)
-		[Column("ASSIGNMENT_TYPE"),               Nullable           ] public string AssignmentType           { get; set; } // NVARCHAR(4)
-		[Column("ASSIGNMENT_INFORMATION"),        Nullable           ] public string AssignmentInformation    { get; set; } // NVARCHAR(4)
-		[Column("ASSIGNMENT_LEVEL"),              Nullable           ] public string AssignmentLevel          { get; set; } // NVARCHAR(4)
+		[Column("TASK_EXECUTION_ID"),          PrimaryKey(1), NotNull] public long    TaskExecutionId          { get; set; } // BIGINT
+		[Column("OPERATION_ID"),               PrimaryKey(2), NotNull] public int     OperationId              { get; set; } // INTEGER
+		[Column("TABLE_ID"),                   PrimaryKey(3), NotNull] public int     TableId                  { get; set; } // INTEGER
+		[Column("ROW_ID"),                     PrimaryKey(4), NotNull] public long    RowId                    { get; set; } // BIGINT
+		[Column("ENTITY_INSTANCE"),            PrimaryKey(5), NotNull] public int     EntityInstance           { get; set; } // INTEGER
+		[Column("ENTITY_INSTANCE_OCCURRENCE"), PrimaryKey(6), NotNull] public int     EntityInstanceOccurrence { get; set; } // INTEGER
+		[Column("DATA_SOURCE"),                   Nullable           ] public string? DataSource               { get; set; } // NVARCHAR(256)
+		[Column("ISO_COUNTRY_2CHAR"),             Nullable           ] public string? IsoCountry2char          { get; set; } // NVARCHAR(4)
+		[Column("ASSIGNMENT_TYPE"),               Nullable           ] public string? AssignmentType           { get; set; } // NVARCHAR(4)
+		[Column("ASSIGNMENT_INFORMATION"),        Nullable           ] public string? AssignmentInformation    { get; set; } // NVARCHAR(4)
+		[Column("ASSIGNMENT_LEVEL"),              Nullable           ] public string? AssignmentLevel          { get; set; } // NVARCHAR(4)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_CHANGE_INFO_")]
 	public partial class _SYS_TASK_CleanseChangeInfo0
 	{
-		[Column("TASK_EXECUTION_ID"),          PrimaryKey(1), NotNull] public long   TaskExecutionId          { get; set; } // BIGINT
-		[Column("OPERATION_ID"),               PrimaryKey(2), NotNull] public int    OperationId              { get; set; } // INTEGER
-		[Column("TABLE_ID"),                      Nullable           ] public int?   TableId                  { get; set; } // INTEGER
-		[Column("ROW_ID"),                     PrimaryKey(3), NotNull] public long   RowId                    { get; set; } // BIGINT
-		[Column("ENTITY_ID"),                  PrimaryKey(4), NotNull] public string EntityId                 { get; set; } // NVARCHAR(12)
-		[Column("ENTITY_INSTANCE"),            PrimaryKey(5), NotNull] public int    EntityInstance           { get; set; } // INTEGER
-		[Column("ENTITY_INSTANCE_OCCURRENCE"), PrimaryKey(6), NotNull] public int    EntityInstanceOccurrence { get; set; } // INTEGER
-		[Column("DATA_SOURCE"),                   Nullable           ] public string DataSource               { get; set; } // NVARCHAR(256)
-		[Column("COMPONENT_ID"),               PrimaryKey(7), NotNull] public string ComponentId              { get; set; } // NVARCHAR(12)
-		[Column("COMPONENT_ELEMENT_ID"),       PrimaryKey(8), NotNull] public string ComponentElementId       { get; set; } // NVARCHAR(12)
-		[Column("CHANGE_CATEGORY_ID"),         PrimaryKey(9), NotNull] public string ChangeCategoryId         { get; set; } // NVARCHAR(12)
-		[Column("CHANGE_SIGNIFICANCE_ID"),        Nullable           ] public string ChangeSignificanceId     { get; set; } // NVARCHAR(12)
+		[Column("TASK_EXECUTION_ID"),          PrimaryKey(1), NotNull] public long    TaskExecutionId          { get; set; } // BIGINT
+		[Column("OPERATION_ID"),               PrimaryKey(2), NotNull] public int     OperationId              { get; set; } // INTEGER
+		[Column("TABLE_ID"),                      Nullable           ] public int?    TableId                  { get; set; } // INTEGER
+		[Column("ROW_ID"),                     PrimaryKey(3), NotNull] public long    RowId                    { get; set; } // BIGINT
+		#nullable disable
+		[Column("ENTITY_ID"),                  PrimaryKey(4), NotNull] public string  EntityId                 { get; set; } // NVARCHAR(12)
+		#nullable enable
+		[Column("ENTITY_INSTANCE"),            PrimaryKey(5), NotNull] public int     EntityInstance           { get; set; } // INTEGER
+		[Column("ENTITY_INSTANCE_OCCURRENCE"), PrimaryKey(6), NotNull] public int     EntityInstanceOccurrence { get; set; } // INTEGER
+		[Column("DATA_SOURCE"),                   Nullable           ] public string? DataSource               { get; set; } // NVARCHAR(256)
+		#nullable disable
+		[Column("COMPONENT_ID"),               PrimaryKey(7), NotNull] public string  ComponentId              { get; set; } // NVARCHAR(12)
+		#nullable enable
+		#nullable disable
+		[Column("COMPONENT_ELEMENT_ID"),       PrimaryKey(8), NotNull] public string  ComponentElementId       { get; set; } // NVARCHAR(12)
+		#nullable enable
+		#nullable disable
+		[Column("CHANGE_CATEGORY_ID"),         PrimaryKey(9), NotNull] public string  ChangeCategoryId         { get; set; } // NVARCHAR(12)
+		#nullable enable
+		[Column("CHANGE_SIGNIFICANCE_ID"),        Nullable           ] public string? ChangeSignificanceId     { get; set; } // NVARCHAR(12)
 	}
 
 	/// <summary>
@@ -1569,59 +1862,71 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_CHANGE_INFO", IsView=true)]
 	public partial class _SYS_TASK_CleanseChangeInfo1
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),                NotNull    ] public string SchemaName               { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),                NotNull    ] public string  SchemaName               { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),                  NotNull    ] public string TaskName                 { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),                  NotNull    ] public string  TaskName                 { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"),          NotNull    ] public long   TaskExecutionId          { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"),          NotNull    ] public long    TaskExecutionId          { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),                Nullable] public string OperationName            { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),                Nullable] public string? OperationName            { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The name of the table defined in the task plan for an operation
 		/// </summary>
-		[Column("TABLE_NAME"),                    Nullable] public string TableName                { get; set; } // NVARCHAR(128)
+		[Column("TABLE_NAME"),                    Nullable] public string? TableName                { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The unique ID of the row processed for this execution of the task plan
 		/// </summary>
-		[Column("ROW_ID"),                     NotNull    ] public long   RowId                    { get; set; } // BIGINT
+		[Column("ROW_ID"),                     NotNull    ] public long    RowId                    { get; set; } // BIGINT
+		#nullable disable
 		/// <summary>
 		/// The ID describing the type of record that was processed
 		/// </summary>
-		[Column("ENTITY_ID"),                  NotNull    ] public string EntityId                 { get; set; } // NVARCHAR(12)
+		[Column("ENTITY_ID"),                  NotNull    ] public string  EntityId                 { get; set; } // NVARCHAR(12)
+		#nullable enable
 		/// <summary>
 		/// An ID to differentiate between multiple entities processed in a row
 		/// </summary>
-		[Column("ENTITY_INSTANCE"),            NotNull    ] public int    EntityInstance           { get; set; } // INTEGER
+		[Column("ENTITY_INSTANCE"),            NotNull    ] public int     EntityInstance           { get; set; } // INTEGER
 		/// <summary>
 		/// A unique ID to identify the occurrence of an entity
 		/// </summary>
-		[Column("ENTITY_INSTANCE_OCCURRENCE"), NotNull    ] public int    EntityInstanceOccurrence { get; set; } // INTEGER
+		[Column("ENTITY_INSTANCE_OCCURRENCE"), NotNull    ] public int     EntityInstanceOccurrence { get; set; } // INTEGER
 		/// <summary>
 		/// The source where the data was produced
 		/// </summary>
-		[Column("DATA_SOURCE"),                   Nullable] public string DataSource               { get; set; } // NVARCHAR(256)
+		[Column("DATA_SOURCE"),                   Nullable] public string? DataSource               { get; set; } // NVARCHAR(256)
+		#nullable disable
 		/// <summary>
 		/// Identification number that refers to data components
 		/// </summary>
-		[Column("COMPONENT_ID"),               NotNull    ] public string ComponentId              { get; set; } // NVARCHAR(12)
+		[Column("COMPONENT_ID"),               NotNull    ] public string  ComponentId              { get; set; } // NVARCHAR(12)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Identification number that refers to more granular elements within a component
 		/// </summary>
-		[Column("COMPONENT_ELEMENT_ID"),       NotNull    ] public string ComponentElementId       { get; set; } // NVARCHAR(12)
-		[Column("CHANGE_CATEGORY_ID"),         NotNull    ] public string ChangeCategoryId         { get; set; } // NVARCHAR(12)
+		[Column("COMPONENT_ELEMENT_ID"),       NotNull    ] public string  ComponentElementId       { get; set; } // NVARCHAR(12)
+		#nullable enable
+		#nullable disable
+		[Column("CHANGE_CATEGORY_ID"),         NotNull    ] public string  ChangeCategoryId         { get; set; } // NVARCHAR(12)
+		#nullable enable
 		/// <summary>
 		/// Identification number that refers to the significance of the change
 		/// </summary>
-		[Column("CHANGE_SIGNIFICANCE_ID"),        Nullable] public string ChangeSignificanceId     { get; set; } // NVARCHAR(12)
+		[Column("CHANGE_SIGNIFICANCE_ID"),        Nullable] public string? ChangeSignificanceId     { get; set; } // NVARCHAR(12)
 	}
 
 	/// <summary>
@@ -1630,104 +1935,108 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_COMPONENT_INFO", IsView=true)]
 	public partial class _SYS_TASK_CleanseComponentInfo0
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),                  NotNull    ] public string SchemaName                { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),                  NotNull    ] public string  SchemaName                { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),                    NotNull    ] public string TaskName                  { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),                    NotNull    ] public string  TaskName                  { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"),            NotNull    ] public long   TaskExecutionId           { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"),            NotNull    ] public long    TaskExecutionId           { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),                  Nullable] public string OperationName             { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),                  Nullable] public string? OperationName             { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The ID describing the type of record that was processed
 		/// </summary>
-		[Column("ENTITY_ID"),                       Nullable] public string EntityId                  { get; set; } // NVARCHAR(12)
+		[Column("ENTITY_ID"),                       Nullable] public string? EntityId                  { get; set; } // NVARCHAR(12)
 		/// <summary>
 		/// An ID to differentiate between multiple entities processed in a row
 		/// </summary>
-		[Column("ENTITY_INSTANCE"),                 Nullable] public int?   EntityInstance            { get; set; } // INTEGER
+		[Column("ENTITY_INSTANCE"),                 Nullable] public int?    EntityInstance            { get; set; } // INTEGER
 		/// <summary>
 		/// A unique ID to identify the occurrence of an entity
 		/// </summary>
-		[Column("ENTITY_INSTANCE_OCCURRENCE"),      Nullable] public int?   EntityInstanceOccurrence  { get; set; } // INTEGER
+		[Column("ENTITY_INSTANCE_OCCURRENCE"),      Nullable] public int?    EntityInstanceOccurrence  { get; set; } // INTEGER
 		/// <summary>
 		/// The source where the data was produced
 		/// </summary>
-		[Column("DATA_SOURCE"),                     Nullable] public string DataSource                { get; set; } // NVARCHAR(256)
+		[Column("DATA_SOURCE"),                     Nullable] public string? DataSource                { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Identification number that refers to data components
 		/// </summary>
-		[Column("COMPONENT_ID"),                    Nullable] public string ComponentId               { get; set; } // NVARCHAR(12)
+		[Column("COMPONENT_ID"),                    Nullable] public string? ComponentId               { get; set; } // NVARCHAR(12)
 		/// <summary>
 		/// Identification number that refers to more granular elements within a component
 		/// </summary>
-		[Column("COMPONENT_ELEMENT_ID"),            Nullable] public string ComponentElementId        { get; set; } // NVARCHAR(12)
+		[Column("COMPONENT_ELEMENT_ID"),            Nullable] public string? ComponentElementId        { get; set; } // NVARCHAR(12)
 		/// <summary>
 		/// The name of the table defined in the task plan for an operation
 		/// </summary>
-		[Column("TABLE_NAME"),                      Nullable] public string TableName                 { get; set; } // NVARCHAR(128)
+		[Column("TABLE_NAME"),                      Nullable] public string? TableName                 { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The unique ID of the row processed for this execution of the task plan
 		/// </summary>
-		[Column("ROW_ID"),                          Nullable] public long?  RowId                     { get; set; } // BIGINT
+		[Column("ROW_ID"),                          Nullable] public long?   RowId                     { get; set; } // BIGINT
 		/// <summary>
 		/// Name of the column
 		/// </summary>
-		[Column("COLUMN_NAME"),                     Nullable] public string ColumnName                { get; set; } // NVARCHAR(128)
+		[Column("COLUMN_NAME"),                     Nullable] public string? ColumnName                { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Starting character of the component in the column
 		/// </summary>
-		[Column("COLUMN_START_POSITION"),           Nullable] public int?   ColumnStartPosition       { get; set; } // INTEGER
+		[Column("COLUMN_START_POSITION"),           Nullable] public int?    ColumnStartPosition       { get; set; } // INTEGER
 		/// <summary>
 		/// Number of characters of the component in the column
 		/// </summary>
-		[Column("COLUMN_DATA_LENGTH"),              Nullable] public int?   ColumnDataLength          { get; set; } // INTEGER
+		[Column("COLUMN_DATA_LENGTH"),              Nullable] public int?    ColumnDataLength          { get; set; } // INTEGER
 		/// <summary>
 		/// Name of the output table
 		/// </summary>
-		[Column("OUTPUT_TABLE_NAME"),               Nullable] public string OutputTableName           { get; set; } // NVARCHAR(128)
+		[Column("OUTPUT_TABLE_NAME"),               Nullable] public string? OutputTableName           { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Name of the output column
 		/// </summary>
-		[Column("OUTPUT_COLUMN_NAME"),              Nullable] public string OutputColumnName          { get; set; } // NVARCHAR(128)
+		[Column("OUTPUT_COLUMN_NAME"),              Nullable] public string? OutputColumnName          { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Starting character of the component in the output column
 		/// </summary>
-		[Column("OUTPUT_COLUMN_START_POSITION"),    Nullable] public int?   OutputColumnStartPosition { get; set; } // INTEGER
+		[Column("OUTPUT_COLUMN_START_POSITION"),    Nullable] public int?    OutputColumnStartPosition { get; set; } // INTEGER
 		/// <summary>
 		/// Number of characters of the component in the output column
 		/// </summary>
-		[Column("OUTPUT_COLUMN_DATA_LENGTH"),       Nullable] public int?   OutputColumnDataLength    { get; set; } // INTEGER
+		[Column("OUTPUT_COLUMN_DATA_LENGTH"),       Nullable] public int?    OutputColumnDataLength    { get; set; } // INTEGER
 	}
 
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_COMPONENT_INFO_")]
 	public partial class _SYS_TASK_CleanseComponentInfo1
 	{
-		[Column("TASK_EXECUTION_ID"),            Nullable] public long?  TaskExecutionId           { get; set; } // BIGINT
-		[Column("OPERATION_ID"),                 Nullable] public int?   OperationId               { get; set; } // INTEGER
-		[Column("ENTITY_ID"),                    Nullable] public string EntityId                  { get; set; } // NVARCHAR(12)
-		[Column("ENTITY_INSTANCE"),              Nullable] public int?   EntityInstance            { get; set; } // INTEGER
-		[Column("ENTITY_INSTANCE_OCCURRENCE"),   Nullable] public int?   EntityInstanceOccurrence  { get; set; } // INTEGER
-		[Column("DATA_SOURCE"),                  Nullable] public string DataSource                { get; set; } // NVARCHAR(256)
-		[Column("COMPONENT_ID"),                 Nullable] public string ComponentId               { get; set; } // NVARCHAR(12)
-		[Column("COMPONENT_ELEMENT_ID"),         Nullable] public string ComponentElementId        { get; set; } // NVARCHAR(12)
-		[Column("TABLE_ID"),                     Nullable] public int?   TableId                   { get; set; } // INTEGER
-		[Column("ROW_ID"),                       Nullable] public long?  RowId                     { get; set; } // BIGINT
-		[Column("COLUMN_ID"),                    Nullable] public int?   ColumnId                  { get; set; } // INTEGER
-		[Column("COLUMN_START_POSITION"),        Nullable] public int?   ColumnStartPosition       { get; set; } // INTEGER
-		[Column("COLUMN_DATA_LENGTH"),           Nullable] public int?   ColumnDataLength          { get; set; } // INTEGER
-		[Column("OUTPUT_TABLE_ID"),              Nullable] public int?   OutputTableId             { get; set; } // INTEGER
-		[Column("OUTPUT_COLUMN_ID"),             Nullable] public int?   OutputColumnId            { get; set; } // INTEGER
-		[Column("OUTPUT_COLUMN_START_POSITION"), Nullable] public int?   OutputColumnStartPosition { get; set; } // INTEGER
-		[Column("OUTPUT_COLUMN_DATA_LENGTH"),    Nullable] public int?   OutputColumnDataLength    { get; set; } // INTEGER
+		[Column("TASK_EXECUTION_ID"),            Nullable] public long?   TaskExecutionId           { get; set; } // BIGINT
+		[Column("OPERATION_ID"),                 Nullable] public int?    OperationId               { get; set; } // INTEGER
+		[Column("ENTITY_ID"),                    Nullable] public string? EntityId                  { get; set; } // NVARCHAR(12)
+		[Column("ENTITY_INSTANCE"),              Nullable] public int?    EntityInstance            { get; set; } // INTEGER
+		[Column("ENTITY_INSTANCE_OCCURRENCE"),   Nullable] public int?    EntityInstanceOccurrence  { get; set; } // INTEGER
+		[Column("DATA_SOURCE"),                  Nullable] public string? DataSource                { get; set; } // NVARCHAR(256)
+		[Column("COMPONENT_ID"),                 Nullable] public string? ComponentId               { get; set; } // NVARCHAR(12)
+		[Column("COMPONENT_ELEMENT_ID"),         Nullable] public string? ComponentElementId        { get; set; } // NVARCHAR(12)
+		[Column("TABLE_ID"),                     Nullable] public int?    TableId                   { get; set; } // INTEGER
+		[Column("ROW_ID"),                       Nullable] public long?   RowId                     { get; set; } // BIGINT
+		[Column("COLUMN_ID"),                    Nullable] public int?    ColumnId                  { get; set; } // INTEGER
+		[Column("COLUMN_START_POSITION"),        Nullable] public int?    ColumnStartPosition       { get; set; } // INTEGER
+		[Column("COLUMN_DATA_LENGTH"),           Nullable] public int?    ColumnDataLength          { get; set; } // INTEGER
+		[Column("OUTPUT_TABLE_ID"),              Nullable] public int?    OutputTableId             { get; set; } // INTEGER
+		[Column("OUTPUT_COLUMN_ID"),             Nullable] public int?    OutputColumnId            { get; set; } // INTEGER
+		[Column("OUTPUT_COLUMN_START_POSITION"), Nullable] public int?    OutputColumnStartPosition { get; set; } // INTEGER
+		[Column("OUTPUT_COLUMN_DATA_LENGTH"),    Nullable] public int?    OutputColumnDataLength    { get; set; } // INTEGER
 	}
 
 	/// <summary>
@@ -1736,64 +2045,68 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_INFO_CODES", IsView=true)]
 	public partial class _SYS_TASK_CleanseInfoCode
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),                NotNull    ] public string SchemaName               { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),                NotNull    ] public string  SchemaName               { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),                  NotNull    ] public string TaskName                 { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),                  NotNull    ] public string  TaskName                 { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"),          NotNull    ] public long   TaskExecutionId          { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"),          NotNull    ] public long    TaskExecutionId          { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),                Nullable] public string OperationName            { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),                Nullable] public string? OperationName            { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The name of the table defined in the task plan for an operation
 		/// </summary>
-		[Column("TABLE_NAME"),                    Nullable] public string TableName                { get; set; } // NVARCHAR(128)
+		[Column("TABLE_NAME"),                    Nullable] public string? TableName                { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The unique ID of the row processed for this execution of the task plan
 		/// </summary>
-		[Column("ROW_ID"),                        Nullable] public long?  RowId                    { get; set; } // BIGINT
+		[Column("ROW_ID"),                        Nullable] public long?   RowId                    { get; set; } // BIGINT
 		/// <summary>
 		/// The ID describing the type of record that was processed
 		/// </summary>
-		[Column("ENTITY_ID"),                     Nullable] public string EntityId                 { get; set; } // NVARCHAR(12)
+		[Column("ENTITY_ID"),                     Nullable] public string? EntityId                 { get; set; } // NVARCHAR(12)
 		/// <summary>
 		/// An ID to differentiate between multiple entities processed in a row
 		/// </summary>
-		[Column("ENTITY_INSTANCE"),               Nullable] public int?   EntityInstance           { get; set; } // INTEGER
+		[Column("ENTITY_INSTANCE"),               Nullable] public int?    EntityInstance           { get; set; } // INTEGER
 		/// <summary>
 		/// A unique ID to identify the occurrence of an entity
 		/// </summary>
-		[Column("ENTITY_INSTANCE_OCCURRENCE"), NotNull    ] public int    EntityInstanceOccurrence { get; set; } // INTEGER
+		[Column("ENTITY_INSTANCE_OCCURRENCE"), NotNull    ] public int     EntityInstanceOccurrence { get; set; } // INTEGER
 		/// <summary>
 		/// The source where the data was produced
 		/// </summary>
-		[Column("DATA_SOURCE"),                   Nullable] public string DataSource               { get; set; } // NVARCHAR(256)
+		[Column("DATA_SOURCE"),                   Nullable] public string? DataSource               { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Information code that gives information about the processing of the record
 		/// </summary>
-		[Column("INFO_CODE"),                     Nullable] public string InfoCode                 { get; set; } // NVARCHAR(10)
+		[Column("INFO_CODE"),                     Nullable] public string? InfoCode                 { get; set; } // NVARCHAR(10)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_INFO_CODES_")]
 	public partial class _SYS_TASK_CleanseInfoCodes
 	{
-		[Column("TASK_EXECUTION_ID"),             Nullable] public long?  TaskExecutionId          { get; set; } // BIGINT
-		[Column("OPERATION_ID"),                  Nullable] public int?   OperationId              { get; set; } // INTEGER
-		[Column("TABLE_ID"),                      Nullable] public int?   TableId                  { get; set; } // INTEGER
-		[Column("ROW_ID"),                        Nullable] public long?  RowId                    { get; set; } // BIGINT
-		[Column("ENTITY_ID"),                     Nullable] public string EntityId                 { get; set; } // NVARCHAR(12)
-		[Column("ENTITY_INSTANCE"),               Nullable] public int?   EntityInstance           { get; set; } // INTEGER
-		[Column("ENTITY_INSTANCE_OCCURRENCE"), NotNull    ] public int    EntityInstanceOccurrence { get; set; } // INTEGER
-		[Column("DATA_SOURCE"),                   Nullable] public string DataSource               { get; set; } // NVARCHAR(256)
-		[Column("INFO_CODE"),                     Nullable] public string InfoCode                 { get; set; } // NVARCHAR(10)
+		[Column("TASK_EXECUTION_ID"),             Nullable] public long?   TaskExecutionId          { get; set; } // BIGINT
+		[Column("OPERATION_ID"),                  Nullable] public int?    OperationId              { get; set; } // INTEGER
+		[Column("TABLE_ID"),                      Nullable] public int?    TableId                  { get; set; } // INTEGER
+		[Column("ROW_ID"),                        Nullable] public long?   RowId                    { get; set; } // BIGINT
+		[Column("ENTITY_ID"),                     Nullable] public string? EntityId                 { get; set; } // NVARCHAR(12)
+		[Column("ENTITY_INSTANCE"),               Nullable] public int?    EntityInstance           { get; set; } // INTEGER
+		[Column("ENTITY_INSTANCE_OCCURRENCE"), NotNull    ] public int     EntityInstanceOccurrence { get; set; } // INTEGER
+		[Column("DATA_SOURCE"),                   Nullable] public string? DataSource               { get; set; } // NVARCHAR(256)
+		[Column("INFO_CODE"),                     Nullable] public string? InfoCode                 { get; set; } // NVARCHAR(10)
 	}
 
 	/// <summary>
@@ -1802,63 +2115,67 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_STATISTICS", IsView=true)]
 	public partial class _SYS_TASK_CleanseStatistic
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),                  NotNull    ] public string SchemaName                { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),                  NotNull    ] public string  SchemaName                { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),                    NotNull    ] public string TaskName                  { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),                    NotNull    ] public string  TaskName                  { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"),            NotNull    ] public long   TaskExecutionId           { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"),            NotNull    ] public long    TaskExecutionId           { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),                  Nullable] public string OperationName             { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),                  Nullable] public string? OperationName             { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The ID describing the type of record that was processed
 		/// </summary>
-		[Column("ENTITY_ID"),                       Nullable] public string EntityId                  { get; set; } // NVARCHAR(12)
+		[Column("ENTITY_ID"),                       Nullable] public string? EntityId                  { get; set; } // NVARCHAR(12)
 		/// <summary>
 		/// An ID to differentiate between multiple entities processed in a row
 		/// </summary>
-		[Column("ENTITY_INSTANCE"),                 Nullable] public int?   EntityInstance            { get; set; } // INTEGER
+		[Column("ENTITY_INSTANCE"),                 Nullable] public int?    EntityInstance            { get; set; } // INTEGER
 		/// <summary>
 		/// The total number of records processed for the entity instance
 		/// </summary>
-		[Column("NUM_RECORDS"),                     Nullable] public long?  NumRecords                { get; set; } // BIGINT
+		[Column("NUM_RECORDS"),                     Nullable] public long?   NumRecords                { get; set; } // BIGINT
 		/// <summary>
 		/// The number of valid records processed for the entity instance
 		/// </summary>
-		[Column("NUM_VALIDS"),                      Nullable] public long?  NumValids                 { get; set; } // BIGINT
+		[Column("NUM_VALIDS"),                      Nullable] public long?   NumValids                 { get; set; } // BIGINT
 		/// <summary>
 		/// The number of suspect records processed for the entity instance
 		/// </summary>
-		[Column("NUM_SUSPECTS"),                    Nullable] public long?  NumSuspects               { get; set; } // BIGINT
+		[Column("NUM_SUSPECTS"),                    Nullable] public long?   NumSuspects               { get; set; } // BIGINT
 		/// <summary>
 		/// The number of blank records processed for the entity instance
 		/// </summary>
-		[Column("NUM_BLANKS"),                      Nullable] public long?  NumBlanks                 { get; set; } // BIGINT
+		[Column("NUM_BLANKS"),                      Nullable] public long?   NumBlanks                 { get; set; } // BIGINT
 		/// <summary>
 		/// The number of records with high significance changes for the entity instance
 		/// </summary>
-		[Column("NUM_HIGH_SIGNIFICANT_CHANGES"),    Nullable] public long?  NumHighSignificantChanges { get; set; } // BIGINT
+		[Column("NUM_HIGH_SIGNIFICANT_CHANGES"),    Nullable] public long?   NumHighSignificantChanges { get; set; } // BIGINT
 	}
 
 	[Table(Schema="_SYS_TASK", Name="CLEANSE_STATISTICS_")]
 	public partial class _SYS_TASK_CleanseStatistics
 	{
-		[Column("TASK_EXECUTION_ID"),            Nullable] public long?  TaskExecutionId           { get; set; } // BIGINT
-		[Column("OPERATION_ID"),                 Nullable] public int?   OperationId               { get; set; } // INTEGER
-		[Column("ENTITY_ID"),                    Nullable] public string EntityId                  { get; set; } // NVARCHAR(12)
-		[Column("ENTITY_INSTANCE"),              Nullable] public int?   EntityInstance            { get; set; } // INTEGER
-		[Column("NUM_RECORDS"),                  Nullable] public long?  NumRecords                { get; set; } // BIGINT
-		[Column("NUM_SUSPECTS"),                 Nullable] public long?  NumSuspects               { get; set; } // BIGINT
-		[Column("NUM_BLANKS"),                   Nullable] public long?  NumBlanks                 { get; set; } // BIGINT
-		[Column("NUM_HIGH_SIGNIFICANT_CHANGES"), Nullable] public long?  NumHighSignificantChanges { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"),            Nullable] public long?   TaskExecutionId           { get; set; } // BIGINT
+		[Column("OPERATION_ID"),                 Nullable] public int?    OperationId               { get; set; } // INTEGER
+		[Column("ENTITY_ID"),                    Nullable] public string? EntityId                  { get; set; } // NVARCHAR(12)
+		[Column("ENTITY_INSTANCE"),              Nullable] public int?    EntityInstance            { get; set; } // INTEGER
+		[Column("NUM_RECORDS"),                  Nullable] public long?   NumRecords                { get; set; } // BIGINT
+		[Column("NUM_SUSPECTS"),                 Nullable] public long?   NumSuspects               { get; set; } // BIGINT
+		[Column("NUM_BLANKS"),                   Nullable] public long?   NumBlanks                 { get; set; } // BIGINT
+		[Column("NUM_HIGH_SIGNIFICANT_CHANGES"), Nullable] public long?   NumHighSignificantChanges { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -1895,26 +2212,32 @@ namespace SapHanaDataContext
 		/// Maximum transmission interval in minute
 		/// </summary>
 		[Column("MAX_TRANSMISSION_INTERVAL"),           Nullable         ] public short?    MaxTransmissionInterval        { get; set; } // SMALLINT
+		#nullable disable
 		/// <summary>
 		/// System ID of the client
 		/// </summary>
 		[Column("CLIENT_SYSTEM_ID"),                              NotNull] public string    ClientSystemId                 { get; set; } // VARCHAR(3)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Database Name of the client
 		/// </summary>
 		[Column("CLIENT_DATABASE_NAME"),                          NotNull] public string    ClientDatabaseName             { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Hardware key of the client
 		/// </summary>
 		[Column("CLIENT_HARDWARE_KEY"),                           NotNull] public string    ClientHardwareKey              { get; set; } // VARCHAR(11)
+		#nullable enable
 		/// <summary>
 		/// Private key of the client
 		/// </summary>
-		[Column("PRIVATE_KEY"),                         Nullable         ] public string    PrivateKey                     { get; set; } // VARCHAR(5000)
+		[Column("PRIVATE_KEY"),                         Nullable         ] public string?   PrivateKey                     { get; set; } // VARCHAR(5000)
 		/// <summary>
 		/// Personal certificate of the client
 		/// </summary>
-		[Column("PERSONAL_CERTIFICATE"),                Nullable         ] public string    PersonalCertificate            { get; set; } // VARCHAR(5000)
+		[Column("PERSONAL_CERTIFICATE"),                Nullable         ] public string?   PersonalCertificate            { get; set; } // VARCHAR(5000)
 		/// <summary>
 		/// Expiration timestamp of the Personal certificate
 		/// </summary>
@@ -1931,14 +2254,18 @@ namespace SapHanaDataContext
 		/// Unique ID of telemetry collector
 		/// </summary>
 		[Column("COLLECTOR_ID"),                PrimaryKey, NotNull] public short  CollectorId               { get; set; } // SMALLINT
+		#nullable disable
 		/// <summary>
 		/// Name of telemetry collector
 		/// </summary>
 		[Column("COLLECTOR_NAME"),                          NotNull] public string CollectorName             { get; set; } // VARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Status of telemetry collector
 		/// </summary>
 		[Column("COLLECTOR_STATUS"),                        NotNull] public object CollectorStatus           { get; set; } // BOOLEAN
+		#nullable enable
 		/// <summary>
 		/// Version of telemetry collector
 		/// </summary>
@@ -1974,27 +2301,27 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),    Nullable] public string    SchemaName    { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),    Nullable] public string?   SchemaName    { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),      Nullable] public string    TaskName      { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),      Nullable] public string?   TaskName      { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// The task plan operation producing the message
 		/// </summary>
-		[Column("OPERATION_NAME"), Nullable] public string    OperationName { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"), Nullable] public string?   OperationName { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Error, warning, or information
 		/// </summary>
-		[Column(),                 Nullable] public string    SEVERITY      { get; set; } // NVARCHAR(12)
+		[Column(),                 Nullable] public string?   SEVERITY      { get; set; } // NVARCHAR(12)
 		/// <summary>
 		/// The ID of the message
 		/// </summary>
-		[Column("MESSAGE_ID"),     Nullable] public string    MessageId     { get; set; } // NVARCHAR(8)
+		[Column("MESSAGE_ID"),     Nullable] public string?   MessageId     { get; set; } // NVARCHAR(8)
 		/// <summary>
 		/// The message text
 		/// </summary>
-		[Column("MESSAGE_TEXT"),   Nullable] public string    MessageText   { get; set; } // NVARCHAR(2048)
+		[Column("MESSAGE_TEXT"),   Nullable] public string?   MessageText   { get; set; } // NVARCHAR(2048)
 		/// <summary>
 		/// The time the message was issued
 		/// </summary>
@@ -2004,12 +2331,12 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="CREATE_TASK_MESSAGES_")]
 	public partial class _SYS_TASK_CreateTaskMessages
 	{
-		[Column("SCHEMA_NAME"),    Nullable] public string    SchemaName    { get; set; } // NVARCHAR(256)
-		[Column("TASK_NAME"),      Nullable] public string    TaskName      { get; set; } // NVARCHAR(256)
-		[Column("OPERATION_NAME"), Nullable] public string    OperationName { get; set; } // NVARCHAR(128)
-		[Column(),                 Nullable] public string    SEVERITY      { get; set; } // NVARCHAR(12)
-		[Column("MESSAGE_ID"),     Nullable] public string    MessageId     { get; set; } // NVARCHAR(8)
-		[Column("MESSAGE_TEXT"),   Nullable] public string    MessageText   { get; set; } // NVARCHAR(2048)
+		[Column("SCHEMA_NAME"),    Nullable] public string?   SchemaName    { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),      Nullable] public string?   TaskName      { get; set; } // NVARCHAR(256)
+		[Column("OPERATION_NAME"), Nullable] public string?   OperationName { get; set; } // NVARCHAR(128)
+		[Column(),                 Nullable] public string?   SEVERITY      { get; set; } // NVARCHAR(12)
+		[Column("MESSAGE_ID"),     Nullable] public string?   MessageId     { get; set; } // NVARCHAR(8)
+		[Column("MESSAGE_TEXT"),   Nullable] public string?   MessageText   { get; set; } // NVARCHAR(2048)
 		[Column("MESSAGE_TIME"),   Nullable] public DateTime? MessageTime   { get; set; } // SECONDDATE
 	}
 
@@ -2048,18 +2375,24 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="CURRENT_VERSIONS_")]
 	public partial class _SYS_TASK_CurrentVersions
 	{
+		#nullable disable
 		[Column("VERSION_ID"),  PrimaryKey,  NotNull] public string VersionId  { get; set; } // NVARCHAR(20)
+		#nullable enable
 		[Column("VERSION_NUM"),    Nullable         ] public int?   VersionNum { get; set; } // INTEGER
 	}
 
 	[Table(Schema="_SYS_XS", Name="DEBUG_PERMISSIONS")]
 	public partial class _SYS_XS_DebugPermission
 	{
+		#nullable disable
 		[Column, NotNull    ] public string   GRANTOR  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column, NotNull    ] public string   GRANTEE  { get; set; } // NVARCHAR(256)
+		#nullable enable
 		[Column, NotNull    ] public DateTime STARTING { get; set; } // TIMESTAMP
 		[Column, NotNull    ] public DateTime UNTIL    { get; set; } // TIMESTAMP
-		[Column,    Nullable] public string   TOKEN    { get; set; } // NVARCHAR(32)
+		[Column,    Nullable] public string?  TOKEN    { get; set; } // NVARCHAR(32)
 	}
 
 	/// <summary>
@@ -2072,10 +2405,12 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"), NotNull    ] public DateTime SnapshotId { get; set; } // TIMESTAMP
+		#nullable disable
 		/// <summary>
 		/// Resource type like LOG, DATA, TRACE, DATA_BACKUP, LOG_BACKUP and CATALOG_BACKUP
 		/// </summary>
 		[Column("USAGE_TYPE"),  NotNull    ] public string   UsageType  { get; set; } // VARCHAR(32)
+		#nullable enable
 		/// <summary>
 		/// Size of used disk space in bytes
 		/// </summary>
@@ -2086,15 +2421,20 @@ namespace SapHanaDataContext
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // INTEGER
+		#nullable disable
 		[Column,     NotNull] public string Taxonomy { get; set; } // NVARCHAR(50)
+		#nullable enable
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
 		public Person Person { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -2102,37 +2442,39 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_SQL_ANALYZER", Name="EDGE_STATISTICS", IsView=true)]
 	public partial class _SYS_SQL_ANALYZER_EdgeStatistic
 	{
+		#nullable disable
 		[Column("USER_NAME"),                    NotNull    ] public string    UserName                  { get; set; } // NVARCHAR(256)
-		[Column("STATEMENT_EXECUTION_ID"),          Nullable] public string    StatementExecutionId      { get; set; } // VARCHAR(32)
-		[Column("PLAN_ID"),                         Nullable] public string    PlanId                    { get; set; } // VARCHAR(256)
-		[Column("PARENT_OPERATOR_ID"),              Nullable] public string    ParentOperatorId          { get; set; } // VARCHAR(256)
-		[Column("CHILD_OPERATOR_ID"),               Nullable] public string    ChildOperatorId           { get; set; } // VARCHAR(256)
-		[Column("EDGE_NAME"),                       Nullable] public string    EdgeName                  { get; set; } // VARCHAR(512)
+		#nullable enable
+		[Column("STATEMENT_EXECUTION_ID"),          Nullable] public string?   StatementExecutionId      { get; set; } // VARCHAR(32)
+		[Column("PLAN_ID"),                         Nullable] public string?   PlanId                    { get; set; } // VARCHAR(256)
+		[Column("PARENT_OPERATOR_ID"),              Nullable] public string?   ParentOperatorId          { get; set; } // VARCHAR(256)
+		[Column("CHILD_OPERATOR_ID"),               Nullable] public string?   ChildOperatorId           { get; set; } // VARCHAR(256)
+		[Column("EDGE_NAME"),                       Nullable] public string?   EdgeName                  { get; set; } // VARCHAR(512)
 		[Column("EXECUTED_OUTPUT_RECORD_COUNT"),    Nullable] public long?     ExecutedOutputRecordCount { get; set; } // BIGINT
 		[Column("OUTPUT_PAYLOAD_SIZE"),             Nullable] public long?     OutputPayloadSize         { get; set; } // BIGINT
 		[Column("FETCH_CALL_COUNT"),                Nullable] public long?     FetchCallCount            { get; set; } // BIGINT
 		[Column("NETWORK_IO_START_TIME"),           Nullable] public DateTime? NetworkIoStartTime        { get; set; } // TIMESTAMP
 		[Column("NETWORK_IO_END_TIME"),             Nullable] public DateTime? NetworkIoEndTime          { get; set; } // TIMESTAMP
-		[Column("ACCESSED_TABLE_NAMES"),            Nullable] public string    AccessedTableNames        { get; set; } // NVARCHAR(5000)
-		[Column("EDGE_DETAILS"),                    Nullable] public string    EdgeDetails               { get; set; } // NCLOB
+		[Column("ACCESSED_TABLE_NAMES"),            Nullable] public string?   AccessedTableNames        { get; set; } // NVARCHAR(5000)
+		[Column("EDGE_DETAILS"),                    Nullable] public string?   EdgeDetails               { get; set; } // NCLOB
 	}
 
 	[Table(Schema="_SYS_SQL_ANALYZER", Name="EDGE_STATISTICS_")]
 	public partial class _SYS_SQL_ANALYZER_EdgeStatistics
 	{
-		[Column("USER_NAME"),                    Nullable] public string    UserName                  { get; set; } // NVARCHAR(256)
-		[Column("STATEMENT_EXECUTION_ID"),       Nullable] public string    StatementExecutionId      { get; set; } // VARCHAR(32)
-		[Column("PLAN_ID"),                      Nullable] public string    PlanId                    { get; set; } // VARCHAR(256)
-		[Column("PARENT_OPERATOR_ID"),           Nullable] public string    ParentOperatorId          { get; set; } // VARCHAR(256)
-		[Column("CHILD_OPERATOR_ID"),            Nullable] public string    ChildOperatorId           { get; set; } // VARCHAR(256)
-		[Column("EDGE_NAME"),                    Nullable] public string    EdgeName                  { get; set; } // VARCHAR(512)
+		[Column("USER_NAME"),                    Nullable] public string?   UserName                  { get; set; } // NVARCHAR(256)
+		[Column("STATEMENT_EXECUTION_ID"),       Nullable] public string?   StatementExecutionId      { get; set; } // VARCHAR(32)
+		[Column("PLAN_ID"),                      Nullable] public string?   PlanId                    { get; set; } // VARCHAR(256)
+		[Column("PARENT_OPERATOR_ID"),           Nullable] public string?   ParentOperatorId          { get; set; } // VARCHAR(256)
+		[Column("CHILD_OPERATOR_ID"),            Nullable] public string?   ChildOperatorId           { get; set; } // VARCHAR(256)
+		[Column("EDGE_NAME"),                    Nullable] public string?   EdgeName                  { get; set; } // VARCHAR(512)
 		[Column("EXECUTED_OUTPUT_RECORD_COUNT"), Nullable] public long?     ExecutedOutputRecordCount { get; set; } // BIGINT
 		[Column("OUTPUT_PAYLOAD_SIZE"),          Nullable] public long?     OutputPayloadSize         { get; set; } // BIGINT
 		[Column("FETCH_CALL_COUNT"),             Nullable] public long?     FetchCallCount            { get; set; } // BIGINT
 		[Column("NETWORK_IO_START_TIME"),        Nullable] public DateTime? NetworkIoStartTime        { get; set; } // TIMESTAMP
 		[Column("NETWORK_IO_END_TIME"),          Nullable] public DateTime? NetworkIoEndTime          { get; set; } // TIMESTAMP
-		[Column("ACCESSED_TABLE_NAMES"),         Nullable] public string    AccessedTableNames        { get; set; } // NVARCHAR(5000)
-		[Column("EDGE_DETAILS"),                 Nullable] public string    EdgeDetails               { get; set; } // NCLOB
+		[Column("ACCESSED_TABLE_NAMES"),         Nullable] public string?   AccessedTableNames        { get; set; } // NVARCHAR(5000)
+		[Column("EDGE_DETAILS"),                 Nullable] public string?   EdgeDetails               { get; set; } // NCLOB
 	}
 
 	/// <summary>
@@ -2144,11 +2486,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),       Nullable] public string    DatabaseName    { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),       Nullable] public string?   DatabaseName    { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Usage type of the root key:'PERSISTENCE','DPAPI'
 		/// </summary>
-		[Column("ROOT_KEY_TYPE"),       Nullable] public string    RootKeyType     { get; set; } // VARCHAR(16)
+		[Column("ROOT_KEY_TYPE"),       Nullable] public string?   RootKeyType     { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Version of the root key created for this root key type
 		/// </summary>
@@ -2160,7 +2502,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// TRUE if key is consistent between persistence and SSFS file, FALSE otherwise
 		/// </summary>
-		[Column("IS_CONSISTENT"),       Nullable] public string    IsConsistent    { get; set; } // VARCHAR(5)
+		[Column("IS_CONSISTENT"),       Nullable] public string?   IsConsistent    { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Number of consistency resets
 		/// </summary>
@@ -2168,11 +2510,13 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// TRUE if the key version is the version used for encryption, FALSE otherwise
 		/// </summary>
-		[Column("IS_USED"),             Nullable] public string    IsUsed          { get; set; } // VARCHAR(5)
+		[Column("IS_USED"),             Nullable] public string?   IsUsed          { get; set; } // VARCHAR(5)
+		#nullable disable
 		/// <summary>
 		/// The key state is ACTIVE, PREACTIVE or DEACTIVATED
 		/// </summary>
 		[Column("ROOT_KEY_STATUS"),  NotNull    ] public string    RootKeyStatus   { get; set; } // VARCHAR(11)
+		#nullable enable
 	}
 
 	/// <summary>
@@ -2181,42 +2525,48 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="ESH_MODEL", IsView=true)]
 	public partial class _SYS_RT_EshModel0
 	{
+		#nullable disable
 		/// <summary>
 		/// Schema name
 		/// </summary>
 		[Column("SCHEMA_NAME"),               NotNull    ] public string   SchemaName              { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// View name
 		/// </summary>
 		[Column("VIEW_NAME"),                 NotNull    ] public string   ViewName                { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// Repository package id
 		/// </summary>
-		[Column("PACKAGE_ID"),                   Nullable] public string   PackageId               { get; set; } // NVARCHAR(256)
+		[Column("PACKAGE_ID"),                   Nullable] public string?  PackageId               { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Repository object name
 		/// </summary>
-		[Column("OBJECT_NAME"),                  Nullable] public string   ObjectName              { get; set; } // NVARCHAR(256)
+		[Column("OBJECT_NAME"),                  Nullable] public string?  ObjectName              { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Repository object suffix
 		/// </summary>
-		[Column("OBJECT_SUFFIX"),                Nullable] public string   ObjectSuffix            { get; set; } // NVARCHAR(255)
+		[Column("OBJECT_SUFFIX"),                Nullable] public string?  ObjectSuffix            { get; set; } // NVARCHAR(255)
 		/// <summary>
 		/// Timestamp of last change (UTC)
 		/// </summary>
 		[Column("LAST_CHANGED"),              NotNull    ] public DateTime LastChanged             { get; set; } // TIMESTAMP
+		#nullable disable
 		/// <summary>
 		/// Enables CDS views for enterprise search
 		/// </summary>
 		[Column("ENTERPRISE_SEARCH_ENABLED"), NotNull    ] public object   EnterpriseSearchEnabled { get; set; } // BOOLEAN
+		#nullable enable
 		/// <summary>
 		/// Odata identifier
 		/// </summary>
-		[Column("ODATA_ID"),                     Nullable] public string   OdataId                 { get; set; } // NVARCHAR(128)
+		[Column("ODATA_ID"),                     Nullable] public string?  OdataId                 { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Configuration identifier
 		/// </summary>
-		[Column("CONFIGURATION_ID"),             Nullable] public string   ConfigurationId         { get; set; } // NVARCHAR(5000)
+		[Column("CONFIGURATION_ID"),             Nullable] public string?  ConfigurationId         { get; set; } // NVARCHAR(5000)
 	}
 
 	/// <summary>
@@ -2225,55 +2575,69 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="ESH_MODEL_")]
 	public partial class _SYS_RT_EshModel1
 	{
+		#nullable disable
 		/// <summary>
 		/// Schema name
 		/// </summary>
 		[Column("SCHEMA_NAME"),               PrimaryKey(1), NotNull] public string   SchemaName              { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// View name
 		/// </summary>
 		[Column("VIEW_NAME"),                 PrimaryKey(2), NotNull] public string   ViewName                { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// Repository package id
 		/// </summary>
-		[Column("PACKAGE_ID"),                   Nullable           ] public string   PackageId               { get; set; } // NVARCHAR(256)
+		[Column("PACKAGE_ID"),                   Nullable           ] public string?  PackageId               { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Repository object name
 		/// </summary>
-		[Column("OBJECT_NAME"),                  Nullable           ] public string   ObjectName              { get; set; } // NVARCHAR(256)
+		[Column("OBJECT_NAME"),                  Nullable           ] public string?  ObjectName              { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Repository object suffix
 		/// </summary>
-		[Column("OBJECT_SUFFIX"),                Nullable           ] public string   ObjectSuffix            { get; set; } // NVARCHAR(255)
+		[Column("OBJECT_SUFFIX"),                Nullable           ] public string?  ObjectSuffix            { get; set; } // NVARCHAR(255)
 		/// <summary>
 		/// Timestamp of last change (UTC)
 		/// </summary>
 		[Column("LAST_CHANGED"),                             NotNull] public DateTime LastChanged             { get; set; } // TIMESTAMP
+		#nullable disable
 		/// <summary>
 		/// Enables CDS views for enterprise search
 		/// </summary>
 		[Column("ENTERPRISE_SEARCH_ENABLED"),                NotNull] public object   EnterpriseSearchEnabled { get; set; } // BOOLEAN
+		#nullable enable
 		/// <summary>
 		/// Odata identifier
 		/// </summary>
-		[Column("ODATA_ID"),                     Nullable           ] public string   OdataId                 { get; set; } // NVARCHAR(128)
+		[Column("ODATA_ID"),                     Nullable           ] public string?  OdataId                 { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Configuration identifier
 		/// </summary>
-		[Column("CONFIGURATION_ID"),             Nullable           ] public string   ConfigurationId         { get; set; } // NVARCHAR(5000)
+		[Column("CONFIGURATION_ID"),             Nullable           ] public string?  ConfigurationId         { get; set; } // NVARCHAR(5000)
 	}
 
 	[Table(Schema="_SYS_RT", Name="ESH_MODEL_AUTH_")]
 	public partial class _SYS_RT_EshModelAuth
 	{
-		[Column("SCHEMA_NAME"),      NotNull    ] public string SchemaName     { get; set; } // NVARCHAR(256)
-		[Column("VIEW_NAME"),        NotNull    ] public string ViewName       { get; set; } // NVARCHAR(256)
-		[Column(),                   NotNull    ] public string CHECKID        { get; set; } // NVARCHAR(256)
-		[Column("AUTH_OBJCT"),          Nullable] public string AuthObjct      { get; set; } // NVARCHAR(256)
-		[Column("AUTH_COLUMN_NAME"),    Nullable] public string AuthColumnName { get; set; } // NVARCHAR(256)
-		[Column("VIEW_COLUMN_NAME"),    Nullable] public string ViewColumnName { get; set; } // NVARCHAR(256)
-		[Column(),                   NotNull    ] public string TYPE           { get; set; } // NVARCHAR(256)
-		[Column(),                      Nullable] public string VALUE          { get; set; } // NVARCHAR(256)
+		#nullable disable
+		[Column("SCHEMA_NAME"),      NotNull    ] public string  SchemaName     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("VIEW_NAME"),        NotNull    ] public string  ViewName       { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column(),                   NotNull    ] public string  CHECKID        { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column("AUTH_OBJCT"),          Nullable] public string? AuthObjct      { get; set; } // NVARCHAR(256)
+		[Column("AUTH_COLUMN_NAME"),    Nullable] public string? AuthColumnName { get; set; } // NVARCHAR(256)
+		[Column("VIEW_COLUMN_NAME"),    Nullable] public string? ViewColumnName { get; set; } // NVARCHAR(256)
+		#nullable disable
+		[Column(),                   NotNull    ] public string  TYPE           { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),                      Nullable] public string? VALUE          { get; set; } // NVARCHAR(256)
 	}
 
 	/// <summary>
@@ -2282,26 +2646,36 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="ESH_MODEL_PROPERTY", IsView=true)]
 	public partial class _SYS_RT_EshModelProperty0
 	{
+		#nullable disable
 		/// <summary>
 		/// Schema name
 		/// </summary>
 		[Column("SCHEMA_NAME"), NotNull] public string SchemaName { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// View name
 		/// </summary>
 		[Column("VIEW_NAME"),   NotNull] public string ViewName   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// View column name
 		/// </summary>
 		[Column("COLUMN_NAME"), NotNull] public string ColumnName { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Property name
 		/// </summary>
 		[Column(),              NotNull] public string PROPERTY   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Property value
 		/// </summary>
 		[Column(),              NotNull] public string VALUE      { get; set; } // NVARCHAR(5000)
+		#nullable enable
 	}
 
 	/// <summary>
@@ -2310,26 +2684,36 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="ESH_MODEL_PROPERTY_")]
 	public partial class _SYS_RT_EshModelProperty1
 	{
+		#nullable disable
 		/// <summary>
 		/// Schema name
 		/// </summary>
 		[Column("SCHEMA_NAME"), PrimaryKey(1), NotNull] public string SchemaName { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// View name
 		/// </summary>
 		[Column("VIEW_NAME"),   PrimaryKey(2), NotNull] public string ViewName   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// View column name
 		/// </summary>
 		[Column("COLUMN_NAME"), PrimaryKey(3), NotNull] public string ColumnName { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Property name
 		/// </summary>
 		[Column(),              PrimaryKey(4), NotNull] public string PROPERTY   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Property value
 		/// </summary>
 		[Column(),                             NotNull] public string VALUE      { get; set; } // NVARCHAR(5000)
+		#nullable enable
 	}
 
 	/// <summary>
@@ -2345,7 +2729,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Type of event
 		/// </summary>
-		[Column(),                 Nullable] public string    TYPE       { get; set; } // VARCHAR(256)
+		[Column(),                 Nullable] public string?   TYPE       { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// ID of event
 		/// </summary>
@@ -2361,7 +2745,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// State of event
 		/// </summary>
-		[Column(),                 Nullable] public string    STATE      { get; set; } // VARCHAR(256)
+		[Column(),                 Nullable] public string?   STATE      { get; set; } // VARCHAR(256)
 	}
 
 	/// <summary>
@@ -2374,14 +2758,18 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"),    NotNull    ] public DateTime  SnapshotId    { get; set; } // TIMESTAMP
+		#nullable disable
 		/// <summary>
 		/// Component name (see M_FEATURES)
 		/// </summary>
 		[Column("COMPONENT_NAME"), NotNull    ] public string    ComponentName { get; set; } // VARCHAR(32)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Feature name (see M_FEATURES)
 		/// </summary>
 		[Column("FEATURE_NAME"),   NotNull    ] public string    FeatureName   { get; set; } // VARCHAR(64)
+		#nullable enable
 		/// <summary>
 		/// Counter tracking the number of times, the feature was used since the last start of the indexserver (e.g. number of accesses to any history table).
 		/// </summary>
@@ -2401,11 +2789,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"), Nullable] public string    DatabaseName { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"), Nullable] public string?   DatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// File name of the collection
 		/// </summary>
-		[Column("FILE_NAME"),     Nullable] public string    FileName     { get; set; } // NVARCHAR(512)
+		[Column("FILE_NAME"),     Nullable] public string?   FileName     { get; set; } // NVARCHAR(512)
 		/// <summary>
 		/// File size in Bytes
 		/// </summary>
@@ -2419,9 +2807,15 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_AFL", Name="FUNCTION_EXECUTION_COUNTS")]
 	public partial class _SYS_AFL_FunctionExecutionCount
 	{
+		#nullable disable
 		[Column("AREA_NAME"),       PrimaryKey(1), NotNull] public string    AreaName       { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("FUNCTION_NAME"),   PrimaryKey(2), NotNull] public string    FunctionName   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column(),                  PrimaryKey(3), NotNull] public string    HOST           { get; set; } // VARCHAR(64)
+		#nullable enable
 		[Column(),                  PrimaryKey(4), NotNull] public int       PORT           { get; set; } // INTEGER
 		[Column("EXECUTION_COUNT"),    Nullable           ] public long?     ExecutionCount { get; set; } // BIGINT
 		[Column("LAST_EXECUTION"),     Nullable           ] public DateTime? LastExecution  { get; set; } // TIMESTAMP
@@ -2430,88 +2824,90 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_AFL", Name="FUNCTION_EXECUTION_COUNTS_CONTROL")]
 	public partial class _SYS_AFL_FunctionExecutionCountsControl
 	{
+		#nullable disable
 		[PrimaryKey, NotNull    ] public string KEY   { get; set; } // VARCHAR(64)
+		#nullable enable
 		[Column,        Nullable] public long?  VALUE { get; set; } // BIGINT
 	}
 
 	[Table(Schema="_SYS_AFL", Name="FUNCTION_PROGRESS_IN_AFLBFL")]
 	public partial class _SYS_AFL_FunctionProgressInAflbfl
 	{
-		[Column("EXECUTION_ID"),         Nullable] public string    ExecutionId         { get; set; } // VARCHAR(64)
-		[Column("FUNCTION_NAME"),        Nullable] public string    FunctionName        { get; set; } // NVARCHAR(256)
-		[Column(),                       Nullable] public string    HOST                { get; set; } // VARCHAR(64)
+		[Column("EXECUTION_ID"),         Nullable] public string?   ExecutionId         { get; set; } // VARCHAR(64)
+		[Column("FUNCTION_NAME"),        Nullable] public string?   FunctionName        { get; set; } // NVARCHAR(256)
+		[Column(),                       Nullable] public string?   HOST                { get; set; } // VARCHAR(64)
 		[Column(),                       Nullable] public int?      PORT                { get; set; } // INTEGER
 		[Column("CONNECTION_ID"),        Nullable] public int?      ConnectionId        { get; set; } // INTEGER
 		[Column("PROGRESS_TIMESTAMP"),   Nullable] public DateTime? ProgressTimestamp   { get; set; } // TIMESTAMP
 		[Column("PROGRESS_ELAPSEDTIME"), Nullable] public int?      ProgressElapsedtime { get; set; } // INTEGER
 		[Column("PROGRESS_CURRENT"),     Nullable] public int?      ProgressCurrent     { get; set; } // INTEGER
 		[Column("PROGRESS_MAX"),         Nullable] public int?      ProgressMax         { get; set; } // INTEGER
-		[Column("PROGRESS_LEVEL"),       Nullable] public string    ProgressLevel       { get; set; } // VARCHAR(16)
-		[Column("PROGRESS_MESSAGE"),     Nullable] public string    ProgressMessage     { get; set; } // NVARCHAR(256)
+		[Column("PROGRESS_LEVEL"),       Nullable] public string?   ProgressLevel       { get; set; } // VARCHAR(16)
+		[Column("PROGRESS_MESSAGE"),     Nullable] public string?   ProgressMessage     { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_AFL", Name="FUNCTION_PROGRESS_IN_AFLPAL")]
 	public partial class _SYS_AFL_FunctionProgressInAflpal
 	{
-		[Column("EXECUTION_ID"),         Nullable] public string    ExecutionId         { get; set; } // VARCHAR(64)
-		[Column("FUNCTION_NAME"),        Nullable] public string    FunctionName        { get; set; } // NVARCHAR(256)
-		[Column(),                       Nullable] public string    HOST                { get; set; } // VARCHAR(64)
+		[Column("EXECUTION_ID"),         Nullable] public string?   ExecutionId         { get; set; } // VARCHAR(64)
+		[Column("FUNCTION_NAME"),        Nullable] public string?   FunctionName        { get; set; } // NVARCHAR(256)
+		[Column(),                       Nullable] public string?   HOST                { get; set; } // VARCHAR(64)
 		[Column(),                       Nullable] public int?      PORT                { get; set; } // INTEGER
 		[Column("CONNECTION_ID"),        Nullable] public int?      ConnectionId        { get; set; } // INTEGER
 		[Column("PROGRESS_TIMESTAMP"),   Nullable] public DateTime? ProgressTimestamp   { get; set; } // TIMESTAMP
 		[Column("PROGRESS_ELAPSEDTIME"), Nullable] public int?      ProgressElapsedtime { get; set; } // INTEGER
 		[Column("PROGRESS_CURRENT"),     Nullable] public int?      ProgressCurrent     { get; set; } // INTEGER
 		[Column("PROGRESS_MAX"),         Nullable] public int?      ProgressMax         { get; set; } // INTEGER
-		[Column("PROGRESS_LEVEL"),       Nullable] public string    ProgressLevel       { get; set; } // VARCHAR(16)
-		[Column("PROGRESS_MESSAGE"),     Nullable] public string    ProgressMessage     { get; set; } // NVARCHAR(256)
+		[Column("PROGRESS_LEVEL"),       Nullable] public string?   ProgressLevel       { get; set; } // VARCHAR(16)
+		[Column("PROGRESS_MESSAGE"),     Nullable] public string?   ProgressMessage     { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_AFL", Name="FUNCTION_PROGRESS_IN_HIE_AREA")]
 	public partial class _SYS_AFL_FunctionProgressInHieArea
 	{
-		[Column("EXECUTION_ID"),         Nullable] public string    ExecutionId         { get; set; } // VARCHAR(64)
-		[Column("FUNCTION_NAME"),        Nullable] public string    FunctionName        { get; set; } // NVARCHAR(256)
-		[Column(),                       Nullable] public string    HOST                { get; set; } // VARCHAR(64)
+		[Column("EXECUTION_ID"),         Nullable] public string?   ExecutionId         { get; set; } // VARCHAR(64)
+		[Column("FUNCTION_NAME"),        Nullable] public string?   FunctionName        { get; set; } // NVARCHAR(256)
+		[Column(),                       Nullable] public string?   HOST                { get; set; } // VARCHAR(64)
 		[Column(),                       Nullable] public int?      PORT                { get; set; } // INTEGER
 		[Column("CONNECTION_ID"),        Nullable] public int?      ConnectionId        { get; set; } // INTEGER
 		[Column("PROGRESS_TIMESTAMP"),   Nullable] public DateTime? ProgressTimestamp   { get; set; } // TIMESTAMP
 		[Column("PROGRESS_ELAPSEDTIME"), Nullable] public int?      ProgressElapsedtime { get; set; } // INTEGER
 		[Column("PROGRESS_CURRENT"),     Nullable] public int?      ProgressCurrent     { get; set; } // INTEGER
 		[Column("PROGRESS_MAX"),         Nullable] public int?      ProgressMax         { get; set; } // INTEGER
-		[Column("PROGRESS_LEVEL"),       Nullable] public string    ProgressLevel       { get; set; } // VARCHAR(16)
-		[Column("PROGRESS_MESSAGE"),     Nullable] public string    ProgressMessage     { get; set; } // NVARCHAR(256)
+		[Column("PROGRESS_LEVEL"),       Nullable] public string?   ProgressLevel       { get; set; } // VARCHAR(16)
+		[Column("PROGRESS_MESSAGE"),     Nullable] public string?   ProgressMessage     { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_AFL", Name="FUNCTION_PROGRESS_IN_LCAPPS_WRAPPER_AREA")]
 	public partial class _SYS_AFL_FunctionProgressInLcappsWrapperArea
 	{
-		[Column("EXECUTION_ID"),         Nullable] public string    ExecutionId         { get; set; } // VARCHAR(64)
-		[Column("FUNCTION_NAME"),        Nullable] public string    FunctionName        { get; set; } // NVARCHAR(256)
-		[Column(),                       Nullable] public string    HOST                { get; set; } // VARCHAR(64)
+		[Column("EXECUTION_ID"),         Nullable] public string?   ExecutionId         { get; set; } // VARCHAR(64)
+		[Column("FUNCTION_NAME"),        Nullable] public string?   FunctionName        { get; set; } // NVARCHAR(256)
+		[Column(),                       Nullable] public string?   HOST                { get; set; } // VARCHAR(64)
 		[Column(),                       Nullable] public int?      PORT                { get; set; } // INTEGER
 		[Column("CONNECTION_ID"),        Nullable] public int?      ConnectionId        { get; set; } // INTEGER
 		[Column("PROGRESS_TIMESTAMP"),   Nullable] public DateTime? ProgressTimestamp   { get; set; } // TIMESTAMP
 		[Column("PROGRESS_ELAPSEDTIME"), Nullable] public int?      ProgressElapsedtime { get; set; } // INTEGER
 		[Column("PROGRESS_CURRENT"),     Nullable] public int?      ProgressCurrent     { get; set; } // INTEGER
 		[Column("PROGRESS_MAX"),         Nullable] public int?      ProgressMax         { get; set; } // INTEGER
-		[Column("PROGRESS_LEVEL"),       Nullable] public string    ProgressLevel       { get; set; } // VARCHAR(16)
-		[Column("PROGRESS_MESSAGE"),     Nullable] public string    ProgressMessage     { get; set; } // NVARCHAR(256)
+		[Column("PROGRESS_LEVEL"),       Nullable] public string?   ProgressLevel       { get; set; } // VARCHAR(16)
+		[Column("PROGRESS_MESSAGE"),     Nullable] public string?   ProgressMessage     { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_AFL", Name="FUNCTION_PROGRESS_IN_OFL_AREA")]
 	public partial class _SYS_AFL_FunctionProgressInOflArea
 	{
-		[Column("EXECUTION_ID"),         Nullable] public string    ExecutionId         { get; set; } // VARCHAR(64)
-		[Column("FUNCTION_NAME"),        Nullable] public string    FunctionName        { get; set; } // NVARCHAR(256)
-		[Column(),                       Nullable] public string    HOST                { get; set; } // VARCHAR(64)
+		[Column("EXECUTION_ID"),         Nullable] public string?   ExecutionId         { get; set; } // VARCHAR(64)
+		[Column("FUNCTION_NAME"),        Nullable] public string?   FunctionName        { get; set; } // NVARCHAR(256)
+		[Column(),                       Nullable] public string?   HOST                { get; set; } // VARCHAR(64)
 		[Column(),                       Nullable] public int?      PORT                { get; set; } // INTEGER
 		[Column("CONNECTION_ID"),        Nullable] public int?      ConnectionId        { get; set; } // INTEGER
 		[Column("PROGRESS_TIMESTAMP"),   Nullable] public DateTime? ProgressTimestamp   { get; set; } // TIMESTAMP
 		[Column("PROGRESS_ELAPSEDTIME"), Nullable] public int?      ProgressElapsedtime { get; set; } // INTEGER
 		[Column("PROGRESS_CURRENT"),     Nullable] public int?      ProgressCurrent     { get; set; } // INTEGER
 		[Column("PROGRESS_MAX"),         Nullable] public int?      ProgressMax         { get; set; } // INTEGER
-		[Column("PROGRESS_LEVEL"),       Nullable] public string    ProgressLevel       { get; set; } // VARCHAR(16)
-		[Column("PROGRESS_MESSAGE"),     Nullable] public string    ProgressMessage     { get; set; } // NVARCHAR(256)
+		[Column("PROGRESS_LEVEL"),       Nullable] public string?   ProgressLevel       { get; set; } // VARCHAR(16)
+		[Column("PROGRESS_MESSAGE"),     Nullable] public string?   ProgressMessage     { get; set; } // NVARCHAR(256)
 	}
 
 	/// <summary>
@@ -2520,49 +2916,53 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="GEOCODE_INFO_CODES", IsView=true)]
 	public partial class _SYS_TASK_GeocodeInfoCode
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),       NotNull    ] public string SchemaName      { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),       NotNull    ] public string  SchemaName      { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),         NotNull    ] public string TaskName        { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),         NotNull    ] public string  TaskName        { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"), NotNull    ] public long   TaskExecutionId { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"), NotNull    ] public long    TaskExecutionId { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),       Nullable] public string OperationName   { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),       Nullable] public string? OperationName   { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The name of the table defined in the task plan for an operation
 		/// </summary>
-		[Column("TABLE_NAME"),           Nullable] public string TableName       { get; set; } // NVARCHAR(128)
+		[Column("TABLE_NAME"),           Nullable] public string? TableName       { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The unique ID of the row processed for this execution of the task plan
 		/// </summary>
-		[Column("ROW_ID"),            NotNull    ] public long   RowId           { get; set; } // BIGINT
+		[Column("ROW_ID"),            NotNull    ] public long    RowId           { get; set; } // BIGINT
 		/// <summary>
 		/// The source where the data was produced
 		/// </summary>
-		[Column("DATA_SOURCE"),          Nullable] public string DataSource      { get; set; } // NVARCHAR(256)
+		[Column("DATA_SOURCE"),          Nullable] public string? DataSource      { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// The informational code generated by the geocode transformation operation
 		/// </summary>
-		[Column("INFO_CODE"),            Nullable] public string InfoCode        { get; set; } // NVARCHAR(10)
+		[Column("INFO_CODE"),            Nullable] public string? InfoCode        { get; set; } // NVARCHAR(10)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="GEOCODE_INFO_CODES_")]
 	public partial class _SYS_TASK_GeocodeInfoCodes
 	{
-		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long   TaskExecutionId { get; set; } // BIGINT
-		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int    OperationId     { get; set; } // INTEGER
-		[Column("TABLE_ID"),          PrimaryKey(3), NotNull] public int    TableId         { get; set; } // INTEGER
-		[Column("ROW_ID"),            PrimaryKey(4), NotNull] public long   RowId           { get; set; } // BIGINT
-		[Column("DATA_SOURCE"),          Nullable           ] public string DataSource      { get; set; } // NVARCHAR(256)
-		[Column("INFO_CODE"),            Nullable           ] public string InfoCode        { get; set; } // NVARCHAR(10)
+		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long    TaskExecutionId { get; set; } // BIGINT
+		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int     OperationId     { get; set; } // INTEGER
+		[Column("TABLE_ID"),          PrimaryKey(3), NotNull] public int     TableId         { get; set; } // INTEGER
+		[Column("ROW_ID"),            PrimaryKey(4), NotNull] public long    RowId           { get; set; } // BIGINT
+		[Column("DATA_SOURCE"),          Nullable           ] public string? DataSource      { get; set; } // NVARCHAR(256)
+		[Column("INFO_CODE"),            Nullable           ] public string? InfoCode        { get; set; } // NVARCHAR(10)
 	}
 
 	/// <summary>
@@ -2571,34 +2971,38 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="GEOCODE_STATISTICS", IsView=true)]
 	public partial class _SYS_TASK_GeocodeStatistic
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),       NotNull    ] public string SchemaName      { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),       NotNull    ] public string  SchemaName      { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),         NotNull    ] public string TaskName        { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),         NotNull    ] public string  TaskName        { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"), NotNull    ] public long   TaskExecutionId { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"), NotNull    ] public long    TaskExecutionId { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),       Nullable] public string OperationName   { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),       Nullable] public string? OperationName   { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The total number of records processed
 		/// </summary>
-		[Column("NUM_RECORDS"),          Nullable] public long?  NumRecords      { get; set; } // BIGINT
+		[Column("NUM_RECORDS"),          Nullable] public long?   NumRecords      { get; set; } // BIGINT
 		/// <summary>
 		/// The number of assigned records processed
 		/// </summary>
-		[Column("NUM_ASSIGNED"),         Nullable] public long?  NumAssigned     { get; set; } // BIGINT
+		[Column("NUM_ASSIGNED"),         Nullable] public long?   NumAssigned     { get; set; } // BIGINT
 		/// <summary>
 		/// The number of unassigned records processed
 		/// </summary>
-		[Column("NUM_UNASSIGNED"),       Nullable] public long?  NumUnassigned   { get; set; } // BIGINT
+		[Column("NUM_UNASSIGNED"),       Nullable] public long?   NumUnassigned   { get; set; } // BIGINT
 	}
 
 	[Table(Schema="_SYS_TASK", Name="GEOCODE_STATISTICS_")]
@@ -2631,15 +3035,19 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// HANA feature name
 		/// </summary>
-		[Column("0SM_FEAT"),       Nullable] public string   _0smFeat   { get; set; } // NVARCHAR(256)
+		[Column("0SM_FEAT"),       Nullable] public string?  _0smFeat   { get; set; } // NVARCHAR(256)
+		#nullable disable
 		/// <summary>
 		/// HANA feature type
 		/// </summary>
 		[Column("0SM_TYPE"),    NotNull    ] public string   _0smType   { get; set; } // VARCHAR(11)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// HANA feature subtype
 		/// </summary>
 		[Column("0SM_SUBT"),    NotNull    ] public string   _0smSubt   { get; set; } // VARCHAR(18)
+		#nullable enable
 		/// <summary>
 		/// HANA feature usage
 		/// </summary>
@@ -2668,10 +3076,12 @@ namespace SapHanaDataContext
 		/// Persistence Volume ID
 		/// </summary>
 		[Column("VOLUME_ID"),             NotNull    ] public int      VolumeId           { get; set; } // INTEGER
+		#nullable disable
 		/// <summary>
 		/// Allocator name
 		/// </summary>
 		[Column(),                        NotNull    ] public string   CATEGORY           { get; set; } // VARCHAR(128)
+		#nullable enable
 		/// <summary>
 		/// Current size of this allocator
 		/// </summary>
@@ -2688,47 +3098,61 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"), NotNull    ] public DateTime SnapshotId { get; set; } // TIMESTAMP
+		#nullable disable
 		/// <summary>
 		/// Key
 		/// </summary>
 		[Column(),              NotNull    ] public string   KEY        { get; set; } // VARCHAR(32)
+		#nullable enable
 		/// <summary>
 		/// Value
 		/// </summary>
-		[Column(),                 Nullable] public string   VALUE      { get; set; } // VARCHAR(256)
+		[Column(),                 Nullable] public string?  VALUE      { get; set; } // VARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_XS", Name="HTTP_DESTINATIONS")]
 	public partial class _SYS_XS_HttpDestination
 	{
-		[Column("PACKAGE_ID"),               PrimaryKey(1), NotNull] public string PackageId             { get; set; } // NVARCHAR(256)
-		[Column("OBJECT_NAME"),              PrimaryKey(2), NotNull] public string ObjectName            { get; set; } // NVARCHAR(256)
-		[Column(),                              Nullable           ] public string DESCRIPTION           { get; set; } // NVARCHAR(512)
-		[Column(),                                          NotNull] public string HOST                  { get; set; } // NVARCHAR(2048)
-		[Column(),                                          NotNull] public int    PORT                  { get; set; } // INTEGER
-		[Column("PATH_PREFIX"),                 Nullable           ] public string PathPrefix            { get; set; } // NVARCHAR(2048)
-		[Column("PROXY_TYPE"),                              NotNull] public byte   ProxyType             { get; set; } // TINYINT
-		[Column("PROXY_HOST"),                  Nullable           ] public string ProxyHost             { get; set; } // NVARCHAR(2048)
-		[Column("PROXY_PORT"),                              NotNull] public int    ProxyPort             { get; set; } // INTEGER
-		[Column("AUTHENTICATION_TYPE"),                     NotNull] public byte   AuthenticationType    { get; set; } // TINYINT
-		[Column("USE_SSL"),                                 NotNull] public byte   UseSsl                { get; set; } // TINYINT
-		[Column(),                                          NotNull] public short  TIMEOUT               { get; set; } // SMALLINT
-		[Column("REMOTE_SID"),                  Nullable           ] public string RemoteSid             { get; set; } // NVARCHAR(12)
-		[Column("REMOTE_CLIENT"),               Nullable           ] public string RemoteClient          { get; set; } // NVARCHAR(12)
-		[Column("SAML_PROVIDER"),               Nullable           ] public string SamlProvider          { get; set; } // NVARCHAR(1024)
-		[Column("SAML_NAMEID"),                             NotNull] public int    SamlNameid            { get; set; } // INTEGER
-		[Column("SAML_ACS"),                    Nullable           ] public string SamlAcs               { get; set; } // NVARCHAR(2048)
-		[Column("SAML_ATTRIBUTES"),             Nullable           ] public string SamlAttributes        { get; set; } // NVARCHAR(2048)
-		[Column("OAUTH_APP_CONFIG_PACKAGE"),    Nullable           ] public string OauthAppConfigPackage { get; set; } // NVARCHAR(256)
-		[Column("OAUTH_APP_CONFIG"),            Nullable           ] public string OauthAppConfig        { get; set; } // NVARCHAR(256)
+		#nullable disable
+		[Column("PACKAGE_ID"),               PrimaryKey(1), NotNull] public string  PackageId             { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("OBJECT_NAME"),              PrimaryKey(2), NotNull] public string  ObjectName            { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),                              Nullable           ] public string? DESCRIPTION           { get; set; } // NVARCHAR(512)
+		#nullable disable
+		[Column(),                                          NotNull] public string  HOST                  { get; set; } // NVARCHAR(2048)
+		#nullable enable
+		[Column(),                                          NotNull] public int     PORT                  { get; set; } // INTEGER
+		[Column("PATH_PREFIX"),                 Nullable           ] public string? PathPrefix            { get; set; } // NVARCHAR(2048)
+		[Column("PROXY_TYPE"),                              NotNull] public byte    ProxyType             { get; set; } // TINYINT
+		[Column("PROXY_HOST"),                  Nullable           ] public string? ProxyHost             { get; set; } // NVARCHAR(2048)
+		[Column("PROXY_PORT"),                              NotNull] public int     ProxyPort             { get; set; } // INTEGER
+		[Column("AUTHENTICATION_TYPE"),                     NotNull] public byte    AuthenticationType    { get; set; } // TINYINT
+		[Column("USE_SSL"),                                 NotNull] public byte    UseSsl                { get; set; } // TINYINT
+		[Column(),                                          NotNull] public short   TIMEOUT               { get; set; } // SMALLINT
+		[Column("REMOTE_SID"),                  Nullable           ] public string? RemoteSid             { get; set; } // NVARCHAR(12)
+		[Column("REMOTE_CLIENT"),               Nullable           ] public string? RemoteClient          { get; set; } // NVARCHAR(12)
+		[Column("SAML_PROVIDER"),               Nullable           ] public string? SamlProvider          { get; set; } // NVARCHAR(1024)
+		[Column("SAML_NAMEID"),                             NotNull] public int     SamlNameid            { get; set; } // INTEGER
+		[Column("SAML_ACS"),                    Nullable           ] public string? SamlAcs               { get; set; } // NVARCHAR(2048)
+		[Column("SAML_ATTRIBUTES"),             Nullable           ] public string? SamlAttributes        { get; set; } // NVARCHAR(2048)
+		[Column("OAUTH_APP_CONFIG_PACKAGE"),    Nullable           ] public string? OauthAppConfigPackage { get; set; } // NVARCHAR(256)
+		[Column("OAUTH_APP_CONFIG"),            Nullable           ] public string? OauthAppConfig        { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_RT", Name="_INA_ACTIVE_OBJECT")]
 	public partial class _SYS_RT_InaActiveObject
 	{
+		#nullable disable
 		[Column("PACKAGE_ID"),            PrimaryKey(1), NotNull] public string PackageId           { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("OBJECT_NAME"),           PrimaryKey(2), NotNull] public string ObjectName          { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("OBJECT_SUFFIX"),         PrimaryKey(3), NotNull] public string ObjectSuffix        { get; set; } // NVARCHAR(255)
+		#nullable enable
 		[Column("IS_SEARCH_SUPPORTED"),      Nullable           ] public char?  IsSearchSupported   { get; set; } // VARCHAR(1)
 		[Column("SCHEMA_VERSION_NUMBER"),    Nullable           ] public int?   SchemaVersionNumber { get; set; } // INTEGER
 	}
@@ -2736,35 +3160,45 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_INA_ACTIVE_OBJECT_PROPERTY")]
 	public partial class _SYS_RT_InaActiveObjectProperty
 	{
+		#nullable disable
 		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string PackageId    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string ObjectName   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string ObjectSuffix { get; set; } // NVARCHAR(255)
+		#nullable enable
+		#nullable disable
 		[Column(),                PrimaryKey(4), NotNull] public string KEY          { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column(),                PrimaryKey(5), NotNull] public string VALUE        { get; set; } // NVARCHAR(256)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="_INA_ACTIVE_PERSPECTIVE_V", IsView=true)]
 	public partial class _SYS_RT_InaActivePerspectiveV
 	{
-		[Column("PACKAGE_ID"),            Nullable] public string    PackageId           { get; set; } // NVARCHAR(256)
-		[Column("PERSPECTIVE_ID"),        Nullable] public string    PerspectiveId       { get; set; } // NVARCHAR(256)
+		[Column("PACKAGE_ID"),            Nullable] public string?   PackageId           { get; set; } // NVARCHAR(256)
+		[Column("PERSPECTIVE_ID"),        Nullable] public string?   PerspectiveId       { get; set; } // NVARCHAR(256)
 		[Column("SCHEMA_VERSION_NUMBER"), Nullable] public int?      SchemaVersionNumber { get; set; } // INTEGER
 		[Column("IS_SEARCH_SUPPORTED"),   Nullable] public char?     IsSearchSupported   { get; set; } // VARCHAR(1)
-		[Column("PROPERTY_KEY"),          Nullable] public string    PropertyKey         { get; set; } // NVARCHAR(256)
-		[Column("PROPERTY_VALUE"),        Nullable] public string    PropertyValue       { get; set; } // NVARCHAR(256)
+		[Column("PROPERTY_KEY"),          Nullable] public string?   PropertyKey         { get; set; } // NVARCHAR(256)
+		[Column("PROPERTY_VALUE"),        Nullable] public string?   PropertyValue       { get; set; } // NVARCHAR(256)
 		[Column(),                        Nullable] public DateTime? TIMESTAMP           { get; set; } // TIMESTAMP
-		[Column("USER_ID"),               Nullable] public string    UserId              { get; set; } // NVARCHAR(256)
-		[Column("CONTENT_TEXT_ID"),       Nullable] public string    ContentTextId       { get; set; } // NVARCHAR(256)
-		[Column("CONTENT_TEXT_TYPE"),     Nullable] public string    ContentTextType     { get; set; } // NVARCHAR(32)
-		[Column("CONTENT_TEXT_LANGUAGE"), Nullable] public string    ContentTextLanguage { get; set; } // NVARCHAR(256)
-		[Column("CONTENT_TEXT"),          Nullable] public string    ContentText         { get; set; } // NVARCHAR(4000)
-		[Column("DATASOURCE_OBJECT_ID"),  Nullable] public string    DatasourceObjectId  { get; set; } // NVARCHAR(256)
-		[Column("DATASOURCE_PACKAGE_ID"), Nullable] public string    DatasourcePackageId { get; set; } // NVARCHAR(256)
-		[Column("DATASOURCE_SCHEMA_ID"),  Nullable] public string    DatasourceSchemaId  { get; set; } // NVARCHAR(256)
-		[Column("TITLE_TEXT_LANGUAGE"),   Nullable] public string    TitleTextLanguage   { get; set; } // NVARCHAR(256)
-		[Column("TITLE_TEXT"),            Nullable] public string    TitleText           { get; set; } // NVARCHAR(4000)
-		[Column("SUMMARY_TEXT_LANGUAGE"), Nullable] public string    SummaryTextLanguage { get; set; } // NVARCHAR(256)
-		[Column("SUMMARY_TEXT"),          Nullable] public string    SummaryText         { get; set; } // NVARCHAR(4000)
+		[Column("USER_ID"),               Nullable] public string?   UserId              { get; set; } // NVARCHAR(256)
+		[Column("CONTENT_TEXT_ID"),       Nullable] public string?   ContentTextId       { get; set; } // NVARCHAR(256)
+		[Column("CONTENT_TEXT_TYPE"),     Nullable] public string?   ContentTextType     { get; set; } // NVARCHAR(32)
+		[Column("CONTENT_TEXT_LANGUAGE"), Nullable] public string?   ContentTextLanguage { get; set; } // NVARCHAR(256)
+		[Column("CONTENT_TEXT"),          Nullable] public string?   ContentText         { get; set; } // NVARCHAR(4000)
+		[Column("DATASOURCE_OBJECT_ID"),  Nullable] public string?   DatasourceObjectId  { get; set; } // NVARCHAR(256)
+		[Column("DATASOURCE_PACKAGE_ID"), Nullable] public string?   DatasourcePackageId { get; set; } // NVARCHAR(256)
+		[Column("DATASOURCE_SCHEMA_ID"),  Nullable] public string?   DatasourceSchemaId  { get; set; } // NVARCHAR(256)
+		[Column("TITLE_TEXT_LANGUAGE"),   Nullable] public string?   TitleTextLanguage   { get; set; } // NVARCHAR(256)
+		[Column("TITLE_TEXT"),            Nullable] public string?   TitleText           { get; set; } // NVARCHAR(4000)
+		[Column("SUMMARY_TEXT_LANGUAGE"), Nullable] public string?   SummaryTextLanguage { get; set; } // NVARCHAR(256)
+		[Column("SUMMARY_TEXT"),          Nullable] public string?   SummaryText         { get; set; } // NVARCHAR(4000)
 	}
 
 	[Table(Schema="TESTHANA", Name="IndexTable")]
@@ -2781,7 +3215,7 @@ namespace SapHanaDataContext
 		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
 		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public IndexTable2 Patient { get; set; }
+		public IndexTable2? Patient { get; set; }
 
 		#endregion
 	}
@@ -2794,11 +3228,14 @@ namespace SapHanaDataContext
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
 		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
 		public IndexTable Patient2IndexTable { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -2806,18 +3243,18 @@ namespace SapHanaDataContext
 	[Table(Schema="TESTHANA", Name="InheritanceChild")]
 	public partial class InheritanceChild
 	{
-		[PrimaryKey, NotNull    ] public int    InheritanceChildId  { get; set; } // INTEGER
-		[Column,     NotNull    ] public int    InheritanceParentId { get; set; } // INTEGER
-		[Column,        Nullable] public int?   TypeDiscriminator   { get; set; } // INTEGER
-		[Column,        Nullable] public string Name                { get; set; } // NVARCHAR(50)
+		[PrimaryKey, NotNull    ] public int     InheritanceChildId  { get; set; } // INTEGER
+		[Column,     NotNull    ] public int     InheritanceParentId { get; set; } // INTEGER
+		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // INTEGER
+		[Column,        Nullable] public string? Name                { get; set; } // NVARCHAR(50)
 	}
 
 	[Table(Schema="TESTHANA", Name="InheritanceParent")]
 	public partial class InheritanceParent
 	{
-		[PrimaryKey, NotNull    ] public int    InheritanceParentId { get; set; } // INTEGER
-		[Column,        Nullable] public int?   TypeDiscriminator   { get; set; } // INTEGER
-		[Column,        Nullable] public string Name                { get; set; } // NVARCHAR(50)
+		[PrimaryKey, NotNull    ] public int     InheritanceParentId { get; set; } // INTEGER
+		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // INTEGER
+		[Column,        Nullable] public string? Name                { get; set; } // NVARCHAR(50)
 	}
 
 	/// <summary>
@@ -2830,63 +3267,83 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"), NotNull    ] public DateTime SnapshotId { get; set; } // TIMESTAMP
+		#nullable disable
 		/// <summary>
 		/// Configuration file name
 		/// </summary>
 		[Column("FILE_NAME"),   NotNull    ] public string   FileName   { get; set; } // VARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Configuration layer: DEFAULT, SYSTEM, HOST, DATABASE
 		/// </summary>
 		[Column("LAYER_NAME"),  NotNull    ] public string   LayerName  { get; set; } // VARCHAR(16)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Configuration section name
 		/// </summary>
 		[Column(),              NotNull    ] public string   SECTION    { get; set; } // VARCHAR(128)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Configuration key name
 		/// </summary>
 		[Column(),              NotNull    ] public string   KEY        { get; set; } // VARCHAR(128)
+		#nullable enable
 		/// <summary>
 		/// Configuration value
 		/// </summary>
-		[Column(),                 Nullable] public string   VALUE      { get; set; } // VARCHAR(5000)
+		[Column(),                 Nullable] public string?  VALUE      { get; set; } // VARCHAR(5000)
 	}
 
 	[Table(Schema="_SYS_XS", Name="JOBS")]
 	public partial class _SYS_XS_JOB
 	{
+		#nullable disable
 		[Column(),                    PrimaryKey,  NotNull] public string    NAME             { get; set; } // NVARCHAR(512)
+		#nullable enable
+		#nullable disable
 		[Column(),                                 NotNull] public string    DESCRIPTION      { get; set; } // NVARCHAR(512)
+		#nullable enable
+		#nullable disable
 		[Column(),                                 NotNull] public string    ACTION           { get; set; } // NVARCHAR(512)
-		[Column(),                       Nullable         ] public string    USER             { get; set; } // NVARCHAR(256)
-		[Column(),                       Nullable         ] public string    LOCALE           { get; set; } // VARCHAR(64)
+		#nullable enable
+		[Column(),                       Nullable         ] public string?   USER             { get; set; } // NVARCHAR(256)
+		[Column(),                       Nullable         ] public string?   LOCALE           { get; set; } // VARCHAR(64)
+		#nullable disable
 		[Column(),                                 NotNull] public string    STATUS           { get; set; } // VARCHAR(16)
+		#nullable enable
 		[Column("START_TIME"),           Nullable         ] public DateTime? StartTime        { get; set; } // TIMESTAMP
 		[Column("END_TIME"),             Nullable         ] public DateTime? EndTime          { get; set; } // TIMESTAMP
 		[Column("SESSION_TIMEOUT"),      Nullable         ] public int?      SessionTimeout   { get; set; } // INTEGER
 		[Column("SIGNATURE_VERSION"),    Nullable         ] public int?      SignatureVersion { get; set; } // INTEGER
-		[Column("ACTIVATED_BY"),         Nullable         ] public string    ActivatedBy      { get; set; } // NVARCHAR(256)
+		[Column("ACTIVATED_BY"),         Nullable         ] public string?   ActivatedBy      { get; set; } // NVARCHAR(256)
 		[Column("ACTIVATED_AT"),         Nullable         ] public DateTime? ActivatedAt      { get; set; } // TIMESTAMP
-		[Column("CONFIGURED_BY"),        Nullable         ] public string    ConfiguredBy     { get; set; } // NVARCHAR(256)
+		[Column("CONFIGURED_BY"),        Nullable         ] public string?   ConfiguredBy     { get; set; } // NVARCHAR(256)
 		[Column("CONFIGURED_AT"),        Nullable         ] public DateTime? ConfiguredAt     { get; set; } // TIMESTAMP
-		[Column("SCHEMA_NAME"),          Nullable         ] public string    SchemaName       { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),          Nullable         ] public string?   SchemaName       { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_XS", Name="JOB_LOG")]
 	public partial class _SYS_XS_JobLog
 	{
+		#nullable disable
 		[Column(),                PrimaryKey(1), NotNull] public string    NAME         { get; set; } // NVARCHAR(512)
+		#nullable enable
 		[Column(),                PrimaryKey(2), NotNull] public long      ID           { get; set; } // BIGINT
 		[Column("PLANNED_TIME"),  PrimaryKey(3), NotNull] public DateTime  PlannedTime  { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column(),                               NotNull] public string    STATUS       { get; set; } // VARCHAR(16)
-		[Column("ERROR_MESSAGE"),    Nullable           ] public string    ErrorMessage { get; set; } // NVARCHAR(2048)
+		#nullable enable
+		[Column("ERROR_MESSAGE"),    Nullable           ] public string?   ErrorMessage { get; set; } // NVARCHAR(2048)
 		[Column("STARTED_AT"),       Nullable           ] public DateTime? StartedAt    { get; set; } // TIMESTAMP
 		[Column("FINISHED_AT"),      Nullable           ] public DateTime? FinishedAt   { get; set; } // TIMESTAMP
-		[Column(),                   Nullable           ] public string    HOST         { get; set; } // NVARCHAR(256)
-		[Column(),                   Nullable           ] public string    PORT         { get; set; } // VARCHAR(5)
-		[Column(),                   Nullable           ] public string    ACTION       { get; set; } // NVARCHAR(512)
-		[Column(),                   Nullable           ] public string    USER         { get; set; } // NVARCHAR(256)
-		[Column(),                   Nullable           ] public string    LOCALE       { get; set; } // VARCHAR(64)
+		[Column(),                   Nullable           ] public string?   HOST         { get; set; } // NVARCHAR(256)
+		[Column(),                   Nullable           ] public string?   PORT         { get; set; } // VARCHAR(5)
+		[Column(),                   Nullable           ] public string?   ACTION       { get; set; } // NVARCHAR(512)
+		[Column(),                   Nullable           ] public string?   USER         { get; set; } // NVARCHAR(256)
+		[Column(),                   Nullable           ] public string?   LOCALE       { get; set; } // VARCHAR(64)
 		[Column("THREAD_ID"),        Nullable           ] public long?     ThreadId     { get; set; } // BIGINT
 	}
 
@@ -2894,24 +3351,38 @@ namespace SapHanaDataContext
 	public partial class _SYS_XS_JobSchedule
 	{
 		[Column(),             PrimaryKey,  NotNull] public long      ID          { get; set; } // BIGINT
+		#nullable disable
 		[Column("JOB_NAME"),                NotNull] public string    JobName     { get; set; } // NVARCHAR(512)
+		#nullable enable
+		#nullable disable
 		[Column(),                          NotNull] public string    XSCRON      { get; set; } // NVARCHAR(256)
-		[Column(),                Nullable         ] public string    DESCRIPTION { get; set; } // NVARCHAR(512)
-		[Column(),                Nullable         ] public string    PARAMETER   { get; set; } // NCLOB
-		[Column(),                Nullable         ] public string    ORIGIN      { get; set; } // VARCHAR(11)
+		#nullable enable
+		[Column(),                Nullable         ] public string?   DESCRIPTION { get; set; } // NVARCHAR(512)
+		[Column(),                Nullable         ] public string?   PARAMETER   { get; set; } // NCLOB
+		[Column(),                Nullable         ] public string?   ORIGIN      { get; set; } // VARCHAR(11)
+		#nullable disable
 		[Column(),                          NotNull] public string    STATUS      { get; set; } // VARCHAR(16)
-		[Column("CHANGED_BY"),    Nullable         ] public string    ChangedBy   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column("CHANGED_BY"),    Nullable         ] public string?   ChangedBy   { get; set; } // NVARCHAR(256)
 		[Column("CHANGED_AT"),    Nullable         ] public DateTime? ChangedAt   { get; set; } // TIMESTAMP
 	}
 
 	[Table(Schema="_SYS_XS", Name="JS_RECOMPILE_ISSUES")]
 	public partial class _SYS_XS_JsRecompileIssue
 	{
+		#nullable disable
 		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string   PackageId    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string   ObjectName   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string   ObjectSuffix { get; set; } // NVARCHAR(255)
+		#nullable enable
 		[Column(),                PrimaryKey(4), NotNull] public DateTime STAMP        { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column(),                               NotNull] public string   MESSAGE      { get; set; } // NVARCHAR(2048)
+		#nullable enable
 	}
 
 	/// <summary>
@@ -2924,10 +3395,12 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"),             NotNull    ] public DateTime  SnapshotId            { get; set; } // TIMESTAMP
+		#nullable disable
 		/// <summary>
 		/// Name of the licensed software product, e.g. SAP HANA
 		/// </summary>
 		[Column("PRODUCT_NAME"),            NotNull    ] public string    ProductName           { get; set; } // VARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// Allowed product usage as specified by the license (e.g. main memory)
 		/// </summary>
@@ -2947,15 +3420,15 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// TRUE if the license is a permanent one, FALSE if the license is a temporary one
 		/// </summary>
-		[Column(),                             Nullable] public string    PERMANENT             { get; set; } // VARCHAR(5)
+		[Column(),                             Nullable] public string?   PERMANENT             { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// TRUE if the license is currently valid, otherwise FALSE
 		/// </summary>
-		[Column(),                             Nullable] public string    VALID                 { get; set; } // VARCHAR(5)
+		[Column(),                             Nullable] public string?   VALID                 { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// TRUE if the license has a product usage limit (license type is enforced), otherwise FALSE
 		/// </summary>
-		[Column(),                             Nullable] public string    ENFORCED              { get; set; } // VARCHAR(5)
+		[Column(),                             Nullable] public string?   ENFORCED              { get; set; } // VARCHAR(5)
 	}
 
 	[Table(Schema="TESTHANA", Name="LinqDataTypes")]
@@ -2966,12 +3439,12 @@ namespace SapHanaDataContext
 		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
 		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
 		[Column, Nullable] public byte?     BoolValue      { get; set; } // TINYINT
-		[Column, Nullable] public string    GuidValue      { get; set; } // VARCHAR(36)
-		[Column, Nullable] public byte[]    BinaryValue    { get; set; } // VARBINARY(5000)
+		[Column, Nullable] public string?   GuidValue      { get; set; } // VARCHAR(36)
+		[Column, Nullable] public byte[]?   BinaryValue    { get; set; } // VARBINARY(5000)
 		[Column, Nullable] public short?    SmallIntValue  { get; set; } // SMALLINT
 		[Column, Nullable] public int?      IntValue       { get; set; } // INTEGER
 		[Column, Nullable] public long?     BigIntValue    { get; set; } // BIGINT
-		[Column, Nullable] public string    StringValue    { get; set; } // NVARCHAR(50)
+		[Column, Nullable] public string?   StringValue    { get; set; } // NVARCHAR(50)
 	}
 
 	[Table(Schema="_SYS_LDB", Name="LT0000000000000001")]
@@ -2989,12 +3462,12 @@ namespace SapHanaDataContext
 		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
 		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
 		[Column, Nullable] public byte?     BoolValue      { get; set; } // TINYINT
-		[Column, Nullable] public string    GuidValue      { get; set; } // VARCHAR(36)
-		[Column, Nullable] public byte[]    BinaryValue    { get; set; } // VARBINARY(5000)
+		[Column, Nullable] public string?   GuidValue      { get; set; } // VARCHAR(36)
+		[Column, Nullable] public byte[]?   BinaryValue    { get; set; } // VARBINARY(5000)
 		[Column, Nullable] public short?    SmallIntValue  { get; set; } // SMALLINT
 		[Column, Nullable] public int?      IntValue       { get; set; } // INTEGER
 		[Column, Nullable] public long?     BigIntValue    { get; set; } // BIGINT
-		[Column, Nullable] public string    StringValue    { get; set; } // NVARCHAR(50)
+		[Column, Nullable] public string?   StringValue    { get; set; } // NVARCHAR(50)
 	}
 
 	/// <summary>
@@ -3003,42 +3476,46 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="MATCH_GROUP_INFO", IsView=true)]
 	public partial class _SYS_TASK_MatchGroupInfo0
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),       NotNull    ] public string SchemaName      { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),       NotNull    ] public string  SchemaName      { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),         NotNull    ] public string TaskName        { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),         NotNull    ] public string  TaskName        { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"), NotNull    ] public long   TaskExecutionId { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"), NotNull    ] public long    TaskExecutionId { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),       Nullable] public string OperationName   { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),       Nullable] public string? OperationName   { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The group identification number
 		/// </summary>
-		[Column("GROUP_ID"),          NotNull    ] public int    GroupId         { get; set; } // INTEGER
+		[Column("GROUP_ID"),          NotNull    ] public int     GroupId         { get; set; } // INTEGER
 		/// <summary>
 		/// The number of records in the match group
 		/// </summary>
-		[Column("GROUP_COUNT"),          Nullable] public int?   GroupCount      { get; set; } // INTEGER
+		[Column("GROUP_COUNT"),          Nullable] public int?    GroupCount      { get; set; } // INTEGER
 		/// <summary>
 		/// The number of sources represented in the match group
 		/// </summary>
-		[Column("SOURCE_COUNT"),         Nullable] public int?   SourceCount     { get; set; } // INTEGER
+		[Column("SOURCE_COUNT"),         Nullable] public int?    SourceCount     { get; set; } // INTEGER
 		/// <summary>
 		/// Contains whether the group is flagged for review
 		/// </summary>
-		[Column("REVIEW_GROUP"),         Nullable] public char?  ReviewGroup     { get; set; } // NVARCHAR(1)
+		[Column("REVIEW_GROUP"),         Nullable] public char?   ReviewGroup     { get; set; } // NVARCHAR(1)
 		/// <summary>
 		/// Contains whether the group is flagged for conflict
 		/// </summary>
-		[Column("CONFLICT_GROUP"),       Nullable] public char?  ConflictGroup   { get; set; } // NVARCHAR(1)
+		[Column("CONFLICT_GROUP"),       Nullable] public char?   ConflictGroup   { get; set; } // NVARCHAR(1)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="MATCH_GROUP_INFO_")]
@@ -3056,10 +3533,10 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="MATCH_POLICIES_")]
 	public partial class _SYS_TASK_MatchPolicies
 	{
-		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long   TaskExecutionId { get; set; } // BIGINT
-		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int    OperationId     { get; set; } // INTEGER
-		[Column("POLICY_ID"),         PrimaryKey(3), NotNull] public int    PolicyId        { get; set; } // INTEGER
-		[Column("POLICY_NAME"),          Nullable           ] public string PolicyName      { get; set; } // NVARCHAR(256)
+		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long    TaskExecutionId { get; set; } // BIGINT
+		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int     OperationId     { get; set; } // INTEGER
+		[Column("POLICY_ID"),         PrimaryKey(3), NotNull] public int     PolicyId        { get; set; } // INTEGER
+		[Column("POLICY_NAME"),          Nullable           ] public string? PolicyName      { get; set; } // NVARCHAR(256)
 	}
 
 	/// <summary>
@@ -3068,34 +3545,38 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="MATCH_RECORD_INFO", IsView=true)]
 	public partial class _SYS_TASK_MatchRecordInfo0
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),       NotNull    ] public string SchemaName      { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),       NotNull    ] public string  SchemaName      { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),         NotNull    ] public string TaskName        { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),         NotNull    ] public string  TaskName        { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"), NotNull    ] public long   TaskExecutionId { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"), NotNull    ] public long    TaskExecutionId { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),       Nullable] public string OperationName   { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),       Nullable] public string? OperationName   { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The name of the table defined in the task plan for an operation
 		/// </summary>
-		[Column("TABLE_NAME"),           Nullable] public string TableName       { get; set; } // NVARCHAR(128)
+		[Column("TABLE_NAME"),           Nullable] public string? TableName       { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The unique ID of the row processed for this execution of the task plan
 		/// </summary>
-		[Column("ROW_ID"),            NotNull    ] public long   RowId           { get; set; } // BIGINT
+		[Column("ROW_ID"),            NotNull    ] public long    RowId           { get; set; } // BIGINT
 		/// <summary>
 		/// The group identification number
 		/// </summary>
-		[Column("GROUP_ID"),             Nullable] public int?   GroupId         { get; set; } // INTEGER
+		[Column("GROUP_ID"),             Nullable] public int?    GroupId         { get; set; } // INTEGER
 	}
 
 	[Table(Schema="_SYS_TASK", Name="MATCH_RECORD_INFO_")]
@@ -3111,19 +3592,21 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="MATCH_RULES_")]
 	public partial class _SYS_TASK_MatchRules
 	{
-		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long   TaskExecutionId { get; set; } // BIGINT
-		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int    OperationId     { get; set; } // INTEGER
-		[Column("RULE_ID"),           PrimaryKey(3), NotNull] public string RuleId          { get; set; } // NVARCHAR(20)
-		[Column("RULE_NAME"),            Nullable           ] public string RuleName        { get; set; } // NVARCHAR(256)
+		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long    TaskExecutionId { get; set; } // BIGINT
+		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int     OperationId     { get; set; } // INTEGER
+		#nullable disable
+		[Column("RULE_ID"),           PrimaryKey(3), NotNull] public string  RuleId          { get; set; } // NVARCHAR(20)
+		#nullable enable
+		[Column("RULE_NAME"),            Nullable           ] public string? RuleName        { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="MATCH_SOURCE_INFO_")]
 	public partial class _SYS_TASK_MatchSourceInfo
 	{
-		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long   TaskExecutionId { get; set; } // BIGINT
-		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int    OperationId     { get; set; } // INTEGER
-		[Column("SOURCE_ID"),         PrimaryKey(3), NotNull] public int    SourceId        { get; set; } // INTEGER
-		[Column("SOURCE_NAME"),          Nullable           ] public string SourceName      { get; set; } // NVARCHAR(256)
+		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long    TaskExecutionId { get; set; } // BIGINT
+		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int     OperationId     { get; set; } // INTEGER
+		[Column("SOURCE_ID"),         PrimaryKey(3), NotNull] public int     SourceId        { get; set; } // INTEGER
+		[Column("SOURCE_NAME"),          Nullable           ] public string? SourceName      { get; set; } // NVARCHAR(256)
 	}
 
 	/// <summary>
@@ -3132,34 +3615,38 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="MATCH_SOURCE_STATISTICS", IsView=true)]
 	public partial class _SYS_TASK_MatchSourceStatistic
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),         NotNull    ] public string SchemaName        { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),         NotNull    ] public string  SchemaName        { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),           NotNull    ] public string TaskName          { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),           NotNull    ] public string  TaskName          { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"),   NotNull    ] public long   TaskExecutionId   { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"),   NotNull    ] public long    TaskExecutionId   { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),         Nullable] public string OperationName     { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),         Nullable] public string? OperationName     { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The data source name
 		/// </summary>
-		[Column("SOURCE_NAME"),            Nullable] public string SourceName        { get; set; } // NVARCHAR(256)
+		[Column("SOURCE_NAME"),            Nullable] public string? SourceName        { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// The related data source name
 		/// </summary>
-		[Column("RELATED_SOURCE_NAME"),    Nullable] public string RelatedSourceName { get; set; } // NVARCHAR(256)
+		[Column("RELATED_SOURCE_NAME"),    Nullable] public string? RelatedSourceName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// The number of comparisons resulting in a match decision between records in each SOURCE_NAME / RELATED_SOURCE_NAME pair
 		/// </summary>
-		[Column("NUM_MATCH_DECISIONS"),    Nullable] public int?   NumMatchDecisions { get; set; } // INTEGER
+		[Column("NUM_MATCH_DECISIONS"),    Nullable] public int?    NumMatchDecisions { get; set; } // INTEGER
 	}
 
 	[Table(Schema="_SYS_TASK", Name="MATCH_SOURCE_STATISTICS_")]
@@ -3167,8 +3654,12 @@ namespace SapHanaDataContext
 	{
 		[Column("TASK_EXECUTION_ID"),   PrimaryKey(1), NotNull] public long   TaskExecutionId   { get; set; } // BIGINT
 		[Column("OPERATION_ID"),        PrimaryKey(2), NotNull] public int    OperationId       { get; set; } // INTEGER
+		#nullable disable
 		[Column("SOURCE_ID"),           PrimaryKey(3), NotNull] public string SourceId          { get; set; } // NVARCHAR(12)
+		#nullable enable
+		#nullable disable
 		[Column("RELATED_SOURCE_ID"),   PrimaryKey(4), NotNull] public string RelatedSourceId   { get; set; } // NVARCHAR(12)
+		#nullable enable
 		[Column("NUM_MATCH_DECISIONS"),    Nullable           ] public int?   NumMatchDecisions { get; set; } // INTEGER
 	}
 
@@ -3178,62 +3669,66 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="MATCH_STATISTICS", IsView=true)]
 	public partial class _SYS_TASK_MatchStatistic
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),               NotNull    ] public string SchemaName              { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),               NotNull    ] public string  SchemaName              { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),                 NotNull    ] public string TaskName                { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),                 NotNull    ] public string  TaskName                { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"),         NotNull    ] public long   TaskExecutionId         { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"),         NotNull    ] public long    TaskExecutionId         { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),               Nullable] public string OperationName           { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),               Nullable] public string? OperationName           { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Total number of records in the input data sources
 		/// </summary>
-		[Column("NUM_RECORDS"),                  Nullable] public long?  NumRecords              { get; set; } // BIGINT
+		[Column("NUM_RECORDS"),                  Nullable] public long?   NumRecords              { get; set; } // BIGINT
 		/// <summary>
 		/// Number of records selected for the matching process
 		/// </summary>
-		[Column("NUM_SELECTED_RECORDS"),         Nullable] public long?  NumSelectedRecords      { get; set; } // BIGINT
+		[Column("NUM_SELECTED_RECORDS"),         Nullable] public long?   NumSelectedRecords      { get; set; } // BIGINT
 		/// <summary>
 		/// Number of records that reside in match groups
 		/// </summary>
-		[Column("NUM_MATCH_RECORDS"),            Nullable] public long?  NumMatchRecords         { get; set; } // BIGINT
+		[Column("NUM_MATCH_RECORDS"),            Nullable] public long?   NumMatchRecords         { get; set; } // BIGINT
 		/// <summary>
 		/// Number of non-matching records that do not reside in match groups
 		/// </summary>
-		[Column("NUM_NON_MATCH_RECORDS"),        Nullable] public long?  NumNonMatchRecords      { get; set; } // BIGINT
+		[Column("NUM_NON_MATCH_RECORDS"),        Nullable] public long?   NumNonMatchRecords      { get; set; } // BIGINT
 		/// <summary>
 		/// Number of match groups identified
 		/// </summary>
-		[Column("NUM_MATCH_GROUPS"),             Nullable] public long?  NumMatchGroups          { get; set; } // BIGINT
+		[Column("NUM_MATCH_GROUPS"),             Nullable] public long?   NumMatchGroups          { get; set; } // BIGINT
 		/// <summary>
 		/// Number of  match groups flagged for review
 		/// </summary>
-		[Column("NUM_REVIEW_GROUPS"),            Nullable] public long?  NumReviewGroups         { get; set; } // BIGINT
+		[Column("NUM_REVIEW_GROUPS"),            Nullable] public long?   NumReviewGroups         { get; set; } // BIGINT
 		/// <summary>
 		/// Number of  match groups not flagged for review
 		/// </summary>
-		[Column("NUM_NON_REVIEW_GROUPS"),        Nullable] public long?  NumNonReviewGroups      { get; set; } // BIGINT
+		[Column("NUM_NON_REVIEW_GROUPS"),        Nullable] public long?   NumNonReviewGroups      { get; set; } // BIGINT
 		/// <summary>
 		/// Number of  match groups flagged with conflicts
 		/// </summary>
-		[Column("NUM_CONFLICT_GROUPS"),          Nullable] public long?  NumConflictGroups       { get; set; } // BIGINT
+		[Column("NUM_CONFLICT_GROUPS"),          Nullable] public long?   NumConflictGroups       { get; set; } // BIGINT
 		/// <summary>
 		///  Number of comparisons performed by the transformation operation
 		/// </summary>
-		[Column("NUM_COMPARISONS_PERFORMED"),    Nullable] public long?  NumComparisonsPerformed { get; set; } // BIGINT
+		[Column("NUM_COMPARISONS_PERFORMED"),    Nullable] public long?   NumComparisonsPerformed { get; set; } // BIGINT
 		/// <summary>
 		/// Number of comparisons resulting in a match decision
 		/// </summary>
-		[Column("NUM_MATCH_DECISIONS"),          Nullable] public long?  NumMatchDecisions       { get; set; } // BIGINT
+		[Column("NUM_MATCH_DECISIONS"),          Nullable] public long?   NumMatchDecisions       { get; set; } // BIGINT
 	}
 
 	[Table(Schema="_SYS_TASK", Name="MATCH_STATISTICS_")]
@@ -3257,64 +3752,68 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="MATCH_TRACING", IsView=true)]
 	public partial class _SYS_TASK_MatchTracing0
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),        NotNull    ] public string SchemaName       { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),        NotNull    ] public string  SchemaName       { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),          NotNull    ] public string TaskName         { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),          NotNull    ] public string  TaskName         { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
-		[Column("TASK_EXECUTION_ID"),  NotNull    ] public long   TaskExecutionId  { get; set; } // BIGINT
+		[Column("TASK_EXECUTION_ID"),  NotNull    ] public long    TaskExecutionId  { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),        Nullable] public string OperationName    { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),        Nullable] public string? OperationName    { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The name of the table defined in the task plan for an operation
 		/// </summary>
-		[Column("TABLE_NAME"),            Nullable] public string TableName        { get; set; } // NVARCHAR(128)
+		[Column("TABLE_NAME"),            Nullable] public string? TableName        { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The unique ID of the row processed for this execution of the task plan
 		/// </summary>
-		[Column("ROW_ID"),             NotNull    ] public long   RowId            { get; set; } // BIGINT
+		[Column("ROW_ID"),             NotNull    ] public long    RowId            { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the table defined in the task plan for an operation
 		/// </summary>
-		[Column("RELATED_TABLE_NAME"),    Nullable] public string RelatedTableName { get; set; } // NVARCHAR(128)
+		[Column("RELATED_TABLE_NAME"),    Nullable] public string? RelatedTableName { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The unique ID of the row processed for this execution of the task plan
 		/// </summary>
-		[Column("RELATED_ROW_ID"),     NotNull    ] public long   RelatedRowId     { get; set; } // BIGINT
+		[Column("RELATED_ROW_ID"),     NotNull    ] public long    RelatedRowId     { get; set; } // BIGINT
 		/// <summary>
 		/// The name of the match policy that processed the related rows
 		/// </summary>
-		[Column("POLICY_NAME"),           Nullable] public string PolicyName       { get; set; } // NVARCHAR(256)
+		[Column("POLICY_NAME"),           Nullable] public string? PolicyName       { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// The name of the match rule that processed the related rows
 		/// </summary>
-		[Column("RULE_NAME"),             Nullable] public string RuleName         { get; set; } // NVARCHAR(256)
+		[Column("RULE_NAME"),             Nullable] public string? RuleName         { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// The similarity score of the related rows
 		/// </summary>
-		[Column(),                        Nullable] public int?   SCORE            { get; set; } // INTEGER
+		[Column(),                        Nullable] public int?    SCORE            { get; set; } // INTEGER
 	}
 
 	[Table(Schema="_SYS_TASK", Name="MATCH_TRACING_")]
 	public partial class _SYS_TASK_MatchTracing1
 	{
-		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long   TaskExecutionId { get; set; } // BIGINT
-		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int    OperationId     { get; set; } // INTEGER
-		[Column("TABLE_ID"),          PrimaryKey(3), NotNull] public int    TableId         { get; set; } // INTEGER
-		[Column("ROW_ID"),            PrimaryKey(4), NotNull] public long   RowId           { get; set; } // BIGINT
-		[Column("RELATED_TABLE_ID"),  PrimaryKey(5), NotNull] public int    RelatedTableId  { get; set; } // INTEGER
-		[Column("RELATED_ROW_ID"),    PrimaryKey(6), NotNull] public long   RelatedRowId    { get; set; } // BIGINT
-		[Column("POLICY_ID"),            Nullable           ] public int?   PolicyId        { get; set; } // INTEGER
-		[Column("RULE_ID"),              Nullable           ] public string RuleId          { get; set; } // NVARCHAR(20)
-		[Column(),                       Nullable           ] public int?   SCORE           { get; set; } // INTEGER
+		[Column("TASK_EXECUTION_ID"), PrimaryKey(1), NotNull] public long    TaskExecutionId { get; set; } // BIGINT
+		[Column("OPERATION_ID"),      PrimaryKey(2), NotNull] public int     OperationId     { get; set; } // INTEGER
+		[Column("TABLE_ID"),          PrimaryKey(3), NotNull] public int     TableId         { get; set; } // INTEGER
+		[Column("ROW_ID"),            PrimaryKey(4), NotNull] public long    RowId           { get; set; } // BIGINT
+		[Column("RELATED_TABLE_ID"),  PrimaryKey(5), NotNull] public int     RelatedTableId  { get; set; } // INTEGER
+		[Column("RELATED_ROW_ID"),    PrimaryKey(6), NotNull] public long    RelatedRowId    { get; set; } // BIGINT
+		[Column("POLICY_ID"),            Nullable           ] public int?    PolicyId        { get; set; } // INTEGER
+		[Column("RULE_ID"),              Nullable           ] public string? RuleId          { get; set; } // NVARCHAR(20)
+		[Column(),                       Nullable           ] public int?    SCORE           { get; set; } // INTEGER
 	}
 
 	/// <summary>
@@ -3326,7 +3825,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),            Nullable] public string    DatabaseName          { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),            Nullable] public string?   DatabaseName          { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Unique ID of a backup catalog entry
 		/// </summary>
@@ -3334,7 +3833,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Classification of backup catalog entries. The following types are supported: 'complete data backup'/'data snapshot'/'log backup'/'log missing'
 		/// </summary>
-		[Column("ENTRY_TYPE_NAME"),          Nullable] public string    EntryTypeName         { get; set; } // VARCHAR(64)
+		[Column("ENTRY_TYPE_NAME"),          Nullable] public string?   EntryTypeName         { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Unique ID of a data backup or a log backup respectively. All backup files of a single data backup share the same BACKUP_ID
 		/// </summary>
@@ -3358,27 +3857,27 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Result of corresponding action: 'successful'/'failed'/'running'/'cancel pending'/'canceled'
 		/// </summary>
-		[Column("STATE_NAME"),               Nullable] public string    StateName             { get; set; } // VARCHAR(64)
+		[Column("STATE_NAME"),               Nullable] public string?   StateName             { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Additional information
 		/// </summary>
-		[Column(),                           Nullable] public string    COMMENT               { get; set; } // VARCHAR(256)
+		[Column(),                           Nullable] public string?   COMMENT               { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Additional information
 		/// </summary>
-		[Column(),                           Nullable] public string    MESSAGE               { get; set; } // VARCHAR(512)
+		[Column(),                           Nullable] public string?   MESSAGE               { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// System identifier (SID) of the SAP HANA database
 		/// </summary>
-		[Column("SYSTEM_ID"),                Nullable] public string    SystemId              { get; set; } // VARCHAR(3)
+		[Column("SYSTEM_ID"),                Nullable] public string?   SystemId              { get; set; } // VARCHAR(3)
 		/// <summary>
 		/// Key used for encrypting this backup, if any
 		/// </summary>
-		[Column("ENCRYPTION_ROOT_KEY_HASH"), Nullable] public string    EncryptionRootKeyHash { get; set; } // VARCHAR(64)
+		[Column("ENCRYPTION_ROOT_KEY_HASH"), Nullable] public string?   EncryptionRootKeyHash { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Name of the database which creates the backup
 		/// </summary>
-		[Column("SOURCE_DATABASE_NAME"),     Nullable] public string    SourceDatabaseName    { get; set; } // NVARCHAR(256)
+		[Column("SOURCE_DATABASE_NAME"),     Nullable] public string?   SourceDatabaseName    { get; set; } // NVARCHAR(256)
 	}
 
 	/// <summary>
@@ -3390,63 +3889,63 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),           Nullable] public string DatabaseName         { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),           Nullable] public string? DatabaseName         { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Unique ID of a backup catalog entry
 		/// </summary>
-		[Column("ENTRY_ID"),                Nullable] public long?  EntryId              { get; set; } // BIGINT
+		[Column("ENTRY_ID"),                Nullable] public long?   EntryId              { get; set; } // BIGINT
 		/// <summary>
 		/// Unique ID of a data backup and log backup respectively. All backup files of a single data backup share the same BACKUP_ID
 		/// </summary>
-		[Column("BACKUP_ID"),               Nullable] public long?  BackupId             { get; set; } // BIGINT
+		[Column("BACKUP_ID"),               Nullable] public long?   BackupId             { get; set; } // BIGINT
 		/// <summary>
 		/// Persistence volume ID
 		/// </summary>
-		[Column("SOURCE_ID"),               Nullable] public long?  SourceId             { get; set; } // BIGINT
+		[Column("SOURCE_ID"),               Nullable] public long?   SourceId             { get; set; } // BIGINT
 		/// <summary>
 		/// Type of persistence to be backed up: 'volume'/'topology'
 		/// </summary>
-		[Column("SOURCE_TYPE_NAME"),        Nullable] public string SourceTypeName       { get; set; } // VARCHAR(64)
+		[Column("SOURCE_TYPE_NAME"),        Nullable] public string? SourceTypeName       { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                          Nullable] public string HOST                 { get; set; } // VARCHAR(64)
+		[Column(),                          Nullable] public string? HOST                 { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Type of database service: 'indexserver'/'nameserver'/'statisticsserver'
 		/// </summary>
-		[Column("SERVICE_TYPE_NAME"),       Nullable] public string ServiceTypeName      { get; set; } // VARCHAR(64)
+		[Column("SERVICE_TYPE_NAME"),       Nullable] public string? ServiceTypeName      { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// In case of a data backup this value specifies the log position that must be processed next when a log recovery is requested after restoring the data backup
 		/// </summary>
-		[Column("REDO_LOG_POSITION"),       Nullable] public long?  RedoLogPosition      { get; set; } // BIGINT
+		[Column("REDO_LOG_POSITION"),       Nullable] public long?   RedoLogPosition      { get; set; } // BIGINT
 		/// <summary>
 		/// In case of a log backup this value specifies the log position of the oldest log entry contained in the backup
 		/// </summary>
-		[Column("FIRST_REDO_LOG_POSITION"), Nullable] public long?  FirstRedoLogPosition { get; set; } // BIGINT
+		[Column("FIRST_REDO_LOG_POSITION"), Nullable] public long?   FirstRedoLogPosition { get; set; } // BIGINT
 		/// <summary>
 		/// In case of a log backup this value specifies the log position of the newest log entry contained in the backup
 		/// </summary>
-		[Column("LAST_REDO_LOG_POSITION"),  Nullable] public long?  LastRedoLogPosition  { get; set; } // BIGINT
+		[Column("LAST_REDO_LOG_POSITION"),  Nullable] public long?   LastRedoLogPosition  { get; set; } // BIGINT
 		/// <summary>
 		/// Specifies the size of the backup
 		/// </summary>
-		[Column("BACKUP_SIZE"),             Nullable] public long?  BackupSize           { get; set; } // BIGINT
+		[Column("BACKUP_SIZE"),             Nullable] public long?   BackupSize           { get; set; } // BIGINT
 		/// <summary>
 		/// Data or log backup was written to this location
 		/// </summary>
-		[Column("DESTINATION_PATH"),        Nullable] public string DestinationPath      { get; set; } // VARCHAR(512)
+		[Column("DESTINATION_PATH"),        Nullable] public string? DestinationPath      { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Type of location: 'file'/'backint'
 		/// </summary>
-		[Column("DESTINATION_TYPE_NAME"),   Nullable] public string DestinationTypeName  { get; set; } // VARCHAR(16)
+		[Column("DESTINATION_TYPE_NAME"),   Nullable] public string? DestinationTypeName  { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Identifier of backup received from a backup tool
 		/// </summary>
-		[Column("EXTERNAL_BACKUP_ID"),      Nullable] public string ExternalBackupId     { get; set; } // VARCHAR(64)
+		[Column("EXTERNAL_BACKUP_ID"),      Nullable] public string? ExternalBackupId     { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// In case of a log backup this value specifies the number of log segments contained in the backup
 		/// </summary>
-		[Column("LOG_SEGMENT_COUNT"),       Nullable] public int?   LogSegmentCount      { get; set; } // INTEGER
+		[Column("LOG_SEGMENT_COUNT"),       Nullable] public int?    LogSegmentCount      { get; set; } // INTEGER
 	}
 
 	/// <summary>
@@ -3458,59 +3957,59 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                 Nullable] public string DatabaseName               { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                 Nullable] public string? DatabaseName               { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Max recovery file age
 		/// </summary>
-		[Column("MAX_RECOVERY_FILE_AGE"),         Nullable] public long?  MaxRecoveryFileAge         { get; set; } // BIGINT
+		[Column("MAX_RECOVERY_FILE_AGE"),         Nullable] public long?   MaxRecoveryFileAge         { get; set; } // BIGINT
 		/// <summary>
 		/// Log replay step size in bytes
 		/// </summary>
-		[Column("LOG_REPLAY_STEP_SIZE"),          Nullable] public long?  LogReplayStepSize          { get; set; } // BIGINT
+		[Column("LOG_REPLAY_STEP_SIZE"),          Nullable] public long?   LogReplayStepSize          { get; set; } // BIGINT
 		/// <summary>
 		/// Max number of backint channels per request during recovery
 		/// </summary>
-		[Column("MAX_RECOVERY_BACKINT_CHANNELS"), Nullable] public long?  MaxRecoveryBackintChannels { get; set; } // BIGINT
+		[Column("MAX_RECOVERY_BACKINT_CHANNELS"), Nullable] public long?   MaxRecoveryBackintChannels { get; set; } // BIGINT
 		/// <summary>
 		/// Linkname of the backint executable
 		/// </summary>
-		[Column("BACKINT_EXECUTABLE_LINK"),       Nullable] public string BackintExecutableLink      { get; set; } // VARCHAR(256)
+		[Column("BACKINT_EXECUTABLE_LINK"),       Nullable] public string? BackintExecutableLink      { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Real filename of the backint executable
 		/// </summary>
-		[Column("BACKINT_EXECUTABLE"),            Nullable] public string BackintExecutable          { get; set; } // VARCHAR(256)
+		[Column("BACKINT_EXECUTABLE"),            Nullable] public string? BackintExecutable          { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Directory for backint-based data backups
 		/// </summary>
-		[Column("BACKINT_DATA_BACKUP_PATH"),      Nullable] public string BackintDataBackupPath      { get; set; } // VARCHAR(256)
+		[Column("BACKINT_DATA_BACKUP_PATH"),      Nullable] public string? BackintDataBackupPath      { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Directory for backint-based log backups
 		/// </summary>
-		[Column("BACKINT_LOG_BACKUP_PATH"),       Nullable] public string BackintLogBackupPath       { get; set; } // VARCHAR(256)
+		[Column("BACKINT_LOG_BACKUP_PATH"),       Nullable] public string? BackintLogBackupPath       { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Directory for backint-based catalog backups
 		/// </summary>
-		[Column("BACKINT_CATALOG_BACKUP_PATH"),   Nullable] public string BackintCatalogBackupPath   { get; set; } // VARCHAR(256)
+		[Column("BACKINT_CATALOG_BACKUP_PATH"),   Nullable] public string? BackintCatalogBackupPath   { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Default directory for file-based data backups
 		/// </summary>
-		[Column("FILE_DATA_BACKUP_PATH"),         Nullable] public string FileDataBackupPath         { get; set; } // VARCHAR(256)
+		[Column("FILE_DATA_BACKUP_PATH"),         Nullable] public string? FileDataBackupPath         { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Directory for file-based log backups
 		/// </summary>
-		[Column("FILE_LOG_BACKUP_PATH"),          Nullable] public string FileLogBackupPath          { get; set; } // VARCHAR(256)
+		[Column("FILE_LOG_BACKUP_PATH"),          Nullable] public string? FileLogBackupPath          { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Directory for file-based catalog backups
 		/// </summary>
-		[Column("FILE_CATALOG_BACKUP_PATH"),      Nullable] public string FileCatalogBackupPath      { get; set; } // VARCHAR(256)
+		[Column("FILE_CATALOG_BACKUP_PATH"),      Nullable] public string? FileCatalogBackupPath      { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Log backup timeout
 		/// </summary>
-		[Column("LOG_BACKUP_TIMEOUT"),            Nullable] public long?  LogBackupTimeout           { get; set; } // BIGINT
+		[Column("LOG_BACKUP_TIMEOUT"),            Nullable] public long?   LogBackupTimeout           { get; set; } // BIGINT
 		/// <summary>
 		/// Log backup interval mode
 		/// </summary>
-		[Column("LOG_BACKUP_INTERVAL_MODE"),      Nullable] public string LogBackupIntervalMode      { get; set; } // VARCHAR(16)
+		[Column("LOG_BACKUP_INTERVAL_MODE"),      Nullable] public string? LogBackupIntervalMode      { get; set; } // VARCHAR(16)
 	}
 
 	/// <summary>
@@ -3522,7 +4021,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),    Nullable] public string    DatabaseName    { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),    Nullable] public string?   DatabaseName    { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Unique ID of a data backup. All backup files of a single data backup share the same BACKUP_ID
 		/// </summary>
@@ -3530,7 +4029,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                   Nullable] public string    HOST            { get; set; } // VARCHAR(64)
+		[Column(),                   Nullable] public string?   HOST            { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -3538,11 +4037,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Name of the service
 		/// </summary>
-		[Column("SERVICE_NAME"),     Nullable] public string    ServiceName     { get; set; } // VARCHAR(32)
+		[Column("SERVICE_NAME"),     Nullable] public string?   ServiceName     { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Classification of the type of backup. Currently only 'complete data backup' is supported
 		/// </summary>
-		[Column("ENTRY_TYPE_NAME"),  Nullable] public string    EntryTypeName   { get; set; } // VARCHAR(64)
+		[Column("ENTRY_TYPE_NAME"),  Nullable] public string?   EntryTypeName   { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// The local server time the backup started
 		/// </summary>
@@ -3562,7 +4061,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Current state of the backup
 		/// </summary>
-		[Column("STATE_NAME"),       Nullable] public string    StateName       { get; set; } // VARCHAR(64)
+		[Column("STATE_NAME"),       Nullable] public string?   StateName       { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Total amount of data
 		/// </summary>
@@ -3582,27 +4081,27 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),   Nullable] public string DatabaseName  { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),   Nullable] public string? DatabaseName  { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                  Nullable] public string HOST          { get; set; } // VARCHAR(64)
+		[Column(),                  Nullable] public string? HOST          { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                  Nullable] public int?   PORT          { get; set; } // INTEGER
+		[Column(),                  Nullable] public int?    PORT          { get; set; } // INTEGER
 		/// <summary>
 		/// Name of the service
 		/// </summary>
-		[Column("SERVICE_NAME"),    Nullable] public string ServiceName   { get; set; } // NVARCHAR(32)
+		[Column("SERVICE_NAME"),    Nullable] public string? ServiceName   { get; set; } // NVARCHAR(32)
 		/// <summary>
 		/// Classification of the type of backup
 		/// </summary>
-		[Column("ENTRY_TYPE_NAME"), Nullable] public string EntryTypeName { get; set; } // NVARCHAR(64)
+		[Column("ENTRY_TYPE_NAME"), Nullable] public string? EntryTypeName { get; set; } // NVARCHAR(64)
 		/// <summary>
 		/// The estimated size of the backup
 		/// </summary>
-		[Column("ESTIMATED_SIZE"),  Nullable] public long?  EstimatedSize { get; set; } // BIGINT
+		[Column("ESTIMATED_SIZE"),  Nullable] public long?   EstimatedSize { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -3614,11 +4113,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),      Nullable] public string  DatabaseName     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),      Nullable] public string? DatabaseName     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                     Nullable] public string  HOST             { get; set; } // VARCHAR(64)
+		[Column(),                     Nullable] public string? HOST             { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -3630,7 +4129,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Statistics object name
 		/// </summary>
-		[Column("STATISTICS_NAME"),    Nullable] public string  StatisticsName   { get; set; } // VARCHAR(128)
+		[Column("STATISTICS_NAME"),    Nullable] public string? StatisticsName   { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Statistics object unique ID
 		/// </summary>
@@ -3682,7 +4181,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Component
 		/// </summary>
-		[Column(),                     Nullable] public string  COMPONENT        { get; set; } // VARCHAR(32)
+		[Column(),                     Nullable] public string? COMPONENT        { get; set; } // VARCHAR(32)
 	}
 
 	/// <summary>
@@ -3694,7 +4193,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),      Nullable] public string    DatabaseName     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),      Nullable] public string?   DatabaseName     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -3702,7 +4201,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                     Nullable] public string    HOST             { get; set; } // VARCHAR(64)
+		[Column(),                     Nullable] public string?   HOST             { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -3714,7 +4213,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Statistics object name
 		/// </summary>
-		[Column("STATISTICS_NAME"),    Nullable] public string    StatisticsName   { get; set; } // VARCHAR(128)
+		[Column("STATISTICS_NAME"),    Nullable] public string?   StatisticsName   { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Statistics object unique ID
 		/// </summary>
@@ -3766,7 +4265,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Component
 		/// </summary>
-		[Column(),                     Nullable] public string    COMPONENT        { get; set; } // VARCHAR(32)
+		[Column(),                     Nullable] public string?   COMPONENT        { get; set; } // VARCHAR(32)
 	}
 
 	/// <summary>
@@ -3778,39 +4277,39 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),     Nullable] public string DatabaseName     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),     Nullable] public string? DatabaseName     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                    Nullable] public string HOST             { get; set; } // VARCHAR(64)
+		[Column(),                    Nullable] public string? HOST             { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                    Nullable] public int?   PORT             { get; set; } // INTEGER
+		[Column(),                    Nullable] public int?    PORT             { get; set; } // INTEGER
 		/// <summary>
 		/// Connection status: 'RUNNING'/'IDLE'
 		/// </summary>
-		[Column("CONNECTION_STATUS"), Nullable] public string ConnectionStatus { get; set; } // VARCHAR(128)
+		[Column("CONNECTION_STATUS"), Nullable] public string? ConnectionStatus { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Host name of client machine
 		/// </summary>
-		[Column("CLIENT_HOST"),       Nullable] public string ClientHost       { get; set; } // NVARCHAR(256)
+		[Column("CLIENT_HOST"),       Nullable] public string? ClientHost       { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// IP of client machine
 		/// </summary>
-		[Column("CLIENT_IP"),         Nullable] public string ClientIp         { get; set; } // VARCHAR(45)
+		[Column("CLIENT_IP"),         Nullable] public string? ClientIp         { get; set; } // VARCHAR(45)
 		/// <summary>
 		/// Client process ID
 		/// </summary>
-		[Column("CLIENT_PID"),        Nullable] public long?  ClientPid        { get; set; } // BIGINT
+		[Column("CLIENT_PID"),        Nullable] public long?   ClientPid        { get; set; } // BIGINT
 		/// <summary>
 		/// Connection type: Remote, Local, History (remote), History (local)
 		/// </summary>
-		[Column("CONNECTION_TYPE"),   Nullable] public string ConnectionType   { get; set; } // VARCHAR(128)
+		[Column("CONNECTION_TYPE"),   Nullable] public string? ConnectionType   { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Own connection: TRUE if own connection, FALSE if not
 		/// </summary>
-		[Column(),                    Nullable] public string OWN              { get; set; } // VARCHAR(5)
+		[Column(),                    Nullable] public string? OWN              { get; set; } // VARCHAR(5)
 	}
 
 	/// <summary>
@@ -3822,75 +4321,75 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),        Nullable] public string DatabaseName       { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),        Nullable] public string? DatabaseName       { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                       Nullable] public string HOST               { get; set; } // VARCHAR(64)
+		[Column(),                       Nullable] public string? HOST               { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                       Nullable] public int?   PORT               { get; set; } // INTEGER
+		[Column(),                       Nullable] public int?    PORT               { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),            Nullable] public int?   VolumeId           { get; set; } // INTEGER
+		[Column("VOLUME_ID"),            Nullable] public int?    VolumeId           { get; set; } // INTEGER
 		/// <summary>
 		/// Count of creates
 		/// </summary>
-		[Column("CNT_CREATE"),           Nullable] public long?  CntCreate          { get; set; } // BIGINT
+		[Column("CNT_CREATE"),           Nullable] public long?   CntCreate          { get; set; } // BIGINT
 		/// <summary>
 		/// Count of rolled back creates
 		/// </summary>
-		[Column("CNT_CREATE_ROLLBACK"),  Nullable] public long?  CntCreateRollback  { get; set; } // BIGINT
+		[Column("CNT_CREATE_ROLLBACK"),  Nullable] public long?   CntCreateRollback  { get; set; } // BIGINT
 		/// <summary>
 		/// Count of removes
 		/// </summary>
-		[Column("CNT_REMOVE"),           Nullable] public long?  CntRemove          { get; set; } // BIGINT
+		[Column("CNT_REMOVE"),           Nullable] public long?   CntRemove          { get; set; } // BIGINT
 		/// <summary>
 		/// Count of failed removes
 		/// </summary>
-		[Column("CNT_REMOVE_FAIL"),      Nullable] public long?  CntRemoveFail      { get; set; } // BIGINT
+		[Column("CNT_REMOVE_FAIL"),      Nullable] public long?   CntRemoveFail      { get; set; } // BIGINT
 		/// <summary>
 		/// Count of rolled back removes
 		/// </summary>
-		[Column("CNT_REMOVE_ROLLBACK"),  Nullable] public long?  CntRemoveRollback  { get; set; } // BIGINT
+		[Column("CNT_REMOVE_ROLLBACK"),  Nullable] public long?   CntRemoveRollback  { get; set; } // BIGINT
 		/// <summary>
 		/// Count of moves
 		/// </summary>
-		[Column("CNT_MOVE"),             Nullable] public long?  CntMove            { get; set; } // BIGINT
+		[Column("CNT_MOVE"),             Nullable] public long?   CntMove            { get; set; } // BIGINT
 		/// <summary>
 		/// Count of getPhysicalSize
 		/// </summary>
-		[Column("CNT_GET_PHYSICALSIZE"), Nullable] public long?  CntGetPhysicalsize { get; set; } // BIGINT
+		[Column("CNT_GET_PHYSICALSIZE"), Nullable] public long?   CntGetPhysicalsize { get; set; } // BIGINT
 		/// <summary>
 		/// Count of retrieved containers
 		/// </summary>
-		[Column("CNT_GET"),              Nullable] public long?  CntGet             { get; set; } // BIGINT
+		[Column("CNT_GET"),              Nullable] public long?   CntGet             { get; set; } // BIGINT
 		/// <summary>
 		/// Count of failed gets
 		/// </summary>
-		[Column("CNT_GET_FAIL"),         Nullable] public long?  CntGetFail         { get; set; } // BIGINT
+		[Column("CNT_GET_FAIL"),         Nullable] public long?   CntGetFail         { get; set; } // BIGINT
 		/// <summary>
 		/// Count of used iterators
 		/// </summary>
-		[Column("CNT_BEGIN"),            Nullable] public long?  CntBegin           { get; set; } // BIGINT
+		[Column("CNT_BEGIN"),            Nullable] public long?   CntBegin           { get; set; } // BIGINT
 		/// <summary>
 		/// Count of iterated containers
 		/// </summary>
-		[Column("CNT_ITERATED"),         Nullable] public long?  CntIterated        { get; set; } // BIGINT
+		[Column("CNT_ITERATED"),         Nullable] public long?   CntIterated        { get; set; } // BIGINT
 		/// <summary>
 		/// Count of cache hits
 		/// </summary>
-		[Column("CNT_CACHEHIT"),         Nullable] public long?  CntCachehit        { get; set; } // BIGINT
+		[Column("CNT_CACHEHIT"),         Nullable] public long?   CntCachehit        { get; set; } // BIGINT
 		/// <summary>
 		/// Count of cache misses
 		/// </summary>
-		[Column("CNT_CACHEMISS"),        Nullable] public long?  CntCachemiss       { get; set; } // BIGINT
+		[Column("CNT_CACHEMISS"),        Nullable] public long?   CntCachemiss       { get; set; } // BIGINT
 		/// <summary>
 		/// Count of existing containers
 		/// </summary>
-		[Column("CNT_CONTAINERS"),       Nullable] public long?  CntContainers      { get; set; } // BIGINT
+		[Column("CNT_CONTAINERS"),       Nullable] public long?   CntContainers      { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -3902,79 +4401,79 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),      Nullable] public string DatabaseName     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),      Nullable] public string? DatabaseName     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                     Nullable] public string HOST             { get; set; } // VARCHAR(64)
+		[Column(),                     Nullable] public string? HOST             { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                     Nullable] public int?   PORT             { get; set; } // INTEGER
+		[Column(),                     Nullable] public int?    PORT             { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),          Nullable] public int?   VolumeId         { get; set; } // INTEGER
+		[Column("VOLUME_ID"),          Nullable] public int?    VolumeId         { get; set; } // INTEGER
 		/// <summary>
 		/// Count of creates
 		/// </summary>
-		[Column("CNT_CREATE"),         Nullable] public long?  CntCreate        { get; set; } // BIGINT
+		[Column("CNT_CREATE"),         Nullable] public long?   CntCreate        { get; set; } // BIGINT
 		/// <summary>
 		/// Count of failed creates
 		/// </summary>
-		[Column("CNT_CREATE_FAIL"),    Nullable] public long?  CntCreateFail    { get; set; } // BIGINT
+		[Column("CNT_CREATE_FAIL"),    Nullable] public long?   CntCreateFail    { get; set; } // BIGINT
 		/// <summary>
 		/// Count of creates on load
 		/// </summary>
-		[Column("CNT_INITIAL_CREATE"), Nullable] public long?  CntInitialCreate { get; set; } // BIGINT
+		[Column("CNT_INITIAL_CREATE"), Nullable] public long?   CntInitialCreate { get; set; } // BIGINT
 		/// <summary>
 		/// Count of skips on load
 		/// </summary>
-		[Column("CNT_INITIAL_SKIP"),   Nullable] public long?  CntInitialSkip   { get; set; } // BIGINT
+		[Column("CNT_INITIAL_SKIP"),   Nullable] public long?   CntInitialSkip   { get; set; } // BIGINT
 		/// <summary>
 		/// Count of removes
 		/// </summary>
-		[Column("CNT_REMOVE"),         Nullable] public long?  CntRemove        { get; set; } // BIGINT
+		[Column("CNT_REMOVE"),         Nullable] public long?   CntRemove        { get; set; } // BIGINT
 		/// <summary>
 		/// Count of failed removes
 		/// </summary>
-		[Column("CNT_REMOVE_FAIL"),    Nullable] public long?  CntRemoveFail    { get; set; } // BIGINT
+		[Column("CNT_REMOVE_FAIL"),    Nullable] public long?   CntRemoveFail    { get; set; } // BIGINT
 		/// <summary>
 		/// Count of removeAll
 		/// </summary>
-		[Column("CNT_REMOVE_ALL"),     Nullable] public long?  CntRemoveAll     { get; set; } // BIGINT
+		[Column("CNT_REMOVE_ALL"),     Nullable] public long?   CntRemoveAll     { get; set; } // BIGINT
 		/// <summary>
 		/// Count of renames
 		/// </summary>
-		[Column("CNT_RENAME"),         Nullable] public long?  CntRename        { get; set; } // BIGINT
+		[Column("CNT_RENAME"),         Nullable] public long?   CntRename        { get; set; } // BIGINT
 		/// <summary>
 		/// Count of failed renames
 		/// </summary>
-		[Column("CNT_RENAME_FAIL"),    Nullable] public long?  CntRenameFail    { get; set; } // BIGINT
+		[Column("CNT_RENAME_FAIL"),    Nullable] public long?   CntRenameFail    { get; set; } // BIGINT
 		/// <summary>
 		/// Count of checked containers
 		/// </summary>
-		[Column("CNT_EXISTS"),         Nullable] public long?  CntExists        { get; set; } // BIGINT
+		[Column("CNT_EXISTS"),         Nullable] public long?   CntExists        { get; set; } // BIGINT
 		/// <summary>
 		/// Count of retrieved containers
 		/// </summary>
-		[Column("CNT_GET"),            Nullable] public long?  CntGet           { get; set; } // BIGINT
+		[Column("CNT_GET"),            Nullable] public long?   CntGet           { get; set; } // BIGINT
 		/// <summary>
 		/// Count of failed gets
 		/// </summary>
-		[Column("CNT_GET_FAIL"),       Nullable] public long?  CntGetFail       { get; set; } // BIGINT
+		[Column("CNT_GET_FAIL"),       Nullable] public long?   CntGetFail       { get; set; } // BIGINT
 		/// <summary>
 		/// Count of used iterators
 		/// </summary>
-		[Column("CNT_BEGIN"),          Nullable] public long?  CntBegin         { get; set; } // BIGINT
+		[Column("CNT_BEGIN"),          Nullable] public long?   CntBegin         { get; set; } // BIGINT
 		/// <summary>
 		/// Count of iterated containers
 		/// </summary>
-		[Column("CNT_ITERATE"),        Nullable] public long?  CntIterate       { get; set; } // BIGINT
+		[Column("CNT_ITERATE"),        Nullable] public long?   CntIterate       { get; set; } // BIGINT
 		/// <summary>
 		/// Count of existing containers
 		/// </summary>
-		[Column("CNT_CONTAINERS"),     Nullable] public long?  CntContainers    { get; set; } // BIGINT
+		[Column("CNT_CONTAINERS"),     Nullable] public long?   CntContainers    { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -3986,99 +4485,99 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                                     Nullable] public string DatabaseName                                { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                                     Nullable] public string? DatabaseName                                { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                                    Nullable] public string HOST                                        { get; set; } // VARCHAR(64)
+		[Column(),                                                    Nullable] public string? HOST                                        { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                                                    Nullable] public int?   PORT                                        { get; set; } // INTEGER
+		[Column(),                                                    Nullable] public int?    PORT                                        { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),                                         Nullable] public int?   VolumeId                                    { get; set; } // INTEGER
+		[Column("VOLUME_ID"),                                         Nullable] public int?    VolumeId                                    { get; set; } // INTEGER
 		/// <summary>
 		/// Type of converter
 		/// </summary>
-		[Column(),                                                    Nullable] public string TYPE                                        { get; set; } // VARCHAR(32)
+		[Column(),                                                    Nullable] public string? TYPE                                        { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Maximum level, e.g. level of root page
 		/// </summary>
-		[Column("MAX_LEVEL"),                                         Nullable] public long?  MaxLevel                                    { get; set; } // BIGINT
+		[Column("MAX_LEVEL"),                                         Nullable] public long?   MaxLevel                                    { get; set; } // BIGINT
 		/// <summary>
 		/// Maximum page number
 		/// </summary>
-		[Column("MAX_PAGENUMBER"),                                    Nullable] public long?  MaxPagenumber                               { get; set; } // BIGINT
+		[Column("MAX_PAGENUMBER"),                                    Nullable] public long?   MaxPagenumber                               { get; set; } // BIGINT
 		/// <summary>
 		/// Number of currently allocated pages
 		/// </summary>
-		[Column("ALLOCATED_PAGE_COUNT"),                              Nullable] public long?  AllocatedPageCount                          { get; set; } // BIGINT
+		[Column("ALLOCATED_PAGE_COUNT"),                              Nullable] public long?   AllocatedPageCount                          { get; set; } // BIGINT
 		/// <summary>
 		/// Total size [bytes] of currently allocated pages
 		/// </summary>
-		[Column("ALLOCATED_PAGE_SIZE"),                               Nullable] public long?  AllocatedPageSize                           { get; set; } // BIGINT
+		[Column("ALLOCATED_PAGE_SIZE"),                               Nullable] public long?   AllocatedPageSize                           { get; set; } // BIGINT
 		/// <summary>
 		/// Maximum number of allocated pages
 		/// </summary>
-		[Column("MAX_ALLOCATED_PAGE_COUNT"),                          Nullable] public long?  MaxAllocatedPageCount                       { get; set; } // BIGINT
+		[Column("MAX_ALLOCATED_PAGE_COUNT"),                          Nullable] public long?   MaxAllocatedPageCount                       { get; set; } // BIGINT
 		/// <summary>
 		/// Maximum size [bytes] of allocated pages
 		/// </summary>
-		[Column("MAX_ALLOCATED_PAGE_SIZE"),                           Nullable] public long?  MaxAllocatedPageSize                        { get; set; } // BIGINT
+		[Column("MAX_ALLOCATED_PAGE_SIZE"),                           Nullable] public long?   MaxAllocatedPageSize                        { get; set; } // BIGINT
 		/// <summary>
 		/// Number of page allocations
 		/// </summary>
-		[Column("ALLOCATE_PAGE_COUNT"),                               Nullable] public long?  AllocatePageCount                           { get; set; } // BIGINT
+		[Column("ALLOCATE_PAGE_COUNT"),                               Nullable] public long?   AllocatePageCount                           { get; set; } // BIGINT
 		/// <summary>
 		/// Number of page allocations or retrievals during static phase
 		/// </summary>
-		[Column("ALLOCATE_OR_GET_STATIC_PAGE_COUNT"),                 Nullable] public long?  AllocateOrGetStaticPageCount                { get; set; } // BIGINT
+		[Column("ALLOCATE_OR_GET_STATIC_PAGE_COUNT"),                 Nullable] public long?   AllocateOrGetStaticPageCount                { get; set; } // BIGINT
 		/// <summary>
 		/// Number of page deallocations
 		/// </summary>
-		[Column("DEALLOCATE_PAGE_COUNT"),                             Nullable] public long?  DeallocatePageCount                         { get; set; } // BIGINT
+		[Column("DEALLOCATE_PAGE_COUNT"),                             Nullable] public long?   DeallocatePageCount                         { get; set; } // BIGINT
 		/// <summary>
 		/// Number of physical page assignments
 		/// </summary>
-		[Column("ASSIGN_PHYSICAL_PAGE_COUNT"),                        Nullable] public long?  AssignPhysicalPageCount                     { get; set; } // BIGINT
+		[Column("ASSIGN_PHYSICAL_PAGE_COUNT"),                        Nullable] public long?   AssignPhysicalPageCount                     { get; set; } // BIGINT
 		/// <summary>
 		/// Number of physical page unassignments
 		/// </summary>
-		[Column("UNASSIGN_PHYSICAL_PAGE_COUNT"),                      Nullable] public long?  UnassignPhysicalPageCount                   { get; set; } // BIGINT
+		[Column("UNASSIGN_PHYSICAL_PAGE_COUNT"),                      Nullable] public long?   UnassignPhysicalPageCount                   { get; set; } // BIGINT
 		/// <summary>
 		/// Number of physical page unassignments during drop snapshot
 		/// </summary>
-		[Column("UNASSIGN_PHYSICAL_PAGE_COUNT_DURING_DROP_SNAPSHOT"), Nullable] public long?  UnassignPhysicalPageCountDuringDropSnapshot { get; set; } // BIGINT
+		[Column("UNASSIGN_PHYSICAL_PAGE_COUNT_DURING_DROP_SNAPSHOT"), Nullable] public long?   UnassignPhysicalPageCountDuringDropSnapshot { get; set; } // BIGINT
 		/// <summary>
 		/// Number of snapshots created
 		/// </summary>
-		[Column("CREATE_SNAPSHOT_COUNT"),                             Nullable] public long?  CreateSnapshotCount                         { get; set; } // BIGINT
+		[Column("CREATE_SNAPSHOT_COUNT"),                             Nullable] public long?   CreateSnapshotCount                         { get; set; } // BIGINT
 		/// <summary>
 		/// Number of snapshots dropped
 		/// </summary>
-		[Column("DROP_SNAPSHOT_COUNT"),                               Nullable] public long?  DropSnapshotCount                           { get; set; } // BIGINT
+		[Column("DROP_SNAPSHOT_COUNT"),                               Nullable] public long?   DropSnapshotCount                           { get; set; } // BIGINT
 		/// <summary>
 		/// Number of level 0 converter pages written to disk
 		/// </summary>
-		[Column("WRITE_CONVERTERPAGE_LEVEL0_COUNT"),                  Nullable] public long?  WriteConverterpageLEVEL0Count               { get; set; } // BIGINT
+		[Column("WRITE_CONVERTERPAGE_LEVEL0_COUNT"),                  Nullable] public long?   WriteConverterpageLEVEL0Count               { get; set; } // BIGINT
 		/// <summary>
 		/// Number of level 1 converter pages written to disk
 		/// </summary>
-		[Column("WRITE_CONVERTERPAGE_LEVEL1_COUNT"),                  Nullable] public long?  WriteConverterpageLEVEL1Count               { get; set; } // BIGINT
+		[Column("WRITE_CONVERTERPAGE_LEVEL1_COUNT"),                  Nullable] public long?   WriteConverterpageLEVEL1Count               { get; set; } // BIGINT
 		/// <summary>
 		/// Number of level 2 converter pages written to disk
 		/// </summary>
-		[Column("WRITE_CONVERTERPAGE_LEVEL2_COUNT"),                  Nullable] public long?  WriteConverterpageLEVEL2Count               { get; set; } // BIGINT
+		[Column("WRITE_CONVERTERPAGE_LEVEL2_COUNT"),                  Nullable] public long?   WriteConverterpageLEVEL2Count               { get; set; } // BIGINT
 		/// <summary>
 		/// Number of level 3 converter pages written to disk
 		/// </summary>
-		[Column("WRITE_CONVERTERPAGE_LEVEL3_COUNT"),                  Nullable] public long?  WriteConverterpageLEVEL3Count               { get; set; } // BIGINT
+		[Column("WRITE_CONVERTERPAGE_LEVEL3_COUNT"),                  Nullable] public long?   WriteConverterpageLEVEL3Count               { get; set; } // BIGINT
 		/// <summary>
 		/// Number of level 4 converter pages written to disk
 		/// </summary>
-		[Column("WRITE_CONVERTERPAGE_LEVEL4_COUNT"),                  Nullable] public long?  WriteConverterpageLEVEL4Count               { get; set; } // BIGINT
+		[Column("WRITE_CONVERTERPAGE_LEVEL4_COUNT"),                  Nullable] public long?   WriteConverterpageLEVEL4Count               { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -4090,7 +4589,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                                     Nullable] public string    DatabaseName                                { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                                     Nullable] public string?   DatabaseName                                { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -4098,7 +4597,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                                    Nullable] public string    HOST                                        { get; set; } // VARCHAR(64)
+		[Column(),                                                    Nullable] public string?   HOST                                        { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -4110,7 +4609,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Type of converter
 		/// </summary>
-		[Column(),                                                    Nullable] public string    TYPE                                        { get; set; } // VARCHAR(32)
+		[Column(),                                                    Nullable] public string?   TYPE                                        { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Maximum level, e.g. level of root page
 		/// </summary>
@@ -4198,19 +4697,19 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"), Nullable] public string DatabaseName { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"), Nullable] public string? DatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Customizable functionality name
 		/// </summary>
-		[Column(),                Nullable] public string NAME         { get; set; } // VARCHAR(64)
+		[Column(),                Nullable] public string? NAME         { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Customizable functionality description
 		/// </summary>
-		[Column(),                Nullable] public string DESCRIPTION  { get; set; } // VARCHAR(256)
+		[Column(),                Nullable] public string? DESCRIPTION  { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Customizable functionality is enabled: 'TRUE'/'FALSE'
 		/// </summary>
-		[Column("IS_ENABLED"),    Nullable] public string IsEnabled    { get; set; } // VARCHAR(5)
+		[Column("IS_ENABLED"),    Nullable] public string? IsEnabled    { get; set; } // VARCHAR(5)
 	}
 
 	/// <summary>
@@ -4222,35 +4721,37 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),           Nullable] public string DatabaseName       { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),           Nullable] public string? DatabaseName       { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Name of source database
 		/// </summary>
-		[Column("SOURCE_DATABASE_NAME"),    Nullable] public string SourceDatabaseName { get; set; } // NVARCHAR(256)
+		[Column("SOURCE_DATABASE_NAME"),    Nullable] public string? SourceDatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host of source system database
 		/// </summary>
-		[Column("SOURCE_SYSTEMDB_HOST"),    Nullable] public string SourceSystemdbHost { get; set; } // VARCHAR(64)
+		[Column("SOURCE_SYSTEMDB_HOST"),    Nullable] public string? SourceSystemdbHost { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Port of source system database
 		/// </summary>
-		[Column("SOURCE_SYSTEMDB_PORT"),    Nullable] public int?   SourceSystemdbPort { get; set; } // INTEGER
+		[Column("SOURCE_SYSTEMDB_PORT"),    Nullable] public int?    SourceSystemdbPort { get; set; } // INTEGER
 		/// <summary>
 		/// Name of target database
 		/// </summary>
-		[Column("TARGET_DATABASE_NAME"),    Nullable] public string TargetDatabaseName { get; set; } // NVARCHAR(256)
+		[Column("TARGET_DATABASE_NAME"),    Nullable] public string? TargetDatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host of target system database
 		/// </summary>
-		[Column("TARGET_SYSTEMDB_HOST"),    Nullable] public string TargetSystemdbHost { get; set; } // VARCHAR(64)
+		[Column("TARGET_SYSTEMDB_HOST"),    Nullable] public string? TargetSystemdbHost { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Port of target system database
 		/// </summary>
-		[Column("TARGET_SYSTEMDB_PORT"),    Nullable] public int?   TargetSystemdbPort { get; set; } // INTEGER
+		[Column("TARGET_SYSTEMDB_PORT"),    Nullable] public int?    TargetSystemdbPort { get; set; } // INTEGER
+		#nullable disable
 		/// <summary>
 		/// Aggregated replication status of database services
 		/// </summary>
-		[Column("REPLICATION_STATUS"),   NotNull    ] public string ReplicationStatus  { get; set; } // VARCHAR(12)
+		[Column("REPLICATION_STATUS"),   NotNull    ] public string  ReplicationStatus  { get; set; } // VARCHAR(12)
+		#nullable enable
 	}
 
 	/// <summary>
@@ -4262,15 +4763,15 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                Nullable] public string    DatabaseName              { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                Nullable] public string?   DatabaseName              { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Name of source database
 		/// </summary>
-		[Column("SOURCE_DATABASE_NAME"),         Nullable] public string    SourceDatabaseName        { get; set; } // NVARCHAR(256)
+		[Column("SOURCE_DATABASE_NAME"),         Nullable] public string?   SourceDatabaseName        { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Source host name
 		/// </summary>
-		[Column("SOURCE_HOST"),                  Nullable] public string    SourceHost                { get; set; } // VARCHAR(64)
+		[Column("SOURCE_HOST"),                  Nullable] public string?   SourceHost                { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Source internal port
 		/// </summary>
@@ -4282,11 +4783,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Name of target database
 		/// </summary>
-		[Column("TARGET_DATABASE_NAME"),         Nullable] public string    TargetDatabaseName        { get; set; } // NVARCHAR(256)
+		[Column("TARGET_DATABASE_NAME"),         Nullable] public string?   TargetDatabaseName        { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Target host name
 		/// </summary>
-		[Column("TARGET_HOST"),                  Nullable] public string    TargetHost                { get; set; } // VARCHAR(64)
+		[Column("TARGET_HOST"),                  Nullable] public string?   TargetHost                { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Target port
 		/// </summary>
@@ -4294,7 +4795,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Target active status
 		/// </summary>
-		[Column("TARGET_ACTIVE_STATUS"),         Nullable] public string    TargetActiveStatus        { get; set; } // VARCHAR(16)
+		[Column("TARGET_ACTIVE_STATUS"),         Nullable] public string?   TargetActiveStatus        { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Time the connection was established from the target
 		/// </summary>
@@ -4310,19 +4811,19 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Indicates if target is fully recoverable.
 		/// </summary>
-		[Column("TARGET_FULLY_RECOVERABLE"),     Nullable] public string    TargetFullyRecoverable    { get; set; } // VARCHAR(5)
+		[Column("TARGET_FULLY_RECOVERABLE"),     Nullable] public string?   TargetFullyRecoverable    { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Replication mode
 		/// </summary>
-		[Column("REPLICATION_MODE"),             Nullable] public string    ReplicationMode           { get; set; } // VARCHAR(16)
+		[Column("REPLICATION_MODE"),             Nullable] public string?   ReplicationMode           { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Replication status
 		/// </summary>
-		[Column("REPLICATION_STATUS"),           Nullable] public string    ReplicationStatus         { get; set; } // VARCHAR(16)
+		[Column("REPLICATION_STATUS"),           Nullable] public string?   ReplicationStatus         { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Replication status details
 		/// </summary>
-		[Column("REPLICATION_STATUS_DETAILS"),   Nullable] public string    ReplicationStatusDetails  { get; set; } // VARCHAR(1024)
+		[Column("REPLICATION_STATUS_DETAILS"),   Nullable] public string?   ReplicationStatusDetails  { get; set; } // VARCHAR(1024)
 		/// <summary>
 		/// Current log position
 		/// </summary>
@@ -4382,35 +4883,35 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"), Nullable] public string DatabaseName { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"), Nullable] public string? DatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                Nullable] public string HOST         { get; set; } // VARCHAR(64)
+		[Column(),                Nullable] public string? HOST         { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                Nullable] public int?   PORT         { get; set; } // INTEGER
+		[Column(),                Nullable] public int?    PORT         { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),     Nullable] public int?   VolumeId     { get; set; } // INTEGER
+		[Column("VOLUME_ID"),     Nullable] public int?    VolumeId     { get; set; } // INTEGER
 		/// <summary>
 		/// Filename of DataVolume
 		/// </summary>
-		[Column("FILE_NAME"),     Nullable] public string FileName     { get; set; } // VARCHAR(512)
+		[Column("FILE_NAME"),     Nullable] public string? FileName     { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// FileID of DataVolume
 		/// </summary>
-		[Column("FILE_ID"),       Nullable] public long?  FileId       { get; set; } // BIGINT
+		[Column("FILE_ID"),       Nullable] public long?   FileId       { get; set; } // BIGINT
 		/// <summary>
 		/// Size of DataVolume
 		/// </summary>
-		[Column(),                Nullable] public long?  SIZE         { get; set; } // BIGINT
+		[Column(),                Nullable] public long?   SIZE         { get; set; } // BIGINT
 		/// <summary>
 		/// Max. size of DataVolume
 		/// </summary>
-		[Column("MAX_SIZE"),      Nullable] public long?  MaxSize      { get; set; } // BIGINT
+		[Column("MAX_SIZE"),      Nullable] public long?   MaxSize      { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -4422,11 +4923,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                              Nullable] public string  DatabaseName                         { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                              Nullable] public string? DatabaseName                         { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                             Nullable] public string  HOST                                 { get; set; } // VARCHAR(64)
+		[Column(),                                             Nullable] public string? HOST                                 { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -4438,11 +4939,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// DataVolume name
 		/// </summary>
-		[Column("DATA_VOLUME_NAME"),                           Nullable] public string  DataVolumeName                       { get; set; } // VARCHAR(512)
+		[Column("DATA_VOLUME_NAME"),                           Nullable] public string? DataVolumeName                       { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Page size class
 		/// </summary>
-		[Column("PAGE_SIZECLASS"),                             Nullable] public string  PageSizeclass                        { get; set; } // VARCHAR(16)
+		[Column("PAGE_SIZECLASS"),                             Nullable] public string? PageSizeclass                        { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Page size
 		/// </summary>
@@ -4494,7 +4995,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                              Nullable] public string    DatabaseName                         { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                              Nullable] public string?   DatabaseName                         { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -4502,7 +5003,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                             Nullable] public string    HOST                                 { get; set; } // VARCHAR(64)
+		[Column(),                                             Nullable] public string?   HOST                                 { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -4514,11 +5015,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// DataVolume name
 		/// </summary>
-		[Column("DATA_VOLUME_NAME"),                           Nullable] public string    DataVolumeName                       { get; set; } // VARCHAR(512)
+		[Column("DATA_VOLUME_NAME"),                           Nullable] public string?   DataVolumeName                       { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Page size class
 		/// </summary>
-		[Column("PAGE_SIZECLASS"),                             Nullable] public string    PageSizeclass                        { get; set; } // VARCHAR(16)
+		[Column("PAGE_SIZECLASS"),                             Nullable] public string?   PageSizeclass                        { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Page size
 		/// </summary>
@@ -4570,11 +5071,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),         Nullable] public string  DatabaseName        { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),         Nullable] public string? DatabaseName        { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                        Nullable] public string  HOST                { get; set; } // VARCHAR(64)
+		[Column(),                        Nullable] public string? HOST                { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -4586,7 +5087,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// DataVolume name
 		/// </summary>
-		[Column("DATA_VOLUME_NAME"),      Nullable] public string  DataVolumeName      { get; set; } // VARCHAR(512)
+		[Column("DATA_VOLUME_NAME"),      Nullable] public string? DataVolumeName      { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Superblock size
 		/// </summary>
@@ -4614,67 +5115,103 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),    Nullable] public string DatabaseName { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),    Nullable] public string? DatabaseName { get; set; } // NVARCHAR(256)
+		#nullable disable
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                NotNull    ] public string HOST         { get; set; } // VARCHAR(64)
+		[Column(),                NotNull    ] public string  HOST         { get; set; } // VARCHAR(64)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Resource type like LOG, DATA, TRACE, DATA_BACKUP, LOG_BACKUP and CATALOG_BACKUP
 		/// </summary>
-		[Column("USAGE_TYPE"),    NotNull    ] public string UsageType    { get; set; } // VARCHAR(32)
+		[Column("USAGE_TYPE"),    NotNull    ] public string  UsageType    { get; set; } // VARCHAR(32)
+		#nullable enable
 		/// <summary>
 		/// Size of used disk space in bytes
 		/// </summary>
-		[Column("USED_SIZE"),        Nullable] public long?  UsedSize     { get; set; } // BIGINT
+		[Column("USED_SIZE"),        Nullable] public long?   UsedSize     { get; set; } // BIGINT
 		/// <summary>
 		/// Total size of disk space in bytes
 		/// </summary>
-		[Column("TOTAL_SIZE"),       Nullable] public long?  TotalSize    { get; set; } // BIGINT
+		[Column("TOTAL_SIZE"),       Nullable] public long?   TotalSize    { get; set; } // BIGINT
 	}
 
 	[Table(Schema="_SYS_XB", Name="MESSAGING_DESTINATIONS", IsView=true)]
 	public partial class _SYS_XB_MessagingDestination
 	{
-		[Column("USER_NAME"),        NotNull    ] public string UserName        { get; set; } // NVARCHAR(256)
-		[Column("DESTINATION_ID"),   NotNull    ] public string DestinationId   { get; set; } // VARCHAR(20)
-		[Column("DESTINATION_TYPE"), NotNull    ] public string DestinationType { get; set; } // VARCHAR(20)
-		[Column(),                      Nullable] public string CONFIGURATION   { get; set; } // NVARCHAR(256)
+		#nullable disable
+		[Column("USER_NAME"),        NotNull    ] public string  UserName        { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("DESTINATION_ID"),   NotNull    ] public string  DestinationId   { get; set; } // VARCHAR(20)
+		#nullable enable
+		#nullable disable
+		[Column("DESTINATION_TYPE"), NotNull    ] public string  DestinationType { get; set; } // VARCHAR(20)
+		#nullable enable
+		[Column(),                      Nullable] public string? CONFIGURATION   { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_XB", Name="MESSAGING_DESTINATIONS_")]
 	public partial class _SYS_XB_MessagingDestinations
 	{
-		[Column("USER_NAME"),        PrimaryKey(1), NotNull] public string UserName        { get; set; } // NVARCHAR(256)
-		[Column("DESTINATION_ID"),   PrimaryKey(2), NotNull] public string DestinationId   { get; set; } // VARCHAR(20)
-		[Column("DESTINATION_TYPE"),                NotNull] public string DestinationType { get; set; } // VARCHAR(20)
-		[Column(),                      Nullable           ] public string CONFIGURATION   { get; set; } // NVARCHAR(256)
+		#nullable disable
+		[Column("USER_NAME"),        PrimaryKey(1), NotNull] public string  UserName        { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("DESTINATION_ID"),   PrimaryKey(2), NotNull] public string  DestinationId   { get; set; } // VARCHAR(20)
+		#nullable enable
+		#nullable disable
+		[Column("DESTINATION_TYPE"),                NotNull] public string  DestinationType { get; set; } // VARCHAR(20)
+		#nullable enable
+		[Column(),                      Nullable           ] public string? CONFIGURATION   { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_XB", Name="MESSAGING_SUBSCRIPTIONS", IsView=true)]
 	public partial class _SYS_XB_MessagingSubscription
 	{
-		[Column("USER_NAME"),      NotNull    ] public string UserName      { get; set; } // NVARCHAR(256)
-		[Column("DESTINATION_ID"), NotNull    ] public string DestinationId { get; set; } // VARCHAR(20)
-		[Column("TOPIC_PATTERN"),  NotNull    ] public string TopicPattern  { get; set; } // NVARCHAR(256)
-		[Column(),                 NotNull    ] public byte   QOS           { get; set; } // TINYINT
-		[Column("SCHEMA_NAME"),    NotNull    ] public string SchemaName    { get; set; } // NVARCHAR(256)
-		[Column("TABLE_NAME"),     NotNull    ] public string TableName     { get; set; } // NVARCHAR(256)
-		[Column(),                    Nullable] public string FORMAT        { get; set; } // VARCHAR(4)
-		[Column(),                    Nullable] public string SETTINGS      { get; set; } // NVARCHAR(256)
+		#nullable disable
+		[Column("USER_NAME"),      NotNull    ] public string  UserName      { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("DESTINATION_ID"), NotNull    ] public string  DestinationId { get; set; } // VARCHAR(20)
+		#nullable enable
+		#nullable disable
+		[Column("TOPIC_PATTERN"),  NotNull    ] public string  TopicPattern  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),                 NotNull    ] public byte    QOS           { get; set; } // TINYINT
+		#nullable disable
+		[Column("SCHEMA_NAME"),    NotNull    ] public string  SchemaName    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("TABLE_NAME"),     NotNull    ] public string  TableName     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),                    Nullable] public string? FORMAT        { get; set; } // VARCHAR(4)
+		[Column(),                    Nullable] public string? SETTINGS      { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_XB", Name="MESSAGING_SUBSCRIPTIONS_")]
 	public partial class _SYS_XB_MessagingSubscriptions
 	{
-		[Column("USER_NAME"),      PrimaryKey(1), NotNull] public string UserName      { get; set; } // NVARCHAR(256)
-		[Column("DESTINATION_ID"), PrimaryKey(2), NotNull] public string DestinationId { get; set; } // VARCHAR(20)
-		[Column("TOPIC_PATTERN"),  PrimaryKey(3), NotNull] public string TopicPattern  { get; set; } // NVARCHAR(256)
-		[Column(),                 PrimaryKey(4), NotNull] public byte   QOS           { get; set; } // TINYINT
-		[Column("SCHEMA_NAME"),                   NotNull] public string SchemaName    { get; set; } // NVARCHAR(256)
-		[Column("TABLE_NAME"),                    NotNull] public string TableName     { get; set; } // NVARCHAR(256)
-		[Column(),                    Nullable           ] public string FORMAT        { get; set; } // VARCHAR(4)
-		[Column(),                    Nullable           ] public string SETTINGS      { get; set; } // NVARCHAR(256)
+		#nullable disable
+		[Column("USER_NAME"),      PrimaryKey(1), NotNull] public string  UserName      { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("DESTINATION_ID"), PrimaryKey(2), NotNull] public string  DestinationId { get; set; } // VARCHAR(20)
+		#nullable enable
+		#nullable disable
+		[Column("TOPIC_PATTERN"),  PrimaryKey(3), NotNull] public string  TopicPattern  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),                 PrimaryKey(4), NotNull] public byte    QOS           { get; set; } // TINYINT
+		#nullable disable
+		[Column("SCHEMA_NAME"),                   NotNull] public string  SchemaName    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("TABLE_NAME"),                    NotNull] public string  TableName     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),                    Nullable           ] public string? FORMAT        { get; set; } // VARCHAR(4)
+		[Column(),                    Nullable           ] public string? SETTINGS      { get; set; } // NVARCHAR(256)
 	}
 
 	/// <summary>
@@ -4686,11 +5223,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                        Nullable] public string    DatabaseName                    { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                        Nullable] public string?   DatabaseName                    { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Name of the store
 		/// </summary>
-		[Column("STORE_NAME"),                           Nullable] public string    StoreName                       { get; set; } // VARCHAR(256)
+		[Column("STORE_NAME"),                           Nullable] public string?   StoreName                       { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Time the connection was established from the secondary
 		/// </summary>
@@ -4706,23 +5243,23 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Indicates if secondary is fully recoverable.
 		/// </summary>
-		[Column("SECONDARY_FULLY_RECOVERABLE"),          Nullable] public string    SecondaryFullyRecoverable       { get; set; } // VARCHAR(5)
+		[Column("SECONDARY_FULLY_RECOVERABLE"),          Nullable] public string?   SecondaryFullyRecoverable       { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Replication mode
 		/// </summary>
-		[Column("REPLICATION_MODE"),                     Nullable] public string    ReplicationMode                 { get; set; } // VARCHAR(16)
+		[Column("REPLICATION_MODE"),                     Nullable] public string?   ReplicationMode                 { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Replication status
 		/// </summary>
-		[Column("REPLICATION_STATUS"),                   Nullable] public string    ReplicationStatus               { get; set; } // VARCHAR(16)
+		[Column("REPLICATION_STATUS"),                   Nullable] public string?   ReplicationStatus               { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Replication status details
 		/// </summary>
-		[Column("REPLICATION_STATUS_DETAILS"),           Nullable] public string    ReplicationStatusDetails        { get; set; } // VARCHAR(1024)
+		[Column("REPLICATION_STATUS_DETAILS"),           Nullable] public string?   ReplicationStatusDetails        { get; set; } // VARCHAR(1024)
 		/// <summary>
 		/// Replication Full sync status
 		/// </summary>
-		[Column("FULL_SYNC"),                            Nullable] public string    FullSync                        { get; set; } // VARCHAR(16)
+		[Column("FULL_SYNC"),                            Nullable] public string?   FullSync                        { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Last log position
 		/// </summary>
@@ -4814,11 +5351,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),  Nullable] public string    DatabaseName  { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),  Nullable] public string?   DatabaseName  { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                 Nullable] public string    HOST          { get; set; } // VARCHAR(64)
+		[Column(),                 Nullable] public string?   HOST          { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -4826,7 +5363,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Type of event
 		/// </summary>
-		[Column(),                 Nullable] public string    TYPE          { get; set; } // VARCHAR(256)
+		[Column(),                 Nullable] public string?   TYPE          { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// ID of event
 		/// </summary>
@@ -4834,7 +5371,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Additional info freetext
 		/// </summary>
-		[Column(),                 Nullable] public string    INFOTEXT      { get; set; } // VARCHAR(2000)
+		[Column(),                 Nullable] public string?   INFOTEXT      { get; set; } // VARCHAR(2000)
 		/// <summary>
 		/// Time event was created
 		/// </summary>
@@ -4850,11 +5387,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// State of event
 		/// </summary>
-		[Column(),                 Nullable] public string    STATE         { get; set; } // VARCHAR(256)
+		[Column(),                 Nullable] public string?   STATE         { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Event acknowledged: 'TRUE'/'FALSE'
 		/// </summary>
-		[Column(),                 Nullable] public string    ACKNOWLEDGED  { get; set; } // VARCHAR(5)
+		[Column(),                 Nullable] public string?   ACKNOWLEDGED  { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Number of failed handle attempts
 		/// </summary>
@@ -4870,11 +5407,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                Nullable] public string  DatabaseName              { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                Nullable] public string? DatabaseName              { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                               Nullable] public string  HOST                      { get; set; } // VARCHAR(64)
+		[Column(),                               Nullable] public string? HOST                      { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -4886,7 +5423,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// type of storage handled (COLUMN STORE, LIVECACHE)
 		/// </summary>
-		[Column("STORE_TYPE"),                   Nullable] public string  StoreType                 { get; set; } // VARCHAR(16)
+		[Column("STORE_TYPE"),                   Nullable] public string? StoreType                 { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Current count of history files in GC
 		/// </summary>
@@ -4990,7 +5527,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                Nullable] public string    DatabaseName              { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                Nullable] public string?   DatabaseName              { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -4998,7 +5535,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                               Nullable] public string    HOST                      { get; set; } // VARCHAR(64)
+		[Column(),                               Nullable] public string?   HOST                      { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -5010,7 +5547,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// type of storage handled (COLUMN STORE, LIVECACHE)
 		/// </summary>
-		[Column("STORE_TYPE"),                   Nullable] public string    StoreType                 { get; set; } // VARCHAR(16)
+		[Column("STORE_TYPE"),                   Nullable] public string?   StoreType                 { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Current count of history files in GC
 		/// </summary>
@@ -5114,123 +5651,123 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                        Nullable] public string DatabaseName                     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                        Nullable] public string? DatabaseName                     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                       Nullable] public string HOST                             { get; set; } // VARCHAR(64)
+		[Column(),                                       Nullable] public string? HOST                             { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                                       Nullable] public int?   PORT                             { get; set; } // INTEGER
+		[Column(),                                       Nullable] public int?    PORT                             { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),                            Nullable] public int?   VolumeId                         { get; set; } // INTEGER
+		[Column("VOLUME_ID"),                            Nullable] public int?    VolumeId                         { get; set; } // INTEGER
 		/// <summary>
 		/// Statistics object unique ID
 		/// </summary>
-		[Column("STATISTICS_ID"),                        Nullable] public long?  StatisticsId                     { get; set; } // BIGINT
+		[Column("STATISTICS_ID"),                        Nullable] public long?   StatisticsId                     { get; set; } // BIGINT
 		/// <summary>
 		/// Allocator name
 		/// </summary>
-		[Column(),                                       Nullable] public string CATEGORY                         { get; set; } // VARCHAR(128)
+		[Column(),                                       Nullable] public string? CATEGORY                         { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Depth
 		/// </summary>
-		[Column(),                                       Nullable] public long?  DEPTH                            { get; set; } // BIGINT
+		[Column(),                                       Nullable] public long?   DEPTH                            { get; set; } // BIGINT
 		/// <summary>
 		/// Current size of this allocator, including suballocators
 		/// </summary>
-		[Column("INCLUSIVE_SIZE_IN_USE"),                Nullable] public long?  InclusiveSizeInUse               { get; set; } // BIGINT
+		[Column("INCLUSIVE_SIZE_IN_USE"),                Nullable] public long?   InclusiveSizeInUse               { get; set; } // BIGINT
 		/// <summary>
 		/// Number of blocks currently in use, including suballocators
 		/// </summary>
-		[Column("INCLUSIVE_COUNT_IN_USE"),               Nullable] public long?  InclusiveCountInUse              { get; set; } // BIGINT
+		[Column("INCLUSIVE_COUNT_IN_USE"),               Nullable] public long?   InclusiveCountInUse              { get; set; } // BIGINT
 		/// <summary>
 		/// Total allocated size in this allocator and suballocators
 		/// </summary>
-		[Column("INCLUSIVE_ALLOCATED_SIZE"),             Nullable] public long?  InclusiveAllocatedSize           { get; set; } // BIGINT
+		[Column("INCLUSIVE_ALLOCATED_SIZE"),             Nullable] public long?   InclusiveAllocatedSize           { get; set; } // BIGINT
 		/// <summary>
 		/// Total deallocated size in this allocator and suballocators
 		/// </summary>
-		[Column("INCLUSIVE_DEALLOCATED_SIZE"),           Nullable] public long?  InclusiveDeallocatedSize         { get; set; } // BIGINT
+		[Column("INCLUSIVE_DEALLOCATED_SIZE"),           Nullable] public long?   InclusiveDeallocatedSize         { get; set; } // BIGINT
 		/// <summary>
 		/// Count of allocations, including suballocators
 		/// </summary>
-		[Column("INCLUSIVE_ALLOCATED_COUNT"),            Nullable] public long?  InclusiveAllocatedCount          { get; set; } // BIGINT
+		[Column("INCLUSIVE_ALLOCATED_COUNT"),            Nullable] public long?   InclusiveAllocatedCount          { get; set; } // BIGINT
 		/// <summary>
 		/// Count of deallocations, including suballocators
 		/// </summary>
-		[Column("INCLUSIVE_DEALLOCATED_COUNT"),          Nullable] public long?  InclusiveDeallocatedCount        { get; set; } // BIGINT
+		[Column("INCLUSIVE_DEALLOCATED_COUNT"),          Nullable] public long?   InclusiveDeallocatedCount        { get; set; } // BIGINT
 		/// <summary>
 		/// Maximum ever allocated block size in this allocator and suballocators
 		/// </summary>
-		[Column("INCLUSIVE_MAX_SINGLE_ALLOCATION_SIZE"), Nullable] public long?  InclusiveMaxSingleAllocationSize { get; set; } // BIGINT
+		[Column("INCLUSIVE_MAX_SINGLE_ALLOCATION_SIZE"), Nullable] public long?   InclusiveMaxSingleAllocationSize { get; set; } // BIGINT
 		/// <summary>
 		/// Maximum size of this allocator and suballocators (estimate)
 		/// </summary>
-		[Column("INCLUSIVE_PEAK_ALLOCATION_SIZE"),       Nullable] public long?  InclusivePeakAllocationSize      { get; set; } // BIGINT
+		[Column("INCLUSIVE_PEAK_ALLOCATION_SIZE"),       Nullable] public long?   InclusivePeakAllocationSize      { get; set; } // BIGINT
 		/// <summary>
 		/// Maximum allowed memory size of this allocator and suballocators. The limit is not a hard limit and may therefore be violated slightly. Currently it is not possible for the user to set limits for each allocator individually.
 		/// </summary>
-		[Column("INCLUSIVE_LIMIT"),                      Nullable] public long?  InclusiveLimit                   { get; set; } // BIGINT
+		[Column("INCLUSIVE_LIMIT"),                      Nullable] public long?   InclusiveLimit                   { get; set; } // BIGINT
 		/// <summary>
 		/// Average allocated memory by this allocator and its suballocators, multiplied by time since start of measurement (sample based rough estimate), this is usually deactivated, only activate in case this is requested by SAP support. Unit is 1 byte times 1 second (may change in future).
 		/// </summary>
-		[Column("INCLUSIVE_IN_USE_INTEGRAL"),            Nullable] public long?  InclusiveInUseIntegral           { get; set; } // BIGINT
+		[Column("INCLUSIVE_IN_USE_INTEGRAL"),            Nullable] public long?   InclusiveInUseIntegral           { get; set; } // BIGINT
 		/// <summary>
 		/// Current size of this allocator
 		/// </summary>
-		[Column("EXCLUSIVE_SIZE_IN_USE"),                Nullable] public long?  ExclusiveSizeInUse               { get; set; } // BIGINT
+		[Column("EXCLUSIVE_SIZE_IN_USE"),                Nullable] public long?   ExclusiveSizeInUse               { get; set; } // BIGINT
 		/// <summary>
 		/// Number of blocks currently in use
 		/// </summary>
-		[Column("EXCLUSIVE_COUNT_IN_USE"),               Nullable] public long?  ExclusiveCountInUse              { get; set; } // BIGINT
+		[Column("EXCLUSIVE_COUNT_IN_USE"),               Nullable] public long?   ExclusiveCountInUse              { get; set; } // BIGINT
 		/// <summary>
 		/// Total allocated size in this allocator
 		/// </summary>
-		[Column("EXCLUSIVE_ALLOCATED_SIZE"),             Nullable] public long?  ExclusiveAllocatedSize           { get; set; } // BIGINT
+		[Column("EXCLUSIVE_ALLOCATED_SIZE"),             Nullable] public long?   ExclusiveAllocatedSize           { get; set; } // BIGINT
 		/// <summary>
 		/// Total deallocated size in this allocator
 		/// </summary>
-		[Column("EXCLUSIVE_DEALLOCATED_SIZE"),           Nullable] public long?  ExclusiveDeallocatedSize         { get; set; } // BIGINT
+		[Column("EXCLUSIVE_DEALLOCATED_SIZE"),           Nullable] public long?   ExclusiveDeallocatedSize         { get; set; } // BIGINT
 		/// <summary>
 		/// Count of allocations
 		/// </summary>
-		[Column("EXCLUSIVE_ALLOCATED_COUNT"),            Nullable] public long?  ExclusiveAllocatedCount          { get; set; } // BIGINT
+		[Column("EXCLUSIVE_ALLOCATED_COUNT"),            Nullable] public long?   ExclusiveAllocatedCount          { get; set; } // BIGINT
 		/// <summary>
 		/// Count of deallocations
 		/// </summary>
-		[Column("EXCLUSIVE_DEALLOCATED_COUNT"),          Nullable] public long?  ExclusiveDeallocatedCount        { get; set; } // BIGINT
+		[Column("EXCLUSIVE_DEALLOCATED_COUNT"),          Nullable] public long?   ExclusiveDeallocatedCount        { get; set; } // BIGINT
 		/// <summary>
 		/// Maximum ever allocated block size in this allocator
 		/// </summary>
-		[Column("EXCLUSIVE_MAX_SINGLE_ALLOCATION_SIZE"), Nullable] public long?  ExclusiveMaxSingleAllocationSize { get; set; } // BIGINT
+		[Column("EXCLUSIVE_MAX_SINGLE_ALLOCATION_SIZE"), Nullable] public long?   ExclusiveMaxSingleAllocationSize { get; set; } // BIGINT
 		/// <summary>
 		/// Maximum size of this allocator (estimate)
 		/// </summary>
-		[Column("EXCLUSIVE_PEAK_ALLOCATION_SIZE"),       Nullable] public long?  ExclusivePeakAllocationSize      { get; set; } // BIGINT
+		[Column("EXCLUSIVE_PEAK_ALLOCATION_SIZE"),       Nullable] public long?   ExclusivePeakAllocationSize      { get; set; } // BIGINT
 		/// <summary>
 		/// Count of allocation errors
 		/// </summary>
-		[Column("EXCLUSIVE_ALLOC_ERRORS"),               Nullable] public long?  ExclusiveAllocErrors             { get; set; } // BIGINT
+		[Column("EXCLUSIVE_ALLOC_ERRORS"),               Nullable] public long?   ExclusiveAllocErrors             { get; set; } // BIGINT
 		/// <summary>
 		/// Average allocated memory by this allocator, multiplied by time since start of measurement (sample based rough estimate), this is usually deactivated, only activate in case this is requested by SAP support. Unit is 1 byte times 1 second (may change in future).
 		/// </summary>
-		[Column("EXCLUSIVE_IN_USE_INTEGRAL"),            Nullable] public long?  ExclusiveInUseIntegral           { get; set; } // BIGINT
+		[Column("EXCLUSIVE_IN_USE_INTEGRAL"),            Nullable] public long?   ExclusiveInUseIntegral           { get; set; } // BIGINT
 		/// <summary>
 		/// Deprecated
 		/// </summary>
-		[Column("MALLOC_PROXY_CACHE_MISSES"),            Nullable] public long?  MallocProxyCacheMisses           { get; set; } // BIGINT
+		[Column("MALLOC_PROXY_CACHE_MISSES"),            Nullable] public long?   MallocProxyCacheMisses           { get; set; } // BIGINT
 		/// <summary>
 		/// Allocator flags
 		/// </summary>
-		[Column(),                                       Nullable] public string FLAGS                            { get; set; } // VARCHAR(64)
+		[Column(),                                       Nullable] public string? FLAGS                            { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Name of SAP HANA component of this allocator
 		/// </summary>
-		[Column(),                                       Nullable] public string COMPONENT                        { get; set; } // VARCHAR(64)
+		[Column(),                                       Nullable] public string? COMPONENT                        { get; set; } // VARCHAR(64)
 	}
 
 	/// <summary>
@@ -5242,7 +5779,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                        Nullable] public string    DatabaseName                     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                        Nullable] public string?   DatabaseName                     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -5250,7 +5787,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                       Nullable] public string    HOST                             { get; set; } // VARCHAR(64)
+		[Column(),                                       Nullable] public string?   HOST                             { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -5266,7 +5803,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Allocator name
 		/// </summary>
-		[Column(),                                       Nullable] public string    CATEGORY                         { get; set; } // VARCHAR(128)
+		[Column(),                                       Nullable] public string?   CATEGORY                         { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Depth
 		/// </summary>
@@ -5358,11 +5895,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Allocator flags
 		/// </summary>
-		[Column(),                                       Nullable] public string    FLAGS                            { get; set; } // VARCHAR(64)
+		[Column(),                                       Nullable] public string?   FLAGS                            { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Name of SAP HANA component of this allocator
 		/// </summary>
-		[Column(),                                       Nullable] public string    COMPONENT                        { get; set; } // VARCHAR(64)
+		[Column(),                                       Nullable] public string?   COMPONENT                        { get; set; } // VARCHAR(64)
 	}
 
 	/// <summary>
@@ -5374,11 +5911,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                         Nullable] public string    DatabaseName                      { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                         Nullable] public string?   DatabaseName                      { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                        Nullable] public string    HOST                              { get; set; } // VARCHAR(64)
+		[Column(),                                        Nullable] public string?   HOST                              { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Free physical memory on the host
 		/// </summary>
@@ -5450,31 +5987,31 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Configuration file name
 		/// </summary>
-		[Column("FILE_NAME"),     Nullable] public string FileName     { get; set; } // VARCHAR(256)
+		[Column("FILE_NAME"),     Nullable] public string? FileName     { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Configuration layer: DEFAULT, SYSTEM, HOST, DATABASE
 		/// </summary>
-		[Column("LAYER_NAME"),    Nullable] public string LayerName    { get; set; } // VARCHAR(16)
+		[Column("LAYER_NAME"),    Nullable] public string? LayerName    { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"), Nullable] public string DatabaseName { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"), Nullable] public string? DatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name, if layer is HOST
 		/// </summary>
-		[Column(),                Nullable] public string HOST         { get; set; } // VARCHAR(64)
+		[Column(),                Nullable] public string? HOST         { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Configuration section name
 		/// </summary>
-		[Column(),                Nullable] public string SECTION      { get; set; } // VARCHAR(128)
+		[Column(),                Nullable] public string? SECTION      { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Configuration key name
 		/// </summary>
-		[Column(),                Nullable] public string KEY          { get; set; } // VARCHAR(128)
+		[Column(),                Nullable] public string? KEY          { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Configuration value
 		/// </summary>
-		[Column(),                Nullable] public string VALUE        { get; set; } // VARCHAR(5000)
+		[Column(),                Nullable] public string? VALUE        { get; set; } // VARCHAR(5000)
 	}
 
 	/// <summary>
@@ -5483,14 +6020,18 @@ namespace SapHanaDataContext
 	[Table(Schema="SYS_DATABASES", Name="M_LICENSE_MEASUREMENTS", IsView=true)]
 	public partial class SYS_DATABASES_MLicenseMeasurement
 	{
+		#nullable disable
 		/// <summary>
 		/// Database name
 		/// </summary>
 		[Column("DATABASE_NAME"),       NotNull    ] public string   DatabaseName      { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// GLAS application ID
 		/// </summary>
 		[Column("GLAS_APPLICATION_ID"), NotNull    ] public string   GlasApplicationId { get; set; } // VARCHAR(6)
+		#nullable enable
 		/// <summary>
 		/// Time when the measurement was done
 		/// </summary>
@@ -5499,10 +6040,12 @@ namespace SapHanaDataContext
 		/// The measured value (can be NULL in case the measurement failed)
 		/// </summary>
 		[Column(),                         Nullable] public long?    VALUE             { get; set; } // BIGINT
+		#nullable disable
 		/// <summary>
 		/// 'TRUE' for successful, 'FALSE' for failed measurement
 		/// </summary>
 		[Column(),                      NotNull    ] public string   SUCCESSFUL        { get; set; } // VARCHAR(5)
+		#nullable enable
 	}
 
 	/// <summary>
@@ -5514,23 +6057,23 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),       Nullable] public string DatabaseName      { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),       Nullable] public string? DatabaseName      { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Year
 		/// </summary>
-		[Column(),                      Nullable] public int?   YEAR              { get; set; } // INTEGER
+		[Column(),                      Nullable] public int?    YEAR              { get; set; } // INTEGER
 		/// <summary>
 		/// Month
 		/// </summary>
-		[Column(),                      Nullable] public int?   MONTH             { get; set; } // INTEGER
+		[Column(),                      Nullable] public int?    MONTH             { get; set; } // INTEGER
 		/// <summary>
 		/// GLAS Application ID
 		/// </summary>
-		[Column("GLAS_APPLICATION_ID"), Nullable] public string GlasApplicationId { get; set; } // VARCHAR(6)
+		[Column("GLAS_APPLICATION_ID"), Nullable] public string? GlasApplicationId { get; set; } // VARCHAR(6)
 		/// <summary>
 		/// Peak value of the application for the given month, year
 		/// </summary>
-		[Column("PEAK_VALUE"),          Nullable] public long?  PeakValue         { get; set; } // BIGINT
+		[Column("PEAK_VALUE"),          Nullable] public long?   PeakValue         { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -5542,55 +6085,55 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),       Nullable] public string DatabaseName      { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),       Nullable] public string? DatabaseName      { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                      Nullable] public string HOST              { get; set; } // VARCHAR(64)
+		[Column(),                      Nullable] public string? HOST              { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                      Nullable] public int?   PORT              { get; set; } // INTEGER
+		[Column(),                      Nullable] public int?    PORT              { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),           Nullable] public int?   VolumeId          { get; set; } // INTEGER
+		[Column("VOLUME_ID"),           Nullable] public int?    VolumeId          { get; set; } // INTEGER
 		/// <summary>
 		/// Log mode
 		/// </summary>
-		[Column("LOG_MODE"),            Nullable] public string LogMode           { get; set; } // VARCHAR(16)
+		[Column("LOG_MODE"),            Nullable] public string? LogMode           { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Size of one log buffer in memory
 		/// </summary>
-		[Column("BUFFER_SIZE"),         Nullable] public long?  BufferSize        { get; set; } // BIGINT
+		[Column("BUFFER_SIZE"),         Nullable] public long?   BufferSize        { get; set; } // BIGINT
 		/// <summary>
 		/// Count of log buffers in memory
 		/// </summary>
-		[Column("BUFFER_COUNT"),        Nullable] public long?  BufferCount       { get; set; } // BIGINT
+		[Column("BUFFER_COUNT"),        Nullable] public long?   BufferCount       { get; set; } // BIGINT
 		/// <summary>
 		/// Maximum size of one log segment
 		/// </summary>
-		[Column("SEGMENT_SIZE"),        Nullable] public long?  SegmentSize       { get; set; } // BIGINT
+		[Column("SEGMENT_SIZE"),        Nullable] public long?   SegmentSize       { get; set; } // BIGINT
 		/// <summary>
 		/// Log segment backup enabled: 'TRUE'/'FALSE' ('FALSE' on log backup history broken)
 		/// </summary>
-		[Column("BACKUP_ENABLED"),      Nullable] public string BackupEnabled     { get; set; } // VARCHAR(5)
+		[Column("BACKUP_ENABLED"),      Nullable] public string? BackupEnabled     { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Log segment backup timeout
 		/// </summary>
-		[Column("BACKUP_TIMEOUT"),      Nullable] public long?  BackupTimeout     { get; set; } // BIGINT
+		[Column("BACKUP_TIMEOUT"),      Nullable] public long?   BackupTimeout     { get; set; } // BIGINT
 		/// <summary>
 		/// Count of buffer switches without blocking on buffer semaphore
 		/// </summary>
-		[Column("SWITCH_NOWAIT_COUNT"), Nullable] public long?  SwitchNowaitCount { get; set; } // BIGINT
+		[Column("SWITCH_NOWAIT_COUNT"), Nullable] public long?   SwitchNowaitCount { get; set; } // BIGINT
 		/// <summary>
 		/// Count of buffer switches with blocking on buffer semaphore
 		/// </summary>
-		[Column("SWITCH_WAIT_COUNT"),   Nullable] public long?  SwitchWaitCount   { get; set; } // BIGINT
+		[Column("SWITCH_WAIT_COUNT"),   Nullable] public long?   SwitchWaitCount   { get; set; } // BIGINT
 		/// <summary>
 		/// Count of ignored still-open buffer switches (resolved races)
 		/// </summary>
-		[Column("SWITCH_OPEN_COUNT"),   Nullable] public long?  SwitchOpenCount   { get; set; } // BIGINT
+		[Column("SWITCH_OPEN_COUNT"),   Nullable] public long?   SwitchOpenCount   { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -5602,7 +6145,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),       Nullable] public string    DatabaseName      { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),       Nullable] public string?   DatabaseName      { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -5610,7 +6153,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                      Nullable] public string    HOST              { get; set; } // VARCHAR(64)
+		[Column(),                      Nullable] public string?   HOST              { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -5622,7 +6165,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Log mode
 		/// </summary>
-		[Column("LOG_MODE"),            Nullable] public string    LogMode           { get; set; } // VARCHAR(16)
+		[Column("LOG_MODE"),            Nullable] public string?   LogMode           { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Size of one log buffer in memory
 		/// </summary>
@@ -5638,7 +6181,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Log segment backup enabled: 'TRUE'/'FALSE' ('FALSE' on log backup history broken)
 		/// </summary>
-		[Column("BACKUP_ENABLED"),      Nullable] public string    BackupEnabled     { get; set; } // VARCHAR(5)
+		[Column("BACKUP_ENABLED"),      Nullable] public string?   BackupEnabled     { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Log segment backup timeout
 		/// </summary>
@@ -5666,203 +6209,203 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                      Nullable] public string DatabaseName                   { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                      Nullable] public string? DatabaseName                   { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                     Nullable] public string HOST                           { get; set; } // VARCHAR(64)
+		[Column(),                                     Nullable] public string? HOST                           { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                                     Nullable] public int?   PORT                           { get; set; } // INTEGER
+		[Column(),                                     Nullable] public int?    PORT                           { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),                          Nullable] public int?   VolumeId                       { get; set; } // INTEGER
+		[Column("VOLUME_ID"),                          Nullable] public int?    VolumeId                       { get; set; } // INTEGER
 		/// <summary>
 		/// Log partition ID
 		/// </summary>
-		[Column("PARTITION_ID"),                       Nullable] public long?  PartitionId                    { get; set; } // BIGINT
+		[Column("PARTITION_ID"),                       Nullable] public long?   PartitionId                    { get; set; } // BIGINT
 		/// <summary>
 		/// Log partition root path
 		/// </summary>
-		[Column(),                                     Nullable] public string PATH                           { get; set; } // VARCHAR(512)
+		[Column(),                                     Nullable] public string? PATH                           { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Size of log buffer at prepare time (actual log data size) (last)
 		/// </summary>
-		[Column("LAST_BUFFER_PREPARE_SIZE"),           Nullable] public long?  LastBufferPrepareSize          { get; set; } // BIGINT
+		[Column("LAST_BUFFER_PREPARE_SIZE"),           Nullable] public long?   LastBufferPrepareSize          { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer at prepare time (actual log data size) (max)
 		/// </summary>
-		[Column("MAX_BUFFER_PREPARE_SIZE"),            Nullable] public long?  MaxBufferPrepareSize           { get; set; } // BIGINT
+		[Column("MAX_BUFFER_PREPARE_SIZE"),            Nullable] public long?   MaxBufferPrepareSize           { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer at prepare time (actual log data size) (min)
 		/// </summary>
-		[Column("MIN_BUFFER_PREPARE_SIZE"),            Nullable] public long?  MinBufferPrepareSize           { get; set; } // BIGINT
+		[Column("MIN_BUFFER_PREPARE_SIZE"),            Nullable] public long?   MinBufferPrepareSize           { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer at prepare time (actual log data size) (total)
 		/// </summary>
-		[Column("SUM_BUFFER_PREPARE_SIZE"),            Nullable] public long?  SumBufferPrepareSize           { get; set; } // BIGINT
+		[Column("SUM_BUFFER_PREPARE_SIZE"),            Nullable] public long?   SumBufferPrepareSize           { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer at prepare time (actual log data size) (avg)
 		/// </summary>
-		[Column("AVG_BUFFER_PREPARE_SIZE"),            Nullable] public long?  AvgBufferPrepareSize           { get; set; } // BIGINT
+		[Column("AVG_BUFFER_PREPARE_SIZE"),            Nullable] public long?   AvgBufferPrepareSize           { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer alignment overhead at I/O time (last)
 		/// </summary>
-		[Column("LAST_BUFFER_OVERHEAD_SIZE"),          Nullable] public long?  LastBufferOverheadSize         { get; set; } // BIGINT
+		[Column("LAST_BUFFER_OVERHEAD_SIZE"),          Nullable] public long?   LastBufferOverheadSize         { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer alignment overhead at I/O time (max)
 		/// </summary>
-		[Column("MAX_BUFFER_OVERHEAD_SIZE"),           Nullable] public long?  MaxBufferOverheadSize          { get; set; } // BIGINT
+		[Column("MAX_BUFFER_OVERHEAD_SIZE"),           Nullable] public long?   MaxBufferOverheadSize          { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer alignment overhead at I/O time (min)
 		/// </summary>
-		[Column("MIN_BUFFER_OVERHEAD_SIZE"),           Nullable] public long?  MinBufferOverheadSize          { get; set; } // BIGINT
+		[Column("MIN_BUFFER_OVERHEAD_SIZE"),           Nullable] public long?   MinBufferOverheadSize          { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer alignment overhead at I/O time (total)
 		/// </summary>
-		[Column("SUM_BUFFER_OVERHEAD_SIZE"),           Nullable] public long?  SumBufferOverheadSize          { get; set; } // BIGINT
+		[Column("SUM_BUFFER_OVERHEAD_SIZE"),           Nullable] public long?   SumBufferOverheadSize          { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer alignment overhead at I/O time (avg)
 		/// </summary>
-		[Column("AVG_BUFFER_OVERHEAD_SIZE"),           Nullable] public long?  AvgBufferOverheadSize          { get; set; } // BIGINT
+		[Column("AVG_BUFFER_OVERHEAD_SIZE"),           Nullable] public long?   AvgBufferOverheadSize          { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer at I/O time (actual data plus alignment overhead) (last)
 		/// </summary>
-		[Column("LAST_BUFFER_IO_SIZE"),                Nullable] public long?  LastBufferIoSize               { get; set; } // BIGINT
+		[Column("LAST_BUFFER_IO_SIZE"),                Nullable] public long?   LastBufferIoSize               { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer at I/O time (actual data plus alignment overhead) (max)
 		/// </summary>
-		[Column("MAX_BUFFER_IO_SIZE"),                 Nullable] public long?  MaxBufferIoSize                { get; set; } // BIGINT
+		[Column("MAX_BUFFER_IO_SIZE"),                 Nullable] public long?   MaxBufferIoSize                { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer at I/O time (actual data plus alignment overhead) (min)
 		/// </summary>
-		[Column("MIN_BUFFER_IO_SIZE"),                 Nullable] public long?  MinBufferIoSize                { get; set; } // BIGINT
+		[Column("MIN_BUFFER_IO_SIZE"),                 Nullable] public long?   MinBufferIoSize                { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer at I/O time (actual data plus alignment overhead) (total)
 		/// </summary>
-		[Column("SUM_BUFFER_IO_SIZE"),                 Nullable] public long?  SumBufferIoSize                { get; set; } // BIGINT
+		[Column("SUM_BUFFER_IO_SIZE"),                 Nullable] public long?   SumBufferIoSize                { get; set; } // BIGINT
 		/// <summary>
 		/// Size of log buffer at I/O time (actual data plus alignment overhead) (avg)
 		/// </summary>
-		[Column("AVG_BUFFER_IO_SIZE"),                 Nullable] public long?  AvgBufferIoSize                { get; set; } // BIGINT
+		[Column("AVG_BUFFER_IO_SIZE"),                 Nullable] public long?   AvgBufferIoSize                { get; set; } // BIGINT
 		/// <summary>
 		/// Group commit frequency (callback count per buffer with sync callback) (last)
 		/// </summary>
-		[Column("LAST_GROUP_COMMIT_FREQUENCY"),        Nullable] public long?  LastGroupCommitFrequency       { get; set; } // BIGINT
+		[Column("LAST_GROUP_COMMIT_FREQUENCY"),        Nullable] public long?   LastGroupCommitFrequency       { get; set; } // BIGINT
 		/// <summary>
 		/// Group commit frequency (callback count per buffer with sync callback) (max)
 		/// </summary>
-		[Column("MAX_GROUP_COMMIT_FREQUENCY"),         Nullable] public long?  MaxGroupCommitFrequency        { get; set; } // BIGINT
+		[Column("MAX_GROUP_COMMIT_FREQUENCY"),         Nullable] public long?   MaxGroupCommitFrequency        { get; set; } // BIGINT
 		/// <summary>
 		/// Group commit frequency (callback count per buffer with sync callback) (min)
 		/// </summary>
-		[Column("MIN_GROUP_COMMIT_FREQUENCY"),         Nullable] public long?  MinGroupCommitFrequency        { get; set; } // BIGINT
+		[Column("MIN_GROUP_COMMIT_FREQUENCY"),         Nullable] public long?   MinGroupCommitFrequency        { get; set; } // BIGINT
 		/// <summary>
 		/// Group commit frequency (callback count per buffer with sync callback) (total)
 		/// </summary>
-		[Column("SUM_GROUP_COMMIT_FREQUENCY"),         Nullable] public long?  SumGroupCommitFrequency        { get; set; } // BIGINT
+		[Column("SUM_GROUP_COMMIT_FREQUENCY"),         Nullable] public long?   SumGroupCommitFrequency        { get; set; } // BIGINT
 		/// <summary>
 		/// Group commit frequency (callback count per buffer with sync callback) (avg)
 		/// </summary>
-		[Column("AVG_GROUP_COMMIT_FREQUENCY"),         Nullable] public long?  AvgGroupCommitFrequency        { get; set; } // BIGINT
+		[Column("AVG_GROUP_COMMIT_FREQUENCY"),         Nullable] public long?   AvgGroupCommitFrequency        { get; set; } // BIGINT
 		/// <summary>
 		/// Callback time per buffer with sync callback (last)
 		/// </summary>
-		[Column("LAST_CALLBACK_TIME"),                 Nullable] public long?  LastCallbackTime               { get; set; } // BIGINT
+		[Column("LAST_CALLBACK_TIME"),                 Nullable] public long?   LastCallbackTime               { get; set; } // BIGINT
 		/// <summary>
 		/// Callback time per buffer with sync callback (max)
 		/// </summary>
-		[Column("MAX_CALLBACK_TIME"),                  Nullable] public long?  MaxCallbackTime                { get; set; } // BIGINT
+		[Column("MAX_CALLBACK_TIME"),                  Nullable] public long?   MaxCallbackTime                { get; set; } // BIGINT
 		/// <summary>
 		/// Callback time per buffer with sync callback (min)
 		/// </summary>
-		[Column("MIN_CALLBACK_TIME"),                  Nullable] public long?  MinCallbackTime                { get; set; } // BIGINT
+		[Column("MIN_CALLBACK_TIME"),                  Nullable] public long?   MinCallbackTime                { get; set; } // BIGINT
 		/// <summary>
 		/// Callback time per buffer with sync callback (total)
 		/// </summary>
-		[Column("SUM_CALLBACK_TIME"),                  Nullable] public long?  SumCallbackTime                { get; set; } // BIGINT
+		[Column("SUM_CALLBACK_TIME"),                  Nullable] public long?   SumCallbackTime                { get; set; } // BIGINT
 		/// <summary>
 		/// Callback time per buffer with sync callback (avg)
 		/// </summary>
-		[Column("AVG_CALLBACK_TIME"),                  Nullable] public long?  AvgCallbackTime                { get; set; } // BIGINT
+		[Column("AVG_CALLBACK_TIME"),                  Nullable] public long?   AvgCallbackTime                { get; set; } // BIGINT
 		/// <summary>
 		/// Count of buffers prepared for I/O
 		/// </summary>
-		[Column("PREPARED_BUFFERS"),                   Nullable] public long?  PreparedBuffers                { get; set; } // BIGINT
+		[Column("PREPARED_BUFFERS"),                   Nullable] public long?   PreparedBuffers                { get; set; } // BIGINT
 		/// <summary>
 		/// Count of completed and written buffers
 		/// </summary>
-		[Column("WRITTEN_BUFFERS"),                    Nullable] public long?  WrittenBuffers                 { get; set; } // BIGINT
+		[Column("WRITTEN_BUFFERS"),                    Nullable] public long?   WrittenBuffers                 { get; set; } // BIGINT
 		/// <summary>
 		/// Count of buffers written out-of-order
 		/// </summary>
-		[Column("WRITTEN_BUFFERS_OOO"),                Nullable] public long?  WrittenBuffersOoo              { get; set; } // BIGINT
+		[Column("WRITTEN_BUFFERS_OOO"),                Nullable] public long?   WrittenBuffersOoo              { get; set; } // BIGINT
 		/// <summary>
 		/// Count of new log segment requests
 		/// </summary>
-		[Column("NEW_SEGMENT_REQUEST_COUNT"),          Nullable] public long?  NewSegmentRequestCount         { get; set; } // BIGINT
+		[Column("NEW_SEGMENT_REQUEST_COUNT"),          Nullable] public long?   NewSegmentRequestCount         { get; set; } // BIGINT
 		/// <summary>
 		/// Count of currently free log segments
 		/// </summary>
-		[Column("FREE_SEGMENTS"),                      Nullable] public long?  FreeSegments                   { get; set; } // BIGINT
+		[Column("FREE_SEGMENTS"),                      Nullable] public long?   FreeSegments                   { get; set; } // BIGINT
 		/// <summary>
 		/// Count of currently in-backup log segments
 		/// </summary>
-		[Column("IN_BACKUP_SEGMENTS"),                 Nullable] public long?  InBackupSegments               { get; set; } // BIGINT
+		[Column("IN_BACKUP_SEGMENTS"),                 Nullable] public long?   InBackupSegments               { get; set; } // BIGINT
 		/// <summary>
 		/// Count of currently in-backup truncated log segments
 		/// </summary>
-		[Column("IN_BACKUP_TRUNCATED_SEGMENTS"),       Nullable] public long?  InBackupTruncatedSegments      { get; set; } // BIGINT
+		[Column("IN_BACKUP_TRUNCATED_SEGMENTS"),       Nullable] public long?   InBackupTruncatedSegments      { get; set; } // BIGINT
 		/// <summary>
 		/// Count of log segments backed up so far
 		/// </summary>
-		[Column("BACKED_UP_SEGMENTS"),                 Nullable] public long?  BackedUpSegments               { get; set; } // BIGINT
+		[Column("BACKED_UP_SEGMENTS"),                 Nullable] public long?   BackedUpSegments               { get; set; } // BIGINT
 		/// <summary>
 		/// Total log segment count in the partition
 		/// </summary>
-		[Column("TOTAL_SEGMENTS"),                     Nullable] public long?  TotalSegments                  { get; set; } // BIGINT
+		[Column("TOTAL_SEGMENTS"),                     Nullable] public long?   TotalSegments                  { get; set; } // BIGINT
 		/// <summary>
 		/// Count of segments in-load during recovery
 		/// </summary>
-		[Column("RECOVERY_SEGMENTS_IN_LOAD"),          Nullable] public long?  RecoverySegmentsInLoad         { get; set; } // BIGINT
+		[Column("RECOVERY_SEGMENTS_IN_LOAD"),          Nullable] public long?   RecoverySegmentsInLoad         { get; set; } // BIGINT
 		/// <summary>
 		/// Count of segments waiting for load during recovery
 		/// </summary>
-		[Column("RECOVERY_SEGMENTS_WAITING_FOR_LOAD"), Nullable] public long?  RecoverySegmentsWaitingForLoad { get; set; } // BIGINT
+		[Column("RECOVERY_SEGMENTS_WAITING_FOR_LOAD"), Nullable] public long?   RecoverySegmentsWaitingForLoad { get; set; } // BIGINT
 		/// <summary>
 		/// Count of segments in process during recovery
 		/// </summary>
-		[Column("RECOVERY_SEGMENTS_IN_PROCESS"),       Nullable] public long?  RecoverySegmentsInProcess      { get; set; } // BIGINT
+		[Column("RECOVERY_SEGMENTS_IN_PROCESS"),       Nullable] public long?   RecoverySegmentsInProcess      { get; set; } // BIGINT
 		/// <summary>
 		/// Count of segments processed during recovery
 		/// </summary>
-		[Column("RECOVERY_SEGMENTS_PROCESSED"),        Nullable] public long?  RecoverySegmentsProcessed      { get; set; } // BIGINT
+		[Column("RECOVERY_SEGMENTS_PROCESSED"),        Nullable] public long?   RecoverySegmentsProcessed      { get; set; } // BIGINT
 		/// <summary>
 		/// Count of commits
 		/// </summary>
-		[Column("COMMIT_COUNT"),                       Nullable] public long?  CommitCount                    { get; set; } // BIGINT
+		[Column("COMMIT_COUNT"),                       Nullable] public long?   CommitCount                    { get; set; } // BIGINT
 		/// <summary>
 		/// Time needed to synchronize flush of commit log entries. (last)
 		/// </summary>
-		[Column("LAST_COMMIT_IO_LATENCY"),             Nullable] public long?  LastCommitIoLatency            { get; set; } // BIGINT
+		[Column("LAST_COMMIT_IO_LATENCY"),             Nullable] public long?   LastCommitIoLatency            { get; set; } // BIGINT
 		/// <summary>
 		/// Time needed to synchronize flush of commit log entries. (max)
 		/// </summary>
-		[Column("MAX_COMMIT_IO_LATENCY"),              Nullable] public long?  MaxCommitIoLatency             { get; set; } // BIGINT
+		[Column("MAX_COMMIT_IO_LATENCY"),              Nullable] public long?   MaxCommitIoLatency             { get; set; } // BIGINT
 		/// <summary>
 		/// Time needed to synchronize flush of commit log entries. (min)
 		/// </summary>
-		[Column("MIN_COMMIT_IO_LATENCY"),              Nullable] public long?  MinCommitIoLatency             { get; set; } // BIGINT
+		[Column("MIN_COMMIT_IO_LATENCY"),              Nullable] public long?   MinCommitIoLatency             { get; set; } // BIGINT
 		/// <summary>
 		/// Time needed to synchronize flush of commit log entries. (total)
 		/// </summary>
-		[Column("SUM_COMMIT_IO_LATENCY"),              Nullable] public long?  SumCommitIoLatency             { get; set; } // BIGINT
+		[Column("SUM_COMMIT_IO_LATENCY"),              Nullable] public long?   SumCommitIoLatency             { get; set; } // BIGINT
 		/// <summary>
 		/// Time needed to synchronize flush of commit log entries. (avg)
 		/// </summary>
-		[Column("AVG_COMMIT_IO_LATENCY"),              Nullable] public long?  AvgCommitIoLatency             { get; set; } // BIGINT
+		[Column("AVG_COMMIT_IO_LATENCY"),              Nullable] public long?   AvgCommitIoLatency             { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -5874,7 +6417,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                      Nullable] public string    DatabaseName                   { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                      Nullable] public string?   DatabaseName                   { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -5882,7 +6425,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                     Nullable] public string    HOST                           { get; set; } // VARCHAR(64)
+		[Column(),                                     Nullable] public string?   HOST                           { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -5898,7 +6441,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Log partition root path
 		/// </summary>
-		[Column(),                                     Nullable] public string    PATH                           { get; set; } // VARCHAR(512)
+		[Column(),                                     Nullable] public string?   PATH                           { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Size of log buffer at prepare time (actual log data size) (last)
 		/// </summary>
@@ -6086,43 +6629,43 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),          Nullable] public string DatabaseName        { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),          Nullable] public string? DatabaseName        { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                         Nullable] public string HOST                { get; set; } // VARCHAR(64)
+		[Column(),                         Nullable] public string? HOST                { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                         Nullable] public int?   PORT                { get; set; } // INTEGER
+		[Column(),                         Nullable] public int?    PORT                { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),              Nullable] public int?   VolumeId            { get; set; } // INTEGER
+		[Column("VOLUME_ID"),              Nullable] public int?    VolumeId            { get; set; } // INTEGER
 		/// <summary>
 		/// ID of log replay queue
 		/// </summary>
-		[Column("LOG_REPLAY_QUEUE_ID"),    Nullable] public int?   LogReplayQueueId    { get; set; } // INTEGER
+		[Column("LOG_REPLAY_QUEUE_ID"),    Nullable] public int?    LogReplayQueueId    { get; set; } // INTEGER
 		/// <summary>
 		/// Type of redo log record
 		/// </summary>
-		[Column("LOG_RECORD_TYPE"),        Nullable] public string LogRecordType       { get; set; } // VARCHAR(40)
+		[Column("LOG_RECORD_TYPE"),        Nullable] public string? LogRecordType       { get; set; } // VARCHAR(40)
 		/// <summary>
 		/// Total number of replayed log entries
 		/// </summary>
-		[Column("TOTAL_LOG_RECORD_COUNT"), Nullable] public long?  TotalLogRecordCount { get; set; } // BIGINT
+		[Column("TOTAL_LOG_RECORD_COUNT"), Nullable] public long?   TotalLogRecordCount { get; set; } // BIGINT
 		/// <summary>
 		/// Accumulated execution time to replay log entries
 		/// </summary>
-		[Column("TOTAL_EXECUTION_TIME"),   Nullable] public long?  TotalExecutionTime  { get; set; } // BIGINT
+		[Column("TOTAL_EXECUTION_TIME"),   Nullable] public long?   TotalExecutionTime  { get; set; } // BIGINT
 		/// <summary>
 		/// Accumulated local wait time during replay of log entries
 		/// </summary>
-		[Column("TOTAL_WAIT_TIME"),        Nullable] public long?  TotalWaitTime       { get; set; } // BIGINT
+		[Column("TOTAL_WAIT_TIME"),        Nullable] public long?   TotalWaitTime       { get; set; } // BIGINT
 		/// <summary>
 		/// Accumulated log size of replayed log entries
 		/// </summary>
-		[Column("TOTAL_LOG_RECORD_SIZE"),  Nullable] public long?  TotalLogRecordSize  { get; set; } // BIGINT
+		[Column("TOTAL_LOG_RECORD_SIZE"),  Nullable] public long?   TotalLogRecordSize  { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -6134,7 +6677,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),          Nullable] public string    DatabaseName        { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),          Nullable] public string?   DatabaseName        { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -6142,7 +6685,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                         Nullable] public string    HOST                { get; set; } // VARCHAR(64)
+		[Column(),                         Nullable] public string?   HOST                { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -6158,7 +6701,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Type of redo log record
 		/// </summary>
-		[Column("LOG_RECORD_TYPE"),        Nullable] public string    LogRecordType       { get; set; } // VARCHAR(40)
+		[Column("LOG_RECORD_TYPE"),        Nullable] public string?   LogRecordType       { get; set; } // VARCHAR(40)
 		/// <summary>
 		/// Total number of replayed log entries
 		/// </summary>
@@ -6186,11 +6729,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),       Nullable] public string    DatabaseName      { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),       Nullable] public string?   DatabaseName      { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                      Nullable] public string    HOST              { get; set; } // VARCHAR(64)
+		[Column(),                      Nullable] public string?   HOST              { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -6210,7 +6753,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Log segment file name
 		/// </summary>
-		[Column("FILE_NAME"),           Nullable] public string    FileName          { get; set; } // VARCHAR(512)
+		[Column("FILE_NAME"),           Nullable] public string?   FileName          { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Start position of log segment in the file
 		/// </summary>
@@ -6218,7 +6761,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Log segment state
 		/// </summary>
-		[Column(),                      Nullable] public string    STATE             { get; set; } // VARCHAR(16)
+		[Column(),                      Nullable] public string?   STATE             { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// First position contained in this log segment
 		/// </summary>
@@ -6242,7 +6785,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Flag for log segment in backup: 'TRUE'/'FALSE'
 		/// </summary>
-		[Column("IN_BACKUP"),           Nullable] public string    InBackup          { get; set; } // VARCHAR(5)
+		[Column("IN_BACKUP"),           Nullable] public string?   InBackup          { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Timestamp of the last commit in this log segment
 		/// </summary>
@@ -6250,7 +6793,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Hash of key used for log segment encryption
 		/// </summary>
-		[Column("ENCRYPTION_KEY_HASH"), Nullable] public string    EncryptionKeyHash { get; set; } // VARCHAR(64)
+		[Column("ENCRYPTION_KEY_HASH"), Nullable] public string?   EncryptionKeyHash { get; set; } // VARCHAR(64)
 	}
 
 	/// <summary>
@@ -6262,7 +6805,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),       Nullable] public string    DatabaseName      { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),       Nullable] public string?   DatabaseName      { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -6270,7 +6813,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                      Nullable] public string    HOST              { get; set; } // VARCHAR(64)
+		[Column(),                      Nullable] public string?   HOST              { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -6290,7 +6833,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Log segment file name
 		/// </summary>
-		[Column("FILE_NAME"),           Nullable] public string    FileName          { get; set; } // VARCHAR(512)
+		[Column("FILE_NAME"),           Nullable] public string?   FileName          { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Start position of log segment in the file
 		/// </summary>
@@ -6298,7 +6841,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Log segment state
 		/// </summary>
-		[Column(),                      Nullable] public string    STATE             { get; set; } // VARCHAR(16)
+		[Column(),                      Nullable] public string?   STATE             { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// First position contained in this log segment
 		/// </summary>
@@ -6322,7 +6865,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Flag for log segment in backup: 'TRUE'/'FALSE'
 		/// </summary>
-		[Column("IN_BACKUP"),           Nullable] public string    InBackup          { get; set; } // VARCHAR(5)
+		[Column("IN_BACKUP"),           Nullable] public string?   InBackup          { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Timestamp of the last commit in this log segment
 		/// </summary>
@@ -6330,7 +6873,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Hash of key used for log segment encryption
 		/// </summary>
-		[Column("ENCRYPTION_KEY_HASH"), Nullable] public string    EncryptionKeyHash { get; set; } // VARCHAR(64)
+		[Column("ENCRYPTION_KEY_HASH"), Nullable] public string?   EncryptionKeyHash { get; set; } // VARCHAR(64)
 	}
 
 	/// <summary>
@@ -6342,119 +6885,119 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                            Nullable] public string DatabaseName                        { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                            Nullable] public string? DatabaseName                        { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                           Nullable] public string HOST                                { get; set; } // VARCHAR(64)
+		[Column(),                                           Nullable] public string? HOST                                { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                                           Nullable] public int?   PORT                                { get; set; } // INTEGER
+		[Column(),                                           Nullable] public int?    PORT                                { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),                                Nullable] public int?   VolumeId                            { get; set; } // INTEGER
+		[Column("VOLUME_ID"),                                Nullable] public int?    VolumeId                            { get; set; } // INTEGER
 		/// <summary>
 		/// Object (statistic) type
 		/// </summary>
-		[Column(),                                           Nullable] public string TYPE                                { get; set; } // VARCHAR(128)
+		[Column(),                                           Nullable] public string? TYPE                                { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Number of objects currently in memory object container
 		/// </summary>
-		[Column("OBJECT_COUNT"),                             Nullable] public long?  ObjectCount                         { get; set; } // BIGINT
+		[Column("OBJECT_COUNT"),                             Nullable] public long?   ObjectCount                         { get; set; } // BIGINT
 		/// <summary>
 		/// Size of objects currently in memory object container
 		/// </summary>
-		[Column("OBJECT_SIZE"),                              Nullable] public long?  ObjectSize                          { get; set; } // BIGINT
+		[Column("OBJECT_SIZE"),                              Nullable] public long?   ObjectSize                          { get; set; } // BIGINT
 		/// <summary>
 		/// Size of non swappable objects currently in memory object container
 		/// </summary>
-		[Column("NON_SWAPPABLE_SIZE"),                       Nullable] public long?  NonSwappableSize                    { get; set; } // BIGINT
+		[Column("NON_SWAPPABLE_SIZE"),                       Nullable] public long?   NonSwappableSize                    { get; set; } // BIGINT
 		/// <summary>
 		/// Size of swappable objects currently in memory object container
 		/// </summary>
-		[Column("SWAPPABLE_SIZE"),                           Nullable] public long?  SwappableSize                       { get; set; } // BIGINT
+		[Column("SWAPPABLE_SIZE"),                           Nullable] public long?   SwappableSize                       { get; set; } // BIGINT
 		/// <summary>
 		/// Total number of objects put into memory object container
 		/// </summary>
-		[Column("PUT_COUNT"),                                Nullable] public long?  PutCount                            { get; set; } // BIGINT
+		[Column("PUT_COUNT"),                                Nullable] public long?   PutCount                            { get; set; } // BIGINT
 		/// <summary>
 		/// Total size of objects put into memory object container
 		/// </summary>
-		[Column("PUT_SIZE"),                                 Nullable] public long?  PutSize                             { get; set; } // BIGINT
+		[Column("PUT_SIZE"),                                 Nullable] public long?   PutSize                             { get; set; } // BIGINT
 		/// <summary>
 		/// Total number of objects moved in from a different statistic
 		/// </summary>
-		[Column("MOVE_IN_COUNT"),                            Nullable] public long?  MoveInCount                         { get; set; } // BIGINT
+		[Column("MOVE_IN_COUNT"),                            Nullable] public long?   MoveInCount                         { get; set; } // BIGINT
 		/// <summary>
 		/// Total size of objects moved in from a different statistic
 		/// </summary>
-		[Column("MOVE_IN_SIZE"),                             Nullable] public long?  MoveInSize                          { get; set; } // BIGINT
+		[Column("MOVE_IN_SIZE"),                             Nullable] public long?   MoveInSize                          { get; set; } // BIGINT
 		/// <summary>
 		/// Total number of objects moved out to a different statistic
 		/// </summary>
-		[Column("MOVE_OUT_COUNT"),                           Nullable] public long?  MoveOutCount                        { get; set; } // BIGINT
+		[Column("MOVE_OUT_COUNT"),                           Nullable] public long?   MoveOutCount                        { get; set; } // BIGINT
 		/// <summary>
 		/// Total size objects moved out to a different statistic
 		/// </summary>
-		[Column("MOVE_OUT_SIZE"),                            Nullable] public long?  MoveOutSize                         { get; set; } // BIGINT
+		[Column("MOVE_OUT_SIZE"),                            Nullable] public long?   MoveOutSize                         { get; set; } // BIGINT
 		/// <summary>
 		/// Total number of objects evicted from memory object container
 		/// </summary>
-		[Column("EVICT_COUNT"),                              Nullable] public long?  EvictCount                          { get; set; } // BIGINT
+		[Column("EVICT_COUNT"),                              Nullable] public long?   EvictCount                          { get; set; } // BIGINT
 		/// <summary>
 		/// Total size of objects evicted from memory object container
 		/// </summary>
-		[Column("EVICT_SIZE"),                               Nullable] public long?  EvictSize                           { get; set; } // BIGINT
+		[Column("EVICT_SIZE"),                               Nullable] public long?   EvictSize                           { get; set; } // BIGINT
 		/// <summary>
 		/// Total number of temp-evicted objects
 		/// </summary>
-		[Column("TEMP_EVICT_COUNT"),                         Nullable] public long?  TempEvictCount                      { get; set; } // BIGINT
+		[Column("TEMP_EVICT_COUNT"),                         Nullable] public long?   TempEvictCount                      { get; set; } // BIGINT
 		/// <summary>
 		/// Total size of temp-evicted objects
 		/// </summary>
-		[Column("TEMP_EVICT_SIZE"),                          Nullable] public long?  TempEvictSize                       { get; set; } // BIGINT
+		[Column("TEMP_EVICT_SIZE"),                          Nullable] public long?   TempEvictSize                       { get; set; } // BIGINT
 		/// <summary>
 		/// Total number of resizes
 		/// </summary>
-		[Column("RESIZE_COUNT"),                             Nullable] public long?  ResizeCount                         { get; set; } // BIGINT
+		[Column("RESIZE_COUNT"),                             Nullable] public long?   ResizeCount                         { get; set; } // BIGINT
 		/// <summary>
 		/// Total size delta changed by resize of objects
 		/// </summary>
-		[Column("RESIZE_DELTA_SIZE"),                        Nullable] public long?  ResizeDeltaSize                     { get; set; } // BIGINT
+		[Column("RESIZE_DELTA_SIZE"),                        Nullable] public long?   ResizeDeltaSize                     { get; set; } // BIGINT
 		/// <summary>
 		/// Total number of shrunk objects
 		/// </summary>
-		[Column("SHRINK_COUNT"),                             Nullable] public long?  ShrinkCount                         { get; set; } // BIGINT
+		[Column("SHRINK_COUNT"),                             Nullable] public long?   ShrinkCount                         { get; set; } // BIGINT
 		/// <summary>
 		/// Total size of shrunk objects
 		/// </summary>
-		[Column("SHRINK_SIZE"),                              Nullable] public long?  ShrinkSize                          { get; set; } // BIGINT
+		[Column("SHRINK_SIZE"),                              Nullable] public long?   ShrinkSize                          { get; set; } // BIGINT
 		/// <summary>
 		/// Total number of shrunk objects due to unused retention period
 		/// </summary>
-		[Column("RETENTION_PERIOD_SHRINK_COUNT"),            Nullable] public long?  RetentionPeriodShrinkCount          { get; set; } // BIGINT
+		[Column("RETENTION_PERIOD_SHRINK_COUNT"),            Nullable] public long?   RetentionPeriodShrinkCount          { get; set; } // BIGINT
 		/// <summary>
 		/// Total size of shrunk objects due to unused retention period
 		/// </summary>
-		[Column("RETENTION_PERIOD_SHRINK_SIZE"),             Nullable] public long?  RetentionPeriodShrinkSize           { get; set; } // BIGINT
+		[Column("RETENTION_PERIOD_SHRINK_SIZE"),             Nullable] public long?   RetentionPeriodShrinkSize           { get; set; } // BIGINT
 		/// <summary>
 		/// Total number of shrunk objects due to paged attribute limit violation
 		/// </summary>
-		[Column("PAGE_LOADABLE_COLUMNS_LIMIT_SHRINK_COUNT"), Nullable] public long?  PageLoadableColumnsLimitShrinkCount { get; set; } // BIGINT
+		[Column("PAGE_LOADABLE_COLUMNS_LIMIT_SHRINK_COUNT"), Nullable] public long?   PageLoadableColumnsLimitShrinkCount { get; set; } // BIGINT
 		/// <summary>
 		/// Total size of shrunk objects due to paged attribute limit violation
 		/// </summary>
-		[Column("PAGE_LOADABLE_COLUMNS_LIMIT_SHRINK_SIZE"),  Nullable] public long?  PageLoadableColumnsLimitShrinkSize  { get; set; } // BIGINT
+		[Column("PAGE_LOADABLE_COLUMNS_LIMIT_SHRINK_SIZE"),  Nullable] public long?   PageLoadableColumnsLimitShrinkSize  { get; set; } // BIGINT
 		/// <summary>
 		/// Total number of objects shrink (and retention period and page loadable columns limit issues) failed to remove
 		/// </summary>
-		[Column("FAILED_SHRINK_COUNT"),                      Nullable] public long?  FailedShrinkCount                   { get; set; } // BIGINT
+		[Column("FAILED_SHRINK_COUNT"),                      Nullable] public long?   FailedShrinkCount                   { get; set; } // BIGINT
 		/// <summary>
 		/// Total size of objects shrink (and retention period and page loadable columns limit issues) failed to remove
 		/// </summary>
-		[Column("FAILED_SHRINK_SIZE"),                       Nullable] public long?  FailedShrinkSize                    { get; set; } // BIGINT
+		[Column("FAILED_SHRINK_SIZE"),                       Nullable] public long?   FailedShrinkSize                    { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -6466,91 +7009,91 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                      Nullable] public string DatabaseName                   { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                      Nullable] public string? DatabaseName                   { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                     Nullable] public string HOST                           { get; set; } // VARCHAR(64)
+		[Column(),                                     Nullable] public string? HOST                           { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                                     Nullable] public int?   PORT                           { get; set; } // INTEGER
+		[Column(),                                     Nullable] public int?    PORT                           { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),                          Nullable] public int?   VolumeId                       { get; set; } // INTEGER
+		[Column("VOLUME_ID"),                          Nullable] public int?    VolumeId                       { get; set; } // INTEGER
 		/// <summary>
 		/// Object (statistic) type)
 		/// </summary>
-		[Column(),                                     Nullable] public string TYPE                           { get; set; } // VARCHAR(128)
+		[Column(),                                     Nullable] public string? TYPE                           { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Allocator category, the corresponding allocator and/or some of its sub allocators were used to allocate the memory objects
 		/// </summary>
-		[Column(),                                     Nullable] public string CATEGORY                       { get; set; } // VARCHAR(128)
+		[Column(),                                     Nullable] public string? CATEGORY                       { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Number of temporary objects
 		/// </summary>
-		[Column("TEMPORARY_OBJECT_COUNT"),             Nullable] public long?  TemporaryObjectCount           { get; set; } // BIGINT
+		[Column("TEMPORARY_OBJECT_COUNT"),             Nullable] public long?   TemporaryObjectCount           { get; set; } // BIGINT
 		/// <summary>
 		/// Number of page loadable columns objects
 		/// </summary>
-		[Column("PAGE_LOADABLE_COLUMNS_OBJECT_COUNT"), Nullable] public long?  PageLoadableColumnsObjectCount { get; set; } // BIGINT
+		[Column("PAGE_LOADABLE_COLUMNS_OBJECT_COUNT"), Nullable] public long?   PageLoadableColumnsObjectCount { get; set; } // BIGINT
 		/// <summary>
 		/// Number of early unload objects
 		/// </summary>
-		[Column("EARLY_UNLOAD_OBJECT_COUNT"),          Nullable] public long?  EarlyUnloadObjectCount         { get; set; } // BIGINT
+		[Column("EARLY_UNLOAD_OBJECT_COUNT"),          Nullable] public long?   EarlyUnloadObjectCount         { get; set; } // BIGINT
 		/// <summary>
 		/// Number of internal short term objects
 		/// </summary>
-		[Column("INTERNAL_SHORT_TERM_OBJECT_COUNT"),   Nullable] public long?  InternalShortTermObjectCount   { get; set; } // BIGINT
+		[Column("INTERNAL_SHORT_TERM_OBJECT_COUNT"),   Nullable] public long?   InternalShortTermObjectCount   { get; set; } // BIGINT
 		/// <summary>
 		/// Number of short term objects
 		/// </summary>
-		[Column("SHORT_TERM_OBJECT_COUNT"),            Nullable] public long?  ShortTermObjectCount           { get; set; } // BIGINT
+		[Column("SHORT_TERM_OBJECT_COUNT"),            Nullable] public long?   ShortTermObjectCount           { get; set; } // BIGINT
 		/// <summary>
 		/// Number of mid term objects
 		/// </summary>
-		[Column("MID_TERM_OBJECT_COUNT"),              Nullable] public long?  MidTermObjectCount             { get; set; } // BIGINT
+		[Column("MID_TERM_OBJECT_COUNT"),              Nullable] public long?   MidTermObjectCount             { get; set; } // BIGINT
 		/// <summary>
 		/// Number of long term objects
 		/// </summary>
-		[Column("LONG_TERM_OBJECT_COUNT"),             Nullable] public long?  LongTermObjectCount            { get; set; } // BIGINT
+		[Column("LONG_TERM_OBJECT_COUNT"),             Nullable] public long?   LongTermObjectCount            { get; set; } // BIGINT
 		/// <summary>
 		/// Number of non swappable objects
 		/// </summary>
-		[Column("NON_SWAPPABLE_OBJECT_COUNT"),         Nullable] public long?  NonSwappableObjectCount        { get; set; } // BIGINT
+		[Column("NON_SWAPPABLE_OBJECT_COUNT"),         Nullable] public long?   NonSwappableObjectCount        { get; set; } // BIGINT
 		/// <summary>
 		/// Size of temporary objects
 		/// </summary>
-		[Column("TEMPORARY_OBJECT_SIZE"),              Nullable] public long?  TemporaryObjectSize            { get; set; } // BIGINT
+		[Column("TEMPORARY_OBJECT_SIZE"),              Nullable] public long?   TemporaryObjectSize            { get; set; } // BIGINT
 		/// <summary>
 		/// Size of page loadable columns objects
 		/// </summary>
-		[Column("PAGE_LOADABLE_COLUMNS_OBJECT_SIZE"),  Nullable] public long?  PageLoadableColumnsObjectSize  { get; set; } // BIGINT
+		[Column("PAGE_LOADABLE_COLUMNS_OBJECT_SIZE"),  Nullable] public long?   PageLoadableColumnsObjectSize  { get; set; } // BIGINT
 		/// <summary>
 		/// Size of early unload objects
 		/// </summary>
-		[Column("EARLY_UNLOAD_OBJECT_SIZE"),           Nullable] public long?  EarlyUnloadObjectSize          { get; set; } // BIGINT
+		[Column("EARLY_UNLOAD_OBJECT_SIZE"),           Nullable] public long?   EarlyUnloadObjectSize          { get; set; } // BIGINT
 		/// <summary>
 		/// Size of internal short term objects
 		/// </summary>
-		[Column("INTERNAL_SHORT_TERM_OBJECT_SIZE"),    Nullable] public long?  InternalShortTermObjectSize    { get; set; } // BIGINT
+		[Column("INTERNAL_SHORT_TERM_OBJECT_SIZE"),    Nullable] public long?   InternalShortTermObjectSize    { get; set; } // BIGINT
 		/// <summary>
 		/// Size of short term objects
 		/// </summary>
-		[Column("SHORT_TERM_OBJECT_SIZE"),             Nullable] public long?  ShortTermObjectSize            { get; set; } // BIGINT
+		[Column("SHORT_TERM_OBJECT_SIZE"),             Nullable] public long?   ShortTermObjectSize            { get; set; } // BIGINT
 		/// <summary>
 		/// Size of mid term objects
 		/// </summary>
-		[Column("MID_TERM_OBJECT_SIZE"),               Nullable] public long?  MidTermObjectSize              { get; set; } // BIGINT
+		[Column("MID_TERM_OBJECT_SIZE"),               Nullable] public long?   MidTermObjectSize              { get; set; } // BIGINT
 		/// <summary>
 		/// Size of long term objects
 		/// </summary>
-		[Column("LONG_TERM_OBJECT_SIZE"),              Nullable] public long?  LongTermObjectSize             { get; set; } // BIGINT
+		[Column("LONG_TERM_OBJECT_SIZE"),              Nullable] public long?   LongTermObjectSize             { get; set; } // BIGINT
 		/// <summary>
 		/// Size of non swappable objects
 		/// </summary>
-		[Column("NON_SWAPPABLE_OBJECT_SIZE"),          Nullable] public long?  NonSwappableObjectSize         { get; set; } // BIGINT
+		[Column("NON_SWAPPABLE_OBJECT_SIZE"),          Nullable] public long?   NonSwappableObjectSize         { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -6562,7 +7105,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                            Nullable] public string    DatabaseName                        { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                            Nullable] public string?   DatabaseName                        { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -6570,7 +7113,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                           Nullable] public string    HOST                                { get; set; } // VARCHAR(64)
+		[Column(),                                           Nullable] public string?   HOST                                { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -6582,7 +7125,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Object (statistic) type
 		/// </summary>
-		[Column(),                                           Nullable] public string    TYPE                                { get; set; } // VARCHAR(128)
+		[Column(),                                           Nullable] public string?   TYPE                                { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Number of objects currently in memory object container
 		/// </summary>
@@ -6690,11 +7233,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),         Nullable] public string  DatabaseName        { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),         Nullable] public string? DatabaseName        { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                        Nullable] public string  HOST                { get; set; } // VARCHAR(64)
+		[Column(),                        Nullable] public string? HOST                { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -6706,7 +7249,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Statistics object name
 		/// </summary>
-		[Column("STATISTICS_NAME"),       Nullable] public string  StatisticsName      { get; set; } // VARCHAR(128)
+		[Column("STATISTICS_NAME"),       Nullable] public string? StatisticsName      { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Statistics object unique ID
 		/// </summary>
@@ -6762,7 +7305,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Component
 		/// </summary>
-		[Column(),                        Nullable] public string  COMPONENT           { get; set; } // VARCHAR(32)
+		[Column(),                        Nullable] public string? COMPONENT           { get; set; } // VARCHAR(32)
 	}
 
 	/// <summary>
@@ -6774,7 +7317,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),         Nullable] public string    DatabaseName        { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),         Nullable] public string?   DatabaseName        { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -6782,7 +7325,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                        Nullable] public string    HOST                { get; set; } // VARCHAR(64)
+		[Column(),                        Nullable] public string?   HOST                { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -6794,7 +7337,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Statistics object name
 		/// </summary>
-		[Column("STATISTICS_NAME"),       Nullable] public string    StatisticsName      { get; set; } // VARCHAR(128)
+		[Column("STATISTICS_NAME"),       Nullable] public string?   StatisticsName      { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Statistics object unique ID
 		/// </summary>
@@ -6850,7 +7393,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Component
 		/// </summary>
-		[Column(),                        Nullable] public string    COMPONENT           { get; set; } // VARCHAR(32)
+		[Column(),                        Nullable] public string?   COMPONENT           { get; set; } // VARCHAR(32)
 	}
 
 	/// <summary>
@@ -6862,47 +7405,47 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),      Nullable] public string DatabaseName     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),      Nullable] public string? DatabaseName     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                     Nullable] public string HOST             { get; set; } // VARCHAR(64)
+		[Column(),                     Nullable] public string? HOST             { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                     Nullable] public int?   PORT             { get; set; } // INTEGER
+		[Column(),                     Nullable] public int?    PORT             { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),          Nullable] public int?   VolumeId         { get; set; } // INTEGER
+		[Column("VOLUME_ID"),          Nullable] public int?    VolumeId         { get; set; } // INTEGER
 		/// <summary>
 		/// Type of pageaccess
 		/// </summary>
-		[Column(),                     Nullable] public string TYPE             { get; set; } // VARCHAR(32)
+		[Column(),                     Nullable] public string? TYPE             { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Chunk size
 		/// </summary>
-		[Column("CHUNK_SIZE"),         Nullable] public int?   ChunkSize        { get; set; } // INTEGER
+		[Column("CHUNK_SIZE"),         Nullable] public int?    ChunkSize        { get; set; } // INTEGER
 		/// <summary>
 		/// Number of allocations
 		/// </summary>
-		[Column("ALLOCATE_COUNT"),     Nullable] public long?  AllocateCount    { get; set; } // BIGINT
+		[Column("ALLOCATE_COUNT"),     Nullable] public long?   AllocateCount    { get; set; } // BIGINT
 		/// <summary>
 		/// Number of gets
 		/// </summary>
-		[Column("GET_COUNT"),          Nullable] public long?  GetCount         { get; set; } // BIGINT
+		[Column("GET_COUNT"),          Nullable] public long?   GetCount         { get; set; } // BIGINT
 		/// <summary>
 		/// Number of synchronous loads
 		/// </summary>
-		[Column("LOAD_COUNT"),         Nullable] public long?  LoadCount        { get; set; } // BIGINT
+		[Column("LOAD_COUNT"),         Nullable] public long?   LoadCount        { get; set; } // BIGINT
 		/// <summary>
 		/// Number of asynchronous loads
 		/// </summary>
-		[Column("TRIGGER_LOAD_COUNT"), Nullable] public long?  TriggerLoadCount { get; set; } // BIGINT
+		[Column("TRIGGER_LOAD_COUNT"), Nullable] public long?   TriggerLoadCount { get; set; } // BIGINT
 		/// <summary>
 		/// Number of deallocations
 		/// </summary>
-		[Column("DEALLOCATE_COUNT"),   Nullable] public long?  DeallocateCount  { get; set; } // BIGINT
+		[Column("DEALLOCATE_COUNT"),   Nullable] public long?   DeallocateCount  { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -6914,7 +7457,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),      Nullable] public string    DatabaseName     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),      Nullable] public string?   DatabaseName     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -6922,7 +7465,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                     Nullable] public string    HOST             { get; set; } // VARCHAR(64)
+		[Column(),                     Nullable] public string?   HOST             { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -6934,7 +7477,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Type of pageaccess
 		/// </summary>
-		[Column(),                     Nullable] public string    TYPE             { get; set; } // VARCHAR(32)
+		[Column(),                     Nullable] public string?   TYPE             { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Chunk size
 		/// </summary>
@@ -6970,11 +7513,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),        Nullable] public string    DatabaseName       { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),        Nullable] public string?   DatabaseName       { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                       Nullable] public string    HOST               { get; set; } // VARCHAR(64)
+		[Column(),                       Nullable] public string?   HOST               { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -6990,7 +7533,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Persistence encryption is active: 'TRUE'/'FALSE'
 		/// </summary>
-		[Column("IS_ENCRYPTED"),         Nullable] public string    IsEncrypted        { get; set; } // VARCHAR(5)
+		[Column("IS_ENCRYPTED"),         Nullable] public string?   IsEncrypted        { get; set; } // VARCHAR(5)
 	}
 
 	/// <summary>
@@ -7002,47 +7545,47 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                          Nullable] public string DatabaseName                       { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                          Nullable] public string? DatabaseName                       { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                         Nullable] public string HOST                               { get; set; } // VARCHAR(64)
+		[Column(),                                         Nullable] public string? HOST                               { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                                         Nullable] public int?   PORT                               { get; set; } // INTEGER
+		[Column(),                                         Nullable] public int?    PORT                               { get; set; } // INTEGER
 		/// <summary>
 		/// Encryption is currently active for writing into persistence: 'TRUE'/'FALSE'
 		/// </summary>
-		[Column("ENCRYPTION_ACTIVE"),                      Nullable] public string EncryptionActive                   { get; set; } // VARCHAR(5)
+		[Column("ENCRYPTION_ACTIVE"),                      Nullable] public string? EncryptionActive                   { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Encryption will be active for writing into persistence after next savepoint: 'TRUE'/'FALSE'
 		/// </summary>
-		[Column("ENCRYPTION_ACTIVE_AFTER_NEXT_SAVEPOINT"), Nullable] public string EncryptionActiveAfterNextSavepoint { get; set; } // VARCHAR(5)
+		[Column("ENCRYPTION_ACTIVE_AFTER_NEXT_SAVEPOINT"), Nullable] public string? EncryptionActiveAfterNextSavepoint { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Next savepoint will activate a new key: 'TRUE'/'FALSE'
 		/// </summary>
-		[Column("KEY_CHANGE_WITH_NEXT_SAVEPOINT"),         Nullable] public string KeyChangeWithNextSavepoint         { get; set; } // VARCHAR(5)
+		[Column("KEY_CHANGE_WITH_NEXT_SAVEPOINT"),         Nullable] public string? KeyChangeWithNextSavepoint         { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Next savepoint will activate a new root key: 'TRUE'/'FALSE'
 		/// </summary>
-		[Column("ROOT_KEY_CHANGE_WITH_NEXT_SAVEPOINT"),    Nullable] public string RootKeyChangeWithNextSavepoint     { get; set; } // VARCHAR(5)
+		[Column("ROOT_KEY_CHANGE_WITH_NEXT_SAVEPOINT"),    Nullable] public string? RootKeyChangeWithNextSavepoint     { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Specifies if the used root key version is the newest one: 'TRUE'/'FALSE'
 		/// </summary>
-		[Column("IS_LATEST_ROOT_KEY_VERSION"),             Nullable] public string IsLatestRootKeyVersion             { get; set; } // VARCHAR(5)
+		[Column("IS_LATEST_ROOT_KEY_VERSION"),             Nullable] public string? IsLatestRootKeyVersion             { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// The version of the root key this service is using
 		/// </summary>
-		[Column("USED_ROOT_KEY_VERSION"),                  Nullable] public int?   UsedRootKeyVersion                 { get; set; } // INTEGER
+		[Column("USED_ROOT_KEY_VERSION"),                  Nullable] public int?    UsedRootKeyVersion                 { get; set; } // INTEGER
 		/// <summary>
 		/// Conversion of data to latest encryption status or key active: 'TRUE'/'FALSE'
 		/// </summary>
-		[Column("DATA_CONVERSION_ACTIVE"),                 Nullable] public string DataConversionActive               { get; set; } // VARCHAR(5)
+		[Column("DATA_CONVERSION_ACTIVE"),                 Nullable] public string? DataConversionActive               { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Number of entries within key page
 		/// </summary>
-		[Column("KEY_PAGE_ENTRY_COUNT"),                   Nullable] public long?  KeyPageEntryCount                  { get; set; } // BIGINT
+		[Column("KEY_PAGE_ENTRY_COUNT"),                   Nullable] public long?   KeyPageEntryCount                  { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -7054,103 +7597,103 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),              Nullable] public string DatabaseName             { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),              Nullable] public string? DatabaseName             { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                             Nullable] public string HOST                     { get; set; } // VARCHAR(64)
+		[Column(),                             Nullable] public string? HOST                     { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                             Nullable] public int?   PORT                     { get; set; } // INTEGER
+		[Column(),                             Nullable] public int?    PORT                     { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),                  Nullable] public int?   VolumeId                 { get; set; } // INTEGER
+		[Column("VOLUME_ID"),                  Nullable] public int?    VolumeId                 { get; set; } // INTEGER
 		/// <summary>
 		/// Maximum known TID
 		/// </summary>
-		[Column("MAX_TID"),                    Nullable] public long?  MaxTid                   { get; set; } // BIGINT
+		[Column("MAX_TID"),                    Nullable] public long?   MaxTid                   { get; set; } // BIGINT
 		/// <summary>
 		/// Count of normal consistent changes (terminated sessions)
 		/// </summary>
-		[Column("CCH_COUNT"),                  Nullable] public long?  CchCount                 { get; set; } // BIGINT
+		[Column("CCH_COUNT"),                  Nullable] public long?   CchCount                 { get; set; } // BIGINT
 		/// <summary>
 		/// Count of consistent changes for mass operations (terminated sessions)
 		/// </summary>
-		[Column("MASS_CCH_COUNT"),             Nullable] public long?  MassCchCount             { get; set; } // BIGINT
+		[Column("MASS_CCH_COUNT"),             Nullable] public long?   MassCchCount             { get; set; } // BIGINT
 		/// <summary>
 		/// Time spent in normal consistent changes (terminated sessions) (last)
 		/// </summary>
-		[Column("LAST_CCH_TIME"),              Nullable] public long?  LastCchTime              { get; set; } // BIGINT
+		[Column("LAST_CCH_TIME"),              Nullable] public long?   LastCchTime              { get; set; } // BIGINT
 		/// <summary>
 		/// Time spent in normal consistent changes (terminated sessions) (max)
 		/// </summary>
-		[Column("MAX_CCH_TIME"),               Nullable] public long?  MaxCchTime               { get; set; } // BIGINT
+		[Column("MAX_CCH_TIME"),               Nullable] public long?   MaxCchTime               { get; set; } // BIGINT
 		/// <summary>
 		/// Time spent in normal consistent changes (terminated sessions) (min)
 		/// </summary>
-		[Column("MIN_CCH_TIME"),               Nullable] public long?  MinCchTime               { get; set; } // BIGINT
+		[Column("MIN_CCH_TIME"),               Nullable] public long?   MinCchTime               { get; set; } // BIGINT
 		/// <summary>
 		/// Time spent in normal consistent changes (terminated sessions) (total)
 		/// </summary>
-		[Column("SUM_CCH_TIME"),               Nullable] public long?  SumCchTime               { get; set; } // BIGINT
+		[Column("SUM_CCH_TIME"),               Nullable] public long?   SumCchTime               { get; set; } // BIGINT
 		/// <summary>
 		/// Time spent in normal consistent changes (terminated sessions) (avg)
 		/// </summary>
-		[Column("AVG_CCH_TIME"),               Nullable] public long?  AvgCchTime               { get; set; } // BIGINT
+		[Column("AVG_CCH_TIME"),               Nullable] public long?   AvgCchTime               { get; set; } // BIGINT
 		/// <summary>
 		/// Time spent in consistent changes for mass operations (terminated sessions) (last)
 		/// </summary>
-		[Column("LAST_MASS_CCH_TIME"),         Nullable] public long?  LastMassCchTime          { get; set; } // BIGINT
+		[Column("LAST_MASS_CCH_TIME"),         Nullable] public long?   LastMassCchTime          { get; set; } // BIGINT
 		/// <summary>
 		/// Time spent in consistent changes for mass operations (terminated sessions) (max)
 		/// </summary>
-		[Column("MAX_MASS_CCH_TIME"),          Nullable] public long?  MaxMassCchTime           { get; set; } // BIGINT
+		[Column("MAX_MASS_CCH_TIME"),          Nullable] public long?   MaxMassCchTime           { get; set; } // BIGINT
 		/// <summary>
 		/// Time spent in consistent changes for mass operations (terminated sessions) (min)
 		/// </summary>
-		[Column("MIN_MASS_CCH_TIME"),          Nullable] public long?  MinMassCchTime           { get; set; } // BIGINT
+		[Column("MIN_MASS_CCH_TIME"),          Nullable] public long?   MinMassCchTime           { get; set; } // BIGINT
 		/// <summary>
 		/// Time spent in consistent changes for mass operations (terminated sessions) (total)
 		/// </summary>
-		[Column("SUM_MASS_CCH_TIME"),          Nullable] public long?  SumMassCchTime           { get; set; } // BIGINT
+		[Column("SUM_MASS_CCH_TIME"),          Nullable] public long?   SumMassCchTime           { get; set; } // BIGINT
 		/// <summary>
 		/// Time spent in consistent changes for mass operations (terminated sessions) (avg)
 		/// </summary>
-		[Column("AVG_MASS_CCH_TIME"),          Nullable] public long?  AvgMassCchTime           { get; set; } // BIGINT
+		[Column("AVG_MASS_CCH_TIME"),          Nullable] public long?   AvgMassCchTime           { get; set; } // BIGINT
 		/// <summary>
 		/// Newest known log position of prepare commit (slave only)
 		/// </summary>
-		[Column("PREPARE_COMMIT_POS"),         Nullable] public long?  PrepareCommitPos         { get; set; } // BIGINT
+		[Column("PREPARE_COMMIT_POS"),         Nullable] public long?   PrepareCommitPos         { get; set; } // BIGINT
 		/// <summary>
 		/// Newest known log position of commit record on transaction master from the point of view of this node
 		/// </summary>
-		[Column("MASTER_COMMIT_POS"),          Nullable] public long?  MasterCommitPos          { get; set; } // BIGINT
+		[Column("MASTER_COMMIT_POS"),          Nullable] public long?   MasterCommitPos          { get; set; } // BIGINT
 		/// <summary>
 		/// Count of in-doubt waiters for currently-running COMMIT (master only)
 		/// </summary>
-		[Column("INDOUBT_WAITERS"),            Nullable] public long?  IndoubtWaiters           { get; set; } // BIGINT
+		[Column("INDOUBT_WAITERS"),            Nullable] public long?   IndoubtWaiters           { get; set; } // BIGINT
 		/// <summary>
 		/// Count of open in-doubt transactions before restart (master only)
 		/// </summary>
-		[Column("INDOUBT_RESTART_COUNT"),      Nullable] public long?  IndoubtRestartCount      { get; set; } // BIGINT
+		[Column("INDOUBT_RESTART_COUNT"),      Nullable] public long?   IndoubtRestartCount      { get; set; } // BIGINT
 		/// <summary>
 		/// Count of open in-doubt transactions since last restart (master only)
 		/// </summary>
-		[Column("INDOUBT_ONLINE_COUNT"),       Nullable] public long?  IndoubtOnlineCount       { get; set; } // BIGINT
+		[Column("INDOUBT_ONLINE_COUNT"),       Nullable] public long?   IndoubtOnlineCount       { get; set; } // BIGINT
 		/// <summary>
 		/// Configured savepoint frequency
 		/// </summary>
-		[Column("SAVEPOINT_CONFIG_FREQUENCY"), Nullable] public long?  SavepointConfigFrequency { get; set; } // BIGINT
+		[Column("SAVEPOINT_CONFIG_FREQUENCY"), Nullable] public long?   SavepointConfigFrequency { get; set; } // BIGINT
 		/// <summary>
 		/// Currently active savepoint frequency
 		/// </summary>
-		[Column("SAVEPOINT_ACTIVE_FREQUENCY"), Nullable] public long?  SavepointActiveFrequency { get; set; } // BIGINT
+		[Column("SAVEPOINT_ACTIVE_FREQUENCY"), Nullable] public long?   SavepointActiveFrequency { get; set; } // BIGINT
 		/// <summary>
 		/// Currently used checksum algorithm for modified pages and log buffers
 		/// </summary>
-		[Column("CHECKSUM_ALGORITHM"),         Nullable] public string ChecksumAlgorithm        { get; set; } // VARCHAR(16)
+		[Column("CHECKSUM_ALGORITHM"),         Nullable] public string? ChecksumAlgorithm        { get; set; } // VARCHAR(16)
 	}
 
 	/// <summary>
@@ -7162,7 +7705,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),              Nullable] public string    DatabaseName             { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),              Nullable] public string?   DatabaseName             { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -7170,7 +7713,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                             Nullable] public string    HOST                     { get; set; } // VARCHAR(64)
+		[Column(),                             Nullable] public string?   HOST                     { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -7262,7 +7805,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Currently used checksum algorithm for modified pages and log buffers
 		/// </summary>
-		[Column("CHECKSUM_ALGORITHM"),         Nullable] public string    ChecksumAlgorithm        { get; set; } // VARCHAR(16)
+		[Column("CHECKSUM_ALGORITHM"),         Nullable] public string?   ChecksumAlgorithm        { get; set; } // VARCHAR(16)
 	}
 
 	/// <summary>
@@ -7274,11 +7817,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                 Nullable] public string  DatabaseName               { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                 Nullable] public string? DatabaseName               { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                Nullable] public string  HOST                       { get; set; } // VARCHAR(64)
+		[Column(),                                Nullable] public string? HOST                       { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -7290,7 +7833,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Statistics object name
 		/// </summary>
-		[Column("STATISTICS_NAME"),               Nullable] public string  StatisticsName             { get; set; } // VARCHAR(128)
+		[Column("STATISTICS_NAME"),               Nullable] public string? StatisticsName             { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Statistics object unique ID
 		/// </summary>
@@ -7430,7 +7973,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Component
 		/// </summary>
-		[Column(),                                Nullable] public string  COMPONENT                  { get; set; } // VARCHAR(32)
+		[Column(),                                Nullable] public string? COMPONENT                  { get; set; } // VARCHAR(32)
 	}
 
 	/// <summary>
@@ -7442,7 +7985,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                 Nullable] public string    DatabaseName               { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                 Nullable] public string?   DatabaseName               { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -7450,7 +7993,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                Nullable] public string    HOST                       { get; set; } // VARCHAR(64)
+		[Column(),                                Nullable] public string?   HOST                       { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -7462,7 +8005,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Statistics object name
 		/// </summary>
-		[Column("STATISTICS_NAME"),               Nullable] public string    StatisticsName             { get; set; } // VARCHAR(128)
+		[Column("STATISTICS_NAME"),               Nullable] public string?   StatisticsName             { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Statistics object unique ID
 		/// </summary>
@@ -7602,7 +8145,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Component
 		/// </summary>
-		[Column(),                                Nullable] public string    COMPONENT                  { get; set; } // VARCHAR(32)
+		[Column(),                                Nullable] public string?   COMPONENT                  { get; set; } // VARCHAR(32)
 	}
 
 	/// <summary>
@@ -7614,7 +8157,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),    Nullable] public string    DatabaseName    { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),    Nullable] public string?   DatabaseName    { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Unique ID of the recovery
 		/// </summary>
@@ -7622,7 +8165,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                   Nullable] public string    HOST            { get; set; } // VARCHAR(64)
+		[Column(),                   Nullable] public string?   HOST            { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -7630,7 +8173,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Name of the service
 		/// </summary>
-		[Column("SERVICE_NAME"),     Nullable] public string    ServiceName     { get; set; } // VARCHAR(32)
+		[Column("SERVICE_NAME"),     Nullable] public string?   ServiceName     { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// The local server time the recovery started
 		/// </summary>
@@ -7650,11 +8193,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Current state of the recovery
 		/// </summary>
-		[Column("STATE_NAME"),       Nullable] public string    StateName       { get; set; } // VARCHAR(64)
+		[Column("STATE_NAME"),       Nullable] public string?   StateName       { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Current phase of the phase
 		/// </summary>
-		[Column("PHASE_NAME"),       Nullable] public string    PhaseName       { get; set; } // VARCHAR(64)
+		[Column("PHASE_NAME"),       Nullable] public string?   PhaseName       { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Number of phases to pass
 		/// </summary>
@@ -7674,7 +8217,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Message text
 		/// </summary>
-		[Column(),                   Nullable] public string    MESSAGE         { get; set; } // VARCHAR(512)
+		[Column(),                   Nullable] public string?   MESSAGE         { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Value reached meanwhile
 		/// </summary>
@@ -7694,31 +8237,31 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),  Nullable] public string DatabaseName  { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),  Nullable] public string? DatabaseName  { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                 Nullable] public string HOST          { get; set; } // VARCHAR(64)
+		[Column(),                 Nullable] public string? HOST          { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                 Nullable] public int?   PORT          { get; set; } // INTEGER
+		[Column(),                 Nullable] public int?    PORT          { get; set; } // INTEGER
 		/// <summary>
 		/// Module name
 		/// </summary>
-		[Column(),                 Nullable] public string CATEGORY      { get; set; } // VARCHAR(128)
+		[Column(),                 Nullable] public string? CATEGORY      { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Allocated memory size of the module
 		/// </summary>
-		[Column("ALLOCATED_SIZE"), Nullable] public long?  AllocatedSize { get; set; } // BIGINT
+		[Column("ALLOCATED_SIZE"), Nullable] public long?   AllocatedSize { get; set; } // BIGINT
 		/// <summary>
 		/// Used memory size of the module
 		/// </summary>
-		[Column("USED_SIZE"),      Nullable] public long?  UsedSize      { get; set; } // BIGINT
+		[Column("USED_SIZE"),      Nullable] public long?   UsedSize      { get; set; } // BIGINT
 		/// <summary>
 		/// Free memory size of the module
 		/// </summary>
-		[Column("FREE_SIZE"),      Nullable] public long?  FreeSize      { get; set; } // BIGINT
+		[Column("FREE_SIZE"),      Nullable] public long?   FreeSize      { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -7730,11 +8273,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                            Nullable] public string    DatabaseName                        { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                            Nullable] public string?   DatabaseName                        { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                           Nullable] public string    HOST                                { get; set; } // VARCHAR(64)
+		[Column(),                                           Nullable] public string?   HOST                                { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -7750,15 +8293,15 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Reason why the savepoint was executed
 		/// </summary>
-		[Column(),                                           Nullable] public string    INITIATION                          { get; set; } // VARCHAR(24)
+		[Column(),                                           Nullable] public string?   INITIATION                          { get; set; } // VARCHAR(24)
 		/// <summary>
 		/// Purpose for that the savepoint was executed
 		/// </summary>
-		[Column(),                                           Nullable] public string    PURPOSE                             { get; set; } // VARCHAR(24)
+		[Column(),                                           Nullable] public string?   PURPOSE                             { get; set; } // VARCHAR(24)
 		/// <summary>
 		/// Savepoint state
 		/// </summary>
-		[Column(),                                           Nullable] public string    STATE                               { get; set; } // VARCHAR(20)
+		[Column(),                                           Nullable] public string?   STATE                               { get; set; } // VARCHAR(20)
 		/// <summary>
 		/// Savepoint version
 		/// </summary>
@@ -7850,11 +8393,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                                 Nullable] public string    DatabaseName                            { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                                 Nullable] public string?   DatabaseName                            { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                                Nullable] public string    HOST                                    { get; set; } // VARCHAR(64)
+		[Column(),                                                Nullable] public string?   HOST                                    { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -7874,15 +8417,15 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Last reason why the savepoint is executed
 		/// </summary>
-		[Column(),                                                Nullable] public string    INITIATION                              { get; set; } // VARCHAR(24)
+		[Column(),                                                Nullable] public string?   INITIATION                              { get; set; } // VARCHAR(24)
 		/// <summary>
 		/// Last purpose for that the savepoint is executed
 		/// </summary>
-		[Column(),                                                Nullable] public string    PURPOSE                                 { get; set; } // VARCHAR(24)
+		[Column(),                                                Nullable] public string?   PURPOSE                                 { get; set; } // VARCHAR(24)
 		/// <summary>
 		/// Last savepoint state
 		/// </summary>
-		[Column(),                                                Nullable] public string    STATE                                   { get; set; } // VARCHAR(20)
+		[Column(),                                                Nullable] public string?   STATE                                   { get; set; } // VARCHAR(20)
 		/// <summary>
 		/// Last savepoint version
 		/// </summary>
@@ -8014,7 +8557,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                                 Nullable] public string    DatabaseName                            { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                                 Nullable] public string?   DatabaseName                            { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -8022,7 +8565,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                                Nullable] public string    HOST                                    { get; set; } // VARCHAR(64)
+		[Column(),                                                Nullable] public string?   HOST                                    { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -8042,15 +8585,15 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Last reason why the savepoint is executed
 		/// </summary>
-		[Column(),                                                Nullable] public string    INITIATION                              { get; set; } // VARCHAR(24)
+		[Column(),                                                Nullable] public string?   INITIATION                              { get; set; } // VARCHAR(24)
 		/// <summary>
 		/// Last purpose for that the savepoint is executed
 		/// </summary>
-		[Column(),                                                Nullable] public string    PURPOSE                                 { get; set; } // VARCHAR(24)
+		[Column(),                                                Nullable] public string?   PURPOSE                                 { get; set; } // VARCHAR(24)
 		/// <summary>
 		/// Last savepoint state
 		/// </summary>
-		[Column(),                                                Nullable] public string    STATE                                   { get; set; } // VARCHAR(20)
+		[Column(),                                                Nullable] public string?   STATE                                   { get; set; } // VARCHAR(20)
 		/// <summary>
 		/// Last savepoint version
 		/// </summary>
@@ -8182,27 +8725,27 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"), Nullable] public string DatabaseName { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"), Nullable] public string? DatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Type of encryption key
 		/// </summary>
-		[Column("KEY_TYPE"),      Nullable] public string KeyType      { get; set; } // VARCHAR(12)
+		[Column("KEY_TYPE"),      Nullable] public string? KeyType      { get; set; } // VARCHAR(12)
 		/// <summary>
 		/// TRUE if key is consistent between persistence and SSFS file, FALSE otherwise
 		/// </summary>
-		[Column("IS_CONSISTENT"), Nullable] public string IsConsistent { get; set; } // VARCHAR(5)
+		[Column("IS_CONSISTENT"), Nullable] public string? IsConsistent { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Number of consistency resets
 		/// </summary>
-		[Column("RESET_COUNT"),   Nullable] public int?   ResetCount   { get; set; } // INTEGER
+		[Column("RESET_COUNT"),   Nullable] public int?    ResetCount   { get; set; } // INTEGER
 		/// <summary>
 		/// Version of the key
 		/// </summary>
-		[Column(),                Nullable] public int?   VERSION      { get; set; } // INTEGER
+		[Column(),                Nullable] public int?    VERSION      { get; set; } // INTEGER
 		/// <summary>
 		/// TRUE if the key version is the current version in the SSFS
 		/// </summary>
-		[Column("IS_CURRENT"),    Nullable] public string IsCurrent    { get; set; } // VARCHAR(5)
+		[Column("IS_CURRENT"),    Nullable] public string? IsCurrent    { get; set; } // VARCHAR(5)
 	}
 
 	/// <summary>
@@ -8214,11 +8757,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),      Nullable] public string  DatabaseName     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),      Nullable] public string? DatabaseName     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                     Nullable] public string  HOST             { get; set; } // VARCHAR(64)
+		[Column(),                     Nullable] public string? HOST             { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -8230,7 +8773,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Statistics object name
 		/// </summary>
-		[Column("STATISTICS_NAME"),    Nullable] public string  StatisticsName   { get; set; } // VARCHAR(128)
+		[Column("STATISTICS_NAME"),    Nullable] public string? StatisticsName   { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Statistics object unique ID
 		/// </summary>
@@ -8282,7 +8825,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Component
 		/// </summary>
-		[Column(),                     Nullable] public string  COMPONENT        { get; set; } // VARCHAR(32)
+		[Column(),                     Nullable] public string? COMPONENT        { get; set; } // VARCHAR(32)
 	}
 
 	/// <summary>
@@ -8294,7 +8837,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),      Nullable] public string    DatabaseName     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),      Nullable] public string?   DatabaseName     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -8302,7 +8845,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                     Nullable] public string    HOST             { get; set; } // VARCHAR(64)
+		[Column(),                     Nullable] public string?   HOST             { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -8314,7 +8857,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Statistics object name
 		/// </summary>
-		[Column("STATISTICS_NAME"),    Nullable] public string    StatisticsName   { get; set; } // VARCHAR(128)
+		[Column("STATISTICS_NAME"),    Nullable] public string?   StatisticsName   { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// Statistics object unique ID
 		/// </summary>
@@ -8366,7 +8909,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Component
 		/// </summary>
-		[Column(),                     Nullable] public string    COMPONENT        { get; set; } // VARCHAR(32)
+		[Column(),                     Nullable] public string?   COMPONENT        { get; set; } // VARCHAR(32)
 	}
 
 	/// <summary>
@@ -8378,39 +8921,39 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),    Nullable] public string DatabaseName    { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),    Nullable] public string? DatabaseName    { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                   Nullable] public string HOST            { get; set; } // VARCHAR(64)
+		[Column(),                   Nullable] public string? HOST            { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                   Nullable] public int?   PORT            { get; set; } // INTEGER
+		[Column(),                   Nullable] public int?    PORT            { get; set; } // INTEGER
 		/// <summary>
 		/// Service name. See M_SERVICE_TYPES for all known service names
 		/// </summary>
-		[Column("SERVICE_NAME"),     Nullable] public string ServiceName     { get; set; } // VARCHAR(32)
+		[Column("SERVICE_NAME"),     Nullable] public string? ServiceName     { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Process ID
 		/// </summary>
-		[Column("PROCESS_ID"),       Nullable] public int?   ProcessId       { get; set; } // INTEGER
+		[Column("PROCESS_ID"),       Nullable] public int?    ProcessId       { get; set; } // INTEGER
 		/// <summary>
 		/// Only for display. Use COORDINATOR_TYPE to test service role
 		/// </summary>
-		[Column(),                   Nullable] public string DETAIL          { get; set; } // VARCHAR(128)
+		[Column(),                   Nullable] public string? DETAIL          { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// NO, YES, UNKNOWN, STARTING, STOPPING
 		/// </summary>
-		[Column("ACTIVE_STATUS"),    Nullable] public string ActiveStatus    { get; set; } // VARCHAR(16)
+		[Column("ACTIVE_STATUS"),    Nullable] public string? ActiveStatus    { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// SQL port
 		/// </summary>
-		[Column("SQL_PORT"),         Nullable] public int?   SqlPort         { get; set; } // INTEGER
+		[Column("SQL_PORT"),         Nullable] public int?    SqlPort         { get; set; } // INTEGER
 		/// <summary>
 		/// Coordinator type in distributed landscape: MASTER, SLAVE, STANDBY, NONE
 		/// </summary>
-		[Column("COORDINATOR_TYPE"), Nullable] public string CoordinatorType { get; set; } // VARCHAR(16)
+		[Column("COORDINATOR_TYPE"), Nullable] public string? CoordinatorType { get; set; } // VARCHAR(16)
 	}
 
 	/// <summary>
@@ -8422,23 +8965,25 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),       Nullable] public string DatabaseName   { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),       Nullable] public string? DatabaseName   { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host where the service is running
 		/// </summary>
-		[Column(),                      Nullable] public string HOST           { get; set; } // VARCHAR(64)
+		[Column(),                      Nullable] public string? HOST           { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Port where the service is running
 		/// </summary>
-		[Column(),                      Nullable] public int?   PORT           { get; set; } // INTEGER
+		[Column(),                      Nullable] public int?    PORT           { get; set; } // INTEGER
+		#nullable disable
 		/// <summary>
 		/// The logical component for which memory usage is reported
 		/// </summary>
-		[Column(),                   NotNull    ] public string COMPONENT      { get; set; } // VARCHAR(64)
+		[Column(),                   NotNull    ] public string  COMPONENT      { get; set; } // VARCHAR(64)
+		#nullable enable
 		/// <summary>
 		/// Amount of memory which is currently actually used for the logical component
 		/// </summary>
-		[Column("USED_MEMORY_SIZE"),    Nullable] public long?  UsedMemorySize { get; set; } // BIGINT
+		[Column("USED_MEMORY_SIZE"),    Nullable] public long?   UsedMemorySize { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -8450,75 +8995,75 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                Nullable] public string DatabaseName              { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                Nullable] public string? DatabaseName              { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                               Nullable] public string HOST                      { get; set; } // VARCHAR(64)
+		[Column(),                               Nullable] public string? HOST                      { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                               Nullable] public int?   PORT                      { get; set; } // INTEGER
+		[Column(),                               Nullable] public int?    PORT                      { get; set; } // INTEGER
 		/// <summary>
 		/// Service name
 		/// </summary>
-		[Column("SERVICE_NAME"),                 Nullable] public string ServiceName               { get; set; } // VARCHAR(32)
+		[Column("SERVICE_NAME"),                 Nullable] public string? ServiceName               { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Process ID
 		/// </summary>
-		[Column("PROCESS_ID"),                   Nullable] public int?   ProcessId                 { get; set; } // INTEGER
+		[Column("PROCESS_ID"),                   Nullable] public int?    ProcessId                 { get; set; } // INTEGER
 		/// <summary>
 		/// Virtual memory size (operating system perspective)
 		/// </summary>
-		[Column("LOGICAL_MEMORY_SIZE"),          Nullable] public long?  LogicalMemorySize         { get; set; } // BIGINT
+		[Column("LOGICAL_MEMORY_SIZE"),          Nullable] public long?   LogicalMemorySize         { get; set; } // BIGINT
 		/// <summary>
 		/// Physical/resident memory size (operating system perspective)
 		/// </summary>
-		[Column("PHYSICAL_MEMORY_SIZE"),         Nullable] public long?  PhysicalMemorySize        { get; set; } // BIGINT
+		[Column("PHYSICAL_MEMORY_SIZE"),         Nullable] public long?   PhysicalMemorySize        { get; set; } // BIGINT
 		/// <summary>
 		/// Code size, including shared libraries
 		/// </summary>
-		[Column("CODE_SIZE"),                    Nullable] public long?  CodeSize                  { get; set; } // BIGINT
+		[Column("CODE_SIZE"),                    Nullable] public long?   CodeSize                  { get; set; } // BIGINT
 		/// <summary>
 		/// Stack size
 		/// </summary>
-		[Column("STACK_SIZE"),                   Nullable] public long?  StackSize                 { get; set; } // BIGINT
+		[Column("STACK_SIZE"),                   Nullable] public long?   StackSize                 { get; set; } // BIGINT
 		/// <summary>
 		/// Heap part of the memory pool
 		/// </summary>
-		[Column("HEAP_MEMORY_ALLOCATED_SIZE"),   Nullable] public long?  HeapMemoryAllocatedSize   { get; set; } // BIGINT
+		[Column("HEAP_MEMORY_ALLOCATED_SIZE"),   Nullable] public long?   HeapMemoryAllocatedSize   { get; set; } // BIGINT
 		/// <summary>
 		/// Amount of pool heap memory that is currently actually in use
 		/// </summary>
-		[Column("HEAP_MEMORY_USED_SIZE"),        Nullable] public long?  HeapMemoryUsedSize        { get; set; } // BIGINT
+		[Column("HEAP_MEMORY_USED_SIZE"),        Nullable] public long?   HeapMemoryUsedSize        { get; set; } // BIGINT
 		/// <summary>
 		/// Shared memory part of the memory pool
 		/// </summary>
-		[Column("SHARED_MEMORY_ALLOCATED_SIZE"), Nullable] public long?  SharedMemoryAllocatedSize { get; set; } // BIGINT
+		[Column("SHARED_MEMORY_ALLOCATED_SIZE"), Nullable] public long?   SharedMemoryAllocatedSize { get; set; } // BIGINT
 		/// <summary>
 		/// Amount of pool shared memory that is currently actually in use
 		/// </summary>
-		[Column("SHARED_MEMORY_USED_SIZE"),      Nullable] public long?  SharedMemoryUsedSize      { get; set; } // BIGINT
+		[Column("SHARED_MEMORY_USED_SIZE"),      Nullable] public long?   SharedMemoryUsedSize      { get; set; } // BIGINT
 		/// <summary>
 		/// Part of the memory pool that can potentially (=if unpinned) be freed on memory shortage
 		/// </summary>
-		[Column("COMPACTORS_ALLOCATED_SIZE"),    Nullable] public long?  CompactorsAllocatedSize   { get; set; } // BIGINT
+		[Column("COMPACTORS_ALLOCATED_SIZE"),    Nullable] public long?   CompactorsAllocatedSize   { get; set; } // BIGINT
 		/// <summary>
 		/// Memory which can actually be freed on memory shortage
 		/// </summary>
-		[Column("COMPACTORS_FREEABLE_SIZE"),     Nullable] public long?  CompactorsFreeableSize    { get; set; } // BIGINT
+		[Column("COMPACTORS_FREEABLE_SIZE"),     Nullable] public long?   CompactorsFreeableSize    { get; set; } // BIGINT
 		/// <summary>
 		/// Maximum memory pool size (configurable value)
 		/// </summary>
-		[Column("ALLOCATION_LIMIT"),             Nullable] public long?  AllocationLimit           { get; set; } // BIGINT
+		[Column("ALLOCATION_LIMIT"),             Nullable] public long?   AllocationLimit           { get; set; } // BIGINT
 		/// <summary>
 		/// Effective maximum memory pool size, considering pool sizes of other processes (computed value)
 		/// </summary>
-		[Column("EFFECTIVE_ALLOCATION_LIMIT"),   Nullable] public long?  EffectiveAllocationLimit  { get; set; } // BIGINT
+		[Column("EFFECTIVE_ALLOCATION_LIMIT"),   Nullable] public long?   EffectiveAllocationLimit  { get; set; } // BIGINT
 		/// <summary>
 		/// Amount of memory from the memory pool that is currently actually in use
 		/// </summary>
-		[Column("TOTAL_MEMORY_USED_SIZE"),       Nullable] public long?  TotalMemoryUsedSize       { get; set; } // BIGINT
+		[Column("TOTAL_MEMORY_USED_SIZE"),       Nullable] public long?   TotalMemoryUsedSize       { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -8530,43 +9075,43 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),    Nullable] public string DatabaseName    { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),    Nullable] public string? DatabaseName    { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name of the sending service
 		/// </summary>
-		[Column("SENDER_HOST"),      Nullable] public string SenderHost      { get; set; } // VARCHAR(64)
+		[Column("SENDER_HOST"),      Nullable] public string? SenderHost      { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Port that the sending service listens on
 		/// </summary>
-		[Column("SENDER_PORT"),      Nullable] public int?   SenderPort      { get; set; } // INTEGER
+		[Column("SENDER_PORT"),      Nullable] public int?    SenderPort      { get; set; } // INTEGER
 		/// <summary>
 		/// Host name of the receiving service
 		/// </summary>
-		[Column("RECEIVER_HOST"),    Nullable] public string ReceiverHost    { get; set; } // VARCHAR(64)
+		[Column("RECEIVER_HOST"),    Nullable] public string? ReceiverHost    { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Port that the receiving service listens on
 		/// </summary>
-		[Column("RECEIVER_PORT"),    Nullable] public int?   ReceiverPort    { get; set; } // INTEGER
+		[Column("RECEIVER_PORT"),    Nullable] public int?    ReceiverPort    { get; set; } // INTEGER
 		/// <summary>
 		/// Number of bytes sent
 		/// </summary>
-		[Column("SEND_SIZE"),        Nullable] public long?  SendSize        { get; set; } // BIGINT
+		[Column("SEND_SIZE"),        Nullable] public long?   SendSize        { get; set; } // BIGINT
 		/// <summary>
 		/// Number of bytes received
 		/// </summary>
-		[Column("RECEIVE_SIZE"),     Nullable] public long?  ReceiveSize     { get; set; } // BIGINT
+		[Column("RECEIVE_SIZE"),     Nullable] public long?   ReceiveSize     { get; set; } // BIGINT
 		/// <summary>
 		/// Time spent sending
 		/// </summary>
-		[Column("SEND_DURATION"),    Nullable] public long?  SendDuration    { get; set; } // BIGINT
+		[Column("SEND_DURATION"),    Nullable] public long?   SendDuration    { get; set; } // BIGINT
 		/// <summary>
 		/// Time spent receiving
 		/// </summary>
-		[Column("RECEIVE_DURATION"), Nullable] public long?  ReceiveDuration { get; set; } // BIGINT
+		[Column("RECEIVE_DURATION"), Nullable] public long?   ReceiveDuration { get; set; } // BIGINT
 		/// <summary>
 		/// Number of requests handled
 		/// </summary>
-		[Column("REQUEST_COUNT"),    Nullable] public long?  RequestCount    { get; set; } // BIGINT
+		[Column("REQUEST_COUNT"),    Nullable] public long?   RequestCount    { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -8578,7 +9123,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),    Nullable] public string    DatabaseName    { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),    Nullable] public string?   DatabaseName    { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -8586,7 +9131,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name of the sending service
 		/// </summary>
-		[Column("SENDER_HOST"),      Nullable] public string    SenderHost      { get; set; } // VARCHAR(64)
+		[Column("SENDER_HOST"),      Nullable] public string?   SenderHost      { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Port that the sending service listens on
 		/// </summary>
@@ -8594,7 +9139,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name of the receiving service
 		/// </summary>
-		[Column("RECEIVER_HOST"),    Nullable] public string    ReceiverHost    { get; set; } // VARCHAR(64)
+		[Column("RECEIVER_HOST"),    Nullable] public string?   ReceiverHost    { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Port that the receiving service listens on
 		/// </summary>
@@ -8630,11 +9175,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                         Nullable] public string    DatabaseName                     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                         Nullable] public string?   DatabaseName                     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                        Nullable] public string    HOST                             { get; set; } // VARCHAR(64)
+		[Column(),                                        Nullable] public string?   HOST                             { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -8650,11 +9195,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Logical site name
 		/// </summary>
-		[Column("SITE_NAME"),                             Nullable] public string    SiteName                         { get; set; } // VARCHAR(256)
+		[Column("SITE_NAME"),                             Nullable] public string?   SiteName                         { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Secondary host name
 		/// </summary>
-		[Column("SECONDARY_HOST"),                        Nullable] public string    SecondaryHost                    { get; set; } // VARCHAR(64)
+		[Column("SECONDARY_HOST"),                        Nullable] public string?   SecondaryHost                    { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Secondary port
 		/// </summary>
@@ -8666,11 +9211,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Secondary logical site name
 		/// </summary>
-		[Column("SECONDARY_SITE_NAME"),                   Nullable] public string    SecondarySiteName                { get; set; } // VARCHAR(256)
+		[Column("SECONDARY_SITE_NAME"),                   Nullable] public string?   SecondarySiteName                { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Secondary active status
 		/// </summary>
-		[Column("SECONDARY_ACTIVE_STATUS"),               Nullable] public string    SecondaryActiveStatus            { get; set; } // VARCHAR(16)
+		[Column("SECONDARY_ACTIVE_STATUS"),               Nullable] public string?   SecondaryActiveStatus            { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Time the connection was established from the secondary
 		/// </summary>
@@ -8686,23 +9231,23 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Indicates if secondary is fully recoverable.
 		/// </summary>
-		[Column("SECONDARY_FULLY_RECOVERABLE"),           Nullable] public string    SecondaryFullyRecoverable        { get; set; } // VARCHAR(5)
+		[Column("SECONDARY_FULLY_RECOVERABLE"),           Nullable] public string?   SecondaryFullyRecoverable        { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Replication mode
 		/// </summary>
-		[Column("REPLICATION_MODE"),                      Nullable] public string    ReplicationMode                  { get; set; } // VARCHAR(16)
+		[Column("REPLICATION_MODE"),                      Nullable] public string?   ReplicationMode                  { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Replication status
 		/// </summary>
-		[Column("REPLICATION_STATUS"),                    Nullable] public string    ReplicationStatus                { get; set; } // VARCHAR(16)
+		[Column("REPLICATION_STATUS"),                    Nullable] public string?   ReplicationStatus                { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Replication status details
 		/// </summary>
-		[Column("REPLICATION_STATUS_DETAILS"),            Nullable] public string    ReplicationStatusDetails         { get; set; } // VARCHAR(1024)
+		[Column("REPLICATION_STATUS_DETAILS"),            Nullable] public string?   ReplicationStatusDetails         { get; set; } // VARCHAR(1024)
 		/// <summary>
 		/// Full sync status
 		/// </summary>
-		[Column("FULL_SYNC"),                             Nullable] public string    FullSync                         { get; set; } // VARCHAR(16)
+		[Column("FULL_SYNC"),                             Nullable] public string?   FullSync                         { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Current log position
 		/// </summary>
@@ -8842,11 +9387,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                       Nullable] public string    DatabaseName                    { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                       Nullable] public string?   DatabaseName                    { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                      Nullable] public string    HOST                            { get; set; } // VARCHAR(64)
+		[Column(),                                      Nullable] public string?   HOST                            { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -8854,7 +9399,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Service name
 		/// </summary>
-		[Column("SERVICE_NAME"),                        Nullable] public string    ServiceName                     { get; set; } // VARCHAR(32)
+		[Column("SERVICE_NAME"),                        Nullable] public string?   ServiceName                     { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Process ID
 		/// </summary>
@@ -8862,11 +9407,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Detail information, similar to COORDINATOR_TYPE in M_SERVICES
 		/// </summary>
-		[Column(),                                      Nullable] public string    DETAIL                          { get; set; } // VARCHAR(128)
+		[Column(),                                      Nullable] public string?   DETAIL                          { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// NO, YES, UNKNOWN, STARTING, STOPPING
 		/// </summary>
-		[Column("ACTIVE_STATUS"),                       Nullable] public string    ActiveStatus                    { get; set; } // VARCHAR(16)
+		[Column("ACTIVE_STATUS"),                       Nullable] public string?   ActiveStatus                    { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Process start timestamp
 		/// </summary>
@@ -8958,11 +9503,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"), Nullable] public string    DatabaseName { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"), Nullable] public string?   DatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                Nullable] public string    HOST         { get; set; } // VARCHAR(64)
+		[Column(),                Nullable] public string?   HOST         { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -8982,7 +9527,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Created for backup: 'TRUE'/'FALSE'
 		/// </summary>
-		[Column("FOR_BACKUP"),    Nullable] public string    ForBackup    { get; set; } // VARCHAR(5)
+		[Column("FOR_BACKUP"),    Nullable] public string?   ForBackup    { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Anchor
 		/// </summary>
@@ -8998,43 +9543,49 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                   Nullable] public string DatabaseName              { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                   Nullable] public string? DatabaseName              { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Generated site ID
 		/// </summary>
-		[Column("SITE_ID"),                         Nullable] public int?   SiteId                    { get; set; } // INTEGER
+		[Column("SITE_ID"),                         Nullable] public int?    SiteId                    { get; set; } // INTEGER
 		/// <summary>
 		/// Logical site name
 		/// </summary>
-		[Column("SITE_NAME"),                       Nullable] public string SiteName                  { get; set; } // VARCHAR(256)
+		[Column("SITE_NAME"),                       Nullable] public string? SiteName                  { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Generated site ID of secondary site
 		/// </summary>
-		[Column("SECONDARY_SITE_ID"),               Nullable] public int?   SecondarySiteId           { get; set; } // INTEGER
+		[Column("SECONDARY_SITE_ID"),               Nullable] public int?    SecondarySiteId           { get; set; } // INTEGER
 		/// <summary>
 		/// Secondary logical site name
 		/// </summary>
-		[Column("SECONDARY_SITE_NAME"),             Nullable] public string SecondarySiteName         { get; set; } // VARCHAR(256)
+		[Column("SECONDARY_SITE_NAME"),             Nullable] public string? SecondarySiteName         { get; set; } // VARCHAR(256)
+		#nullable disable
 		/// <summary>
 		/// Replication mode
 		/// </summary>
-		[Column("REPLICATION_MODE"),             NotNull    ] public string ReplicationMode           { get; set; } // VARCHAR(7)
+		[Column("REPLICATION_MODE"),             NotNull    ] public string  ReplicationMode           { get; set; } // VARCHAR(7)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Replication status
 		/// </summary>
-		[Column("REPLICATION_STATUS"),           NotNull    ] public string ReplicationStatus         { get; set; } // VARCHAR(12)
+		[Column("REPLICATION_STATUS"),           NotNull    ] public string  ReplicationStatus         { get; set; } // VARCHAR(12)
+		#nullable enable
 		/// <summary>
 		/// Operation mode
 		/// </summary>
-		[Column("OPERATION_MODE"),                  Nullable] public string OperationMode             { get; set; } // VARCHAR(32)
+		[Column("OPERATION_MODE"),                  Nullable] public string? OperationMode             { get; set; } // VARCHAR(32)
+		#nullable disable
 		/// <summary>
 		/// Secondary read access status
 		/// </summary>
-		[Column("SECONDARY_READ_ACCESS_STATUS"), NotNull    ] public string SecondaryReadAccessStatus { get; set; } // VARCHAR(16)
+		[Column("SECONDARY_READ_ACCESS_STATUS"), NotNull    ] public string  SecondaryReadAccessStatus { get; set; } // VARCHAR(16)
+		#nullable enable
 		/// <summary>
 		/// Tier
 		/// </summary>
-		[Column(),                                  Nullable] public int?   TIER                      { get; set; } // INTEGER
+		[Column(),                                  Nullable] public int?    TIER                      { get; set; } // INTEGER
 	}
 
 	/// <summary>
@@ -9046,7 +9597,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                  Nullable] public string    DatabaseName                { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                  Nullable] public string?   DatabaseName                { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Global MVCC Timestamp
 		/// </summary>
@@ -9074,15 +9625,15 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"), Nullable] public string    DatabaseName { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"), Nullable] public string?   DatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                Nullable] public string    HOST         { get; set; } // VARCHAR(64)
+		[Column(),                Nullable] public string?   HOST         { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// File name
 		/// </summary>
-		[Column("FILE_NAME"),     Nullable] public string    FileName     { get; set; } // VARCHAR(256)
+		[Column("FILE_NAME"),     Nullable] public string?   FileName     { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// File size
 		/// </summary>
@@ -9102,23 +9653,23 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"), Nullable] public string DatabaseName { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"), Nullable] public string? DatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                Nullable] public string HOST         { get; set; } // VARCHAR(64)
+		[Column(),                Nullable] public string? HOST         { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// File name
 		/// </summary>
-		[Column("FILE_NAME"),     Nullable] public string FileName     { get; set; } // VARCHAR(256)
+		[Column("FILE_NAME"),     Nullable] public string? FileName     { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// File offset
 		/// </summary>
-		[Column(),                Nullable] public long?  OFFSET       { get; set; } // BIGINT
+		[Column(),                Nullable] public long?   OFFSET       { get; set; } // BIGINT
 		/// <summary>
 		/// File content at offset
 		/// </summary>
-		[Column(),                Nullable] public string CONTENT      { get; set; } // NVARCHAR(1000)
+		[Column(),                Nullable] public string? CONTENT      { get; set; } // NVARCHAR(1000)
 	}
 
 	/// <summary>
@@ -9130,63 +9681,63 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                Nullable] public string DatabaseName               { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                Nullable] public string? DatabaseName               { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                               Nullable] public string HOST                       { get; set; } // VARCHAR(64)
+		[Column(),                               Nullable] public string? HOST                       { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                               Nullable] public int?   PORT                       { get; set; } // INTEGER
+		[Column(),                               Nullable] public int?    PORT                       { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),                    Nullable] public int?   VolumeId                   { get; set; } // INTEGER
+		[Column("VOLUME_ID"),                    Nullable] public int?    VolumeId                   { get; set; } // INTEGER
 		/// <summary>
 		/// File type (UNDO, CLEANUP, FREE)
 		/// </summary>
-		[Column(),                               Nullable] public string TYPE                       { get; set; } // VARCHAR(16)
+		[Column(),                               Nullable] public string? TYPE                       { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Transaction ID
 		/// </summary>
-		[Column(),                               Nullable] public long?  TID                        { get; set; } // BIGINT
+		[Column(),                               Nullable] public long?   TID                        { get; set; } // BIGINT
 		/// <summary>
 		/// Page count
 		/// </summary>
-		[Column("PAGE_COUNT"),                   Nullable] public long?  PageCount                  { get; set; } // BIGINT
+		[Column("PAGE_COUNT"),                   Nullable] public long?   PageCount                  { get; set; } // BIGINT
 		/// <summary>
 		/// Raw size
 		/// </summary>
-		[Column("RAW_SIZE"),                     Nullable] public long?  RawSize                    { get; set; } // BIGINT
+		[Column("RAW_SIZE"),                     Nullable] public long?   RawSize                    { get; set; } // BIGINT
 		/// <summary>
 		/// Cleanup position mark
 		/// </summary>
-		[Column("CLEANUP_MARK"),                 Nullable] public long?  CleanupMark                { get; set; } // BIGINT
+		[Column("CLEANUP_MARK"),                 Nullable] public long?   CleanupMark                { get; set; } // BIGINT
 		/// <summary>
 		/// Nested session ID
 		/// </summary>
-		[Column("NESTED_SESSION_ID"),            Nullable] public int?   NestedSessionId            { get; set; } // INTEGER
+		[Column("NESTED_SESSION_ID"),            Nullable] public int?    NestedSessionId            { get; set; } // INTEGER
 		/// <summary>
 		/// Nested session parent ID
 		/// </summary>
-		[Column("NESTED_SESSION_PARENT_ID"),     Nullable] public int?   NestedSessionParentId      { get; set; } // INTEGER
+		[Column("NESTED_SESSION_PARENT_ID"),     Nullable] public int?    NestedSessionParentId      { get; set; } // INTEGER
 		/// <summary>
 		/// Dependent index during redo
 		/// </summary>
-		[Column("DEPENDENT_INDEX"),              Nullable] public int?   DependentIndex             { get; set; } // INTEGER
+		[Column("DEPENDENT_INDEX"),              Nullable] public int?    DependentIndex             { get; set; } // INTEGER
 		/// <summary>
 		/// Indoubt flag for distributed transaction: 'TRUE'/'FALSE'
 		/// </summary>
-		[Column("INDOUBT_FLAG"),                 Nullable] public string IndoubtFlag                { get; set; } // VARCHAR(5)
+		[Column("INDOUBT_FLAG"),                 Nullable] public string? IndoubtFlag                { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Tentative precommit position
 		/// </summary>
-		[Column("TENTATIVE_PRECOMMIT_POSITION"), Nullable] public long?  TentativePrecommitPosition { get; set; } // BIGINT
+		[Column("TENTATIVE_PRECOMMIT_POSITION"), Nullable] public long?   TentativePrecommitPosition { get; set; } // BIGINT
 		/// <summary>
 		/// Commit ID
 		/// </summary>
-		[Column("COMMIT_ID"),                    Nullable] public long?  CommitId                   { get; set; } // BIGINT
+		[Column("COMMIT_ID"),                    Nullable] public long?   CommitId                   { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -9198,35 +9749,35 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),   Nullable] public string DatabaseName   { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),   Nullable] public string? DatabaseName   { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                  Nullable] public string HOST           { get; set; } // VARCHAR(64)
+		[Column(),                  Nullable] public string? HOST           { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                  Nullable] public int?   PORT           { get; set; } // INTEGER
+		[Column(),                  Nullable] public int?    PORT           { get; set; } // INTEGER
 		/// <summary>
 		/// Service name
 		/// </summary>
-		[Column("SERVICE_NAME"),    Nullable] public string ServiceName    { get; set; } // VARCHAR(32)
+		[Column("SERVICE_NAME"),    Nullable] public string? ServiceName    { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),       Nullable] public int?   VolumeId       { get; set; } // INTEGER
+		[Column("VOLUME_ID"),       Nullable] public int?    VolumeId       { get; set; } // INTEGER
 		/// <summary>
 		/// Subpath appended to M_DISKS.PATH
 		/// </summary>
-		[Column(),                  Nullable] public string SUBPATH        { get; set; } // VARCHAR(512)
+		[Column(),                  Nullable] public string? SUBPATH        { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Livecache is enabled
 		/// </summary>
-		[Column("LIVECACHE_STORE"), Nullable] public string LivecacheStore { get; set; } // VARCHAR(10)
+		[Column("LIVECACHE_STORE"), Nullable] public string? LivecacheStore { get; set; } // VARCHAR(10)
 		/// <summary>
 		/// Remove progress
 		/// </summary>
-		[Column("REMOVE_STATUS"),   Nullable] public string RemoveStatus   { get; set; } // VARCHAR(16)
+		[Column("REMOVE_STATUS"),   Nullable] public string? RemoveStatus   { get; set; } // VARCHAR(16)
 	}
 
 	/// <summary>
@@ -9238,35 +9789,35 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"), Nullable] public string DatabaseName { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"), Nullable] public string? DatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                Nullable] public string HOST         { get; set; } // VARCHAR(64)
+		[Column(),                Nullable] public string? HOST         { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                Nullable] public int?   PORT         { get; set; } // INTEGER
+		[Column(),                Nullable] public int?    PORT         { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),     Nullable] public int?   VolumeId     { get; set; } // INTEGER
+		[Column("VOLUME_ID"),     Nullable] public int?    VolumeId     { get; set; } // INTEGER
 		/// <summary>
 		/// Type of file (DATA, LOG, ...)
 		/// </summary>
-		[Column("FILE_TYPE"),     Nullable] public string FileType     { get; set; } // VARCHAR(16)
+		[Column("FILE_TYPE"),     Nullable] public string? FileType     { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// File name
 		/// </summary>
-		[Column("FILE_NAME"),     Nullable] public string FileName     { get; set; } // VARCHAR(256)
+		[Column("FILE_NAME"),     Nullable] public string? FileName     { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Size of used data within file
 		/// </summary>
-		[Column("USED_SIZE"),     Nullable] public long?  UsedSize     { get; set; } // BIGINT
+		[Column("USED_SIZE"),     Nullable] public long?   UsedSize     { get; set; } // BIGINT
 		/// <summary>
 		/// Total file size
 		/// </summary>
-		[Column("TOTAL_SIZE"),    Nullable] public long?  TotalSize    { get; set; } // BIGINT
+		[Column("TOTAL_SIZE"),    Nullable] public long?   TotalSize    { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -9278,239 +9829,239 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                    Nullable] public string DatabaseName                 { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                    Nullable] public string? DatabaseName                 { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                   Nullable] public string HOST                         { get; set; } // VARCHAR(64)
+		[Column(),                                   Nullable] public string? HOST                         { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                                   Nullable] public int?   PORT                         { get; set; } // INTEGER
+		[Column(),                                   Nullable] public int?    PORT                         { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),                        Nullable] public int?   VolumeId                     { get; set; } // INTEGER
+		[Column("VOLUME_ID"),                        Nullable] public int?    VolumeId                     { get; set; } // INTEGER
 		/// <summary>
 		/// Filesystem path
 		/// </summary>
-		[Column(),                                   Nullable] public string PATH                         { get; set; } // VARCHAR(512)
+		[Column(),                                   Nullable] public string? PATH                         { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Filesystem type
 		/// </summary>
-		[Column("FILESYSTEM_TYPE"),                  Nullable] public string FilesystemType               { get; set; } // VARCHAR(32)
+		[Column("FILESYSTEM_TYPE"),                  Nullable] public string? FilesystemType               { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Type of contained files
 		/// </summary>
-		[Column(),                                   Nullable] public string TYPE                         { get; set; } // VARCHAR(16)
+		[Column(),                                   Nullable] public string? TYPE                         { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Configuration parameters
 		/// </summary>
-		[Column(),                                   Nullable] public string CONFIGURATION                { get; set; } // VARCHAR(256)
+		[Column(),                                   Nullable] public string? CONFIGURATION                { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Max. I/O buffer size
 		/// </summary>
-		[Column("MAX_IO_BUFFER_SIZE"),               Nullable] public long?  MaxIoBufferSize              { get; set; } // BIGINT
+		[Column("MAX_IO_BUFFER_SIZE"),               Nullable] public long?   MaxIoBufferSize              { get; set; } // BIGINT
 		/// <summary>
 		/// Count of appends
 		/// </summary>
-		[Column("APPEND_COUNT"),                     Nullable] public long?  AppendCount                  { get; set; } // BIGINT
+		[Column("APPEND_COUNT"),                     Nullable] public long?   AppendCount                  { get; set; } // BIGINT
 		/// <summary>
 		/// Count of active appends
 		/// </summary>
-		[Column("ACTIVE_APPEND_COUNT"),              Nullable] public long?  ActiveAppendCount            { get; set; } // BIGINT
+		[Column("ACTIVE_APPEND_COUNT"),              Nullable] public long?   ActiveAppendCount            { get; set; } // BIGINT
 		/// <summary>
 		/// Size of appended data (min)
 		/// </summary>
-		[Column("MIN_APPEND_SIZE"),                  Nullable] public long?  MinAppendSize                { get; set; } // BIGINT
+		[Column("MIN_APPEND_SIZE"),                  Nullable] public long?   MinAppendSize                { get; set; } // BIGINT
 		/// <summary>
 		/// Size of appended data (avg)
 		/// </summary>
-		[Column("AVG_APPEND_SIZE"),                  Nullable] public long?  AvgAppendSize                { get; set; } // BIGINT
+		[Column("AVG_APPEND_SIZE"),                  Nullable] public long?   AvgAppendSize                { get; set; } // BIGINT
 		/// <summary>
 		/// Size of appended data (max)
 		/// </summary>
-		[Column("MAX_APPEND_SIZE"),                  Nullable] public long?  MaxAppendSize                { get; set; } // BIGINT
+		[Column("MAX_APPEND_SIZE"),                  Nullable] public long?   MaxAppendSize                { get; set; } // BIGINT
 		/// <summary>
 		/// Size of appended data (total)
 		/// </summary>
-		[Column("SUM_APPEND_SIZE"),                  Nullable] public long?  SumAppendSize                { get; set; } // BIGINT
+		[Column("SUM_APPEND_SIZE"),                  Nullable] public long?   SumAppendSize                { get; set; } // BIGINT
 		/// <summary>
 		/// Time for appends (min)
 		/// </summary>
-		[Column("MIN_APPEND_TIME"),                  Nullable] public long?  MinAppendTime                { get; set; } // BIGINT
+		[Column("MIN_APPEND_TIME"),                  Nullable] public long?   MinAppendTime                { get; set; } // BIGINT
 		/// <summary>
 		/// Time for appends (avg)
 		/// </summary>
-		[Column("AVG_APPEND_TIME"),                  Nullable] public long?  AvgAppendTime                { get; set; } // BIGINT
+		[Column("AVG_APPEND_TIME"),                  Nullable] public long?   AvgAppendTime                { get; set; } // BIGINT
 		/// <summary>
 		/// Time for appends (max)
 		/// </summary>
-		[Column("MAX_APPEND_TIME"),                  Nullable] public long?  MaxAppendTime                { get; set; } // BIGINT
+		[Column("MAX_APPEND_TIME"),                  Nullable] public long?   MaxAppendTime                { get; set; } // BIGINT
 		/// <summary>
 		/// Time for appends (total)
 		/// </summary>
-		[Column("SUM_APPEND_TIME"),                  Nullable] public long?  SumAppendTime                { get; set; } // BIGINT
+		[Column("SUM_APPEND_TIME"),                  Nullable] public long?   SumAppendTime                { get; set; } // BIGINT
 		/// <summary>
 		/// Count of writes
 		/// </summary>
-		[Column("WRITE_COUNT"),                      Nullable] public long?  WriteCount                   { get; set; } // BIGINT
+		[Column("WRITE_COUNT"),                      Nullable] public long?   WriteCount                   { get; set; } // BIGINT
 		/// <summary>
 		/// Count of active writes
 		/// </summary>
-		[Column("ACTIVE_WRITE_COUNT"),               Nullable] public long?  ActiveWriteCount             { get; set; } // BIGINT
+		[Column("ACTIVE_WRITE_COUNT"),               Nullable] public long?   ActiveWriteCount             { get; set; } // BIGINT
 		/// <summary>
 		/// Size of written data (min)
 		/// </summary>
-		[Column("MIN_WRITE_SIZE"),                   Nullable] public long?  MinWriteSize                 { get; set; } // BIGINT
+		[Column("MIN_WRITE_SIZE"),                   Nullable] public long?   MinWriteSize                 { get; set; } // BIGINT
 		/// <summary>
 		/// Size of written data (avg)
 		/// </summary>
-		[Column("AVG_WRITE_SIZE"),                   Nullable] public long?  AvgWriteSize                 { get; set; } // BIGINT
+		[Column("AVG_WRITE_SIZE"),                   Nullable] public long?   AvgWriteSize                 { get; set; } // BIGINT
 		/// <summary>
 		/// Size of written data (max)
 		/// </summary>
-		[Column("MAX_WRITE_SIZE"),                   Nullable] public long?  MaxWriteSize                 { get; set; } // BIGINT
+		[Column("MAX_WRITE_SIZE"),                   Nullable] public long?   MaxWriteSize                 { get; set; } // BIGINT
 		/// <summary>
 		/// Size of written data (total)
 		/// </summary>
-		[Column("SUM_WRITE_SIZE"),                   Nullable] public long?  SumWriteSize                 { get; set; } // BIGINT
+		[Column("SUM_WRITE_SIZE"),                   Nullable] public long?   SumWriteSize                 { get; set; } // BIGINT
 		/// <summary>
 		/// Time for writes (min)
 		/// </summary>
-		[Column("MIN_WRITE_TIME"),                   Nullable] public long?  MinWriteTime                 { get; set; } // BIGINT
+		[Column("MIN_WRITE_TIME"),                   Nullable] public long?   MinWriteTime                 { get; set; } // BIGINT
 		/// <summary>
 		/// Time for writes (avg)
 		/// </summary>
-		[Column("AVG_WRITE_TIME"),                   Nullable] public long?  AvgWriteTime                 { get; set; } // BIGINT
+		[Column("AVG_WRITE_TIME"),                   Nullable] public long?   AvgWriteTime                 { get; set; } // BIGINT
 		/// <summary>
 		/// Time for writes (max)
 		/// </summary>
-		[Column("MAX_WRITE_TIME"),                   Nullable] public long?  MaxWriteTime                 { get; set; } // BIGINT
+		[Column("MAX_WRITE_TIME"),                   Nullable] public long?   MaxWriteTime                 { get; set; } // BIGINT
 		/// <summary>
 		/// Time for writes (total)
 		/// </summary>
-		[Column("SUM_WRITE_TIME"),                   Nullable] public long?  SumWriteTime                 { get; set; } // BIGINT
+		[Column("SUM_WRITE_TIME"),                   Nullable] public long?   SumWriteTime                 { get; set; } // BIGINT
 		/// <summary>
 		/// Count of trigger asynchronous writes
 		/// </summary>
-		[Column("TRIGGER_ASYNC_WRITE_COUNT"),        Nullable] public long?  TriggerAsyncWriteCount       { get; set; } // BIGINT
+		[Column("TRIGGER_ASYNC_WRITE_COUNT"),        Nullable] public long?   TriggerAsyncWriteCount       { get; set; } // BIGINT
 		/// <summary>
 		/// Count of active trigger asynchronous writes
 		/// </summary>
-		[Column("ACTIVE_TRIGGER_ASYNC_WRITE_COUNT"), Nullable] public long?  ActiveTriggerAsyncWriteCount { get; set; } // BIGINT
+		[Column("ACTIVE_TRIGGER_ASYNC_WRITE_COUNT"), Nullable] public long?   ActiveTriggerAsyncWriteCount { get; set; } // BIGINT
 		/// <summary>
 		/// Size of trigger asynchronous write data (min)
 		/// </summary>
-		[Column("MIN_TRIGGER_ASYNC_WRITE_SIZE"),     Nullable] public long?  MinTriggerAsyncWriteSize     { get; set; } // BIGINT
+		[Column("MIN_TRIGGER_ASYNC_WRITE_SIZE"),     Nullable] public long?   MinTriggerAsyncWriteSize     { get; set; } // BIGINT
 		/// <summary>
 		/// Size of trigger asynchronous write data (avg)
 		/// </summary>
-		[Column("AVG_TRIGGER_ASYNC_WRITE_SIZE"),     Nullable] public long?  AvgTriggerAsyncWriteSize     { get; set; } // BIGINT
+		[Column("AVG_TRIGGER_ASYNC_WRITE_SIZE"),     Nullable] public long?   AvgTriggerAsyncWriteSize     { get; set; } // BIGINT
 		/// <summary>
 		/// Size of trigger asynchronous write data (max)
 		/// </summary>
-		[Column("MAX_TRIGGER_ASYNC_WRITE_SIZE"),     Nullable] public long?  MaxTriggerAsyncWriteSize     { get; set; } // BIGINT
+		[Column("MAX_TRIGGER_ASYNC_WRITE_SIZE"),     Nullable] public long?   MaxTriggerAsyncWriteSize     { get; set; } // BIGINT
 		/// <summary>
 		/// Size of trigger asynchronous write data (total)
 		/// </summary>
-		[Column("SUM_TRIGGER_ASYNC_WRITE_SIZE"),     Nullable] public long?  SumTriggerAsyncWriteSize     { get; set; } // BIGINT
+		[Column("SUM_TRIGGER_ASYNC_WRITE_SIZE"),     Nullable] public long?   SumTriggerAsyncWriteSize     { get; set; } // BIGINT
 		/// <summary>
 		/// Time for trigger asynchronous writes (min)
 		/// </summary>
-		[Column("MIN_TRIGGER_ASYNC_WRITE_TIME"),     Nullable] public long?  MinTriggerAsyncWriteTime     { get; set; } // BIGINT
+		[Column("MIN_TRIGGER_ASYNC_WRITE_TIME"),     Nullable] public long?   MinTriggerAsyncWriteTime     { get; set; } // BIGINT
 		/// <summary>
 		/// Time for trigger asynchronous writes (avg)
 		/// </summary>
-		[Column("AVG_TRIGGER_ASYNC_WRITE_TIME"),     Nullable] public long?  AvgTriggerAsyncWriteTime     { get; set; } // BIGINT
+		[Column("AVG_TRIGGER_ASYNC_WRITE_TIME"),     Nullable] public long?   AvgTriggerAsyncWriteTime     { get; set; } // BIGINT
 		/// <summary>
 		/// Time for trigger asynchronous writes (max)
 		/// </summary>
-		[Column("MAX_TRIGGER_ASYNC_WRITE_TIME"),     Nullable] public long?  MaxTriggerAsyncWriteTime     { get; set; } // BIGINT
+		[Column("MAX_TRIGGER_ASYNC_WRITE_TIME"),     Nullable] public long?   MaxTriggerAsyncWriteTime     { get; set; } // BIGINT
 		/// <summary>
 		/// Time for trigger asynchronous writes (total)
 		/// </summary>
-		[Column("SUM_TRIGGER_ASYNC_WRITE_TIME"),     Nullable] public long?  SumTriggerAsyncWriteTime     { get; set; } // BIGINT
+		[Column("SUM_TRIGGER_ASYNC_WRITE_TIME"),     Nullable] public long?   SumTriggerAsyncWriteTime     { get; set; } // BIGINT
 		/// <summary>
 		/// Count of reads
 		/// </summary>
-		[Column("READ_COUNT"),                       Nullable] public long?  ReadCount                    { get; set; } // BIGINT
+		[Column("READ_COUNT"),                       Nullable] public long?   ReadCount                    { get; set; } // BIGINT
 		/// <summary>
 		/// Count of active reads
 		/// </summary>
-		[Column("ACTIVE_READ_COUNT"),                Nullable] public long?  ActiveReadCount              { get; set; } // BIGINT
+		[Column("ACTIVE_READ_COUNT"),                Nullable] public long?   ActiveReadCount              { get; set; } // BIGINT
 		/// <summary>
 		/// Size of read data (min)
 		/// </summary>
-		[Column("MIN_READ_SIZE"),                    Nullable] public long?  MinReadSize                  { get; set; } // BIGINT
+		[Column("MIN_READ_SIZE"),                    Nullable] public long?   MinReadSize                  { get; set; } // BIGINT
 		/// <summary>
 		/// Size of read data (avg)
 		/// </summary>
-		[Column("AVG_READ_SIZE"),                    Nullable] public long?  AvgReadSize                  { get; set; } // BIGINT
+		[Column("AVG_READ_SIZE"),                    Nullable] public long?   AvgReadSize                  { get; set; } // BIGINT
 		/// <summary>
 		/// Size of read data (max)
 		/// </summary>
-		[Column("MAX_READ_SIZE"),                    Nullable] public long?  MaxReadSize                  { get; set; } // BIGINT
+		[Column("MAX_READ_SIZE"),                    Nullable] public long?   MaxReadSize                  { get; set; } // BIGINT
 		/// <summary>
 		/// Size of read data (total)
 		/// </summary>
-		[Column("SUM_READ_SIZE"),                    Nullable] public long?  SumReadSize                  { get; set; } // BIGINT
+		[Column("SUM_READ_SIZE"),                    Nullable] public long?   SumReadSize                  { get; set; } // BIGINT
 		/// <summary>
 		/// Time for reads (min)
 		/// </summary>
-		[Column("MIN_READ_TIME"),                    Nullable] public long?  MinReadTime                  { get; set; } // BIGINT
+		[Column("MIN_READ_TIME"),                    Nullable] public long?   MinReadTime                  { get; set; } // BIGINT
 		/// <summary>
 		/// Time for reads (avg)
 		/// </summary>
-		[Column("AVG_READ_TIME"),                    Nullable] public long?  AvgReadTime                  { get; set; } // BIGINT
+		[Column("AVG_READ_TIME"),                    Nullable] public long?   AvgReadTime                  { get; set; } // BIGINT
 		/// <summary>
 		/// Time for reads (max)
 		/// </summary>
-		[Column("MAX_READ_TIME"),                    Nullable] public long?  MaxReadTime                  { get; set; } // BIGINT
+		[Column("MAX_READ_TIME"),                    Nullable] public long?   MaxReadTime                  { get; set; } // BIGINT
 		/// <summary>
 		/// Time for reads (total)
 		/// </summary>
-		[Column("SUM_READ_TIME"),                    Nullable] public long?  SumReadTime                  { get; set; } // BIGINT
+		[Column("SUM_READ_TIME"),                    Nullable] public long?   SumReadTime                  { get; set; } // BIGINT
 		/// <summary>
 		/// Count of trigger asynchronous reads
 		/// </summary>
-		[Column("TRIGGER_ASYNC_READ_COUNT"),         Nullable] public long?  TriggerAsyncReadCount        { get; set; } // BIGINT
+		[Column("TRIGGER_ASYNC_READ_COUNT"),         Nullable] public long?   TriggerAsyncReadCount        { get; set; } // BIGINT
 		/// <summary>
 		/// Count of active trigger asynchronous reads
 		/// </summary>
-		[Column("ACTIVE_TRIGGER_ASYNC_READ_COUNT"),  Nullable] public long?  ActiveTriggerAsyncReadCount  { get; set; } // BIGINT
+		[Column("ACTIVE_TRIGGER_ASYNC_READ_COUNT"),  Nullable] public long?   ActiveTriggerAsyncReadCount  { get; set; } // BIGINT
 		/// <summary>
 		/// Size of trigger asynchronous read data (min)
 		/// </summary>
-		[Column("MIN_TRIGGER_ASYNC_READ_SIZE"),      Nullable] public long?  MinTriggerAsyncReadSize      { get; set; } // BIGINT
+		[Column("MIN_TRIGGER_ASYNC_READ_SIZE"),      Nullable] public long?   MinTriggerAsyncReadSize      { get; set; } // BIGINT
 		/// <summary>
 		/// Size of trigger asynchronous read data (avg)
 		/// </summary>
-		[Column("AVG_TRIGGER_ASYNC_READ_SIZE"),      Nullable] public long?  AvgTriggerAsyncReadSize      { get; set; } // BIGINT
+		[Column("AVG_TRIGGER_ASYNC_READ_SIZE"),      Nullable] public long?   AvgTriggerAsyncReadSize      { get; set; } // BIGINT
 		/// <summary>
 		/// Size of trigger asynchronous read data (max)
 		/// </summary>
-		[Column("MAX_TRIGGER_ASYNC_READ_SIZE"),      Nullable] public long?  MaxTriggerAsyncReadSize      { get; set; } // BIGINT
+		[Column("MAX_TRIGGER_ASYNC_READ_SIZE"),      Nullable] public long?   MaxTriggerAsyncReadSize      { get; set; } // BIGINT
 		/// <summary>
 		/// Size of trigger asynchronous read data (total)
 		/// </summary>
-		[Column("SUM_TRIGGER_ASYNC_READ_SIZE"),      Nullable] public long?  SumTriggerAsyncReadSize      { get; set; } // BIGINT
+		[Column("SUM_TRIGGER_ASYNC_READ_SIZE"),      Nullable] public long?   SumTriggerAsyncReadSize      { get; set; } // BIGINT
 		/// <summary>
 		/// Time for trigger asynchronous reads (min)
 		/// </summary>
-		[Column("MIN_TRIGGER_ASYNC_READ_TIME"),      Nullable] public long?  MinTriggerAsyncReadTime      { get; set; } // BIGINT
+		[Column("MIN_TRIGGER_ASYNC_READ_TIME"),      Nullable] public long?   MinTriggerAsyncReadTime      { get; set; } // BIGINT
 		/// <summary>
 		/// Time for trigger asynchronous reads (avg)
 		/// </summary>
-		[Column("AVG_TRIGGER_ASYNC_READ_TIME"),      Nullable] public long?  AvgTriggerAsyncReadTime      { get; set; } // BIGINT
+		[Column("AVG_TRIGGER_ASYNC_READ_TIME"),      Nullable] public long?   AvgTriggerAsyncReadTime      { get; set; } // BIGINT
 		/// <summary>
 		/// Time for trigger asynchronous reads (max)
 		/// </summary>
-		[Column("MAX_TRIGGER_ASYNC_READ_TIME"),      Nullable] public long?  MaxTriggerAsyncReadTime      { get; set; } // BIGINT
+		[Column("MAX_TRIGGER_ASYNC_READ_TIME"),      Nullable] public long?   MaxTriggerAsyncReadTime      { get; set; } // BIGINT
 		/// <summary>
 		/// Time for trigger asynchronous reads (total)
 		/// </summary>
-		[Column("SUM_TRIGGER_ASYNC_READ_TIME"),      Nullable] public long?  SumTriggerAsyncReadTime      { get; set; } // BIGINT
+		[Column("SUM_TRIGGER_ASYNC_READ_TIME"),      Nullable] public long?   SumTriggerAsyncReadTime      { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -9522,7 +10073,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                    Nullable] public string    DatabaseName                 { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                    Nullable] public string?   DatabaseName                 { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -9530,7 +10081,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                   Nullable] public string    HOST                         { get; set; } // VARCHAR(64)
+		[Column(),                                   Nullable] public string?   HOST                         { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -9542,19 +10093,19 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Filesystem path
 		/// </summary>
-		[Column(),                                   Nullable] public string    PATH                         { get; set; } // VARCHAR(512)
+		[Column(),                                   Nullable] public string?   PATH                         { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Filesystem type
 		/// </summary>
-		[Column("FILESYSTEM_TYPE"),                  Nullable] public string    FilesystemType               { get; set; } // VARCHAR(32)
+		[Column("FILESYSTEM_TYPE"),                  Nullable] public string?   FilesystemType               { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Type of contained files
 		/// </summary>
-		[Column(),                                   Nullable] public string    TYPE                         { get; set; } // VARCHAR(16)
+		[Column(),                                   Nullable] public string?   TYPE                         { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Configuration parameters
 		/// </summary>
-		[Column(),                                   Nullable] public string    CONFIGURATION                { get; set; } // VARCHAR(256)
+		[Column(),                                   Nullable] public string?   CONFIGURATION                { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Max. I/O buffer size
 		/// </summary>
@@ -9770,127 +10321,127 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                           Nullable] public string DatabaseName                      { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                           Nullable] public string? DatabaseName                      { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                          Nullable] public string HOST                              { get; set; } // VARCHAR(64)
+		[Column(),                                          Nullable] public string? HOST                              { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
-		[Column(),                                          Nullable] public int?   PORT                              { get; set; } // INTEGER
+		[Column(),                                          Nullable] public int?    PORT                              { get; set; } // INTEGER
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
-		[Column("VOLUME_ID"),                               Nullable] public int?   VolumeId                          { get; set; } // INTEGER
+		[Column("VOLUME_ID"),                               Nullable] public int?    VolumeId                          { get; set; } // INTEGER
 		/// <summary>
 		/// Filesystem path
 		/// </summary>
-		[Column(),                                          Nullable] public string PATH                              { get; set; } // VARCHAR(512)
+		[Column(),                                          Nullable] public string? PATH                              { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Filesystem type
 		/// </summary>
-		[Column("FILESYSTEM_TYPE"),                         Nullable] public string FilesystemType                    { get; set; } // VARCHAR(32)
+		[Column("FILESYSTEM_TYPE"),                         Nullable] public string? FilesystemType                    { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Type of contained files
 		/// </summary>
-		[Column(),                                          Nullable] public string TYPE                              { get; set; } // VARCHAR(16)
+		[Column(),                                          Nullable] public string? TYPE                              { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Configuration parameters
 		/// </summary>
-		[Column(),                                          Nullable] public string CONFIGURATION                     { get; set; } // VARCHAR(256)
+		[Column(),                                          Nullable] public string? CONFIGURATION                     { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Max. I/O buffer size
 		/// </summary>
-		[Column("MAX_IO_BUFFER_SIZE"),                      Nullable] public long?  MaxIoBufferSize                   { get; set; } // BIGINT
+		[Column("MAX_IO_BUFFER_SIZE"),                      Nullable] public long?   MaxIoBufferSize                   { get; set; } // BIGINT
 		/// <summary>
 		/// Count of all appends
 		/// </summary>
-		[Column("TOTAL_APPEND_COUNT"),                      Nullable] public long?  TotalAppendCount                  { get; set; } // BIGINT
+		[Column("TOTAL_APPEND_COUNT"),                      Nullable] public long?   TotalAppendCount                  { get; set; } // BIGINT
 		/// <summary>
 		/// Count of failed appends
 		/// </summary>
-		[Column("FAILED_APPEND_COUNT"),                     Nullable] public long?  FailedAppendCount                 { get; set; } // BIGINT
+		[Column("FAILED_APPEND_COUNT"),                     Nullable] public long?   FailedAppendCount                 { get; set; } // BIGINT
 		/// <summary>
 		/// Count of all writes
 		/// </summary>
-		[Column("TOTAL_WRITE_COUNT"),                       Nullable] public long?  TotalWriteCount                   { get; set; } // BIGINT
+		[Column("TOTAL_WRITE_COUNT"),                       Nullable] public long?   TotalWriteCount                   { get; set; } // BIGINT
 		/// <summary>
 		/// Count of failed writes
 		/// </summary>
-		[Column("FAILED_WRITE_COUNT"),                      Nullable] public long?  FailedWriteCount                  { get; set; } // BIGINT
+		[Column("FAILED_WRITE_COUNT"),                      Nullable] public long?   FailedWriteCount                  { get; set; } // BIGINT
 		/// <summary>
 		/// Count of short writes
 		/// </summary>
-		[Column("SHORT_WRITE_COUNT"),                       Nullable] public long?  ShortWriteCount                   { get; set; } // BIGINT
+		[Column("SHORT_WRITE_COUNT"),                       Nullable] public long?   ShortWriteCount                   { get; set; } // BIGINT
 		/// <summary>
 		/// Count of requests with short writes
 		/// </summary>
-		[Column("REQUESTS_WITH_SHORT_WRITES_COUNT"),        Nullable] public long?  RequestsWithShortWritesCount      { get; set; } // BIGINT
+		[Column("REQUESTS_WITH_SHORT_WRITES_COUNT"),        Nullable] public long?   RequestsWithShortWritesCount      { get; set; } // BIGINT
 		/// <summary>
 		/// Count of short writes per request with short writes (avg)
 		/// </summary>
-		[Column("AVG_SHORT_WRITES_PER_REQUEST_COUNT"),      Nullable] public long?  AvgShortWritesPerRequestCount     { get; set; } // BIGINT
+		[Column("AVG_SHORT_WRITES_PER_REQUEST_COUNT"),      Nullable] public long?   AvgShortWritesPerRequestCount     { get; set; } // BIGINT
 		/// <summary>
 		/// Count of short writes per request (max)
 		/// </summary>
-		[Column("MAX_SHORT_WRITES_PER_REQUEST_COUNT"),      Nullable] public long?  MaxShortWritesPerRequestCount     { get; set; } // BIGINT
+		[Column("MAX_SHORT_WRITES_PER_REQUEST_COUNT"),      Nullable] public long?   MaxShortWritesPerRequestCount     { get; set; } // BIGINT
 		/// <summary>
 		/// Count of full retry writes
 		/// </summary>
-		[Column("FULL_RETRY_WRITE_COUNT"),                  Nullable] public long?  FullRetryWriteCount               { get; set; } // BIGINT
+		[Column("FULL_RETRY_WRITE_COUNT"),                  Nullable] public long?   FullRetryWriteCount               { get; set; } // BIGINT
 		/// <summary>
 		/// Count of requests with full retry writes
 		/// </summary>
-		[Column("REQUESTS_WITH_FULL_RETRY_WRITES_COUNT"),   Nullable] public long?  RequestsWithFullRetryWritesCount  { get; set; } // BIGINT
+		[Column("REQUESTS_WITH_FULL_RETRY_WRITES_COUNT"),   Nullable] public long?   RequestsWithFullRetryWritesCount  { get; set; } // BIGINT
 		/// <summary>
 		/// Count of full retry writes per request with full retry writes (avg)
 		/// </summary>
-		[Column("AVG_FULL_RETRY_WRITES_PER_REQUEST_COUNT"), Nullable] public long?  AvgFullRetryWritesPerRequestCount { get; set; } // BIGINT
+		[Column("AVG_FULL_RETRY_WRITES_PER_REQUEST_COUNT"), Nullable] public long?   AvgFullRetryWritesPerRequestCount { get; set; } // BIGINT
 		/// <summary>
 		/// Count of full retry writes per request (max)
 		/// </summary>
-		[Column("MAX_FULL_RETRY_WRITES_PER_REQUEST_COUNT"), Nullable] public long?  MaxFullRetryWritesPerRequestCount { get; set; } // BIGINT
+		[Column("MAX_FULL_RETRY_WRITES_PER_REQUEST_COUNT"), Nullable] public long?   MaxFullRetryWritesPerRequestCount { get; set; } // BIGINT
 		/// <summary>
 		/// Count of all reads
 		/// </summary>
-		[Column("TOTAL_READ_COUNT"),                        Nullable] public long?  TotalReadCount                    { get; set; } // BIGINT
+		[Column("TOTAL_READ_COUNT"),                        Nullable] public long?   TotalReadCount                    { get; set; } // BIGINT
 		/// <summary>
 		/// Count of failed reads
 		/// </summary>
-		[Column("FAILED_READ_COUNT"),                       Nullable] public long?  FailedReadCount                   { get; set; } // BIGINT
+		[Column("FAILED_READ_COUNT"),                       Nullable] public long?   FailedReadCount                   { get; set; } // BIGINT
 		/// <summary>
 		/// Count of short reads
 		/// </summary>
-		[Column("SHORT_READ_COUNT"),                        Nullable] public long?  ShortReadCount                    { get; set; } // BIGINT
+		[Column("SHORT_READ_COUNT"),                        Nullable] public long?   ShortReadCount                    { get; set; } // BIGINT
 		/// <summary>
 		/// Count of requests with short reads
 		/// </summary>
-		[Column("REQUESTS_WITH_SHORT_READS_COUNT"),         Nullable] public long?  RequestsWithShortReadsCount       { get; set; } // BIGINT
+		[Column("REQUESTS_WITH_SHORT_READS_COUNT"),         Nullable] public long?   RequestsWithShortReadsCount       { get; set; } // BIGINT
 		/// <summary>
 		/// Count of short reads per request with short reads (avg)
 		/// </summary>
-		[Column("AVG_SHORT_READS_PER_REQUEST_COUNT"),       Nullable] public long?  AvgShortReadsPerRequestCount      { get; set; } // BIGINT
+		[Column("AVG_SHORT_READS_PER_REQUEST_COUNT"),       Nullable] public long?   AvgShortReadsPerRequestCount      { get; set; } // BIGINT
 		/// <summary>
 		/// Count of short reads per request (max)
 		/// </summary>
-		[Column("MAX_SHORT_READS_PER_REQUEST_COUNT"),       Nullable] public long?  MaxShortReadsPerRequestCount      { get; set; } // BIGINT
+		[Column("MAX_SHORT_READS_PER_REQUEST_COUNT"),       Nullable] public long?   MaxShortReadsPerRequestCount      { get; set; } // BIGINT
 		/// <summary>
 		/// Count of full retry reads
 		/// </summary>
-		[Column("FULL_RETRY_READ_COUNT"),                   Nullable] public long?  FullRetryReadCount                { get; set; } // BIGINT
+		[Column("FULL_RETRY_READ_COUNT"),                   Nullable] public long?   FullRetryReadCount                { get; set; } // BIGINT
 		/// <summary>
 		/// Count of requests with full retry reads
 		/// </summary>
-		[Column("REQUESTS_WITH_FULL_RETRY_READS_COUNT"),    Nullable] public long?  RequestsWithFullRetryReadsCount   { get; set; } // BIGINT
+		[Column("REQUESTS_WITH_FULL_RETRY_READS_COUNT"),    Nullable] public long?   RequestsWithFullRetryReadsCount   { get; set; } // BIGINT
 		/// <summary>
 		/// Count of full retry reads per request with full retry reads (avg)
 		/// </summary>
-		[Column("AVG_FULL_RETRY_READS_PER_REQUEST_COUNT"),  Nullable] public long?  AvgFullRetryReadsPerRequestCount  { get; set; } // BIGINT
+		[Column("AVG_FULL_RETRY_READS_PER_REQUEST_COUNT"),  Nullable] public long?   AvgFullRetryReadsPerRequestCount  { get; set; } // BIGINT
 		/// <summary>
 		/// Count of full retry reads per request (max)
 		/// </summary>
-		[Column("MAX_FULL_RETRY_READS_PER_REQUEST_COUNT"),  Nullable] public long?  MaxFullRetryReadsPerRequestCount  { get; set; } // BIGINT
+		[Column("MAX_FULL_RETRY_READS_PER_REQUEST_COUNT"),  Nullable] public long?   MaxFullRetryReadsPerRequestCount  { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -9902,7 +10453,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                           Nullable] public string    DatabaseName                      { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                           Nullable] public string?   DatabaseName                      { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -9910,7 +10461,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                          Nullable] public string    HOST                              { get; set; } // VARCHAR(64)
+		[Column(),                                          Nullable] public string?   HOST                              { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -9922,19 +10473,19 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Filesystem path
 		/// </summary>
-		[Column(),                                          Nullable] public string    PATH                              { get; set; } // VARCHAR(512)
+		[Column(),                                          Nullable] public string?   PATH                              { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Filesystem type
 		/// </summary>
-		[Column("FILESYSTEM_TYPE"),                         Nullable] public string    FilesystemType                    { get; set; } // VARCHAR(32)
+		[Column("FILESYSTEM_TYPE"),                         Nullable] public string?   FilesystemType                    { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Type of contained files
 		/// </summary>
-		[Column(),                                          Nullable] public string    TYPE                              { get; set; } // VARCHAR(16)
+		[Column(),                                          Nullable] public string?   TYPE                              { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Configuration parameters
 		/// </summary>
-		[Column(),                                          Nullable] public string    CONFIGURATION                     { get; set; } // VARCHAR(256)
+		[Column(),                                          Nullable] public string?   CONFIGURATION                     { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Max. I/O buffer size
 		/// </summary>
@@ -10038,11 +10589,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),              Nullable] public string  DatabaseName            { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),              Nullable] public string? DatabaseName            { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                             Nullable] public string  HOST                    { get; set; } // VARCHAR(64)
+		[Column(),                             Nullable] public string? HOST                    { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -10054,19 +10605,19 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Filesystem path
 		/// </summary>
-		[Column(),                             Nullable] public string  PATH                    { get; set; } // VARCHAR(512)
+		[Column(),                             Nullable] public string? PATH                    { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Filesystem type
 		/// </summary>
-		[Column("FILESYSTEM_TYPE"),            Nullable] public string  FilesystemType          { get; set; } // VARCHAR(32)
+		[Column("FILESYSTEM_TYPE"),            Nullable] public string? FilesystemType          { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Type of contained files
 		/// </summary>
-		[Column(),                             Nullable] public string  TYPE                    { get; set; } // VARCHAR(16)
+		[Column(),                             Nullable] public string? TYPE                    { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Configuration parameters
 		/// </summary>
-		[Column(),                             Nullable] public string  CONFIGURATION           { get; set; } // VARCHAR(256)
+		[Column(),                             Nullable] public string? CONFIGURATION           { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Count of blocked write requests
 		/// </summary>
@@ -10166,7 +10717,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),              Nullable] public string    DatabaseName            { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),              Nullable] public string?   DatabaseName            { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Last reset timestamp
 		/// </summary>
@@ -10174,7 +10725,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                             Nullable] public string    HOST                    { get; set; } // VARCHAR(64)
+		[Column(),                             Nullable] public string?   HOST                    { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -10186,19 +10737,19 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Filesystem path
 		/// </summary>
-		[Column(),                             Nullable] public string    PATH                    { get; set; } // VARCHAR(512)
+		[Column(),                             Nullable] public string?   PATH                    { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Filesystem type
 		/// </summary>
-		[Column("FILESYSTEM_TYPE"),            Nullable] public string    FilesystemType          { get; set; } // VARCHAR(32)
+		[Column("FILESYSTEM_TYPE"),            Nullable] public string?   FilesystemType          { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// Type of contained files
 		/// </summary>
-		[Column(),                             Nullable] public string    TYPE                    { get; set; } // VARCHAR(16)
+		[Column(),                             Nullable] public string?   TYPE                    { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Configuration parameters
 		/// </summary>
-		[Column(),                             Nullable] public string    CONFIGURATION           { get; set; } // VARCHAR(256)
+		[Column(),                             Nullable] public string?   CONFIGURATION           { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Count of blocked write requests
 		/// </summary>
@@ -10298,23 +10849,23 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"), Nullable] public string DatabaseName { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"), Nullable] public string? DatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Volume ID. See M_VOLUMES
 		/// </summary>
-		[Column("VOLUME_ID"),     Nullable] public int?   VolumeId     { get; set; } // INTEGER
+		[Column("VOLUME_ID"),     Nullable] public int?    VolumeId     { get; set; } // INTEGER
 		/// <summary>
 		/// Disk ID. See M_DISKS
 		/// </summary>
-		[Column("DISK_ID"),       Nullable] public int?   DiskId       { get; set; } // INTEGER
+		[Column("DISK_ID"),       Nullable] public int?    DiskId       { get; set; } // INTEGER
 		/// <summary>
 		/// Data area size
 		/// </summary>
-		[Column("DATA_SIZE"),     Nullable] public long?  DataSize     { get; set; } // BIGINT
+		[Column("DATA_SIZE"),     Nullable] public long?   DataSize     { get; set; } // BIGINT
 		/// <summary>
 		/// Log area size
 		/// </summary>
-		[Column("LOG_SIZE"),      Nullable] public long?  LogSize      { get; set; } // BIGINT
+		[Column("LOG_SIZE"),      Nullable] public long?   LogSize      { get; set; } // BIGINT
 	}
 
 	/// <summary>
@@ -10326,11 +10877,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                   Nullable] public string  DatabaseName                 { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                   Nullable] public string? DatabaseName                 { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                  Nullable] public string  HOST                         { get; set; } // VARCHAR(64)
+		[Column(),                                  Nullable] public string? HOST                         { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -10422,27 +10973,33 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"), Nullable] public string DatabaseName { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"), Nullable] public string? DatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Public HTTP URL of the XS Engine
 		/// </summary>
-		[Column("HTTP_URL"),      Nullable] public string HttpUrl      { get; set; } // VARCHAR(270)
+		[Column("HTTP_URL"),      Nullable] public string? HttpUrl      { get; set; } // VARCHAR(270)
 		/// <summary>
 		/// Public HTTPS URL of the XS Engine
 		/// </summary>
-		[Column("HTTPS_URL"),     Nullable] public string HttpsUrl     { get; set; } // VARCHAR(270)
+		[Column("HTTPS_URL"),     Nullable] public string? HttpsUrl     { get; set; } // VARCHAR(270)
 		/// <summary>
 		/// Purpose of these URLs
 		/// </summary>
-		[Column(),                Nullable] public string PURPOSE      { get; set; } // VARCHAR(32)
+		[Column(),                Nullable] public string? PURPOSE      { get; set; } // VARCHAR(32)
 	}
 
 	[Table(Schema="_SYS_XS", Name="OAUTH_ACCESS_TOKEN")]
 	public partial class _SYS_XS_OauthAccessToken
 	{
+		#nullable disable
 		[Column("CLIENT_PACKAGE"),   PrimaryKey(1), NotNull] public string    ClientPackage  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("CLIENT_NAME"),      PrimaryKey(2), NotNull] public string    ClientName     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column(),                   PrimaryKey(3), NotNull] public string    USER           { get; set; } // NVARCHAR(256)
+		#nullable enable
 		[Column("TOKEN_TYPE"),       PrimaryKey(4), NotNull] public byte      TokenType      { get; set; } // TINYINT
 		[Column("TOKEN_LIFETIME"),      Nullable           ] public int?      TokenLifetime  { get; set; } // INTEGER
 		[Column("TOKEN_GRANT_TIME"),    Nullable           ] public DateTime? TokenGrantTime { get; set; } // TIMESTAMP
@@ -10451,169 +11008,213 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="OAUTH_ACCESS_TOKEN_SCOPES")]
 	public partial class _SYS_XS_OauthAccessTokenScope
 	{
+		#nullable disable
 		[Column("CLIENT_PACKAGE"), PrimaryKey(1), NotNull] public string ClientPackage { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("CLIENT_NAME"),    PrimaryKey(2), NotNull] public string ClientName    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column(),                 PrimaryKey(3), NotNull] public string USER          { get; set; } // NVARCHAR(256)
+		#nullable enable
 		[Column("TOKEN_TYPE"),     PrimaryKey(4), NotNull] public byte   TokenType     { get; set; } // TINYINT
+		#nullable disable
 		[Column(),                 PrimaryKey(5), NotNull] public string SCOPE         { get; set; } // NVARCHAR(512)
+		#nullable enable
 		[Column("SCOPE_TYPE"),        Nullable           ] public byte?  ScopeType     { get; set; } // TINYINT
 	}
 
 	[Table(Schema="_SYS_XS", Name="OAUTH_APP_CONFIG")]
 	public partial class _SYS_XS_OauthAppConfig
 	{
+		#nullable disable
 		[Column("PACKAGE_ID"),     PrimaryKey(1), NotNull] public string    PackageId     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("OBJECT_NAME"),    PrimaryKey(2), NotNull] public string    ObjectName    { get; set; } // NVARCHAR(256)
-		[Column("CLIENT_PACKAGE"),    Nullable           ] public string    ClientPackage { get; set; } // NVARCHAR(256)
-		[Column("CLIENT_NAME"),       Nullable           ] public string    ClientName    { get; set; } // NVARCHAR(256)
-		[Column(),                    Nullable           ] public string    DESCRIPTION   { get; set; } // NVARCHAR(512)
-		[Column("CHANGED_BY"),        Nullable           ] public string    ChangedBy     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column("CLIENT_PACKAGE"),    Nullable           ] public string?   ClientPackage { get; set; } // NVARCHAR(256)
+		[Column("CLIENT_NAME"),       Nullable           ] public string?   ClientName    { get; set; } // NVARCHAR(256)
+		[Column(),                    Nullable           ] public string?   DESCRIPTION   { get; set; } // NVARCHAR(512)
+		[Column("CHANGED_BY"),        Nullable           ] public string?   ChangedBy     { get; set; } // NVARCHAR(256)
 		[Column("CHANGED_AT"),        Nullable           ] public DateTime? ChangedAt     { get; set; } // TIMESTAMP
 	}
 
 	[Table(Schema="_SYS_XS", Name="OAUTH_APP_CONFIG_SCOPES")]
 	public partial class _SYS_XS_OauthAppConfigScope
 	{
-		[Column("PACKAGE_ID"),     PrimaryKey(1), NotNull] public string PackageId     { get; set; } // NVARCHAR(256)
-		[Column("OBJECT_NAME"),    PrimaryKey(2), NotNull] public string ObjectName    { get; set; } // NVARCHAR(256)
-		[Column(),                 PrimaryKey(3), NotNull] public string SCOPE         { get; set; } // NVARCHAR(256)
-		[Column(),                    Nullable           ] public byte?  MANDATORY     { get; set; } // TINYINT
-		[Column("CLIENT_PACKAGE"),    Nullable           ] public string ClientPackage { get; set; } // NVARCHAR(256)
-		[Column("CLIENT_NAME"),       Nullable           ] public string ClientName    { get; set; } // NVARCHAR(256)
+		#nullable disable
+		[Column("PACKAGE_ID"),     PrimaryKey(1), NotNull] public string  PackageId     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("OBJECT_NAME"),    PrimaryKey(2), NotNull] public string  ObjectName    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column(),                 PrimaryKey(3), NotNull] public string  SCOPE         { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),                    Nullable           ] public byte?   MANDATORY     { get; set; } // TINYINT
+		[Column("CLIENT_PACKAGE"),    Nullable           ] public string? ClientPackage { get; set; } // NVARCHAR(256)
+		[Column("CLIENT_NAME"),       Nullable           ] public string? ClientName    { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_XS", Name="OAUTH_CLIENT_CONFIG")]
 	public partial class _SYS_XS_OauthClientConfig
 	{
+		#nullable disable
 		[Column("CLIENT_PACKAGE"),             PrimaryKey(1), NotNull] public string    ClientPackage            { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("CLIENT_NAME"),                PrimaryKey(2), NotNull] public string    ClientName               { get; set; } // NVARCHAR(256)
-		[Column("FLAVOR_PACKAGE"),                Nullable           ] public string    FlavorPackage            { get; set; } // NVARCHAR(256)
-		[Column("FLAVOR_NAME"),                   Nullable           ] public string    FlavorName               { get; set; } // NVARCHAR(256)
-		[Column("CLIENT_ID"),                     Nullable           ] public string    ClientId                 { get; set; } // NVARCHAR(512)
+		#nullable enable
+		[Column("FLAVOR_PACKAGE"),                Nullable           ] public string?   FlavorPackage            { get; set; } // NVARCHAR(256)
+		[Column("FLAVOR_NAME"),                   Nullable           ] public string?   FlavorName               { get; set; } // NVARCHAR(256)
+		[Column("CLIENT_ID"),                     Nullable           ] public string?   ClientId                 { get; set; } // NVARCHAR(512)
 		[Column("CLIENT_AUTHENTICATION_TYPE"),                NotNull] public byte      ClientAuthenticationType { get; set; } // TINYINT
-		[Column("URL_TOKEN_ENDPOINT"),            Nullable           ] public string    UrlTokenEndpoint         { get; set; } // NVARCHAR(2048)
-		[Column("URL_REVOCATION_ENDPOINT"),       Nullable           ] public string    UrlRevocationEndpoint    { get; set; } // NVARCHAR(2048)
-		[Column("URL_AUTHORIZATION_ENDPOINT"),    Nullable           ] public string    UrlAuthorizationEndpoint { get; set; } // NVARCHAR(2048)
-		[Column("SAML_ISSUER"),                   Nullable           ] public string    SamlIssuer               { get; set; } // NVARCHAR(512)
+		[Column("URL_TOKEN_ENDPOINT"),            Nullable           ] public string?   UrlTokenEndpoint         { get; set; } // NVARCHAR(2048)
+		[Column("URL_REVOCATION_ENDPOINT"),       Nullable           ] public string?   UrlRevocationEndpoint    { get; set; } // NVARCHAR(2048)
+		[Column("URL_AUTHORIZATION_ENDPOINT"),    Nullable           ] public string?   UrlAuthorizationEndpoint { get; set; } // NVARCHAR(2048)
+		[Column("SAML_ISSUER"),                   Nullable           ] public string?   SamlIssuer               { get; set; } // NVARCHAR(512)
 		[Column(),                                            NotNull] public byte      FLOW                     { get; set; } // TINYINT
-		[Column("URL_REDIRECT"),                  Nullable           ] public string    UrlRedirect              { get; set; } // NVARCHAR(2048)
+		[Column("URL_REDIRECT"),                  Nullable           ] public string?   UrlRedirect              { get; set; } // NVARCHAR(2048)
 		[Column(),                                            NotNull] public byte      SHARED                   { get; set; } // TINYINT
 		[Column("SCOPE_REQUEST"),                             NotNull] public byte      ScopeRequest             { get; set; } // TINYINT
-		[Column(),                                Nullable           ] public string    DESCRIPTION              { get; set; } // NVARCHAR(512)
-		[Column("CHANGED_BY"),                    Nullable           ] public string    ChangedBy                { get; set; } // NVARCHAR(256)
+		[Column(),                                Nullable           ] public string?   DESCRIPTION              { get; set; } // NVARCHAR(512)
+		[Column("CHANGED_BY"),                    Nullable           ] public string?   ChangedBy                { get; set; } // NVARCHAR(256)
 		[Column("CHANGED_AT"),                    Nullable           ] public DateTime? ChangedAt                { get; set; } // TIMESTAMP
 	}
 
 	[Table(Schema="_SYS_XS", Name="OAUTH_CLIENT_FLAVOR")]
 	public partial class _SYS_XS_OauthClientFlavor
 	{
+		#nullable disable
 		[Column("FLAVOR_PACKAGE"),  PrimaryKey(1), NotNull] public string    FlavorPackage  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("FLAVOR_NAME"),     PrimaryKey(2), NotNull] public string    FlavorName     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("FLAVOR_STEP"),     PrimaryKey(3), NotNull] public string    FlavorStep     { get; set; } // NVARCHAR(4)
+		#nullable enable
+		#nullable disable
 		[Column("PARAM_LOCATION"),  PrimaryKey(4), NotNull] public string    ParamLocation  { get; set; } // NVARCHAR(4)
+		#nullable enable
+		#nullable disable
 		[Column("PARAM_NAME"),      PrimaryKey(5), NotNull] public string    ParamName      { get; set; } // NVARCHAR(256)
-		[Column("PARAM_VALUE"),        Nullable           ] public string    ParamValue     { get; set; } // NVARCHAR(2048)
-		[Column("VALUE_TYPE"),         Nullable           ] public string    ValueType      { get; set; } // NVARCHAR(4)
+		#nullable enable
+		[Column("PARAM_VALUE"),        Nullable           ] public string?   ParamValue     { get; set; } // NVARCHAR(2048)
+		[Column("VALUE_TYPE"),         Nullable           ] public string?   ValueType      { get; set; } // NVARCHAR(4)
 		[Column("PARAM_MANDATORY"),                NotNull] public byte      ParamMandatory { get; set; } // TINYINT
-		[Column("CHANGED_BY"),         Nullable           ] public string    ChangedBy      { get; set; } // NVARCHAR(256)
+		[Column("CHANGED_BY"),         Nullable           ] public string?   ChangedBy      { get; set; } // NVARCHAR(256)
 		[Column("CHANGED_AT"),         Nullable           ] public DateTime? ChangedAt      { get; set; } // TIMESTAMP
 	}
 
 	[Table(Schema="_SYS_XS", Name="ODATA_SERVICES", IsView=true)]
 	public partial class _SYS_XS_OdataService
 	{
+		#nullable disable
 		[Column(),                NotNull    ] public string   PACKAGE      { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("SERVICE_NAME"),  NotNull    ] public string   ServiceName  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column(),                NotNull    ] public string   TYPE         { get; set; } // NVARCHAR(255)
+		#nullable enable
 		[Column("ACTIVATED_AT"),  NotNull    ] public DateTime ActivatedAt  { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("DELIVERY_UNIT"), NotNull    ] public string   DeliveryUnit { get; set; } // NVARCHAR(256)
-		[Column(),                   Nullable] public string   AUTHOR       { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),                   Nullable] public string?  AUTHOR       { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_SQL_ANALYZER", Name="OPERATOR_DETAILS", IsView=true)]
 	public partial class _SYS_SQL_ANALYZER_OperatorDetail
 	{
-		[Column("USER_NAME"),              NotNull    ] public string UserName             { get; set; } // NVARCHAR(256)
-		[Column("STATEMENT_EXECUTION_ID"),    Nullable] public string StatementExecutionId { get; set; } // VARCHAR(32)
-		[Column("OPERATOR_ID"),               Nullable] public string OperatorId           { get; set; } // VARCHAR(256)
-		[Column("OPERATOR_DETAILS_KEY"),      Nullable] public string OperatorDetailsKey   { get; set; } // NVARCHAR(512)
-		[Column("OPERATOR_DETAILS_VALUE"),    Nullable] public string OperatorDetailsValue { get; set; } // NCLOB
+		#nullable disable
+		[Column("USER_NAME"),              NotNull    ] public string  UserName             { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column("STATEMENT_EXECUTION_ID"),    Nullable] public string? StatementExecutionId { get; set; } // VARCHAR(32)
+		[Column("OPERATOR_ID"),               Nullable] public string? OperatorId           { get; set; } // VARCHAR(256)
+		[Column("OPERATOR_DETAILS_KEY"),      Nullable] public string? OperatorDetailsKey   { get; set; } // NVARCHAR(512)
+		[Column("OPERATOR_DETAILS_VALUE"),    Nullable] public string? OperatorDetailsValue { get; set; } // NCLOB
 	}
 
 	[Table(Schema="_SYS_SQL_ANALYZER", Name="OPERATOR_DETAILS_")]
 	public partial class _SYS_SQL_ANALYZER_OperatorDetails
 	{
-		[Column("USER_NAME"),              Nullable] public string UserName             { get; set; } // NVARCHAR(256)
-		[Column("STATEMENT_EXECUTION_ID"), Nullable] public string StatementExecutionId { get; set; } // VARCHAR(32)
-		[Column("OPERATOR_ID"),            Nullable] public string OperatorId           { get; set; } // VARCHAR(256)
-		[Column("OPERATOR_DETAILS_KEY"),   Nullable] public string OperatorDetailsKey   { get; set; } // NVARCHAR(512)
-		[Column("OPERATOR_DETAILS_VALUE"), Nullable] public string OperatorDetailsValue { get; set; } // NCLOB
+		[Column("USER_NAME"),              Nullable] public string? UserName             { get; set; } // NVARCHAR(256)
+		[Column("STATEMENT_EXECUTION_ID"), Nullable] public string? StatementExecutionId { get; set; } // VARCHAR(32)
+		[Column("OPERATOR_ID"),            Nullable] public string? OperatorId           { get; set; } // VARCHAR(256)
+		[Column("OPERATOR_DETAILS_KEY"),   Nullable] public string? OperatorDetailsKey   { get; set; } // NVARCHAR(512)
+		[Column("OPERATOR_DETAILS_VALUE"), Nullable] public string? OperatorDetailsValue { get; set; } // NCLOB
 	}
 
 	[Table(Schema="_SYS_SQL_ANALYZER", Name="OPERATOR_STATISTICS", IsView=true)]
 	public partial class _SYS_SQL_ANALYZER_OperatorStatistic
 	{
-		[Column("FROM_PLV"),                        Nullable] public string    FromPlv                   { get; set; } // VARCHAR(5)
+		[Column("FROM_PLV"),                        Nullable] public string?   FromPlv                   { get; set; } // VARCHAR(5)
+		#nullable disable
 		[Column("USER_NAME"),                    NotNull    ] public string    UserName                  { get; set; } // NVARCHAR(256)
-		[Column("SCHEMA_NAME"),                     Nullable] public string    SchemaName                { get; set; } // NVARCHAR(256)
-		[Column("STATEMENT_EXECUTION_ID"),          Nullable] public string    StatementExecutionId      { get; set; } // VARCHAR(32)
-		[Column("OPERATOR_ID"),                     Nullable] public string    OperatorId                { get; set; } // VARCHAR(256)
-		[Column("OPERATOR_NAME"),                   Nullable] public string    OperatorName              { get; set; } // VARCHAR(256)
-		[Column("OPERATOR_TYPE"),                   Nullable] public string    OperatorType              { get; set; } // VARCHAR(32)
-		[Column("IS_LOGICAL"),                      Nullable] public string    IsLogical                 { get; set; } // VARCHAR(5)
-		[Column("EXECUTION_ENGINE"),                Nullable] public string    ExecutionEngine           { get; set; } // VARCHAR(64)
-		[Column("PLAN_ID"),                         Nullable] public string    PlanId                    { get; set; } // VARCHAR(256)
-		[Column("SUB_PLAN"),                        Nullable] public string    SubPlan                   { get; set; } // CLOB
-		[Column("CHILD_OPERATOR_ID"),               Nullable] public string    ChildOperatorId           { get; set; } // CLOB
-		[Column("EXECUTION_STATUS"),                Nullable] public string    ExecutionStatus           { get; set; } // VARCHAR(32)
-		[Column("ACCESSED_OBJECT_NAMES"),           Nullable] public string    AccessedObjectNames       { get; set; } // NVARCHAR(5000)
-		[Column("TABLE_TYPE"),                      Nullable] public string    TableType                 { get; set; } // VARCHAR(256)
-		[Column("HOST_EXECUTED"),                   Nullable] public string    HostExecuted              { get; set; } // VARCHAR(64)
+		#nullable enable
+		[Column("SCHEMA_NAME"),                     Nullable] public string?   SchemaName                { get; set; } // NVARCHAR(256)
+		[Column("STATEMENT_EXECUTION_ID"),          Nullable] public string?   StatementExecutionId      { get; set; } // VARCHAR(32)
+		[Column("OPERATOR_ID"),                     Nullable] public string?   OperatorId                { get; set; } // VARCHAR(256)
+		[Column("OPERATOR_NAME"),                   Nullable] public string?   OperatorName              { get; set; } // VARCHAR(256)
+		[Column("OPERATOR_TYPE"),                   Nullable] public string?   OperatorType              { get; set; } // VARCHAR(32)
+		[Column("IS_LOGICAL"),                      Nullable] public string?   IsLogical                 { get; set; } // VARCHAR(5)
+		[Column("EXECUTION_ENGINE"),                Nullable] public string?   ExecutionEngine           { get; set; } // VARCHAR(64)
+		[Column("PLAN_ID"),                         Nullable] public string?   PlanId                    { get; set; } // VARCHAR(256)
+		[Column("SUB_PLAN"),                        Nullable] public string?   SubPlan                   { get; set; } // CLOB
+		[Column("CHILD_OPERATOR_ID"),               Nullable] public string?   ChildOperatorId           { get; set; } // CLOB
+		[Column("EXECUTION_STATUS"),                Nullable] public string?   ExecutionStatus           { get; set; } // VARCHAR(32)
+		[Column("ACCESSED_OBJECT_NAMES"),           Nullable] public string?   AccessedObjectNames       { get; set; } // NVARCHAR(5000)
+		[Column("TABLE_TYPE"),                      Nullable] public string?   TableType                 { get; set; } // VARCHAR(256)
+		[Column("HOST_EXECUTED"),                   Nullable] public string?   HostExecuted              { get; set; } // VARCHAR(64)
 		[Column("PORT_EXECUTED"),                   Nullable] public int?      PortExecuted              { get; set; } // INTEGER
-		[Column("ACCESSED_PARTITION"),              Nullable] public string    AccessedPartition         { get; set; } // VARCHAR(256)
+		[Column("ACCESSED_PARTITION"),              Nullable] public string?   AccessedPartition         { get; set; } // VARCHAR(256)
 		[Column("EXCLUSIVE_EXECUTION_TIME"),        Nullable] public long?     ExclusiveExecutionTime    { get; set; } // BIGINT
 		[Column("EXECUTION_START_TIME"),            Nullable] public DateTime? ExecutionStartTime        { get; set; } // TIMESTAMP
 		[Column("EXECUTION_END_TIME"),              Nullable] public DateTime? ExecutionEndTime          { get; set; } // TIMESTAMP
-		[Column("EXECUTION_TIMESTAMPS"),            Nullable] public string    ExecutionTimestamps       { get; set; } // CLOB
+		[Column("EXECUTION_TIMESTAMPS"),            Nullable] public string?   ExecutionTimestamps       { get; set; } // CLOB
 		[Column("CPU_TIME_SELF"),                   Nullable] public long?     CpuTimeSelf               { get; set; } // BIGINT
 		[Column("ESTIMATED_OUTPUT_SIZE"),           Nullable] public double?   EstimatedOutputSize       { get; set; } // DOUBLE
 		[Column("EXECUTED_OUTPUT_RECORD_COUNT"),    Nullable] public long?     ExecutedOutputRecordCount { get; set; } // BIGINT
 		[Column("OUTPUT_PAYLOAD_SIZE"),             Nullable] public long?     OutputPayloadSize         { get; set; } // BIGINT
-		[Column("OPERATOR_DETAILS_SUMMARY"),        Nullable] public string    OperatorDetailsSummary    { get; set; } // NCLOB
-		[Column("OPERATOR_DETAILS"),                Nullable] public string    OperatorDetails           { get; set; } // NCLOB
+		[Column("OPERATOR_DETAILS_SUMMARY"),        Nullable] public string?   OperatorDetailsSummary    { get; set; } // NCLOB
+		[Column("OPERATOR_DETAILS"),                Nullable] public string?   OperatorDetails           { get; set; } // NCLOB
 	}
 
 	[Table(Schema="_SYS_SQL_ANALYZER", Name="OPERATOR_STATISTICS_")]
 	public partial class _SYS_SQL_ANALYZER_OperatorStatistics
 	{
-		[Column("FROM_PLV"),                     Nullable] public string    FromPlv                   { get; set; } // VARCHAR(5)
-		[Column("USER_NAME"),                    Nullable] public string    UserName                  { get; set; } // NVARCHAR(256)
-		[Column("SCHEMA_NAME"),                  Nullable] public string    SchemaName                { get; set; } // NVARCHAR(256)
-		[Column("STATEMENT_EXECUTION_ID"),       Nullable] public string    StatementExecutionId      { get; set; } // VARCHAR(32)
-		[Column("OPERATOR_ID"),                  Nullable] public string    OperatorId                { get; set; } // VARCHAR(256)
-		[Column("OPERATOR_NAME"),                Nullable] public string    OperatorName              { get; set; } // VARCHAR(256)
-		[Column("OPERATOR_TYPE"),                Nullable] public string    OperatorType              { get; set; } // VARCHAR(32)
-		[Column("IS_LOGICAL"),                   Nullable] public string    IsLogical                 { get; set; } // VARCHAR(5)
-		[Column("EXECUTION_ENGINE"),             Nullable] public string    ExecutionEngine           { get; set; } // VARCHAR(64)
-		[Column("PLAN_ID"),                      Nullable] public string    PlanId                    { get; set; } // VARCHAR(256)
-		[Column("SUB_PLAN"),                     Nullable] public string    SubPlan                   { get; set; } // CLOB
-		[Column("CHILD_OPERATOR_ID"),            Nullable] public string    ChildOperatorId           { get; set; } // CLOB
-		[Column("EXECUTION_STATUS"),             Nullable] public string    ExecutionStatus           { get; set; } // VARCHAR(32)
-		[Column("ACCESSED_OBJECT_NAMES"),        Nullable] public string    AccessedObjectNames       { get; set; } // NVARCHAR(5000)
-		[Column("TABLE_TYPE"),                   Nullable] public string    TableType                 { get; set; } // VARCHAR(256)
-		[Column("HOST_EXECUTED"),                Nullable] public string    HostExecuted              { get; set; } // VARCHAR(64)
+		[Column("FROM_PLV"),                     Nullable] public string?   FromPlv                   { get; set; } // VARCHAR(5)
+		[Column("USER_NAME"),                    Nullable] public string?   UserName                  { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),                  Nullable] public string?   SchemaName                { get; set; } // NVARCHAR(256)
+		[Column("STATEMENT_EXECUTION_ID"),       Nullable] public string?   StatementExecutionId      { get; set; } // VARCHAR(32)
+		[Column("OPERATOR_ID"),                  Nullable] public string?   OperatorId                { get; set; } // VARCHAR(256)
+		[Column("OPERATOR_NAME"),                Nullable] public string?   OperatorName              { get; set; } // VARCHAR(256)
+		[Column("OPERATOR_TYPE"),                Nullable] public string?   OperatorType              { get; set; } // VARCHAR(32)
+		[Column("IS_LOGICAL"),                   Nullable] public string?   IsLogical                 { get; set; } // VARCHAR(5)
+		[Column("EXECUTION_ENGINE"),             Nullable] public string?   ExecutionEngine           { get; set; } // VARCHAR(64)
+		[Column("PLAN_ID"),                      Nullable] public string?   PlanId                    { get; set; } // VARCHAR(256)
+		[Column("SUB_PLAN"),                     Nullable] public string?   SubPlan                   { get; set; } // CLOB
+		[Column("CHILD_OPERATOR_ID"),            Nullable] public string?   ChildOperatorId           { get; set; } // CLOB
+		[Column("EXECUTION_STATUS"),             Nullable] public string?   ExecutionStatus           { get; set; } // VARCHAR(32)
+		[Column("ACCESSED_OBJECT_NAMES"),        Nullable] public string?   AccessedObjectNames       { get; set; } // NVARCHAR(5000)
+		[Column("TABLE_TYPE"),                   Nullable] public string?   TableType                 { get; set; } // VARCHAR(256)
+		[Column("HOST_EXECUTED"),                Nullable] public string?   HostExecuted              { get; set; } // VARCHAR(64)
 		[Column("PORT_EXECUTED"),                Nullable] public int?      PortExecuted              { get; set; } // INTEGER
-		[Column("ACCESSED_PARTITION"),           Nullable] public string    AccessedPartition         { get; set; } // VARCHAR(256)
+		[Column("ACCESSED_PARTITION"),           Nullable] public string?   AccessedPartition         { get; set; } // VARCHAR(256)
 		[Column("EXCLUSIVE_EXECUTION_TIME"),     Nullable] public long?     ExclusiveExecutionTime    { get; set; } // BIGINT
 		[Column("EXECUTION_START_TIME"),         Nullable] public DateTime? ExecutionStartTime        { get; set; } // TIMESTAMP
 		[Column("EXECUTION_END_TIME"),           Nullable] public DateTime? ExecutionEndTime          { get; set; } // TIMESTAMP
-		[Column("EXECUTION_TIMESTAMPS"),         Nullable] public string    ExecutionTimestamps       { get; set; } // CLOB
+		[Column("EXECUTION_TIMESTAMPS"),         Nullable] public string?   ExecutionTimestamps       { get; set; } // CLOB
 		[Column("CPU_TIME_SELF"),                Nullable] public long?     CpuTimeSelf               { get; set; } // BIGINT
 		[Column("ESTIMATED_OUTPUT_SIZE"),        Nullable] public double?   EstimatedOutputSize       { get; set; } // DOUBLE
 		[Column("EXECUTED_OUTPUT_RECORD_COUNT"), Nullable] public long?     ExecutedOutputRecordCount { get; set; } // BIGINT
 		[Column("OUTPUT_PAYLOAD_SIZE"),          Nullable] public long?     OutputPayloadSize         { get; set; } // BIGINT
-		[Column("OPERATOR_DETAILS_SUMMARY"),     Nullable] public string    OperatorDetailsSummary    { get; set; } // NCLOB
-		[Column("OPERATOR_DETAILS"),             Nullable] public string    OperatorDetails           { get; set; } // NCLOB
+		[Column("OPERATOR_DETAILS_SUMMARY"),     Nullable] public string?   OperatorDetailsSummary    { get; set; } // NCLOB
+		[Column("OPERATOR_DETAILS"),             Nullable] public string?   OperatorDetails           { get; set; } // NCLOB
 	}
 
 	/// <summary>
@@ -10630,14 +11231,16 @@ namespace SapHanaDataContext
 		/// Time of OOM
 		/// </summary>
 		[Column(),                       NotNull    ] public DateTime TIME               { get; set; } // TIMESTAMP
+		#nullable disable
 		/// <summary>
 		/// Prepared statement ID
 		/// </summary>
 		[Column("STATEMENT_ID"),         NotNull    ] public string   StatementId        { get; set; } // VARCHAR(20)
+		#nullable enable
 		/// <summary>
 		/// Allocator name in case of a heap memory failure
 		/// </summary>
-		[Column("HEAP_MEMORY_CATEGORY"),    Nullable] public string   HeapMemoryCategory { get; set; } // VARCHAR(128)
+		[Column("HEAP_MEMORY_CATEGORY"),    Nullable] public string?  HeapMemoryCategory { get; set; } // VARCHAR(128)
 		/// <summary>
 		/// The size in bytes of the failed memory allocation
 		/// </summary>
@@ -10649,7 +11252,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Reason for OOM, e.g. GLOBAL ALLOCATION LIMIT, PROCESS ALLOCATION LIMIT, STATEMENT MEMORY LIMIT
 		/// </summary>
-		[Column("EVENT_REASON"),            Nullable] public string   EventReason        { get; set; } // VARCHAR(32)
+		[Column("EVENT_REASON"),            Nullable] public string?  EventReason        { get; set; } // VARCHAR(32)
 		/// <summary>
 		/// The size of the limit, depends on EVENT_REASON
 		/// </summary>
@@ -10682,15 +11285,20 @@ namespace SapHanaDataContext
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // INTEGER
+		#nullable disable
 		[Column,     NotNull] public string Diagnosis { get; set; } // NVARCHAR(256)
+		#nullable enable
 
 		#region Associations
 
+		#nullable disable
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
 		public Person Person { get; set; }
+
+		#nullable enable
 
 		#endregion
 	}
@@ -10704,11 +11312,15 @@ namespace SapHanaDataContext
 	[Table(Schema="TESTHANA", Name="Person")]
 	public partial class Person
 	{
-		[PrimaryKey, Identity   ] public int    PersonID   { get; set; } // INTEGER
-		[Column,     NotNull    ] public string FirstName  { get; set; } // NVARCHAR(50)
-		[Column,     NotNull    ] public string LastName   { get; set; } // NVARCHAR(50)
-		[Column,        Nullable] public string MiddleName { get; set; } // NVARCHAR(50)
-		[Column,     NotNull    ] public char   Gender     { get; set; } // CHAR(1)
+		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // INTEGER
+		#nullable disable
+		[Column,     NotNull    ] public string  FirstName  { get; set; } // NVARCHAR(50)
+		#nullable enable
+		#nullable disable
+		[Column,     NotNull    ] public string  LastName   { get; set; } // NVARCHAR(50)
+		#nullable enable
+		[Column,        Nullable] public string? MiddleName { get; set; } // NVARCHAR(50)
+		[Column,     NotNull    ] public char    Gender     { get; set; } // CHAR(1)
 
 		#region Associations
 
@@ -10716,13 +11328,13 @@ namespace SapHanaDataContext
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Doctor Doctor { get; set; }
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Patient Patient { get; set; }
+		public Patient? Patient { get; set; }
 
 		#endregion
 	}
@@ -10730,66 +11342,88 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_AFL", Name="PLUGIN_ERRORS")]
 	public partial class _SYS_AFL_PluginError
 	{
-		[Column("PLUGIN_NAME"),    Nullable] public string PluginName    { get; set; } // VARCHAR(32)
-		[Column("ERROR_TEXT"),     Nullable] public string ErrorText     { get; set; } // NVARCHAR(1024)
-		[Column("AREA_NAME"),      Nullable] public string AreaName      { get; set; } // NVARCHAR(256)
-		[Column("AREA_STATUS"),    Nullable] public string AreaStatus    { get; set; } // VARCHAR(32)
-		[Column("PACKAGE_NAME"),   Nullable] public string PackageName   { get; set; } // NVARCHAR(256)
-		[Column("PACKAGE_STATUS"), Nullable] public string PackageStatus { get; set; } // VARCHAR(32)
+		[Column("PLUGIN_NAME"),    Nullable] public string? PluginName    { get; set; } // VARCHAR(32)
+		[Column("ERROR_TEXT"),     Nullable] public string? ErrorText     { get; set; } // NVARCHAR(1024)
+		[Column("AREA_NAME"),      Nullable] public string? AreaName      { get; set; } // NVARCHAR(256)
+		[Column("AREA_STATUS"),    Nullable] public string? AreaStatus    { get; set; } // VARCHAR(32)
+		[Column("PACKAGE_NAME"),   Nullable] public string? PackageName   { get; set; } // NVARCHAR(256)
+		[Column("PACKAGE_STATUS"), Nullable] public string? PackageStatus { get; set; } // VARCHAR(32)
 	}
 
 	[Table(Schema="_SYS_RT", Name="PP_A_ALGORITHM")]
 	public partial class _SYS_RT_PpAAlgorithm
 	{
-		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string PackageId   { get; set; } // NVARCHAR(256)
-		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string ObjectName  { get; set; } // NVARCHAR(256)
-		[Column("PDC_NAME"),       Nullable           ] public string PdcName     { get; set; } // NVARCHAR(256)
-		[Column("PDC_PACKAGE"),    Nullable           ] public string PdcPackage  { get; set; } // NVARCHAR(256)
-		[Column(),                 Nullable           ] public string DESCRIPTION { get; set; } // NVARCHAR(256)
+		#nullable disable
+		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column("PDC_NAME"),       Nullable           ] public string? PdcName     { get; set; } // NVARCHAR(256)
+		[Column("PDC_PACKAGE"),    Nullable           ] public string? PdcPackage  { get; set; } // NVARCHAR(256)
+		[Column(),                 Nullable           ] public string? DESCRIPTION { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_RT", Name="PP_A_CHA")]
 	public partial class _SYS_RT_PpACha
 	{
-		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string PackageId   { get; set; } // NVARCHAR(256)
-		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string ObjectName  { get; set; } // NVARCHAR(256)
-		[Column(),                 Nullable           ] public string DESCRIPTION { get; set; } // NVARCHAR(256)
-		[Column("MSD_TABLE"),      Nullable           ] public string MsdTable    { get; set; } // NVARCHAR(256)
-		[Column(),                 Nullable           ] public long?  DATATYPE    { get; set; } // BIGINT
-		[Column(),                 Nullable           ] public long?  LENGTH      { get; set; } // BIGINT
-		[Column("READ_VIEW"),      Nullable           ] public string ReadView    { get; set; } // NVARCHAR(256)
+		#nullable disable
+		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),                 Nullable           ] public string? DESCRIPTION { get; set; } // NVARCHAR(256)
+		[Column("MSD_TABLE"),      Nullable           ] public string? MsdTable    { get; set; } // NVARCHAR(256)
+		[Column(),                 Nullable           ] public long?   DATATYPE    { get; set; } // BIGINT
+		[Column(),                 Nullable           ] public long?   LENGTH      { get; set; } // BIGINT
+		[Column("READ_VIEW"),      Nullable           ] public string? ReadView    { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_RT", Name="PP_A_DATACONTAINER")]
 	public partial class _SYS_RT_PpADatacontainer
 	{
-		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string PackageId  { get; set; } // NVARCHAR(256)
-		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string ObjectName { get; set; } // NVARCHAR(256)
-		[Column("FACT_TABLE"),     Nullable           ] public string FactTable  { get; set; } // NVARCHAR(256)
-		[Column("READ_VIEW"),      Nullable           ] public string ReadView   { get; set; } // NVARCHAR(256)
+		#nullable disable
+		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column("FACT_TABLE"),     Nullable           ] public string? FactTable  { get; set; } // NVARCHAR(256)
+		[Column("READ_VIEW"),      Nullable           ] public string? ReadView   { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_RT", Name="PP_A_KYF")]
 	public partial class _SYS_RT_PpAKyf
 	{
-		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string PackageId     { get; set; } // NVARCHAR(256)
-		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string ObjectName    { get; set; } // NVARCHAR(256)
-		[Column(),                 Nullable           ] public string DESCRIPTION   { get; set; } // NVARCHAR(256)
-		[Column(),                 Nullable           ] public string UNITDIMENSION { get; set; } // NVARCHAR(256)
-		[Column(),                 Nullable           ] public string CHARGEDUNIT   { get; set; } // NVARCHAR(256)
-		[Column(),                 Nullable           ] public long?  DATATYPE      { get; set; } // BIGINT
-		[Column(),                 Nullable           ] public long?  LENGTH        { get; set; } // BIGINT
-		[Column(),                 Nullable           ] public long?  SCALE         { get; set; } // BIGINT
+		#nullable disable
+		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),                 Nullable           ] public string? DESCRIPTION   { get; set; } // NVARCHAR(256)
+		[Column(),                 Nullable           ] public string? UNITDIMENSION { get; set; } // NVARCHAR(256)
+		[Column(),                 Nullable           ] public string? CHARGEDUNIT   { get; set; } // NVARCHAR(256)
+		[Column(),                 Nullable           ] public long?   DATATYPE      { get; set; } // BIGINT
+		[Column(),                 Nullable           ] public long?   LENGTH        { get; set; } // BIGINT
+		[Column(),                 Nullable           ] public long?   SCALE         { get; set; } // BIGINT
 	}
 
 	[Table(Schema="_SYS_RT", Name="PP_A_SESSION")]
 	public partial class _SYS_RT_PpASession
 	{
-		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string PackageId  { get; set; } // NVARCHAR(256)
-		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string ObjectName { get; set; } // NVARCHAR(256)
-		[Column(),              PrimaryKey(4), NotNull] public int    VERSION    { get; set; } // INTEGER
-		[Column("READ_VIEW"),   PrimaryKey(3), NotNull] public string ReadView   { get; set; } // NVARCHAR(256)
-		[Column(),                 Nullable           ] public string USER       { get; set; } // NVARCHAR(256)
+		#nullable disable
+		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string  PackageId  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string  ObjectName { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),              PrimaryKey(4), NotNull] public int     VERSION    { get; set; } // INTEGER
+		#nullable disable
+		[Column("READ_VIEW"),   PrimaryKey(3), NotNull] public string  ReadView   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),                 Nullable           ] public string? USER       { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="TESTHANA", Name="prd.global.ecc/CV_MARA")]
@@ -10801,78 +11435,110 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="RUNTIME_CONFIGURATION")]
 	public partial class _SYS_XS_RuntimeConfiguration
 	{
+		#nullable disable
 		[Column("PACKAGE_ID"), PrimaryKey,  NotNull] public string    PackageId     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column(),                          NotNull] public string    CONFIGURATION { get; set; } // NVARCHAR(2048)
-		[Column("CHANGED_BY"),    Nullable         ] public string    ChangedBy     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column("CHANGED_BY"),    Nullable         ] public string?   ChangedBy     { get; set; } // NVARCHAR(256)
 		[Column("CHANGED_AT"),    Nullable         ] public DateTime? ChangedAt     { get; set; } // TIMESTAMP
 	}
 
 	[Table(Schema="_SYS_XS", Name="RUNTIME_JSON_EXTENSIONS")]
 	public partial class _SYS_XS_RuntimeJsonExtension
 	{
-		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string PackageId    { get; set; } // NVARCHAR(256)
-		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string ObjectName   { get; set; } // NVARCHAR(256)
-		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string ObjectSuffix { get; set; } // NVARCHAR(255)
-		[Column(),                   Nullable           ] public string CONTENT      { get; set; } // NVARCHAR(4096)
-		[Column(),                   Nullable           ] public string DESCRIPTION  { get; set; } // NVARCHAR(512)
+		#nullable disable
+		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string  PackageId    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string  ObjectName   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string  ObjectSuffix { get; set; } // NVARCHAR(255)
+		#nullable enable
+		[Column(),                   Nullable           ] public string? CONTENT      { get; set; } // NVARCHAR(4096)
+		[Column(),                   Nullable           ] public string? DESCRIPTION  { get; set; } // NVARCHAR(512)
 	}
 
 	[Table(Schema="_SYS_XS", Name="RUNTIME_JSON_OBJECTS")]
 	public partial class _SYS_XS_RuntimeJsonObject
 	{
-		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string PackageId    { get; set; } // NVARCHAR(256)
-		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string ObjectName   { get; set; } // NVARCHAR(256)
-		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string ObjectSuffix { get; set; } // NVARCHAR(255)
-		[Column(),                   Nullable           ] public string CONTENT      { get; set; } // NVARCHAR(4096)
+		#nullable disable
+		[Column("PACKAGE_ID"),    PrimaryKey(1), NotNull] public string  PackageId    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("OBJECT_NAME"),   PrimaryKey(2), NotNull] public string  ObjectName   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("OBJECT_SUFFIX"), PrimaryKey(3), NotNull] public string  ObjectSuffix { get; set; } // NVARCHAR(255)
+		#nullable enable
+		[Column(),                   Nullable           ] public string? CONTENT      { get; set; } // NVARCHAR(4096)
 	}
 
 	[Table(Schema="_SYS_XS", Name="SAML_PROVIDER_CONFIG")]
 	public partial class _SYS_XS_SamlProviderConfig
 	{
-		[Column("SAML_PROVIDER"),       PrimaryKey(1), NotNull] public string SamlProvider       { get; set; } // NVARCHAR(256)
-		[Column("PROFILE_TYPE"),        PrimaryKey(2), NotNull] public byte   ProfileType        { get; set; } // TINYINT
-		[Column("BINDING_TYPE"),        PrimaryKey(3), NotNull] public byte   BindingType        { get; set; } // TINYINT
-		[Column("DESTINATION_PACKAGE"),                NotNull] public string DestinationPackage { get; set; } // NVARCHAR(256)
-		[Column("DESTINATION_NAME"),                   NotNull] public string DestinationName    { get; set; } // NVARCHAR(256)
-		[Column(),                         Nullable           ] public string PATH               { get; set; } // NVARCHAR(2048)
+		#nullable disable
+		[Column("SAML_PROVIDER"),       PrimaryKey(1), NotNull] public string  SamlProvider       { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column("PROFILE_TYPE"),        PrimaryKey(2), NotNull] public byte    ProfileType        { get; set; } // TINYINT
+		[Column("BINDING_TYPE"),        PrimaryKey(3), NotNull] public byte    BindingType        { get; set; } // TINYINT
+		#nullable disable
+		[Column("DESTINATION_PACKAGE"),                NotNull] public string  DestinationPackage { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
+		[Column("DESTINATION_NAME"),                   NotNull] public string  DestinationName    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),                         Nullable           ] public string? PATH               { get; set; } // NVARCHAR(2048)
 	}
 
 	[Table(Schema="TESTHANA", Name="SapHana")]
 	public partial class SapHana
 	{
-		[PrimaryKey, NotNull    ] public int    Id            { get; set; } // INTEGER
-		[Column,        Nullable] public string DuplicateData { get; set; } // NVARCHAR(255)
-		[Column,     NotNull    ] public int    OrderData1    { get; set; } // INTEGER
-		[Column,     NotNull    ] public int    OrderData2    { get; set; } // INTEGER
+		[PrimaryKey, NotNull    ] public int     Id            { get; set; } // INTEGER
+		[Column,        Nullable] public string? DuplicateData { get; set; } // NVARCHAR(255)
+		[Column,     NotNull    ] public int     OrderData1    { get; set; } // INTEGER
+		[Column,     NotNull    ] public int     OrderData2    { get; set; } // INTEGER
 	}
 
 	[Table(Schema="_SYS_RT", Name="SEARCH_RULE_SETS")]
 	public partial class _SYS_RT_SearchRuleSet
 	{
-		[Column("SCHEMA_NAME"), Nullable] public string SchemaName { get; set; } // NVARCHAR(256)
-		[Column("PACKAGE_ID"),  Nullable] public string PackageId  { get; set; } // NVARCHAR(256)
-		[Column("RULE_SET"),    Nullable] public string RuleSet    { get; set; } // NVARCHAR(256)
-		[Column("RULE_ID"),     Nullable] public string RuleId     { get; set; } // NVARCHAR(256)
-		[Column("ORDER_"),      Nullable] public int?   Order      { get; set; } // INTEGER
-		[Column(),              Nullable] public string COLUMN     { get; set; } // NVARCHAR(256)
-		[Column(),              Nullable] public string PARAMETER  { get; set; } // NVARCHAR(256)
-		[Column(),              Nullable] public string VALUE      { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"), Nullable] public string? SchemaName { get; set; } // NVARCHAR(256)
+		[Column("PACKAGE_ID"),  Nullable] public string? PackageId  { get; set; } // NVARCHAR(256)
+		[Column("RULE_SET"),    Nullable] public string? RuleSet    { get; set; } // NVARCHAR(256)
+		[Column("RULE_ID"),     Nullable] public string? RuleId     { get; set; } // NVARCHAR(256)
+		[Column("ORDER_"),      Nullable] public int?    Order      { get; set; } // INTEGER
+		[Column(),              Nullable] public string? COLUMN     { get; set; } // NVARCHAR(256)
+		[Column(),              Nullable] public string? PARAMETER  { get; set; } // NVARCHAR(256)
+		[Column(),              Nullable] public string? VALUE      { get; set; } // NVARCHAR(256)
 	}
 
 	[Table(Schema="_SYS_XS", Name="SECURE_STORE")]
 	public partial class _SYS_XS_SecureStore
 	{
+		#nullable disable
 		[Column("STORE_ID"),   PrimaryKey(1), NotNull] public string StoreId   { get; set; } // NVARCHAR(530)
+		#nullable enable
 		[Column("USER_ID"),    PrimaryKey(2), NotNull] public long   UserId    { get; set; } // BIGINT
+		#nullable disable
 		[Column("DATA_ID"),    PrimaryKey(3), NotNull] public string DataId    { get; set; } // NVARCHAR(1024)
+		#nullable enable
+		#nullable disable
 		[Column("DATA_VALUE"),                NotNull] public byte[] DataValue { get; set; } // VARBINARY(5000)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_XS", Name="SECURE_STORE_LIST")]
 	public partial class _SYS_XS_SecureStoreList
 	{
+		#nullable disable
 		[Column("PACKAGE_ID"),  PrimaryKey(1), NotNull] public string PackageId  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("OBJECT_NAME"), PrimaryKey(2), NotNull] public string ObjectName { get; set; } // NVARCHAR(256)
+		#nullable enable
 		[Column("IS_ACTIVE"),                  NotNull] public byte   IsActive   { get; set; } // TINYINT
 	}
 
@@ -10882,10 +11548,12 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TELEMETRY", Name="SERVER")]
 	public partial class _SYS_TELEMETRY_SERVER
 	{
+		#nullable disable
 		/// <summary>
 		/// Telemetry central server URL.
 		/// </summary>
 		[Column("SERVER_URL"), NotNull] public string ServerUrl { get; set; } // VARCHAR(2083)
+		#nullable enable
 	}
 
 	/// <summary>
@@ -10898,10 +11566,12 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"),                  NotNull    ] public DateTime SnapshotId                { get; set; } // TIMESTAMP
+		#nullable disable
 		/// <summary>
 		/// Service name
 		/// </summary>
 		[Column("SERVICE_NAME"),                 NotNull    ] public string   ServiceName               { get; set; } // VARCHAR(32)
+		#nullable enable
 		/// <summary>
 		/// Virtual memory size (operating system perspective)
 		/// </summary>
@@ -10943,15 +11613,25 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="SQL_CONNECTIONS")]
 	public partial class _SYS_XS_SqlConnection
 	{
+		#nullable disable
 		[Column(),                 PrimaryKey,  NotNull] public string    NAME         { get; set; } // NVARCHAR(512)
+		#nullable enable
+		#nullable disable
 		[Column("PACKAGE_ID"),                  NotNull] public string    PackageId    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("OBJECT_NAME"),                 NotNull] public string    ObjectName   { get; set; } // NVARCHAR(256)
-		[Column(),                    Nullable         ] public string    USERNAME     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column(),                    Nullable         ] public string?   USERNAME     { get; set; } // NVARCHAR(256)
+		#nullable disable
 		[Column(),                              NotNull] public string    DESCRIPTION  { get; set; } // NVARCHAR(2048)
-		[Column("ASSIGNED_BY"),       Nullable         ] public string    AssignedBy   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		[Column("ASSIGNED_BY"),       Nullable         ] public string?   AssignedBy   { get; set; } // NVARCHAR(256)
 		[Column("ASSIGNED_AT"),       Nullable         ] public DateTime? AssignedAt   { get; set; } // TIMESTAMP
-		[Column("AUTO_USER_ROLE"),    Nullable         ] public string    AutoUserRole { get; set; } // NVARCHAR(256)
+		[Column("AUTO_USER_ROLE"),    Nullable         ] public string?   AutoUserRole { get; set; } // NVARCHAR(256)
+		#nullable disable
 		[Column(),                              NotNull] public string    STATUS       { get; set; } // VARCHAR(16)
+		#nullable enable
 	}
 
 	/// <summary>
@@ -10964,30 +11644,34 @@ namespace SapHanaDataContext
 		/// The unique ID for a particular run of a task plan created when "START TASK" is called
 		/// </summary>
 		[Column("TASK_EXECUTION_ID"), NotNull    ] public long      TaskExecutionId { get; set; } // BIGINT
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
 		[Column("SCHEMA_NAME"),       NotNull    ] public string    SchemaName      { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
 		[Column("TASK_NAME"),         NotNull    ] public string    TaskName        { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The name of the operation producing the message
 		/// </summary>
-		[Column("OPERATION_NAME"),       Nullable] public string    OperationName   { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),       Nullable] public string?   OperationName   { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Error, warning, or information
 		/// </summary>
-		[Column(),                       Nullable] public string    SEVERITY        { get; set; } // NVARCHAR(12)
+		[Column(),                       Nullable] public string?   SEVERITY        { get; set; } // NVARCHAR(12)
 		/// <summary>
 		/// The ID of the message
 		/// </summary>
-		[Column("MESSAGE_ID"),           Nullable] public string    MessageId       { get; set; } // NVARCHAR(8)
+		[Column("MESSAGE_ID"),           Nullable] public string?   MessageId       { get; set; } // NVARCHAR(8)
 		/// <summary>
 		/// The message text
 		/// </summary>
-		[Column("MESSAGE_TEXT"),         Nullable] public string    MessageText     { get; set; } // NVARCHAR(2048)
+		[Column("MESSAGE_TEXT"),         Nullable] public string?   MessageText     { get; set; } // NVARCHAR(2048)
 		/// <summary>
 		/// The time the message was issued
 		/// </summary>
@@ -10998,59 +11682,61 @@ namespace SapHanaDataContext
 	public partial class _SYS_TASK_StartTaskMessages
 	{
 		[Column("TASK_EXECUTION_ID"), Nullable] public long?     TaskExecutionId { get; set; } // BIGINT
-		[Column("OPERATION_NAME"),    Nullable] public string    OperationName   { get; set; } // NVARCHAR(128)
-		[Column(),                    Nullable] public string    SEVERITY        { get; set; } // NVARCHAR(12)
-		[Column("MESSAGE_ID"),        Nullable] public string    MessageId       { get; set; } // NVARCHAR(8)
-		[Column("MESSAGE_TEXT"),      Nullable] public string    MessageText     { get; set; } // NVARCHAR(2048)
+		[Column("OPERATION_NAME"),    Nullable] public string?   OperationName   { get; set; } // NVARCHAR(128)
+		[Column(),                    Nullable] public string?   SEVERITY        { get; set; } // NVARCHAR(12)
+		[Column("MESSAGE_ID"),        Nullable] public string?   MessageId       { get; set; } // NVARCHAR(8)
+		[Column("MESSAGE_TEXT"),      Nullable] public string?   MessageText     { get; set; } // NVARCHAR(2048)
 		[Column("MESSAGE_TIME"),      Nullable] public DateTime? MessageTime     { get; set; } // SECONDDATE
 	}
 
 	[Table(Schema="_SYS_SQL_ANALYZER", Name="STATEMENT_STATISTICS", IsView=true)]
 	public partial class _SYS_SQL_ANALYZER_StatementStatistic
 	{
-		[Column("FROM_PLV"),                          Nullable] public string    FromPlv                      { get; set; } // VARCHAR(5)
+		[Column("FROM_PLV"),                          Nullable] public string?   FromPlv                      { get; set; } // VARCHAR(5)
 		[Column("FEATURE_VERSION"),                   Nullable] public int?      FeatureVersion               { get; set; } // INTEGER
-		[Column("SYSTEM_VERSION"),                    Nullable] public string    SystemVersion                { get; set; } // VARCHAR(512)
+		[Column("SYSTEM_VERSION"),                    Nullable] public string?   SystemVersion                { get; set; } // VARCHAR(512)
 		[Column("CONNECTION_ID"),                     Nullable] public int?      ConnectionId                 { get; set; } // INTEGER
+		#nullable disable
 		[Column("USER_NAME"),                      NotNull    ] public string    UserName                     { get; set; } // NVARCHAR(256)
-		[Column("SCHEMA_NAME"),                       Nullable] public string    SchemaName                   { get; set; } // NVARCHAR(256)
-		[Column("STATEMENT_EXECUTION_ID"),            Nullable] public string    StatementExecutionId         { get; set; } // VARCHAR(32)
-		[Column("CHILD_STATEMENT_EXECUTION_ID"),      Nullable] public string    ChildStatementExecutionId    { get; set; } // CLOB
-		[Column("STATEMENT_HASH"),                    Nullable] public string    StatementHash                { get; set; } // VARCHAR(32)
-		[Column("STATEMENT_STRING"),                  Nullable] public string    StatementString              { get; set; } // NCLOB
+		#nullable enable
+		[Column("SCHEMA_NAME"),                       Nullable] public string?   SchemaName                   { get; set; } // NVARCHAR(256)
+		[Column("STATEMENT_EXECUTION_ID"),            Nullable] public string?   StatementExecutionId         { get; set; } // VARCHAR(32)
+		[Column("CHILD_STATEMENT_EXECUTION_ID"),      Nullable] public string?   ChildStatementExecutionId    { get; set; } // CLOB
+		[Column("STATEMENT_HASH"),                    Nullable] public string?   StatementHash                { get; set; } // VARCHAR(32)
+		[Column("STATEMENT_STRING"),                  Nullable] public string?   StatementString              { get; set; } // NCLOB
 		[Column("COMPILATION_START_TIME"),            Nullable] public DateTime? CompilationStartTime         { get; set; } // TIMESTAMP
 		[Column("COMPILATION_END_TIME"),              Nullable] public DateTime? CompilationEndTime           { get; set; } // TIMESTAMP
-		[Column("COMPILATION_SUMMARY"),               Nullable] public string    CompilationSummary           { get; set; } // NCLOB
-		[Column("EXECUTION_STATUS"),                  Nullable] public string    ExecutionStatus              { get; set; } // VARCHAR(32)
+		[Column("COMPILATION_SUMMARY"),               Nullable] public string?   CompilationSummary           { get; set; } // NCLOB
+		[Column("EXECUTION_STATUS"),                  Nullable] public string?   ExecutionStatus              { get; set; } // VARCHAR(32)
 		[Column("EXECUTION_START_TIME"),              Nullable] public DateTime? ExecutionStartTime           { get; set; } // TIMESTAMP
 		[Column("EXECUTION_END_TIME"),                Nullable] public DateTime? ExecutionEndTime             { get; set; } // TIMESTAMP
 		[Column("EXECUTED_OUTPUT_RECORD_COUNT"),      Nullable] public long?     ExecutedOutputRecordCount    { get; set; } // BIGINT
-		[Column("USED_MEMORY_SIZE"),                  Nullable] public string    UsedMemorySize               { get; set; } // NCLOB
-		[Column("SQLSCRIPT_STATEMENT_STATISTICS"),    Nullable] public string    SqlscriptStatementStatistics { get; set; } // NCLOB
+		[Column("USED_MEMORY_SIZE"),                  Nullable] public string?   UsedMemorySize               { get; set; } // NCLOB
+		[Column("SQLSCRIPT_STATEMENT_STATISTICS"),    Nullable] public string?   SqlscriptStatementStatistics { get; set; } // NCLOB
 	}
 
 	[Table(Schema="_SYS_SQL_ANALYZER", Name="STATEMENT_STATISTICS_")]
 	public partial class _SYS_SQL_ANALYZER_StatementStatistics
 	{
-		[Column("FROM_PLV"),                       Nullable] public string    FromPlv                      { get; set; } // VARCHAR(5)
+		[Column("FROM_PLV"),                       Nullable] public string?   FromPlv                      { get; set; } // VARCHAR(5)
 		[Column("FEATURE_VERSION"),                Nullable] public int?      FeatureVersion               { get; set; } // INTEGER
-		[Column("SYSTEM_VERSION"),                 Nullable] public string    SystemVersion                { get; set; } // VARCHAR(512)
+		[Column("SYSTEM_VERSION"),                 Nullable] public string?   SystemVersion                { get; set; } // VARCHAR(512)
 		[Column("CONNECTION_ID"),                  Nullable] public int?      ConnectionId                 { get; set; } // INTEGER
-		[Column("USER_NAME"),                      Nullable] public string    UserName                     { get; set; } // NVARCHAR(256)
-		[Column("SCHEMA_NAME"),                    Nullable] public string    SchemaName                   { get; set; } // NVARCHAR(256)
-		[Column("STATEMENT_EXECUTION_ID"),         Nullable] public string    StatementExecutionId         { get; set; } // VARCHAR(32)
-		[Column("CHILD_STATEMENT_EXECUTION_ID"),   Nullable] public string    ChildStatementExecutionId    { get; set; } // CLOB
-		[Column("STATEMENT_HASH"),                 Nullable] public string    StatementHash                { get; set; } // VARCHAR(32)
-		[Column("STATEMENT_STRING"),               Nullable] public string    StatementString              { get; set; } // NCLOB
+		[Column("USER_NAME"),                      Nullable] public string?   UserName                     { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),                    Nullable] public string?   SchemaName                   { get; set; } // NVARCHAR(256)
+		[Column("STATEMENT_EXECUTION_ID"),         Nullable] public string?   StatementExecutionId         { get; set; } // VARCHAR(32)
+		[Column("CHILD_STATEMENT_EXECUTION_ID"),   Nullable] public string?   ChildStatementExecutionId    { get; set; } // CLOB
+		[Column("STATEMENT_HASH"),                 Nullable] public string?   StatementHash                { get; set; } // VARCHAR(32)
+		[Column("STATEMENT_STRING"),               Nullable] public string?   StatementString              { get; set; } // NCLOB
 		[Column("COMPILATION_START_TIME"),         Nullable] public DateTime? CompilationStartTime         { get; set; } // TIMESTAMP
 		[Column("COMPILATION_END_TIME"),           Nullable] public DateTime? CompilationEndTime           { get; set; } // TIMESTAMP
-		[Column("COMPILATION_SUMMARY"),            Nullable] public string    CompilationSummary           { get; set; } // NCLOB
-		[Column("EXECUTION_STATUS"),               Nullable] public string    ExecutionStatus              { get; set; } // VARCHAR(32)
+		[Column("COMPILATION_SUMMARY"),            Nullable] public string?   CompilationSummary           { get; set; } // NCLOB
+		[Column("EXECUTION_STATUS"),               Nullable] public string?   ExecutionStatus              { get; set; } // VARCHAR(32)
 		[Column("EXECUTION_START_TIME"),           Nullable] public DateTime? ExecutionStartTime           { get; set; } // TIMESTAMP
 		[Column("EXECUTION_END_TIME"),             Nullable] public DateTime? ExecutionEndTime             { get; set; } // TIMESTAMP
 		[Column("EXECUTED_OUTPUT_RECORD_COUNT"),   Nullable] public long?     ExecutedOutputRecordCount    { get; set; } // BIGINT
-		[Column("USED_MEMORY_SIZE"),               Nullable] public string    UsedMemorySize               { get; set; } // NCLOB
-		[Column("SQLSCRIPT_STATEMENT_STATISTICS"), Nullable] public string    SqlscriptStatementStatistics { get; set; } // NCLOB
+		[Column("USED_MEMORY_SIZE"),               Nullable] public string?   UsedMemorySize               { get; set; } // NCLOB
+		[Column("SQLSCRIPT_STATEMENT_STATISTICS"), Nullable] public string?   SqlscriptStatementStatistics { get; set; } // NCLOB
 	}
 
 	/// <summary>
@@ -11062,7 +11748,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),   Nullable] public string    DatabaseName   { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),   Nullable] public string?   DatabaseName   { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Time at which the alert occurred (UTC)
 		/// </summary>
@@ -11074,11 +11760,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Index that distinguishes multiple occurrences of the same alert in a SNAPSHOT_ID. For example, if a check that examines database tables issues an alert for several tables, the index is the table name.
 		/// </summary>
-		[Column(),                  Nullable] public string    INDEX          { get; set; } // NVARCHAR(1024)
+		[Column(),                  Nullable] public string?   INDEX          { get; set; } // NVARCHAR(1024)
 		/// <summary>
 		/// Host name on which the alert occurred.
 		/// </summary>
-		[Column("ALERT_HOST"),      Nullable] public string    AlertHost      { get; set; } // NVARCHAR(64)
+		[Column("ALERT_HOST"),      Nullable] public string?   AlertHost      { get; set; } // NVARCHAR(64)
 		/// <summary>
 		/// Port number on which the alert occurred.
 		/// </summary>
@@ -11094,7 +11780,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Human-readable alert text
 		/// </summary>
-		[Column("ALERT_DETAILS"),   Nullable] public string    AlertDetails   { get; set; } // NVARCHAR(1024)
+		[Column("ALERT_DETAILS"),   Nullable] public string?   AlertDetails   { get; set; } // NVARCHAR(1024)
 		/// <summary>
 		/// Column for the management of external processing of alert. Not used by the embedded statistics service
 		/// </summary>
@@ -11106,7 +11792,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Column for the management of external processing of alert. Not used by the embedded statistics service
 		/// </summary>
-		[Column("PROCESS_AGENT"),   Nullable] public string    ProcessAgent   { get; set; } // NVARCHAR(256)
+		[Column("PROCESS_AGENT"),   Nullable] public string?   ProcessAgent   { get; set; } // NVARCHAR(256)
 	}
 
 	/// <summary>
@@ -11118,7 +11804,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"), Nullable] public string    DatabaseName { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"), Nullable] public string?   DatabaseName { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Unique ID of check
 		/// </summary>
@@ -11130,15 +11816,15 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Unit of the threshold value (for example, millisecond, percent, and so on). This value is freely definable and used for information only.
 		/// </summary>
-		[Column(),                Nullable] public string    UNIT         { get; set; } // NVARCHAR(256)
+		[Column(),                Nullable] public string?   UNIT         { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Default threshold value. This value cannot be changed. It is used when there is no value specified in the CURRENT_VALUE column.
 		/// </summary>
-		[Column("DEFAULT_VALUE"), Nullable] public string    DefaultValue { get; set; } // NVARCHAR(256)
+		[Column("DEFAULT_VALUE"), Nullable] public string?   DefaultValue { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// User-defined threshold value. This value overrides the value in the DEFAULT_VALUE column.
 		/// </summary>
-		[Column("CURRENT_VALUE"), Nullable] public string    CurrentValue { get; set; } // NVARCHAR(256)
+		[Column("CURRENT_VALUE"), Nullable] public string?   CurrentValue { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Time (UTC) at which the threshold value was reached
 		/// </summary>
@@ -11154,7 +11840,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),     Nullable] public string    DatabaseName     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),     Nullable] public string?   DatabaseName     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Unique check ID
 		/// </summary>
@@ -11162,11 +11848,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Index that distinguishes multiple occurrences of the same alert in a SNAPSHOT_ID. For example, if a check that examines database tables issues an alert for several tables, the index is the table name.
 		/// </summary>
-		[Column(),                    Nullable] public string    INDEX            { get; set; } // NVARCHAR(1024)
+		[Column(),                    Nullable] public string?   INDEX            { get; set; } // NVARCHAR(1024)
 		/// <summary>
 		/// Host name on which the alert occurred.
 		/// </summary>
-		[Column("ALERT_HOST"),        Nullable] public string    AlertHost        { get; set; } // NVARCHAR(64)
+		[Column("ALERT_HOST"),        Nullable] public string?   AlertHost        { get; set; } // NVARCHAR(64)
 		/// <summary>
 		/// Port number on which the alert occurred.
 		/// </summary>
@@ -11178,15 +11864,15 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Check description
 		/// </summary>
-		[Column("ALERT_DESCRIPTION"), Nullable] public string    AlertDescription { get; set; } // NVARCHAR(1024)
+		[Column("ALERT_DESCRIPTION"), Nullable] public string?   AlertDescription { get; set; } // NVARCHAR(1024)
 		/// <summary>
 		/// Human-readable alert text
 		/// </summary>
-		[Column("ALERT_DETAILS"),     Nullable] public string    AlertDetails     { get; set; } // NVARCHAR(1024)
+		[Column("ALERT_DETAILS"),     Nullable] public string?   AlertDetails     { get; set; } // NVARCHAR(1024)
 		/// <summary>
 		/// Short name of check
 		/// </summary>
-		[Column("ALERT_NAME"),        Nullable] public string    AlertName        { get; set; } // NVARCHAR(64)
+		[Column("ALERT_NAME"),        Nullable] public string?   AlertName        { get; set; } // NVARCHAR(64)
 		/// <summary>
 		/// Severity of the alert occurrence. This may be different for each INDEX (per ALERT_ID+SNAPSHOT_ID). The following values are possible: 1 (info), 2 (warning1), 3 (warning2), 4 (warning3), 5 (error).
 		/// </summary>
@@ -11198,11 +11884,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Recommended action to be taken by an administrator when the check issues an alert
 		/// </summary>
-		[Column("ALERT_USERACTION"),  Nullable] public string    AlertUseraction  { get; set; } // NVARCHAR(1024)
+		[Column("ALERT_USERACTION"),  Nullable] public string?   AlertUseraction  { get; set; } // NVARCHAR(1024)
 		/// <summary>
 		/// Indicates whether the check was triggered by the scheduler ('Timer') or by the user ('Manual')
 		/// </summary>
-		[Column(),                    Nullable] public string    SCHEDULE         { get; set; } // VARCHAR(6)
+		[Column(),                    Nullable] public string?   SCHEDULE         { get; set; } // VARCHAR(6)
 	}
 
 	/// <summary>
@@ -11214,7 +11900,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                        Nullable] public string    DatabaseName                     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                        Nullable] public string?   DatabaseName                     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Timestamp ID (UTC)
 		/// </summary>
@@ -11226,7 +11912,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Allocator name
 		/// </summary>
-		[Column(),                                       Nullable] public string    CATEGORY                         { get; set; } // NVARCHAR(128)
+		[Column(),                                       Nullable] public string?   CATEGORY                         { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Depth
 		/// </summary>
@@ -11270,7 +11956,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Allocator flags
 		/// </summary>
-		[Column(),                                       Nullable] public string    FLAGS                            { get; set; } // NVARCHAR(64)
+		[Column(),                                       Nullable] public string?   FLAGS                            { get; set; } // NVARCHAR(64)
 		/// <summary>
 		/// Count of allocations, including suballocators
 		/// </summary>
@@ -11318,7 +12004,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                       Nullable] public string    HOST                             { get; set; } // NVARCHAR(64)
+		[Column(),                                       Nullable] public string?   HOST                             { get; set; } // NVARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -11334,7 +12020,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),    Nullable] public string    DatabaseName    { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),    Nullable] public string?   DatabaseName    { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Timestamp ID (UTC)
 		/// </summary>
@@ -11350,7 +12036,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Module name
 		/// </summary>
-		[Column(),                   Nullable] public string    CATEGORY        { get; set; } // NVARCHAR(128)
+		[Column(),                   Nullable] public string?   CATEGORY        { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Free memory size of the module
 		/// </summary>
@@ -11362,7 +12048,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                   Nullable] public string    HOST            { get; set; } // NVARCHAR(64)
+		[Column(),                   Nullable] public string?   HOST            { get; set; } // NVARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -11378,7 +12064,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),    Nullable] public string    DatabaseName    { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),    Nullable] public string?   DatabaseName    { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Timestamp ID (UTC)
 		/// </summary>
@@ -11390,7 +12076,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// The logical component for which memory usage is reported
 		/// </summary>
-		[Column(),                   Nullable] public string    COMPONENT       { get; set; } // NVARCHAR(64)
+		[Column(),                   Nullable] public string?   COMPONENT       { get; set; } // NVARCHAR(64)
 		/// <summary>
 		/// Amount of memory which is currently actually used for the logical component
 		/// </summary>
@@ -11398,7 +12084,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host where the service is running
 		/// </summary>
-		[Column(),                   Nullable] public string    HOST            { get; set; } // NVARCHAR(64)
+		[Column(),                   Nullable] public string?   HOST            { get; set; } // NVARCHAR(64)
 		/// <summary>
 		/// Port where the service is running
 		/// </summary>
@@ -11414,7 +12100,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                Nullable] public string    DatabaseName              { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                Nullable] public string?   DatabaseName              { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Timestamp ID (UTC)
 		/// </summary>
@@ -11466,7 +12152,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Service name
 		/// </summary>
-		[Column("SERVICE_NAME"),                 Nullable] public string    ServiceName               { get; set; } // NVARCHAR(32)
+		[Column("SERVICE_NAME"),                 Nullable] public string?   ServiceName               { get; set; } // NVARCHAR(32)
 		/// <summary>
 		/// Shared memory part of the memory pool
 		/// </summary>
@@ -11486,7 +12172,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                               Nullable] public string    HOST                      { get; set; } // NVARCHAR(64)
+		[Column(),                               Nullable] public string?   HOST                      { get; set; } // NVARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -11502,7 +12188,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                         Nullable] public string    DatabaseName                     { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                         Nullable] public string?   DatabaseName                     { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Timestamp ID (UTC)
 		/// </summary>
@@ -11514,7 +12200,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                        Nullable] public string    HOST                             { get; set; } // VARCHAR(64)
+		[Column(),                                        Nullable] public string?   HOST                             { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -11530,11 +12216,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Logical site name
 		/// </summary>
-		[Column("SITE_NAME"),                             Nullable] public string    SiteName                         { get; set; } // VARCHAR(256)
+		[Column("SITE_NAME"),                             Nullable] public string?   SiteName                         { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Secondary host name
 		/// </summary>
-		[Column("SECONDARY_HOST"),                        Nullable] public string    SecondaryHost                    { get; set; } // VARCHAR(64)
+		[Column("SECONDARY_HOST"),                        Nullable] public string?   SecondaryHost                    { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Secondary port
 		/// </summary>
@@ -11546,11 +12232,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Secondary logical site name
 		/// </summary>
-		[Column("SECONDARY_SITE_NAME"),                   Nullable] public string    SecondarySiteName                { get; set; } // VARCHAR(256)
+		[Column("SECONDARY_SITE_NAME"),                   Nullable] public string?   SecondarySiteName                { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Secondary active status
 		/// </summary>
-		[Column("SECONDARY_ACTIVE_STATUS"),               Nullable] public string    SecondaryActiveStatus            { get; set; } // VARCHAR(16)
+		[Column("SECONDARY_ACTIVE_STATUS"),               Nullable] public string?   SecondaryActiveStatus            { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Time the connection was established from the secondary
 		/// </summary>
@@ -11566,23 +12252,23 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Indicates if secondary is fully recoverable.
 		/// </summary>
-		[Column("SECONDARY_FULLY_RECOVERABLE"),           Nullable] public string    SecondaryFullyRecoverable        { get; set; } // VARCHAR(5)
+		[Column("SECONDARY_FULLY_RECOVERABLE"),           Nullable] public string?   SecondaryFullyRecoverable        { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Replication mode
 		/// </summary>
-		[Column("REPLICATION_MODE"),                      Nullable] public string    ReplicationMode                  { get; set; } // VARCHAR(16)
+		[Column("REPLICATION_MODE"),                      Nullable] public string?   ReplicationMode                  { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Replication status
 		/// </summary>
-		[Column("REPLICATION_STATUS"),                    Nullable] public string    ReplicationStatus                { get; set; } // VARCHAR(16)
+		[Column("REPLICATION_STATUS"),                    Nullable] public string?   ReplicationStatus                { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Replication status details
 		/// </summary>
-		[Column("REPLICATION_STATUS_DETAILS"),            Nullable] public string    ReplicationStatusDetails         { get; set; } // VARCHAR(1024)
+		[Column("REPLICATION_STATUS_DETAILS"),            Nullable] public string?   ReplicationStatusDetails         { get; set; } // VARCHAR(1024)
 		/// <summary>
 		/// Full sync status
 		/// </summary>
-		[Column("FULL_SYNC"),                             Nullable] public string    FullSync                         { get; set; } // VARCHAR(16)
+		[Column("FULL_SYNC"),                             Nullable] public string?   FullSync                         { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Current log position
 		/// </summary>
@@ -11762,7 +12448,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),              Nullable] public string    DatabaseName            { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),              Nullable] public string?   DatabaseName            { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Timestamp ID (UTC)
 		/// </summary>
@@ -11814,15 +12500,15 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Configuration parameters
 		/// </summary>
-		[Column(),                             Nullable] public string    CONFIGURATION           { get; set; } // VARCHAR(256)
+		[Column(),                             Nullable] public string?   CONFIGURATION           { get; set; } // VARCHAR(256)
 		/// <summary>
 		/// Filesystem type
 		/// </summary>
-		[Column("FILESYSTEM_TYPE"),            Nullable] public string    FilesystemType          { get; set; } // VARCHAR(16)
+		[Column("FILESYSTEM_TYPE"),            Nullable] public string?   FilesystemType          { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                             Nullable] public string    HOST                    { get; set; } // VARCHAR(64)
+		[Column(),                             Nullable] public string?   HOST                    { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Max. count of blocked write requests
 		/// </summary>
@@ -11830,7 +12516,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Filesystem path
 		/// </summary>
-		[Column(),                             Nullable] public string    PATH                    { get; set; } // VARCHAR(512)
+		[Column(),                             Nullable] public string?   PATH                    { get; set; } // VARCHAR(512)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -11910,7 +12596,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Type of contained files
 		/// </summary>
-		[Column(),                             Nullable] public string    TYPE                    { get; set; } // VARCHAR(16)
+		[Column(),                             Nullable] public string?   TYPE                    { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Persistence Volume ID
 		/// </summary>
@@ -11926,7 +12612,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Database name
 		/// </summary>
-		[Column("DATABASE_NAME"),                  Nullable] public string    DatabaseName                { get; set; } // NVARCHAR(256)
+		[Column("DATABASE_NAME"),                  Nullable] public string?   DatabaseName                { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Unique ID of check, collector or special function.
 		/// </summary>
@@ -11934,11 +12620,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Scheduling status of the check, collector or special function. The following values are possible: Idle, Scheduled, Manual, Disabled, Inactive.
 		/// </summary>
-		[Column(),                                 Nullable] public string    STATUS                      { get; set; } // NVARCHAR(256)
+		[Column(),                                 Nullable] public string?   STATUS                      { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Reason if STATUS is Disabled. This column is empty for other scheduling statuses.
 		/// </summary>
-		[Column(),                                 Nullable] public string    STATUSREASON                { get; set; } // NVARCHAR(1024)
+		[Column(),                                 Nullable] public string?   STATUSREASON                { get; set; } // NVARCHAR(1024)
 		/// <summary>
 		/// Number of seconds between 2 scheduled calls of the check, collector, or special function
 		/// </summary>
@@ -11988,16 +12674,26 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_SECURITY", Name="_SYS_OBJECT_PRIVILEGES")]
 	public partial class _SYS_SECURITY_SysObjectPrivilege
 	{
+		#nullable disable
 		[Column("OBJECT_TYPE"), PrimaryKey(1), NotNull] public string ObjectType { get; set; } // VARCHAR(32)
+		#nullable enable
+		#nullable disable
 		[Column(),              PrimaryKey(2), NotNull] public string PRIVILEGE  { get; set; } // VARCHAR(40)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_SECURITY", Name="_SYS_PASSWORD_BLACKLIST")]
 	public partial class _SYS_SECURITY_SysPasswordBlacklist
 	{
+		#nullable disable
 		[Column("BLACKLIST_TERM"),         PrimaryKey(3), NotNull] public string BlacklistTerm        { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("CHECK_PARTIAL_PASSWORD"), PrimaryKey(1), NotNull] public string CheckPartialPassword { get; set; } // VARCHAR(6)
+		#nullable enable
+		#nullable disable
 		[Column("CHECK_CASE_SENSITIVE"),   PrimaryKey(2), NotNull] public string CheckCaseSensitive   { get; set; } // VARCHAR(6)
+		#nullable enable
 	}
 
 	/// <summary>
@@ -12010,22 +12706,26 @@ namespace SapHanaDataContext
 		/// Timestamp ID (UTC)
 		/// </summary>
 		[Column("SNAPSHOT_ID"), NotNull    ] public DateTime SnapshotId { get; set; } // TIMESTAMP
+		#nullable disable
 		/// <summary>
 		/// Section name
 		/// </summary>
 		[Column(),              NotNull    ] public string   SECTION    { get; set; } // VARCHAR(16)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Key name in section
 		/// </summary>
 		[Column(),              NotNull    ] public string   NAME       { get; set; } // VARCHAR(32)
+		#nullable enable
 		/// <summary>
 		/// Status value: OK, ERROR, WARNING or empty for info items
 		/// </summary>
-		[Column(),                 Nullable] public string   STATUS     { get; set; } // VARCHAR(8)
+		[Column(),                 Nullable] public string?  STATUS     { get; set; } // VARCHAR(8)
 		/// <summary>
 		/// Key value in section
 		/// </summary>
-		[Column(),                 Nullable] public string   VALUE      { get; set; } // VARCHAR(256)
+		[Column(),                 Nullable] public string?  VALUE      { get; set; } // VARCHAR(256)
 	}
 
 	/// <summary>
@@ -12034,25 +12734,29 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="TASK_CLIENT_MAPPING", IsView=true)]
 	public partial class _SYS_TASK_TaskClientMapping0
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"), NotNull    ] public string SchemaName { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"), NotNull    ] public string  SchemaName { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),   NotNull    ] public string TaskName   { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),   NotNull    ] public string  TaskName   { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The client name that created the task by the ABAP API
 		/// </summary>
-		[Column(),                 Nullable] public string CLIENT     { get; set; } // NVARCHAR(128)
+		[Column(),                 Nullable] public string? CLIENT     { get; set; } // NVARCHAR(128)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="TASK_CLIENT_MAPPING_")]
 	public partial class _SYS_TASK_TaskClientMapping1
 	{
-		[Column("TASK_OID"), PrimaryKey,  NotNull] public long   TaskOid { get; set; } // BIGINT
-		[Column(),              Nullable         ] public string CLIENT  { get; set; } // NVARCHAR(128)
+		[Column("TASK_OID"), PrimaryKey,  NotNull] public long    TaskOid { get; set; } // BIGINT
+		[Column(),              Nullable         ] public string? CLIENT  { get; set; } // NVARCHAR(128)
 	}
 
 	/// <summary>
@@ -12061,41 +12765,45 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="TASK_COLUMN_DEFINITIONS", IsView=true)]
 	public partial class _SYS_TASK_TaskColumnDefinition
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),    NotNull    ] public string SchemaName    { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),    NotNull    ] public string  SchemaName    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),      NotNull    ] public string TaskName      { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),      NotNull    ] public string  TaskName      { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),    Nullable] public string OperationName { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),    Nullable] public string? OperationName { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The name of the table defined in the task plan for an operation
 		/// </summary>
-		[Column("TABLE_NAME"),        Nullable] public string TableName     { get; set; } // NVARCHAR(128)
+		[Column("TABLE_NAME"),        Nullable] public string? TableName     { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The name of the column used in the task plan within a table
 		/// </summary>
-		[Column("COLUMN_NAME"),       Nullable] public string ColumnName    { get; set; } // NVARCHAR(128)
+		[Column("COLUMN_NAME"),       Nullable] public string? ColumnName    { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The mapped name of the column used in a task plan within a table
 		/// </summary>
-		[Column("MAPPED_NAME"),       Nullable] public string MappedName    { get; set; } // NVARCHAR(128)
+		[Column("MAPPED_NAME"),       Nullable] public string? MappedName    { get; set; } // NVARCHAR(128)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="TASK_COLUMN_DEFINITIONS_")]
 	public partial class _SYS_TASK_TaskColumnDefinitions
 	{
-		[Column("TASK_OID"),     PrimaryKey(1), NotNull] public long   TaskOid     { get; set; } // BIGINT
-		[Column("OPERATION_ID"), PrimaryKey(2), NotNull] public int    OperationId { get; set; } // INTEGER
-		[Column("TABLE_ID"),     PrimaryKey(3), NotNull] public int    TableId     { get; set; } // INTEGER
-		[Column("COLUMN_ID"),    PrimaryKey(4), NotNull] public int    ColumnId    { get; set; } // INTEGER
-		[Column("COLUMN_NAME"),     Nullable           ] public string ColumnName  { get; set; } // NVARCHAR(128)
-		[Column("MAPPED_NAME"),     Nullable           ] public string MappedName  { get; set; } // NVARCHAR(128)
+		[Column("TASK_OID"),     PrimaryKey(1), NotNull] public long    TaskOid     { get; set; } // BIGINT
+		[Column("OPERATION_ID"), PrimaryKey(2), NotNull] public int     OperationId { get; set; } // INTEGER
+		[Column("TABLE_ID"),     PrimaryKey(3), NotNull] public int     TableId     { get; set; } // INTEGER
+		[Column("COLUMN_ID"),    PrimaryKey(4), NotNull] public int     ColumnId    { get; set; } // INTEGER
+		[Column("COLUMN_NAME"),     Nullable           ] public string? ColumnName  { get; set; } // NVARCHAR(128)
+		[Column("MAPPED_NAME"),     Nullable           ] public string? MappedName  { get; set; } // NVARCHAR(128)
 	}
 
 	/// <summary>
@@ -12107,19 +12815,23 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                              Nullable] public string    HOST                  { get; set; } // VARCHAR(64)
+		[Column(),                              Nullable] public string?   HOST                  { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
 		[Column(),                              Nullable] public int?      PORT                  { get; set; } // INTEGER
+		#nullable disable
 		/// <summary>
 		/// Schema name used in the task
 		/// </summary>
 		[Column("SCHEMA_NAME"),              NotNull    ] public string    SchemaName            { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Name of the task
 		/// </summary>
 		[Column("TASK_NAME"),                NotNull    ] public string    TaskName              { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// Connection Identifier
 		/// </summary>
@@ -12139,15 +12851,15 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// 'TRUE' if the task is asynchronous task, else 'FALSE'
 		/// </summary>
-		[Column("IS_ASYNC"),                    Nullable] public string    IsAsync               { get; set; } // VARCHAR(5)
+		[Column("IS_ASYNC"),                    Nullable] public string?   IsAsync               { get; set; } // VARCHAR(5)
 		/// <summary>
 		/// Input parameters for the task
 		/// </summary>
-		[Column(),                              Nullable] public string    PARAMETERS            { get; set; } // NVARCHAR(5000)
+		[Column(),                              Nullable] public string?   PARAMETERS            { get; set; } // NVARCHAR(5000)
 		/// <summary>
 		/// Input procedure parameters for the task
 		/// </summary>
-		[Column("PROCEDURE_PARAMETERS"),        Nullable] public string    ProcedureParameters   { get; set; } // NVARCHAR(5000)
+		[Column("PROCEDURE_PARAMETERS"),        Nullable] public string?   ProcedureParameters   { get; set; } // NVARCHAR(5000)
 		/// <summary>
 		/// Start time of the task
 		/// </summary>
@@ -12163,11 +12875,11 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Status of the task: STARTING/RUNNING/FAILED/COMPLETED
 		/// </summary>
-		[Column(),                              Nullable] public string    STATUS                { get; set; } // VARCHAR(16)
+		[Column(),                              Nullable] public string?   STATUS                { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Current operation of the task
 		/// </summary>
-		[Column("CURRENT_OPERATION"),           Nullable] public string    CurrentOperation      { get; set; } // NVARCHAR(128)
+		[Column("CURRENT_OPERATION"),           Nullable] public string?   CurrentOperation      { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Total number of records processed
 		/// </summary>
@@ -12183,41 +12895,41 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// User name
 		/// </summary>
-		[Column("USER_NAME"),                   Nullable] public string    UserName              { get; set; } // NVARCHAR(256)
+		[Column("USER_NAME"),                   Nullable] public string?   UserName              { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// Application user name
 		/// </summary>
-		[Column("APPLICATION_USER_NAME"),       Nullable] public string    ApplicationUserName   { get; set; } // NVARCHAR(256)
+		[Column("APPLICATION_USER_NAME"),       Nullable] public string?   ApplicationUserName   { get; set; } // NVARCHAR(256)
 		/// <summary>
 		/// 'TRUE' if the task produces side effect data, else 'FALSE'
 		/// </summary>
-		[Column("HAS_SIDE_EFFECTS"),            Nullable] public string    HasSideEffects        { get; set; } // VARCHAR(5)
+		[Column("HAS_SIDE_EFFECTS"),            Nullable] public string?   HasSideEffects        { get; set; } // VARCHAR(5)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="TASK_EXECUTIONS_")]
 	public partial class _SYS_TASK_TaskExecutions
 	{
 		[Column("TASK_OID"),                 PrimaryKey(1), NotNull] public long      TaskOid               { get; set; } // BIGINT
-		[Column(),                              Nullable           ] public string    HOST                  { get; set; } // VARCHAR(64)
+		[Column(),                              Nullable           ] public string?   HOST                  { get; set; } // VARCHAR(64)
 		[Column(),                              Nullable           ] public int?      PORT                  { get; set; } // INTEGER
 		[Column("CONNECTION_ID"),               Nullable           ] public int?      ConnectionId          { get; set; } // INTEGER
 		[Column("TRANSACTION_ID"),              Nullable           ] public int?      TransactionId         { get; set; } // INTEGER
 		[Column("TASK_EXECUTION_ID"),        PrimaryKey(2), NotNull] public long      TaskExecutionId       { get; set; } // BIGINT
 		[Column("PARENT_TASK_EXECUTION_ID"),    Nullable           ] public long?     ParentTaskExecutionId { get; set; } // BIGINT
-		[Column("IS_ASYNC"),                    Nullable           ] public string    IsAsync               { get; set; } // VARCHAR(5)
-		[Column(),                              Nullable           ] public string    PARAMETERS            { get; set; } // NVARCHAR(5000)
-		[Column("PROCEDURE_PARAMETERS"),        Nullable           ] public string    ProcedureParameters   { get; set; } // NVARCHAR(5000)
+		[Column("IS_ASYNC"),                    Nullable           ] public string?   IsAsync               { get; set; } // VARCHAR(5)
+		[Column(),                              Nullable           ] public string?   PARAMETERS            { get; set; } // NVARCHAR(5000)
+		[Column("PROCEDURE_PARAMETERS"),        Nullable           ] public string?   ProcedureParameters   { get; set; } // NVARCHAR(5000)
 		[Column("START_TIME"),                  Nullable           ] public DateTime? StartTime             { get; set; } // TIMESTAMP
 		[Column("END_TIME"),                    Nullable           ] public DateTime? EndTime               { get; set; } // TIMESTAMP
-		[Column(),                              Nullable           ] public string    STATUS                { get; set; } // VARCHAR(16)
-		[Column("CURRENT_OPERATION"),           Nullable           ] public string    CurrentOperation      { get; set; } // NVARCHAR(128)
+		[Column(),                              Nullable           ] public string?   STATUS                { get; set; } // VARCHAR(16)
+		[Column("CURRENT_OPERATION"),           Nullable           ] public string?   CurrentOperation      { get; set; } // NVARCHAR(128)
 		[Column("PROCESSED_RECORDS"),           Nullable           ] public long?     ProcessedRecords      { get; set; } // BIGINT
 		[Column("PARTITION_COUNT"),             Nullable           ] public int?      PartitionCount        { get; set; } // INTEGER
 		[Column("TOTAL_OPERATIONS"),            Nullable           ] public int?      TotalOperations       { get; set; } // INTEGER
 		[Column("TOTAL_PROGRESS_PERCENT"),      Nullable           ] public double?   TotalProgressPercent  { get; set; } // DOUBLE
-		[Column("USER_NAME"),                   Nullable           ] public string    UserName              { get; set; } // NVARCHAR(256)
-		[Column("APPLICATION_USER_NAME"),       Nullable           ] public string    ApplicationUserName   { get; set; } // NVARCHAR(256)
-		[Column("HAS_SIDE_EFFECTS"),            Nullable           ] public string    HasSideEffects        { get; set; } // VARCHAR(5)
+		[Column("USER_NAME"),                   Nullable           ] public string?   UserName              { get; set; } // NVARCHAR(256)
+		[Column("APPLICATION_USER_NAME"),       Nullable           ] public string?   ApplicationUserName   { get; set; } // NVARCHAR(256)
+		[Column("HAS_SIDE_EFFECTS"),            Nullable           ] public string?   HasSideEffects        { get; set; } // VARCHAR(5)
 		[Column("STATEMENT_EXECUTION_ID"),      Nullable           ] public long?     StatementExecutionId  { get; set; } // BIGINT
 		[Column("LOGICAL_CONNECTION_ID"),       Nullable           ] public int?      LogicalConnectionId   { get; set; } // INTEGER
 	}
@@ -12231,28 +12943,32 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// The ID of the type of entity being localized
 		/// </summary>
-		[Column("LOC_TYPE_ID"), NotNull    ] public int    LocTypeId   { get; set; } // INTEGER
+		[Column("LOC_TYPE_ID"), NotNull    ] public int     LocTypeId   { get; set; } // INTEGER
+		#nullable disable
 		/// <summary>
 		/// The ID of the entity being localized
 		/// </summary>
-		[Column("LOC_ID"),      NotNull    ] public string LocId       { get; set; } // NVARCHAR(64)
+		[Column("LOC_ID"),      NotNull    ] public string  LocId       { get; set; } // NVARCHAR(64)
+		#nullable enable
 		/// <summary>
 		/// The one character code of the localized language
 		/// </summary>
-		[Column(),              NotNull    ] public char   LANGUAGE    { get; set; } // NVARCHAR(1)
+		[Column(),              NotNull    ] public char    LANGUAGE    { get; set; } // NVARCHAR(1)
 		/// <summary>
 		/// The localized description
 		/// </summary>
-		[Column(),                 Nullable] public string DESCRIPTION { get; set; } // NVARCHAR(1024)
+		[Column(),                 Nullable] public string? DESCRIPTION { get; set; } // NVARCHAR(1024)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="TASK_LOCALIZATION_")]
 	public partial class _SYS_TASK_TaskLocalization1
 	{
-		[Column("LOC_TYPE_ID"), PrimaryKey(1), NotNull] public int    LocTypeId   { get; set; } // INTEGER
-		[Column("LOC_ID"),      PrimaryKey(2), NotNull] public string LocId       { get; set; } // NVARCHAR(64)
-		[Column(),              PrimaryKey(3), NotNull] public char   LANGUAGE    { get; set; } // NVARCHAR(1)
-		[Column(),                 Nullable           ] public string DESCRIPTION { get; set; } // NVARCHAR(1024)
+		[Column("LOC_TYPE_ID"), PrimaryKey(1), NotNull] public int     LocTypeId   { get; set; } // INTEGER
+		#nullable disable
+		[Column("LOC_ID"),      PrimaryKey(2), NotNull] public string  LocId       { get; set; } // NVARCHAR(64)
+		#nullable enable
+		[Column(),              PrimaryKey(3), NotNull] public char    LANGUAGE    { get; set; } // NVARCHAR(1)
+		[Column(),                 Nullable           ] public string? DESCRIPTION { get; set; } // NVARCHAR(1024)
 	}
 
 	/// <summary>
@@ -12261,41 +12977,45 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="TASK_OPERATIONS", IsView=true)]
 	public partial class _SYS_TASK_TaskOperation
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),      NotNull    ] public string SchemaName     { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),      NotNull    ] public string  SchemaName     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),        NotNull    ] public string TaskName       { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),        NotNull    ] public string  TaskName       { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),      Nullable] public string OperationName  { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),      Nullable] public string? OperationName  { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Comments made on the operation
 		/// </summary>
-		[Column(),                      Nullable] public string COMMENTS       { get; set; } // NVARCHAR(512)
+		[Column(),                      Nullable] public string? COMMENTS       { get; set; } // NVARCHAR(512)
 		/// <summary>
 		/// Whether the operation has side-effect data
 		/// </summary>
-		[Column("HAS_SIDE_EFFECTS"),    Nullable] public byte?  HasSideEffects { get; set; } // TINYINT
+		[Column("HAS_SIDE_EFFECTS"),    Nullable] public byte?   HasSideEffects { get; set; } // TINYINT
 		/// <summary>
 		/// The type of operation in the task plan
 		/// </summary>
-		[Column("OPERATION_TYPE"),      Nullable] public string OperationType  { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_TYPE"),      Nullable] public string? OperationType  { get; set; } // NVARCHAR(128)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="TASK_OPERATIONS_")]
 	public partial class _SYS_TASK_TaskOperations
 	{
-		[Column("TASK_OID"),         PrimaryKey(1), NotNull] public int    TaskOid        { get; set; } // INTEGER
-		[Column("OPERATION_ID"),     PrimaryKey(2), NotNull] public int    OperationId    { get; set; } // INTEGER
-		[Column("OPERATION_NAME"),      Nullable           ] public string OperationName  { get; set; } // NVARCHAR(128)
-		[Column(),                      Nullable           ] public string COMMENTS       { get; set; } // NVARCHAR(512)
-		[Column("HAS_SIDE_EFFECTS"),    Nullable           ] public byte?  HasSideEffects { get; set; } // TINYINT
-		[Column("OPERATION_TYPE"),      Nullable           ] public string OperationType  { get; set; } // NVARCHAR(128)
+		[Column("TASK_OID"),         PrimaryKey(1), NotNull] public int     TaskOid        { get; set; } // INTEGER
+		[Column("OPERATION_ID"),     PrimaryKey(2), NotNull] public int     OperationId    { get; set; } // INTEGER
+		[Column("OPERATION_NAME"),      Nullable           ] public string? OperationName  { get; set; } // NVARCHAR(128)
+		[Column(),                      Nullable           ] public string? COMMENTS       { get; set; } // NVARCHAR(512)
+		[Column("HAS_SIDE_EFFECTS"),    Nullable           ] public byte?   HasSideEffects { get; set; } // TINYINT
+		[Column("OPERATION_TYPE"),      Nullable           ] public string? OperationType  { get; set; } // NVARCHAR(128)
 	}
 
 	/// <summary>
@@ -12307,7 +13027,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                                Nullable] public string    HOST                     { get; set; } // VARCHAR(64)
+		[Column(),                                Nullable] public string?   HOST                     { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
@@ -12328,15 +13048,17 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Name of operation
 		/// </summary>
-		[Column("CURRENT_OPERATION"),             Nullable] public string    CurrentOperation         { get; set; } // NVARCHAR(128)
+		[Column("CURRENT_OPERATION"),             Nullable] public string?   CurrentOperation         { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Type of operation
 		/// </summary>
-		[Column("OPERATION_TYPE"),                Nullable] public string    OperationType            { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_TYPE"),                Nullable] public string?   OperationType            { get; set; } // NVARCHAR(128)
+		#nullable disable
 		/// <summary>
 		/// Internal name of operation
 		/// </summary>
 		[Column("OPERATION_NAME"),             NotNull    ] public string    OperationName            { get; set; } // NVARCHAR(128)
+		#nullable enable
 		/// <summary>
 		/// Start time of operation
 		/// </summary>
@@ -12352,7 +13074,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Status of the operation: STARTING/RUNNING/FAILED/COMPLETED
 		/// </summary>
-		[Column(),                                Nullable] public string    STATUS                   { get; set; } // VARCHAR(16)
+		[Column(),                                Nullable] public string?   STATUS                   { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Total number of records processed
 		/// </summary>
@@ -12364,27 +13086,29 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// 'TRUE' if the operation produces side effect data, else 'FALSE'
 		/// </summary>
-		[Column("HAS_SIDE_EFFECTS"),              Nullable] public string    HasSideEffects           { get; set; } // VARCHAR(5)
+		[Column("HAS_SIDE_EFFECTS"),              Nullable] public string?   HasSideEffects           { get; set; } // VARCHAR(5)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="TASK_OPERATIONS_EXECUTIONS_")]
 	public partial class _SYS_TASK_TaskOperationsExecutions
 	{
-		[Column(),                                Nullable           ] public string    HOST                     { get; set; } // VARCHAR(64)
+		[Column(),                                Nullable           ] public string?   HOST                     { get; set; } // VARCHAR(64)
 		[Column(),                                Nullable           ] public int?      PORT                     { get; set; } // INTEGER
 		[Column("CONNECTION_ID"),                 Nullable           ] public int?      ConnectionId             { get; set; } // INTEGER
 		[Column("TRANSACTION_ID"),                Nullable           ] public int?      TransactionId            { get; set; } // INTEGER
 		[Column("TASK_EXECUTION_ID"),          PrimaryKey(1), NotNull] public long      TaskExecutionId          { get; set; } // BIGINT
 		[Column("PARTITION_ID"),               PrimaryKey(2), NotNull] public int       PartitionId              { get; set; } // INTEGER
+		#nullable disable
 		[Column("OPERATION_NAME"),             PrimaryKey(3), NotNull] public string    OperationName            { get; set; } // NVARCHAR(128)
-		[Column("CURRENT_OPERATION"),             Nullable           ] public string    CurrentOperation         { get; set; } // NVARCHAR(128)
-		[Column("OPERATION_TYPE"),                Nullable           ] public string    OperationType            { get; set; } // NVARCHAR(128)
+		#nullable enable
+		[Column("CURRENT_OPERATION"),             Nullable           ] public string?   CurrentOperation         { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_TYPE"),                Nullable           ] public string?   OperationType            { get; set; } // NVARCHAR(128)
 		[Column("START_TIME"),                    Nullable           ] public DateTime? StartTime                { get; set; } // TIMESTAMP
 		[Column("END_TIME"),                      Nullable           ] public DateTime? EndTime                  { get; set; } // TIMESTAMP
-		[Column(),                                Nullable           ] public string    STATUS                   { get; set; } // VARCHAR(16)
+		[Column(),                                Nullable           ] public string?   STATUS                   { get; set; } // VARCHAR(16)
 		[Column("PROCESSED_RECORDS"),             Nullable           ] public long?     ProcessedRecords         { get; set; } // BIGINT
 		[Column("OPERATION_PROGRESS_PERCENT"),    Nullable           ] public double?   OperationProgressPercent { get; set; } // DOUBLE
-		[Column("HAS_SIDE_EFFECTS"),              Nullable           ] public string    HasSideEffects           { get; set; } // VARCHAR(5)
+		[Column("HAS_SIDE_EFFECTS"),              Nullable           ] public string?   HasSideEffects           { get; set; } // VARCHAR(5)
 	}
 
 	/// <summary>
@@ -12396,19 +13120,23 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Host name
 		/// </summary>
-		[Column(),                            Nullable] public string    HOST                 { get; set; } // VARCHAR(64)
+		[Column(),                            Nullable] public string?   HOST                 { get; set; } // VARCHAR(64)
 		/// <summary>
 		/// Internal port
 		/// </summary>
 		[Column(),                            Nullable] public int?      PORT                 { get; set; } // INTEGER
+		#nullable disable
 		/// <summary>
 		/// Schema name of the task
 		/// </summary>
 		[Column("SCHEMA_NAME"),            NotNull    ] public string    SchemaName           { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Name of the task
 		/// </summary>
 		[Column("TASK_NAME"),              NotNull    ] public string    TaskName             { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// Connection Identifier
 		/// </summary>
@@ -12428,7 +13156,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Name of the partition
 		/// </summary>
-		[Column("PARTITION_NAME"),            Nullable] public string    PartitionName        { get; set; } // NVARCHAR(5000)
+		[Column("PARTITION_NAME"),            Nullable] public string?   PartitionName        { get; set; } // NVARCHAR(5000)
 		/// <summary>
 		/// Start time of the partition
 		/// </summary>
@@ -12444,7 +13172,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// Status of the task: STARTING/RUNNING/FAILED/COMPLETED
 		/// </summary>
-		[Column(),                            Nullable] public string    STATUS               { get; set; } // VARCHAR(16)
+		[Column(),                            Nullable] public string?   STATUS               { get; set; } // VARCHAR(16)
 		/// <summary>
 		/// Total number of records processed
 		/// </summary>
@@ -12459,16 +13187,16 @@ namespace SapHanaDataContext
 	public partial class _SYS_TASK_TaskPartitionExecutions
 	{
 		[Column("TASK_OID"),               PrimaryKey(1), NotNull] public long      TaskOid              { get; set; } // BIGINT
-		[Column(),                            Nullable           ] public string    HOST                 { get; set; } // VARCHAR(64)
+		[Column(),                            Nullable           ] public string?   HOST                 { get; set; } // VARCHAR(64)
 		[Column(),                            Nullable           ] public int?      PORT                 { get; set; } // INTEGER
 		[Column("CONNECTION_ID"),             Nullable           ] public int?      ConnectionId         { get; set; } // INTEGER
 		[Column("TRANSACTION_ID"),            Nullable           ] public int?      TransactionId        { get; set; } // INTEGER
 		[Column("TASK_EXECUTION_ID"),      PrimaryKey(2), NotNull] public long      TaskExecutionId      { get; set; } // BIGINT
 		[Column("PARTITION_ID"),           PrimaryKey(3), NotNull] public long      PartitionId          { get; set; } // BIGINT
-		[Column("PARTITION_NAME"),            Nullable           ] public string    PartitionName        { get; set; } // NVARCHAR(5000)
+		[Column("PARTITION_NAME"),            Nullable           ] public string?   PartitionName        { get; set; } // NVARCHAR(5000)
 		[Column("START_TIME"),                Nullable           ] public DateTime? StartTime            { get; set; } // TIMESTAMP
 		[Column("END_TIME"),                  Nullable           ] public DateTime? EndTime              { get; set; } // TIMESTAMP
-		[Column(),                            Nullable           ] public string    STATUS               { get; set; } // VARCHAR(16)
+		[Column(),                            Nullable           ] public string?   STATUS               { get; set; } // VARCHAR(16)
 		[Column("PROCESSED_RECORDS"),         Nullable           ] public long?     ProcessedRecords     { get; set; } // BIGINT
 		[Column("TOTAL_PROGRESS_PERCENT"),    Nullable           ] public double?   TotalProgressPercent { get; set; } // DOUBLE
 	}
@@ -12479,55 +13207,59 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="TASK_TABLE_DEFINITIONS", IsView=true)]
 	public partial class _SYS_TASK_TaskTableDefinition
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),          NotNull    ] public string SchemaName         { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),          NotNull    ] public string  SchemaName         { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),            NotNull    ] public string TaskName           { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),            NotNull    ] public string  TaskName           { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),          Nullable] public string OperationName      { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),          Nullable] public string? OperationName      { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Unique ID for the table
 		/// </summary>
-		[Column("TABLE_ID"),             NotNull    ] public int    TableId            { get; set; } // INTEGER
+		[Column("TABLE_ID"),             NotNull    ] public int     TableId            { get; set; } // INTEGER
 		/// <summary>
 		/// The name of the table defined in the task plan for an operation
 		/// </summary>
-		[Column("TABLE_NAME"),              Nullable] public string TableName          { get; set; } // NVARCHAR(128)
+		[Column("TABLE_NAME"),              Nullable] public string? TableName          { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The schema where the generated side-effect table is located
 		/// </summary>
-		[Column("SIDE_EFFECT_SCHEMA"),      Nullable] public string SideEffectSchema   { get; set; } // NVARCHAR(128)
+		[Column("SIDE_EFFECT_SCHEMA"),      Nullable] public string? SideEffectSchema   { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The name of the generated side-effect table
 		/// </summary>
-		[Column("SIDE_EFFECT_NAME"),        Nullable] public string SideEffectName     { get; set; } // NVARCHAR(128)
+		[Column("SIDE_EFFECT_NAME"),        Nullable] public string? SideEffectName     { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// Whether this table is the primary table in a relationship
 		/// </summary>
-		[Column("IS_PRIMARY_TABLE"),        Nullable] public byte?  IsPrimaryTable     { get; set; } // TINYINT
+		[Column("IS_PRIMARY_TABLE"),        Nullable] public byte?   IsPrimaryTable     { get; set; } // TINYINT
 		/// <summary>
 		/// The type of operation this table is used within
 		/// </summary>
-		[Column("OPERATION_TABLE_TYPE"),    Nullable] public string OperationTableType { get; set; } // NVARCHAR(20)
+		[Column("OPERATION_TABLE_TYPE"),    Nullable] public string? OperationTableType { get; set; } // NVARCHAR(20)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="TASK_TABLE_DEFINITIONS_")]
 	public partial class _SYS_TASK_TaskTableDefinitions
 	{
-		[Column("TASK_OID"),             PrimaryKey(1), NotNull] public long   TaskOid            { get; set; } // BIGINT
-		[Column("OPERATION_ID"),         PrimaryKey(2), NotNull] public int    OperationId        { get; set; } // INTEGER
-		[Column("TABLE_ID"),             PrimaryKey(3), NotNull] public int    TableId            { get; set; } // INTEGER
-		[Column("TABLE_NAME"),              Nullable           ] public string TableName          { get; set; } // NVARCHAR(128)
-		[Column("SIDE_EFFECT_SCHEMA"),      Nullable           ] public string SideEffectSchema   { get; set; } // NVARCHAR(128)
-		[Column("SIDE_EFFECT_NAME"),        Nullable           ] public string SideEffectName     { get; set; } // NVARCHAR(128)
-		[Column("IS_PRIMARY_TABLE"),        Nullable           ] public byte?  IsPrimaryTable     { get; set; } // TINYINT
-		[Column("OPERATION_TABLE_TYPE"),    Nullable           ] public string OperationTableType { get; set; } // NVARCHAR(20)
+		[Column("TASK_OID"),             PrimaryKey(1), NotNull] public long    TaskOid            { get; set; } // BIGINT
+		[Column("OPERATION_ID"),         PrimaryKey(2), NotNull] public int     OperationId        { get; set; } // INTEGER
+		[Column("TABLE_ID"),             PrimaryKey(3), NotNull] public int     TableId            { get; set; } // INTEGER
+		[Column("TABLE_NAME"),              Nullable           ] public string? TableName          { get; set; } // NVARCHAR(128)
+		[Column("SIDE_EFFECT_SCHEMA"),      Nullable           ] public string? SideEffectSchema   { get; set; } // NVARCHAR(128)
+		[Column("SIDE_EFFECT_NAME"),        Nullable           ] public string? SideEffectName     { get; set; } // NVARCHAR(128)
+		[Column("IS_PRIMARY_TABLE"),        Nullable           ] public byte?   IsPrimaryTable     { get; set; } // TINYINT
+		[Column("OPERATION_TABLE_TYPE"),    Nullable           ] public string? OperationTableType { get; set; } // NVARCHAR(20)
 	}
 
 	/// <summary>
@@ -12536,34 +13268,42 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TASK", Name="TASK_TABLE_RELATIONSHIPS", IsView=true)]
 	public partial class _SYS_TASK_TaskTableRelationship
 	{
+		#nullable disable
 		/// <summary>
 		/// The name of the schema where the task is located
 		/// </summary>
-		[Column("SCHEMA_NAME"),        NotNull    ] public string SchemaName       { get; set; } // NVARCHAR(256)
+		[Column("SCHEMA_NAME"),        NotNull    ] public string  SchemaName       { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the task
 		/// </summary>
-		[Column("TASK_NAME"),          NotNull    ] public string TaskName         { get; set; } // NVARCHAR(256)
+		[Column("TASK_NAME"),          NotNull    ] public string  TaskName         { get; set; } // NVARCHAR(256)
+		#nullable enable
 		/// <summary>
 		/// The name of the operation in the task plan
 		/// </summary>
-		[Column("OPERATION_NAME"),        Nullable] public string OperationName    { get; set; } // NVARCHAR(128)
+		[Column("OPERATION_NAME"),        Nullable] public string? OperationName    { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The name of the table defined in the task plan for an operation
 		/// </summary>
-		[Column("TABLE_NAME"),            Nullable] public string TableName        { get; set; } // NVARCHAR(128)
+		[Column("TABLE_NAME"),            Nullable] public string? TableName        { get; set; } // NVARCHAR(128)
 		/// <summary>
 		/// The name of the table with which the "TABLE NAME" table is related
 		/// </summary>
-		[Column("RELATED_TABLE_NAME"),    Nullable] public string RelatedTableName { get; set; } // NVARCHAR(128)
+		[Column("RELATED_TABLE_NAME"),    Nullable] public string? RelatedTableName { get; set; } // NVARCHAR(128)
+		#nullable disable
 		/// <summary>
 		/// The name of the column in the "TABLE_NAME" table that relates to the "TO_ATTRIBUTE"
 		/// </summary>
-		[Column("FROM_ATTRIBUTE"),     NotNull    ] public string FromAttribute    { get; set; } // NVARCHAR(128)
+		[Column("FROM_ATTRIBUTE"),     NotNull    ] public string  FromAttribute    { get; set; } // NVARCHAR(128)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// The name of the column in the "RELATED_TABLE_NAME" that relates to the "FROM_ATTRIBUTE"
 		/// </summary>
-		[Column("TO_ATTRIBUTE"),       NotNull    ] public string ToAttribute      { get; set; } // NVARCHAR(128)
+		[Column("TO_ATTRIBUTE"),       NotNull    ] public string  ToAttribute      { get; set; } // NVARCHAR(128)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_TASK", Name="TASK_TABLE_RELATIONSHIPS_")]
@@ -12573,8 +13313,12 @@ namespace SapHanaDataContext
 		[Column("OPERATION_ID"),     PrimaryKey(2), NotNull] public int    OperationId    { get; set; } // INTEGER
 		[Column("TABLE_ID"),         PrimaryKey(3), NotNull] public int    TableId        { get; set; } // INTEGER
 		[Column("RELATED_TABLE_ID"), PrimaryKey(4), NotNull] public int    RelatedTableId { get; set; } // INTEGER
+		#nullable disable
 		[Column("FROM_ATTRIBUTE"),   PrimaryKey(5), NotNull] public string FromAttribute  { get; set; } // NVARCHAR(128)
+		#nullable enable
+		#nullable disable
 		[Column("TO_ATTRIBUTE"),     PrimaryKey(6), NotNull] public string ToAttribute    { get; set; } // NVARCHAR(128)
+		#nullable enable
 	}
 
 	/// <summary>
@@ -12611,26 +13355,32 @@ namespace SapHanaDataContext
 		/// Maximum transmission interval in minute
 		/// </summary>
 		[Column("MAX_TRANSMISSION_INTERVAL"),           Nullable] public short?    MaxTransmissionInterval        { get; set; } // SMALLINT
+		#nullable disable
 		/// <summary>
 		/// System ID of the client
 		/// </summary>
 		[Column("CLIENT_SYSTEM_ID"),                 NotNull    ] public string    ClientSystemId                 { get; set; } // VARCHAR(3)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Database Name of the client
 		/// </summary>
 		[Column("CLIENT_DATABASE_NAME"),             NotNull    ] public string    ClientDatabaseName             { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Hardware key of the client
 		/// </summary>
 		[Column("CLIENT_HARDWARE_KEY"),              NotNull    ] public string    ClientHardwareKey              { get; set; } // VARCHAR(11)
+		#nullable enable
 		/// <summary>
 		/// Private key of the client
 		/// </summary>
-		[Column("PRIVATE_KEY"),                         Nullable] public string    PrivateKey                     { get; set; } // VARCHAR(5000)
+		[Column("PRIVATE_KEY"),                         Nullable] public string?   PrivateKey                     { get; set; } // VARCHAR(5000)
 		/// <summary>
 		/// Personal certificate of the client
 		/// </summary>
-		[Column("PERSONAL_CERTIFICATE"),                Nullable] public string    PersonalCertificate            { get; set; } // VARCHAR(5000)
+		[Column("PERSONAL_CERTIFICATE"),                Nullable] public string?   PersonalCertificate            { get; set; } // VARCHAR(5000)
 		/// <summary>
 		/// Expiration timestamp of the Personal certificate
 		/// </summary>
@@ -12643,18 +13393,22 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_TELEMETRY", Name="TELEMETRY_INIFILE", IsView=true)]
 	public partial class _SYS_TELEMETRY_TelemetryInifile
 	{
+		#nullable disable
 		/// <summary>
 		/// Configuration key name
 		/// </summary>
-		[Column("INI_KEY"),        NotNull    ] public string IniKey       { get; set; } // VARCHAR(128)
+		[Column("INI_KEY"),        NotNull    ] public string  IniKey       { get; set; } // VARCHAR(128)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// Configuration layer: DEFAULT, SYSTEM, HOST, DATABASE
 		/// </summary>
-		[Column("INI_LAYER_NAME"), NotNull    ] public string IniLayerName { get; set; } // VARCHAR(16)
+		[Column("INI_LAYER_NAME"), NotNull    ] public string  IniLayerName { get; set; } // VARCHAR(16)
+		#nullable enable
 		/// <summary>
 		/// Configuration value
 		/// </summary>
-		[Column("INI_VALUE"),         Nullable] public string IniValue     { get; set; } // VARCHAR(5000)
+		[Column("INI_VALUE"),         Nullable] public string? IniValue     { get; set; } // VARCHAR(5000)
 	}
 
 	/// <summary>
@@ -12670,15 +13424,19 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// HANA feature name
 		/// </summary>
-		[Column("0SM_FEAT"),       Nullable] public string    _0smFeat   { get; set; } // NVARCHAR(256)
+		[Column("0SM_FEAT"),       Nullable] public string?   _0smFeat   { get; set; } // NVARCHAR(256)
+		#nullable disable
 		/// <summary>
 		/// HANA feature type
 		/// </summary>
 		[Column("0SM_TYPE"),    NotNull    ] public string    _0smType   { get; set; } // VARCHAR(11)
+		#nullable enable
+		#nullable disable
 		/// <summary>
 		/// HANA feature subtype
 		/// </summary>
 		[Column("0SM_SUBT"),    NotNull    ] public string    _0smSubt   { get; set; } // VARCHAR(18)
+		#nullable enable
 		/// <summary>
 		/// HANA feature usage
 		/// </summary>
@@ -12724,19 +13482,19 @@ namespace SapHanaDataContext
 		[Column,        Nullable] public int?      Field5          { get; set; } // INTEGER
 		[Column,        Nullable] public long?     FieldInt64      { get; set; } // BIGINT
 		[Column,        Nullable] public byte?     FieldBoolean    { get; set; } // TINYINT
-		[Column,        Nullable] public string    FieldString     { get; set; } // VARCHAR(20)
-		[Column,        Nullable] public string    FieldNString    { get; set; } // NVARCHAR(20)
+		[Column,        Nullable] public string?   FieldString     { get; set; } // VARCHAR(20)
+		[Column,        Nullable] public string?   FieldNString    { get; set; } // NVARCHAR(20)
 		[Column,        Nullable] public char?     FieldChar       { get; set; } // CHAR(1)
 		[Column,        Nullable] public char?     FieldNChar      { get; set; } // NCHAR(1)
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // REAL
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // DOUBLE
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // TIMESTAMP
-		[Column,        Nullable] public byte[]    FieldBinary     { get; set; } // VARBINARY(20)
-		[Column,        Nullable] public string    FieldGuid       { get; set; } // CHAR(36)
+		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
+		[Column,        Nullable] public string?   FieldGuid       { get; set; } // CHAR(36)
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // DECIMAL(24, 10)
 		[Column,        Nullable] public DateTime? FieldDate       { get; set; } // DATE
 		[Column,        Nullable] public TimeSpan? FieldTime       { get; set; } // TIME
-		[Column,        Nullable] public string    FieldEnumString { get; set; } // VARCHAR(20)
+		[Column,        Nullable] public string?   FieldEnumString { get; set; } // VARCHAR(20)
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // INTEGER
 	}
 
@@ -12762,127 +13520,197 @@ namespace SapHanaDataContext
 		[Column,        Nullable] public int?      Field5          { get; set; } // INTEGER
 		[Column,        Nullable] public long?     FieldInt64      { get; set; } // BIGINT
 		[Column,        Nullable] public byte?     FieldBoolean    { get; set; } // TINYINT
-		[Column,        Nullable] public string    FieldString     { get; set; } // VARCHAR(20)
-		[Column,        Nullable] public string    FieldNString    { get; set; } // NVARCHAR(20)
+		[Column,        Nullable] public string?   FieldString     { get; set; } // VARCHAR(20)
+		[Column,        Nullable] public string?   FieldNString    { get; set; } // NVARCHAR(20)
 		[Column,        Nullable] public char?     FieldChar       { get; set; } // CHAR(1)
 		[Column,        Nullable] public char?     FieldNChar      { get; set; } // NCHAR(1)
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // REAL
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // DOUBLE
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // TIMESTAMP
-		[Column,        Nullable] public byte[]    FieldBinary     { get; set; } // VARBINARY(20)
-		[Column,        Nullable] public string    FieldGuid       { get; set; } // CHAR(36)
+		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
+		[Column,        Nullable] public string?   FieldGuid       { get; set; } // CHAR(36)
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // DECIMAL(24, 10)
 		[Column,        Nullable] public DateTime? FieldDate       { get; set; } // DATE
 		[Column,        Nullable] public TimeSpan? FieldTime       { get; set; } // TIME
-		[Column,        Nullable] public string    FieldEnumString { get; set; } // VARCHAR(20)
+		[Column,        Nullable] public string?   FieldEnumString { get; set; } // VARCHAR(20)
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // INTEGER
 	}
 
 	[Table(Schema="_SYS_RT", Name="TI_IMPORT_KEYS")]
 	public partial class _SYS_RT_TiImportKey
 	{
+		#nullable disable
 		[Column("TABLE_SCHEMA"),    PrimaryKey(1),  NotNull] public string TableSchema   { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("TABLE_NAME"),      PrimaryKey(2),  NotNull] public string TableName     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("TI_PACKAGE"),      PrimaryKey(3),  NotNull] public string TiPackage     { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("TI_NAME"),         PrimaryKey(4),  NotNull] public string TiName        { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("TI_TYPE"),         PrimaryKey(5),  NotNull] public string TiType        { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("CSV_PACKAGE"),     PrimaryKey(6),  NotNull] public string CsvPackage    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("CSV_NAME"),        PrimaryKey(7),  NotNull] public string CsvName       { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("CSV_FILEEXT"),     PrimaryKey(8),  NotNull] public string CsvFileext    { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("KEY_COLUMN_NAME"), PrimaryKey(9),  NotNull] public string KeyColumnName { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column("KEY_VALUE"),       PrimaryKey(10), NotNull] public string KeyValue      { get; set; } // NVARCHAR(5000)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="_UIS_APPSITES")]
 	public partial class _SYS_RT_UisAppsite
 	{
+		#nullable disable
 		[Column(),             PrimaryKey(3), NotNull] public string    ID          { get; set; } // NVARCHAR(2000)
-		[Column(),                Nullable           ] public string    NAME        { get; set; } // NVARCHAR(300)
-		[Column(),                Nullable           ] public string    DESCRIPTION { get; set; } // NVARCHAR(5000)
-		[Column(),                Nullable           ] public string    LAYOUT      { get; set; } // CLOB
+		#nullable enable
+		[Column(),                Nullable           ] public string?   NAME        { get; set; } // NVARCHAR(300)
+		[Column(),                Nullable           ] public string?   DESCRIPTION { get; set; } // NVARCHAR(5000)
+		[Column(),                Nullable           ] public string?   LAYOUT      { get; set; } // CLOB
+		#nullable disable
 		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId    { get; set; } // VARCHAR(50)
-		[Column(),                Nullable           ] public string    ALIAS       { get; set; } // NVARCHAR(5000)
+		#nullable enable
+		[Column(),                Nullable           ] public string?   ALIAS       { get; set; } // NVARCHAR(5000)
+		#nullable disable
 		[Column(),             PrimaryKey(2), NotNull] public string    DTYPE       { get; set; } // VARCHAR(20)
+		#nullable enable
 		[Column(),                Nullable           ] public int?      VERSION     { get; set; } // INTEGER
 		[Column(),                Nullable           ] public DateTime? CREATED     { get; set; } // TIMESTAMP
 		[Column(),                Nullable           ] public DateTime? UPDATED     { get; set; } // TIMESTAMP
-		[Column("UPDATED_BY"),    Nullable           ] public string    UpdatedBy   { get; set; } // NVARCHAR(300)
-		[Column("THEME_ID"),      Nullable           ] public string    ThemeId     { get; set; } // VARCHAR(50)
+		[Column("UPDATED_BY"),    Nullable           ] public string?   UpdatedBy   { get; set; } // NVARCHAR(300)
+		[Column("THEME_ID"),      Nullable           ] public string?   ThemeId     { get; set; } // VARCHAR(50)
 	}
 
 	[Table(Schema="_SYS_RT", Name="_UIS_APPSITE_PROPERTIES")]
 	public partial class _SYS_RT_UisAppsitePROPERTy
 	{
+		#nullable disable
 		[Column(),             PrimaryKey(4), NotNull] public string    ID        { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column(),             PrimaryKey(2), NotNull] public string    DTYPE     { get; set; } // VARCHAR(20)
+		#nullable enable
+		#nullable disable
 		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } // NVARCHAR(2000)
+		#nullable enable
+		#nullable disable
 		[Column(),                            NotNull] public string    KEY       { get; set; } // NVARCHAR(300)
-		[Column(),                Nullable           ] public string    VALUE     { get; set; } // NCLOB
-		[Column("VALUE_TYPE"),    Nullable           ] public string    ValueType { get; set; } // NVARCHAR(20)
+		#nullable enable
+		[Column(),                Nullable           ] public string?   VALUE     { get; set; } // NCLOB
+		[Column("VALUE_TYPE"),    Nullable           ] public string?   ValueType { get; set; } // NVARCHAR(20)
 		[Column(),                Nullable           ] public int?      VERSION   { get; set; } // INTEGER
 		[Column(),                Nullable           ] public DateTime? CREATED   { get; set; } // TIMESTAMP
 		[Column(),                Nullable           ] public DateTime? UPDATED   { get; set; } // TIMESTAMP
-		[Column("UPDATED_BY"),    Nullable           ] public string    UpdatedBy { get; set; } // NVARCHAR(300)
+		[Column("UPDATED_BY"),    Nullable           ] public string?   UpdatedBy { get; set; } // NVARCHAR(300)
 	}
 
 	[Table(Schema="_SYS_RT", Name="_UIS_AUDIT_LOG")]
 	public partial class _SYS_RT_UisAuditLog
 	{
 		[Column(),            NotNull] public DateTime TIMESTAMP { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column("USER_NAME"), NotNull] public string   UserName  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[Column(),            NotNull] public string   HOST      { get; set; } // NVARCHAR(2048)
+		#nullable enable
+		#nullable disable
 		[Column(),            NotNull] public string   MESSAGE   { get; set; } // NCLOB
+		#nullable enable
+		#nullable disable
 		[Column(),            NotNull] public string   STATUS    { get; set; } // VARCHAR(128)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_RT", Name="_UIS_PAGES")]
 	public partial class _SYS_RT_UisPage
 	{
+		#nullable disable
 		[Column(),                    PrimaryKey(4), NotNull] public string    ID              { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("TENANT_ID"),         PrimaryKey(1), NotNull] public string    TenantId        { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column(),                    PrimaryKey(2), NotNull] public string    DTYPE           { get; set; } // VARCHAR(20)
+		#nullable enable
+		#nullable disable
 		[Column("SITE_ID"),           PrimaryKey(3), NotNull] public string    SiteId          { get; set; } // NVARCHAR(2000)
-		[Column("PARENT_ID"),            Nullable           ] public string    ParentId        { get; set; } // VARCHAR(50)
-		[Column(),                       Nullable           ] public string    NAME            { get; set; } // NVARCHAR(300)
-		[Column(),                       Nullable           ] public string    DESCRIPTION     { get; set; } // NVARCHAR(5000)
-		[Column(),                       Nullable           ] public string    LAYOUT          { get; set; } // CLOB
-		[Column("LAYOUT_ID"),            Nullable           ] public string    LayoutId        { get; set; } // VARCHAR(50)
-		[Column(),                       Nullable           ] public string    ALIAS           { get; set; } // NVARCHAR(5000)
+		#nullable enable
+		[Column("PARENT_ID"),            Nullable           ] public string?   ParentId        { get; set; } // VARCHAR(50)
+		[Column(),                       Nullable           ] public string?   NAME            { get; set; } // NVARCHAR(300)
+		[Column(),                       Nullable           ] public string?   DESCRIPTION     { get; set; } // NVARCHAR(5000)
+		[Column(),                       Nullable           ] public string?   LAYOUT          { get; set; } // CLOB
+		[Column("LAYOUT_ID"),            Nullable           ] public string?   LayoutId        { get; set; } // VARCHAR(50)
+		[Column(),                       Nullable           ] public string?   ALIAS           { get; set; } // NVARCHAR(5000)
 		[Column(),                       Nullable           ] public int?      VERSION         { get; set; } // INTEGER
 		[Column(),                       Nullable           ] public DateTime? CREATED         { get; set; } // TIMESTAMP
 		[Column(),                       Nullable           ] public DateTime? UPDATED         { get; set; } // TIMESTAMP
-		[Column("UPDATED_BY"),           Nullable           ] public string    UpdatedBy       { get; set; } // NVARCHAR(300)
+		[Column("UPDATED_BY"),           Nullable           ] public string?   UpdatedBy       { get; set; } // NVARCHAR(300)
 		[Column("IS_PERMISSION_HUB"),    Nullable           ] public int?      IsPermissionHub { get; set; } // INTEGER
 	}
 
 	[Table(Schema="_SYS_RT", Name="_UIS_PAGE_PROPERTIES")]
 	public partial class _SYS_RT_UisPagePROPERTy
 	{
+		#nullable disable
 		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } // NVARCHAR(2000)
+		#nullable enable
+		#nullable disable
 		[Column("PAGE_ID"),    PrimaryKey(4), NotNull] public string    PageId    { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column(),                            NotNull] public string    KEY       { get; set; } // NVARCHAR(300)
+		#nullable enable
+		#nullable disable
 		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column(),             PrimaryKey(2), NotNull] public string    DTYPE     { get; set; } // VARCHAR(20)
-		[Column(),                Nullable           ] public string    VALUE     { get; set; } // NVARCHAR(5000)
-		[Column("VALUE_TYPE"),    Nullable           ] public string    ValueType { get; set; } // NVARCHAR(20)
+		#nullable enable
+		[Column(),                Nullable           ] public string?   VALUE     { get; set; } // NVARCHAR(5000)
+		[Column("VALUE_TYPE"),    Nullable           ] public string?   ValueType { get; set; } // NVARCHAR(20)
 		[Column(),                Nullable           ] public int?      VERSION   { get; set; } // INTEGER
 		[Column(),                Nullable           ] public DateTime? CREATED   { get; set; } // TIMESTAMP
 		[Column(),                Nullable           ] public DateTime? UPDATED   { get; set; } // TIMESTAMP
-		[Column("UPDATED_BY"),    Nullable           ] public string    UpdatedBy { get; set; } // NVARCHAR(300)
+		[Column("UPDATED_BY"),    Nullable           ] public string?   UpdatedBy { get; set; } // NVARCHAR(300)
 	}
 
 	[Table(Schema="_SYS_RT", Name="_UIS_USER_APPSITES")]
 	public partial class _SYS_RT_UisUserAppsite
 	{
+		#nullable disable
 		[Column(),            PrimaryKey(3), NotNull] public string    ID          { get; set; } // NVARCHAR(2000)
+		#nullable enable
+		#nullable disable
 		[Column("USER_NAME"), PrimaryKey(2), NotNull] public string    UserName    { get; set; } // NVARCHAR(300)
+		#nullable enable
+		#nullable disable
 		[Column("TENANT_ID"), PrimaryKey(1), NotNull] public string    TenantId    { get; set; } // VARCHAR(50)
-		[Column(),               Nullable           ] public string    NAME        { get; set; } // NVARCHAR(300)
-		[Column(),               Nullable           ] public string    DESCRIPTION { get; set; } // NVARCHAR(5000)
-		[Column(),               Nullable           ] public string    LAYOUT      { get; set; } // CLOB
-		[Column(),               Nullable           ] public string    ALIAS       { get; set; } // NVARCHAR(5000)
+		#nullable enable
+		[Column(),               Nullable           ] public string?   NAME        { get; set; } // NVARCHAR(300)
+		[Column(),               Nullable           ] public string?   DESCRIPTION { get; set; } // NVARCHAR(5000)
+		[Column(),               Nullable           ] public string?   LAYOUT      { get; set; } // CLOB
+		[Column(),               Nullable           ] public string?   ALIAS       { get; set; } // NVARCHAR(5000)
 		[Column(),               Nullable           ] public int?      VERSION     { get; set; } // INTEGER
 		[Column(),               Nullable           ] public DateTime? CREATED     { get; set; } // TIMESTAMP
 		[Column(),               Nullable           ] public DateTime? UPDATED     { get; set; } // TIMESTAMP
@@ -12891,13 +13719,23 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_USER_APPSITE_PROPERTIES")]
 	public partial class _SYS_RT_UisUserAppsitePROPERTy
 	{
+		#nullable disable
 		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } // NVARCHAR(2000)
+		#nullable enable
+		#nullable disable
 		[Column("USER_NAME"),  PrimaryKey(2), NotNull] public string    UserName  { get; set; } // NVARCHAR(300)
+		#nullable enable
+		#nullable disable
 		[Column(),             PrimaryKey(4), NotNull] public string    KEY       { get; set; } // NVARCHAR(300)
-		[Column(),                Nullable           ] public string    VALUE     { get; set; } // NCLOB
-		[Column("VALUE_TYPE"),    Nullable           ] public string    ValueType { get; set; } // NVARCHAR(20)
+		#nullable enable
+		[Column(),                Nullable           ] public string?   VALUE     { get; set; } // NCLOB
+		[Column("VALUE_TYPE"),    Nullable           ] public string?   ValueType { get; set; } // NVARCHAR(20)
 		[Column(),                Nullable           ] public int?      VERSION   { get; set; } // INTEGER
 		[Column(),                Nullable           ] public DateTime? CREATED   { get; set; } // TIMESTAMP
 		[Column(),                Nullable           ] public DateTime? UPDATED   { get; set; } // TIMESTAMP
@@ -12906,17 +13744,25 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_USER_PAGES")]
 	public partial class _SYS_RT_UisUserPage
 	{
+		#nullable disable
 		[Column(),            PrimaryKey(4), NotNull] public string    ID          { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("USER_NAME"), PrimaryKey(2), NotNull] public string    UserName    { get; set; } // NVARCHAR(300)
-		[Column(),               Nullable           ] public string    NAME        { get; set; } // NVARCHAR(300)
-		[Column(),               Nullable           ] public string    DESCRIPTION { get; set; } // NVARCHAR(5000)
-		[Column(),               Nullable           ] public string    LAYOUT      { get; set; } // CLOB
-		[Column("LAYOUT_ID"),    Nullable           ] public string    LayoutId    { get; set; } // VARCHAR(50)
-		[Column("PARENT_ID"),    Nullable           ] public string    ParentId    { get; set; } // VARCHAR(50)
+		#nullable enable
+		[Column(),               Nullable           ] public string?   NAME        { get; set; } // NVARCHAR(300)
+		[Column(),               Nullable           ] public string?   DESCRIPTION { get; set; } // NVARCHAR(5000)
+		[Column(),               Nullable           ] public string?   LAYOUT      { get; set; } // CLOB
+		[Column("LAYOUT_ID"),    Nullable           ] public string?   LayoutId    { get; set; } // VARCHAR(50)
+		[Column("PARENT_ID"),    Nullable           ] public string?   ParentId    { get; set; } // VARCHAR(50)
+		#nullable disable
 		[Column("SITE_ID"),   PrimaryKey(3), NotNull] public string    SiteId      { get; set; } // NVARCHAR(2000)
+		#nullable enable
+		#nullable disable
 		[Column("TENANT_ID"), PrimaryKey(1), NotNull] public string    TenantId    { get; set; } // VARCHAR(50)
+		#nullable enable
 		[Column(),               Nullable           ] public int?      VERSION     { get; set; } // INTEGER
-		[Column(),               Nullable           ] public string    ALIAS       { get; set; } // NVARCHAR(5000)
+		[Column(),               Nullable           ] public string?   ALIAS       { get; set; } // NVARCHAR(5000)
 		[Column(),               Nullable           ] public DateTime? CREATED     { get; set; } // TIMESTAMP
 		[Column(),               Nullable           ] public DateTime? UPDATED     { get; set; } // TIMESTAMP
 	}
@@ -12924,14 +13770,26 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_USER_PAGE_PROPERTIES")]
 	public partial class _SYS_RT_UisUserPagePROPERTy
 	{
+		#nullable disable
 		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } // NVARCHAR(2000)
+		#nullable enable
+		#nullable disable
 		[Column("PAGE_ID"),    PrimaryKey(4), NotNull] public string    PageId    { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("USER_NAME"),  PrimaryKey(2), NotNull] public string    UserName  { get; set; } // NVARCHAR(300)
+		#nullable enable
+		#nullable disable
 		[Column(),                            NotNull] public string    KEY       { get; set; } // NVARCHAR(300)
-		[Column(),                Nullable           ] public string    VALUE     { get; set; } // NVARCHAR(5000)
-		[Column("VALUE_TYPE"),    Nullable           ] public string    ValueType { get; set; } // NVARCHAR(20)
+		#nullable enable
+		[Column(),                Nullable           ] public string?   VALUE     { get; set; } // NVARCHAR(5000)
+		[Column("VALUE_TYPE"),    Nullable           ] public string?   ValueType { get; set; } // NVARCHAR(20)
 		[Column(),                Nullable           ] public int?      VERSION   { get; set; } // INTEGER
 		[Column(),                Nullable           ] public DateTime? CREATED   { get; set; } // TIMESTAMP
 		[Column(),                Nullable           ] public DateTime? UPDATED   { get; set; } // TIMESTAMP
@@ -12940,20 +13798,28 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_USER_WIDGETS")]
 	public partial class _SYS_RT_UisUserWidget
 	{
+		#nullable disable
 		[Column(),                          PrimaryKey(4), NotNull] public string    ID                   { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("USER_NAME"),               PrimaryKey(2), NotNull] public string    UserName             { get; set; } // NVARCHAR(300)
-		[Column(),                             Nullable           ] public string    NAME                 { get; set; } // NVARCHAR(300)
-		[Column(),                             Nullable           ] public string    DESCRIPTION          { get; set; } // NVARCHAR(5000)
-		[Column(),                             Nullable           ] public string    SRC                  { get; set; } // VARCHAR(5000)
-		[Column(),                             Nullable           ] public string    ICON                 { get; set; } // CLOB
+		#nullable enable
+		[Column(),                             Nullable           ] public string?   NAME                 { get; set; } // NVARCHAR(300)
+		[Column(),                             Nullable           ] public string?   DESCRIPTION          { get; set; } // NVARCHAR(5000)
+		[Column(),                             Nullable           ] public string?   SRC                  { get; set; } // VARCHAR(5000)
+		[Column(),                             Nullable           ] public string?   ICON                 { get; set; } // CLOB
 		[Column(),                             Nullable           ] public DateTime? UPDATED              { get; set; } // TIMESTAMP
-		[Column("TEMPLATE_ID"),                Nullable           ] public string    TemplateId           { get; set; } // NVARCHAR(5000)
-		[Column("WIDGET_TEMPLATE_LIST_ID"),    Nullable           ] public string    WidgetTemplateListId { get; set; } // NVARCHAR(2000)
-		[Column(),                             Nullable           ] public string    TYPE                 { get; set; } // NVARCHAR(300)
+		[Column("TEMPLATE_ID"),                Nullable           ] public string?   TemplateId           { get; set; } // NVARCHAR(5000)
+		[Column("WIDGET_TEMPLATE_LIST_ID"),    Nullable           ] public string?   WidgetTemplateListId { get; set; } // NVARCHAR(2000)
+		[Column(),                             Nullable           ] public string?   TYPE                 { get; set; } // NVARCHAR(300)
+		#nullable disable
 		[Column("SITE_ID"),                 PrimaryKey(3), NotNull] public string    SiteId               { get; set; } // NVARCHAR(2000)
-		[Column("LAYOUT_ID"),                  Nullable           ] public string    LayoutId             { get; set; } // VARCHAR(50)
+		#nullable enable
+		[Column("LAYOUT_ID"),                  Nullable           ] public string?   LayoutId             { get; set; } // VARCHAR(50)
+		#nullable disable
 		[Column("TENANT_ID"),               PrimaryKey(1), NotNull] public string    TenantId             { get; set; } // VARCHAR(50)
-		[Column("PARENT_ID"),                  Nullable           ] public string    ParentId             { get; set; } // VARCHAR(50)
+		#nullable enable
+		[Column("PARENT_ID"),                  Nullable           ] public string?   ParentId             { get; set; } // VARCHAR(50)
 		[Column(),                             Nullable           ] public int?      VERSION              { get; set; } // INTEGER
 		[Column(),                             Nullable           ] public DateTime? CREATED              { get; set; } // TIMESTAMP
 	}
@@ -12961,110 +13827,168 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_RT", Name="_UIS_USER_WIDGET_PROPERTIES")]
 	public partial class _SYS_RT_UisUserWidgetPROPERTy
 	{
+		#nullable disable
 		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("USER_NAME"),  PrimaryKey(2), NotNull] public string    UserName  { get; set; } // NVARCHAR(300)
+		#nullable enable
+		#nullable disable
 		[Column("WIDGET_ID"),  PrimaryKey(4), NotNull] public string    WidgetId  { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column(),                            NotNull] public string    KEY       { get; set; } // NVARCHAR(300)
-		[Column(),                Nullable           ] public string    VALUE     { get; set; } // NVARCHAR(5000)
+		#nullable enable
+		[Column(),                Nullable           ] public string?   VALUE     { get; set; } // NVARCHAR(5000)
+		#nullable disable
 		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } // NVARCHAR(2000)
+		#nullable enable
+		#nullable disable
 		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } // VARCHAR(50)
+		#nullable enable
 		[Column(),                Nullable           ] public int?      VERSION   { get; set; } // INTEGER
 		[Column(),                Nullable           ] public DateTime? CREATED   { get; set; } // TIMESTAMP
 		[Column(),                Nullable           ] public DateTime? UPDATED   { get; set; } // TIMESTAMP
-		[Column("VALUE_TYPE"),    Nullable           ] public string    ValueType { get; set; } // NVARCHAR(20)
+		[Column("VALUE_TYPE"),    Nullable           ] public string?   ValueType { get; set; } // NVARCHAR(20)
 	}
 
 	[Table(Schema="_SYS_RT", Name="_UIS_WIDGETS")]
 	public partial class _SYS_RT_UisWidget
 	{
+		#nullable disable
 		[Column(),                          PrimaryKey(4), NotNull] public string    ID                   { get; set; } // VARCHAR(50)
-		[Column(),                             Nullable           ] public string    NAME                 { get; set; } // NVARCHAR(300)
-		[Column(),                             Nullable           ] public string    DESCRIPTION          { get; set; } // NVARCHAR(5000)
-		[Column(),                             Nullable           ] public string    SRC                  { get; set; } // VARCHAR(5000)
-		[Column(),                             Nullable           ] public string    ICON                 { get; set; } // CLOB
-		[Column("TEMPLATE_ID"),                Nullable           ] public string    TemplateId           { get; set; } // NVARCHAR(5000)
-		[Column("WIDGET_TEMPLATE_LIST_ID"),    Nullable           ] public string    WidgetTemplateListId { get; set; } // NVARCHAR(2000)
-		[Column(),                             Nullable           ] public string    TYPE                 { get; set; } // NVARCHAR(300)
+		#nullable enable
+		[Column(),                             Nullable           ] public string?   NAME                 { get; set; } // NVARCHAR(300)
+		[Column(),                             Nullable           ] public string?   DESCRIPTION          { get; set; } // NVARCHAR(5000)
+		[Column(),                             Nullable           ] public string?   SRC                  { get; set; } // VARCHAR(5000)
+		[Column(),                             Nullable           ] public string?   ICON                 { get; set; } // CLOB
+		[Column("TEMPLATE_ID"),                Nullable           ] public string?   TemplateId           { get; set; } // NVARCHAR(5000)
+		[Column("WIDGET_TEMPLATE_LIST_ID"),    Nullable           ] public string?   WidgetTemplateListId { get; set; } // NVARCHAR(2000)
+		[Column(),                             Nullable           ] public string?   TYPE                 { get; set; } // NVARCHAR(300)
+		#nullable disable
 		[Column("TENANT_ID"),               PrimaryKey(1), NotNull] public string    TenantId             { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column(),                          PrimaryKey(2), NotNull] public string    DTYPE                { get; set; } // VARCHAR(20)
+		#nullable enable
+		#nullable disable
 		[Column("SITE_ID"),                 PrimaryKey(3), NotNull] public string    SiteId               { get; set; } // NVARCHAR(2000)
-		[Column("PARENT_ID"),                  Nullable           ] public string    ParentId             { get; set; } // VARCHAR(50)
-		[Column("LAYOUT_ID"),                  Nullable           ] public string    LayoutId             { get; set; } // VARCHAR(50)
+		#nullable enable
+		[Column("PARENT_ID"),                  Nullable           ] public string?   ParentId             { get; set; } // VARCHAR(50)
+		[Column("LAYOUT_ID"),                  Nullable           ] public string?   LayoutId             { get; set; } // VARCHAR(50)
 		[Column(),                             Nullable           ] public int?      VERSION              { get; set; } // INTEGER
 		[Column(),                             Nullable           ] public DateTime? CREATED              { get; set; } // TIMESTAMP
 		[Column(),                             Nullable           ] public DateTime? UPDATED              { get; set; } // TIMESTAMP
-		[Column("UPDATED_BY"),                 Nullable           ] public string    UpdatedBy            { get; set; } // NVARCHAR(300)
+		[Column("UPDATED_BY"),                 Nullable           ] public string?   UpdatedBy            { get; set; } // NVARCHAR(300)
 	}
 
 	[Table(Schema="_SYS_RT", Name="_UIS_WIDGET_PROPERTIES")]
 	public partial class _SYS_RT_UisWidgetPROPERTy
 	{
+		#nullable disable
 		[Column(),             PrimaryKey(5), NotNull] public string    ID        { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("WIDGET_ID"),  PrimaryKey(4), NotNull] public string    WidgetId  { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column(),                            NotNull] public string    KEY       { get; set; } // NVARCHAR(300)
-		[Column(),                Nullable           ] public string    VALUE     { get; set; } // NVARCHAR(5000)
+		#nullable enable
+		[Column(),                Nullable           ] public string?   VALUE     { get; set; } // NVARCHAR(5000)
+		#nullable disable
 		[Column("SITE_ID"),    PrimaryKey(3), NotNull] public string    SiteId    { get; set; } // NVARCHAR(2000)
+		#nullable enable
+		#nullable disable
 		[Column("TENANT_ID"),  PrimaryKey(1), NotNull] public string    TenantId  { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column(),             PrimaryKey(2), NotNull] public string    DTYPE     { get; set; } // VARCHAR(20)
+		#nullable enable
 		[Column(),                Nullable           ] public int?      VERSION   { get; set; } // INTEGER
 		[Column(),                Nullable           ] public DateTime? CREATED   { get; set; } // TIMESTAMP
 		[Column(),                Nullable           ] public DateTime? UPDATED   { get; set; } // TIMESTAMP
-		[Column("UPDATED_BY"),    Nullable           ] public string    UpdatedBy { get; set; } // NVARCHAR(300)
-		[Column("VALUE_TYPE"),    Nullable           ] public string    ValueType { get; set; } // NVARCHAR(20)
+		[Column("UPDATED_BY"),    Nullable           ] public string?   UpdatedBy { get; set; } // NVARCHAR(300)
+		[Column("VALUE_TYPE"),    Nullable           ] public string?   ValueType { get; set; } // NVARCHAR(20)
 	}
 
 	[Table(Schema="_SYS_RT", Name="_UIS_WIDGET_TEMPLATES")]
 	public partial class _SYS_RT_UisWidgetTemplate
 	{
+		#nullable disable
 		[Column(),                PrimaryKey(3), NotNull] public string    ID           { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("TENANT_ID"),     PrimaryKey(1), NotNull] public string    TenantId     { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
 		[Column("REPOSITORY_ID"), PrimaryKey(2), NotNull] public string    RepositoryId { get; set; } // NVARCHAR(2000)
-		[Column(),                   Nullable           ] public string    NAME         { get; set; } // NVARCHAR(300)
-		[Column(),                   Nullable           ] public string    DESCRIPTION  { get; set; } // NVARCHAR(5000)
-		[Column(),                   Nullable           ] public string    SPECXMLURL   { get; set; } // NVARCHAR(5000)
-		[Column(),                   Nullable           ] public string    THUMBNAIL    { get; set; } // CLOB
-		[Column(),                   Nullable           ] public string    CATEGORIES   { get; set; } // VARCHAR(300)
-		[Column(),                   Nullable           ] public string    TYPE         { get; set; } // NVARCHAR(300)
+		#nullable enable
+		[Column(),                   Nullable           ] public string?   NAME         { get; set; } // NVARCHAR(300)
+		[Column(),                   Nullable           ] public string?   DESCRIPTION  { get; set; } // NVARCHAR(5000)
+		[Column(),                   Nullable           ] public string?   SPECXMLURL   { get; set; } // NVARCHAR(5000)
+		[Column(),                   Nullable           ] public string?   THUMBNAIL    { get; set; } // CLOB
+		[Column(),                   Nullable           ] public string?   CATEGORIES   { get; set; } // VARCHAR(300)
+		[Column(),                   Nullable           ] public string?   TYPE         { get; set; } // NVARCHAR(300)
 		[Column(),                   Nullable           ] public int?      VERSION      { get; set; } // INTEGER
 		[Column(),                   Nullable           ] public DateTime? CREATED      { get; set; } // TIMESTAMP
 		[Column(),                   Nullable           ] public DateTime? UPDATED      { get; set; } // TIMESTAMP
-		[Column("UPDATED_BY"),       Nullable           ] public string    UpdatedBy    { get; set; } // NVARCHAR(300)
+		[Column("UPDATED_BY"),       Nullable           ] public string?   UpdatedBy    { get; set; } // NVARCHAR(300)
 	}
 
 	[Table(Schema="_SYS_RT", Name="_UIS_WIDGET_TEMPLATE_LISTS")]
 	public partial class _SYS_RT_UisWidgetTemplateList
 	{
-		[Column("TENANT_ID"),     PrimaryKey(1), NotNull] public string TenantId     { get; set; } // VARCHAR(50)
-		[Column("REPOSITORY_ID"), PrimaryKey(2), NotNull] public string RepositoryId { get; set; } // NVARCHAR(2000)
-		[Column(),                   Nullable           ] public string NAME         { get; set; } // NVARCHAR(300)
-		[Column(),                   Nullable           ] public string TYPE         { get; set; } // VARCHAR(10)
-		[Column(),                   Nullable           ] public int?   VERSION      { get; set; } // INTEGER
+		#nullable disable
+		[Column("TENANT_ID"),     PrimaryKey(1), NotNull] public string  TenantId     { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
+		[Column("REPOSITORY_ID"), PrimaryKey(2), NotNull] public string  RepositoryId { get; set; } // NVARCHAR(2000)
+		#nullable enable
+		[Column(),                   Nullable           ] public string? NAME         { get; set; } // NVARCHAR(300)
+		[Column(),                   Nullable           ] public string? TYPE         { get; set; } // VARCHAR(10)
+		[Column(),                   Nullable           ] public int?    VERSION      { get; set; } // INTEGER
 	}
 
 	[Table(Schema="_SYS_RT", Name="_UIS_WIDGET_TEMPLATE_PROPERTIES")]
 	public partial class _SYS_RT_UisWidgetTemplatePROPERTy
 	{
-		[Column(),                     PrimaryKey(5), NotNull] public string ID               { get; set; } // VARCHAR(50)
-		[Column("TENANT_ID"),          PrimaryKey(1), NotNull] public string TenantId         { get; set; } // VARCHAR(50)
-		[Column("REPOSITORY_ID"),      PrimaryKey(2), NotNull] public string RepositoryId     { get; set; } // NVARCHAR(2000)
-		[Column("WIDGET_TEMPLATE_ID"), PrimaryKey(3), NotNull] public string WidgetTemplateId { get; set; } // VARCHAR(50)
-		[Column(),                     PrimaryKey(4), NotNull] public string KEY              { get; set; } // NVARCHAR(300)
-		[Column(),                        Nullable           ] public string VALUE            { get; set; } // NVARCHAR(5000)
-		[Column("VALUE_TYPE"),            Nullable           ] public string ValueType        { get; set; } // NVARCHAR(20)
-		[Column(),                        Nullable           ] public int?   VERSION          { get; set; } // INTEGER
+		#nullable disable
+		[Column(),                     PrimaryKey(5), NotNull] public string  ID               { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
+		[Column("TENANT_ID"),          PrimaryKey(1), NotNull] public string  TenantId         { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
+		[Column("REPOSITORY_ID"),      PrimaryKey(2), NotNull] public string  RepositoryId     { get; set; } // NVARCHAR(2000)
+		#nullable enable
+		#nullable disable
+		[Column("WIDGET_TEMPLATE_ID"), PrimaryKey(3), NotNull] public string  WidgetTemplateId { get; set; } // VARCHAR(50)
+		#nullable enable
+		#nullable disable
+		[Column(),                     PrimaryKey(4), NotNull] public string  KEY              { get; set; } // NVARCHAR(300)
+		#nullable enable
+		[Column(),                        Nullable           ] public string? VALUE            { get; set; } // NVARCHAR(5000)
+		[Column("VALUE_TYPE"),            Nullable           ] public string? ValueType        { get; set; } // NVARCHAR(20)
+		[Column(),                        Nullable           ] public int?    VERSION          { get; set; } // INTEGER
 	}
 
 	[Table(Schema="_SYS_XS", Name="USAGE_MEASURING_OBJECTS")]
 	public partial class _SYS_XS_UsageMeasuringObject
 	{
+		#nullable disable
 		[PrimaryKey(1), NotNull] public string APP  { get; set; } // NVARCHAR(256)
+		#nullable enable
+		#nullable disable
 		[PrimaryKey(2), NotNull] public string NAME { get; set; } // NVARCHAR(1024)
+		#nullable enable
 	}
 
 	[Table(Schema="_SYS_XS", Name="USAGE_STATISTICS")]
 	public partial class _SYS_XS_UsageStatistic
 	{
+		#nullable disable
 		[Column("APPLICATION_NAME"), NotNull] public string   ApplicationName { get; set; } // NVARCHAR(256)
+		#nullable enable
 		[Column(),                   NotNull] public DateTime UNTIL           { get; set; } // TIMESTAMP
 		[Column(),                   NotNull] public long     COUNTER         { get; set; } // BIGINT
 	}
@@ -13072,17 +13996,21 @@ namespace SapHanaDataContext
 	[Table(Schema="_SYS_XS", Name="XSJS_USAGE")]
 	public partial class _SYS_XS_XsjsUsage
 	{
+		#nullable disable
 		[Column, NotNull] public string   FEATURE   { get; set; } // NVARCHAR(1024)
+		#nullable enable
 		[Column, NotNull] public double   TRAFFIC   { get; set; } // DOUBLE
 		[Column, NotNull] public DateTime TIMESTAMP { get; set; } // TIMESTAMP
+		#nullable disable
 		[Column, NotNull] public string   APP       { get; set; } // NVARCHAR(256)
+		#nullable enable
 	}
 
 	public static partial class SYSTEMDBDBStoredProcedures
 	{
 		#region FindNologgingTable
 
-		public static int FindNologgingTable(this DataConnection dataConnection, string SCHEMANAME, string TABLENAME, out int? RESULT)
+		public static int FindNologgingTable(this SYSTEMDBDB dataConnection, string? SCHEMANAME, string? TABLENAME, out int? RESULT)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYS\".\"FIND_NOLOGGING_TABLE\"",
 				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar),
@@ -13098,7 +14026,7 @@ namespace SapHanaDataContext
 
 		#region DsoRehash
 
-		public static int DsoRehash(this DataConnection dataConnection, string DSONAME, string HASHFUNCTION)
+		public static int DsoRehash(this SYSTEMDBDB dataConnection, string? DSONAME, string? HASHFUNCTION)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"DSO_REHASH\"",
 				new DataParameter("DSONAME",      DSONAME,      DataType.VarChar),
@@ -13109,12 +14037,12 @@ namespace SapHanaDataContext
 
 		#region DsoVersion
 
-		public static int DsoVersion(this DataConnection dataConnection, out string DSOVERSION)
+		public static int DsoVersion(this SYSTEMDBDB dataConnection, out string? DSOVERSION)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYS\".\"DSO_VERSION\"",
 				new DataParameter("DSOVERSION", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 20 });
 
-			DSOVERSION = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["DSOVERSION"]).Value);
+			DSOVERSION = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["DSOVERSION"]).Value);
 
 			return ret;
 		}
@@ -13123,7 +14051,7 @@ namespace SapHanaDataContext
 
 		#region ResetCeDebugJsons
 
-		public static int ResetCeDebugJsons(this DataConnection dataConnection)
+		public static int ResetCeDebugJsons(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"RESET_CE_DEBUG_JSONS\"");
 		}
@@ -13132,7 +14060,7 @@ namespace SapHanaDataContext
 
 		#region ResetCeDebugNodeMapping
 
-		public static int ResetCeDebugNodeMapping(this DataConnection dataConnection)
+		public static int ResetCeDebugNodeMapping(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"RESET_CE_DEBUG_NODE_MAPPING\"");
 		}
@@ -13141,7 +14069,7 @@ namespace SapHanaDataContext
 
 		#region ResetCeDebugInfos
 
-		public static int ResetCeDebugInfos(this DataConnection dataConnection)
+		public static int ResetCeDebugInfos(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"RESET_CE_DEBUG_INFOS\"");
 		}
@@ -13150,7 +14078,7 @@ namespace SapHanaDataContext
 
 		#region TruncateProcedureObjects
 
-		public static int TruncateProcedureObjects(this DataConnection dataConnection)
+		public static int TruncateProcedureObjects(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"TRUNCATE_PROCEDURE_OBJECTS\"");
 		}
@@ -13159,7 +14087,7 @@ namespace SapHanaDataContext
 
 		#region TruncateSqlscriptTrace
 
-		public static int TruncateSqlscriptTrace(this DataConnection dataConnection)
+		public static int TruncateSqlscriptTrace(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"TRUNCATE_SQLSCRIPT_TRACE\"");
 		}
@@ -13168,7 +14096,7 @@ namespace SapHanaDataContext
 
 		#region UnsetSqlscriptTrace
 
-		public static int UnsetSqlscriptTrace(this DataConnection dataConnection)
+		public static int UnsetSqlscriptTrace(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"UNSET_SQLSCRIPT_TRACE\"");
 		}
@@ -13177,7 +14105,7 @@ namespace SapHanaDataContext
 
 		#region GetObjectDefinition
 
-		public static IEnumerable<GetObjectDEFINITIONResult> GetObjectDefinition(this DataConnection dataConnection, string SCHEMA, string OBJECT)
+		public static IEnumerable<GetObjectDEFINITIONResult> GetObjectDefinition(this SYSTEMDBDB dataConnection, string? SCHEMA, string? OBJECT)
 		{
 			return dataConnection.QueryProc<GetObjectDEFINITIONResult>("\"SYS\".\"GET_OBJECT_DEFINITION\"",
 				new DataParameter("SCHEMA", SCHEMA, DataType.NVarChar),
@@ -13186,18 +14114,18 @@ namespace SapHanaDataContext
 
 		public partial class GetObjectDEFINITIONResult
 		{
-			public string SCHEMA_NAME               { get; set; }
-			public string OBJECT_NAME               { get; set; }
-			public string OBJECT_TYPE               { get; set; }
-			public string OBJECT_OID                { get; set; }
-			public string OBJECT_CREATION_STATEMENT { get; set; }
+			public string? SCHEMA_NAME               { get; set; }
+			public string? OBJECT_NAME               { get; set; }
+			public string? OBJECT_TYPE               { get; set; }
+			public string? OBJECT_OID                { get; set; }
+			public string? OBJECT_CREATION_STATEMENT { get; set; }
 		}
 
 		#endregion
 
 		#region ReorgClearLogs
 
-		public static int ReorgClearLogs(this DataConnection dataConnection)
+		public static int ReorgClearLogs(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"REORG_CLEAR_LOGS\"");
 		}
@@ -13206,7 +14134,7 @@ namespace SapHanaDataContext
 
 		#region AnalyzeColumnsToMaterialize
 
-		public static IEnumerable<AnalyzeColumnsToMATERIALIZEResult> AnalyzeColumnsToMaterialize(this DataConnection dataConnection, string SELECT_STMT)
+		public static IEnumerable<AnalyzeColumnsToMATERIALIZEResult> AnalyzeColumnsToMaterialize(this SYSTEMDBDB dataConnection, string? SELECT_STMT)
 		{
 			return dataConnection.QueryProc<AnalyzeColumnsToMATERIALIZEResult>("\"SYS\".\"ANALYZE_COLUMNS_TO_MATERIALIZE\"",
 				new DataParameter("SELECT_STMT", SELECT_STMT, DataType.Text));
@@ -13214,105 +14142,105 @@ namespace SapHanaDataContext
 
 		public partial class AnalyzeColumnsToMATERIALIZEResult
 		{
-			public string SCHEMA_NAME              { get; set; }
-			public string TABLE_NAME               { get; set; }
-			public string EXPRESSION               { get; set; }
-			public string RESULT_TYPE              { get; set; }
-			public int?   RESULT_LENGTH            { get; set; }
-			public int?   RESULT_SCALE             { get; set; }
-			public string USAGE                    { get; set; }
-			public string ALREADY_EXISTS           { get; set; }
-			public string MATERIALIZED_COLUMN_NAME { get; set; }
+			public string? SCHEMA_NAME              { get; set; }
+			public string? TABLE_NAME               { get; set; }
+			public string? EXPRESSION               { get; set; }
+			public string? RESULT_TYPE              { get; set; }
+			public int?    RESULT_LENGTH            { get; set; }
+			public int?    RESULT_SCALE             { get; set; }
+			public string? USAGE                    { get; set; }
+			public string? ALREADY_EXISTS           { get; set; }
+			public string? MATERIALIZED_COLUMN_NAME { get; set; }
 		}
 
 		#endregion
 
 		#region GetTypeMap
 
-		public static IEnumerable<GetTypeMAPResult> GetTypeMap(this DataConnection dataConnection)
+		public static IEnumerable<GetTypeMAPResult> GetTypeMap(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<GetTypeMAPResult>("\"SYS\".\"GET_TYPE_MAP\"");
 		}
 
 		public partial class GetTypeMAPResult
 		{
-			public string TYPE_CODE           { get; set; }
-			public string TYPE_NAME           { get; set; }
-			public string EVAL_TYPE_NAME      { get; set; }
-			public string TYPE_SIZE           { get; set; }
-			public string TYPE_ALIGNMENT      { get; set; }
-			public string TYPE_DISPLAY_LENGTH { get; set; }
+			public string? TYPE_CODE           { get; set; }
+			public string? TYPE_NAME           { get; set; }
+			public string? EVAL_TYPE_NAME      { get; set; }
+			public string? TYPE_SIZE           { get; set; }
+			public string? TYPE_ALIGNMENT      { get; set; }
+			public string? TYPE_DISPLAY_LENGTH { get; set; }
 		}
 
 		#endregion
 
 		#region GetFunctionMap
 
-		public static IEnumerable<GetFunctionMAPResult> GetFunctionMap(this DataConnection dataConnection)
+		public static IEnumerable<GetFunctionMAPResult> GetFunctionMap(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<GetFunctionMAPResult>("\"SYS\".\"GET_FUNCTION_MAP\"");
 		}
 
 		public partial class GetFunctionMAPResult
 		{
-			public string FUNCTION_NAME { get; set; }
-			public string RETURN_TYPE   { get; set; }
-			public string ARGUMENT_TYPE { get; set; }
+			public string? FUNCTION_NAME { get; set; }
+			public string? RETURN_TYPE   { get; set; }
+			public string? ARGUMENT_TYPE { get; set; }
 		}
 
 		#endregion
 
 		#region GetFunctionDictionaryFromRsToCsEngine
 
-		public static IEnumerable<GetFunctionDictionaryFromRsToCsENGINEResult> GetFunctionDictionaryFromRsToCsEngine(this DataConnection dataConnection)
+		public static IEnumerable<GetFunctionDictionaryFromRsToCsENGINEResult> GetFunctionDictionaryFromRsToCsEngine(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<GetFunctionDictionaryFromRsToCsENGINEResult>("\"SYS\".\"GET_FUNCTION_DICTIONARY_FROM_RS_TO_CS_ENGINE\"");
 		}
 
 		public partial class GetFunctionDictionaryFromRsToCsENGINEResult
 		{
-			public string FUNCTION_NAME { get; set; }
-			public string USE_TEMPLATE  { get; set; }
-			public string TEMPLATE      { get; set; }
+			public string? FUNCTION_NAME { get; set; }
+			public string? USE_TEMPLATE  { get; set; }
+			public string? TEMPLATE      { get; set; }
 		}
 
 		#endregion
 
 		#region GetFunctionsForRsCsEngines
 
-		public static IEnumerable<GetFunctionsForRsCsENGINESResult> GetFunctionsForRsCsEngines(this DataConnection dataConnection)
+		public static IEnumerable<GetFunctionsForRsCsENGINESResult> GetFunctionsForRsCsEngines(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<GetFunctionsForRsCsENGINESResult>("\"SYS\".\"GET_FUNCTIONS_FOR_RS_CS_ENGINES\"");
 		}
 
 		public partial class GetFunctionsForRsCsENGINESResult
 		{
-			public string FUNCTION_NAME { get; set; }
-			public string RETURN_TYPE   { get; set; }
-			public string ARGUMENT_TYPE { get; set; }
+			public string? FUNCTION_NAME { get; set; }
+			public string? RETURN_TYPE   { get; set; }
+			public string? ARGUMENT_TYPE { get; set; }
 		}
 
 		#endregion
 
 		#region GetFunctionsForRsEngineOnly
 
-		public static IEnumerable<GetFunctionsForRsEngineONLYResult> GetFunctionsForRsEngineOnly(this DataConnection dataConnection)
+		public static IEnumerable<GetFunctionsForRsEngineONLYResult> GetFunctionsForRsEngineOnly(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<GetFunctionsForRsEngineONLYResult>("\"SYS\".\"GET_FUNCTIONS_FOR_RS_ENGINE_ONLY\"");
 		}
 
 		public partial class GetFunctionsForRsEngineONLYResult
 		{
-			public string FUNCTION_NAME { get; set; }
-			public string RETURN_TYPE   { get; set; }
-			public string ARGUMENT_TYPE { get; set; }
+			public string? FUNCTION_NAME { get; set; }
+			public string? RETURN_TYPE   { get; set; }
+			public string? ARGUMENT_TYPE { get; set; }
 		}
 
 		#endregion
 
 		#region CheckFunctionFromRsToCsEngine
 
-		public static IEnumerable<CheckFunctionFromRsToCsENGINEResult> CheckFunctionFromRsToCsEngine(this DataConnection dataConnection, string FUNCTION_NAME)
+		public static IEnumerable<CheckFunctionFromRsToCsENGINEResult> CheckFunctionFromRsToCsEngine(this SYSTEMDBDB dataConnection, string? FUNCTION_NAME)
 		{
 			return dataConnection.QueryProc<CheckFunctionFromRsToCsENGINEResult>("\"SYS\".\"CHECK_FUNCTION_FROM_RS_TO_CS_ENGINE\"",
 				new DataParameter("FUNCTION_NAME", FUNCTION_NAME, DataType.VarChar));
@@ -13320,31 +14248,31 @@ namespace SapHanaDataContext
 
 		public partial class CheckFunctionFromRsToCsENGINEResult
 		{
-			public string FUNCTION_NAME { get; set; }
-			public string USE_TEMPLATE  { get; set; }
-			public string TEMPLATE      { get; set; }
+			public string? FUNCTION_NAME { get; set; }
+			public string? USE_TEMPLATE  { get; set; }
+			public string? TEMPLATE      { get; set; }
 		}
 
 		#endregion
 
 		#region GetDbversionAndGithashForAutomigration
 
-		public static IEnumerable<GetDbversionAndGithashForAUTOMIGRATIONResult> GetDbversionAndGithashForAutomigration(this DataConnection dataConnection)
+		public static IEnumerable<GetDbversionAndGithashForAUTOMIGRATIONResult> GetDbversionAndGithashForAutomigration(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<GetDbversionAndGithashForAUTOMIGRATIONResult>("\"SYS\".\"GET_DBVERSION_AND_GITHASH_FOR_AUTOMIGRATION\"");
 		}
 
 		public partial class GetDbversionAndGithashForAUTOMIGRATIONResult
 		{
-			public string DB_VERSION { get; set; }
-			public string GIT_HASH   { get; set; }
+			public string? DB_VERSION { get; set; }
+			public string? GIT_HASH   { get; set; }
 		}
 
 		#endregion
 
 		#region TableStatistics
 
-		public static int TableStatistics(this DataConnection dataConnection, string TABLE_IN, string TABLE_OUT)
+		public static int TableStatistics(this SYSTEMDBDB dataConnection, string? TABLE_IN, string? TABLE_OUT)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"TABLE_STATISTICS\"",
 				new DataParameter("TABLE_IN",  TABLE_IN,  DataType.NVarChar),
@@ -13355,7 +14283,7 @@ namespace SapHanaDataContext
 
 		#region ReorganizeRowstore
 
-		public static int ReorganizeRowstore(this DataConnection dataConnection, string ACTION_NAME, string SCHEMA_NAME, string TABLE_NAME)
+		public static int ReorganizeRowstore(this SYSTEMDBDB dataConnection, string? ACTION_NAME, string? SCHEMA_NAME, string? TABLE_NAME)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"REORGANIZE_ROWSTORE\"",
 				new DataParameter("ACTION_NAME", ACTION_NAME, DataType.VarChar),
@@ -13367,15 +14295,15 @@ namespace SapHanaDataContext
 
 		#region IsValidUserName
 
-		public static int IsValidUserName(this DataConnection dataConnection, string USER_NAME, out int? ERROR_CODE, out string ERROR_MESSAGE)
+		public static int IsValidUserName(this SYSTEMDBDB dataConnection, string? USER_NAME, out int? ERROR_CODE, out string? ERROR_MESSAGE)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYS\".\"IS_VALID_USER_NAME\"",
 				new DataParameter("USER_NAME",     USER_NAME,     DataType.NVarChar),
 				new DataParameter("ERROR_CODE", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
 				new DataParameter("ERROR_MESSAGE", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 128 });
 
-			ERROR_CODE    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["ERROR_CODE"]).   Value);
-			ERROR_MESSAGE = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["ERROR_MESSAGE"]).Value);
+			ERROR_CODE    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["ERROR_CODE"]).   Value);
+			ERROR_MESSAGE = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["ERROR_MESSAGE"]).Value);
 
 			return ret;
 		}
@@ -13384,15 +14312,15 @@ namespace SapHanaDataContext
 
 		#region IsValidPassword
 
-		public static int IsValidPassword(this DataConnection dataConnection, string PASSWORD, out int? ERROR_CODE, out string ERROR_MESSAGE)
+		public static int IsValidPassword(this SYSTEMDBDB dataConnection, string? PASSWORD, out int? ERROR_CODE, out string? ERROR_MESSAGE)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYS\".\"IS_VALID_PASSWORD\"",
 				new DataParameter("PASSWORD",      PASSWORD,      DataType.NVarChar),
 				new DataParameter("ERROR_CODE", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
 				new DataParameter("ERROR_MESSAGE", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 128 });
 
-			ERROR_CODE    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["ERROR_CODE"]).   Value);
-			ERROR_MESSAGE = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["ERROR_MESSAGE"]).Value);
+			ERROR_CODE    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["ERROR_CODE"]).   Value);
+			ERROR_MESSAGE = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["ERROR_MESSAGE"]).Value);
 
 			return ret;
 		}
@@ -13401,7 +14329,7 @@ namespace SapHanaDataContext
 
 		#region GetNextNumberFromNumberRange
 
-		public static int GetNextNumberFromNumberRange(this DataConnection dataConnection, string SCHEMA_NAME, string TABLE_NAME, string CLIENT_ID, string NUMBER_RANGE, string NUMBER_RANGE_OBJECT, string NUMBER_RANGE_SUBOBJECT, string NUMBER_RANGE_TO_YEAR, int? QUANTITY, int? AUTONOMOUS_TRANSACTION, int? NUMBER_RANGE_CYCLE, decimal? WARNING_PERCENTAGE, out decimal? NEW_NUMBER, out int? NEW_QUANTITY, out int? RC)
+		public static int GetNextNumberFromNumberRange(this SYSTEMDBDB dataConnection, string? SCHEMA_NAME, string? TABLE_NAME, string? CLIENT_ID, string? NUMBER_RANGE, string? NUMBER_RANGE_OBJECT, string? NUMBER_RANGE_SUBOBJECT, string? NUMBER_RANGE_TO_YEAR, int? QUANTITY, int? AUTONOMOUS_TRANSACTION, int? NUMBER_RANGE_CYCLE, decimal? WARNING_PERCENTAGE, out decimal? NEW_NUMBER, out int? NEW_QUANTITY, out int? RC)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYS\".\"GET_NEXT_NUMBER_FROM_NUMBER_RANGE\"",
 				new DataParameter("SCHEMA_NAME",  SCHEMA_NAME,  DataType.NVarChar),
@@ -13430,7 +14358,7 @@ namespace SapHanaDataContext
 
 		#region TextConfigurationDrop
 
-		public static int TextConfigurationDrop(this DataConnection dataConnection, string SCHEMA_NAME, string NAME, string TYPE)
+		public static int TextConfigurationDrop(this SYSTEMDBDB dataConnection, string? SCHEMA_NAME, string? NAME, string? TYPE)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"TEXT_CONFIGURATION_DROP\"",
 				new DataParameter("SCHEMA_NAME", SCHEMA_NAME, DataType.NVarChar),
@@ -13442,7 +14370,7 @@ namespace SapHanaDataContext
 
 		#region GetDynamicResultCacheImplicitMatchCandidatesInStatement
 
-		public static IEnumerable<GetDynamicResultCacheImplicitMatchCandidatesInSTATEMENTResult> GetDynamicResultCacheImplicitMatchCandidatesInStatement(this DataConnection dataConnection, string SQL_STATEMENT)
+		public static IEnumerable<GetDynamicResultCacheImplicitMatchCandidatesInSTATEMENTResult> GetDynamicResultCacheImplicitMatchCandidatesInStatement(this SYSTEMDBDB dataConnection, string? SQL_STATEMENT)
 		{
 			return dataConnection.QueryProc<GetDynamicResultCacheImplicitMatchCandidatesInSTATEMENTResult>("\"SYS\".\"GET_DYNAMIC_RESULT_CACHE_IMPLICIT_MATCH_CANDIDATES_IN_STATEMENT\"",
 				new DataParameter("SQL_STATEMENT", SQL_STATEMENT, DataType.NText));
@@ -13450,14 +14378,14 @@ namespace SapHanaDataContext
 
 		public partial class GetDynamicResultCacheImplicitMatchCandidatesInSTATEMENTResult
 		{
-			public string RESULT { get; set; }
+			public string? RESULT { get; set; }
 		}
 
 		#endregion
 
 		#region CdsCatalogCleanup
 
-		public static int CdsCatalogCleanup(this DataConnection dataConnection, out byte? SUCCESS, out string MESSAGE, string SCHEMA_NAME, string NAMESPACE_FILTER)
+		public static int CdsCatalogCleanup(this SYSTEMDBDB dataConnection, out byte? SUCCESS, out string? MESSAGE, string? SCHEMA_NAME, string? NAMESPACE_FILTER)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_RT\".\"CDS_CATALOG_CLEANUP\"",
 				new DataParameter("SUCCESS", null, DataType.Byte) { Direction = ParameterDirection.Output, Size = 3 },
@@ -13465,120 +14393,17 @@ namespace SapHanaDataContext
 				new DataParameter("SCHEMA_NAME", SCHEMA_NAME, DataType.NVarChar),
 				new DataParameter("NAMESPACE_FILTER", NAMESPACE_FILTER, DataType.NVarChar));
 
-			SUCCESS = Converter.ChangeTypeTo<byte?> (((IDbDataParameter)dataConnection.Command.Parameters["SUCCESS"]).Value);
-			MESSAGE = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MESSAGE"]).Value);
+			SUCCESS = Converter.ChangeTypeTo<byte?>  (((IDbDataParameter)dataConnection.Command.Parameters["SUCCESS"]).Value);
+			MESSAGE = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MESSAGE"]).Value);
 
 			return ret;
 		}
 
 		#endregion
 
-		#region PersonSelectByKey
-
-		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this DataConnection dataConnection, int? ID)
-		{
-			return dataConnection.QueryProc<PersonSelectByKeyResult>("\"TESTHANA\".\"Person_SelectByKey\"",
-				new DataParameter("ID", ID, DataType.Int32));
-		}
-
-		public partial class PersonSelectByKeyResult
-		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		#endregion
-
-		#region PersonSelectListByName
-
-		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME)
-		{
-			return dataConnection.QueryProc<PersonSelectListByNameResult>("\"TESTHANA\".\"Person_SelectListByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
-		}
-
-		public partial class PersonSelectListByNameResult
-		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		#endregion
-
-		#region PersonUpdate
-
-		public static int PersonUpdate(this DataConnection dataConnection, int? PERSONID, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Update\"",
-				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     DataType.Char));
-		}
-
-		#endregion
-
-		#region PersonDelete
-
-		public static int PersonDelete(this DataConnection dataConnection, int? PERSONID)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Delete\"",
-				new DataParameter("PERSONID", PERSONID, DataType.Int32));
-		}
-
-		#endregion
-
-		#region PatientSelectAll
-
-		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<PatientSelectAllResult>("\"TESTHANA\".\"Patient_SelectAll\"");
-		}
-
-		public partial class PatientSelectAllResult
-		{
-			public int?   PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-			public string Diagnosis  { get; set; }
-		}
-
-		#endregion
-
-		#region PatientSelectByName
-
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME)
-		{
-			return dataConnection.QueryProc<PatientSelectByNameResult>("\"TESTHANA\".\"Patient_SelectByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
-		}
-
-		public partial class PatientSelectByNameResult
-		{
-			public int?   PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-			public string Diagnosis  { get; set; }
-		}
-
-		#endregion
-
 		#region OutRefTest
 
-		public static int OutRefTest0(this DataConnection dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string STR, out string OUTPUTSTR, ref string INPUTOUTPUTSTR)
+		public static int OutRefTest0(this SYSTEMDBDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefTest\"",
 				new DataParameter("ID",             ID,             DataType.Int32),
@@ -13588,10 +14413,10 @@ namespace SapHanaDataContext
 				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
-			OUTPUTID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
-			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
+			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
 
 			return ret;
 		}
@@ -13600,15 +14425,15 @@ namespace SapHanaDataContext
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest0(this DataConnection dataConnection, string STR, out string OUTPUTSTR, ref string INPUTOUTPUTSTR)
+		public static int OutRefEnumTest0(this SYSTEMDBDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefEnumTest\"",
 				new DataParameter("STR",            STR,            DataType.VarChar),
 				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
-			OUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
 
 			return ret;
 		}
@@ -13617,7 +14442,7 @@ namespace SapHanaDataContext
 
 		#region SelectImplicitColumn
 
-		public static IEnumerable<SelectImplicitColumnResult0> SelectImplicitColumn0(this DataConnection dataConnection)
+		public static IEnumerable<SelectImplicitColumnResult0> SelectImplicitColumn0(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<SelectImplicitColumnResult0>("\"TESTHANA\".\"SelectImplicitColumn\"");
 		}
@@ -13631,30 +14456,30 @@ namespace SapHanaDataContext
 
 		#region DuplicateColumnNames
 
-		public static IEnumerable<DuplicateColumnNamesResult0> DuplicateColumnNames0(this DataConnection dataConnection)
+		public static IEnumerable<DuplicateColumnNamesResult0> DuplicateColumnNames0(this SYSTEMDBDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
 			return dataConnection.QueryProc(dataReader =>
 				new DuplicateColumnNamesResult0
 				{
-					id      = Converter.ChangeTypeTo<int?>  (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
+					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
 				},
 				"\"TESTHANA\".\"DuplicateColumnNames\"");
 		}
 
 		public partial class DuplicateColumnNamesResult0
 		{
-			               public int?   id      { get; set; }
-			[Column("id")] public string Column2 { get; set; }
+			               public int?    id      { get; set; }
+			[Column("id")] public string? Column2 { get; set; }
 		}
 
 		#endregion
 
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this DataConnection dataConnection)
+		public static int AddIssue792Record(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"AddIssue792Record\"");
 		}
@@ -13663,30 +14488,30 @@ namespace SapHanaDataContext
 
 		#region PrdGlobalEccCvMARAproc
 
-		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this DataConnection dataConnection)
+		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this SYSTEMDBDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
 			return dataConnection.QueryProc(dataReader =>
 				new PrdGlobalEccCvMARAprocResult
 				{
-					id      = Converter.ChangeTypeTo<int?>  (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
+					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
 				},
 				"\"TESTHANA\".\"prd.global.ecc/CV_MARAproc\"");
 		}
 
 		public partial class PrdGlobalEccCvMARAprocResult
 		{
-			               public int?   id      { get; set; }
-			[Column("id")] public string Column2 { get; set; }
+			               public int?    id      { get; set; }
+			[Column("id")] public string? Column2 { get; set; }
 		}
 
 		#endregion
 
 		#region DROPEXISTINGVIEW
 
-		public static int DROPEXISTINGVIEW0(this DataConnection dataConnection, string VIEWNAME, string SCHEMANAME)
+		public static int DROPEXISTINGVIEW0(this SYSTEMDBDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGVIEW\"",
 				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
@@ -13695,9 +14520,124 @@ namespace SapHanaDataContext
 
 		#endregion
 
+		#region PersonSelectByKey
+
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this SYSTEMDBDB dataConnection, int? ID)
+		{
+			return dataConnection.QueryProc<PersonSelectByKeyResult>("\"TESTHANA\".\"Person_SelectByKey\"",
+				new DataParameter("ID", ID, DataType.Int32));
+		}
+
+		public partial class PersonSelectByKeyResult
+		{
+			public int     PersonID   { get; set; }
+			#nullable disable
+			public string  FirstName  { get; set; }
+			#nullable enable
+			#nullable disable
+			public string  LastName   { get; set; }
+			#nullable enable
+			public string? MiddleName { get; set; }
+			#nullable disable
+			public string  Gender     { get; set; }
+			#nullable enable
+		}
+
+		#endregion
+
+		#region PersonSelectListByName
+
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this SYSTEMDBDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		{
+			return dataConnection.QueryProc<PersonSelectListByNameResult>("\"TESTHANA\".\"Person_SelectListByName\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+		}
+
+		public partial class PersonSelectListByNameResult
+		{
+			public int     PersonID   { get; set; }
+			#nullable disable
+			public string  FirstName  { get; set; }
+			#nullable enable
+			#nullable disable
+			public string  LastName   { get; set; }
+			#nullable enable
+			public string? MiddleName { get; set; }
+			#nullable disable
+			public string  Gender     { get; set; }
+			#nullable enable
+		}
+
+		#endregion
+
+		#region PersonUpdate
+
+		public static int PersonUpdate(this SYSTEMDBDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Update\"",
+				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
+				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",     GENDER,     DataType.Char));
+		}
+
+		#endregion
+
+		#region PersonDelete
+
+		public static int PersonDelete(this SYSTEMDBDB dataConnection, int? PERSONID)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Delete\"",
+				new DataParameter("PERSONID", PERSONID, DataType.Int32));
+		}
+
+		#endregion
+
+		#region PatientSelectAll
+
+		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this SYSTEMDBDB dataConnection)
+		{
+			return dataConnection.QueryProc<PatientSelectAllResult>("\"TESTHANA\".\"Patient_SelectAll\"");
+		}
+
+		public partial class PatientSelectAllResult
+		{
+			public int?    PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
+			public string? Diagnosis  { get; set; }
+		}
+
+		#endregion
+
+		#region PatientSelectByName
+
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this SYSTEMDBDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		{
+			return dataConnection.QueryProc<PatientSelectByNameResult>("\"TESTHANA\".\"Patient_SelectByName\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+		}
+
+		public partial class PatientSelectByNameResult
+		{
+			public int?    PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
+			public string? Diagnosis  { get; set; }
+		}
+
+		#endregion
+
 		#region TelemetryHanaUsage
 
-		public static int TelemetryHanaUsage(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int TelemetryHanaUsage(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_HANA_USAGE\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -13712,7 +14652,7 @@ namespace SapHanaDataContext
 
 		#region SpecialFunctionEmailManagement
 
-		public static int SpecialFunctionEmailManagement(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int SpecialFunctionEmailManagement(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SPECIAL_FUNCTION_EMAIL_MANAGEMENT\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -13727,7 +14667,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGTABLE
 
-		public static int DROPEXISTINGTABLE0(this DataConnection dataConnection, string TABLENAME, string SCHEMANAME)
+		public static int DROPEXISTINGTABLE0(this SYSTEMDBDB dataConnection, string? TABLENAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGTABLE\"",
 				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
@@ -13738,7 +14678,7 @@ namespace SapHanaDataContext
 
 		#region SpecialFunctionActivateObjects
 
-		public static int SpecialFunctionActivateObjects(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int SpecialFunctionActivateObjects(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SPECIAL_FUNCTION_ACTIVATE_OBJECTS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -13753,7 +14693,7 @@ namespace SapHanaDataContext
 
 		#region OutRefTest
 
-		public static int OutRefTest1(this DataConnection dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string STR, out string OUTPUTSTR, ref string INPUTOUTPUTSTR)
+		public static int OutRefTest1(this SYSTEMDBDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYSTEM\".\"OutRefTest\"",
 				new DataParameter("ID",             ID,             DataType.Int32),
@@ -13763,10 +14703,10 @@ namespace SapHanaDataContext
 				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
-			OUTPUTID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
-			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
+			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
 
 			return ret;
 		}
@@ -13775,7 +14715,7 @@ namespace SapHanaDataContext
 
 		#region SpecialFunctionDeleteAlerts
 
-		public static int SpecialFunctionDeleteAlerts(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int SpecialFunctionDeleteAlerts(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SPECIAL_FUNCTION_DELETE_ALERTS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -13790,15 +14730,15 @@ namespace SapHanaDataContext
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest1(this DataConnection dataConnection, string STR, out string OUTPUTSTR, ref string INPUTOUTPUTSTR)
+		public static int OutRefEnumTest1(this SYSTEMDBDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("\"SYSTEM\".\"OutRefEnumTest\"",
 				new DataParameter("STR",            STR,            DataType.VarChar),
 				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
 				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
-			OUTPUTSTR      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
 
 			return ret;
 		}
@@ -13807,7 +14747,7 @@ namespace SapHanaDataContext
 
 		#region RemoveStatisticsStoreUsedValues
 
-		public static int RemoveStatisticsStoreUsedValues(this DataConnection dataConnection)
+		public static int RemoveStatisticsStoreUsedValues(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"REMOVE_STATISTICS_STORE_USED_VALUES\"");
 		}
@@ -13816,7 +14756,7 @@ namespace SapHanaDataContext
 
 		#region StartupAppendix
 
-		public static IEnumerable<StartupAPPENDIXResult> StartupAppendix(this DataConnection dataConnection)
+		public static IEnumerable<StartupAPPENDIXResult> StartupAppendix(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<StartupAPPENDIXResult>("\"_SYS_STATISTICS\".\"STARTUP_APPENDIX\"");
 		}
@@ -13830,7 +14770,7 @@ namespace SapHanaDataContext
 
 		#region SelectImplicitColumn
 
-		public static IEnumerable<SelectImplicitColumnResult1> SelectImplicitColumn1(this DataConnection dataConnection)
+		public static IEnumerable<SelectImplicitColumnResult1> SelectImplicitColumn1(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<SelectImplicitColumnResult1>("\"SYSTEM\".\"SelectImplicitColumn\"");
 		}
@@ -13844,7 +14784,7 @@ namespace SapHanaDataContext
 
 		#region TelemetrySystemOverview
 
-		public static int TelemetrySystemOverview(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int TelemetrySystemOverview(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_SYSTEM_OVERVIEW\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -13859,30 +14799,30 @@ namespace SapHanaDataContext
 
 		#region DuplicateColumnNames
 
-		public static IEnumerable<DuplicateColumnNamesResult1> DuplicateColumnNames1(this DataConnection dataConnection)
+		public static IEnumerable<DuplicateColumnNamesResult1> DuplicateColumnNames1(this SYSTEMDBDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
 			return dataConnection.QueryProc(dataReader =>
 				new DuplicateColumnNamesResult1
 				{
-					id      = Converter.ChangeTypeTo<int?>  (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
+					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
 				},
 				"\"SYSTEM\".\"DuplicateColumnNames\"");
 		}
 
 		public partial class DuplicateColumnNamesResult1
 		{
-			               public int?   id      { get; set; }
-			[Column("id")] public string Column2 { get; set; }
+			               public int?    id      { get; set; }
+			[Column("id")] public string? Column2 { get; set; }
 		}
 
 		#endregion
 
 		#region PersonInsert
 
-		public static int PersonInsert(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
+		public static int PersonInsert(this SYSTEMDBDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert\"",
 				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
@@ -13895,7 +14835,7 @@ namespace SapHanaDataContext
 
 		#region TelemetryHostInformation
 
-		public static int TelemetryHostInformation(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int TelemetryHostInformation(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_HOST_INFORMATION\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -13910,7 +14850,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGPROCEDURE
 
-		public static int DROPEXISTINGPROCEDURE0(this DataConnection dataConnection, string PROCEDURENAME, string SCHEMANAME)
+		public static int DROPEXISTINGPROCEDURE0(this SYSTEMDBDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGPROCEDURE\"",
 				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
@@ -13921,7 +14861,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGFUNCTION
 
-		public static int DROPEXISTINGFUNCTION0(this DataConnection dataConnection, string FUNCTIONNAME, string SCHEMANAME)
+		public static int DROPEXISTINGFUNCTION0(this SYSTEMDBDB dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGFUNCTION\"",
 				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
@@ -13932,7 +14872,7 @@ namespace SapHanaDataContext
 
 		#region TelemetryLicenses
 
-		public static int TelemetryLicenses(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int TelemetryLicenses(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_LICENSES\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -13947,7 +14887,7 @@ namespace SapHanaDataContext
 
 		#region DROPCONSTRAINTFROMTABLE
 
-		public static int DROPCONSTRAINTFROMTABLE0(this DataConnection dataConnection, string TABLENAME, string CONSTRAINTNAME, string SCHEMANAME)
+		public static int DROPCONSTRAINTFROMTABLE0(this SYSTEMDBDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPCONSTRAINTFROMTABLE\"",
 				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
@@ -13959,25 +14899,31 @@ namespace SapHanaDataContext
 
 		#region PersonSelectAll
 
-		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this DataConnection dataConnection)
+		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<PersonSelectAllResult>("\"TESTHANA\".\"Person_SelectAll\"");
 		}
 
 		public partial class PersonSelectAllResult
 		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
+			public int     PersonID   { get; set; }
+			#nullable disable
+			public string  FirstName  { get; set; }
+			#nullable enable
+			#nullable disable
+			public string  LastName   { get; set; }
+			#nullable enable
+			public string? MiddleName { get; set; }
+			#nullable disable
+			public string  Gender     { get; set; }
+			#nullable enable
 		}
 
 		#endregion
 
 		#region TelemetryInifileContents
 
-		public static int TelemetryInifileContents(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int TelemetryInifileContents(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_INIFILE_CONTENTS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -13992,7 +14938,7 @@ namespace SapHanaDataContext
 
 		#region PersonSelectByName
 
-		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this SYSTEMDBDB dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
 			return dataConnection.QueryProc<PersonSelectByNameResult>("\"TESTHANA\".\"Person_SelectByName\"",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
@@ -14001,18 +14947,24 @@ namespace SapHanaDataContext
 
 		public partial class PersonSelectByNameResult
 		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
+			public int     PersonID   { get; set; }
+			#nullable disable
+			public string  FirstName  { get; set; }
+			#nullable enable
+			#nullable disable
+			public string  LastName   { get; set; }
+			#nullable enable
+			public string? MiddleName { get; set; }
+			#nullable disable
+			public string  Gender     { get; set; }
+			#nullable enable
 		}
 
 		#endregion
 
 		#region PersonInsertOutputParameter
 
-		public static int PersonInsertOutputParameter(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static int PersonInsertOutputParameter(this SYSTEMDBDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert_OutputParameter\"",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
@@ -14030,7 +14982,7 @@ namespace SapHanaDataContext
 
 		#region TelemetryFeatureUsage
 
-		public static int TelemetryFeatureUsage(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int TelemetryFeatureUsage(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_FEATURE_USAGE\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14045,7 +14997,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGPROCEDURE
 
-		public static int DROPEXISTINGPROCEDURE1(this DataConnection dataConnection, string PROCEDURENAME, string SCHEMANAME)
+		public static int DROPEXISTINGPROCEDURE1(this SYSTEMDBDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"DROPEXISTINGPROCEDURE\"",
 				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
@@ -14056,7 +15008,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGFUNCTION
 
-		public static int DROPEXISTINGFUNCTION1(this DataConnection dataConnection, string FUNCTIONNAME, string SCHEMANAME)
+		public static int DROPEXISTINGFUNCTION1(this SYSTEMDBDB dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"DROPEXISTINGFUNCTION\"",
 				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
@@ -14067,7 +15019,7 @@ namespace SapHanaDataContext
 
 		#region TelemetryOutOfMemoryEvents
 
-		public static int TelemetryOutOfMemoryEvents(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int TelemetryOutOfMemoryEvents(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_OUT_OF_MEMORY_EVENTS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14082,7 +15034,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGVIEW
 
-		public static int DROPEXISTINGVIEW1(this DataConnection dataConnection, string VIEWNAME, string SCHEMANAME)
+		public static int DROPEXISTINGVIEW1(this SYSTEMDBDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"DROPEXISTINGVIEW\"",
 				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
@@ -14093,7 +15045,7 @@ namespace SapHanaDataContext
 
 		#region DROPCONSTRAINTFROMTABLE
 
-		public static int DROPCONSTRAINTFROMTABLE1(this DataConnection dataConnection, string TABLENAME, string CONSTRAINTNAME, string SCHEMANAME)
+		public static int DROPCONSTRAINTFROMTABLE1(this SYSTEMDBDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"DROPCONSTRAINTFROMTABLE\"",
 				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
@@ -14105,7 +15057,7 @@ namespace SapHanaDataContext
 
 		#region TelemetryDiskUsage
 
-		public static int TelemetryDiskUsage(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int TelemetryDiskUsage(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_DISK_USAGE\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14120,7 +15072,7 @@ namespace SapHanaDataContext
 
 		#region TelemetryServiceMemory
 
-		public static int TelemetryServiceMemory(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int TelemetryServiceMemory(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_SERVICE_MEMORY\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14135,7 +15087,7 @@ namespace SapHanaDataContext
 
 		#region TelemetryHeapMemory
 
-		public static int TelemetryHeapMemory(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int TelemetryHeapMemory(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_HEAP_MEMORY\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14150,7 +15102,7 @@ namespace SapHanaDataContext
 
 		#region TelemetryCsTables
 
-		public static int TelemetryCsTables(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int TelemetryCsTables(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_CS_TABLES\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14165,7 +15117,7 @@ namespace SapHanaDataContext
 
 		#region TelemetryEvents
 
-		public static int TelemetryEvents(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		public static int TelemetryEvents(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_EVENTS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14180,7 +15132,7 @@ namespace SapHanaDataContext
 
 		#region SharedSetRecommendedSp
 
-		public static int SharedSetRecommendedSp(this DataConnection dataConnection, int? SP, DateTime? RELEASE_DATE)
+		public static int SharedSetRecommendedSp(this SYSTEMDBDB dataConnection, int? SP, DateTime? RELEASE_DATE)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_SET_RECOMMENDED_SP\"",
 				new DataParameter("SP",           SP,           DataType.Int32),
@@ -14191,7 +15143,7 @@ namespace SapHanaDataContext
 
 		#region CollectorTelOutOfMemoryEvents
 
-		public static int CollectorTelOutOfMemoryEvents(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorTelOutOfMemoryEvents(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_OUT_OF_MEMORY_EVENTS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14207,7 +15159,7 @@ namespace SapHanaDataContext
 
 		#region CollectorStreamingSubscribersStatistics
 
-		public static int CollectorStreamingSubscribersStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorStreamingSubscribersStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_STREAMING_SUBSCRIBERS_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14223,7 +15175,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostJobHistory
 
-		public static int CollectorHostJobHistory(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostJobHistory(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_JOB_HISTORY\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14239,7 +15191,7 @@ namespace SapHanaDataContext
 
 		#region CollectorTelDiskUsage
 
-		public static int CollectorTelDiskUsage(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorTelDiskUsage(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_DISK_USAGE\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14255,7 +15207,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostLoadHistoryHost
 
-		public static int CollectorHostLoadHistoryHost(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostLoadHistoryHost(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LOAD_HISTORY_HOST\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14271,7 +15223,7 @@ namespace SapHanaDataContext
 
 		#region CollectorStreamingStreamsStatistics
 
-		public static int CollectorStreamingStreamsStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorStreamingStreamsStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_STREAMING_STREAMS_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14287,7 +15239,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostLoadHistoryService
 
-		public static int CollectorHostLoadHistoryService(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostLoadHistoryService(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LOAD_HISTORY_SERVICE\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14303,7 +15255,7 @@ namespace SapHanaDataContext
 
 		#region CollectorStreamingProjectConnectionsStatistics
 
-		public static int CollectorStreamingProjectConnectionsStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorStreamingProjectConnectionsStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_STREAMING_PROJECT_CONNECTIONS_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14319,7 +15271,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostServiceThreadSamplesStatements
 
-		public static int CollectorHostServiceThreadSamplesStatements(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostServiceThreadSamplesStatements(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_THREAD_SAMPLES_STATEMENTS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14335,7 +15287,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostCsLobSpaceReclaims
 
-		public static int CollectorHostCsLobSpaceReclaims(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostCsLobSpaceReclaims(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CS_LOB_SPACE_RECLAIMS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14351,7 +15303,7 @@ namespace SapHanaDataContext
 
 		#region CollectorTelSystemOverview
 
-		public static int CollectorTelSystemOverview(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorTelSystemOverview(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_SYSTEM_OVERVIEW\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14367,7 +15319,7 @@ namespace SapHanaDataContext
 
 		#region CollectorTelHostInformation
 
-		public static int CollectorTelHostInformation(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorTelHostInformation(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_HOST_INFORMATION\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14383,7 +15335,7 @@ namespace SapHanaDataContext
 
 		#region CollectorStreamingProjectsStatistics
 
-		public static int CollectorStreamingProjectsStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorStreamingProjectsStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_STREAMING_PROJECTS_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14399,7 +15351,7 @@ namespace SapHanaDataContext
 
 		#region CollectorTelLicenses
 
-		public static int CollectorTelLicenses(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorTelLicenses(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_LICENSES\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14415,7 +15367,7 @@ namespace SapHanaDataContext
 
 		#region CollectorTelInifileContents
 
-		public static int CollectorTelInifileContents(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorTelInifileContents(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_INIFILE_CONTENTS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14431,7 +15383,7 @@ namespace SapHanaDataContext
 
 		#region CollectorStreamingPublishersStatistics
 
-		public static int CollectorStreamingPublishersStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorStreamingPublishersStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_STREAMING_PUBLISHERS_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14447,7 +15399,7 @@ namespace SapHanaDataContext
 
 		#region CollectorTelFeatureUsage
 
-		public static int CollectorTelFeatureUsage(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorTelFeatureUsage(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_FEATURE_USAGE\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14463,7 +15415,7 @@ namespace SapHanaDataContext
 
 		#region AflWrapperEraser
 
-		public static int AflWrapperEraser(this DataConnection dataConnection, string PROCORIG)
+		public static int AflWrapperEraser(this SYSTEMDBDB dataConnection, string? PROCORIG)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"AFL_WRAPPER_ERASER\"",
 				new DataParameter("PROCORIG", PROCORIG, DataType.VarChar));
@@ -14473,7 +15425,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostRsIndexes
 
-		public static int CollectorHostRsIndexes(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostRsIndexes(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_RS_INDEXES\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14489,7 +15441,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostMvccOverview
 
-		public static int CollectorHostMvccOverview(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostMvccOverview(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_MVCC_OVERVIEW\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14505,7 +15457,7 @@ namespace SapHanaDataContext
 
 		#region CollectorLivecacheSchemaStatistics
 
-		public static int CollectorLivecacheSchemaStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorLivecacheSchemaStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_LIVECACHE_SCHEMA_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14521,7 +15473,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostServiceReplication
 
-		public static int CollectorHostServiceReplication(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostServiceReplication(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_REPLICATION\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14537,7 +15489,7 @@ namespace SapHanaDataContext
 
 		#region CollectorGlobalTableConsistency
 
-		public static int CollectorGlobalTableConsistency(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorGlobalTableConsistency(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_TABLE_CONSISTENCY\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14553,7 +15505,7 @@ namespace SapHanaDataContext
 
 		#region CollectorLivecacheProcedureStatistics
 
-		public static int CollectorLivecacheProcedureStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorLivecacheProcedureStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_LIVECACHE_PROCEDURE_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14569,7 +15521,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostWorkload
 
-		public static int CollectorHostWorkload(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostWorkload(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_WORKLOAD\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14585,7 +15537,7 @@ namespace SapHanaDataContext
 
 		#region CollectorLivecacheOmsversions
 
-		public static int CollectorLivecacheOmsversions(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorLivecacheOmsversions(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_LIVECACHE_OMSVERSIONS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14601,7 +15553,7 @@ namespace SapHanaDataContext
 
 		#region CollectorLivecacheContainerStatistics
 
-		public static int CollectorLivecacheContainerStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorLivecacheContainerStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_LIVECACHE_CONTAINER_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14617,7 +15569,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostObjectLockStatistics
 
-		public static int CollectorHostObjectLockStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostObjectLockStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_OBJECT_LOCK_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14633,7 +15585,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostRecordLocks
 
-		public static int CollectorHostRecordLocks(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostRecordLocks(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_RECORD_LOCKS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14649,7 +15601,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostServiceThreadSamples
 
-		public static int CollectorHostServiceThreadSamples(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostServiceThreadSamples(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_THREAD_SAMPLES\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14665,7 +15617,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostCsUnloads
 
-		public static int CollectorHostCsUnloads(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostCsUnloads(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CS_UNLOADS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14681,7 +15633,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostDeltaMergeStatistics
 
-		public static int CollectorHostDeltaMergeStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostDeltaMergeStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_DELTA_MERGE_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14697,7 +15649,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostDataVolumeSuperblockStatistics
 
-		public static int CollectorHostDataVolumeSuperblockStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostDataVolumeSuperblockStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_DATA_VOLUME_SUPERBLOCK_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14713,7 +15665,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostRsMemory
 
-		public static int CollectorHostRsMemory(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostRsMemory(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_RS_MEMORY\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14729,14 +15681,14 @@ namespace SapHanaDataContext
 
 		#region SharedMailRecipients
 
-		public static int SharedMailRecipients(this DataConnection dataConnection, int? ALERT_ID, string FREQUENCY, out string RECIPIENTS)
+		public static int SharedMailRecipients(this SYSTEMDBDB dataConnection, int? ALERT_ID, string? FREQUENCY, out string? RECIPIENTS)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_MAIL_RECIPIENTS\"",
 				new DataParameter("ALERT_ID",   ALERT_ID,   DataType.Int32),
 				new DataParameter("FREQUENCY",  FREQUENCY,  DataType.VarChar),
 				new DataParameter("RECIPIENTS", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
 
-			RECIPIENTS = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["RECIPIENTS"]).Value);
+			RECIPIENTS = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["RECIPIENTS"]).Value);
 
 			return ret;
 		}
@@ -14745,7 +15697,7 @@ namespace SapHanaDataContext
 
 		#region SharedMailBody
 
-		public static int SharedMailBody(this DataConnection dataConnection, string SNAPSHOT, string ALERT_NAME, string RATING, string DETAILS, string USER_ACTION, out string BODY)
+		public static int SharedMailBody(this SYSTEMDBDB dataConnection, string? SNAPSHOT, string? ALERT_NAME, string? RATING, string? DETAILS, string? USER_ACTION, out string? BODY)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_MAIL_BODY\"",
 				new DataParameter("SNAPSHOT", SNAPSHOT, DataType.VarChar),
@@ -14755,7 +15707,7 @@ namespace SapHanaDataContext
 				new DataParameter("USER_ACTION", USER_ACTION, DataType.VarChar),
 				new DataParameter("BODY", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
 
-			BODY = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["BODY"]).Value);
+			BODY = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["BODY"]).Value);
 
 			return ret;
 		}
@@ -14764,7 +15716,7 @@ namespace SapHanaDataContext
 
 		#region SharedColumnComments
 
-		public static int SharedColumnComments(this DataConnection dataConnection, string SYS_SCHEMA, string SYS_VIEW, string STAT_SCHEMA, string STAT_VIEW)
+		public static int SharedColumnComments(this SYSTEMDBDB dataConnection, string? SYS_SCHEMA, string? SYS_VIEW, string? STAT_SCHEMA, string? STAT_VIEW)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_COLUMN_COMMENTS\"",
 				new DataParameter("SYS_SCHEMA",  SYS_SCHEMA,  DataType.VarChar),
@@ -14777,7 +15729,7 @@ namespace SapHanaDataContext
 
 		#region SharedViewComments
 
-		public static int SharedViewComments(this DataConnection dataConnection, string SYS_SCHEMA, string SYS_VIEW, string STAT_SCHEMA, string STAT_VIEW)
+		public static int SharedViewComments(this SYSTEMDBDB dataConnection, string? SYS_SCHEMA, string? SYS_VIEW, string? STAT_SCHEMA, string? STAT_VIEW)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_VIEW_COMMENTS\"",
 				new DataParameter("SYS_SCHEMA",  SYS_SCHEMA,  DataType.VarChar),
@@ -14790,7 +15742,7 @@ namespace SapHanaDataContext
 
 		#region SharedAssignComments
 
-		public static int SharedAssignComments(this DataConnection dataConnection, string SYS_SCHEMA, string SYS_VIEW, string SYS_COLUMN, string STAT_SCHEMA, string STAT_VIEW, string STAT_COLUMN)
+		public static int SharedAssignComments(this SYSTEMDBDB dataConnection, string? SYS_SCHEMA, string? SYS_VIEW, string? SYS_COLUMN, string? STAT_SCHEMA, string? STAT_VIEW, string? STAT_COLUMN)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_ASSIGN_COMMENTS\"",
 				new DataParameter("SYS_SCHEMA",  SYS_SCHEMA,  DataType.VarChar),
@@ -14805,7 +15757,7 @@ namespace SapHanaDataContext
 
 		#region SharedFollowUpActions
 
-		public static int SharedFollowUpActions(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, int? ALERT_ID)
+		public static int SharedFollowUpActions(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, int? ALERT_ID)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_FOLLOW_UP_ACTIONS\"",
 				new DataParameter("SNAPSHOT_ID", SNAPSHOT_ID, DataType.Timestamp),
@@ -14816,7 +15768,7 @@ namespace SapHanaDataContext
 
 		#region SharedCreateUnionView
 
-		public static int SharedCreateUnionView(this DataConnection dataConnection, string PREFIX, string VIEW_NAME, string SYNONYM_NAME)
+		public static int SharedCreateUnionView(this SYSTEMDBDB dataConnection, string? PREFIX, string? VIEW_NAME, string? SYNONYM_NAME)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_CREATE_UNION_VIEW\"",
 				new DataParameter("PREFIX",       PREFIX,       DataType.VarChar),
@@ -14828,7 +15780,7 @@ namespace SapHanaDataContext
 
 		#region SharedDropUnionView
 
-		public static int SharedDropUnionView(this DataConnection dataConnection, string VIEW_NAME, string SYNONYM_NAME)
+		public static int SharedDropUnionView(this SYSTEMDBDB dataConnection, string? VIEW_NAME, string? SYNONYM_NAME)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_DROP_UNION_VIEW\"",
 				new DataParameter("VIEW_NAME",    VIEW_NAME,    DataType.VarChar),
@@ -14839,7 +15791,7 @@ namespace SapHanaDataContext
 
 		#region SharedCopyProfiles
 
-		public static int SharedCopyProfiles(this DataConnection dataConnection, string OLD_PROFILE, string NEW_PROFILE)
+		public static int SharedCopyProfiles(this SYSTEMDBDB dataConnection, string? OLD_PROFILE, string? NEW_PROFILE)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_COPY_PROFILES\"",
 				new DataParameter("OLD_PROFILE", OLD_PROFILE, DataType.VarChar),
@@ -14850,7 +15802,7 @@ namespace SapHanaDataContext
 
 		#region SharedBuildViews
 
-		public static int SharedBuildViews(this DataConnection dataConnection, string CMD, string PREFIX, string EX_TYPE)
+		public static int SharedBuildViews(this SYSTEMDBDB dataConnection, string? CMD, string? PREFIX, string? EX_TYPE)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_BUILD_VIEWS\"",
 				new DataParameter("CMD",     CMD,     DataType.VarChar),
@@ -14862,7 +15814,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostBlockedTransactions
 
-		public static int CollectorHostBlockedTransactions(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostBlockedTransactions(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_BLOCKED_TRANSACTIONS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14878,7 +15830,7 @@ namespace SapHanaDataContext
 
 		#region SharedBuildSrViews
 
-		public static int SharedBuildSrViews(this DataConnection dataConnection, string CMD, string PREFIX)
+		public static int SharedBuildSrViews(this SYSTEMDBDB dataConnection, string? CMD, string? PREFIX)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_BUILD_SR_VIEWS\"",
 				new DataParameter("CMD",    CMD,    DataType.VarChar),
@@ -14889,7 +15841,7 @@ namespace SapHanaDataContext
 
 		#region SharedBuildAaViews
 
-		public static int SharedBuildAaViews(this DataConnection dataConnection, string CMD, string PREFIX)
+		public static int SharedBuildAaViews(this SYSTEMDBDB dataConnection, string? CMD, string? PREFIX)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_BUILD_AA_VIEWS\"",
 				new DataParameter("CMD",    CMD,    DataType.VarChar),
@@ -14900,7 +15852,7 @@ namespace SapHanaDataContext
 
 		#region SharedStoreUsedValues
 
-		public static int SharedStoreUsedValues(this DataConnection dataConnection, int? STORE)
+		public static int SharedStoreUsedValues(this SYSTEMDBDB dataConnection, int? STORE)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_STORE_USED_VALUES\"",
 				new DataParameter("STORE", STORE, DataType.Int32));
@@ -14910,7 +15862,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostResourceUtilizationStatistics
 
-		public static int CollectorHostResourceUtilizationStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostResourceUtilizationStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_RESOURCE_UTILIZATION_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14926,7 +15878,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostDataVolumePageStatistics
 
-		public static int CollectorHostDataVolumePageStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostDataVolumePageStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_DATA_VOLUME_PAGE_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14942,7 +15894,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostLongIdleCursor
 
-		public static int CollectorHostLongIdleCursor(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostLongIdleCursor(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LONG_IDLE_CURSOR\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14958,7 +15910,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostOneDayFileCount
 
-		public static int CollectorHostOneDayFileCount(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostOneDayFileCount(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_ONE_DAY_FILE_COUNT\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14974,7 +15926,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostUncommittedWriteTransaction
 
-		public static int CollectorHostUncommittedWriteTransaction(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostUncommittedWriteTransaction(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_UNCOMMITTED_WRITE_TRANSACTION\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -14990,7 +15942,7 @@ namespace SapHanaDataContext
 
 		#region CollectorGlobalRowstoreTablesSize
 
-		public static int CollectorGlobalRowstoreTablesSize(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorGlobalRowstoreTablesSize(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_ROWSTORE_TABLES_SIZE\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15006,7 +15958,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostHeapAllocators
 
-		public static int CollectorHostHeapAllocators(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostHeapAllocators(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_HEAP_ALLOCATORS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15022,7 +15974,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostVolumeIoRetryStatistics
 
-		public static int CollectorHostVolumeIoRetryStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostVolumeIoRetryStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_VOLUME_IO_RETRY_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15038,7 +15990,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostConnectionStatistics
 
-		public static int CollectorHostConnectionStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostConnectionStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CONNECTION_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15054,7 +16006,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostServiceComponentMemory
 
-		public static int CollectorHostServiceComponentMemory(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostServiceComponentMemory(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_COMPONENT_MEMORY\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15070,7 +16022,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostSavepoints
 
-		public static int CollectorHostSavepoints(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostSavepoints(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SAVEPOINTS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15086,7 +16038,7 @@ namespace SapHanaDataContext
 
 		#region CollectorGlobalTablePersistenceStatistics
 
-		public static int CollectorGlobalTablePersistenceStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorGlobalTablePersistenceStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_TABLE_PERSISTENCE_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15102,7 +16054,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostConnections
 
-		public static int CollectorHostConnections(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostConnections(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CONNECTIONS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15118,7 +16070,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostServiceMemory
 
-		public static int CollectorHostServiceMemory(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostServiceMemory(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_MEMORY\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15134,7 +16086,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostSqlPlanCacheOverview
 
-		public static int CollectorHostSqlPlanCacheOverview(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostSqlPlanCacheOverview(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SQL_PLAN_CACHE_OVERVIEW\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15150,7 +16102,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostColumnTablesPartSize
 
-		public static int CollectorHostColumnTablesPartSize(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostColumnTablesPartSize(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_COLUMN_TABLES_PART_SIZE\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15166,7 +16118,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostLongSerializableTransaction
 
-		public static int CollectorHostLongSerializableTransaction(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostLongSerializableTransaction(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LONG_SERIALIZABLE_TRANSACTION\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15182,7 +16134,7 @@ namespace SapHanaDataContext
 
 		#region CollectorGlobalPersistenceStatistics
 
-		public static int CollectorGlobalPersistenceStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorGlobalPersistenceStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_PERSISTENCE_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15198,7 +16150,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostObjectLocks
 
-		public static int CollectorHostObjectLocks(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostObjectLocks(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_OBJECT_LOCKS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15214,7 +16166,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostServiceStatistics
 
-		public static int CollectorHostServiceStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostServiceStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15230,7 +16182,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostLongRunningStatements
 
-		public static int CollectorHostLongRunningStatements(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostLongRunningStatements(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LONG_RUNNING_STATEMENTS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15246,7 +16198,7 @@ namespace SapHanaDataContext
 
 		#region CollectorGlobalDecExtractorStatus
 
-		public static int CollectorGlobalDecExtractorStatus(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorGlobalDecExtractorStatus(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_DEC_EXTRACTOR_STATUS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15262,7 +16214,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostVolumeIoDetailedStatistics
 
-		public static int CollectorHostVolumeIoDetailedStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostVolumeIoDetailedStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_VOLUME_IO_DETAILED_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15278,7 +16230,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostVolumeFiles
 
-		public static int CollectorHostVolumeFiles(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostVolumeFiles(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_VOLUME_FILES\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15294,7 +16246,7 @@ namespace SapHanaDataContext
 
 		#region CollectorGlobalInternalEvents
 
-		public static int CollectorGlobalInternalEvents(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorGlobalInternalEvents(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_INTERNAL_EVENTS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15310,7 +16262,7 @@ namespace SapHanaDataContext
 
 		#region CollectorHostVolumeIoTotalStatistics
 
-		public static int CollectorHostVolumeIoTotalStatistics(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostVolumeIoTotalStatistics(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_VOLUME_IO_TOTAL_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15326,7 +16278,7 @@ namespace SapHanaDataContext
 
 		#region CollectorGlobalDisks
 
-		public static int CollectorGlobalDisks(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorGlobalDisks(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_DISKS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
@@ -15342,15 +16294,15 @@ namespace SapHanaDataContext
 
 		#region SearchCatalogCleanup
 
-		public static int SearchCatalogCleanup(this DataConnection dataConnection, out byte? SUCCESS, out string MESSAGE, string SCHEMA_NAME)
+		public static int SearchCatalogCleanup(this SYSTEMDBDB dataConnection, out byte? SUCCESS, out string? MESSAGE, string? SCHEMA_NAME)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_RT\".\"SEARCH_CATALOG_CLEANUP\"",
 				new DataParameter("SUCCESS", null, DataType.Byte) { Direction = ParameterDirection.Output, Size = 3 },
 				new DataParameter("MESSAGE", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 3000 },
 				new DataParameter("SCHEMA_NAME", SCHEMA_NAME, DataType.NVarChar));
 
-			SUCCESS = Converter.ChangeTypeTo<byte?> (((IDbDataParameter)dataConnection.Command.Parameters["SUCCESS"]).Value);
-			MESSAGE = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MESSAGE"]).Value);
+			SUCCESS = Converter.ChangeTypeTo<byte?>  (((IDbDataParameter)dataConnection.Command.Parameters["SUCCESS"]).Value);
+			MESSAGE = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MESSAGE"]).Value);
 
 			return ret;
 		}
@@ -15359,7 +16311,7 @@ namespace SapHanaDataContext
 
 		#region DeleteSchemaFromBimcTables
 
-		public static int DeleteSchemaFromBimcTables(this DataConnection dataConnection, string SCHEMA_NAME)
+		public static int DeleteSchemaFromBimcTables(this SYSTEMDBDB dataConnection, string? SCHEMA_NAME)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_BI\".\"DELETE_SCHEMA_FROM_BIMC_TABLES\"",
 				new DataParameter("SCHEMA_NAME", SCHEMA_NAME, DataType.NVarChar));
@@ -15369,7 +16321,7 @@ namespace SapHanaDataContext
 
 		#region AflpmOnlineRegistrationCleanup
 
-		public static int AflpmOnlineRegistrationCleanup(this DataConnection dataConnection)
+		public static int AflpmOnlineRegistrationCleanup(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"AFLPM_ONLINE_REGISTRATION_CLEANUP\"");
 		}
@@ -15378,7 +16330,7 @@ namespace SapHanaDataContext
 
 		#region AflpmEraser
 
-		public static int AflpmEraser(this DataConnection dataConnection, string PROC)
+		public static int AflpmEraser(this SYSTEMDBDB dataConnection, string? PROC)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"AFLPM_ERASER\"",
 				new DataParameter("PROC", PROC, DataType.VarChar));
@@ -15388,7 +16340,7 @@ namespace SapHanaDataContext
 
 		#region AfllangWrapperProcedureDrop
 
-		public static int AfllangWrapperProcedureDrop(this DataConnection dataConnection, string SCHEMA_NAME, string PROCEDURE_NAME)
+		public static int AfllangWrapperProcedureDrop(this SYSTEMDBDB dataConnection, string? SCHEMA_NAME, string? PROCEDURE_NAME)
 		{
 			return dataConnection.ExecuteProc("\"SYS\".\"AFLLANG_WRAPPER_PROCEDURE_DROP\"",
 				new DataParameter("SCHEMA_NAME",    SCHEMA_NAME,    DataType.NVarChar),
@@ -15399,14 +16351,14 @@ namespace SapHanaDataContext
 
 		#region SharedConstraintColumnNames
 
-		public static int SharedConstraintColumnNames(this DataConnection dataConnection, string TABLE_NAME1, string TABLE_NAME2, out string COLUMN_NAMES)
+		public static int SharedConstraintColumnNames(this SYSTEMDBDB dataConnection, string? TABLE_NAME1, string? TABLE_NAME2, out string? COLUMN_NAMES)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_CONSTRAINT_COLUMN_NAMES\"",
 				new DataParameter("TABLE_NAME1",  TABLE_NAME1,  DataType.VarChar),
 				new DataParameter("TABLE_NAME2",  TABLE_NAME2,  DataType.VarChar),
 				new DataParameter("COLUMN_NAMES", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
 
-			COLUMN_NAMES = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
+			COLUMN_NAMES = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
 
 			return ret;
 		}
@@ -15415,7 +16367,7 @@ namespace SapHanaDataContext
 
 		#region MessagingDESTINATIONS__insert
 
-		public static int MessagingDESTINATIONS__insert(this DataConnection dataConnection, string DESTINATION_ID, string DESTINATION_TYPE, string CONFIGURATION)
+		public static int MessagingDESTINATIONS__insert(this SYSTEMDBDB dataConnection, string? DESTINATION_ID, string? DESTINATION_TYPE, string? CONFIGURATION)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_XB\".\"MESSAGING_DESTINATIONS::insert\"",
 				new DataParameter("DESTINATION_ID",   DESTINATION_ID,   DataType.VarChar),
@@ -15427,7 +16379,7 @@ namespace SapHanaDataContext
 
 		#region MessagingDESTINATIONS__delete
 
-		public static int MessagingDESTINATIONS__delete(this DataConnection dataConnection, string DESTINATION_ID)
+		public static int MessagingDESTINATIONS__delete(this SYSTEMDBDB dataConnection, string? DESTINATION_ID)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_XB\".\"MESSAGING_DESTINATIONS::delete\"",
 				new DataParameter("DESTINATION_ID", DESTINATION_ID, DataType.VarChar));
@@ -15437,7 +16389,7 @@ namespace SapHanaDataContext
 
 		#region MessagingSUBSCRIPTIONS__insert
 
-		public static int MessagingSUBSCRIPTIONS__insert(this DataConnection dataConnection, string DESTINATION_ID, string TOPIC_PATTERN, byte? QOS, string SCHEMA_NAME, string TABLE_NAME, string FORMAT, string SETTINGS)
+		public static int MessagingSUBSCRIPTIONS__insert(this SYSTEMDBDB dataConnection, string? DESTINATION_ID, string? TOPIC_PATTERN, byte? QOS, string? SCHEMA_NAME, string? TABLE_NAME, string? FORMAT, string? SETTINGS)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_XB\".\"MESSAGING_SUBSCRIPTIONS::insert\"",
 				new DataParameter("DESTINATION_ID", DESTINATION_ID, DataType.VarChar),
@@ -15453,7 +16405,7 @@ namespace SapHanaDataContext
 
 		#region MessagingSUBSCRIPTIONS__delete
 
-		public static int MessagingSUBSCRIPTIONS__delete(this DataConnection dataConnection, string DESTINATION_ID, string TOPIC_PATTERN, byte? QOS)
+		public static int MessagingSUBSCRIPTIONS__delete(this SYSTEMDBDB dataConnection, string? DESTINATION_ID, string? TOPIC_PATTERN, byte? QOS)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_XB\".\"MESSAGING_SUBSCRIPTIONS::delete\"",
 				new DataParameter("DESTINATION_ID", DESTINATION_ID, DataType.VarChar),
@@ -15465,7 +16417,7 @@ namespace SapHanaDataContext
 
 		#region StatisticsPrepareCallTimer
 
-		public static int StatisticsPrepareCallTimer(this DataConnection dataConnection, DateTime? SNAPSHOT_ID, int? SCHEDULABLE_ID, out int? CAN_CALL)
+		public static int StatisticsPrepareCallTimer(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOT_ID, int? SCHEDULABLE_ID, out int? CAN_CALL)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"STATISTICS_PREPARE_CALL_TIMER\"",
 				new DataParameter("SNAPSHOT_ID", SNAPSHOT_ID, DataType.Timestamp),
@@ -15481,7 +16433,7 @@ namespace SapHanaDataContext
 
 		#region DROPEXISTINGTABLE
 
-		public static int DROPEXISTINGTABLE1(this DataConnection dataConnection, string TABLENAME, string SCHEMANAME)
+		public static int DROPEXISTINGTABLE1(this SYSTEMDBDB dataConnection, string? TABLENAME, string? SCHEMANAME)
 		{
 			return dataConnection.ExecuteProc("\"SYSTEM\".\"DROPEXISTINGTABLE\"",
 				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
@@ -15492,7 +16444,7 @@ namespace SapHanaDataContext
 
 		#region StatisticsPrepareCallManual
 
-		public static int StatisticsPrepareCallManual(this DataConnection dataConnection, int? SCHEDULABLE_ID, out int? CAN_CALL, out DateTime? CALLTIME_UTC)
+		public static int StatisticsPrepareCallManual(this SYSTEMDBDB dataConnection, int? SCHEDULABLE_ID, out int? CAN_CALL, out DateTime? CALLTIME_UTC)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"STATISTICS_PREPARE_CALL_MANUAL\"",
 				new DataParameter("SCHEDULABLE_ID", SCHEDULABLE_ID, DataType.Int32),
@@ -15509,7 +16461,7 @@ namespace SapHanaDataContext
 
 		#region StartupPreamble
 
-		public static IEnumerable<StartupPREAMBLEResult> StartupPreamble(this DataConnection dataConnection)
+		public static IEnumerable<StartupPREAMBLEResult> StartupPreamble(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<StartupPREAMBLEResult>("\"_SYS_STATISTICS\".\"STARTUP_PREAMBLE\"");
 		}
@@ -15523,7 +16475,7 @@ namespace SapHanaDataContext
 
 		#region SharedPrepareCollector
 
-		public static int SharedPrepareCollector(this DataConnection dataConnection, string ID, string TABLE_NAME, string VIEW_COLUMNS, string SELECT_COLUMNS)
+		public static int SharedPrepareCollector(this SYSTEMDBDB dataConnection, string? ID, string? TABLE_NAME, string? VIEW_COLUMNS, string? SELECT_COLUMNS)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_PREPARE_COLLECTOR\"",
 				new DataParameter("ID",             ID,             DataType.VarChar),
@@ -15536,7 +16488,7 @@ namespace SapHanaDataContext
 
 		#region SharedMigrateCollector
 
-		public static int SharedMigrateCollector(this DataConnection dataConnection, string ID, string TABLE_NAME, string SELECT_LIST, string INSERT_LIST)
+		public static int SharedMigrateCollector(this SYSTEMDBDB dataConnection, string? ID, string? TABLE_NAME, string? SELECT_LIST, string? INSERT_LIST)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_MIGRATE_COLLECTOR\"",
 				new DataParameter("ID",          ID,          DataType.VarChar),
@@ -15549,7 +16501,7 @@ namespace SapHanaDataContext
 
 		#region SharedTruncateCollector
 
-		public static int SharedTruncateCollector(this DataConnection dataConnection, int? ID, string TABLE_NAME)
+		public static int SharedTruncateCollector(this SYSTEMDBDB dataConnection, int? ID, string? TABLE_NAME)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_TRUNCATE_COLLECTOR\"",
 				new DataParameter("ID",         ID,         DataType.Int32),
@@ -15560,7 +16512,7 @@ namespace SapHanaDataContext
 
 		#region SharedWriteInternalAlert
 
-		public static int SharedWriteInternalAlert(this DataConnection dataConnection, DateTime? SNAPSHOTID, string ALERTDETAILS)
+		public static int SharedWriteInternalAlert(this SYSTEMDBDB dataConnection, DateTime? SNAPSHOTID, string? ALERTDETAILS)
 		{
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_WRITE_INTERNAL_ALERT\"",
 				new DataParameter("SNAPSHOTID",   SNAPSHOTID,   DataType.Timestamp),
@@ -15571,13 +16523,13 @@ namespace SapHanaDataContext
 
 		#region SharedColumnNames
 
-		public static int SharedColumnNames(this DataConnection dataConnection, string TABLE_NAME, out string COLUMN_NAMES)
+		public static int SharedColumnNames(this SYSTEMDBDB dataConnection, string? TABLE_NAME, out string? COLUMN_NAMES)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_COLUMN_NAMES\"",
 				new DataParameter("TABLE_NAME",   TABLE_NAME,   DataType.VarChar),
 				new DataParameter("COLUMN_NAMES", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
 
-			COLUMN_NAMES = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
+			COLUMN_NAMES = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
 
 			return ret;
 		}
@@ -15586,13 +16538,13 @@ namespace SapHanaDataContext
 
 		#region SharedKeyColumnNames
 
-		public static int SharedKeyColumnNames(this DataConnection dataConnection, string TABLE_NAME, out string COLUMN_NAMES)
+		public static int SharedKeyColumnNames(this SYSTEMDBDB dataConnection, string? TABLE_NAME, out string? COLUMN_NAMES)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_KEY_COLUMN_NAMES\"",
 				new DataParameter("TABLE_NAME",   TABLE_NAME,   DataType.VarChar),
 				new DataParameter("COLUMN_NAMES", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
 
-			COLUMN_NAMES = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
+			COLUMN_NAMES = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
 
 			return ret;
 		}
@@ -15601,14 +16553,14 @@ namespace SapHanaDataContext
 
 		#region SharedCommonColumnNames
 
-		public static int SharedCommonColumnNames(this DataConnection dataConnection, string TABLE_NAME1, string TABLE_NAME2, out string COLUMN_NAMES)
+		public static int SharedCommonColumnNames(this SYSTEMDBDB dataConnection, string? TABLE_NAME1, string? TABLE_NAME2, out string? COLUMN_NAMES)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_COMMON_COLUMN_NAMES\"",
 				new DataParameter("TABLE_NAME1",  TABLE_NAME1,  DataType.VarChar),
 				new DataParameter("TABLE_NAME2",  TABLE_NAME2,  DataType.VarChar),
 				new DataParameter("COLUMN_NAMES", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
 
-			COLUMN_NAMES = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
+			COLUMN_NAMES = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
 
 			return ret;
 		}
@@ -15621,7 +16573,7 @@ namespace SapHanaDataContext
 		#region CdsSchemaLastModifiedTime
 
 		[Sql.Function(Name="SYS.CDS_SCHEMA_LAST_MODIFIED_TIME", ServerSideOnly=true)]
-		public static DateTime? CdsSchemaLastModifiedTime(string SCHEMA_NAME)
+		public static DateTime? CdsSchemaLastModifiedTime(string? SCHEMA_NAME)
 		{
 			throw new InvalidOperationException();
 		}
@@ -16565,4 +17517,5 @@ namespace SapHanaDataContext
 	}
 }
 
+#nullable restore
 #pragma warning restore 1591
