@@ -57,9 +57,9 @@ namespace Tests.Linq
 			{
 				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte();
 				var query = from p in db.Parent
-					join c in cte1 on p.ParentID equals c.ParentID
-					join c2 in cte1 on p.ParentID equals c2.ParentID
-					select p;
+							join c in cte1 on p.ParentID equals c.ParentID
+							join c2 in cte1 on p.ParentID equals c2.ParentID
+							select p;
 
 				var cte1_ = db.GetTable<Child>().Where(c => c.ParentID > 1);
 
@@ -82,24 +82,24 @@ namespace Tests.Linq
 				var cte2 = db.Parent.Where(p => cte1.Any(c => c.ParentID == p.ParentID)).AsCte("CTE2_");
 				var cte3 = db.Parent.Where(p => cte2.Any(c => c.ParentID == p.ParentID)).AsCte("CTE3_");
 				var result = from p in cte2
-					join c in cte1 on p.ParentID equals c.ParentID
-					join c2 in cte2 on p.ParentID equals c2.ParentID
-					join c3 in cte3 on p.ParentID equals c3.ParentID
-					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == c3.ParentID)
-					select c3;
+							 join c in cte1 on p.ParentID equals c.ParentID
+							 join c2 in cte2 on p.ParentID equals c2.ParentID
+							 join c3 in cte3 on p.ParentID equals c3.ParentID
+							 from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == c3.ParentID)
+							 select c3;
 
 				var ncte1 = db.GetTable<Child>().Where(c => c.ParentID > 1);
 				var ncte2 = db.Parent.Where(p => ncte1.Any(c => c.ParentID == p.ParentID));
 				var ncte3 = db.Parent.Where(p => ncte2.Any(c => c.ParentID == p.ParentID));
 				var expected = from p in ncte2
-					join c in ncte1 on p.ParentID equals c.ParentID
-					join c2 in ncte2 on p.ParentID equals c2.ParentID
-					join c3 in ncte3 on p.ParentID equals c3.ParentID
-					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == c3.ParentID)
-					select c3;
+							   join c in ncte1 on p.ParentID equals c.ParentID
+							   join c2 in ncte2 on p.ParentID equals c2.ParentID
+							   join c3 in ncte3 on p.ParentID equals c3.ParentID
+							   from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == c3.ParentID)
+							   select c3;
 
 				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var resultdStr = result.ToString();
 
 				// Looks like we do not populate needed field for CTE. It is aproblem that needs to be solved
 				AreEqual(expected, result);
@@ -156,7 +156,7 @@ namespace Tests.Linq
 					select p;
 
 				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var resultdStr = result.ToString();
 
 				AreEqual(expected, result);
 			}
@@ -198,7 +198,7 @@ namespace Tests.Linq
 					};
 
 				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var resultdStr = result.ToString();
 
 				AreEqual(expected, result);
 			}
@@ -248,7 +248,7 @@ namespace Tests.Linq
 					};
 
 				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var resultdStr = result.ToString();
 
 				AreEqual(expected, result);
 			}
@@ -260,7 +260,7 @@ namespace Tests.Linq
 		{
 			using (var db = new NorthwindDB(context))
 			{
-				var employeeSubordinatesReport  =
+				var employeeSubordinatesReport =
 					from e in db.Employee
 					select new
 					{
@@ -300,7 +300,7 @@ namespace Tests.Linq
 					};
 
 				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var resultdStr = result.ToString();
 
 				AreEqual(expected, result);
 			}
@@ -358,7 +358,7 @@ namespace Tests.Linq
 					orderby eh.HierarchyLevel, eh.LastName, eh.FirstName
 					select eh;
 
-				var resultdStr  = result.ToString();
+				var resultdStr = result.ToString();
 
 				var data = result.ToArray();
 			}
@@ -371,16 +371,16 @@ namespace Tests.Linq
 			{
 				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte("CTE1_");
 				var result = from p in cte1
-					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
-					select c4;
+							 from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
+							 select c4;
 
 				var _cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1);
 				var expected = from p in _cte1
-					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
-					select c4;
+							   from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
+							   select c4;
 
 				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var resultdStr = result.ToString();
 
 				AreEqual(expected, result);
 			}
@@ -400,9 +400,9 @@ namespace Tests.Linq
 					}).Distinct()
 					.AsCte();
 				var query = from p in db.Parent
-					join c in cte1 on p.ParentID equals c.ParentID
-					join c2 in cte1 on p.ParentID equals c2.ParentID
-					select p;
+							join c in cte1 on p.ParentID equals c.ParentID
+							join c2 in cte1 on p.ParentID equals c2.ParentID
+							select p;
 
 				var cte1_ = db.GetTable<Child>().Where(c => c.ParentID > 1).Select(child => new
 				{
@@ -443,7 +443,7 @@ namespace Tests.Linq
 				}
 			}
 
-			public int ChildID  { get; set; }
+			public int ChildID { get; set; }
 			public int ParentID { get; set; }
 		}
 
@@ -460,13 +460,13 @@ namespace Tests.Linq
 
 				Assert.AreEqual(expected, cnt1);
 
-				var query = db.GetTable<Child>().Select(c => new { C = new { c.ChildID }});
+				var query = db.GetTable<Child>().Select(c => new { C = new { c.ChildID } });
 				var cte2 = query.AsCte("CTE1_");
 				var cnt2 = cte2.Count();
 
 				Assert.AreEqual(expected, cnt2);
 
-				var any  = cte2.Any();
+				var any = cte2.Any();
 
 				Assert.IsTrue(any);
 			}
@@ -494,26 +494,26 @@ namespace Tests.Linq
 			{
 				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte("CTE1_");
 				var toInsert = from p in cte1
-					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
-					select new CteDMLTests
-					{
-						ChildID = c4.ChildID,
-						ParentID = c4.ParentID
-					};
+							   from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
+							   select new CteDMLTests
+							   {
+								   ChildID = c4.ChildID,
+								   ParentID = c4.ParentID
+							   };
 
 				var affected = toInsert.Insert(testTable, c => c);
 
 				var _cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1);
 				var expected = from p in _cte1
-					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
-					select new CteDMLTests
-					{
-						ChildID = c4.ChildID,
-						ParentID = c4.ParentID
-					};
+							   from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
+							   select new CteDMLTests
+							   {
+								   ChildID = c4.ChildID,
+								   ParentID = c4.ParentID
+							   };
 
 				var result = testTable.OrderBy(c => c.ChildID).ThenBy(c => c.ParentID);
-				expected   = expected. OrderBy(c => c.ChildID).ThenBy(c => c.ParentID);
+				expected = expected.OrderBy(c => c.ChildID).ThenBy(c => c.ParentID);
 
 				AreEqual(expected, result);
 			}
@@ -522,7 +522,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestDelete([CteContextSource(ProviderName.Firebird, ProviderName.DB2)] string context)
 		{
-			using (var db  = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (var tmp = db.CreateLocalTable("CteChild",
 				Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i })))
 			{
@@ -553,7 +553,7 @@ namespace Tests.Linq
 					from ct in cte.InnerJoin(ct => ct.ParentID == c.ParentID)
 					select c;
 
-				toUpdate.Update(prev => new CteDMLTests {ParentID = prev.ChildID});
+				toUpdate.Update(prev => new CteDMLTests { ParentID = prev.ChildID });
 
 				var expected = testTable.Where(c => c.ParentID % 2 == 0)
 					.Select(c => new CteDMLTests { ParentID = c.ChildID, ChildID = c.ChildID });
@@ -661,10 +661,10 @@ namespace Tests.Linq
 			var cte = db.GetCte<HierarchyData>(hierarchyDown =>
 				{
 					return subCte1.Select(t => new HierarchyData
-						{
-							Id = t.Id,
-							Level = 0
-						})
+					{
+						Id = t.Id,
+						Level = 0
+					})
 						.Concat(
 							from h in hierarchyDown
 							from t in subCte2.InnerJoin(t => t.ParentId == h.Id)
@@ -722,12 +722,12 @@ namespace Tests.Linq
 				var hierarchy2 = GetHierarchyDown(tree, db);
 
 				var query = from h1 in hierarchy1
-					from h2 in hierarchy2.InnerJoin(h2 => h2.Id == h1.Id)
-					select new
-					{
-						h1.Id,
-						LevelSum = h2.Level + h1.Level
-					};
+							from h2 in hierarchy2.InnerJoin(h2 => h2.Id == h1.Id)
+							select new
+							{
+								h1.Id,
+								LevelSum = h2.Level + h1.Level
+							};
 
 				var count = query.Count();
 
@@ -755,8 +755,8 @@ namespace Tests.Linq
 		{
 			var hierarchyData = GeHirarchyData();
 
-			using (var db          = GetDataContext(context))
-			using (var tree        = db.CreateLocalTable(hierarchyData))
+			using (var db = GetDataContext(context))
+			using (var tree = db.CreateLocalTable(hierarchyData))
 			using (var resultTable = db.CreateLocalTable<HierarchyData>())
 			{
 				var hierarchy = GetHierarchyDown(tree, db);
@@ -772,21 +772,21 @@ namespace Tests.Linq
 		[Test]
 		public void RecursiveDeepNesting([CteContextSource(true, ProviderName.DB2)] string context)
 		{
-			using (var db   = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (var tree = db.CreateLocalTable<HierarchyTree>())
 			{
 				var hierarchy = GetHierarchyDown(tree, db);
 
 				var query = from q in hierarchy
-					from data1 in tree.InnerJoin(data1 => data1.Id == q.Id)
-					from data2 in tree.InnerJoin(data2 => data2.Id == q.Id)
-					from data3 in tree.InnerJoin(data3 => data3.Id == q.Id)
-					from data4 in tree.InnerJoin(data4 => data4.Id == q.Id)
-					select new
-					{
-						q.Id,
-						q.Level
-					};
+							from data1 in tree.InnerJoin(data1 => data1.Id == q.Id)
+							from data2 in tree.InnerJoin(data2 => data2.Id == q.Id)
+							from data3 in tree.InnerJoin(data3 => data3.Id == q.Id)
+							from data4 in tree.InnerJoin(data4 => data4.Id == q.Id)
+							select new
+							{
+								q.Id,
+								q.Level
+							};
 
 				Assert.DoesNotThrow(() => Console.WriteLine(query.ToString()));
 			}
@@ -818,7 +818,7 @@ namespace Tests.Linq
 
 		private class TestWrapper2
 		{
-			public Child Child   { get; set; }
+			public Child Child { get; set; }
 			public Parent Parent { get; set; }
 
 			protected bool Equals(TestWrapper2 other)
@@ -857,15 +857,15 @@ namespace Tests.Linq
 				var cte1 = cteQuery.AsCte();
 
 				var query = from p in db.Parent
-					join c in cte1 on p.ParentID equals c.Child.ParentID
-					select new {p, c};
+							join c in cte1 on p.ParentID equals c.Child.ParentID
+							select new { p, c };
 
 				var result = query.ToArray();
 
 				var expected =
 					from p in db.Parent
 					join c in cteQuery on p.ParentID equals c.Child.ParentID
-					select new {p, c};
+					select new { p, c };
 
 				Assert.AreEqual(expected, result);
 			}
@@ -952,31 +952,121 @@ namespace Tests.Linq
 			{
 				var queryable = db.GetTable<OrgGroup>();
 				var cte = db.GetCte<OrgGroupDepthWrapper>(previous =>
-				    {
-				        var parentQuery = from parent in queryable
-				            select new OrgGroupDepthWrapper
-				            {
-				                OrgGroup = parent,
-				                Depth = 0
-				            };
+					{
+						var parentQuery = from parent in queryable
+										  select new OrgGroupDepthWrapper
+										  {
+											  OrgGroup = parent,
+											  Depth = 0
+										  };
 
-				        var childQuery = from child in queryable
-				            from parent in previous.InnerJoin(parent => parent.OrgGroup.Id == child.ParentId)
-				            orderby parent.Depth + 1, child.GroupName
-				            select new OrgGroupDepthWrapper
-				            {
-				                OrgGroup = child,
-				                Depth = parent.Depth + 1
-				            };
+						var childQuery = from child in queryable
+										 from parent in previous.InnerJoin(parent => parent.OrgGroup.Id == child.ParentId)
+										 orderby parent.Depth + 1, child.GroupName
+										 select new OrgGroupDepthWrapper
+										 {
+											 OrgGroup = child,
+											 Depth = parent.Depth + 1
+										 };
 
-				        return parentQuery.Union(childQuery);
-				    })
-				    .Select(wrapper => wrapper.OrgGroup);
+						return parentQuery.Union(childQuery);
+					})
+					.Select(wrapper => wrapper.OrgGroup);
 
 				var result = cte.ToList();
 
 			}
 		}
 
+		[Table]
+		class Issue1564Category
+		{
+			[PrimaryKey] public int    Id           { get; set; }
+			[Column]     public bool   IsVisible    { get; set; }
+			[Column]     public int    DisplayOrder { get; set; }
+			[Column]     public int    ParentId     { get; set; }
+			[Column]     public string Name         { get; set; }
+		}
+
+		class AdminCategoryPreview
+		{
+			public int    Id;
+			public bool   IsVisible;
+			public int    DisplayOrder;
+			public string FullPath;
+		}
+
+		class AdminCategoryPathItemCte
+		{
+			public int    CategoryId;
+			public int    ParentCategoryId;
+			public string Name;
+			public int    RootCategoryId;
+			public int    Level;
+		}
+
+		[ActiveIssue(1564)]
+		[Test]
+		public void Issue1564([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Issue1564Category>())
+			{
+				var pathQuery = GetPathQuery(db).OrderByDescending(i => i.Level);
+
+				var adminCategoriesQuery =
+					from c in db.GetTable<Issue1564Category>()
+					select new AdminCategoryPreview
+					{
+						Id           = c.Id,
+						IsVisible    = c.IsVisible,
+						DisplayOrder = c.DisplayOrder,
+						FullPath     = pathQuery
+							.Where(c1 => c1.RootCategoryId == c.Id)
+							.StringAggregate(" -> ", i => i.Name)
+							.ToValue()
+					};
+
+				pathQuery.ToList();
+				adminCategoriesQuery.ToList();
+
+				Assert.True(pathQuery           .ToString().Contains("ORDER BY"));
+				Assert.True(adminCategoriesQuery.ToString().Contains("ORDER BY"));
+			}
+
+			IQueryable<AdminCategoryPathItemCte> GetPathQuery(ITestDataContext db)
+			{
+				var categoryPathCte = db.GetCte<AdminCategoryPathItemCte>(categoryHierarchy =>
+				{
+					return
+						(
+							from innerC in db.GetTable<Issue1564Category>()
+							select new AdminCategoryPathItemCte
+							{
+								CategoryId       = innerC.Id,
+								ParentCategoryId = innerC.ParentId,
+								Name             = innerC.Name,
+								RootCategoryId   = innerC.Id,
+								Level            = 0
+							}
+						)
+						.Concat
+						(
+							from c in db.GetTable<Issue1564Category>()
+							from ch in categoryHierarchy.InnerJoin(ch => ch.ParentCategoryId == c.Id)
+							select new AdminCategoryPathItemCte
+							{
+								CategoryId       = c.Id,
+								ParentCategoryId = c.ParentId,
+								Name             = c.Name,
+								RootCategoryId   = ch.RootCategoryId,
+								Level            = ch.Level + 1
+							}
+						);
+				});
+
+				return categoryPathCte;
+			}
+		}
 	}
 }
