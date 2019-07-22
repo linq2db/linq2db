@@ -339,6 +339,12 @@ namespace LinqToDB.SqlQuery
 					Visit1(i);
 				}
 			}
+
+			if (q.HasUniqueKeys)
+				foreach (var keyList in q.UniqueKeys)
+				{
+					Visit1X(keyList);
+				}
 		}
 
 		void Visit1X(SqlOrderByClause element)
@@ -815,6 +821,12 @@ namespace LinqToDB.SqlQuery
 					Visit2(i);
 				}
 			}
+
+			if (q.HasUniqueKeys)
+				foreach (var keyList in q.UniqueKeys)
+				{
+					Visit2X(keyList);
+				}
 		}
 
 		void Visit2X(SqlOrderByClause element)

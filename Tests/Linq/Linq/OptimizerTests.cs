@@ -89,7 +89,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void AsSubQueryTest([DataSources] string context)
+		public void AsSubQueryTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -132,7 +132,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void DistinctOptimization([DataSources] string context)
+		public void DistinctOptimization([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -160,7 +160,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByOptimization([DataSources] string context)
+		public void GroupByOptimization([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -201,7 +201,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PrimaryKeyOptimization([DataSources] string context, [Values] bool opimizerSwitch)
+		public void PrimaryKeyOptimization([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
@@ -230,7 +230,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void HasKeyProjectionOptimization([DataSources] string context, [Values] bool opimizerSwitch)
+		public void HasKeyProjectionOptimization([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
@@ -302,7 +302,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void HasKeyJoinOptimization([DataSources] string context, [Values] bool opimizerSwitch)
+		public void HasKeyJoinOptimization([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
@@ -343,7 +343,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UniqueKeysPropagation([DataSources] string context, [Values] bool opimizerSwitch)
+		public void UniqueKeysPropagation([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
