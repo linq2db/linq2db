@@ -37,14 +37,14 @@ stages:
 
     - task: CopyFiles@2
       inputs:
-        TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
-        sourceFolder: '$(Build.SourcesDirectory)/Tests',
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
+        sourceFolder: '$(Build.SourcesDirectory)/Tests'
         contents: 'DataProviders.json'
 
     - task: CopyFiles@2
       inputs:
-        TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0'
-        sourceFolder: '$(Build.SourcesDirectory)/Tests',
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0'
+        sourceFolder: '$(Build.SourcesDirectory)/Tests'
         contents: 'DataProviders.json'
 
     - task: PublishBuildArtifacts@1
