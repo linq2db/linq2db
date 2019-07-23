@@ -11,15 +11,15 @@ stages:
   displayName: 'Build'
   jobs:
   - job:
-	pool:
-	  vmImage: 'windows-2019'
-	displayName: 'Build (Visual Studio 2019)'
+    pool:
+      vmImage: 'windows-2019'
+    displayName: 'Build (Visual Studio 2019)'
 
-	steps:
+    steps:
 
-	- task: MSBuild@1
-	  inputs:
-		solution: '$(solution)'
-		configuration: '$(buildConfiguration)'
-		maximumCpuCount: 8
-		msbuildArguments: '/t:Restore;Rebuild'
+    - task: MSBuild@1
+      inputs:
+        solution: '$(solution)'
+        configuration: '$(buildConfiguration)'
+        maximumCpuCount: 8
+        msbuildArguments: '/t:Restore;Rebuild'
