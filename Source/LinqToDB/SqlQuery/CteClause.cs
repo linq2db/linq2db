@@ -88,7 +88,7 @@ namespace LinqToDB.SqlQuery
 			{
 				f.Name = n;
 				f.PhysicalName = n;
-			}, f => "cte_field");
+			}, f => (string.IsNullOrEmpty(f.Name) ? "cte_field" : f.Name) + "_1");
 
 			Fields.Insert(index, newField);
 
@@ -96,6 +96,11 @@ namespace LinqToDB.SqlQuery
 				FieldIndexes.Add(expression, Tuple.Create(newField, index));
 			if (baseField != null)
 				FieldIndexesByName.Add(baseField.Name, Tuple.Create(newField, index));
+			else
+			{
+				if (expression is SqlField field && !FieldIndexesByName.ContainsKey(field.Name))
+					FieldIndexesByName.Add(field.Name, Tuple.Create(newField, index));
+			}
 			return newField;
 
 		}
