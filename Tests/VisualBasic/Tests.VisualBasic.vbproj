@@ -4,7 +4,6 @@
 	<PropertyGroup>
 		<LangVersion>latest</LangVersion>
 		<TargetFrameworks>$(TargetFrameworks)</TargetFrameworks>
-		<Configurations>Debug;Release</Configurations>
 		<DefineConstants>$([System.String]::Copy('$(DefineConstants)').Replace(';',','))</DefineConstants>
 	</PropertyGroup>
 

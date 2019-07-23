@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-#if !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 using System.ServiceModel;
 using System.ServiceModel.Description;
 #endif
@@ -20,7 +20,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
-#if !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 using LinqToDB.ServiceModel;
 #endif
 
@@ -61,7 +61,7 @@ namespace Tests
 //			Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = typeof(TestBase).AssemblyEx().GetPath();
 
-#if !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
@@ -79,7 +79,7 @@ namespace Tests
 			var userDataProvidersJson =
 				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
-#if NETSTANDARD2_0 || NETCOREAPP2_0
+#if NETCOREAPP2_0
 			var configName = "CORE2";
 #elif NET46
 			var configName = "NET45";
@@ -88,17 +88,11 @@ namespace Tests
 #error Unknown framework
 #endif
 
-#if APPVEYOR
-#warning "AppVeyor configuration detected."
+#if AZURE
+#warning "Azure configuration detected."
 
-			Console.WriteLine("AppVeyor configuration detected.");
-			configName += ".AppVeyor";
-#endif
-#if TRAVIS
-#warning "Travis configuration detected."
-
-			Console.WriteLine("Travis configuration detected.");
-			configName += ".Travis";
+			Console.WriteLine("Azure configuration detected.");
+			configName += ".Azure";
 #endif
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
 			var databasePath = Path.GetFullPath(Path.Combine("Database"));
@@ -133,7 +127,7 @@ namespace Tests
 
 			Console.WriteLine("Connection strings:");
 
-#if NETSTANDARD2_0
+#if NETCOREAPP2_0
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -169,12 +163,12 @@ namespace Tests
 			if (!string.IsNullOrEmpty(defaultConfiguration))
 			{
 				DataConnection.DefaultConfiguration       = defaultConfiguration;
-#if NETSTANDARD2_0
+#if NETCOREAPP2_0
 				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
 #endif
 			}
 
-#if !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -208,7 +202,7 @@ namespace Tests
 			return fileName;
 		}
 
-#if !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 		const int IP = 22654;
 		static bool _isHostOpen;
 		static LinqService _service;
@@ -216,7 +210,7 @@ namespace Tests
 
 		static void OpenHost(MappingSchema ms)
 		{
-#if !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 			if (_isHostOpen)
 			{
 				_service.MappingSchema = ms;
@@ -260,7 +254,7 @@ namespace Tests
 
 		public static readonly List<string> Providers = new List<string>
 		{
-#if !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Informix,
@@ -298,7 +292,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 				OpenHost(ms);
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);

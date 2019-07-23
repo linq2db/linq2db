@@ -485,7 +485,7 @@ namespace Tests.DataProvider
 			public int Id;
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 
 		[Test, Parallelizable(ParallelScope.None)]
 		public void CreateDatabase([IncludeDataSources(TestProvName.AllSQLite)] string context)

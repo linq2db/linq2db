@@ -160,7 +160,7 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-#if !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 
 		[Test]
 		public void MySqlTest([IncludeDataSources(TestProvName.AllMySqlData)] string context)

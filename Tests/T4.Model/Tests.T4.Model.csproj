@@ -4,6 +4,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net46</TargetFrameworks>
+		<Configurations>Debug;Release</Configurations>
 		<NoWarn>$(NoWarn);CS0219</NoWarn>
 	</PropertyGroup>
 

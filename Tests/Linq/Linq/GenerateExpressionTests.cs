@@ -47,9 +47,7 @@ namespace Tests.Linq
 
 				var test = result.GenerateTestString();
 
-#if !APPVEYOR
 				Console.WriteLine(test);
-#endif
 
 				var _ = result.ToList();
 			}

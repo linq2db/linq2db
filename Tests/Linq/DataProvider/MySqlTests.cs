@@ -453,7 +453,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 		[Test]
 		public void SchemaProviderTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{

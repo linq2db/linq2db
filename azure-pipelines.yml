@@ -1,25 +1,28 @@
 variables:
   solution: 'linq2db.sln'
-  buildConfiguration: 'Azure'
+  build_configuration: 'Azure'
+#  net45_tests: 'net45_tests' # maybe
+  net46_tests: 'net46_tests'
+  netcore2_tests: 'netcoreapp20_tests'
 
 stages:
 
-##############################
-#  Build
-##############################
+########################################
+#  Build and publish testable binaries #
+########################################
 - stage: Build
-  displayName: 'Build'
+  displayName: 'Solution build and publish'
   jobs:
   - job:
     pool:
       vmImage: 'windows-2019'
-    displayName: 'Build (Visual Studio 2019)'
+    displayName: 'Build and publish'
 
     steps:
 
     - task: MSBuild@1
       inputs:
         solution: '$(solution)'
-        configuration: '$(buildConfiguration)'
-        maximumCpuCount: 8
-        msbuildArguments: '/t:Restore;Rebuild'
+        configuration: '$(build_configuration)'
+        msbuildArguments: '/t:Restore;Rebuild -m'
+
