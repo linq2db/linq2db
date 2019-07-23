@@ -432,21 +432,22 @@ namespace LinqToDB
 				return attributes;
 			}
 
-			public static List<Expression> BuildFunctionsChain(MappingSchema mapping, Expression expr)
+			public static Expression ExcludeExtensionChain(MappingSchema mapping, Expression expr)
 			{
-				var chains = new List<Expression> { expr };
-				var current  = expr;
+				var current = expr;
 
 				while (current != null)
 				{
-					MemberInfo   memberInfo;
+					var attributes = GetExtensionAttributes(current, mapping);
+
+					if (!attributes.Any())
+						break;
+
 					switch (current.NodeType)
 					{
 						case ExpressionType.MemberAccess :
 							{
 								var memberExpr = (MemberExpression)current;
-
-								memberInfo = memberExpr.Member;
 								current    = memberExpr.Expression;
 
 								break;
@@ -456,29 +457,26 @@ namespace LinqToDB
 							{
 								var call = (MethodCallExpression) current;
 
-								memberInfo = call.Method;
-
 								if (call.Method.IsStatic)
-									current = call.Arguments.First();
+								{
+									if (call.Arguments.Count > 0)
+										current = call.Arguments[0];
+									else
+										return current;
+								}								
 								else
 									current = call.Object;
 
 								break;
 							}
 						default:
-						{
-							current = null;
-							continue;
-						}
+							{
+								return current;
+							}
 					}
-
-					var attributes = GetExtensionAttributes(current, mapping);
-
-					if (attributes.Any())
-						chains.Add(current);
 				}
 
-				return chains;
+				return current;
 			}
 
 			protected List<SqlExtensionParam> BuildFunctionsChain(IDataContext dataContext, SelectQuery query, Expression expr, ConvertHelper convertHelper)
