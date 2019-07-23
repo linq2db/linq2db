@@ -1,0 +1,107 @@
+<#
+	{
+		var beforeGenerateModel = BeforeGenerateModel;
+		BeforeGenerateModel = () =>
+		{
+			beforeGenerateModel();
+			EquatableImpl();
+		};
+	}
+#><#+
+
+static bool DefaultEquatable = true;
+
+string EqualityComparerFieldName = "_comparer";
+
+Func<Class, Property, bool> EqualityPropertiesFilter = EqualityPropertiesFilterDefault;
+
+void EquatableImpl()
+{
+	foreach (Class cl in GetTreeNodes(Model).OfType<Class>().Where(c => c.IsEquatable && !c.IsStatic))
+	{
+		var props = GetTreeNodes(cl).OfType<Property>().Where(p => EqualityPropertiesFilter(cl, p)).ToList();
+		if (props.Count > 0)
+		{
+			var className = cl.Name;
+
+			if (!cl.Interfaces.Contains($"IEquatable<{className}>"))
+			{
+				cl.Interfaces.Add($"IEquatable<{className}>");
+
+				if (!Model.Usings.Contains("LinqToDB.Tools.Comparers"))
+					Model.Usings.Add("LinqToDB.Tools.Comparers");
+
+				var comparerProperties = string.Join(", ", props.Select(p => $"c => c.{p.Name}"));
+
+				cl.Members.Add(new MemberGroup
+				{
+					Region  = "IEquatable support",
+					Members =
+					{
+						new MemberGroup
+						{
+							IsCompact = false,
+							Members   =
+							{
+								new Field(() => $"IEqualityComparer<{className}>", EqualityComparerFieldName)
+								{
+									InitValue      = $"ComparerBuilder.GetEqualityComparer<{className}>({comparerProperties})",
+									AccessModifier = AccessModifier.Private,
+									IsStatic       = true,
+									IsReadonly     = true
+								},
+
+								new Method(() => "bool", "Equals",
+									new Func<string>[]
+									{
+										() => $"{new ModelType(className, true, false).ToTypeName()} other"
+									},
+									() => new[]
+									{
+										$"return {EqualityComparerFieldName}.Equals(this, other);"
+									}),
+
+								new Method(() => "int", "GetHashCode", null,
+									() => new[]
+									{
+										$"return {EqualityComparerFieldName}.GetHashCode(this);"
+									})
+									{
+										IsOverride = true
+									},
+
+								new Method(() => "bool", "Equals",
+									new Func<string>[]
+									{
+										() => new ModelType("object", true, true).ToTypeName() + " obj",
+									},
+									() => new[]
+									{
+										$"if (!(obj is {className} other))", "\treturn false;", string.Empty,
+										"// use IEquatable implementation",
+										"return Equals(other);"
+									})
+									{
+										IsOverride = true
+									}
+							}
+						}
+					}
+				});
+			}
+		}
+
+		cl.SetTree();
+	}
+}
+
+partial class Class
+{
+	public bool IsEquatable = DefaultEquatable;
+}
+
+static bool EqualityPropertiesFilterDefault(Class cl, Property prop)
+{
+	return cl is Table && prop is Column col && col.IsPrimaryKey;
+}
+#>

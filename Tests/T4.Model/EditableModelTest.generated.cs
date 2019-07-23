@@ -4,6 +4,9 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -23,7 +26,7 @@ namespace Tests.T4.Model
 		#region EditableLong1 : long
 
 		private long  _currentEditableLong1 = 12345;
-		private long _originalEditableLong1;
+		private long _originalEditableLong1 = 12345;
 		public  long          EditableLong1
 		{
 			get { return _currentEditableLong1; }
@@ -146,6 +149,12 @@ namespace Tests.T4.Model
 
 		public List<string> Field4;
 
+		public List<string> Field5;
+
+		public List<string> Field6 = new List<string>();
+
+		public List<string> Field7 = new List<string>();
+
 		#region EditableObject support
 
 		partial void BeforeAcceptChanges();
@@ -204,3 +213,5 @@ namespace Tests.T4.Model
 		#endregion
 	}
 }
+
+#pragma warning restore 1591

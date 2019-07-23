@@ -346,7 +346,7 @@ namespace LinqToDB.SqlQuery
 
 				var union = (SelectQuery)table.Source;
 
-				if (!union.HasUnion)
+				if (!union.HasUnion || sql.Select.Columns.Count != union.Select.Columns.Count)
 					return;
 
 				for (var i = 0; i < sql.Select.Columns.Count; i++)
@@ -635,9 +635,17 @@ namespace LinqToDB.SqlQuery
 
 			var areTablesCollected = false;
 
+			var visitor = new QueryVisitor();
+
+			void TableCollector(IQueryElement expr)
+			{
+				if (expr is SqlField field && field.Table != null && field.Table.All != field && !tables.Contains(field.Table))
+					tables.Add(field.Table);
+			}
+
 			_selectQuery.ForEachTable(table =>
 			{
-				for (var i = 0; i < table.Joins.Count; i++)
+				for (var i = table.Joins.Count - 1; i >= 0; i--)
 				{
 					var join = table.Joins[i];
 
@@ -646,14 +654,6 @@ namespace LinqToDB.SqlQuery
 						if (!areTablesCollected)
 						{
 							areTablesCollected = true;
-
-							void TableCollector(IQueryElement expr)
-							{
-								if (expr is SqlField field && !tables.Contains(field.Table))
-									tables.Add(field.Table);
-							}
-
-							var visitor = new QueryVisitor();
 
 							visitor.VisitAll(_selectQuery.Select,  TableCollector);
 							visitor.VisitAll(_selectQuery.Where,   TableCollector);
@@ -688,9 +688,11 @@ namespace LinqToDB.SqlQuery
 						else
 						{
 							table.Joins.RemoveAt(i);
-							i--;
+							continue;
 						}
 					}
+
+					visitor.VisitAll(join, TableCollector);
 				}
 			}, new HashSet<SelectQuery>());
 		}
@@ -734,8 +736,7 @@ namespace LinqToDB.SqlQuery
 					{
 						// We can not remove subquery that is left side for FULL and RIGHT joins and there is filter
 						var join = source.Joins[0];
-						if (join.JoinType == JoinType.Full ||
-						    join.JoinType == JoinType.Right
+						if ((join.JoinType == JoinType.Full || join.JoinType == JoinType.Right)
 							&& !select.Where.IsEmpty)
 						canRemove = false;
 					}

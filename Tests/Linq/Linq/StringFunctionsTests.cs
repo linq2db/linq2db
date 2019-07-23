@@ -33,6 +33,8 @@ namespace Tests.Linq
 			[Column(Length = 50, CanBeNull = true)] public string Value1 { get; set; }
 			[Column(Length = 50, CanBeNull = true)] public string Value2 { get; set; }
 			[Column(Length = 50, CanBeNull = true)] public string Value3 { get; set; }
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]
+			                                        public string Value4 { get; set; }
 		}
 
 		public class StringTestSourcesAttribute : IncludeDataSourcesAttribute
@@ -238,8 +240,6 @@ namespace Tests.Linq
 			}
 		}
 
-
-
 		[Test]
 		public void FinalAggregationTest([StringTestSources] string context)
 		{
@@ -334,11 +334,155 @@ namespace Tests.Linq
 		{
 			var data = new[]
 			{
-				new SampleClass { Id = 1, Value1 = "V1", Value2 = "V2"},
-				new SampleClass { Id = 2, Value1 = null, Value2 = "Z2"},
-				new SampleClass { Id = 3, Value1 = "Z1", Value2 = null}
+				new SampleClass { Id = 1, Value1 = "V1", Value2 = "V2", Value4 = "V4" },
+				new SampleClass { Id = 2, Value1 = null, Value2 = "Z2", Value4 = null },
+				new SampleClass { Id = 3, Value1 = "Z1", Value2 = null, Value4 = "Z4" }
 			};
 			return data;
+		}
+
+		[Test]
+		public void Issue1765TestLiteral1([StringTestSources] string context)
+		{
+			var data = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var actual = table.Select(t => t.Value4).StringAggregate(" -> ").ToValue();
+				var expected = AggregateStrings(" -> ", data.Select(t => t.Value4));
+				Assert.AreEqual(expected, actual);
+			}
+		}
+
+		[Test]
+		public void Issue1765TestLiteral2([StringTestSources] string context)
+		{
+			var data = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var actual = table.AsQueryable().StringAggregate(" -> ", t => t.Value4).ToValue();
+				var expected = AggregateStrings(" -> ", data.Select(t => t.Value4));
+				Assert.AreEqual(expected, actual);
+			}
+		}
+
+		[Test]
+		public void Issue1765TestLiteral3([StringTestOrderSources] string context)
+		{
+			var data = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var actual = from t in table
+							 group t by new { t.Id, Value = t.Value4 }
+					into g
+							 select new
+							 {
+								 Values = g.StringAggregate(" -> ", e => e.Value4).OrderByDescending(e => e.Value3).ThenBy(e => e.Value4).ToValue(),
+							 };
+
+				var expected = from t in data
+							   group t by new { t.Id, Value = t.Value4 }
+					into g
+							   select new
+							   {
+								   Values = AggregateStrings(" -> ", g.OrderByDescending(e => e.Value3).ThenBy(e => e.Value4).Select(e => e.Value4)),
+							   };
+
+				AreEqual(expected, actual);
+			}
+		}
+
+		[Test]
+		public void Issue1765TestLiteral4([StringTestSources] string context)
+		{
+			var data = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var actual = from t in table
+							 group t.Value4 by new { t.Id, Value = t.Value4 }
+					into g
+							 select new
+							 {
+								 Max = g.Max(),
+								 Values = g.StringAggregate(" -> ").ToValue(),
+							 };
+
+				var expected = from t in data
+							   group t.Value4 by new { t.Id, Value = t.Value4 }
+					into g
+							   select new
+							   {
+								   Max = g.Max(),
+								   Values = AggregateStrings(" -> ", g),
+							   };
+
+				AreEqual(expected, actual);
+			}
+		}
+
+		[Test]
+		public void Issue1765TestParameter3([StringTestOrderSources] string context, [Values(" -> ", " => ", " -> ")] string separator)
+		{
+			var data = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var actual = from t in table
+							 group t by new { t.Id, Value = t.Value4 }
+					into g
+							 select new
+							 {
+								 Values = g.StringAggregate(separator, e => e.Value4).OrderByDescending(e => e.Value3).ThenBy(e => e.Value4).ToValue(),
+							 };
+
+				var expected = from t in data
+							   group t by new { t.Id, Value = t.Value4 }
+					into g
+							   select new
+							   {
+								   Values = AggregateStrings(separator, g.OrderByDescending(e => e.Value3).ThenBy(e => e.Value4).Select(e => e.Value4)),
+							   };
+
+				AreEqual(expected, actual);
+			}
+		}
+
+		[Test]
+		public void Issue1765TestParameter4([StringTestSources] string context, [Values(" -> ", " => ", " -> ")] string separator)
+		{
+			var data = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var actual = from t in table
+							 group t.Value4 by new { t.Id, Value = t.Value4 }
+					into g
+							 select new
+							 {
+								 Max = g.Max(),
+								 Values = g.StringAggregate(separator).ToValue(),
+							 };
+
+				var expected = from t in data
+							   group t.Value4 by new { t.Id, Value = t.Value4 }
+					into g
+							   select new
+							   {
+								   Max = g.Max(),
+								   Values = AggregateStrings(separator, g),
+							   };
+
+				AreEqual(expected, actual);
+			}
 		}
 	}
 }
