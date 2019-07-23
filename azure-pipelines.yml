@@ -1,0 +1,25 @@
+variables:
+  solution: 'linq2db.sln'
+  buildConfiguration: 'Azure'
+
+stages:
+
+##############################
+#  Build
+##############################
+- stage: Build
+  displayName: 'Build'
+  jobs:
+  - job:
+	pool:
+	  vmImage: 'windows-2019'
+	displayName: 'Build (Visual Studio 2019)'
+
+	steps:
+
+	- task: MSBuild@1
+	  inputs:
+		solution: '$(solution)'
+		configuration: '$(buildConfiguration)'
+		maximumCpuCount: 8
+		msbuildArguments: '/t:Restore;Rebuild'
