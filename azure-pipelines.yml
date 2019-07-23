@@ -11,12 +11,12 @@ stages:
 #  Build and publish testable binaries #
 ########################################
 - stage: Build
-  displayName: 'Solution build and publish'
+  displayName: 'Build'
   jobs:
   - job:
     pool:
       vmImage: 'windows-2019'
-    displayName: 'Build and publish'
+    displayName: 'Build'
 
     steps:
 
@@ -26,14 +26,14 @@ stages:
         configuration: '$(build_configuration)'
         msbuildArguments: '/t:Restore;Rebuild -m'
 
-    - task: DotNetCoreCLI@2
-      inputs:
-        command: 'publish'
-        projects: '**/Tests/Linq/Tests.csproj'
-        publishWebProjects: false
-        zipAfterPublish: false
-        arguments: -f netcoreapp2.0  -c $(build_configuration)
-        nobuild: true
+#    - task: DotNetCoreCLI@2
+#      inputs:
+#        command: 'publish'
+#        projects: '**/Tests/Linq/Tests.csproj'
+#        publishWebProjects: false
+#        zipAfterPublish: false
+#        arguments: -f netcoreapp2.0  -c $(build_configuration)
+#        nobuild: true
 
     - task: CopyFiles@2
       inputs:
