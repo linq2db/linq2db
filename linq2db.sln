@@ -6,12 +6,13 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
 	ProjectSection(SolutionItems) = preProject
 		Build\AppVeyor.FixVersionNugets.ps1 = Build\AppVeyor.FixVersionNugets.ps1
+		Build\AppVeyor.FixVersionProps.ps1 = Build\AppVeyor.FixVersionProps.ps1
 		Build\AppVeyor.NUnit.Tests.ps1 = Build\AppVeyor.NUnit.Tests.ps1
-		Build\CodeJam.AppVeyor.FixVersionProps.ps1 = Build\CodeJam.AppVeyor.FixVersionProps.ps1
 		Build\linq2db.Default.props = Build\linq2db.Default.props
 		Build\linq2db.Providers.props = Build\linq2db.Providers.props
 		Build\linq2db.snk = Build\linq2db.snk
 		Build\linq2db.Source.props = Build\linq2db.Source.props
+		Build\linq2db.Tests.Playground.props = Build\linq2db.Tests.Playground.props
 		Build\linq2db.Tests.props = Build\linq2db.Tests.props
 	EndProjectSection
 EndProject
@@ -20,6 +21,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB", "Source\LinqToDB\LinqToDB.csproj", "{0E4E9A56-F285-4067-ADAA-392ACB9CAAA7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DF8DE665-05A2-4ACF-9799-8FC35E7F1525}"
+	ProjectSection(SolutionItems) = preProject
+		Tests\DataProviders.json = Tests\DataProviders.json
+		Tests\UserDataProviders.json = Tests\UserDataProviders.json
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.Model", "Tests\Model\Tests.Model.csproj", "{EF534F71-A4E6-4019-8835-43BEE792C70A}"
 EndProject
@@ -32,6 +37,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LinqToDB.Templates", "LinqT
 		Source\LinqToDB.Templates\DataAnnotations.ttinclude = Source\LinqToDB.Templates\DataAnnotations.ttinclude
 		Source\LinqToDB.Templates\DataModel.ttinclude = Source\LinqToDB.Templates\DataModel.ttinclude
 		Source\LinqToDB.Templates\EditableObject.ttinclude = Source\LinqToDB.Templates\EditableObject.ttinclude
+		Source\LinqToDB.Templates\Equatable.ttinclude = Source\LinqToDB.Templates\Equatable.ttinclude
 		Source\LinqToDB.Templates\Humanizer.ttinclude = Source\LinqToDB.Templates\Humanizer.ttinclude
 		Source\LinqToDB.Templates\LinqToDB.Access.ttinclude = Source\LinqToDB.Templates\LinqToDB.Access.ttinclude
 		Source\LinqToDB.Templates\LinqToDB.DB2.ttinclude = Source\LinqToDB.Templates\LinqToDB.DB2.ttinclude
@@ -62,10 +68,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{6278F811
 		.editorconfig = .editorconfig
 		.travis.yml = .travis.yml
 		appveyor.yml = appveyor.yml
-		build.cake = build.cake
 		Build.cmd = Build.cmd
-		build.ps1 = build.ps1
-		build.sh = build.sh
 		Clean.cmd = Clean.cmd
 		CONTRIBUTING.md = CONTRIBUTING.md
 		.github\ISSUE_TEMPLATE.md = .github\ISSUE_TEMPLATE.md
@@ -241,6 +244,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySqlConnector", "MySqlConnector", "{B4080869-A89C-4996-938C-D7F42E9AA3CB}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\MySqlConnector\CopyMe.MySqlConnector.tt.txt = NuGet\MySqlConnector\CopyMe.MySqlConnector.tt.txt
+		NuGet\linq2db.MySqlConnector.nuspec = NuGet\linq2db.MySqlConnector.nuspec
 		NuGet\MySqlConnector\linq2db.MySqlConnector.props = NuGet\MySqlConnector\linq2db.MySqlConnector.props
 		NuGet\MySqlConnector\LinqToDB.MySqlConnector.Tools.ttinclude = NuGet\MySqlConnector\LinqToDB.MySqlConnector.Tools.ttinclude
 	EndProjectSection

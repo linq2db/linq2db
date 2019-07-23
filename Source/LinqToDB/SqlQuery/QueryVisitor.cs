@@ -1423,7 +1423,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.JoinedTable:
 					{
 						var join  = (SqlJoinedTable)element;
-						var table = (SqlTableSource)    ConvertInternal(join.Table,     action);
+						var table = (SqlTableSource)ConvertInternal(join.Table,     action);
 						var cond  = (SqlSearchCondition)ConvertInternal(join.Condition, action);
 
 						if (table != null && !ReferenceEquals(table, join.Table) ||
@@ -1784,7 +1784,7 @@ namespace LinqToDB.SqlQuery
 							take != null && !ReferenceEquals(sc.TakeValue, take) ||
 							skip != null && !ReferenceEquals(sc.SkipValue, skip))
 						{
-							newElement = new SqlSelectClause(sc.IsDistinct, take ?? sc.TakeValue, skip ?? sc.SkipValue, cols ?? sc.Columns);
+							newElement = new SqlSelectClause(sc.IsDistinct, take ?? sc.TakeValue, sc.TakeHints, skip ?? sc.SkipValue, cols ?? sc.Columns);
 							((SqlSelectClause)newElement).SetSqlQuery((SelectQuery)parent);
 						}
 
@@ -1907,7 +1907,8 @@ namespace LinqToDB.SqlQuery
 
 								if (ret != null && !ReferenceEquals(e, ret))
 								{
-									_visitedElements.Add(e, ret);
+									if (ret.ElementType == QueryElementType.Column) 
+										_visitedElements.Add(e, ret);
 									return true;
 								}
 

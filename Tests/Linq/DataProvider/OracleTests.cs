@@ -2024,7 +2024,6 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		public void Issue723Test1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var ms = new MappingSchema();
@@ -2076,7 +2075,6 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		public void Issue723Test2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))

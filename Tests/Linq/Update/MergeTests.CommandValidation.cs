@@ -172,7 +172,7 @@ namespace Tests.xUpdate
 
 				IDbConnection IDataProvider.CreateConnection(string connectionString) => throw new NotImplementedException();
 
-				ISqlBuilder IDataProvider.CreateSqlBuilder() => throw new NotImplementedException();
+				ISqlBuilder IDataProvider.CreateSqlBuilder(MappingSchema mappingSchema) => throw new NotImplementedException();
 
 				void IDataProvider.DisposeCommand(DataConnection dataConnection) => throw new NotImplementedException();
 
@@ -190,7 +190,7 @@ namespace Tests.xUpdate
 
 				ISqlOptimizer IDataProvider.GetSqlOptimizer() => throw new NotImplementedException();
 
-				void IDataProvider.InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters) => throw new NotImplementedException();
+				void IDataProvider.InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters, bool withParameters) => throw new NotImplementedException();
 
 				bool IDataProvider.IsCompatibleConnection(IDbConnection connection) => throw new NotImplementedException();
 

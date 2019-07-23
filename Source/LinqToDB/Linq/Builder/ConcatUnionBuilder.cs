@@ -272,7 +272,8 @@ namespace LinqToDB.Linq.Builder
 										var assignment1 = (MemberAssignment)binding;
 										var assignment2 = (MemberAssignment)foundBinding;
 
-										if (!assignment1.Expression.EqualsTo(assignment2.Expression, accessorDic))
+										if (!assignment1.Expression.EqualsTo(assignment2.Expression, accessorDic) || 
+										    !(assignment1.Expression.NodeType == ExpressionType.MemberAccess || assignment1.Expression.NodeType == ExpressionType.Parameter))
 										{
 											needsRewrite = true;
 											break;
@@ -422,6 +423,8 @@ namespace LinqToDB.Linq.Builder
 
 									return new[] { member.SqlQueryInfo };
 								}
+
+								return base.ConvertToSql(expression, level, flags);
 							}
 
 							break;

@@ -9,6 +9,7 @@ using PN = LinqToDB.ProviderName;
 namespace LinqToDB
 {
 	using Linq;
+	using LinqToDB.Common;
 	using SqlQuery;
 
 	public static class StringAggregateExtensions
@@ -17,7 +18,7 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{expr}",                           TokenName = "order_item")]
 		public static Sql.IStringAggregateOrdered<T> OrderBy<T, TKey>(
-			                [NotNull] this Sql.IStringAggregateNotOrdered<T> aggregate, 
+							[NotNull] this Sql.IStringAggregateNotOrdered<T> aggregate, 
 			[ExprParameter] [NotNull]      Expression<Func<T, TKey>>         expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -54,7 +55,7 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{expr} DESC",                      TokenName = "order_item")]
 		public static Sql.IStringAggregateOrdered<T> OrderByDescending<T, TKey>(
-			                [NotNull] this Sql.IStringAggregateNotOrdered<T> aggregate, 
+							[NotNull] this Sql.IStringAggregateNotOrdered<T> aggregate, 
 			[ExprParameter] [NotNull]      Expression<Func<T, TKey>>         expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -90,7 +91,7 @@ namespace LinqToDB
 
 		[Sql.Extension("{expr}", TokenName = "order_item")]
 		public static Sql.IStringAggregateOrdered<T> ThenBy<T, TKey>(
-			                [NotNull] this Sql.IStringAggregateOrdered<T> aggregate, 
+							[NotNull] this Sql.IStringAggregateOrdered<T> aggregate, 
 			[ExprParameter] [NotNull]      Expression<Func<T, TKey>>      expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -108,7 +109,7 @@ namespace LinqToDB
 
 		[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 		public static Sql.IStringAggregateOrdered<T> ThenByDescending<T, TKey>(
-			                [NotNull] this Sql.IStringAggregateOrdered<T> aggregate, 
+							[NotNull] this Sql.IStringAggregateOrdered<T> aggregate, 
 			[ExprParameter] [NotNull]      Expression<Func<T, TKey>>      expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -167,9 +168,44 @@ namespace LinqToDB
 			public IQueryable Query { get; }
 		}
 
-		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		class StringAggSql2017Builder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				ISqlExpression data;
+				if (builder.Arguments.Length == 2)
+					data = builder.GetExpression("source");
+				else
+					data = builder.GetExpression("selector");
+
+				// https://github.com/linq2db/linq2db/issues/1765
+				if (data is SqlField field && field.DataType != DataType.Undefined)
+				{
+					var separator = builder.GetExpression("separator");
+
+					if (separator is SqlValue value && value.ValueType.DataType == DataType.Undefined)
+						value.ValueType = value.ValueType.WithDataType(field.DataType);
+					else if (separator is SqlParameter parameter && parameter.DataType == DataType.Undefined)
+						parameter.DataType = field.DataType;
+				}
+			}
+		}
+
+		class StringAggSapHanaBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var separator = builder.GetExpression("separator");
+
+				// SAP HANA doesn't support parameters as separators
+				if (separator is SqlParameter parameter)
+					parameter.IsQueryParameter = false;
+			}
+		}
+
+		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SapHana,       "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SapHana,       "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSapHanaBuilder))]
 		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({source}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({source}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Oracle,        "LISTAGG({source}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
@@ -195,9 +231,9 @@ namespace LinqToDB
 			return new StringAggregateNotOrderedImpl<string>(query);
 		}
 
-		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SapHana,       "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SapHana,       "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSapHanaBuilder))]
 		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({selector}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({selector}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Oracle,        "LISTAGG({selector}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
@@ -207,16 +243,16 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
-			                [NotNull] this IEnumerable<T> source,
+							[NotNull] this IEnumerable<T> source,
 			[ExprParameter] [NotNull] string separator,
 			[ExprParameter] [NotNull] Func<T, string> selector)
 		{
 			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
 		}
 
-		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SapHana,       "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SapHana,       "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSapHanaBuilder))]
 		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({selector}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({selector}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Oracle,        "LISTAGG({selector}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
@@ -226,7 +262,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		public static IStringAggregateNotOrdered<T> StringAggregate<T>(
-			                [NotNull] this IQueryable<T> source,
+							[NotNull] this IQueryable<T> source,
 			[ExprParameter] [NotNull] string separator,
 			[ExprParameter] [NotNull] Expression<Func<T, string>> selector)
 		{
@@ -244,9 +280,9 @@ namespace LinqToDB
 			return new StringAggregateNotOrderedImpl<T>(query);
 		}
 
-		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Sql.Extension(PN.PostgreSQL,    "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
-		[Sql.Extension(PN.SapHana,       "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension(PN.SapHana,       "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSapHanaBuilder))]
 		[Sql.Extension(PN.SQLite,        "GROUP_CONCAT({source}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.MySql,         "GROUP_CONCAT({source}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
 		[Sql.Extension(PN.Oracle,        "LISTAGG({source}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
@@ -368,8 +404,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Concatenates NOT NULL strings, using the specified separator between each member.
 		/// </summary>
-        /// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
-    	/// <param name="arguments">A collection that contains the strings to concatenate.</param>
+		/// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
+		/// <param name="arguments">A collection that contains the strings to concatenate.</param>
 		/// <returns></returns>
 		[Sql.Extension(PN.SqlServer2017, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')")]
 		[Sql.Extension(PN.PostgreSQL,    "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null)]
@@ -378,7 +414,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.SQLite,        "", BuilderType = typeof(SqliteConcatWsBuilder))]
 		public static string ConcatStrings(
 			[ExprParameter] [NotNull] string separator,
-			                [NotNull] params string[] arguments)
+							[NotNull] params string[] arguments)
 		{
 			return string.Join(separator, arguments.Where(a => a != null));
 		}

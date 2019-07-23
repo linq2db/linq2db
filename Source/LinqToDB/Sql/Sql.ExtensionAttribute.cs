@@ -16,8 +16,8 @@ using NotNull = JetBrains.Annotations.NotNullAttribute;
 
 namespace LinqToDB
 {
-    using Common;
-    using Expressions;
+	using Common;
+	using Expressions;
 	using Extensions;
 	using SqlQuery;
 
@@ -261,8 +261,8 @@ namespace LinqToDB
 				readonly ConvertHelper _convert;
 
 				public ExtensionBuilder(
-					          string        configuration,
-					          object        builderValue,
+							  string        configuration,
+							  object        builderValue,
 					[NotNull] IDataContext  dataContext,
 					[NotNull] SelectQuery   query,
 					[NotNull] SqlExtension  extension,
@@ -326,7 +326,7 @@ namespace LinqToDB
 						}
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' bot found", argName));
+					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
 				}
 
 				public ISqlExpression GetExpression(int index)
@@ -348,7 +348,7 @@ namespace LinqToDB
 						}
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' bot found", argName));
+					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
 				}
 
 				public ISqlExpression ConvertToSqlExpression()

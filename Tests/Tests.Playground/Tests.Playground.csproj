@@ -25,7 +25,7 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
-		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
+		<PackageReference Include="Humanizer.Core" Version="2.6.2" />
 	</ItemGroup>
 
 	<Target Name="AddPackageAliases" BeforeTargets="ResolveReferences" Outputs="%(PackageReference.Identity)">

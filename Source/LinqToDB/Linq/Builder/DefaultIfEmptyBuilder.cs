@@ -49,11 +49,13 @@ namespace LinqToDB.Linq.Builder
 
 			private readonly Expression _defaultValue;
 
+			public bool Disabled { get; set; }
+
 			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				var expr = Sequence.BuildExpression(expression, level, enforceServerSide);
 
-				if (expression == null)
+				if (!Disabled && expression == null)
 				{
 					var q =
 						from col in SelectQuery.Select.Columns

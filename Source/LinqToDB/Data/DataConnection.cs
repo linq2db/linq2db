@@ -1054,16 +1054,16 @@ namespace LinqToDB.Data
 		/// </summary>
 		public string LastQuery;
 
-		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints)
+		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints, bool withParameters)
 		{
 			if (queryHints?.Count > 0)
 			{
-				var sqlProvider = DataProvider.CreateSqlBuilder();
+				var sqlProvider = DataProvider.CreateSqlBuilder(MappingSchema);
 				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
 				queryHints.Clear();
 			}
 
-			DataProvider.InitCommand(this, commandType, sql, parameters);
+			DataProvider.InitCommand(this, commandType, sql, parameters, withParameters);
 			LastQuery = Command.CommandText;
 		}
 

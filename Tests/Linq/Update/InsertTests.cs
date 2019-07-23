@@ -1590,7 +1590,6 @@ namespace Tests.xUpdate
 			return tableName;
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void InsertByTableName([DataSources] string context)
 		{
@@ -1637,7 +1636,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public async Task InsertByTableNameAsync([DataSources] string context)
 		{
