@@ -30,15 +30,16 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal void Init(
-			SqlSelectClause  select,
-			SqlFromClause    from,
-			SqlWhereClause   where,
-			SqlGroupByClause groupBy,
-			SqlWhereClause   having,
-			SqlOrderByClause orderBy,
-			List<SqlUnion>   unions,
-			SelectQuery      parentSelect,
-			bool             parameterDependent)
+			SqlSelectClause        select,
+			SqlFromClause          from,
+			SqlWhereClause         where,
+			SqlGroupByClause       groupBy,
+			SqlWhereClause         having,
+			SqlOrderByClause       orderBy,
+			List<SqlUnion>         unions,
+			List<ISqlExpression[]> uniqueKeys,
+			SelectQuery            parentSelect,
+			bool                   parameterDependent)
 		{
 			Select               = select;
 			From                 = from;
@@ -49,6 +50,9 @@ namespace LinqToDB.SqlQuery
 			_unions              = unions;
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
+
+			if (uniqueKeys != null)
+				UniqueKeys.AddRange(uniqueKeys);
 
 			foreach (var col in select.Columns)
 				col.Parent = this;
