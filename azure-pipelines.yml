@@ -1,8 +1,8 @@
 variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
-#  net45_tests: 'net45_tests' # maybe
-  net46_tests: 'net46_tests'
+#  netfx45_tests: 'netfx45_tests' # maybe
+  netfx46_tests: 'netfx46_tests'
   netcore2_tests: 'netcoreapp20_tests'
 
 stages:
@@ -26,3 +26,131 @@ stages:
         configuration: '$(build_configuration)'
         msbuildArguments: '/t:Restore;Rebuild -m'
 
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'publish'
+        projects: '**/Tests/Linq/Tests.csproj'
+        publishWebProjects: false
+        zipAfterPublish: false
+        arguments: -f netcoreapp2.0  -c $(build_configuration)
+        nobuild: true
+
+    - task: CopyFiles@2
+      inputs:
+        TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46/DataProviders.json'
+        sourceFolder: '$(Build.SourcesDirectory)/Tests/DataProviders.json'
+
+    - task: CopyFiles@2
+      inputs:
+        TargetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/DataProviders.json'
+        sourceFolder: '$(Build.SourcesDirectory)/Tests/DataProviders.json'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
+        artifactName: '$(netfx46_tests)'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0'
+        artifactName: '$(netcore2_tests)'
+
+##############
+#  Run tests #
+##############
+
+- stage: Tests
+  dependsOn: Build
+  condition: succeeded()
+
+  jobs:
+########################
+#  Windows (NETFX 4.6) #
+########################
+  - job: 
+    pool:
+      vmImage: 'windows-2019'
+    displayName: 'Tests: Windows / NETFX 4.6'
+
+    strategy:
+      maxParallel: 2
+      matrix:
+        job1:
+           title: '$(displayName) / SQLite.Classic'
+#          file: 'win_netfx_job1.ps1'
+#        job2:
+#          file: 'win_netfx_job2.ps1'
+
+    steps:
+    - checkout: none
+
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: '$(netfx46_tests)'
+        downloadPath: '$(System.DefaultWorkingDirectory)'
+
+#    - task: PowerShell@2
+#      inputs:
+#        filePath: '$(netfx46_tests)/$(file)'
+#        workingDirectory: '$(netfx46_tests)'
+
+    - task: VSTest@2
+      inputs:
+        testAssemblyVer2: |
+         **/$(netfx46_tests)/linq2db.Tests.dll
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        testFiltercriteria: 'TestCategory != SkipCI'
+        otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6'
+      displayName: '$(title)'
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
+
+############################
+#  Windows (NETCOREAPP2_0) #
+############################
+  - job:
+    pool:
+      vmImage: 'windows-2019'
+    displayName: 'Tests: Windows / NETCOREAPP2.0'
+
+    variables:
+        title: '$(displayName) / SQLite.MS'
+#      file: 'win_core2_job1.ps1'
+
+    steps:
+    - checkout: none
+
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: '$(netcore2_tests)'
+        downloadPath: '$(System.DefaultWorkingDirectory)'
+
+#    - task: PowerShell@2
+#      inputs:
+#        filePath: '$(netcore2_tests)/$(file)'
+#        workingDirectory: '$(netcore2_tests)'
+
+    - task: VSTest@2
+      inputs:
+        testAssemblyVer2: |
+          **/$(netcore2_tests)/linq2db.Tests.dll
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        testFiltercriteria: 'TestCategory != SkipCI'
+        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
+      displayName: '$(title)'
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'

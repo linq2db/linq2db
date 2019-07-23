@@ -82,7 +82,7 @@ namespace Tests
 #if NETCOREAPP2_0
 			var configName = "CORE2";
 #elif NET46
-			var configName = "NET45";
+			var configName = "NET46";
 #else
 			var configName = "";
 #error Unknown framework
