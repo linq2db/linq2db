@@ -66,6 +66,8 @@ namespace Tests.Playground
 			using (db.CreateLocalTable<Table1>())
 			using (db.CreateLocalTable<Table2>())
 			using (db.CreateLocalTable<Table3>())
+			using (db.CreateLocalTable<BTable2>())
+			using (db.CreateLocalTable<CTable2>())
 			{
 				int id = 0;
 				var part1 = db.GetTable<Table1>()
@@ -105,12 +107,58 @@ namespace Tests.Playground
 		}
 
 		[Test]
+		public void OriginalTestSimplifiedReadable([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Table1>())
+			using (db.CreateLocalTable<Table2>())
+			using (db.CreateLocalTable<Table3>())
+			using (db.CreateLocalTable<BTable2>())
+			using (db.CreateLocalTable<CTable2>())
+			{
+				int id = 0;
+				var grouping = from w in db.GetTable<Table1>()
+						group w by w.CTb1LId into g
+						select new
+							{
+								Id = g.Key,
+								maxCol = g.Max(s => s.CTb1LId)
+							};
+				var part1 = from allE in grouping
+					from tbl3 in db.GetTable<Table3>().LeftJoin(tbl3 => allE.maxCol == tbl3.Id)
+					from btbl in db.GetTable<Table3>().LeftJoin(btbl => btbl.Col == tbl3.Col)
+					select new
+					{
+						allE,
+						tbl3,
+						btbl
+					};
+
+				var general = from t1 in db.GetTable<Table1>()
+					where t1.CommonTableId == id
+					from bt1 in db.GetTable<Table2>().LeftJoin(bt1 => t1.CTb1LId == bt1.Id)
+					from ctb in part1.LeftJoin(ctb => bt1.Col3 == ctb.btbl.Id)
+					from ctb2 in db.GetTable<CTable2>().LeftJoin(ctb2 => bt1.TextCol == ctb2.Col1)
+					group ctb by ctb
+					into g
+					select new
+					{
+						g.Key
+					};
+
+				_ = general.ToList();
+			}
+		}
+
+		[Test]
 		public void OriginalTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Table1>())
 			using (db.CreateLocalTable<Table2>())
 			using (db.CreateLocalTable<Table3>())
+			using (db.CreateLocalTable<BTable2>())
+			using (db.CreateLocalTable<CTable2>())
 			{
 				int id = 0;
 				var part1 = db.GetTable<Table1>()
@@ -197,39 +245,5 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test]
-		public void OriginalTest2([IncludeDataSources(TestProvName.AllSQLite)] string context)
-		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<Table1>())
-			using (db.CreateLocalTable<Table2>())
-			using (db.CreateLocalTable<Table3>())
-			{
-				var part1 = db.GetTable<Table1>()
-					.InnerJoin(db.GetTable<Table2>(),
-						(tbl1, tbl2) => tbl1.IdTbl2 == tbl2.Id,
-						(tbl1, tbl2) => new {tbl1, tbl2})
-					.InnerJoin(db.GetTable<Table3>(),
-						(all, tbl3) => all.tbl1.IdTbl3 == tbl3.Id,
-						(all, tbl3) => new {all.tbl2, tbl3})
-					.GroupBy(w => w.tbl2.Col3)
-					.Select(w => new
-					{
-						Col3 = w.Key,
-						maxCol = w.Max(s => s.tbl3.Id)
-					})
-					.LeftJoin(db.GetTable<Table3>(),
-						(allE, tbl3) => allE.maxCol == tbl3.Id,
-						(allG, tbl3) => new {c1=allG.Col3, b1=tbl3.Col});
-
-				var general =
-					from allA in db.GetTable<Table1>()
-					join ctb in part1 on allA.Id equals ctb.c1 into g
-					from ctb in g.DefaultIfEmpty()
-					select allA.Id;
-
-				_ = general.ToList();
-			}
-		}
 	}
 }
