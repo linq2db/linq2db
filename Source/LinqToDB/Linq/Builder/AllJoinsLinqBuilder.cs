@@ -71,8 +71,10 @@ namespace LinqToDB.Linq.Builder
 #if DEBUG
 			{
 				MethodCall = methodCall
-			};
+			}
 #endif
+			;
+
 			if (conditionIndex != -1)
 			{
 				var condition     = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
