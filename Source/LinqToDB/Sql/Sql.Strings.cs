@@ -126,9 +126,9 @@ namespace LinqToDB
 		}
 
 		// For Oracle we always define at least one ordering by rownum. If ordering defined explicitly, this definition will be replaced.
-		[Sql.Extension(PN.Oracle,       "WITHIN GROUP (ORDER BY ROWNUM)", TokenName = "aggregation_ordering", ChainPrecedence = 0)]
-		[Sql.Extension(PN.OracleNative, "WITHIN GROUP (ORDER BY ROWNUM)", TokenName = "aggregation_ordering", ChainPrecedence = 0)]
-		[Sql.Extension(                  "",                                                                  ChainPrecedence = 0)]
+		[Sql.Extension(PN.Oracle,       "WITHIN GROUP (ORDER BY ROWNUM)", TokenName = "aggregation_ordering", ChainPrecedence = 0, IsAggregate = true)]
+		[Sql.Extension(PN.OracleNative, "WITHIN GROUP (ORDER BY ROWNUM)", TokenName = "aggregation_ordering", ChainPrecedence = 0, IsAggregate = true)]
+		[Sql.Extension(                  "",                                                                  ChainPrecedence = 0, IsAggregate = true)]
 		public static string ToValue<T>([NotNull] this Sql.IStringAggregate<T> aggregate)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));

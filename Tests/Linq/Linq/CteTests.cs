@@ -18,12 +18,12 @@ namespace Tests.Linq
 	{
 		public static string[] CteSupportedProviders = new[]
 		{
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
+			TestProvName.AllSqlServer2008Plus,
 			ProviderName.Firebird,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+			TestProvName.AllPostgreSQL,
 			ProviderName.DB2,
-			ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative
+			TestProvName.AllSQLite,
+			TestProvName.AllOracle 
 			//ProviderName.Informix,
 			// Will be supported in SQL 8.0 - ProviderName.MySql
 		};
@@ -978,95 +978,5 @@ namespace Tests.Linq
 			}
 		}
 
-		[Table]
-		class Issue1564Category
-		{
-			[PrimaryKey] public int    Id           { get; set; }
-			[Column]     public bool   IsVisible    { get; set; }
-			[Column]     public int    DisplayOrder { get; set; }
-			[Column]     public int    ParentId     { get; set; }
-			[Column]     public string Name         { get; set; }
-		}
-
-		class AdminCategoryPreview
-		{
-			public int    Id;
-			public bool   IsVisible;
-			public int    DisplayOrder;
-			public string FullPath;
-		}
-
-		class AdminCategoryPathItemCte
-		{
-			public int    CategoryId;
-			public int    ParentCategoryId;
-			public string Name;
-			public int    RootCategoryId;
-			public int    Level;
-		}
-
-		[ActiveIssue(1564)]
-		[Test]
-		public void Issue1564([CteContextSource] string context)
-		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<Issue1564Category>())
-			{
-				var pathQuery = GetPathQuery(db).OrderByDescending(i => i.Level);
-
-				var adminCategoriesQuery =
-					from c in db.GetTable<Issue1564Category>()
-					select new AdminCategoryPreview
-					{
-						Id           = c.Id,
-						IsVisible    = c.IsVisible,
-						DisplayOrder = c.DisplayOrder,
-						FullPath     = pathQuery
-							.Where(c1 => c1.RootCategoryId == c.Id)
-							.StringAggregate(" -> ", i => i.Name)
-							.ToValue()
-					};
-
-				pathQuery.ToList();
-				adminCategoriesQuery.ToList();
-
-				Assert.True(pathQuery           .ToString().Contains("ORDER BY"));
-				Assert.True(adminCategoriesQuery.ToString().Contains("ORDER BY"));
-			}
-
-			IQueryable<AdminCategoryPathItemCte> GetPathQuery(ITestDataContext db)
-			{
-				var categoryPathCte = db.GetCte<AdminCategoryPathItemCte>(categoryHierarchy =>
-				{
-					return
-						(
-							from innerC in db.GetTable<Issue1564Category>()
-							select new AdminCategoryPathItemCte
-							{
-								CategoryId = innerC.Id,
-								ParentCategoryId = innerC.ParentId,
-								Name = innerC.Name,
-								RootCategoryId = innerC.Id,
-								Level = 0
-							}
-						)
-						.Concat
-						(
-							from c in db.GetTable<Issue1564Category>()
-							from ch in categoryHierarchy.InnerJoin(ch => ch.ParentCategoryId == c.Id)
-							select new AdminCategoryPathItemCte
-							{
-								CategoryId = c.Id,
-								ParentCategoryId = c.ParentId,
-								Name = c.Name,
-								RootCategoryId = ch.RootCategoryId,
-								Level = ch.Level + 1
-							}
-						);
-				});
-
-				return categoryPathCte;
-			}
-		}
 	}
 }

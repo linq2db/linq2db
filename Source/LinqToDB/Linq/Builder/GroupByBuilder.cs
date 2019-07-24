@@ -447,7 +447,9 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (call.Arguments[0].NodeType == ExpressionType.Call)
+				var rootArgument = call.Arguments[0].SkipMethodChain(Builder.MappingSchema);
+
+				if (rootArgument.NodeType == ExpressionType.Call)
 				{
 					var ctx = Builder.GetSubQuery(this, call);
 
@@ -493,7 +495,7 @@ namespace LinqToDB.Linq.Builder
 							return res;
 						}
 
-						if (call.Arguments[0] == e && typeof(IGrouping<,>).IsSameOrParentOf(ex.Type))
+						if (rootArgument == e && typeof(IGrouping<,>).IsSameOrParentOf(ex.Type))
 							return _element.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
 
 						return Builder.ConvertToExtensionSql(_element, ex);
