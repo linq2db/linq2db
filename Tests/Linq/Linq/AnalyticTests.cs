@@ -1270,7 +1270,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedQueries([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.Oracle)]string context)
+		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, ProviderName.Oracle)]string context)
 		{
 			using (var db = GetDataContext(context))
 			{
