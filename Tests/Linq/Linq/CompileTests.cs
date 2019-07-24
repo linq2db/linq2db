@@ -113,9 +113,9 @@ namespace Tests.Linq
 				query(db).ToList().Count();
 		}
 
-// NS16 disabled due to intermittent crashes
-// System.InvalidCastException: Unable to cast object of type 'System.Int64' to type 'System.Int32'.
-#if !NETSTANDARD1_6
+		// NS16 disabled due to intermittent crashes
+		// System.InvalidCastException: Unable to cast object of type 'System.Int64' to type 'System.Int32'.
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[Test, Order(100)]
 		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

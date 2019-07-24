@@ -538,6 +538,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
 			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
