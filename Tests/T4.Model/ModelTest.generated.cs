@@ -1075,6 +1075,33 @@ namespace Tests.T4.Model
 	public partial class TestClass2 : TestClass1
 	{
 	}
+
+	public partial interface ITestInterface
+	{
+		#region Test Region
+
+		int    P1 { get; set; }
+		string P2 { get; set; }
+
+		#endregion
+
+		#region Test Region 2
+
+		int PField121 { get; set; }
+
+		string PField122 { get; set; }
+
+		string PField221 { get; set; }
+
+		#endregion
+
+#if !AAA
+
+		[DisplayName("Prop"), XmlArrayItem(typeof(int), DataType="List")]
+		char Property1 { get; set; } // Property1 comment
+
+#endif
+	}
 }
 
 #pragma warning restore 1591
