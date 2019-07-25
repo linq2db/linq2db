@@ -63,6 +63,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{6278F811-C5AA-4C35-B996-AA5913F41A0D}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
 		azure-pipelines.yml = azure-pipelines.yml
 		Build.cmd = Build.cmd
 		Clean.cmd = Clean.cmd

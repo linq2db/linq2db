@@ -188,5 +188,46 @@
 		}
 	});
 
+	Model.Namespaces[0].Types.Add(new Class
+	{
+		Name         = "ITestInterface",
+		ClassKeyword = "interface",
+		Members      =
+		{
+			new MemberGroup
+			{
+				Region    = "Test Region",
+				IsCompact = true,
+				Members   =
+				{
+					new Property { Type = "int",    Name = "P1", AccessModifier = AccessModifier.None },
+					new Property { Type = "string", Name = "P2", AccessModifier = AccessModifier.None  },
+				}
+			},
+			new MemberGroup
+			{
+				Region    = "Test Region 2",
+				IsCompact = false,
+				Members   =
+				{
+					new Property(ModelType.Create<int>(true),     "PField121") { AccessModifier = AccessModifier.None  },
+					new Property(ModelType.Create<string>(false), "PField122") { AccessModifier = AccessModifier.None  },
+					new Property(ModelType.Create<string>(true) , "PField221") { AccessModifier = AccessModifier.None  },
+				}
+			},
+			new Property(() => "char", "Property1")
+			{
+				AccessModifier = AccessModifier.None,
+				EndLineComment = "Property1 comment",
+				Conditional    = "!AAA",
+				Attributes     =
+				{
+					new Attribute("DisplayName", "\"Prop\""),
+					new Attribute("XmlArrayItem", "typeof(int)", "DataType=\"List\""),
+				}
+			},
+		}
+	});
+
 	GenerateModel();
 #>

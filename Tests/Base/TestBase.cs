@@ -1141,9 +1141,10 @@ namespace Tests
 
 	public class WithoutJoinOptimization : IDisposable
 	{
-		public WithoutJoinOptimization()
+		public WithoutJoinOptimization(bool opimizerSwitch = false)
 		{
-			Configuration.Linq.OptimizeJoins = false;
+			Configuration.Linq.OptimizeJoins = opimizerSwitch;
+			Query.ClearCaches();
 		}
 
 		public void Dispose()
