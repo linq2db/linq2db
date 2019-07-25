@@ -9,11 +9,6 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-		<Compile Include="..\Linq\Linq\AnalyticTests.cs" Link="AnalyticTests.cs" />
-		<Compile Include="..\Linq\Linq\JoinOptimizeTests.cs" Link="JoinOptimizeTests.cs" />
-		<Compile Include="..\Linq\Linq\JoinTests.cs" Link="JoinTests.cs" />
-		<Compile Include="..\Linq\Linq\OptimizerTests.cs" Link="OptimizerTests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue1397Tests.cs" Link="Issue1397Tests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
