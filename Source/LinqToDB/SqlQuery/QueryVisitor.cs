@@ -369,6 +369,13 @@ namespace LinqToDB.SqlQuery
 					Visit1(i);
 				}
 			}
+
+			// decided to do not enumerate unique keys
+//			if (q.HasUniqueKeys)
+//				foreach (var keyList in q.UniqueKeys)
+//				{
+//					Visit1X(keyList);
+//				}
 		}
 
 		void Visit1X(SqlOrderByClause element)
@@ -907,6 +914,13 @@ namespace LinqToDB.SqlQuery
 					Visit2(i);
 				}
 			}
+
+			// decided to do not enumerate unique keys
+//			if (q.HasUniqueKeys)
+//				foreach (var keyList in q.UniqueKeys)
+//				{
+//					Visit2X(keyList);
+//				}
 		}
 
 		void Visit2X(SqlOrderByClause element)
@@ -1472,10 +1486,17 @@ namespace LinqToDB.SqlQuery
 						var source = (ISqlTableSource)ConvertInternal(table.Source);
 						var joins  = Convert(table.Joins);
 
-						if (source != null && !ReferenceEquals(source, table.Source) ||
-							joins  != null && !ReferenceEquals(table.Joins, joins))
-							newElement = new SqlTableSource(source ?? table.Source, table._alias, joins ?? table.Joins);
+						List<ISqlExpression[]> uk = null;
+						if (table.HasUniqueKeys) 
+							uk = ConvertListArray(table.UniqueKeys, null);
 
+						if (source != null && !ReferenceEquals(source, table.Source) ||
+							joins  != null && !ReferenceEquals(table.Joins, joins)   || 
+							uk     != null && !ReferenceEquals(table.UniqueKeys, uk))
+						{
+							newElement = new SqlTableSource(source ?? table.Source, table._alias, joins ?? table.Joins,
+								uk ?? (table.HasUniqueKeys ? table.UniqueKeys : null));
+						}
 						break;
 					}
 
@@ -1971,7 +1992,7 @@ namespace LinqToDB.SqlQuery
 
 								if (ret != null && !ReferenceEquals(e, ret))
 								{
-									if (ret.ElementType == QueryElementType.Column)
+									if (ret.ElementType == QueryElementType.Column) 
 										_visitedElements.Add(e, ret);
 									return true;
 								}
@@ -1979,6 +2000,16 @@ namespace LinqToDB.SqlQuery
 								return false;
 							});
 						}
+
+						if (!doConvert)
+						{
+							if (q.HasUniqueKeys)
+							{
+								doConvert = q.UniqueKeys.Any(keys => keys.Any(k =>
+									_visitedElements.TryGetValue(k, out var ve) && ve != null && ve != k));
+							}
+						}
+
 
 						if (!doConvert)
 							break;
@@ -1996,7 +2027,11 @@ namespace LinqToDB.SqlQuery
 						var oc = (SqlOrderByClause)ConvertInternal(q.OrderBy) ?? q.OrderBy;
 						var us = q.HasUnion ? Convert(q.Unions) : q.Unions;
 
-						nq.Init(sc, fc, wc, gc, hc, oc, us,
+						List<ISqlExpression[]> uk = null;
+						if (q.HasUniqueKeys) 
+							uk = ConvertListArray(q.UniqueKeys, null) ?? q.UniqueKeys;
+
+						nq.Init(sc, fc, wc, gc, hc, oc, us, uk,
 							(SelectQuery)parent,
 							q.IsParameterDependent);
 
@@ -2168,10 +2203,10 @@ namespace LinqToDB.SqlQuery
 									Table         = table,
 									ResetIdentity = truncate.ResetIdentity
 								};
-						}
+					}
 
 						break;
-					}
+			}
 
 				case QueryElementType.SqlField:
 				case QueryElementType.SqlParameter:
@@ -2303,6 +2338,35 @@ namespace LinqToDB.SqlQuery
 				}
 				else
 					list2?.Add(clone == null ? elem1 : clone(elem1));
+			}
+
+			return list2;
+		}
+
+		List<T[]> ConvertListArray<T>(List<T[]> list1, Clone<T> clone)
+			where T : class, IQueryElement
+		{
+			List<T[]> list2 = null;
+
+			for (var i = 0; i < list1.Count; i++)
+			{
+				var elem1 = list1[i];
+				var elem2 = Convert(elem1);
+
+				if (elem2 != null && !ReferenceEquals(elem1, elem2))
+				{
+					if (list2 == null)
+					{
+						list2 = new List<T[]>(list1.Count);
+
+						for (var j = 0; j < i; j++)
+							list2.Add(clone == null ? list1[j] : list1[j].Select(e => clone(e)).ToArray() );
+					}
+
+					list2.Add(elem2);
+				}
+				else
+					list2?.Add(clone == null ? elem1 : elem1.Select(e => clone(e)).ToArray());
 			}
 
 			return list2;
@@ -2513,9 +2577,17 @@ namespace LinqToDB.SqlQuery
 						var source = (ISqlTableSource)ConvertImmutableInternal(table.Source);
 						var joins  = ConvertImmutable(table.Joins);
 
-						if (source != null && !ReferenceEquals(source, table.Source) ||
+						List<ISqlExpression[]> uk = null;
+							if (table.HasUniqueKeys)
+								uk = ConvertListArray(table.UniqueKeys, null);
+
+							if (source != null && !ReferenceEquals(source, table.Source) ||
 							joins  != null && !ReferenceEquals(table.Joins, joins))
-							newElement = new SqlTableSource(source ?? table.Source, table._alias, joins ?? table.Joins);
+							newElement = new SqlTableSource(
+								source ?? table.Source,
+								table._alias,
+								joins ?? table.Joins,
+								uk ?? (table.HasUniqueKeys ? table.UniqueKeys : null));
 
 						break;
 					}
@@ -2990,6 +3062,10 @@ namespace LinqToDB.SqlQuery
 						var oc = (SqlOrderByClause)ConvertImmutableInternal(q.OrderBy) ?? q.OrderBy;
 						var us = q.HasUnion ? ConvertImmutable(q.Unions) : q.Unions;
 
+						List<ISqlExpression[]> uk = null;
+						if (q.HasUniqueKeys)
+							uk = ConvertImmutableListArray(q.UniqueKeys, null) ?? q.UniqueKeys;
+
 						if (   !ReferenceEquals(fc, q.From)
 						    || !ReferenceEquals(sc, q.Select)
 						    || !ReferenceEquals(wc, q.Where)
@@ -2997,6 +3073,7 @@ namespace LinqToDB.SqlQuery
 						    || !ReferenceEquals(hc, q.Having)
 						    || !ReferenceEquals(oc, q.OrderBy)
 						    || us != null && !ReferenceEquals(us, q.Unions)
+							|| uk != null && !ReferenceEquals(uk, q.UniqueKeys)
 						)
 						{
 							var nq = new SelectQuery();
@@ -3020,7 +3097,7 @@ namespace LinqToDB.SqlQuery
 
 							AddVisited(q.All, nq.All);
 
-							nq.Init(sc, fc, wc, gc, hc, oc, us,
+							nq.Init(sc, fc, wc, gc, hc, oc, us, uk,
 								q.ParentSelect,
 								q.IsParameterDependent);
 
@@ -3379,6 +3456,35 @@ namespace LinqToDB.SqlQuery
 				}
 				else
 					list2?.Add(clone == null ? elem1 : clone(elem1));
+			}
+
+			return list2;
+		}
+
+		List<T[]> ConvertImmutableListArray<T>(List<T[]> list1, Clone<T> clone)
+			where T : class, IQueryElement
+		{
+			List<T[]> list2 = null;
+
+			for (var i = 0; i < list1.Count; i++)
+			{
+				var elem1 = list1[i];
+				var elem2 = ConvertImmutable(elem1);
+
+				if (elem2 != null && !ReferenceEquals(elem1, elem2))
+				{
+					if (list2 == null)
+					{
+						list2 = new List<T[]>(list1.Count);
+
+						for (var j = 0; j < i; j++)
+							list2.Add(clone == null ? list1[j] : list1[j].Select(e => clone(e)).ToArray());
+					}
+
+					list2.Add(elem2);
+				}
+				else
+					list2?.Add(clone == null ? elem1 : elem1.Select(e => clone(e)).ToArray());
 			}
 
 			return list2;

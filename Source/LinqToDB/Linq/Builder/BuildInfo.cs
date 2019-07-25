@@ -37,7 +37,6 @@ namespace LinqToDB.Linq.Builder
 		public bool                 AssociationsAsSubQueries { get; set; }
 		public JoinType             JoinType                 { get; set; }
 		public bool                 IsSubQuery => Parent != null;
-		public bool                 IsChain        { get; set; }
 
 		private bool _isAssociationBuilt;
 		public  bool  IsAssociationBuilt

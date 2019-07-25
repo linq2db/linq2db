@@ -33,15 +33,16 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal void Init(
-			SqlSelectClause  select,
-			SqlFromClause    from,
-			SqlWhereClause   where,
-			SqlGroupByClause groupBy,
-			SqlWhereClause   having,
-			SqlOrderByClause orderBy,
-			List<SqlUnion>   unions,
-			SelectQuery      parentSelect,
-			bool             parameterDependent)
+			SqlSelectClause        select,
+			SqlFromClause          from,
+			SqlWhereClause         where,
+			SqlGroupByClause       groupBy,
+			SqlWhereClause         having,
+			SqlOrderByClause       orderBy,
+			List<SqlUnion>         unions,
+			List<ISqlExpression[]> uniqueKeys,
+			SelectQuery            parentSelect,
+			bool                   parameterDependent)
 		{
 			Select               = select;
 			From                 = from;
@@ -52,6 +53,9 @@ namespace LinqToDB.SqlQuery
 			_unions              = unions;
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
+
+			if (uniqueKeys != null)
+				UniqueKeys.AddRange(uniqueKeys);
 
 			foreach (var col in select.Columns)
 				col.Parent = this;
@@ -77,6 +81,22 @@ namespace LinqToDB.SqlQuery
 		public SelectQuery    ParentSelect         { get; set; }
 		public bool           IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
 		public bool           IsParameterDependent { get; set; }
+
+		/// <summary>
+		/// Gets or sets flag when sub-query can be removed during optimization.
+		/// </summary>
+		public bool               DoNotRemove         { get; set; }
+
+		private List<ISqlExpression[]> _uniqueKeys;
+
+		/// <summary>
+		/// Contains list of columns that build unique key for this sub-query.
+		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
+		/// </summary>
+		public  List<ISqlExpression[]>  UniqueKeys   => _uniqueKeys ?? (_uniqueKeys = new List<ISqlExpression[]>());
+
+		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
+
 
 		#endregion
 
@@ -123,6 +143,9 @@ namespace LinqToDB.SqlQuery
 			}
 
 			IsParameterDependent = clone.IsParameterDependent;
+
+			if (clone.HasUniqueKeys)
+				UniqueKeys.AddRange(clone.UniqueKeys.Select(uk => uk.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
 
 			new QueryVisitor().Visit(this, expr =>
 			{
@@ -240,7 +263,7 @@ namespace LinqToDB.SqlQuery
 				return this;
 
 			if (!objectTree.TryGetValue(this, out var clone))
-				clone = new SelectQuery(this, objectTree, doClone);
+				clone = new SelectQuery(this, objectTree, doClone) { DoNotRemove = this.DoNotRemove };
 
 			return clone;
 		}
@@ -261,6 +284,11 @@ namespace LinqToDB.SqlQuery
 			if (HasUnion)
 				foreach (var union in Unions)
 					((ISqlExpressionWalkable)union.SelectQuery).Walk(options, func);
+
+			if (HasUniqueKeys)
+				foreach (var uk in UniqueKeys)
+					foreach (var k in uk)
+						k.Walk(options, func);
 
 			return func(this);
 		}

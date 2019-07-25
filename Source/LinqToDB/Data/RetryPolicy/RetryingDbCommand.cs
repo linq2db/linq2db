@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Data.RetryPolicy
 {
 	using Configuration;
-	using LinqToDB.Data.DbCommandProcessor;
+	using DbCommandProcessor;
 
 	class RetryingDbCommand : DbCommand, IProxy<DbCommand>
 	{

@@ -18,12 +18,12 @@ namespace Tests.Linq
 	{
 		public static string[] CteSupportedProviders = new[]
 		{
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
+			TestProvName.AllSqlServer2008Plus,
 			ProviderName.Firebird,
-			ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95, TestProvName.PostgreSQL10, TestProvName.PostgreSQL11, TestProvName.PostgreSQLLatest,
+			TestProvName.AllPostgreSQL,
 			ProviderName.DB2,
-			ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-			ProviderName.OracleManaged, ProviderName.OracleNative
+			TestProvName.AllSQLite,
+			TestProvName.AllOracle 
 			//ProviderName.Informix,
 			// Will be supported in SQL 8.0 - ProviderName.MySql
 		};
@@ -538,6 +538,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
 			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.OracleManaged, ProviderName.OracleNative)]
