@@ -26,13 +26,16 @@ namespace LinqToDB.SqlQuery
 				Joins.AddRange(joins);
 		}
 
-		public SqlTableSource(ISqlTableSource source, string alias, IEnumerable<SqlJoinedTable> joins)
+		public SqlTableSource(ISqlTableSource source, string alias, IEnumerable<SqlJoinedTable> joins, IEnumerable<ISqlExpression[]> uniqueKeys)
 		{
 			Source = source ?? throw new ArgumentNullException(nameof(source));
 			_alias = alias;
 
 			if (joins != null)
 				Joins.AddRange(joins);
+
+			if (uniqueKeys != null)
+				UniqueKeys.AddRange(uniqueKeys);
 		}
 
 		public ISqlTableSource Source       { get; set; }
@@ -57,6 +60,17 @@ namespace LinqToDB.SqlQuery
 			}
 			set => _alias = value;
 		}
+
+		private List<ISqlExpression[]> _uniqueKeys;
+
+		/// <summary>
+		/// Contains list of columns that build unique key for <see cref="Source"/>.
+		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
+		/// </summary>
+		public  List<ISqlExpression[]>  UniqueKeys    => _uniqueKeys ?? (_uniqueKeys = new List<ISqlExpression[]>());
+
+		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
+
 
 		public SqlTableSource this[ISqlTableSource table] => this[table, null];
 
@@ -166,6 +180,9 @@ namespace LinqToDB.SqlQuery
 				objectTree.Add(this, clone = ts);
 
 				ts.Joins.AddRange(Joins.Select(jt => (SqlJoinedTable)jt.Clone(objectTree, doClone)));
+
+				if (HasUniqueKeys)
+					ts.UniqueKeys.AddRange(UniqueKeys.Select(uk => uk.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
 			}
 
 			return clone;

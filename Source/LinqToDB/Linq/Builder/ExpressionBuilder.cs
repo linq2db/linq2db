@@ -25,44 +25,44 @@ namespace LinqToDB.Linq.Builder
 
 		static List<ISequenceBuilder> _sequenceBuilders = new List<ISequenceBuilder>
 		{
-			new TableBuilder               (),
-			new SelectBuilder              (),
-			new SelectManyBuilder          (),
-			new WhereBuilder               (),
-			new OrderByBuilder             (),
-			new GroupByBuilder             (),
-			new JoinBuilder                (),
-			new AllJoinsBuilder            (),
-			new AllJoinsLinqBuilder        (),
-			new TakeSkipBuilder            (),
-			new DefaultIfEmptyBuilder      (),
-			new DistinctBuilder            (),
-			new FirstSingleBuilder         (),
-			new AggregationBuilder         (),
-			new MethodChainBuilder         (),
-			new ScalarSelectBuilder        (),
-			new CountBuilder               (),
-			new PassThroughBuilder         (),
-			new TableAttributeBuilder      (),
-			new InsertBuilder              (),
-			new InsertBuilder.Into         (),
-			new InsertBuilder.Value        (),
-			new InsertOrUpdateBuilder      (),
-			new UpdateBuilder              (),
-			new UpdateBuilder.Set          (),
-			new DeleteBuilder              (),
-			new ContainsBuilder            (),
-			new AllAnyBuilder              (),
-			new ConcatUnionBuilder         (),
-			new IntersectBuilder           (),
-			new CastBuilder                (),
-			new OfTypeBuilder              (),
-			new AsUpdatableBuilder         (),
-			new LoadWithBuilder            (),
-			new DropBuilder                (),
-			new TruncateBuilder            (),
-			new ChangeTypeExpressionBuilder(),
-			new WithTableExpressionBuilder (),
+			new TableBuilder                             (),
+			new SelectBuilder                            (),
+			new SelectManyBuilder                        (),
+			new WhereBuilder                             (),
+			new OrderByBuilder                           (),
+			new GroupByBuilder                           (),
+			new JoinBuilder                              (),
+			new AllJoinsBuilder                          (),
+			new AllJoinsLinqBuilder                      (),
+			new TakeSkipBuilder                          (),
+			new DefaultIfEmptyBuilder                    (),
+			new DistinctBuilder                          (),
+			new FirstSingleBuilder                       (),
+			new AggregationBuilder                       (),
+			new MethodChainBuilder                       (),
+			new ScalarSelectBuilder                      (),
+			new CountBuilder                             (),
+			new PassThroughBuilder                       (),
+			new TableAttributeBuilder                    (),
+			new InsertBuilder                            (),
+			new InsertBuilder.Into                       (),
+			new InsertBuilder.Value                      (),
+			new InsertOrUpdateBuilder                    (),
+			new UpdateBuilder                            (),
+			new UpdateBuilder.Set                        (),
+			new DeleteBuilder                            (),
+			new ContainsBuilder                          (),
+			new AllAnyBuilder                            (),
+			new ConcatUnionBuilder                       (),
+			new IntersectBuilder                         (),
+			new CastBuilder                              (),
+			new OfTypeBuilder                            (),
+			new AsUpdatableBuilder                       (),
+			new LoadWithBuilder                          (),
+			new DropBuilder                              (),
+			new TruncateBuilder                          (),
+			new ChangeTypeExpressionBuilder              (),
+			new WithTableExpressionBuilder               (),
 			new MergeBuilder                             (),
 			new MergeBuilder.InsertWhenNotMatched        (),
 			new MergeBuilder.UpdateWhenMatched           (),
@@ -75,8 +75,10 @@ namespace LinqToDB.Linq.Builder
 			new MergeBuilder.MergeInto                   (),
 			new MergeBuilder.Using                       (),
 			new MergeBuilder.UsingTarget                 (),
-			new ContextParser              (),
-			new ArrayBuilder               ()
+			new ContextParser                            (),
+			new ArrayBuilder                             (),
+			new AsSubQueryBuilder                        (),
+			new HasUniqueKeyBuilder                      (),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
@@ -790,29 +792,29 @@ namespace LinqToDB.Linq.Builder
 
 				if (!string.IsNullOrEmpty(attr.MethodName))
 				{
-				Expression expr;
+					Expression expr;
 
-				if (mi is MethodInfo method && method.IsGenericMethod)
-				{
-					var args  = method.GetGenericArguments();
-					var names = args.Select(t => (object)t.Name).ToArray();
-					var name  = string.Format(attr.MethodName, names);
+					if (mi is MethodInfo method && method.IsGenericMethod)
+					{
+						var args  = method.GetGenericArguments();
+						var names = args.Select(t => (object)t.Name).ToArray();
+						var name  = string.Format(attr.MethodName, names);
 
-					expr = Expression.Call(
-						mi.DeclaringType,
-						name,
-						name != attr.MethodName ? Array<Type>.Empty : args);
-				}
-				else
-				{
-					expr = Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty);
-				}
+						expr = Expression.Call(
+							mi.DeclaringType,
+							name,
+							name != attr.MethodName ? Array<Type>.Empty : args);
+					}
+					else
+					{
+						expr = Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty);
+					}
 
 					var call = Expression.Lambda<Func<LambdaExpression>>(Expression.Convert(expr,
 						typeof(LambdaExpression)));
 
-				return call.Compile()();
-			}
+					return call.Compile()();
+				}
 			}
 
 			return null;

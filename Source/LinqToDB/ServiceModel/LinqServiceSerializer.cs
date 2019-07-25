@@ -1727,6 +1727,7 @@ namespace LinqToDB.ServiceModel
 								having,
 								orderBy,
 								unions?.ToList(),
+								null, // we do not serialize unique keys
 								null,
 								parameterDependent);
 
