@@ -173,26 +173,18 @@ namespace LinqToDB.Linq.Builder
 										case ExpressionType.New        :
 										case ExpressionType.MemberInit :
 											{
-												return memberExpression.Transform(e =>
+												var resultExpression = memberExpression.Transform(e =>
 												{
 													if (!ReferenceEquals(e, memberExpression))
 													{
 														switch (e.NodeType)
 														{
 															case ExpressionType.MemberAccess :
-																var sequence = GetSequence(memberExpression, 0);
-
-																if (sequence != null &&
-																	!sequence.IsExpression(e, 0, RequestFor.Object).Result &&
-																	!sequence.IsExpression(e, 0, RequestFor.Field). Result)
+															case ExpressionType.Parameter :
 																{
-																	var info = ConvertToIndex(e, 0, ConvertFlags.Field).Single();
-																	var idx  = Parent?.ConvertToParentIndex(info.Index, this) ?? info.Index;
-
-																	return Builder.BuildSql(e.Type, idx);
+																	var sequence = GetSequence(e, 0);
+																	return Builder.BuildExpression(sequence, e, enforceServerSide);
 																}
-
-																return Builder.BuildExpression(this, e, enforceServerSide);
 														}
 
 														if (enforceServerSide)
@@ -201,6 +193,8 @@ namespace LinqToDB.Linq.Builder
 
 													return e;
 												});
+
+												return resultExpression;
 											}
 									}
 

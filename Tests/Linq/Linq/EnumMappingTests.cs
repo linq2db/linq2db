@@ -1755,7 +1755,8 @@ namespace Tests.Linq
 		[Sql.Expression("{0} = {1}", InlineParameters = true, ServerSideOnly = true, IsPredicate = true)]
 		public static bool SomeComparison(string column, Issue1622Enum value) => throw new InvalidOperationException();
 
-		[Test, ActiveIssue(1622)]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "Fails due to default mapping schema on remote server. Fixed in 3.0")]
+		[Test]
 		public void Issue1622Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
@@ -1775,7 +1776,9 @@ namespace Tests.Linq
 					var res2 = table.Where(e => e.Id == 1).Single();
 
 					Assert.That(item.Id, Is.EqualTo(res.Id));
+					Assert.That(item.SomeText, Is.EqualTo(res.SomeText));
 					Assert.That(item.Id, Is.EqualTo(res2.Id));
+					Assert.That(item.SomeText, Is.EqualTo(res2.SomeText));
 				}
 			}
 		}

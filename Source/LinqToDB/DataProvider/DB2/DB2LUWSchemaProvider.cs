@@ -432,7 +432,8 @@ WHERE
 						Ordinal       = ConvertTo<int>.From(rd["ORDINAL"]),
 						IsIn          = mode.Contains("IN"),
 						IsOut         = mode.Contains("OUT"),
-						IsResult      = false
+						IsResult      = false,
+						IsNullable    = true
 					};
 
 					var ci = new ColumnInfo { DataType = ppi.DataType };

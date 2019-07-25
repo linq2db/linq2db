@@ -19,6 +19,18 @@ namespace LinqToDB.SqlProvider
 			BaseConverters = converters ?? Array<ValueToSqlConverter>.Empty;
 		}
 
+		public bool CanConvert(Type type)
+		{
+			if (_converters.ContainsKey(type))
+				return true;
+
+			for (var i = 0; i < BaseConverters.Length; i++)
+				if (BaseConverters[i].CanConvert(type))
+					return true;
+
+			return false;
+		}
+
 		internal void SetDefaults()
 		{
 			SetConverter(typeof(Boolean),    (sb,dt,v) => sb.Append((bool)v       ? "1" : "0"));
@@ -162,31 +174,33 @@ namespace LinqToDB.SqlProvider
 
 			ConverterType converter = null;
 
-			if (_converters.Count > 0 && !type.IsEnumEx())
+			if (_converters.Count > 0)
 			{
-				switch (type.GetTypeCodeEx())
+				if (!_converters.TryGetValue(type, out converter))
 				{
+					switch (type.GetTypeCodeEx())
+					{
 #if NETSTANDARD1_6
-					case (TypeCode)2       : stringBuilder.Append("NULL"); return true;
+					case (TypeCode)2          : stringBuilder.Append("NULL")  ; return true;
 #else
-					case TypeCode.DBNull   : stringBuilder.Append("NULL"); return true;
+						case TypeCode.DBNull  : stringBuilder.Append("NULL")  ; return true;
 #endif
-					case TypeCode.Boolean  : converter = _booleanConverter;  break;
-					case TypeCode.Char     : converter = _charConverter;     break;
-					case TypeCode.SByte    : converter = _sByteConverter;    break;
-					case TypeCode.Byte     : converter = _byteConverter;     break;
-					case TypeCode.Int16    : converter = _int16Converter;    break;
-					case TypeCode.UInt16   : converter = _uInt16Converter;   break;
-					case TypeCode.Int32    : converter = _int32Converter;    break;
-					case TypeCode.UInt32   : converter = _uInt32Converter;   break;
-					case TypeCode.Int64    : converter = _int64Converter;    break;
-					case TypeCode.UInt64   : converter = _uInt64Converter;   break;
-					case TypeCode.Single   : converter = _singleConverter;   break;
-					case TypeCode.Double   : converter = _doubleConverter;   break;
-					case TypeCode.Decimal  : converter = _decimalConverter;  break;
-					case TypeCode.DateTime : converter = _dateTimeConverter; break;
-					case TypeCode.String   : converter = _stringConverter;   break;
-					default                : _converters.TryGetValue(type, out converter); break;
+						case TypeCode.Boolean : converter = _booleanConverter ; break;
+						case TypeCode.Char    : converter = _charConverter    ; break;
+						case TypeCode.SByte   : converter = _sByteConverter   ; break;
+						case TypeCode.Byte    : converter = _byteConverter    ; break;
+						case TypeCode.Int16   : converter = _int16Converter   ; break;
+						case TypeCode.UInt16  : converter = _uInt16Converter  ; break;
+						case TypeCode.Int32   : converter = _int32Converter   ; break;
+						case TypeCode.UInt32  : converter = _uInt32Converter  ; break;
+						case TypeCode.Int64   : converter = _int64Converter   ; break;
+						case TypeCode.UInt64  : converter = _uInt64Converter  ; break;
+						case TypeCode.Single  : converter = _singleConverter  ; break;
+						case TypeCode.Double  : converter = _doubleConverter  ; break;
+						case TypeCode.Decimal : converter = _decimalConverter ; break;
+						case TypeCode.DateTime: converter = _dateTimeConverter; break;
+						case TypeCode.String  : converter = _stringConverter  ; break;
+					}
 				}
 			}
 
@@ -240,23 +254,26 @@ namespace LinqToDB.SqlProvider
 			{
 				_converters[type] = converter;
 
-				switch (type.GetTypeCodeEx())
+				if (!type.IsEnumEx())
 				{
-					case TypeCode.Boolean  : _booleanConverter  = converter; return;
-					case TypeCode.Char     : _charConverter     = converter; return;
-					case TypeCode.SByte    : _sByteConverter    = converter; return;
-					case TypeCode.Byte     : _byteConverter     = converter; return;
-					case TypeCode.Int16    : _int16Converter    = converter; return;
-					case TypeCode.UInt16   : _uInt16Converter   = converter; return;
-					case TypeCode.Int32    : _int32Converter    = converter; return;
-					case TypeCode.UInt32   : _uInt32Converter   = converter; return;
-					case TypeCode.Int64    : _int64Converter    = converter; return;
-					case TypeCode.UInt64   : _uInt64Converter   = converter; return;
-					case TypeCode.Single   : _singleConverter   = converter; return;
-					case TypeCode.Double   : _doubleConverter   = converter; return;
-					case TypeCode.Decimal  : _decimalConverter  = converter; return;
-					case TypeCode.DateTime : _dateTimeConverter = converter; return;
-					case TypeCode.String   : _stringConverter   = converter; return;
+					switch (type.GetTypeCodeEx())
+					{
+						case TypeCode.Boolean : _booleanConverter  = converter; return;
+						case TypeCode.Char    : _charConverter     = converter; return;
+						case TypeCode.SByte   : _sByteConverter    = converter; return;
+						case TypeCode.Byte    : _byteConverter     = converter; return;
+						case TypeCode.Int16   : _int16Converter    = converter; return;
+						case TypeCode.UInt16  : _uInt16Converter   = converter; return;
+						case TypeCode.Int32   : _int32Converter    = converter; return;
+						case TypeCode.UInt32  : _uInt32Converter   = converter; return;
+						case TypeCode.Int64   : _int64Converter    = converter; return;
+						case TypeCode.UInt64  : _uInt64Converter   = converter; return;
+						case TypeCode.Single  : _singleConverter   = converter; return;
+						case TypeCode.Double  : _doubleConverter   = converter; return;
+						case TypeCode.Decimal : _decimalConverter  = converter; return;
+						case TypeCode.DateTime: _dateTimeConverter = converter; return;
+						case TypeCode.String  : _stringConverter   = converter; return;
+					}
 				}
 			}
 		}

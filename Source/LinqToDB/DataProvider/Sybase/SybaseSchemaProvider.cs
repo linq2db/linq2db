@@ -225,7 +225,8 @@ WHERE
 						Scale         = rd.IsDBNull(13) ? (int?)null : rd.GetInt32(13),
 						Ordinal       = rd.GetInt32(4),
 						IsResult      = direction == 4,
-						DataType      = type
+						DataType      = type,
+						IsNullable    = rd.GetBoolean(8)
 					};
 				}).ToList();
 			}

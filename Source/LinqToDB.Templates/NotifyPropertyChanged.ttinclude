@@ -214,7 +214,7 @@ void NotifyPropertyChangedImpl()
 					Region  = "INotifyPropertyChanged support",
 					Members =
 					{
-						new Event(() => "PropertyChangedEventHandler", "PropertyChanged")
+						new Event("PropertyChangedEventHandler", "PropertyChanged", true)
 						{
 							IsVirtual  = true,
 							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
@@ -243,7 +243,7 @@ void NotifyPropertyChangedImpl()
 					Region  = "INotifyPropertyChanging support",
 					Members =
 					{
-						new Event(() => "PropertyChangingEventHandler", "PropertyChanging")
+						new Event("PropertyChangingEventHandler", "PropertyChanging", true)
 						{
 							IsVirtual  = true,
 							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
@@ -366,6 +366,17 @@ class NotifyingProperty : Property
 	public NotifyingProperty()
 	{
 		IsNotifying = true;
+	}
+
+	public NotifyingProperty(ModelType type, string name, params string[] dependents)
+		: base(() => type.ToTypeName(), name, null, null)
+	{
+		IsNotifying = true;
+
+		if (dependents.Length == 0)
+			Dependents.Add(name);
+		else
+			Dependents.AddRange(dependents);
 	}
 
 	public NotifyingProperty(string type, string name, params string[] dependents)

@@ -1,8 +1,4 @@
 <#@ include file="LinqToDB.ttinclude" #>
-<#
-	LinqToDB.DataProvider.MySql.MySqlTools.ResolveMySql(
-		typeof(MySql.Data.MySqlClient.MySqlConnection).Assembly);
-#>
 <#+
 LinqToDB.Data.DataConnection GetMySqlConnection(string connectionString)
 {

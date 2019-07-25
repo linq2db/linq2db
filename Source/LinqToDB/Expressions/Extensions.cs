@@ -944,6 +944,18 @@ namespace LinqToDB.Expressions
 				e == lambda.Parameters[1] ? exprToReplaceParameter2 : e);
 		}
 
+		/// <summary>
+		/// Returns the body of <paramref name="lambda"/> but replaces the first three parameters of
+		/// that lambda expression with the given replace expressions.
+		/// </summary>
+		public static Expression GetBody(this LambdaExpression lambda, Expression exprToReplaceParameter1, Expression exprToReplaceParameter2, Expression exprToReplaceParameter3)
+		{
+			return Transform(lambda.Body, e =>
+				e == lambda.Parameters[0] ? exprToReplaceParameter1 :
+				e == lambda.Parameters[1] ? exprToReplaceParameter2 :
+				e == lambda.Parameters[2] ? exprToReplaceParameter3 : e);
+		}
+
 		static IEnumerable<T> Transform<T>(ICollection<T> source, Func<T,T> func)
 			where T : class
 		{

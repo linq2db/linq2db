@@ -4,6 +4,9 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -16,17 +19,13 @@ using LinqToDB.Mapping;
 
 namespace MySqlDataContext
 {
-	/// <summary>
-	/// Database       : testdb55
-	/// Data Source    : localhost
-	/// Server Version : 5.5.55-log
-	/// </summary>
 	public partial class Testdb55DB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
 		public ITable<Datatypetest>      Datatypetests      { get { return this.GetTable<Datatypetest>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
+		public ITable<Fulltextindextest> Fulltextindextests { get { return this.GetTable<Fulltextindextest>(); } }
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
 		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
 		public ITable<Inheritanceparent> Inheritanceparents { get { return this.GetTable<Inheritanceparent>(); } }
@@ -34,6 +33,9 @@ namespace MySqlDataContext
 		public ITable<Parent>            Parents            { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>           Patients           { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>            People             { get { return this.GetTable<Person>(); } }
+		/// <summary>
+		/// VIEW
+		/// </summary>
 		public ITable<Personview>        Personviews        { get { return this.GetTable<Personview>(); } }
 		public ITable<Test>              Tests              { get { return this.GetTable<Test>(); } }
 		public ITable<Testidentity>      Testidentities     { get { return this.GetTable<Testidentity>(); } }
@@ -143,6 +145,14 @@ namespace MySqlDataContext
 		#endregion
 	}
 
+	[Table("fulltextindextest")]
+	public partial class Fulltextindextest
+	{
+		[Column("id"), PrimaryKey, Identity] public uint   Id         { get; set; } // int(10) unsigned
+		[Column(),     Nullable            ] public string TestField1 { get; set; } // text
+		[Column(),     Nullable            ] public string TestField2 { get; set; } // text
+	}
+
 	[Table("grandchild")]
 	public partial class Grandchild
 	{
@@ -234,6 +244,9 @@ namespace MySqlDataContext
 		#endregion
 	}
 
+	/// <summary>
+	/// VIEW
+	/// </summary>
 	[Table("personview", IsView=true)]
 	public partial class Personview
 	{
@@ -405,6 +418,12 @@ namespace MySqlDataContext
 				t.PersonID == PersonID);
 		}
 
+		public static Fulltextindextest Find(this ITable<Fulltextindextest> table, uint Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
 		public static Inheritancechild Find(this ITable<Inheritancechild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
@@ -454,3 +473,5 @@ namespace MySqlDataContext
 		}
 	}
 }
+
+#pragma warning restore 1591

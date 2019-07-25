@@ -109,7 +109,7 @@ namespace LinqToDB.Common.Internal.Cache
             if (!cache.TryGetValue(key, out object result))
             {
                 var entry = cache.CreateEntry(key);
-                result = await factory(entry);
+                result = await factory(entry).ConfigureAwait(Configuration.ContinueOnCapturedContext);
                 entry.SetValue(result);
                 // need to manually call dispose instead of having a using
                 // in case the factory passed in throws, in which case we

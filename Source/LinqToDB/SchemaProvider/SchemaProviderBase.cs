@@ -81,7 +81,8 @@ namespace LinqToDB.SchemaProvider
 						(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(t.SchemaName))  &&
 						(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(t.SchemaName))  &&
 						(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(t.CatalogName)) &&
-						(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(t.CatalogName))
+						(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(t.CatalogName)) &&
+						(options.LoadTable == null   ||  options.LoadTable(new LoadTableData(t)))
 					select new TableSchema
 					{
 						ID                 = t.TableID,
@@ -207,7 +208,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				#region Procedures
 
-				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder();
+				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 				var procs       = GetProcedures(dataConnection);
 				var procPparams = GetProcedureParameters(dataConnection);
 				var n           = 0;
@@ -259,6 +260,7 @@ namespace LinqToDB.SchemaProvider
 									SystemType           = systemType ?? typeof(object),
 									DataType             = GetDataType(pr.DataType, null, pr.Length, pr.Precision, pr.Scale),
 									ProviderSpecificType = GetProviderSpecificType(pr.DataType),
+									IsNullable           = pr.IsNullable
 								}
 							).ToList()
 						} into ps

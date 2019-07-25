@@ -14,12 +14,12 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Data
 {
+	using Async;
 	using Common;
 	using Configuration;
 	using DataProvider;
+	using DbCommandProcessor;
 	using Expressions;
-	using LinqToDB.Async;
-	using LinqToDB.Data.DbCommandProcessor;
 	using Mapping;
 	using RetryPolicy;
 
@@ -1054,22 +1054,22 @@ namespace LinqToDB.Data
 		/// </summary>
 		public string LastQuery;
 
-		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints)
+		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints, bool withParameters)
 		{
 			if (queryHints?.Count > 0)
 			{
-				var sqlProvider = DataProvider.CreateSqlBuilder();
+				var sqlProvider = DataProvider.CreateSqlBuilder(MappingSchema);
 				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
 				queryHints.Clear();
 			}
 
-			DataProvider.InitCommand(this, commandType, sql, parameters);
+			DataProvider.InitCommand(this, commandType, sql, parameters, withParameters);
 			LastQuery = Command.CommandText;
 		}
 
 		private int? _commandTimeout;
 		/// <summary>
-		/// Gets or sets command execution timeout in seconds. 
+		/// Gets or sets command execution timeout in seconds.
 		/// Negative timeout value means that default timeout will be used.
 		/// 0 timeout value corresponds to infinite timeout.
 		/// By default timeout is not set and default value for current provider used.
@@ -1131,11 +1131,18 @@ namespace LinqToDB.Data
 			}
 		}
 
+		#region ExecuteNonQuery
+
+		protected virtual int ExecuteNonQuery(IDbCommand command)
+		{
+			return Command.ExecuteNonQueryExt();
+		}
+
 		internal int ExecuteNonQuery()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				using (DataProvider.ExecuteScope())
-					return Command.ExecuteNonQueryExt();
+					return ExecuteNonQuery(Command);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -1151,12 +1158,11 @@ namespace LinqToDB.Data
 				});
 			}
 
-
 			try
 			{
 				int ret;
 				using (DataProvider.ExecuteScope())
-					ret = Command.ExecuteNonQueryExt();
+					ret = ExecuteNonQuery(Command);
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -1192,10 +1198,19 @@ namespace LinqToDB.Data
 			}
 		}
 
+		#endregion
+
+		#region ExecuteScalar
+
+		protected virtual object ExecuteScalar(IDbCommand command)
+		{
+			return Command.ExecuteScalarExt();
+		}
+
 		object ExecuteScalar()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return Command.ExecuteScalarExt();
+				return ExecuteScalar(Command);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -1213,7 +1228,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = Command.ExecuteScalarExt();
+				var ret = ExecuteScalar(Command);
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -1248,16 +1263,25 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private IDataReader ExecuteReader()
+		#endregion
+
+		#region ExecuteReader
+
+		protected virtual IDataReader ExecuteReader(IDbCommand command, CommandBehavior commandBehavior)
 		{
-			return ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
+			return command.ExecuteReaderExt(commandBehavior);
+		}
+
+		IDataReader ExecuteReader()
+		{
+			return ExecuteReader(CommandBehavior.Default);
 		}
 
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				using (DataProvider.ExecuteScope())
-					return Command.ExecuteReaderExt(GetCommandBehavior(commandBehavior));
+					return ExecuteReader(Command, GetCommandBehavior(commandBehavior));
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -1278,7 +1302,7 @@ namespace LinqToDB.Data
 				IDataReader ret;
 
 				using (DataProvider.ExecuteScope())
-					ret = Command.ExecuteReaderExt(GetCommandBehavior(commandBehavior));
+					ret = ExecuteReader(Command, GetCommandBehavior(commandBehavior));
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -1312,6 +1336,8 @@ namespace LinqToDB.Data
 				throw;
 			}
 		}
+
+		#endregion
 
 		/// <summary>
 		/// Removes cached data mappers.

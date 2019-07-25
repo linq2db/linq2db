@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 					var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-					var sb      = _dataProvider.CreateSqlBuilder();
+					var sb      = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 					var rd      = new BulkCopyReader(_dataProvider, dataConnection.MappingSchema, columns, source);
 					var sqlopt  = SqlBulkCopyOptions.Default;
 					var rc      = new BulkCopyRowsCopied();
@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
 						if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-						var sqlBuilder = _dataProvider.CreateSqlBuilder();
+						var sqlBuilder = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 						var tableName  = GetTableName(sqlBuilder, options, table);
 
 						bc.DestinationTableName = tableName;

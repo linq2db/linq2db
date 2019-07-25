@@ -4,6 +4,9 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,11 +16,6 @@ using LinqToDB.Mapping;
 
 namespace SqlCeDataContext
 {
-	/// <summary>
-	/// Database       : TestData
-	/// Data Source    : C:\GitHub\linq2db\\Data\TestData.sdf
-	/// Server Version : 4.0.8876.1
-	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
@@ -482,3 +480,5 @@ namespace SqlCeDataContext
 		#endregion
 	}
 }
+
+#pragma warning restore 1591

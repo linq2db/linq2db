@@ -375,16 +375,16 @@ namespace LinqToDB.Linq
 				{
 					mapper.QueryRunner = runner;
 
-					using (var dr = await runner.ExecuteReaderAsync(cancellationToken))
+					using (var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
 						var skip = skipAction?.Invoke(expression, ps) ?? 0;
 
-						while (skip-- > 0 && await dr.ReadAsync(cancellationToken))
+						while (skip-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 							{}
 
 						var take = takeAction?.Invoke(expression, ps) ?? int.MaxValue;
 
-						while (take-- > 0 && await dr.ReadAsync(cancellationToken))
+						while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
 							runner.RowsCount++;
 							if (!func(mapper.Map(runner, dr.DataReader)))
@@ -444,20 +444,20 @@ namespace LinqToDB.Linq
 
 					_mapper.QueryRunner = _queryRunner;
 
-					_dataReader = await _queryRunner.ExecuteReaderAsync(cancellationToken);
+					_dataReader = await _queryRunner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					var skip = _skipAction?.Invoke(_expression, _ps) ?? 0;
 
 					while (skip-- > 0)
 					{
-						if (!await _dataReader.ReadAsync(cancellationToken))
+						if (!await _dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 							return false;
 					}
 
 					_take = _takeAction?.Invoke(_expression, _ps) ?? int.MaxValue;
 				}
 
-				if (_take-- > 0 && await _dataReader.ReadAsync(cancellationToken))
+				if (_take-- > 0 && await _dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
 					_queryRunner.RowsCount++;
 
@@ -687,9 +687,9 @@ namespace LinqToDB.Linq
 				{
 					mapper.QueryRunner = runner;
 
-					using (var dr = await runner.ExecuteReaderAsync(cancellationToken))
+					using (var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
-						if (await dr.ReadAsync(cancellationToken))
+						if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
 							runner.RowsCount++;
 
@@ -739,7 +739,7 @@ namespace LinqToDB.Linq
 			CancellationToken cancellationToken)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
-				return await runner.ExecuteScalarAsync(cancellationToken);
+				return await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion
@@ -773,7 +773,7 @@ namespace LinqToDB.Linq
 			CancellationToken cancellationToken)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
-				return await runner.ExecuteNonQueryAsync(cancellationToken);
+				return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion
@@ -817,14 +817,14 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
-				var n = await runner.ExecuteNonQueryAsync(cancellationToken);
+				var n = await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (n != 0)
 					return n;
 
 				runner.QueryNumber = 1;
 
-				return await runner.ExecuteNonQueryAsync(cancellationToken);
+				return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 
@@ -869,14 +869,14 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
-				var n = await runner.ExecuteScalarAsync(cancellationToken);
+				var n = await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (n != null)
 					return 0;
 
 				runner.QueryNumber = 1;
 
-				return await runner.ExecuteNonQueryAsync(cancellationToken);
+				return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 

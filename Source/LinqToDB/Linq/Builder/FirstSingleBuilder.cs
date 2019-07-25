@@ -121,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 					var obj   = default(T);
 
 					await query.GetForEachAsync(db, expr, ps,
-						r => { obj = r; count++; return false; }, token);
+						r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					return count > 0 ? obj : Array<T>.Empty.First();
 				};
@@ -136,7 +136,7 @@ namespace LinqToDB.Linq.Builder
 					var count = 0;
 					var obj   = default(T);
 
-					await query.GetForEachAsync(db, expr, ps, r => { obj = r; count++; return false; }, token);
+					await query.GetForEachAsync(db, expr, ps, r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					return count > 0 ? obj : Array<T>.Empty.FirstOrDefault();
 				};
@@ -158,7 +158,7 @@ namespace LinqToDB.Linq.Builder
 								obj = r;
 							count++;
 							return count == 1;
-						}, token);
+						}, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					return count == 1 ? obj : new T[count].Single();
 				};
@@ -180,7 +180,7 @@ namespace LinqToDB.Linq.Builder
 								obj = r;
 							count++;
 							return count == 1;
-						}, token);
+						}, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					return count == 1 ? obj : new T[count].SingleOrDefault();
 				};

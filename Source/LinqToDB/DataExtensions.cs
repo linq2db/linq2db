@@ -357,7 +357,7 @@ namespace LinqToDB
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
+			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return dataContext.MappingSchema.ChangeTypeTo<int>(ret);
 		}
 
@@ -378,7 +378,7 @@ namespace LinqToDB
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
+			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return dataContext.MappingSchema.ChangeTypeTo<long>(ret);
 		}
 
@@ -399,7 +399,7 @@ namespace LinqToDB
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
+			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return dataContext.MappingSchema.ChangeTypeTo<decimal>(ret);
 		}
 
@@ -659,11 +659,11 @@ namespace LinqToDB
 
 			if (throwExceptionIfNotExists)
 			{
-				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, !throwExceptionIfNotExists, token);
+				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, !throwExceptionIfNotExists, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 			else try
 			{
-				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, !throwExceptionIfNotExists, token);
+				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, !throwExceptionIfNotExists, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 			catch
 			{
@@ -702,7 +702,7 @@ namespace LinqToDB
 					databaseName ?? table.DatabaseName,
 					schemaName   ?? table.SchemaName,
 					!throwExceptionIfNotExists,
-					token);
+					token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 			else try
 			{
@@ -712,7 +712,7 @@ namespace LinqToDB
 					databaseName ?? table.DatabaseName,
 					schemaName   ?? table.SchemaName,
 					!throwExceptionIfNotExists,
-					token);
+					token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 			catch
 			{

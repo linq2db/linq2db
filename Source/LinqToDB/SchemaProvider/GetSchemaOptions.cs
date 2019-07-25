@@ -54,5 +54,11 @@ namespace LinqToDB.SchemaProvider
 		/// discovered procedires. Second parameter provides position of currently loaded procedure.
 		/// </summary>
 		public Action<int,int>               ProcedureLoadingProgress = (outOf,current) => {};
+
+		/// <summary>
+		/// Optinal callback to filter loaded tables. receives object with table details and return boolean flag
+		/// to indicate that table should be loaded (<c>true</c>) or skipped (<c>false</c>).
+		/// </summary>
+		public Func<LoadTableData, bool>     LoadTable;
 	}
 }

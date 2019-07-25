@@ -224,47 +224,7 @@ namespace LinqToDB.Mapping
 				throw new ArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
 
 			if (!string.IsNullOrEmpty(ExpressionQueryMethod))
-			{
-				var members = type.GetStaticMembersEx(ExpressionQueryMethod);
-
-				if (members.Length == 0)
-					throw new LinqToDBException($"Static member '{ExpressionQueryMethod}' for type '{type.Name}' not found");
-
-				if (members.Length > 1)
-					throw new LinqToDBException($"Ambiguous members '{ExpressionQueryMethod}' for type '{type.Name}' has been found");
-
-				var propInfo = members[0] as PropertyInfo;
-
-				if (propInfo != null)
-				{
-					var value = propInfo.GetValue(null, null);
-					if (value == null)
-						return null;
-
-					queryExpression = value as Expression;
-					if (queryExpression == null)
-						throw new LinqToDBException($"Property '{ExpressionQueryMethod}' for type '{type.Name}' should return expression");
-				}
-				else
-				{
-					var method = members[0] as MethodInfo;
-					if (method != null)
-					{
-						if (method.GetParameters().Length > 0)
-							throw new LinqToDBException($"Method '{ExpressionQueryMethod}' for type '{type.Name}' should have no parameters");
-						var value = method.Invoke(null, Array<object>.Empty);
-						if (value == null)
-							return null;
-
-						queryExpression = value as Expression;
-						if (queryExpression == null)
-							throw new LinqToDBException($"Method '{ExpressionQueryMethod}' for type '{type.Name}' should return expression");
-					}
-				}
-				if (queryExpression == null)
-					throw new LinqToDBException(
-						$"Member '{ExpressionQueryMethod}' for type '{type.Name}' should be static property or method");
-			}
+				queryExpression = type.GetExpressionFromExpressionMember<Expression>(ExpressionQueryMethod);
 			else
 				queryExpression = ExpressionQuery;
 

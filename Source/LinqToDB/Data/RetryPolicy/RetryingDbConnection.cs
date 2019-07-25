@@ -68,7 +68,7 @@ namespace LinqToDB.Data.RetryPolicy
 #endif
 			async Task OpenAsync(CancellationToken cancellationToken)
 		{
-			await _policy.ExecuteAsync(async ct => await _connection.OpenAsync(ct), cancellationToken);
+			await _policy.ExecuteAsync(async ct => await _connection.OpenAsync(ct).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext), cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		void IDisposable.Dispose()

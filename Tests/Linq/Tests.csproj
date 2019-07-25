@@ -69,6 +69,7 @@
 		<Compile Remove="DataProvider\OracleTests.cs" />
 		<Compile Remove="Linq\DynamicColumnsTests.cs" />
 		<Compile Remove="Mapping\FluentDynamicMappingTests.cs" />
+		<Compile Remove="Mapping\DynamicStoreTests.cs" />
 		<Compile Remove="Update\DynamicColumnsTests.cs" />
 		<Compile Remove="UserTests\Issue1268Tests.cs" />
 	</ItemGroup>

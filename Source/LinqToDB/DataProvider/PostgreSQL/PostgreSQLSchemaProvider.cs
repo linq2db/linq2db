@@ -477,7 +477,8 @@ SELECT	r.ROUTINE_CATALOG,
 						// those fields not supported by pgsql on parameter level
 						Precision     = null,
 						Scale         = null,
-						Length        = null
+						Length        = null,
+						IsNullable    = true
 					};
 				}, "SELECT SPECIFIC_CATALOG, SPECIFIC_SCHEMA, SPECIFIC_NAME, ORDINAL_POSITION, PARAMETER_MODE, PARAMETER_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.parameters")
 				// populare return parameters for functions
@@ -496,7 +497,8 @@ SELECT	r.ROUTINE_CATALOG,
 					// not supported by pgsql
 					Precision     = null,
 					Scale         = null,
-					Length        = null
+					Length        = null,
+					IsNullable    = true
 				}, @"SELECT r.SPECIFIC_CATALOG, r.SPECIFIC_SCHEMA, r.SPECIFIC_NAME, r.DATA_TYPE
 	FROM INFORMATION_SCHEMA.ROUTINES r
 		LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname

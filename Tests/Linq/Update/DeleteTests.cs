@@ -396,7 +396,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void DeleteByTableName([DataSources] string context)
 		{
@@ -429,7 +428,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public async Task DeleteByTableNameAsync([DataSources] string context)
 		{

@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider
 			if (!BuildCommand(dataConnection, predicate, delete, source, tableName, databaseName, schemaName))
 				return 0;
 
-			return await ExecuteAsync(dataConnection, token);
+			return await ExecuteAsync(dataConnection, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider
 			where T : class
 		{
 			var table      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
+			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 
 			Columns = table.Columns
 				.Select(c => new ColumnInfo
@@ -317,7 +317,7 @@ namespace LinqToDB.DataProvider
 		protected virtual bool BuildUsing<T>(DataConnection dataConnection, IEnumerable<T> source)
 		{
 			var table          = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var sqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder();
+			var sqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			var pname          = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 			var valueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
 
@@ -400,7 +400,7 @@ namespace LinqToDB.DataProvider
 		protected bool BuildUsing2<T>(DataConnection dataConnection, IEnumerable<T> source, string top, string fromDummyTable)
 		{
 			var table          = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var sqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder();
+			var sqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			var pname          = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 			var valueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
 

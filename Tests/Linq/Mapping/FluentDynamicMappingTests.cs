@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Linq.Expressions;
+using System.Reflection;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -26,6 +27,9 @@ namespace Tests.Mapping
 
 			[DynamicColumnsStore]
 			public IDictionary<string, object> ExtendedColumns { get; set; }
+
+			[DynamicColumnsStore(Configuration = ProviderName.SQLite)]
+			public IDictionary<string, object> ExtendedSQLiteColumns { get; set; }
 		}
 
 		[Table]
@@ -222,8 +226,21 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.AreEqual(ed.DynamicColumnsStore.MemberName, "ExtendedColumns");
-			Assert.IsFalse(ed.Columns.Any(c => c.MemberName == "ExtendedColumns"));
+			Assert.AreEqual(ed.DynamicColumnsStore.MemberName, nameof(MyClass.ExtendedColumns));
+			Assert.IsFalse(ed.Columns.Any(c => c.MemberName == nameof(MyClass.ExtendedColumns)));
+			Assert.IsFalse(ed.Columns.Any(c => c.MemberName == nameof(MyClass.ExtendedSQLiteColumns)));
+		}
+
+		[Test]
+		public void HasDynamicColumnStoreWithConfiguration()
+		{
+			var ms = new MappingSchema(ProviderName.SQLite);
+
+			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.AreEqual(ed.DynamicColumnsStore.MemberName, nameof(MyClass.ExtendedSQLiteColumns));
+			Assert.IsFalse(ed.Columns.Any(c => c.MemberName == nameof(MyClass.ExtendedColumns)));
+			Assert.IsFalse(ed.Columns.Any(c => c.MemberName == nameof(MyClass.ExtendedSQLiteColumns)));
 		}
 
 		[Test]

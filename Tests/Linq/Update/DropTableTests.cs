@@ -51,7 +51,6 @@ namespace Tests.xUpdate
 			public int ID1 { get; set; }
 		}
 
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		[Test]
 		public void DropCurrentDatabaseTableWIthIdentityTest([DataSources] string context)
 		{

@@ -457,11 +457,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void SchemaProviderTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			// MySqlConnector does not currently support GetSchema("Table")
-			// https://github.com/mysql-net/MySqlConnector/issues/375
-			if (context == ProviderName.MySqlConnector)
-				return;
-
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				var sp = db.DataProvider.GetSchemaProvider();
@@ -654,7 +649,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void ProceduresSchemaProviderTest(
-			[IncludeDataSources(TestProvName.AllMySqlData)] string context,
+			[IncludeDataSources(TestProvName.AllMySql)] string context,
 			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
 		{
 			// TODO: add aggregate/udf functions test cases
@@ -773,7 +768,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void FullTextIndexTest([IncludeDataSources(TestProvName.AllMySqlData)] string context)
+		public void FullTextIndexTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{

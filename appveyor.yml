@@ -10,8 +10,8 @@ branches:
     - /dev.*/
 
 environment:
-  assemblyVersion: 2.7.4
-  packageVersion: 2.7.4
+  assemblyVersion: 2.8.0
+  packageVersion: 2.8.0
 
 cache:
 - packages -> appveyor.yml
@@ -33,7 +33,6 @@ nuget:
 
 build_script:
 - cmd: msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
-##- ps: .\build.ps1
 
 before_build:
 - ps: |
@@ -42,31 +41,32 @@ before_build:
         $env:packageVersion = "$env:assemblyVersion-rc$env:appveyor_build_number"
     }
 
-    .\Build\AppVeyor.FixVersionProps.ps1  -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
+    .\Build\AppVeyor.FixVersionProps.ps1  -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion
     .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion $env:APPVEYOR_REPO_BRANCH
 
     $env:MYSQL_PWD="Password12!"
     $env:PGUSER="postgres"
     $env:PGPASSWORD="Password12!"
-    $sqlInstance = "(local)\SQL2014"
+    $sqlPassword = "Password12!"
+    $sqlInstance = "localhost\SQL2014"
 
     # create databases
     $dbName = "TestDatanet45"
-    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    sqlcmd -U sa -P $sqlPassword -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
     $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
     iex "& $cmd"
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
     iex "& $cmd"
 
     $dbName = "TestDatacore1"
-    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    sqlcmd -U sa -P $sqlPassword -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
     $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
     iex "& $cmd"
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
     iex "& $cmd"
 
     $dbName = "TestDatacore2"
-    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    sqlcmd -U sa -P $sqlPassword -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
     $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
     iex "& $cmd"
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'

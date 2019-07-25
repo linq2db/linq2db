@@ -229,7 +229,8 @@ namespace LinqToDB.DataProvider.Access
 						Scale         = scale,
 						Ordinal       = i + 1,
 						IsResult      = false,
-						DataType      = dataType
+						DataType      = dataType,
+						IsNullable    = true
 					});
 				}
 			}

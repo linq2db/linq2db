@@ -4,6 +4,9 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -16,11 +19,6 @@ using LinqToDB.Mapping;
 
 namespace AccessDataContext
 {
-	/// <summary>
-	/// Database       : TestData
-	/// Data Source    : C:\GitHub\linq2db\\Data\TestData.mdb
-	/// Server Version : 04.00.0000
-	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>             AllTypes             { get { return this.GetTable<AllType>(); } }
@@ -491,3 +489,5 @@ namespace AccessDataContext
 		}
 	}
 }
+
+#pragma warning restore 1591

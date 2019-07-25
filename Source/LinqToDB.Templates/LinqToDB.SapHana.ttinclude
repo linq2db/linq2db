@@ -9,7 +9,7 @@
 		var method = new Method(
 			() => string.Format("ITable<{0}>", t.TypeName),
 			t.DataContextPropertyName,
-			t.Parameters.Select(p => (Func<string>)(() => p.ParameterType + " " + p.ParameterName)),
+			t.Parameters.Select(p => (Func<string>)(() => p.Type.ToTypeName() + " " + p.ParameterName)),
 			() => new []
 			{
 				String.Concat("return GetTable<",t.TypeName,">(this, (MethodInfo) MethodBase.GetCurrentMethod(),"),
@@ -40,7 +40,7 @@
 				Description             = t.Description,
 				Columns                 = t.Columns.ToDictionary(
 				c => c.ColumnName,
-				c => new Column
+				c => new Column(new ModelType(c.MemberType, !IsValueType(c.MemberType), c.IsNullable))
 				{
 					ColumnName      = c.ColumnName,
 					ColumnType      = c.ColumnType,
@@ -49,7 +49,6 @@
 					IsPrimaryKey    = c.IsPrimaryKey,
 					PrimaryKeyOrder = c.PrimaryKeyOrder,
 					MemberName      = CheckType(c.SystemType, c.MemberName),
-					TypeBuilder     = () => c.MemberType,
 					SkipOnInsert    = c.SkipOnInsert,
 					SkipOnUpdate    = c.SkipOnUpdate,
 					Description     = c.Description,
@@ -66,6 +65,7 @@
 					ParameterType = pr.ParameterType,
 					SystemType    = pr.SystemType,
 					DataType      = pr.DataType.ToString(),
+					IsNullable    = pr.IsNullable
 				})
 				.ToList()
 			};

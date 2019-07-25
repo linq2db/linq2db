@@ -941,6 +941,53 @@ namespace Tests.Linq
 			[Association(ThisKey = nameof(ParentID), OtherKey = nameof(ComplexParent.ParentID), CanBeNull = true)]
 			public ComplexParent Parent { get; }
 		}
+
+		public class User
+		{
+			public int Id { get; set; }
+		}
+
+		public class Lookup
+		{
+			public int    Id   { get; set; }
+			public string Type { get; set; }
+		}
+
+		public class Resource
+		{
+			public int  Id                 { get; set; }
+			public int  AssociatedObjectId { get; set; }
+			public int? AssociationTypeId  { get; set; }
+
+			[Association(
+				ThisKey      = nameof(AssociationTypeId),
+				OtherKey     = nameof(Lookup.Id),
+				CanBeNull    = true,
+				Relationship = Relationship.ManyToOne)]
+			public Lookup AssociationTypeCode { get; set; }
+
+			public static Expression<Func<Resource, IDataContext, IQueryable<User>>> UserExpression =>
+				(r, db) => db.GetTable<User>().Where(c => r.AssociationTypeCode.Type == "us" && c.Id == r.AssociatedObjectId);
+
+			[Association(QueryExpressionMethod = nameof(UserExpression))]
+			public User User { get; set; }
+		}
+
+		[Test]
+		public void Issue1614Test([DataSources(ProviderName.Access)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<User>())
+			using (db.CreateLocalTable<Resource>())
+			using (db.CreateLocalTable<Lookup>())
+			{
+				var result = db.GetTable<Resource>()
+					.LoadWith(x => x.User)
+					.ToList();
+
+				//No assert, just need to get past here without an exception
+			}
+		}
 	}
 
 	public static class AssociationExtension

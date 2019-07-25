@@ -39,44 +39,37 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			var restrictions = string.IsNullOrEmpty(dataConnection.Connection.Database) ? new [] { (string)null} : new[] { null, dataConnection.Connection.Database };
-
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
-			var views  = ((DbConnection)dataConnection.Connection).GetSchema("Views", restrictions);
-
-			return
-			(
-				from t in tables.AsEnumerable()
-				let catalog = t.Field<string>("TABLE_SCHEMA")
-				let name    = t.Field<string>("TABLE_NAME")
-				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
-				select new TableInfo
+			// https://dev.mysql.com/doc/refman/8.0/en/tables-table.html
+			// all selected columns are not nullable
+			return dataConnection
+				.Query(rd =>
 				{
-					// The latest MySql returns FK information with lowered schema names.
-					//
-					TableID            = catalog?.ToLower() + ".." + name,
-					CatalogName        = catalog,
-					SchemaName         = "",
-					TableName          = name,
-					IsDefaultSchema    = true,
-					IsView             = false,
-					IsProviderSpecific = system || catalog.Equals("sys", StringComparison.OrdinalIgnoreCase)
-				}
-			).Concat(
-				from t in views.AsEnumerable()
-				let catalog = t.Field<string>("TABLE_SCHEMA")
-				let name    = t.Field<string>("TABLE_NAME")
-				select new TableInfo
-				{
-					TableID         = catalog?.ToLower() + ".." + name,
-					CatalogName     = catalog,
-					SchemaName      = "",
-					TableName       = name,
-					IsDefaultSchema = true,
-					IsView          = true,
-					IsProviderSpecific = catalog.Equals("sys", StringComparison.OrdinalIgnoreCase)
-				}
-			).ToList();
+					var catalog = rd.GetString(0);
+					var name    = rd.GetString(1);
+					// BASE TABLE/VIEW/SYSTEM VIEW
+					var type    = rd.GetString(2);
+					return new TableInfo()
+					{
+						// The latest MySql returns FK information with lowered schema names.
+						//
+						TableID            = catalog.ToLower() + ".." + name,
+						CatalogName        = catalog,
+						SchemaName         = string.Empty,
+						TableName          = name,
+						IsDefaultSchema    = true,
+						IsView             = type == "VIEW" || type == "SYSTEM VIEW",
+						IsProviderSpecific = type == "SYSTEM VIEW" || catalog.Equals("sys", StringComparison.OrdinalIgnoreCase),
+						Description        = rd.GetString(3)
+					};
+				}, @"
+SELECT
+		TABLE_SCHEMA,
+		TABLE_NAME,
+		TABLE_TYPE,
+		TABLE_COMMENT
+	FROM INFORMATION_SCHEMA.TABLES
+	WHERE TABLE_SCHEMA = DATABASE()")
+				.ToList();
 		}
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
@@ -104,91 +97,89 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-			var tcs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
-//			var vcs = ((DbConnection)dataConnection.Connection).GetSchema("ViewColumns");
-
-			var ret =
-			(
-				from c in tcs.AsEnumerable()
-				let dataType = c.Field<string>("DATA_TYPE")
-				select new ColumnInfo
+			// https://dev.mysql.com/doc/refman/8.0/en/columns-table.html
+			// nullable columns:
+			// CHARACTER_MAXIMUM_LENGTH
+			// NUMERIC_PRECISION
+			// NUMERIC_SCALE
+			return dataConnection
+				.Query(rd =>
 				{
-					TableID      = c.Field<string>("TABLE_SCHEMA")?.ToLower() + ".." + c.Field<string>("TABLE_NAME"),
-					Name         = c.Field<string>("COLUMN_NAME"),
-					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
-					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
-					DataType     = dataType,
-					Length       = Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int?> (c["NUMERIC_PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int?> (c["NUMERIC_SCALE"]),
-					ColumnType   = c.Field<string>("COLUMN_TYPE"),
-					IsIdentity   = c.Field<string>("EXTRA") == "auto_increment",
-				}
-			)
-//			.Concat(
-//				from c in vcs.AsEnumerable()
-//				let dataType = c.Field<string>("DATA_TYPE")
-//				select new ColumnInfo
-//				{
-//					TableID      = c.Field<string>("VIEW_SCHEMA")?.ToLower() + ".." + c.Field<string>("VIEW_NAME"),
-//					Name         = c.Field<string>("COLUMN_NAME"),
-//					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
-//					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
-//					DataType     = dataType,
-//					Length       = Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]),
-//					Precision    = Converter.ChangeTypeTo<int?> (c["NUMERIC_PRECISION"]),
-//					Scale        = Converter.ChangeTypeTo<int?> (c["NUMERIC_SCALE"]),
-//					ColumnType   = c.Field<string>("COLUMN_TYPE"),
-//					IsIdentity   = c.Field<string>("EXTRA") == "auto_increment",
-//				}
-//			)
-			.Select(ci =>
-			{
-				switch (ci.DataType)
-				{
-					case "bit"        :
-					case "date"       :
-					case "datetime"   :
-					case "timestamp"  :
-					case "time"       :
-					case "tinyint"    :
-					case "smallint"   :
-					case "int"        :
-					case "year"       :
-					case "mediumint"  :
-					case "bigint"     :
-					case "tiny int"   :
-						ci.Precision = null;
-						ci.Scale     = null;
-						break;
-				}
-
-				return ci;
-			})
-			.ToList();
-
-			return ret;
+					var extra      = rd.GetString(10);
+					return new ColumnInfo()
+					{
+						TableID      = rd.GetString(2).ToLower() + ".." + rd.GetString(3),
+						Name         = rd.GetString(4),
+						IsNullable   = rd.GetString(5) == "YES",
+						Ordinal      = Converter.ChangeTypeTo<int>(rd[6]),
+						DataType     = rd.GetString(0),
+						Length       = Converter.ChangeTypeTo<long?>(rd[7]),
+						Precision    = Converter.ChangeTypeTo<int?>(rd[8]),
+						Scale        = Converter.ChangeTypeTo<int?>(rd[9]),
+						ColumnType   = rd.GetString(1),
+						IsIdentity   = extra.Contains("auto_increment"),
+						Description  = rd.GetString(11),
+						// also starting from 5.1 we can utilise provileges column for skip properties
+						// but it sounds like a bad idea
+						SkipOnInsert = extra.Contains("VIRTUAL STORED") || extra.Contains("VIRTUAL GENERATED"),
+						SkipOnUpdate = extra.Contains("VIRTUAL STORED") || extra.Contains("VIRTUAL GENERATED")
+					};
+				}, @"
+SELECT
+		DATA_TYPE,
+		COLUMN_TYPE,
+		TABLE_SCHEMA,
+		TABLE_NAME,
+		COLUMN_NAME,
+		IS_NULLABLE,
+		ORDINAL_POSITION,
+		CHARACTER_MAXIMUM_LENGTH,
+		NUMERIC_PRECISION,
+		NUMERIC_SCALE,
+		EXTRA,
+		COLUMN_COMMENT
+	FROM INFORMATION_SCHEMA.COLUMNS
+	WHERE TABLE_SCHEMA = DATABASE()")
+				.ToList();
 		}
 
 		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			var fks = ((DbConnection)dataConnection.Connection).GetSchema("Foreign Key Columns");
-
-			//DataTable fks = ((dynamic)dataConnection.Connection).GetSchemaCollection("Foreign Key Columns", null);
-
-			return
-			(
-				from fk in fks.AsEnumerable()
-				select new ForeignKeyInfo
+			// https://dev.mysql.com/doc/refman/8.0/en/key-column-usage-table.html
+			// https://dev.mysql.com/doc/refman/8.0/en/table-constraints-table.html
+			// nullable columns:
+			// REFERECED_* columns could be null, but not for FK
+			return dataConnection
+				.Query(rd =>
 				{
-					Name         = fk.Field<string>("CONSTRAINT_NAME"),
-					ThisTableID  = fk.Field<string>("TABLE_SCHEMA")?.ToLower() + ".." + fk.Field<string>("TABLE_NAME"),
-					ThisColumn   = fk.Field<string>("COLUMN_NAME"),
-					OtherTableID = fk.Field<string>("REFERENCED_TABLE_SCHEMA")?.ToLower() + ".." + fk.Field<string>("REFERENCED_TABLE_NAME"),
-					OtherColumn  = fk.Field<string>("REFERENCED_COLUMN_NAME"),
-					Ordinal      = Converter.ChangeTypeTo<int>(fk["ORDINAL_POSITION"]),
-				}
-			).ToList();
+					return new ForeignKeyInfo()
+					{
+						Name         = rd.GetString(2),
+						ThisTableID  = rd.GetString(1).ToLower() + ".." + rd.GetString(0),
+						ThisColumn   = rd.GetString(3),
+						OtherTableID = rd.GetString(4).ToLower() + ".." + rd.GetString(5),
+						OtherColumn  = rd.GetString(6),
+						Ordinal      = Converter.ChangeTypeTo<int>(rd[7]),
+					};
+				}, @"
+SELECT
+		c.TABLE_NAME,
+		c.TABLE_SCHEMA,
+		c.CONSTRAINT_NAME,
+		c.COLUMN_NAME,
+		c.REFERENCED_TABLE_SCHEMA,
+		c.REFERENCED_TABLE_NAME,
+		c.REFERENCED_COLUMN_NAME,
+		c.ORDINAL_POSITION
+	FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE c
+		INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+			ON c.CONSTRAINT_SCHEMA    = tc.CONSTRAINT_SCHEMA
+				AND c.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+				AND c.TABLE_SCHEMA    = tc.TABLE_SCHEMA
+				AND c.TABLE_NAME      = tc.TABLE_NAME
+	WHERE tc.CONSTRAINT_TYPE = 'FOREIGN KEY'
+		AND c.TABLE_SCHEMA   = DATABASE()")
+				.ToList();
 		}
 
 		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
@@ -275,6 +266,7 @@ namespace LinqToDB.DataProvider.MySql
 						Ordinal       = Converter.ChangeTypeTo<int>(rd["ORDINAL_POSITION"]),
 						IsResult      = mode == null,
 						DataType      = rd.GetString(7).ToUpper(),
+						IsNullable    = true
 					};
 				}, "SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, PARAMETER_MODE, ORDINAL_POSITION, PARAMETER_NAME, NUMERIC_PRECISION, NUMERIC_SCALE, DATA_TYPE FROM INFORMATION_SCHEMA.parameters WHERE SPECIFIC_SCHEMA = database()")
 				.ToList();

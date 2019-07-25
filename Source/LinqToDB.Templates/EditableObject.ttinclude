@@ -71,7 +71,10 @@ void EditableObjectImpl()
 		};
 
 		if (prop.InitValue != null)
-			currentField.InitValue = prop.InitValue;
+		{
+			originalField.InitValue = prop.InitValue;
+			currentField.InitValue  = prop.InitValue;
+		}
 
 		gr.Members.Insert(0, currentField);
 
@@ -237,6 +240,12 @@ partial class Property
 class EditableProperty : Property
 {
 	public EditableProperty()
+	{
+		IsEditable = true;
+	}
+
+	public EditableProperty(ModelType type, string name)
+		: base(() => type.ToTypeName(), name, null, null)
 	{
 		IsEditable = true;
 	}

@@ -6,6 +6,7 @@
 <#
 	NamespaceName = "FirebirdDataContext";
 
+	IncludeDefaultSchema = false;
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
 

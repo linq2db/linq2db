@@ -53,7 +53,8 @@ void DoGenerateSqlServerFreeText()
 					})
 				{
 					GenericArguments = { "T" },
-					IsPartial        = false
+					IsPartial        = false,
+					DisableNullable  = true
 				},
 
 				new Field(() => "MethodInfo", "_freeTextTableMethod1")
@@ -91,7 +92,7 @@ void DoGenerateSqlServerFreeText()
 				},
 
 				new Method(() => "ITable<FreeTextKey<TKey>>", "FreeTextTable",
-					new Func<string>[] { () => "Expression<Func<TTable,string>> fieldSelector", () => "string text" },
+					new Func<string>[] { () => $"Expression<Func<TTable,{ModelType.Create<string>(true).ToTypeName()}>> fieldSelector", () => "string text" },
 					() => new[]
 					{
 						"return this.GetTable<FreeTextKey<TKey>>(",

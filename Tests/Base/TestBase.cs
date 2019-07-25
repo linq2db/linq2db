@@ -917,9 +917,9 @@ namespace Tests
 			return data;
 		}
 
-		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
+		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false)
 		{
-			AreEqual(t => t, expected, result, EqualityComparer<T>.Default);
+			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty);
 		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, Func<IEnumerable<T>, IEnumerable<T>> sort)
@@ -947,9 +947,9 @@ namespace Tests
 			AreEqual(fixSelector, expected, result, EqualityComparer<T>.Default);
 		}
 
-		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
+		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
 		{
-			AreEqual<T>(fixSelector, expected, result, comparer, null);
+			AreEqual<T>(fixSelector, expected, result, comparer, null, allowEmpty);
 		}
 
 		protected void AreEqual<T>(
@@ -957,7 +957,8 @@ namespace Tests
 			IEnumerable<T> expected,
 			IEnumerable<T> result,
 			IEqualityComparer<T> comparer,
-			Func<IEnumerable<T>, IEnumerable<T>> sort)
+			Func<IEnumerable<T>, IEnumerable<T>> sort,
+			bool allowEmpty = false)
 		{
 			var resultList   = result.  Select(fixSelector).ToList();
 			var expectedList = expected.Select(fixSelector).ToList();
@@ -968,7 +969,8 @@ namespace Tests
 				expectedList = sort(expectedList).ToList();
 			}
 
-			Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
+			if (!allowEmpty)
+				Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
 			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
 			var exceptExpectedList = resultList.  Except(expectedList, comparer).ToList();
@@ -1160,9 +1162,10 @@ namespace Tests
 
 	public class WithoutJoinOptimization : IDisposable
 	{
-		public WithoutJoinOptimization()
+		public WithoutJoinOptimization(bool opimizerSwitch = false)
 		{
-			Configuration.Linq.OptimizeJoins = false;
+			Configuration.Linq.OptimizeJoins = opimizerSwitch;
+			Query.ClearCaches();
 		}
 
 		public void Dispose()

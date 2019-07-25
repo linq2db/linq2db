@@ -240,11 +240,6 @@ namespace LinqToDB.SqlQuery
 
 		#region Distinct
 
-		public SqlSelectClause Distinct
-		{
-			get { IsDistinct = true; return this; }
-		}
-
 		public bool IsDistinct { get; set; }
 
 		#endregion

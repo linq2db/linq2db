@@ -16,7 +16,7 @@ namespace LinqToDB.Reflection
 		{
 			if (member == null) throw new ArgumentNullException("member");
 
-			_members.Add(member);
+			Members.Add(member);
 			_membersByName[member.MemberInfo.Name] = member;
 		}
 
@@ -40,20 +40,14 @@ namespace LinqToDB.Reflection
 
 		#region Public Members
 
-		public IObjectFactory          ObjectFactory               { get; set; }
-		public abstract Type           Type                        { get; }
-
-		/// <summary>
-		/// Gets the dynamic columns store accessor.
-		/// </summary>
-		public abstract MemberAccessor DynamicColumnsStoreAccessor { get; }
+		public IObjectFactory          ObjectFactory { get; set; }
+		public abstract Type           Type          { get; }
 
 		#endregion
 
 		#region Items
 
-		readonly List<MemberAccessor> _members = new List<MemberAccessor>();
-		public   List<MemberAccessor>  Members => _members;
+		public List<MemberAccessor>    Members       { get; } = new List<MemberAccessor>();
 
 		readonly ConcurrentDictionary<string,MemberAccessor> _membersByName = new ConcurrentDictionary<string,MemberAccessor>();
 
@@ -63,14 +57,14 @@ namespace LinqToDB.Reflection
 			{
 				return _membersByName.GetOrAdd(memberName, name =>
 				{
-					var ma = new MemberAccessor(this, name);
+					var ma = new MemberAccessor(this, name, null);
 					Members.Add(ma);
 					return ma;
 				});
 			}
 		}
 
-		public MemberAccessor this[int index] => _members[index];
+		public MemberAccessor this[int index] => Members[index];
 
 		#endregion
 

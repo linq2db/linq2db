@@ -58,12 +58,12 @@ namespace Tests.DataProvider
 		}
 
 		static void TestType<T>(
-			DataConnection connection, 
-			string dataTypeName, 
-			T value, 
-			string tableName = "AllTypes", 
-			bool convertToString = false, 
-			bool throwException = false)
+			DataConnection connection,
+			string         dataTypeName,
+			T              value,
+			string         tableName       = "AllTypes",
+			bool           convertToString = false,
+			bool           throwException  = false)
 		{
 			Assert.That(connection.Execute<T>($"SELECT {dataTypeName} FROM {tableName} WHERE ID = 1"),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
@@ -588,7 +588,7 @@ namespace Tests.DataProvider
 				.Where(_ => value == _.StringValue2);
 		}
 
-#region DateTime Tests
+		#region DateTime Tests
 
 		[Table(Name="ALLTYPES")]
 		public partial class ALLTYPE
@@ -847,9 +847,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-#endregion
+		#endregion
 
-#region Sequence
+		#region Sequence
 
 		[Test]
 		public void SequenceInsert([IncludeDataSources(TestProvName.AllOracle)] string context)
@@ -885,9 +885,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-#endregion
+		#endregion
 
-#region BulkCopy
+		#region BulkCopy
 
 		static void BulkCopyLinqTypes(string context, BulkCopyType bulkCopyType)
 		{
@@ -1295,9 +1295,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-#endregion
+		#endregion
 
-#region CreateTest
+		#region CreateTest
 
 		[Table]
 		class TempTestTable
@@ -1326,9 +1326,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-#endregion
+		#endregion
 
-#region XmlTable
+		#region XmlTable
 
 		[Test]
 		public void XmlTableTest1([IncludeDataSources(TestProvName.AllOracle)] string context)
@@ -1576,7 +1576,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#endregion
+		#endregion
 
 		[Test]
 		public void TestOrderByFirst1([IncludeDataSources(TestProvName.AllOracle)] string context)
@@ -2024,7 +2024,6 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		public void Issue723Test1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			var ms = new MappingSchema();
@@ -2076,7 +2075,6 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[ActiveIssue(":NEW as parameter", Configuration = ProviderName.OracleNative)]
 		public void Issue723Test2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -2330,6 +2328,35 @@ namespace Tests.DataProvider
 				{
 					OracleTools.DontEscapeLowercaseIdentifiers = initial;
 				}
+			}
+		}
+
+		class MyTestDataConnection : TestDataConnection
+		{
+			public MyTestDataConnection(string configurationString)
+				: base(configurationString)
+			{
+			}
+
+			protected override IDataReader ExecuteReader(IDbCommand command, CommandBehavior commandBehavior)
+			{
+				var reader = base.ExecuteReader(command, commandBehavior);
+
+				if (reader is OracleDataReader or1 && command is OracleCommand oc1)
+				{
+					or1.FetchSize = oc1.RowSize * 10000;
+				}
+
+				return reader;
+			}
+		}
+
+		[Test]
+		public void OverrideExecuteReaderTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using (var db = new MyTestDataConnection(context))
+			{
+				_ = db.Person.ToList();
 			}
 		}
 	}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -339,6 +340,13 @@ namespace LinqToDB.SqlQuery
 					Visit1(i);
 				}
 			}
+
+			// decided to do not enumerate unique keys
+//			if (q.HasUniqueKeys)
+//				foreach (var keyList in q.UniqueKeys)
+//				{
+//					Visit1X(keyList);
+//				}
 		}
 
 		void Visit1X(SqlOrderByClause element)
@@ -815,6 +823,13 @@ namespace LinqToDB.SqlQuery
 					Visit2(i);
 				}
 			}
+
+			// decided to do not enumerate unique keys
+//			if (q.HasUniqueKeys)
+//				foreach (var keyList in q.UniqueKeys)
+//				{
+//					Visit2X(keyList);
+//				}
 		}
 
 		void Visit2X(SqlOrderByClause element)
@@ -1316,10 +1331,18 @@ namespace LinqToDB.SqlQuery
 						var source = (ISqlTableSource)ConvertInternal(table.Source, action);
 						var joins  = Convert(table.Joins, action);
 
-						if (source != null && !ReferenceEquals(source, table.Source) ||
-							joins  != null && !ReferenceEquals(table.Joins, joins))
-							newElement = new SqlTableSource(source ?? table.Source, table._alias, joins ?? table.Joins);
+						List<ISqlExpression[]> uk = null;
+						if (table.HasUniqueKeys) 
+							uk = ConvertListArray(table.UniqueKeys, action, null);
 
+
+						if (source != null && !ReferenceEquals(source, table.Source) ||
+							joins  != null && !ReferenceEquals(table.Joins, joins)   || 
+							uk     != null && !ReferenceEquals(table.UniqueKeys, uk))
+						{
+							newElement = new SqlTableSource(source ?? table.Source, table._alias, joins ?? table.Joins,
+								uk ?? (table.HasUniqueKeys ? table.UniqueKeys : null));
+						}
 						break;
 					}
 
@@ -1820,6 +1843,16 @@ namespace LinqToDB.SqlQuery
 						}
 
 						if (!doConvert)
+						{
+							if (q.HasUniqueKeys)
+							{
+								doConvert = q.UniqueKeys.Any(keys => keys.Any(k =>
+									_visitedElements.TryGetValue(k, out var ve) && ve != null && ve != k));
+							}
+						}
+
+
+						if (!doConvert)
 							break;
 
 						var nq = new SelectQuery();
@@ -1835,7 +1868,11 @@ namespace LinqToDB.SqlQuery
 						var oc = (SqlOrderByClause)ConvertInternal(q.OrderBy, action) ?? q.OrderBy;
 						var us = q.HasUnion ? Convert(q.Unions, action) : q.Unions;
 
-						nq.Init(sc, fc, wc, gc, hc, oc, us,
+						List<ISqlExpression[]> uk = null;
+						if (q.HasUniqueKeys) 
+							uk = ConvertListArray(q.UniqueKeys, action, null) ?? q.UniqueKeys;
+
+						nq.Init(sc, fc, wc, gc, hc, oc, us, uk,
 							(SelectQuery)parent,
 							q.IsParameterDependent);
 
@@ -1969,6 +2006,36 @@ namespace LinqToDB.SqlQuery
 
 			return list2;
 		}
+
+		List<T[]> ConvertListArray<T>(List<T[]> list1, Func<IQueryElement, IQueryElement> action, Clone<T> clone)
+			where T : class, IQueryElement
+		{
+			List<T[]> list2 = null;
+
+			for (var i = 0; i < list1.Count; i++)
+			{
+				var elem1 = list1[i];
+				var elem2 = Convert(elem1, action);
+
+				if (elem2 != null && !ReferenceEquals(elem1, elem2))
+				{
+					if (list2 == null)
+					{
+						list2 = new List<T[]>(list1.Count);
+
+						for (var j = 0; j < i; j++)
+							list2.Add(clone == null ? list1[j] : list1[j].Select(e => clone(e)).ToArray() );
+					}
+
+					list2.Add(elem2);
+				}
+				else
+					list2?.Add(clone == null ? elem1 : elem1.Select(e => clone(e)).ToArray());
+			}
+
+			return list2;
+		}
+
 
 		#endregion
 	}

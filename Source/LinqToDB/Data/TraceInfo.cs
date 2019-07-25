@@ -102,7 +102,7 @@ namespace LinqToDB.Data
 					if (_sqlText != null)
 						return _sqlText;
 
-					var sqlProvider = DataConnection.DataProvider.CreateSqlBuilder();
+					var sqlProvider = DataConnection.DataProvider.CreateSqlBuilder(DataConnection.MappingSchema);
 					var sb          = new StringBuilder();
 
 					sb.Append("-- ").Append(DataConnection.ConfigurationString);

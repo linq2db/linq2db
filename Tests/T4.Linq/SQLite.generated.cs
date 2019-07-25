@@ -4,6 +4,9 @@
 //    Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
+
+#pragma warning disable 1591
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,11 +16,6 @@ using LinqToDB.Mapping;
 
 namespace SQLiteDataContext
 {
-	/// <summary>
-	/// Database       : TestData
-	/// Data Source    : TestData
-	/// Server Version : 3.19.3
-	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
@@ -487,3 +485,5 @@ namespace SQLiteDataContext
 		#endregion
 	}
 }
+
+#pragma warning restore 1591

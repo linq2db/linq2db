@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
-			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
+			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var tableName  = GetTableName(sqlBuilder, options, table);
 

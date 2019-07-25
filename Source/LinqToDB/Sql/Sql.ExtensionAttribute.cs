@@ -16,8 +16,8 @@ using NotNull = JetBrains.Annotations.NotNullAttribute;
 
 namespace LinqToDB
 {
-    using Common;
-    using Expressions;
+	using Common;
+	using Expressions;
 	using Extensions;
 	using SqlQuery;
 
@@ -261,8 +261,8 @@ namespace LinqToDB
 				readonly ConvertHelper _convert;
 
 				public ExtensionBuilder(
-					          string        configuration,
-					          object        builderValue,
+							  string        configuration,
+							  object        builderValue,
 					[NotNull] IDataContext  dataContext,
 					[NotNull] SelectQuery   query,
 					[NotNull] SqlExtension  extension,
@@ -326,7 +326,7 @@ namespace LinqToDB
 						}
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' bot found", argName));
+					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
 				}
 
 				public ISqlExpression GetExpression(int index)
@@ -348,7 +348,7 @@ namespace LinqToDB
 						}
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' bot found", argName));
+					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
 				}
 
 				public ISqlExpression ConvertToSqlExpression()
@@ -432,21 +432,22 @@ namespace LinqToDB
 				return attributes;
 			}
 
-			public static List<Expression> BuildFunctionsChain(MappingSchema mapping, Expression expr)
+			public static Expression ExcludeExtensionChain(MappingSchema mapping, Expression expr)
 			{
-				var chains = new List<Expression> { expr };
-				var current  = expr;
+				var current = expr;
 
 				while (current != null)
 				{
-					MemberInfo   memberInfo;
+					var attributes = GetExtensionAttributes(current, mapping);
+
+					if (!attributes.Any())
+						break;
+
 					switch (current.NodeType)
 					{
 						case ExpressionType.MemberAccess :
 							{
 								var memberExpr = (MemberExpression)current;
-
-								memberInfo = memberExpr.Member;
 								current    = memberExpr.Expression;
 
 								break;
@@ -456,29 +457,26 @@ namespace LinqToDB
 							{
 								var call = (MethodCallExpression) current;
 
-								memberInfo = call.Method;
-
 								if (call.Method.IsStatic)
-									current = call.Arguments.First();
+								{
+									if (call.Arguments.Count > 0)
+										current = call.Arguments[0];
+									else
+										return current;
+								}								
 								else
 									current = call.Object;
 
 								break;
 							}
 						default:
-						{
-							current = null;
-							continue;
-						}
+							{
+								return current;
+							}
 					}
-
-					var attributes = GetExtensionAttributes(current, mapping);
-
-					if (attributes.Any())
-						chains.Add(current);
 				}
 
-				return chains;
+				return current;
 			}
 
 			protected List<SqlExtensionParam> BuildFunctionsChain(IDataContext dataContext, SelectQuery query, Expression expr, ConvertHelper convertHelper)

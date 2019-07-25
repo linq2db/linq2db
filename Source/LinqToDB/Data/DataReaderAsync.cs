@@ -50,7 +50,7 @@ namespace LinqToDB.Data
 		public async Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync(objectReader, list.Add, cancellationToken);
+			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return list;
 		}
 
@@ -62,7 +62,7 @@ namespace LinqToDB.Data
 		public async Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync(objectReader, list.Add, cancellationToken);
+			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return list.ToArray();
 		}
 
@@ -73,7 +73,7 @@ namespace LinqToDB.Data
 
 		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
 		{
-			while (await Reader.ReadAsync(cancellationToken))
+			while (await Reader.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				action(objectReader(Reader));
 		}
 
@@ -89,7 +89,7 @@ namespace LinqToDB.Data
 		public async Task<List<T>> QueryToListAsync<T>(CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync<T>(list.Add, cancellationToken);
+			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return list;
 		}
 
@@ -101,7 +101,7 @@ namespace LinqToDB.Data
 		public async Task<T[]> QueryToArrayAsync<T>(CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync<T>(list.Add, cancellationToken);
+			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return list.ToArray();
 		}
 
@@ -113,12 +113,12 @@ namespace LinqToDB.Data
 		public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken)
 		{
 			if (ReadNumber != 0)
-				if (!await Reader.NextResultAsync(cancellationToken))
+				if (!await Reader.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 					return;
 
 			ReadNumber++;
 
-			await CommandInfo.ExecuteQueryAsync(Reader, CommandInfo.DataConnection.Command.CommandText + "$$$" + ReadNumber, action, cancellationToken);
+			await CommandInfo.ExecuteQueryAsync(Reader, CommandInfo.DataConnection.Command.CommandText + "$$$" + ReadNumber, action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion
@@ -133,7 +133,7 @@ namespace LinqToDB.Data
 		public async Task<List<T>> QueryToListAsync<T>(T template, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync(template, list.Add, cancellationToken);
+			await QueryForEachAsync(template, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return list;
 		}
 
@@ -145,7 +145,7 @@ namespace LinqToDB.Data
 		public async Task<T[]> QueryToArrayAsync<T>(T template, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync(template, list.Add, cancellationToken);
+			await QueryForEachAsync(template, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return list.ToArray();
 		}
 
@@ -171,14 +171,14 @@ namespace LinqToDB.Data
 		public async Task<T> ExecuteForEachAsync<T>(CancellationToken cancellationToken)
 		{
 			if (ReadNumber != 0)
-				if (!await Reader.NextResultAsync(cancellationToken))
+				if (!await Reader.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 					return default(T);
 
 			ReadNumber++;
 
 			var sql = CommandInfo.DataConnection.Command.CommandText + "$$$" + ReadNumber;
 
-			return await CommandInfo.ExecuteScalarAsync<T>(Reader, sql, cancellationToken);
+			return await CommandInfo.ExecuteScalarAsync<T>(Reader, sql, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion
