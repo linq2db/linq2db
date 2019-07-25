@@ -119,13 +119,5 @@ deploy:
   on:
     branch: release1
 
-- provider: NuGet
-  server: https://www.myget.org/F/linq2db/api/v2
-  api_key:
-    secure: LDw0jeA1Yo3R4/TKv2kmlgJR8dTT6Wun2MONq3uDvtVQJG4LOU9LjvVTAc7IgRfm
-  skip_symbols: true
-  on:
-    branch: release.3.0
-
 skip_commits:
   message: /ci skip/      # Regex for matching commit message
