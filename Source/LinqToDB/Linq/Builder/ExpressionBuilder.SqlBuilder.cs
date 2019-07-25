@@ -313,6 +313,7 @@ namespace LinqToDB.Linq.Builder
 						arg = ((MethodCallExpression)arg).Arguments[0];
 
 				arg = arg.SkipPathThrough();
+				arg = arg.SkipMethodChain(MappingSchema);
 
 				var mc = arg as MethodCallExpression;
 

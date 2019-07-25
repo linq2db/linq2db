@@ -1,4 +1,7 @@
-﻿namespace Tests.Linq
+﻿using System;
+using System.Diagnostics;
+
+namespace Tests.Linq
 {
 	using System;
 	using System.Linq;
@@ -1263,6 +1266,34 @@
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+			}
+		}
+
+		[Test]
+		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, ProviderName.Oracle)]string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 =
+					from p in db.Parent.Where(p => p.ParentID > 0).AsSubQuery()
+					select new
+					{
+						p.ParentID,
+						MaxValue = Sql.Ext.Max(p.Value1).Over().PartitionBy(p.ParentID).ToValue(),
+					};
+
+				var q2 = from q in q1.AsSubQuery()
+					select new
+					{
+						q.ParentID,
+						MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
+					};
+
+				Console.WriteLine(q1.ToString());
+				Console.WriteLine(q2.ToString());
+
+				Assert.AreEqual(2, q1.EnumQueries().Count());
+				Assert.AreEqual(3, q2.EnumQueries().Count());
 			}
 		}
 

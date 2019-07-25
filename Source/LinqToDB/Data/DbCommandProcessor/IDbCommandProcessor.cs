@@ -1,19 +1,21 @@
-﻿using JetBrains.Annotations;
+﻿using System;
 using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.Data.DbCommandProcessor
 {
 	[PublicAPI]
 	public interface IDbCommandProcessor
 	{
-		object ExecuteScalar(DbCommand cmd);
-		Task<object> ExecuteScalarAsync(DbCommand cmd, CancellationToken ct);
-		int ExecuteNonQuery(DbCommand cmd);
-		Task<int> ExecuteNonQueryAsync(DbCommand cmd, CancellationToken ct);
-		DbDataReader ExecuteReader(DbCommand cmd, CommandBehavior commandBehavior);
-		Task<DbDataReader> ExecuteReaderAsync(DbCommand cmd, CommandBehavior commandBehavior, CancellationToken ct);
+		object             ExecuteScalar       (DbCommand command);
+		Task<object>       ExecuteScalarAsync  (DbCommand command, CancellationToken cancellationToken);
+		int                ExecuteNonQuery     (DbCommand command);
+		Task<int>          ExecuteNonQueryAsync(DbCommand command, CancellationToken cancellationToken);
+		DbDataReader       ExecuteReader       (DbCommand command, CommandBehavior commandBehavior);
+		Task<DbDataReader> ExecuteReaderAsync  (DbCommand command, CommandBehavior commandBehavior, CancellationToken cancellationToken);
 	}
 }

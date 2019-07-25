@@ -54,7 +54,7 @@ void EquatableImpl()
 								new Method(() => "bool", "Equals",
 									new Func<string>[]
 									{
-										() => $"{new ModelType(className, true, true).ToTypeName()} other"
+										() => $"{new ModelType(className, true, false).ToTypeName()} other"
 									},
 									() => new[]
 									{
