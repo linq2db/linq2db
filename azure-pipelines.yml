@@ -26,14 +26,14 @@ stages:
         configuration: '$(build_configuration)'
         msbuildArguments: '/t:Restore;Rebuild -m'
 
-#    - task: DotNetCoreCLI@2
-#      inputs:
-#        command: 'publish'
-#        projects: '**/Tests/Linq/Tests.csproj'
-#        publishWebProjects: false
-#        zipAfterPublish: false
-#        arguments: -f netcoreapp2.0  -c $(build_configuration)
-#        nobuild: true
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'publish'
+        projects: '**/Tests/Linq/Tests.csproj'
+        publishWebProjects: false
+        zipAfterPublish: false
+        arguments: -f netcoreapp2.0 -c $(build_configuration)
+        nobuild: true
 
     - task: CopyFiles@2
       inputs:
@@ -43,7 +43,7 @@ stages:
 
     - task: CopyFiles@2
       inputs:
-        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0'
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish'
         sourceFolder: '$(Build.SourcesDirectory)/Tests'
         contents: 'DataProviders.json'
 
@@ -54,7 +54,7 @@ stages:
 
     - task: PublishBuildArtifacts@1
       inputs:
-        pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0'
+        pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish'
         artifactName: '$(netcore2_tests)'
 
 ##############
@@ -62,6 +62,7 @@ stages:
 ##############
 
 - stage: Tests
+  displayName: 'Tests: '
   dependsOn: Build
   condition: succeeded()
 
@@ -72,13 +73,12 @@ stages:
   - job: 
     pool:
       vmImage: 'windows-2019'
-    displayName: 'Tests: Windows / NETFX 4.6'
+    displayName: 'Win / NETFX 4.6 / '
 
     strategy:
-      maxParallel: 2
       matrix:
-        job1:
-           title: '$(displayName) / SQLite.Classic'
+        SQLite_Classic:
+           title: 'SQLite.Classic'
 #          file: 'win_netfx_job1.ps1'
 #        job2:
 #          file: 'win_netfx_job2.ps1'
@@ -120,10 +120,12 @@ stages:
   - job:
     pool:
       vmImage: 'windows-2019'
-    displayName: 'Tests: Windows / NETCOREAPP2.0'
+    displayName: 'Win / NETCOREAPP2.0 / '
 
-    variables:
-        title: '$(displayName) / SQLite.MS'
+    strategy:
+      matrix:
+        SQLite_MS:
+        title: 'SQLite.MS'
 #      file: 'win_core2_job1.ps1'
 
     steps:

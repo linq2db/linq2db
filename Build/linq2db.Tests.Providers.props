@@ -17,7 +17,7 @@
 		<PackageReference Include="AdoNetCore.AseClient" Version="0.13.1" />
 
 		<PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.1.1" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
 
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 
