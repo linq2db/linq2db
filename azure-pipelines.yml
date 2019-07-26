@@ -25,6 +25,7 @@ stages:
         solution: '$(solution)'
         configuration: '$(build_configuration)'
         msbuildArguments: '/t:Restore;Rebuild -m'
+      displayName: Build Solution
 
 # need it for DotNetCoreCLI task be able to build C#8 project
     - task: DotNetCoreInstaller@1
@@ -40,28 +41,33 @@ stages:
         zipAfterPublish: false
         arguments: -f netcoreapp2.0 -c $(build_configuration)
         nobuild: true
+      displayName: Publish Test Project
 
     - task: CopyFiles@2
       inputs:
         targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
         sourceFolder: '$(Build.SourcesDirectory)/Tests'
         contents: 'DataProviders.json'
+      displayName: Copy test settings for NETFX46
 
     - task: CopyFiles@2
       inputs:
         targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish'
         sourceFolder: '$(Build.SourcesDirectory)/Tests'
         contents: 'DataProviders.json'
+      displayName: Copy test settings for NETCOREAPP2.0
 
     - task: PublishBuildArtifacts@1
       inputs:
         pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
         artifactName: '$(netfx46_tests)'
+      displayName: Publish test artifacts for NETFX46
 
     - task: PublishBuildArtifacts@1
       inputs:
         pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish'
         artifactName: '$(netcore2_tests)'
+      displayName: Publish test artifacts for NETCOREAPP2.0
 
 ##############
 #  Run tests #
