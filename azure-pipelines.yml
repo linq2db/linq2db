@@ -125,7 +125,7 @@ stages:
     strategy:
       matrix:
         SQLite_MS:
-        title: 'SQLite.MS'
+          title: 'SQLite.MS'
 #      file: 'win_core2_job1.ps1'
 
     steps:
