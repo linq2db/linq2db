@@ -11,7 +11,7 @@ stages:
 #  Build and publish testable binaries #
 ########################################
 - stage: Build
-  displayName: 'Build'
+  displayName: 'Build: '
   jobs:
   - job:
     pool:
@@ -25,6 +25,12 @@ stages:
         solution: '$(solution)'
         configuration: '$(build_configuration)'
         msbuildArguments: '/t:Restore;Rebuild -m'
+
+# need it for DotNetCoreCLI task be able to build C#8 project
+    - task: DotNetCoreInstaller@1
+      inputs:
+        version: '3.0.100-preview7-012821'
+      displayName: Install .NET Core 3p7 SDK
 
     - task: DotNetCoreCLI@2
       inputs:
@@ -70,7 +76,7 @@ stages:
 ########################
 #  Windows (NETFX 4.6) #
 ########################
-  - job: 
+  - job:
     pool:
       vmImage: 'windows-2019'
     displayName: 'Win / NETFX 4.6 / '
