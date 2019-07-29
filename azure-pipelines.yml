@@ -202,11 +202,11 @@ stages:
 
     - task: DotNetCoreCLI@2
       inputs:
-        command: 'vstest'
+        command: 'test'
         projects: './$(netcore2_tests)/linq2db.Tests.dll'
         publishWebProjects: false
         zipAfterPublish: false
-        arguments: '"/TestCaseFilter:\"TestCategory != SkipCI\"" /Framework:.NETCoreApp,Version=v2.0'
+        arguments: -f netcoreapp2.0 --filter "TestCategory != SkipCI" --logger trx
         nobuild: true
         publishTestResults: false
       displayName: '$(title)'
