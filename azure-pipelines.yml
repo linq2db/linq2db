@@ -200,15 +200,9 @@ stages:
 #        filePath: '$(netcore2_tests)/$(file)'
 #        workingDirectory: '$(netcore2_tests)'
 
-    - task: DotNetCoreCLI@2
-      inputs:
-        command: 'vstest'
-        projects: './$(netcore2_tests)/linq2db.Tests.dll'
-        publishWebProjects: false
-        zipAfterPublish: false
-        arguments: '"/TestCaseFilter:\"TestCategory != SkipCI\"" /Framework:.NETCoreApp,Version=v2.0'
-        nobuild: true
-        publishTestResults: false
+# just because there is not vstest handing in DotNetCoreCLI@2
+# https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
+    - script: dotnet vstest ./$(netcore2_tests)/linq2db.Tests.dll TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0
       displayName: '$(title)'
 
 
