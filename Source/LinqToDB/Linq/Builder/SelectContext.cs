@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 		public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
-
+		public string Path => this.GetPath();
 		public MethodCallExpression MethodCall;
 #endif
 
@@ -892,7 +892,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (level == 0)
 			{
-				if (Body.NodeType == ExpressionType.Parameter)
+				if (Body.NodeType == ExpressionType.Parameter && Lambda.Parameters.Count == 1)
 				{
 					var sequence = GetSequence(Body, 0);
 
