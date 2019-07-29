@@ -170,3 +170,50 @@ stages:
       inputs:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
+
+##########################
+#  Linux (NETCOREAPP2_0) #
+##########################
+  - job:
+    pool:
+      vmImage: 'ubuntu-16.04'
+    displayName: 'Lin / NETCOREAPP2.0 / '
+
+    strategy:
+      matrix:
+        SQLite_MS:
+          title: 'SQLite.MS'
+#      file: 'win_core2_job1.ps1'
+
+    steps:
+    - checkout: none
+
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: '$(netcore2_tests)'
+        downloadPath: '$(System.DefaultWorkingDirectory)'
+
+#    - task: PowerShell@2
+#      inputs:
+#        filePath: '$(netcore2_tests)/$(file)'
+#        workingDirectory: '$(netcore2_tests)'
+
+      - task: DotNetCoreCLI@2
+      inputs:
+        command: 'test'
+        projects: './$(netcore2_tests)/linq2db.Tests.dll'
+        publishWebProjects: false
+        zipAfterPublish: false
+        arguments: './$(netcore2_tests)/linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0'
+        nobuild: true
+        publishTestResults: false
+      displayName: '$(title)'
+
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
