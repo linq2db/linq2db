@@ -99,6 +99,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(1554)]
 		public void TestUpdate3([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -181,6 +182,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(1554)]
 		public void TestUpdate7([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -238,6 +240,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(1554)]
 		public void TestInsert3([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -312,6 +315,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(1554)]
 		public void TestInsert7([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -371,6 +375,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(1554)]
 		public void TestFluentUpdate3([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureFluentMapping()))
@@ -453,6 +458,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(1554)]
 		public void TestFluentUpdate7([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureFluentMapping()))
@@ -510,6 +516,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(1554)]
 		public void TestFluentInsert3([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureFluentMapping()))
@@ -584,6 +591,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(1554)]
 		public void TestFluentInsert7([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureFluentMapping()))
