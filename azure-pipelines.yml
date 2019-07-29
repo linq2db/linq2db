@@ -200,7 +200,7 @@ stages:
 #        filePath: '$(netcore2_tests)/$(file)'
 #        workingDirectory: '$(netcore2_tests)'
 
-      - task: DotNetCoreCLI@2
+    - task: DotNetCoreCLI@2
       inputs:
         command: 'test'
         projects: './$(netcore2_tests)/linq2db.Tests.dll'
