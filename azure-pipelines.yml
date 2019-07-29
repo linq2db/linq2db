@@ -206,7 +206,7 @@ stages:
         projects: './$(netcore2_tests)/linq2db.Tests.dll'
         publishWebProjects: false
         zipAfterPublish: false
-        arguments: '/TestCaseFilter:"TestCategory != SkipCI\" /Framework:.NETCoreApp,Version=v2.0'
+        arguments: '/TestCaseFilter:\\"TestCategory != SkipCI\" /Framework:.NETCoreApp,Version=v2.0'
         nobuild: true
         publishTestResults: false
       displayName: '$(title)'
