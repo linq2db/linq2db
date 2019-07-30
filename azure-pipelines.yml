@@ -140,7 +140,7 @@ stages:
 
     - task: CmdLine@2
       inputs:
-        script: echo "$(Build.SourcesDirectory)/NuGet/PackCI.bat"
+        script: $(Build.SourcesDirectory)/NuGet/PackCI.bat
         workingDirectory: $(Build.SourcesDirectory)/NuGet
       displayName: Build nugets
 
