@@ -106,8 +106,8 @@ stages:
 
     steps:
 
-    - powershell: echo "##vso[task.setvariable variable=nugetVersion]$(nugetVersion)-rc$(Build.BuildNumber)"
-      condition: ne(variables['Build.SourceBranch'], 'release')
+    - powershell: echo "##vso[task.setvariable variable=nugetVersion]$(nugetVersion)-rc$(Date:yyyyMMdd)-$(BuildID)"
+      condition: ne(variables['Build.SourceBranchName'], 'release')
       displayName: Update nuget version
 
     - task: DownloadPipelineArtifact@2
@@ -129,7 +129,7 @@ stages:
       inputs:
         filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
         workingDirectory: '$(Build.SourcesDirectory)'
-        arguments: -path $(Build.SourcesDirectory)/NuGet/*.nuspec -version $(nugetVersion)
+        arguments: -path $(Build.SourcesDirectory)/NuGet/*.nuspec -version $(nugetVersion) -branch $(Build.SourceBranchName)
       displayName: Update nuspecs
 
     - task: CmdLine@2
@@ -152,7 +152,7 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Win / NETFX 4.6 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'release'))
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
 
     strategy:
       matrix:
@@ -197,7 +197,7 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Win / NETCOREAPP2.0 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'release'))
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
 
     strategy:
       matrix:
@@ -240,7 +240,7 @@ stages:
       vmImage: 'ubuntu-16.04'
     displayName: 'Lin / NETCOREAPP2.0 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'release'))
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
 
     strategy:
       matrix:
@@ -280,7 +280,7 @@ stages:
       vmImage: 'macOS-10.14'
     displayName: 'Mac / NETCOREAPP2.0 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'release'))
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
 
     strategy:
       matrix:

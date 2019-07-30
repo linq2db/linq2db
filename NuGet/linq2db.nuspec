@@ -11,35 +11,11 @@
 		<dependencies>
 			<group targetFramework=".NETFramework4.5" />
 			<group targetFramework=".NETFramework4.6" />
-			<group targetFramework=".NETStandard1.6">
-				<dependency id="Microsoft.CSharp"                     version="4.5.0" />
-				<dependency id="System.Diagnostics.TraceSource"       version="4.3.0" />
-				<dependency id="Microsoft.Extensions.DependencyModel" version="2.1.0" />
-				<dependency id="System.ComponentModel.Annotations"    version="4.5.0" />
-				<dependency id="System.ComponentModel.TypeConverter"  version="4.3.0" />
-				<dependency id="System.Linq.Queryable"                version="4.3.0" />
-				<dependency id="System.Runtime.Loader"                version="4.3.0" />
-				<dependency id="System.Xml.XmlDocument"               version="4.3.0" />
-				<dependency id="System.Data.SqlClient"                version="4.6.0" />
-				<dependency id="System.Net.NetworkInformation"        version="4.3.0" />
-			</group>
 			<group targetFramework=".NETStandard2.0">
 				<dependency id="Microsoft.CSharp"                     version="4.5.0" />
 				<dependency id="System.ComponentModel.Annotations"    version="4.5.0" />
 				<dependency id="System.Data.SqlClient"                version="4.6.0" />
 				<dependency id="System.Data.DataSetExtensions"        version="4.5.0" />
-			</group>
-			<group targetFramework=".NETCoreApp1.0">
-				<dependency id="Microsoft.CSharp"                     version="4.5.0" />
-				<dependency id="System.Diagnostics.TraceSource"       version="4.3.0" />
-				<dependency id="Microsoft.Extensions.DependencyModel" version="2.1.0" />
-				<dependency id="System.ComponentModel.Annotations"    version="4.5.0" />
-				<dependency id="System.ComponentModel.TypeConverter"  version="4.3.0" />
-				<dependency id="System.Linq.Queryable"                version="4.3.0" />
-				<dependency id="System.Runtime.Loader"                version="4.3.0" />
-				<dependency id="System.Xml.XmlDocument"               version="4.3.0" />
-				<dependency id="System.Data.SqlClient"                version="4.6.0" />
-				<dependency id="System.Net.NetworkInformation"        version="4.3.0" />
 			</group>
 			<group targetFramework=".NETCoreApp2.0">
 				<dependency id="System.ComponentModel.Annotations"    version="4.5.0" />
@@ -50,8 +26,6 @@
 	</metadata>
 
 	<files>
-		<file src="..\MIT-LICENSE.txt" />
-
 		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.pdb" target="lib\" />
 		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.xml" target="lib\" />
 		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.dll" target="lib\" />

@@ -31,5 +31,5 @@ This script update nuspecs with missing properties like:
 
 Usage:
 ```
-BuildNuspecs.ps1 -path <NUSPEC_SEARCH_MASK> -version <NUGET_VERSION>
+BuildNuspecs.ps1 -path <NUSPEC_SEARCH_MASK> -version <NUGET_VERSION>[ -branch <BRANCH_NAME>]
 ```

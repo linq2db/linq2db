@@ -1,6 +1,7 @@
 ﻿Param(
 	[Parameter(Mandatory=$true)][string]$path,
-	[Parameter(Mandatory=$true)][string]$version
+	[Parameter(Mandatory=$true)][string]$version,
+	[Parameter(Mandatory=$false)][string]$branch
 )
 
 $ErrorActionPreference = "Stop"
@@ -13,7 +14,9 @@ if ($version) {
 	$ns = @{ns=$nsUri}
 	$dotlessVersion = $version -replace '\.',''
 	$commit = (git rev-parse HEAD)
-	$branch = (git rev-parse --abbrev-ref HEAD)
+	if (-not $branch) {
+		$branch = (git rev-parse --abbrev-ref HEAD)
+	}
 
 	Get-ChildItem $path | ForEach {
 		$xmlPath = Resolve-Path $_.FullName
@@ -53,9 +56,17 @@ if ($version) {
 		$child.InnerText = $authors
 		$xml.package.metadata.AppendChild($child)
 
-		$child = $xml.CreateElement('licenseUrl', $nsUri)
-		$child.InnerText = 'https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt'
+		$child = $xml.CreateElement('license', $nsUri)
+		$attr = $xml.CreateAttribute('src')
+		$attr.Value = 'MIT-LICENSE.txt'
+		$child.Attributes.Append($attr)
 		$xml.package.metadata.AppendChild($child)
+
+		$child = $xml.CreateElement('file', $nsUri)
+		$attr = $xml.CreateAttribute('src')
+		$attr.Value = '..\MIT-LICENSE.txt'
+		$child.Attributes.Append($attr)
+		$xml.package.files.AppendChild($child)
 
 		$child = $xml.CreateElement('projectUrl', $nsUri)
 		$child.InnerText = 'http://linq2db.com'
