@@ -133,7 +133,7 @@ stages:
 
     - task: PowerShell@2
       inputs:
-        filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
+        filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
         workingDirectory: '$(Build.SourcesDirectory)'
         arguments: -path $(Build.SourcesDirectory)/NuGet/*.nuspec -version $(nugetVersion)
       displayName: Update nuspecs
