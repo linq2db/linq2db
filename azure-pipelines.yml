@@ -106,7 +106,7 @@ stages:
 
     steps:
 
-    - powershell: echo "##vso[task.setvariable variable=nugetVersion]$(nugetVersion)-rc$(Date:yyyyMMdd)-$(BuildID)"
+    - powershell: echo "##vso[task.setvariable variable=nugetVersion]$(nugetVersion)-rc$(Build.BuildId)"
       condition: ne(variables['Build.SourceBranchName'], 'release')
       displayName: Update nuget version
 
