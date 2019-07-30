@@ -15,8 +15,8 @@ stages:
 - stage: Build
   displayName: 'Build: '
   jobs:
-  - job:
-    pool: build
+  - job: build_job
+    pool:
       vmImage: 'windows-2019'
     displayName: 'Build'
 
@@ -81,18 +81,14 @@ stages:
 #############################
 #  Build and Publish nugets #
 #############################
-
-- stage: Nuget
-  displayName: 'Build nuget: '
-  dependsOn: Build
-  condition: succeeded()
-
-  jobs:
-  - job:
-    pool: build
+  - job: build_nugets_job
+    pool:
+      vmImage: 'windows-2019'
     displayName: 'Build nugets'
     variables:
       nugetVersion: $(assemblyVersion)
+    dependsOn: build_job
+    condition: succeeded()
 
     steps:
 
@@ -119,23 +115,15 @@ stages:
       displayName: Publish nugets to artifacts
 
 
-##############
-#  Run tests #
-##############
-
-- stage: Tests
-  displayName: 'Tests: '
-  dependsOn: Build
-  condition: succeeded()
-
-  jobs:
-########################
-#  Windows (NETFX 4.6) #
-########################
-  - job:
+###############################
+#  Tests: Windows (NETFX 4.6) #
+###############################
+  - job: test_win_netfx46_job
     pool:
       vmImage: 'windows-2019'
     displayName: 'Win / NETFX 4.6 / '
+    dependsOn: build_job
+    condition: succeeded()
 
     strategy:
       matrix:
@@ -176,13 +164,15 @@ stages:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
 
-############################
-#  Windows (NETCOREAPP2_0) #
-############################
-  - job:
+###################################
+#  Tests: Windows (NETCOREAPP2_0) #
+###################################
+  - job: test_win_netcoreapp20_job
     pool:
       vmImage: 'windows-2019'
     displayName: 'Win / NETCOREAPP2.0 / '
+    dependsOn: build_job
+    condition: succeeded()
 
     strategy:
       matrix:
@@ -221,13 +211,15 @@ stages:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
 
-##########################
-#  Linux (NETCOREAPP2_0) #
-##########################
-  - job:
+#################################
+#  Tests: Linux (NETCOREAPP2_0) #
+#################################
+  - job: test_linux_netcoreapp20_job
     pool:
       vmImage: 'ubuntu-16.04'
     displayName: 'Lin / NETCOREAPP2.0 / '
+    dependsOn: build_job
+    condition: succeeded()
 
     strategy:
       matrix:
@@ -262,13 +254,15 @@ stages:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
 
-##########################
-#  MacOS (NETCOREAPP2_0) #
-##########################
-  - job:
+#################################
+#  Tests: MacOS (NETCOREAPP2_0) #
+#################################
+  - job: test_macos_netcoreapp20_job
     pool:
       vmImage: 'macOS-10.14'
     displayName: 'Mac / NETCOREAPP2.0 / '
+    dependsOn: build_job
+    condition: succeeded()
 
     strategy:
       matrix:
