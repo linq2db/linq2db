@@ -57,9 +57,10 @@ if ($version) {
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('license', $nsUri)
-		$attr = $xml.CreateAttribute('src')
-		$attr.Value = 'MIT-LICENSE.txt'
+		$attr = $xml.CreateAttribute('type')
+		$attr.Value = 'file'
 		$child.Attributes.Append($attr)
+		$child.InnerText = 'MIT-LICENSE.txt'
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('file', $nsUri)
