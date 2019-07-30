@@ -307,6 +307,21 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
+		public static T GetCustomAttributeEx<T>(this Type type, bool inherit)
+			where T : class
+		{
+#if NETSTANDARD1_6
+			return type.GetTypeInfo()
+				.GetCustomAttributes(inherit)
+				.Where(x => x is T)
+				.FirstOrDefault() as T;
+#else
+			return type.GetCustomAttributes(inherit)
+				.Where(x => x is T)
+				.FirstOrDefault() as T;
+#endif
+		}
+
 		public static InterfaceMapping GetInterfaceMapEx(this Type type, Type interfaceType)
 		{
 #if NETSTANDARD1_6

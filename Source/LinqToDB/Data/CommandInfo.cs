@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Reflection;
 
 using JetBrains.Annotations;
 
@@ -123,7 +124,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public IEnumerable<T> QueryProc<T>(Func<IDataReader,T> objectReader)
+		public IEnumerable<T> QueryProc<T>(Func<IDataReader, T> objectReader)
 		{
 			CommandType = CommandType.StoredProcedure;
 			return Query(objectReader);
@@ -135,7 +136,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public IEnumerable<T> Query<T>(Func<IDataReader,T> objectReader)
+		public IEnumerable<T> Query<T>(Func<IDataReader, T> objectReader)
 		{
 			var hasParameters = Parameters?.Length > 0;
 
@@ -166,7 +167,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader)
+		public Task<List<T>> QueryToListAsync<T>(Func<IDataReader, T> objectReader)
 		{
 			return QueryToListAsync(objectReader, CancellationToken.None);
 		}
@@ -178,7 +179,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public async Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
+		public async Task<List<T>> QueryToListAsync<T>(Func<IDataReader, T> objectReader, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -191,7 +192,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader)
+		public Task<T[]> QueryToArrayAsync<T>(Func<IDataReader, T> objectReader)
 		{
 			return QueryToArrayAsync(objectReader, CancellationToken.None);
 		}
@@ -203,7 +204,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public async Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
+		public async Task<T[]> QueryToArrayAsync<T>(Func<IDataReader, T> objectReader, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -217,7 +218,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="action">Action, applied to each result record.</param>
 		/// <returns>Returns task.</returns>
-		public Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action)
+		public Task QueryForEachAsync<T>(Func<IDataReader, T> objectReader, Action<T> action)
 		{
 			return QueryForEachAsync(objectReader, action, CancellationToken.None);
 		}
@@ -230,7 +231,7 @@ namespace LinqToDB.Data
 		/// <param name="action">Action, applied to each result record.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
+		public async Task QueryForEachAsync<T>(Func<IDataReader, T> objectReader, Action<T> action, CancellationToken cancellationToken)
 		{
 			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -285,8 +286,8 @@ namespace LinqToDB.Data
 				if (rd.Read())
 				{
 					var additionalKey = GetCommandAdditionalKey(rd);
-					var objectReader  = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
-					var isFaulted     = false;
+					var objectReader = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
+					var isFaulted = false;
 
 					do
 					{
@@ -301,9 +302,9 @@ namespace LinqToDB.Data
 							if (isFaulted)
 								throw;
 
-							isFaulted    = true;
+							isFaulted = true;
 							objectReader = GetObjectReader2<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
-							result       = objectReader(rd);
+							result = objectReader(rd);
 						}
 
 						yield return result;
@@ -448,6 +449,112 @@ namespace LinqToDB.Data
 		public IEnumerable<T> QueryProc<T>(T template)
 		{
 			return QueryProc<T>();
+		}
+
+		#endregion
+
+		#region Query with multiple result sets
+
+		/// <summary>
+		/// Executes command using <see cref="StoredProcedure"/> command type and returns a result containing multiple result sets.
+		/// </summary>
+		/// <typeparam name="T">Result set type.</typeparam>
+		/// <returns>Returns result.</returns>
+		public T QueryProcMulti<T>()
+		{
+			CommandType = CommandType.StoredProcedure;
+			// Check whether attribute has been applied.
+			if (typeof(T).GetCustomAttributeEx<MultipleResultSetsAttribute>(false) == null)
+			{
+				throw new LinqToDBException("Query type must have attribute MultipleResultSetsAttribute");
+			}
+
+			return QueryMulti<T>();
+		}
+
+		/// <summary>
+		/// Executes command and returns a result containing multiple result sets.
+		/// </summary>
+		/// <typeparam name="T">Result set type.</typeparam>
+		/// <returns>Returns result.</returns>
+		public T QueryMulti<T>()
+		{
+			var hasParameters = Parameters?.Length > 0;
+
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
+
+			if (hasParameters)
+				SetParameters(DataConnection, Parameters);
+
+			using (var rd = DataConnection.ExecuteReader(GetCommandBehavior()))
+			{
+				return ReadMultipleResultSets<T>(rd);
+			}
+		}
+
+
+		T ReadMultipleResultSets<T>(IDataReader rd)
+		{
+			// Dictionary mapping the result query index to the type it should be reading.
+			var resultSetIndexProperties = typeof(T).GetProperties()
+				.Where(x => x.GetCustomAttribute<ResultSetIndexAttribute>() != null)
+				.ToDictionary(
+					x => (uint)x.GetCustomAttribute<ResultSetIndexAttribute>().Index,
+					x => x
+				);
+			var readEnumeratorGeneric = typeof(CommandInfo).GetMethod("ReadEnumeratorAsList", BindingFlags.NonPublic | BindingFlags.Instance);
+
+			uint resultIndex = 0;
+			var result = (T)Activator.CreateInstance(typeof(T));
+			do
+			{
+				// Only process the field if we're reading it into a property.
+				if (resultSetIndexProperties.ContainsKey(resultIndex))
+				{
+					var property = resultSetIndexProperties[resultIndex];
+					var itemType = property.PropertyType.GetItemType();
+					var resultSetEnumerable = readEnumeratorGeneric.MakeGenericMethod(new Type[] { itemType })
+						.Invoke(this, new object[] { rd });
+					property.SetValue(result, resultSetEnumerable);
+				}
+				resultIndex++;
+			} while (rd.NextResult());
+			return result;
+		}
+
+		IEnumerable<T> ReadEnumeratorAsList<T>(IDataReader rd)
+		{
+			var results = new List<T>();
+			if (rd.Read())
+			{
+				var additionalKey = GetCommandAdditionalKey(rd);
+				var objectReader = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
+				var isFaulted = false;
+
+				do
+				{
+					T result;
+
+					try
+					{
+						result = objectReader(rd);
+					}
+					catch (InvalidCastException)
+					{
+						if (isFaulted)
+							throw;
+
+						isFaulted = true;
+						objectReader = GetObjectReader2<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
+						result = objectReader(rd);
+					}
+
+					results.Add(result);
+
+				} while (rd.Read());
+
+			}
+			return results;
 		}
 
 		#endregion
