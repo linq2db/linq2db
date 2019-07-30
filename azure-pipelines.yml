@@ -109,11 +109,10 @@ stages:
       displayName: Build nugets
 
       - task: PublishBuildArtifacts@1
-      inputs:
-        pathToPublish: '$(Build.SourcesDirectory)/NuGet/built'
-        artifactName: '$(artifact_nugets)'
-      displayName: Publish nugets to artifacts
-
+        inputs:
+          pathToPublish: '$(Build.SourcesDirectory)/NuGet/built'
+          artifactName: '$(artifact_nugets)'
+        displayName: Publish nugets to artifacts
 
 ###############################
 #  Tests: Windows (NETFX 4.6) #
