@@ -5,12 +5,14 @@ VisualStudioVersion = 16.0.29102.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
 	ProjectSection(SolutionItems) = preProject
+		Build\BuildNuspecs.ps1 = Build\BuildNuspecs.ps1
 		Build\linq2db.Default.props = Build\linq2db.Default.props
 		Build\linq2db.snk = Build\linq2db.snk
 		Build\linq2db.Source.props = Build\linq2db.Source.props
 		Build\linq2db.Tests.props = Build\linq2db.Tests.props
 		Build\linq2db.Tests.Providers.props = Build\linq2db.Tests.Providers.props
 		Build\README.md = Build\README.md
+		Build\SetVersion.ps1 = Build\SetVersion.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{AF93451E-198C-4A94-8EB4-C330D886E102}"
@@ -100,10 +102,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
 		NuGet\linq2db.Tools.nuspec = NuGet\linq2db.Tools.nuspec
 		NuGet\Pack.bat = NuGet\Pack.bat
-		NuGet\PackAV.bat = NuGet\PackAV.bat
+		NuGet\PackCI.bat = NuGet\PackCI.bat
 		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
-		NuGet\Push.bat = NuGet\Push.bat
-		NuGet\Readme.txt = NuGet\Readme.txt
 	EndProjectSection
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.FSharp", "Tests\FSharp\Tests.FSharp.fsproj", "{E3E09A92-ED23-457B-8E59-CCD34667B6EE}"

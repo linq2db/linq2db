@@ -50,7 +50,6 @@
 	</metadata>
 
 	<files>
-		<file src="Readme.txt"         />
 		<file src="..\MIT-LICENSE.txt" />
 
 		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.pdb" target="lib\" />

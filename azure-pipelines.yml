@@ -1,6 +1,8 @@
 variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
+  assemblyVersion: 3.0.0
+  artifact_nugets: 'nugets'
 #  netfx45_tests: 'netfx45_tests' # maybe
   netfx46_tests: 'netfx46_tests'
   netcore2_tests: 'netcoreapp20_tests'
@@ -14,11 +16,18 @@ stages:
   displayName: 'Build: '
   jobs:
   - job:
-    pool:
+    pool: build
       vmImage: 'windows-2019'
     displayName: 'Build'
 
     steps:
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
+        workingDirectory: '$(Build.SourcesDirectory)'
+        arguments: -path $(Build.SourcesDirectory)/Build/linq2db.Default.props -version $(assemblyVersion)
+      displayName: Update assembly version
 
     - task: MSBuild@1
       inputs:
@@ -59,15 +68,56 @@ stages:
 
     - task: PublishBuildArtifacts@1
       inputs:
-        pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
+        pathToPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
         artifactName: '$(netfx46_tests)'
       displayName: Publish test artifacts for NETFX46
 
     - task: PublishBuildArtifacts@1
       inputs:
-        pathtoPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish'
+        pathToPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish'
         artifactName: '$(netcore2_tests)'
       displayName: Publish test artifacts for NETCOREAPP2.0
+
+#############################
+#  Build and Publish nugets #
+#############################
+
+- stage: Nuget
+  displayName: 'Build nuget: '
+  dependsOn: Build
+  condition: succeeded()
+
+  jobs:
+  - job:
+    pool: build
+    displayName: 'Build nugets'
+    variables:
+      nugetVersion: $(assemblyVersion)
+
+    steps:
+
+    - powershell: echo "##vso[task.setvariable variable=nugetVersion]$(nugetVersion)-rc$(Build.BuildNumber)"
+      condition: neq($(Build.SourceBranch), 'release')
+      displayName: Update nuget version
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
+        workingDirectory: '$(Build.SourcesDirectory)'
+        arguments: -path $(Build.SourcesDirectory)/NuGet/*.nuspec -version $(nugetVersion)
+      displayName: Update nuspecs
+
+    - task: CmdLine@2
+      script: echo "$(Build.SourcesDirectory)/NuGet/PackCI.bat"
+      workingDirectory: $(Build.SourcesDirectory)/NuGet
+      displayName: Build nugets
+
+      - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: '$(Build.SourcesDirectory)/NuGet/built'
+        artifactName: '$(artifact_nugets)'
+      displayName: Publish nugets to artifacts
+
 
 ##############
 #  Run tests #

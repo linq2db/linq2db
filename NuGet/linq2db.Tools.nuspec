@@ -31,7 +31,6 @@
 	</metadata>
 
 	<files>
-		<file src="Readme.txt"         />
 		<file src="..\MIT-LICENSE.txt" />
 
 		<file src="..\Source\LinqToDB.Tools\bin\Release\**\linq2db.Tools.pdb" target="lib\" />
