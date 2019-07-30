@@ -104,8 +104,9 @@ stages:
       displayName: Update nuspecs
 
     - task: CmdLine@2
-      script: echo "$(Build.SourcesDirectory)/NuGet/PackCI.bat"
-      workingDirectory: $(Build.SourcesDirectory)/NuGet
+      inputs:
+        script: echo "$(Build.SourcesDirectory)/NuGet/PackCI.bat"
+        workingDirectory: $(Build.SourcesDirectory)/NuGet
       displayName: Build nugets
 
     - task: PublishBuildArtifacts@1
