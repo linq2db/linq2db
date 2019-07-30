@@ -3,6 +3,8 @@ variables:
   build_configuration: 'Azure'
   assemblyVersion: 3.0.0
   artifact_nugets: 'nugets'
+  artifact_linq2db_binaries: 'linq2db_binaries'
+  artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
 #  netfx45_tests: 'netfx45_tests' # maybe
   netfx46_tests: 'netfx46_tests'
   netcore2_tests: 'netcoreapp20_tests'
@@ -78,6 +80,18 @@ stages:
         artifactName: '$(netcore2_tests)'
       displayName: Publish test artifacts for NETCOREAPP2.0
 
+      - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
+        artifactName: '$(artifact_linq2db_binaries)'
+      displayName: Publish linq2db build results
+
+        - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
+        artifactName: '$(artifact_linq2db_tools_binaries)'
+      displayName: Publish linq2db build results
+
 #############################
 #  Build and Publish nugets #
 #############################
@@ -93,8 +107,29 @@ stages:
     steps:
 
     - powershell: echo "##vso[task.setvariable variable=nugetVersion]$(nugetVersion)-rc$(Build.BuildNumber)"
-      condition: neq($(Build.SourceBranch), 'release')
+      condition: ne($(Build.SourceBranch), 'release')
       displayName: Update nuget version
+
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: '$(artifact_linq2db_binaries)'
+        downloadPath: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
+
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: '$(artifact_linq2db_Tools_binaries)'
+        downloadPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
+
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: '$(netfx46_tests)'
+        downloadPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
 
     - task: PowerShell@2
       inputs:
@@ -123,7 +158,7 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Win / NETFX 4.6 / '
     dependsOn: build_job
-    condition: succeeded()
+    condition: and(succeeded(), ne($(Build.SourceBranch), 'release'))
 
     strategy:
       matrix:
@@ -172,7 +207,7 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Win / NETCOREAPP2.0 / '
     dependsOn: build_job
-    condition: succeeded()
+    condition: and(succeeded(), ne($(Build.SourceBranch), 'release'))
 
     strategy:
       matrix:
@@ -219,7 +254,7 @@ stages:
       vmImage: 'ubuntu-16.04'
     displayName: 'Lin / NETCOREAPP2.0 / '
     dependsOn: build_job
-    condition: succeeded()
+    condition: and(succeeded(), ne($(Build.SourceBranch), 'release'))
 
     strategy:
       matrix:
@@ -262,7 +297,7 @@ stages:
       vmImage: 'macOS-10.14'
     displayName: 'Mac / NETCOREAPP2.0 / '
     dependsOn: build_job
-    condition: succeeded()
+    condition: and(succeeded(), ne($(Build.SourceBranch), 'release'))
 
     strategy:
       matrix:

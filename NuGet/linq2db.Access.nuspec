@@ -18,7 +18,7 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"          target="tools" />
+		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"          target="tools" />
 		
 		<file src="Access\linq2db.Access.props"                               target="build" />
 		
