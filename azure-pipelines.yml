@@ -68,28 +68,28 @@ stages:
         contents: 'DataProviders.json'
       displayName: Copy test settings for NETCOREAPP2.0
 
-    - task: PublishBuildArtifacts@1
+    - task: PublishPipelineArtifact@1
       inputs:
-        pathToPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
-        artifactName: '$(netfx46_tests)'
+        path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
+        artifact: '$(netfx46_tests)'
       displayName: Publish test artifacts for NETFX46
 
-    - task: PublishBuildArtifacts@1
+    - task: PublishPipelineArtifact@1
       inputs:
-        pathToPublish: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish'
-        artifactName: '$(netcore2_tests)'
+        path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish'
+        artifact: '$(netcore2_tests)'
       displayName: Publish test artifacts for NETCOREAPP2.0
 
-    - task: PublishBuildArtifacts@1
+    - task: PublishPipelineArtifact@1
       inputs:
-        pathToPublish: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
-        artifactName: '$(artifact_linq2db_binaries)'
+        path: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
+        artifact: '$(artifact_linq2db_binaries)'
       displayName: Publish linq2db build results
 
-    - task: PublishBuildArtifacts@1
+    - task: PublishPipelineArtifact@1
       inputs:
-        pathToPublish: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
-        artifactName: '$(artifact_linq2db_tools_binaries)'
+        path: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
+        artifact: '$(artifact_linq2db_tools_binaries)'
       displayName: Publish linq2db build results
 
 #############################
@@ -110,26 +110,20 @@ stages:
       condition: ne(variables['Build.SourceBranch'], 'release')
       displayName: Update nuget version
 
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       inputs:
-        buildType: 'current'
-        downloadType: 'single'
         artifactName: '$(artifact_linq2db_binaries)'
-        downloadPath: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
+        targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
 
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       inputs:
-        buildType: 'current'
-        downloadType: 'single'
         artifactName: '$(artifact_linq2db_Tools_binaries)'
-        downloadPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
+        targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
 
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       inputs:
-        buildType: 'current'
-        downloadType: 'single'
         artifactName: '$(netfx46_tests)'
-        downloadPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
+        targetPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
 
     - task: PowerShell@2
       inputs:
@@ -171,22 +165,18 @@ stages:
     steps:
     - checkout: none
 
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       inputs:
-        buildType: 'current'
-        downloadType: 'single'
         artifactName: '$(netfx46_tests)'
-        downloadPath: '$(System.DefaultWorkingDirectory)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
 
 #    - task: PowerShell@2
 #      inputs:
-#        filePath: '$(netfx46_tests)/$(file)'
-#        workingDirectory: '$(netfx46_tests)'
+#        filePath: '$(file)'
 
     - task: VSTest@2
       inputs:
-        testAssemblyVer2: |
-         **/$(netfx46_tests)/linq2db.Tests.dll
+        testAssemblyVer2: linq2db.Tests.dll
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
         testFiltercriteria: 'TestCategory != SkipCI'
@@ -218,22 +208,18 @@ stages:
     steps:
     - checkout: none
 
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       inputs:
-        buildType: 'current'
-        downloadType: 'single'
         artifactName: '$(netcore2_tests)'
-        downloadPath: '$(System.DefaultWorkingDirectory)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
 
 #    - task: PowerShell@2
 #      inputs:
-#        filePath: '$(netcore2_tests)/$(file)'
-#        workingDirectory: '$(netcore2_tests)'
+#        filePath: '$(file)'
 
     - task: VSTest@2
       inputs:
-        testAssemblyVer2: |
-          **/$(netcore2_tests)/linq2db.Tests.dll
+        testAssemblyVer2: linq2db.Tests.dll
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
         testFilterCriteria: 'TestCategory != SkipCI'
@@ -265,21 +251,18 @@ stages:
     steps:
     - checkout: none
 
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       inputs:
-        buildType: 'current'
-        downloadType: 'single'
         artifactName: '$(netcore2_tests)'
-        downloadPath: '$(System.DefaultWorkingDirectory)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
 
 #    - task: PowerShell@2
 #      inputs:
-#        filePath: '$(netcore2_tests)/$(file)'
-#        workingDirectory: '$(netcore2_tests)'
+#        filePath: '$(file)'
 
 # just because there is not vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
-    - script: dotnet vstest ./$(netcore2_tests)/linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
+    - script: dotnet vstest ./linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
       displayName: '$(title)'
 
 
@@ -308,21 +291,18 @@ stages:
     steps:
     - checkout: none
 
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       inputs:
-        buildType: 'current'
-        downloadType: 'single'
         artifactName: '$(netcore2_tests)'
-        downloadPath: '$(System.DefaultWorkingDirectory)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
 
 #    - task: PowerShell@2
 #      inputs:
-#        filePath: '$(netcore2_tests)/$(file)'
-#        workingDirectory: '$(netcore2_tests)'
+#        filePath: '$(file)'
 
 # just because there is not vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
-    - script: dotnet vstest ./$(netcore2_tests)/linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
+    - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
       displayName: '$(title)'
 
 
