@@ -80,13 +80,13 @@ stages:
         artifactName: '$(netcore2_tests)'
       displayName: Publish test artifacts for NETCOREAPP2.0
 
-      - task: PublishBuildArtifacts@1
+    - task: PublishBuildArtifacts@1
       inputs:
         pathToPublish: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
         artifactName: '$(artifact_linq2db_binaries)'
       displayName: Publish linq2db build results
 
-        - task: PublishBuildArtifacts@1
+    - task: PublishBuildArtifacts@1
       inputs:
         pathToPublish: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
         artifactName: '$(artifact_linq2db_tools_binaries)'
