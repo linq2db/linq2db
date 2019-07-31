@@ -152,7 +152,7 @@ stages:
         nuGetFeedType: 'internal'
         publishVstsFeed: '0dcc414b-ea54-451e-a54f-d63f05367c4b/967a4107-9788-41a4-9f6d-a2318aab1410'
       displayName: Publish to Azure Artifacts feed
-      #condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
 
 # apikey exires around 31/07/2020
     - task: NuGetCommand@2
