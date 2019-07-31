@@ -42,9 +42,8 @@ No, this is not the donate link. We do need something really more valuable - you
 ## Feeds
 
 * NuGet [![NuGet](https://img.shields.io/nuget/vpre/linq2db.svg)](https://www.nuget.org/profiles/LinqToDB)
-* MyGet [![MyGet](https://img.shields.io/myget/linq2db/vpre/linq2db.svg)](https://www.myget.org/gallery/linq2db)
-  * V2 `https://www.myget.org/F/linq2db/api/v2`
-  * V3 `https://www.myget.org/F/linq2db/api/v3/index.json`
+* Nightly [![Azure DevOps](https://img.shields.io/myget/linq2db/vpre/linq2db.svg)](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db)
+  * feed `https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json`
 
 ## Let's get started
 
