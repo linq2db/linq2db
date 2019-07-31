@@ -39,7 +39,7 @@ namespace LinqToDB.SqlQuery
 			GroupByClause,
 			OrderByClause,
 				OrderByItem,
-			Union,
+			SetOperator,
 
 		WithClause,
 		CteClause,

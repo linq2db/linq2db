@@ -89,10 +89,11 @@ namespace LinqToDB.SqlQuery
 
 		public bool? GetUnionInvolving(SelectQuery selectQuery)
 		{
+			//TODO: review Set Operations
 			var info = GetHierarchyInfo(selectQuery);
 			if (info?.HierarchyType != HierarchyType.Union)
 				return null;
-			return ((SqlUnion)info.ParentElement).IsAll;
+			return ((SqlSetOperator)info.ParentElement).Operation != SetOperation.UnionAll;
 		}
 
 		void RegisterHierachry(SelectQuery parent, SelectQuery child, HierarchyInfo info)
@@ -115,7 +116,7 @@ namespace LinqToDB.SqlQuery
 				{
 					RegisterHierachry(selectQuery, s, new HierarchyInfo(selectQuery, HierarchyType.From, selectQuery));
 
-					foreach (var union in s.Unions)
+					foreach (var union in s.SetOperators)
 					{
 						RegisterHierachry(selectQuery, union.SelectQuery, new HierarchyInfo(selectQuery, HierarchyType.Union, union));
 						BuildParentHierarchy(union.SelectQuery);

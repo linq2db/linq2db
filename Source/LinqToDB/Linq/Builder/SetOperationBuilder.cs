@@ -11,24 +11,35 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using SqlQuery;
 
-	class ConcatUnionBuilder : MethodCallBuilder
+	class SetOperationBuilder : MethodCallBuilder
 	{
 		#region Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.Arguments.Count == 2 && methodCall.IsQueryable("Concat", "Union");
+			return methodCall.Arguments.Count == 2 && methodCall.IsQueryable("Concat", "Union", "Except", "Intersect");
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence1 = new SubQueryContext(builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0])));
 			var sequence2 = new SubQueryContext(builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery())));
-			var union     = new SqlUnion(sequence2.SelectQuery, methodCall.Method.Name == "Concat");
 
-			sequence1.SelectQuery.Unions.Add(union);
+			SetOperation setOperation;
+			switch (methodCall.Method.Name)
+			{
+				case "Concat"    : setOperation = SetOperation.UnionAll;  break;
+				case "Union"     : setOperation = SetOperation.Union;     break;
+				case "Except"    : setOperation = SetOperation.Except;    break;
+				case "Intersect" : setOperation = SetOperation.Intersect; break;
+				default:
+					throw new ArgumentException($"Invalid method name {methodCall.Method.Name}.");
+			}
+			var union     = new SqlSetOperator(sequence2.SelectQuery, setOperation);
 
-			return new UnionContext(sequence1, sequence2, methodCall);
+			sequence1.SelectQuery.SetOperators.Add(union);
+
+			return new SetOperationContext(sequence1, sequence2, methodCall);
 		}
 
 		protected override SequenceConvertInfo Convert(
@@ -41,9 +52,9 @@ namespace LinqToDB.Linq.Builder
 
 		#region Context
 
-		sealed class UnionContext : SubQueryContext
+		sealed class SetOperationContext : SubQueryContext
 		{
-			public UnionContext(SubQueryContext sequence1, SubQueryContext sequence2, MethodCallExpression methodCall)
+			public SetOperationContext(SubQueryContext sequence1, SubQueryContext sequence2, MethodCallExpression methodCall)
 				: base(sequence1)
 			{
 				_sequence1  = sequence1;

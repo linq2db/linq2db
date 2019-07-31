@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 			new DeleteBuilder              (),
 			new ContainsBuilder            (),
 			new AllAnyBuilder              (),
-			new ConcatUnionBuilder         (),
+			new SetOperationBuilder        (),
 			new IntersectBuilder           (),
 			new CastBuilder                (),
 			new OfTypeBuilder              (),

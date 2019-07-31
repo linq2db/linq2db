@@ -291,9 +291,9 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-				case QueryElementType.Union:
+				case QueryElementType.SetOperator:
 					{
-						Visit1(((SqlUnion)element).SelectQuery);
+						Visit1(((SqlSetOperator)element).SelectQuery);
 						break;
 					}
 
@@ -330,9 +330,9 @@ namespace LinqToDB.SqlQuery
 			Visit1(q.Having);
 			Visit1(q.OrderBy);
 
-			if (q.HasUnion)
+			if (q.HasSetOperators)
 			{
-				foreach (var i in q.Unions)
+				foreach (var i in q.SetOperators)
 				{
 					if (i.SelectQuery == q)
 						throw new InvalidOperationException();
@@ -744,8 +744,8 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-				case QueryElementType.Union:
-					Visit2(((SqlUnion)element).SelectQuery);
+				case QueryElementType.SetOperator:
+					Visit2(((SqlSetOperator)element).SelectQuery);
 					break;
 
 				case QueryElementType.SqlQuery:
@@ -813,9 +813,9 @@ namespace LinqToDB.SqlQuery
 			Visit2(q.Having);
 			Visit2(q.OrderBy);
 
-			if (q.HasUnion)
+			if (q.HasSetOperators)
 			{
-				foreach (var i in q.Unions)
+				foreach (var i in q.SetOperators)
 				{
 					if (i.SelectQuery == q)
 						throw new InvalidOperationException();
@@ -995,7 +995,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.GroupByClause     : return Find(((SqlGroupByClause)     element).Items,           find);
 				case QueryElementType.OrderByClause     : return Find(((SqlOrderByClause)     element).Items,           find);
 				case QueryElementType.OrderByItem       : return Find(((SqlOrderByItem)       element).Expression,      find);
-				case QueryElementType.Union             : return Find(((SqlUnion)             element).SelectQuery,     find);
+				case QueryElementType.SetOperator       : return Find(((SqlSetOperator)       element).SelectQuery,     find);
 				case QueryElementType.FuncLikePredicate : return Find(((SqlPredicate.FuncLike)element).Function,        find);
 
 				case QueryElementType.SqlBinaryExpression:
@@ -1140,7 +1140,7 @@ namespace LinqToDB.SqlQuery
 							Find(((SelectQuery)element).GroupBy, find) ??
 							Find(((SelectQuery)element).Having,  find) ??
 							Find(((SelectQuery)element).OrderBy, find) ??
-							(((SelectQuery)element).HasUnion ? Find(((SelectQuery)element).Unions, find) : null);
+							(((SelectQuery)element).HasSetOperators ? Find(((SelectQuery)element).SetOperators, find) : null);
 					}
 			}
 
@@ -1792,13 +1792,13 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-				case QueryElementType.Union:
+				case QueryElementType.SetOperator:
 					{
-						var u = (SqlUnion)element;
+						var u = (SqlSetOperator)element;
 						var q = (SelectQuery)ConvertInternal(u.SelectQuery, action);
 
 						if (q != null && !ReferenceEquals(u.SelectQuery, q))
-							newElement = new SqlUnion(q, u.IsAll);
+							newElement = new SqlSetOperator(q, u.Operation);
 
 						break;
 					}
@@ -1866,7 +1866,7 @@ namespace LinqToDB.SqlQuery
 						var gc = (SqlGroupByClause)ConvertInternal(q.GroupBy, action) ?? q.GroupBy;
 						var hc = (SqlWhereClause)  ConvertInternal(q.Having,  action) ?? q.Having;
 						var oc = (SqlOrderByClause)ConvertInternal(q.OrderBy, action) ?? q.OrderBy;
-						var us = q.HasUnion ? Convert(q.Unions, action) : q.Unions;
+						var us = q.HasSetOperators ? Convert(q.SetOperators, action) : q.SetOperators;
 
 						List<ISqlExpression[]> uk = null;
 						if (q.HasUniqueKeys) 

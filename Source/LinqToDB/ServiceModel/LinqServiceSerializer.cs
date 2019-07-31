@@ -991,10 +991,10 @@ namespace LinqToDB.ServiceModel
 							Append(elem.ParentSelect?.SourceID ?? 0);
 							Append(elem.IsParameterDependent);
 
-							if (!elem.HasUnion)
+							if (!elem.HasSetOperators)
 								Builder.Append(" -");
 							else
-								Append(elem.Unions);
+								Append(elem.SetOperators);
 
 							if (ObjectIndices.ContainsKey(elem.All))
 								Append(ObjectIndices[elem.All]);
@@ -1230,12 +1230,12 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
-					case QueryElementType.Union :
+					case QueryElementType.SetOperator :
 						{
-							var elem = (SqlUnion)e;
+							var elem = (SqlSetOperator)e;
 
 							Append(elem.SelectQuery);
-							Append(elem.IsAll);
+							Append((int)elem.Operation);
 
 							break;
 						}
@@ -1666,7 +1666,7 @@ namespace LinqToDB.ServiceModel
 							var orderBy            = Read<SqlOrderByClause>();
 							var parentSql          = ReadInt();
 							var parameterDependent = ReadBool();
-							var unions             = ReadArray<SqlUnion>();
+							var unions             = ReadArray<SqlSetOperator>();
 
 							var query = new SelectQuery(sid);
 							_statement = new SqlSelectStatement(query);
@@ -1952,12 +1952,12 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
-					case QueryElementType.Union :
+					case QueryElementType.SetOperator :
 						{
-							var sqlQuery = Read<SelectQuery>();
-							var isAll    = ReadBool();
+							var sqlQuery     = Read<SelectQuery>();
+							var setOperation = (SetOperation)ReadInt();
 
-							obj = new SqlUnion(sqlQuery, isAll);
+							obj = new SqlSetOperator(sqlQuery, setOperation);
 
 							break;
 						}
