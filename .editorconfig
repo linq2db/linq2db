@@ -7,3 +7,6 @@ root = true
 indent_style = tab
 insert_final_newline = true
 end_of_line = crlf
+
+[*.yml]
+indent_style = space

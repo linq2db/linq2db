@@ -2,6 +2,7 @@ variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
   assemblyVersion: 3.0.0
+  nugetVersion: 3.0.0
   artifact_nugets: 'nugets'
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
@@ -15,7 +16,7 @@ stages:
 #  Build and publish testable binaries #
 ########################################
 - stage: Build
-  displayName: 'Build: '
+  displayName: ''
   jobs:
   - job: build_job
     pool:
@@ -98,15 +99,15 @@ stages:
   - job: build_nugets_job
     pool:
       vmImage: 'windows-2019'
-    displayName: 'Build nugets'
+    displayName: 'Nugets Generation'
     variables:
-      nugetVersion: $(assemblyVersion)
+      packageVersion: $(nugetVersion)
     dependsOn: build_job
     condition: succeeded()
 
     steps:
 
-    - powershell: echo "##vso[task.setvariable variable=nugetVersion]$(nugetVersion)-rc$(Build.BuildId)"
+    - powershell: echo "##vso[task.setvariable variable=packageVersion]$(packageVersion)-rc$(Build.BuildId)"
       condition: ne(variables['Build.SourceBranchName'], 'release')
       displayName: Update nuget version
 
@@ -129,7 +130,7 @@ stages:
       inputs:
         filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
         workingDirectory: '$(Build.SourcesDirectory)'
-        arguments: -path $(Build.SourcesDirectory)/NuGet/*.nuspec -version $(nugetVersion) -branch $(Build.SourceBranchName)
+        arguments: -path $(Build.SourcesDirectory)/NuGet/*.nuspec -version $(packageVersion) -branch $(Build.SourceBranchName)
       displayName: Update nuspecs
 
     - task: CmdLine@2
@@ -144,13 +145,32 @@ stages:
         artifactName: '$(artifact_nugets)'
       displayName: Publish nugets to artifacts
 
+    - task: NuGetCommand@2
+      inputs:
+        command: 'push'
+        packagesToPush: '$(Build.SourcesDirectory)/NuGet/built/*.nupkg'
+        nuGetFeedType: 'internal'
+        publishVstsFeed: '99051aba-ae72-4e58-aa58-dfb89038a188'
+      displayName: Publish to Azure Artifacts feed
+      condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+
+# apikey exires around 31/07/2020
+    - task: NuGetCommand@2
+      inputs:
+        command: 'push'
+        packagesToPush: '$(Build.SourcesDirectory)/NuGet/built/*.nupkg'
+        nuGetFeedType: 'external'
+        publishFeedCredentials: 'linq2db nuget.org feed (allows update of linq2db and linq2db.EF nugets)'
+      displayName: Publish to Nuget.org
+      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
+
 ###############################
 #  Tests: Windows (NETFX 4.6) #
 ###############################
   - job: test_win_netfx46_job
     pool:
       vmImage: 'windows-2019'
-    displayName: 'Win / NETFX 4.6 / '
+    displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
 
@@ -195,7 +215,7 @@ stages:
   - job: test_win_netcoreapp20_job
     pool:
       vmImage: 'windows-2019'
-    displayName: 'Win / NETCOREAPP2.0 / '
+    displayName: 'Tests: Win / NETCOREAPP2.0 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
 
@@ -238,7 +258,7 @@ stages:
   - job: test_linux_netcoreapp20_job
     pool:
       vmImage: 'ubuntu-16.04'
-    displayName: 'Lin / NETCOREAPP2.0 / '
+    displayName: 'Tests: Lin / NETCOREAPP2.0 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
 
@@ -278,7 +298,7 @@ stages:
   - job: test_macos_netcoreapp20_job
     pool:
       vmImage: 'macOS-10.14'
-    displayName: 'Mac / NETCOREAPP2.0 / '
+    displayName: 'Tests: Mac / NETCOREAPP2.0 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
 
