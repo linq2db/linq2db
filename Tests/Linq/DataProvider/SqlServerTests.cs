@@ -1337,7 +1337,7 @@ namespace Tests.DataProvider
 		{
 			var sampleData = new[]
 			{
-				new Issue1613Table { DateTimeOffset = null },
+				new Issue1613Table { DateTimeOffset = DateTimeOffset.Now },
 				new Issue1613Table { DateTimeOffset = DateTimeOffset.Now.AddDays(1) },
 				new Issue1613Table { DateTimeOffset = DateTimeOffset.Now.AddDays(2) },
 				new Issue1613Table { DateTimeOffset = DateTimeOffset.Now.AddDays(3) },
@@ -1362,8 +1362,8 @@ namespace Tests.DataProvider
 			}
 		}
 		
-		[Test, ActiveIssue(1666)]
-		public void Issue1613Test2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		[Test]
+		public void Issue1613Test2([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateData()))
@@ -1378,18 +1378,15 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, ActiveIssue(1666)]
-		public void Issue1613Test3([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		[Test]
+		public void Issue1613Test3([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateData()))
-			{ 
-
+			{
 				var query1 = table.GroupBy(x => x.DateTimeOffset.Value.TimeOfDay).Select(g => g.Key).ToList();
-				var query2 = table.Select(r => r.DateTimeOffset.Value.TimeOfDay).ToList();
+				var query2 = table.Select(r => r.DateTimeOffset.Value.TimeOfDay).Distinct().ToList();
 
-				Assert.AreEqual(5, query1.Count);
-				Assert.AreEqual(5, query2.Count);
 				Assert.AreEqual(query1, query2);
 			}
 		}

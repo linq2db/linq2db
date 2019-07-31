@@ -14,14 +14,14 @@ namespace LinqToDB.Async
 	public interface IAsyncDbTransaction : IDbTransaction
 	{
 		/// <summary>
-		/// Commits transaction asynchonously.
+		/// Commits transaction asynchronously.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
 		Task CommitAsync(CancellationToken cancellationToken = default);
 
 		/// <summary>
-		/// Rollbacks transaction asynchonously.
+		/// Rollbacks transaction asynchronously.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>

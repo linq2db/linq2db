@@ -811,14 +811,6 @@ namespace LinqToDB.Expressions
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
 					return ((UnaryExpression)ex).Operand.Unwrap();
-				case ExpressionType.Constant       :
-					{
-						var c = (ConstantExpression)ex;
-
-						if (c.Value != null && c.Type != c.Value.GetType())
-							return Expression.Constant(c.Value, c.Value.GetType());
-						break;
-					}
 			}
 
 			return ex;
@@ -843,6 +835,12 @@ namespace LinqToDB.Expressions
 			while (expr is MethodCallExpression mce && mce.IsQueryable("AsQueryable"))
 				expr = mce.Arguments[0];
 			return expr;
+		}
+
+		public static Expression SkipMethodChain(this Expression expr, MappingSchema mappingSchema)
+		{
+			var result = Sql.ExtensionAttribute.ExcludeExtensionChain(mappingSchema, expr);
+			return result;
 		}
 
 		public static Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)
@@ -894,6 +892,8 @@ namespace LinqToDB.Expressions
 		{
 			if (expr == null)
 				return null;
+
+			expr = expr.SkipMethodChain(mapping);
 
 			switch (expr.NodeType)
 			{
@@ -995,6 +995,14 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
+		public static bool IsExtensionMethod(this MethodCallExpression methodCall, MappingSchema mapping)
+		{
+			var functions = mapping.GetAttributes<Sql.ExtensionAttribute>(methodCall.Method.ReflectedTypeEx(),
+				methodCall.Method,
+				f => f.Configuration);
+			return functions.Any();
+		}
+
 		public static bool IsQueryable(this MethodCallExpression method, string name)
 		{
 			return method.Method.Name == name && method.IsQueryable();
@@ -1034,7 +1042,7 @@ namespace LinqToDB.Expressions
 						var call = (MethodCallExpression)expression;
 						var expr = call.Object;
 
-						if (expr == null && (call.IsQueryable() || call.IsAggregate(mapping) || call.IsAssociation(mapping) || call.Method.IsSqlPropertyMethodEx()) && call.Arguments.Count > 0)
+						if (expr == null && (call.IsQueryable() || call.IsAggregate(mapping) || call.IsExtensionMethod(mapping) || call.IsAssociation(mapping) || call.Method.IsSqlPropertyMethodEx()) && call.Arguments.Count > 0)
 							expr = call.Arguments[0];
 
 						if (expr != null)

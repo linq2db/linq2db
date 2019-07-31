@@ -41,7 +41,7 @@ namespace LinqToDB.DataProvider
 		bool               IsCompatibleConnection(IDbConnection connection);
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);
 		/// <summary>
-		/// Returns conext object to wrap calls of Execute* methods.
+		/// Returns context object to wrap calls of Execute* methods.
 		/// Using this, provider could e.g. change thread culture during Execute* calls.
 		/// Following calls wrapped right now:
 		/// DataConnection.ExecuteNonQuery
