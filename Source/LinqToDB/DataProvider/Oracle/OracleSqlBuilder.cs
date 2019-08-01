@@ -101,7 +101,8 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (operation)
 			{
-				case SetOperation.Except : sb.Append("MINUS"); return;
+				case SetOperation.Except    : sb.Append("MINUS");     return;
+				case SetOperation.ExceptAll : sb.Append("MINUS ALL"); return;
 			}
 			base.BuildSetOperation(operation, sb);
 		}

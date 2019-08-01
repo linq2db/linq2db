@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -17,29 +18,79 @@ namespace LinqToDB.Linq.Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.Arguments.Count == 2 && methodCall.IsQueryable("Concat", "Union", "Except", "Intersect");
+			return methodCall.Arguments.Count == 2 && methodCall.IsQueryable("Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll");
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence1 = new SubQueryContext(builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0])));
-			var sequence2 = new SubQueryContext(builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery())));
+			var sequence1 = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence2 = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
 			SetOperation setOperation;
 			switch (methodCall.Method.Name)
 			{
-				case "Concat"    : setOperation = SetOperation.UnionAll;  break;
-				case "Union"     : setOperation = SetOperation.Union;     break;
-				case "Except"    : setOperation = SetOperation.Except;    break;
-				case "Intersect" : setOperation = SetOperation.Intersect; break;
+				case "Concat"       : 
+				case "UnionAll"     : setOperation = SetOperation.UnionAll;     break;
+				case "Union"        : setOperation = SetOperation.Union;        break;
+				case "Except"       : setOperation = SetOperation.Except;       break;
+				case "ExceptAll"    : setOperation = SetOperation.ExceptAll;    break;
+				case "Intersect"    : setOperation = SetOperation.Intersect;    break;
+				case "IntersectAll" : setOperation = SetOperation.IntersectAll; break;
 				default:
 					throw new ArgumentException($"Invalid method name {methodCall.Method.Name}.");
 			}
-			var union     = new SqlSetOperator(sequence2.SelectQuery, setOperation);
 
-			sequence1.SelectQuery.SetOperators.Add(union);
+			var needsEmulation = !builder.DataContext.SqlProviderFlags.IsAllSetOperationsSupported &&
+			                     setOperation.In(SetOperation.ExceptAll, SetOperation.IntersectAll)
+			                     ||
+			                     !builder.DataContext.SqlProviderFlags.IsDistinctSetOperationsSupported &&
+			                     setOperation.In(SetOperation.Except, SetOperation.Intersect);
 
-			return new SetOperationContext(sequence1, sequence2, methodCall);
+			if (needsEmulation)
+			{
+				// emulation
+
+				var sequence = new SubQueryContext(sequence1);
+				var query    = sequence2;
+				var except   = query.SelectQuery;
+
+				var sql = sequence.SelectQuery;
+
+				if (setOperation.In(SetOperation.Except, SetOperation.Intersect))
+					sql.Select.IsDistinct = true;
+
+				except.ParentSelect = sql;
+
+				if (setOperation.In(SetOperation.Except, SetOperation.ExceptAll))
+					sql.Where.Not.Exists(except);
+				else
+					sql.Where.Exists(except);
+
+				var keys1 = sequence.ConvertToSql(null, 0, ConvertFlags.All);
+				var keys2 = query.   ConvertToSql(null, 0, ConvertFlags.All);
+
+				if (keys1.Length != keys2.Length)
+					throw new InvalidOperationException();
+
+				for (var i = 0; i < keys1.Length; i++)
+				{
+					except.Where
+						.Expr(keys1[i].Sql)
+						.Equal
+						.Expr(keys2[i].Sql);
+				}
+
+				return sequence;
+			}
+
+			var set1 = new SubQueryContext(sequence1);
+			var set2 = new SubQueryContext(sequence2);
+
+			var setOperator = new SqlSetOperator(set2.SelectQuery, setOperation);
+
+			sequence1.SelectQuery.SetOperators.Add(setOperator);
+
+			return new SetOperationContext(set1, set2, methodCall);
 		}
 
 		protected override SequenceConvertInfo Convert(

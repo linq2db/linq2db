@@ -30,6 +30,8 @@ namespace LinqToDB.DataProvider.MySql
 			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.IsAllSetOperationsSupported       = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 		}

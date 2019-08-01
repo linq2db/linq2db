@@ -88,8 +88,14 @@ namespace LinqToDB.SqlProvider
 				case SetOperation.Except:
 					sb.Append("EXCEPT");
 					break;
+				case SetOperation.ExceptAll:
+					sb.Append("EXCEPT ALL");
+					break;
 				case SetOperation.Intersect:
 					sb.Append("INTERSECT");
+					break;
+				case SetOperation.IntersectAll:
+					sb.Append("INTERSECT ALL");
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(operation), operation, null);

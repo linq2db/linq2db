@@ -35,10 +35,12 @@ namespace LinqToDB.SqlQuery
 			sb.Append(" \n");
 			switch (Operation)
 			{
-				case SetOperation.Union     : sb.Append("UNION");     break;
-				case SetOperation.UnionAll  : sb.Append("UNION ALL"); break;
-				case SetOperation.Except    : sb.Append("EXCEPT");    break;
-				case SetOperation.Intersect : sb.Append("INTERSECT"); break;
+				case SetOperation.Union        : sb.Append("UNION");         break;
+				case SetOperation.UnionAll     : sb.Append("UNION ALL");     break;
+				case SetOperation.Except       : sb.Append("EXCEPT");        break;
+				case SetOperation.ExceptAll    : sb.Append("EXCEPT ALL");    break;
+				case SetOperation.Intersect    : sb.Append("INTERSECT");     break;
+				case SetOperation.IntersectAll : sb.Append("INTERSECT ALL"); break;
 			}
 			sb.Append('\n');
 			return ((IQueryElement)SelectQuery).ToString(sb, dic);

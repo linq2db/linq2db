@@ -54,7 +54,6 @@ namespace LinqToDB.Linq.Builder
 			new ContainsBuilder            (),
 			new AllAnyBuilder              (),
 			new SetOperationBuilder        (),
-			new IntersectBuilder           (),
 			new CastBuilder                (),
 			new OfTypeBuilder              (),
 			new AsUpdatableBuilder         (),
