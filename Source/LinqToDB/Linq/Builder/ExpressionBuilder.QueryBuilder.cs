@@ -61,7 +61,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				var cond = (ConditionalExpression)CorrectConditional(context, resultExpr);
 				if (resultExpr != cond)
-					resultExpr = cond.Update(cond.Test, BuildExpression(context, cond.IfTrue, enforceServerSide), BuildExpression(context, cond.IfFalse, enforceServerSide));
+					resultExpr = cond.Update(
+						cond.Test != ((ConditionalExpression)resultExpr).Test
+							? cond.Test
+							: BuildExpression(context, cond.Test, enforceServerSide),
+						BuildExpression(context, cond.IfTrue, enforceServerSide),
+						BuildExpression(context, cond.IfFalse, enforceServerSide));
 			}
 
 			if (resultExpr == expr)
