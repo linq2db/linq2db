@@ -1108,6 +1108,10 @@ BEGIN
 	-- 5: Number of matched people.
 	SELECT COUNT(*) FROM #PeopleIds;
 
+	-- 6: First matched person.
+	SELECT TOP 1 * FROM Person WHERE Person.PersonID
+	IN (SELECT PersonID FROM #PeopleIds) ORDER BY LastName;
+
 	Drop Table #PeopleIds;
 END
 GO

@@ -883,9 +883,8 @@ namespace LinqToDB.Extensions
 		public static bool IsGenericEnumerableType(this Type type)
 		{
 			if (type.IsGenericTypeEx())
-				foreach (var aType in type.GetGenericArgumentsEx())
-					if (typeof(IEnumerable<>).MakeGenericType(new[] { aType }).IsAssignableFromEx(type))
-						return true;
+				if (typeof(IEnumerable<>).IsSameOrParentOf(type))
+					return true;
 			return false;
 		}
 

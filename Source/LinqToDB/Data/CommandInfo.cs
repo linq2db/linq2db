@@ -304,7 +304,7 @@ namespace LinqToDB.Data
 
 							isFaulted = true;
 							objectReader = GetObjectReader2<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
-							result = objectReader(rd);
+							result       = objectReader(rd);
 						}
 
 						yield return result;
@@ -474,12 +474,6 @@ namespace LinqToDB.Data
 		/// <returns>Returns result.</returns>
 		public T QueryMulti<T>()
 		{
-			// Check whether attribute has been applied.
-			if (DataConnection.MappingSchema.GetAttribute<MultipleResultSetsAttribute>(typeof(T)) == null)
-			{
-				throw new LinqToDBException("Query type must have attribute MultipleResultSetsAttribute");
-			}
-
 			var hasParameters = Parameters?.Length > 0;
 
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
@@ -493,16 +487,35 @@ namespace LinqToDB.Data
 			}
 		}
 
+		Dictionary<uint, PropertyInfo> GetMultipleQueryIndexMap<T>()
+		{
+			var type = typeof(T);
+			var properties = type.GetProperties();
+			// Use attribute labels if any exist.
+			if (properties.Any(x => x.GetCustomAttribute<ResultSetIndexAttribute>() != null))
+			{
+				return properties.Where(x => x.GetCustomAttribute<ResultSetIndexAttribute>() != null)
+					.ToDictionary(
+						x => (uint)x.GetCustomAttribute<ResultSetIndexAttribute>().Index,
+						x => x
+					);
+			} else
+			{
+				// Use ordering of properties according to reflection.
+				var indexMap = new Dictionary<uint, PropertyInfo>();
+				for (var i=(uint)0; i<properties.Length; i++)
+				{
+					indexMap[i] = properties[i];
+				}
+				return indexMap;
+			}
+		}
+
 
 		T ReadMultipleResultSets<T>(IDataReader rd)
 		{
 			// Dictionary mapping the result query index to the type it should be reading.
-			var resultSetIndexProperties = typeof(T).GetProperties()
-				.Where(x => x.GetCustomAttribute<ResultSetIndexAttribute>() != null)
-				.ToDictionary(
-					x => (uint)x.GetCustomAttribute<ResultSetIndexAttribute>().Index,
-					x => x
-				);
+			var resultSetIndexProperties = GetMultipleQueryIndexMap<T>();
 			var readEnumeratorGeneric = typeof(CommandInfo).GetMethod("ReadEnumeratorAsList", BindingFlags.NonPublic | BindingFlags.Instance);
 
 			uint resultIndex = 0;
