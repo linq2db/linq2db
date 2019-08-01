@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
@@ -9,6 +10,13 @@ namespace Tests.Playground
 	[TestFixture]
 	public class SetOperatorTests : TestBase
 	{
+		class SupportedSourcesAttribute : DataSourcesAttribute
+		{
+			public SupportedSourcesAttribute() : base(ProviderName.Access, ProviderName.SqlCe, TestProvName.AllFirebird, TestProvName.AllMySql)
+			{
+			}
+		}
+
 		[Table]
 		class SampleData
 		{
@@ -20,7 +28,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void TestExcept([DataSources(ProviderName.Access, ProviderName.SqlCe)] string context)
+		public void TestExcept([SupportedSources] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))
@@ -38,7 +46,31 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void TestIntersect([DataSources(ProviderName.Access, ProviderName.SqlCe)] string context)
+		public void TestExceptProjection([SupportedSources] string context)
+		{
+			var testData = GenerateTestData();
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var rs1 = table.Select(r => new { r.Id, Value = r.Value1 }).Where(t => t.Id % 2 == 0);
+				var rs2 = table.Select(r => new { r.Id, Value = r.Value2 / 10 }).Where(t => t.Id % 4 == 0);
+				var rs3 = table.Select(r => new { r.Id, Value = r.Value1 }).Where(t => t.Id % 6 == 0);
+				var query = rs1.Except(rs2).Except(rs3);
+
+				var e1 = testData.Select(r => new { r.Id, Value = r.Value1 }).Where(t => t.Id % 2 == 0);
+				var e2 = testData.Select(r => new { r.Id, Value = r.Value2 / 10 }).Where(t => t.Id % 4 == 0);
+				var e3 = testData.Select(r => new { r.Id, Value = r.Value1 }).Where(t => t.Id % 6 == 0);
+				var expectedQuery = e1.Except(e2).Except(e3);
+
+				var actual   = query.Select(r => new { r.Value }).ToArray();
+				var expected = expectedQuery.Select(r => new { r.Value }).ToArray();
+
+				AreEqual(expected, actual);
+			}
+		}
+
+		[Test]
+		public void TestIntersect([SupportedSources] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))

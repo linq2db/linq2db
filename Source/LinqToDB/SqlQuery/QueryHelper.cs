@@ -184,7 +184,7 @@ namespace LinqToDB.SqlQuery
 						break;
 					case QueryInformation.HierarchyType.Join:
 						return true;
-					case QueryInformation.HierarchyType.Union:
+					case QueryInformation.HierarchyType.SetOperator:
 						// currently removing ordering for all UNION
 						return true;
 					case QueryInformation.HierarchyType.InnerQuery:

@@ -323,7 +323,6 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeUnions()
 		{
-			//TODO: Set Oprators revise
 			var isAllUnion = QueryVisitor.Find(_selectQuery,
 				ne => ne is SqlSetOperator nu && nu.Operation == SetOperation.UnionAll);
 

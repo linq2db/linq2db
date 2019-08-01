@@ -13,11 +13,11 @@ namespace LinqToDB.SqlQuery
 		public SqlSetOperator(SelectQuery selectQuery, SetOperation operation)
 		{
 			SelectQuery = selectQuery;
-			Operation       = operation;
+			Operation   = operation;
 		}
 
-		public SelectQuery SelectQuery { get; }
-		public SetOperation Operation          { get; }
+		public SelectQuery  SelectQuery { get; }
+		public SetOperation Operation   { get; }
 
 		public QueryElementType ElementType => QueryElementType.SetOperator;
 
