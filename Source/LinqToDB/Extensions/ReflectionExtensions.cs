@@ -307,21 +307,6 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
-		public static T GetCustomAttributeEx<T>(this Type type, bool inherit)
-			where T : class
-		{
-#if NETSTANDARD1_6
-			return type.GetTypeInfo()
-				.GetCustomAttributes(inherit)
-				.Where(x => x is T)
-				.FirstOrDefault() as T;
-#else
-			return type.GetCustomAttributes(inherit)
-				.Where(x => x is T)
-				.FirstOrDefault() as T;
-#endif
-		}
-
 		public static InterfaceMapping GetInterfaceMapEx(this Type type, Type interfaceType)
 		{
 #if NETSTANDARD1_6
@@ -893,6 +878,15 @@ namespace LinqToDB.Extensions
 			}
 
 			return typeof(object);
+		}
+
+		public static bool IsGenericEnumerableType(this Type type)
+		{
+			if (type.IsGenericTypeEx())
+				foreach (var aType in type.GetGenericArgumentsEx())
+					if (typeof(IEnumerable<>).MakeGenericType(new[] { aType }).IsAssignableFromEx(type))
+						return true;
+			return false;
 		}
 
 		public static Type GetItemType(this Type type)

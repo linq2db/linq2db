@@ -382,6 +382,19 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Executes command and returns a result containing multiple result sets.
+		/// </summary>
+		/// <typeparam name="T">Result set type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="parameters">Command parameters.</param>
+		/// <returns>Returns result.</returns>
+		public static T QueryMulti<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryMulti<T>();
+		}
+
+		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
@@ -398,7 +411,7 @@ namespace LinqToDB.Data
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns a result containing multiple result sets.
 		/// Result type must be marked with <see cref="LinqToDB.Mapping.MultipleResultSetsAttribute"/> attribute, and have properties marked with <see cref="LinqToDB.Mapping.ResultSetIndexAttribute"/>.
 		/// </summary>
-		/// <typeparam name="T">Result record type.</typeparam>
+		/// <typeparam name="T">Result set type.</typeparam>
 		/// <param name="connection">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>

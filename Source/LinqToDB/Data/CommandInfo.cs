@@ -463,11 +463,6 @@ namespace LinqToDB.Data
 		public T QueryProcMulti<T>()
 		{
 			CommandType = CommandType.StoredProcedure;
-			// Check whether attribute has been applied.
-			if (typeof(T).GetCustomAttributeEx<MultipleResultSetsAttribute>(false) == null)
-			{
-				throw new LinqToDBException("Query type must have attribute MultipleResultSetsAttribute");
-			}
 
 			return QueryMulti<T>();
 		}
@@ -479,6 +474,12 @@ namespace LinqToDB.Data
 		/// <returns>Returns result.</returns>
 		public T QueryMulti<T>()
 		{
+			// Check whether attribute has been applied.
+			if (DataConnection.MappingSchema.GetAttribute<MultipleResultSetsAttribute>(typeof(T)) == null)
+			{
+				throw new LinqToDBException("Query type must have attribute MultipleResultSetsAttribute");
+			}
+
 			var hasParameters = Parameters?.Length > 0;
 
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
@@ -512,17 +513,66 @@ namespace LinqToDB.Data
 				if (resultSetIndexProperties.ContainsKey(resultIndex))
 				{
 					var property = resultSetIndexProperties[resultIndex];
-					var itemType = property.PropertyType.GetItemType();
-					var resultSetEnumerable = readEnumeratorGeneric.MakeGenericMethod(new Type[] { itemType })
-						.Invoke(this, new object[] { rd });
-					property.SetValue(result, resultSetEnumerable);
+					if (property.PropertyType.IsArray)
+					{
+						var resultSetEnumerable = readEnumeratorGeneric.MakeGenericMethod(new Type[] { property.PropertyType.GetItemType() })
+							.Invoke(this, new object[] { rd, true });
+						property.SetValue(result, resultSetEnumerable);
+					}
+					else if (property.PropertyType.IsGenericEnumerableType())
+					{
+
+						var resultSetEnumerable = readEnumeratorGeneric.MakeGenericMethod(new Type[] { property.PropertyType.GetItemType() })
+							.Invoke(this, new object[] { rd, false });
+						property.SetValue(result, resultSetEnumerable);
+					} else
+					{
+						var readValueGeneric = typeof(CommandInfo).GetMethod("ReadValue", BindingFlags.NonPublic | BindingFlags.Instance);
+						var resultValue = readValueGeneric.MakeGenericMethod(new Type[] { property.PropertyType })
+							.Invoke(this, new object[] { rd });
+						property.SetValue(result, resultValue);
+					}
 				}
 				resultIndex++;
 			} while (rd.NextResult());
 			return result;
 		}
 
-		IEnumerable<T> ReadEnumeratorAsList<T>(IDataReader rd)
+
+		T ReadValue<T>(IDataReader rd)
+		{
+			if (rd.Read())
+			{
+				var additionalKey = GetCommandAdditionalKey(rd);
+				var objectReader = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
+				var isFaulted = false;
+
+				do
+				{
+					T result;
+
+					try
+					{
+						result = objectReader(rd);
+					}
+					catch (InvalidCastException)
+					{
+						if (isFaulted)
+							throw;
+
+						isFaulted = true;
+						objectReader = GetObjectReader2<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
+						result = objectReader(rd);
+					}
+
+					return result;
+
+				} while (rd.Read());
+			}
+			return default(T);
+		}
+
+		IEnumerable<T> ReadEnumeratorAsList<T>(IDataReader rd, bool array)
 		{
 			var results = new List<T>();
 			if (rd.Read())
@@ -553,6 +603,10 @@ namespace LinqToDB.Data
 
 				} while (rd.Read());
 
+			}
+			if (array)
+			{
+				return results.ToArray();
 			}
 			return results;
 		}
