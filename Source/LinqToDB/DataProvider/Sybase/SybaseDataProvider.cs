@@ -24,15 +24,17 @@ namespace LinqToDB.DataProvider.Sybase
 		public SybaseDataProvider(string name)
 			: base(name, null)
 		{
-			SqlProviderFlags.AcceptsTakeAsParameter     = false;
-			SqlProviderFlags.IsSkipSupported            = false;
-			SqlProviderFlags.IsSubQueryTakeSupported    = false;
-			//SqlProviderFlags.IsCountSubQuerySupported  = false;
-			SqlProviderFlags.CanCombineParameters       = false;
-			SqlProviderFlags.IsSybaseBuggyGroupBy       = true;
-			SqlProviderFlags.IsCrossJoinSupported       = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported = false;
-			SqlProviderFlags.IsDistinctOrderBySupported = false;
+			SqlProviderFlags.AcceptsTakeAsParameter           = false;
+			SqlProviderFlags.IsSkipSupported                  = false;
+			SqlProviderFlags.IsSubQueryTakeSupported          = false;
+			//SqlProviderFlags.IsCountSubQuerySupported       = false;
+			SqlProviderFlags.CanCombineParameters             = false;
+			SqlProviderFlags.IsSybaseBuggyGroupBy             = true;
+			SqlProviderFlags.IsCrossJoinSupported             = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
+			SqlProviderFlags.IsDistinctOrderBySupported       = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
+			SqlProviderFlags.IsAllSetOperationsSupported      = false;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
