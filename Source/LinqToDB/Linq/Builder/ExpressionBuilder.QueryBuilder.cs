@@ -59,9 +59,9 @@ namespace LinqToDB.Linq.Builder
 			var resultExpr = expr;
 			if (resultExpr.NodeType == ExpressionType.Conditional)
 			{
-				var cond = (ConditionalExpression)CorrectConditional(context, resultExpr);
-				if (resultExpr != cond)
-					resultExpr = cond.Update(cond.Test, BuildExpression(context, cond.IfTrue, enforceServerSide), BuildExpression(context, cond.IfFalse, enforceServerSide));
+//				var cond = (ConditionalExpression)CorrectConditional(context, resultExpr);
+//				if (resultExpr != cond)
+//					resultExpr = cond.Update(cond.Test, BuildExpression(context, cond.IfTrue, enforceServerSide), BuildExpression(context, cond.IfFalse, enforceServerSide));
 			}
 
 			if (resultExpr == expr)
