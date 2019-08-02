@@ -33,7 +33,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			SqlProviderFlags.IsDistinctOrderBySupported       = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
-			SqlProviderFlags.IsAllSetOperationsSupported      = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
 
 			if (version == SqlServerVersion.v2000)

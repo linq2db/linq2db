@@ -30,7 +30,6 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsAllSetOperationsSupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));

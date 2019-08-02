@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider
 				IsCrossJoinSupported                 = true,
 				IsInnerJoinAsCrossSupported          = true,
 				IsOrderByAggregateFunctionsSupported = true,
-				IsAllSetOperationsSupported          = true,
+				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
 			};
 

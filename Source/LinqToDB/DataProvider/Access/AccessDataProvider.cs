@@ -35,7 +35,6 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.IsCrossJoinSupported             = false;
 			SqlProviderFlags.IsInnerJoinAsCrossSupported      = false;
 			SqlProviderFlags.IsDistinctOrderBySupported       = false;
-			SqlProviderFlags.IsAllSetOperationsSupported      = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 
 			SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd(' '));

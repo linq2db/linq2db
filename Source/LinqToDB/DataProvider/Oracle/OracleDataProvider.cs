@@ -35,7 +35,6 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsAllSetOperationsSupported       = false;
 
 			SqlProviderFlags.MaxInListValuesCount = 1000;
 
