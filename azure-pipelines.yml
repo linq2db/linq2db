@@ -211,13 +211,13 @@ stages:
 
     - task: CmdLine@2
       inputs:
-        script: 'copy $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+        script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       displayName: Copy test config
 
     - task: CmdLine@2
       inputs:
-        script: '$(System.DefaultWorkingDirectory)/configs/$(script)'
+        script: '$(System.DefaultWorkingDirectory)\configs\$(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       condition: variables['script']
       displayName: Setup tests
@@ -266,13 +266,13 @@ stages:
 
     - task: CmdLine@2
       inputs:
-        script: 'copy $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+        script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       displayName: Copy test config
 
     - task: CmdLine@2
       inputs:
-        script: '$(System.DefaultWorkingDirectory)/configs/$(script)'
+        script: '$(System.DefaultWorkingDirectory)\configs\$(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       condition: variables['script']
       displayName: Setup tests
@@ -306,7 +306,7 @@ stages:
       matrix:
         SQLite_MS:
           title: 'SQLite.MS'
-          config: 'sqlite_classic'
+          config: 'sqlite_ms'
         MySQL:
           title: 'MySQL 5.7'
           config: 'mysql'
