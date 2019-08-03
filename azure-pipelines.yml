@@ -327,6 +327,13 @@ stages:
 
     - task: CmdLine@2
       inputs:
+        script: 'chmod -x $(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/configs'
+      condition: variables['script']
+      displayName: Mark script as executable
+
+    - task: CmdLine@2
+      inputs:
         script: '$(System.DefaultWorkingDirectory)/configs/$(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       condition: variables['script']
@@ -379,6 +386,13 @@ stages:
       displayName: Copy test config
 
     - task: CmdLine@2
+      inputs:
+        script: 'chmod -x $(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/configs'
+      condition: variables['script']
+      displayName: Mark script as executable
+      
+      - task: CmdLine@2
       inputs:
         script: '$(System.DefaultWorkingDirectory)/configs/$(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)'

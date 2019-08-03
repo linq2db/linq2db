@@ -196,7 +196,7 @@
 	"AzureConnectionStrings": {
 		"BasedOn": "CommonConnectionStrings",
 		"Connections": {
-			"MySql57": { "Provider": "MySql.Data.MySqlClient", "ConnectionString": "Server=localhost;Port=3357;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;" },
+			"MySql57": { "Provider": "MySql.Data.MySqlClient", "ConnectionString": "Server=localhost;Port=33060;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;" },
 			//"MySqlConnector": {
 			//	"Provider": "MySql.Data.MySqlClient",
 			//	"ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;Treat Tiny As Boolean=False;Use Affected Rows=False"
