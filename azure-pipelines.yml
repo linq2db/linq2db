@@ -81,6 +81,18 @@ stages:
         sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp20'
       displayName: Copy test configs for NETCOREAPP2.0
 
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish/scripts'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+      displayName: Copy test scripts for NETCOREAPP2.0
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46/scripts'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+      displayName: Copy test scripts for NETFX46
+
     - task: PublishPipelineArtifact@1
       inputs:
         path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
@@ -195,6 +207,10 @@ stages:
           title: 'MySQL 5.7'
           config: 'mysql'
           script: 'mysql.cmd'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'pgsql.cmd'
 
     steps:
     - checkout: none
@@ -217,7 +233,7 @@ stages:
 
     - task: CmdLine@2
       inputs:
-        script: '$(System.DefaultWorkingDirectory)\configs\$(script)'
+        script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       condition: variables['script']
       displayName: Setup tests
@@ -256,6 +272,10 @@ stages:
           title: 'MySQL 5.7'
           config: 'mysql'
           script: 'mysql.cmd'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'pgsql.cmd'
     steps:
     - checkout: none
 
@@ -272,7 +292,7 @@ stages:
 
     - task: CmdLine@2
       inputs:
-        script: '$(System.DefaultWorkingDirectory)\configs\$(script)'
+        script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       condition: variables['script']
       displayName: Setup tests
@@ -311,6 +331,10 @@ stages:
           title: 'MySQL 5.7'
           config: 'mysql'
           script: 'mysql.sh'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'pgsql.cmd'
     steps:
     - checkout: none
 
@@ -328,13 +352,13 @@ stages:
     - task: CmdLine@2
       inputs:
         script: 'chmod -x $(script)'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/configs'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
       condition: variables['script']
       displayName: Mark script as executable
 
     - task: CmdLine@2
       inputs:
-        script: '$(System.DefaultWorkingDirectory)/configs/$(script)'
+        script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       condition: variables['script']
       displayName: Setup tests
@@ -370,6 +394,10 @@ stages:
           title: 'MySQL 5.7'
           config: 'mysql'
           script: 'mysql.sh'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'pgsql.cmd'
 
     steps:
     - checkout: none
@@ -388,13 +416,13 @@ stages:
     - task: CmdLine@2
       inputs:
         script: 'chmod -x $(script)'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/configs'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
       condition: variables['script']
       displayName: Mark script as executable
       
     - task: CmdLine@2
       inputs:
-        script: '$(System.DefaultWorkingDirectory)/configs/$(script)'
+        script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       condition: variables['script']
       displayName: Setup tests

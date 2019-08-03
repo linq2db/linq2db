@@ -260,17 +260,24 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure", "Azure", "{51E64464
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net46", "net46", "{B7AADC73-2739-4B07-B3EB-C9EF64846874}"
 	ProjectSection(SolutionItems) = preProject
-		Build\Azure\net46\mysql.cmd = Build\Azure\net46\mysql.cmd
 		Build\Azure\net46\mysql.json = Build\Azure\net46\mysql.json
+		Build\Azure\net46\pgsql.json = Build\Azure\net46\pgsql.json
 		Build\Azure\net46\sqlite_classic.json = Build\Azure\net46\sqlite_classic.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp20", "netcoreapp20", "{9C01FF5E-F85A-4561-A05B-8F32A4E11C6D}"
 	ProjectSection(SolutionItems) = preProject
-		Build\Azure\netcoreapp20\mysql.cmd = Build\Azure\netcoreapp20\mysql.cmd
 		Build\Azure\netcoreapp20\mysql.json = Build\Azure\netcoreapp20\mysql.json
-		Build\Azure\netcoreapp20\mysql.sh = Build\Azure\netcoreapp20\mysql.sh
+		Build\Azure\netcoreapp20\pgsql.json = Build\Azure\netcoreapp20\pgsql.json
 		Build\Azure\netcoreapp20\sqlite_ms.json = Build\Azure\netcoreapp20\sqlite_ms.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A37E5A-A8A3-4C89-B11C-D700A9F52BAA}"
+	ProjectSection(SolutionItems) = preProject
+		Build\Azure\scripts\mysql.cmd = Build\Azure\scripts\mysql.cmd
+		Build\Azure\scripts\mysql.sh = Build\Azure\scripts\mysql.sh
+		Build\Azure\scripts\pgsql.cmd = Build\Azure\scripts\pgsql.cmd
+		Build\Azure\scripts\pgsql.sh = Build\Azure\scripts\pgsql.sh
 	EndProjectSection
 EndProject
 Global
@@ -392,6 +399,7 @@ Global
 		{51E64464-E257-4984-A4D5-BF9FF8B7DF1D} = {885042E3-18EA-4927-B1CF-5E0E3DBD1C00}
 		{B7AADC73-2739-4B07-B3EB-C9EF64846874} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{9C01FF5E-F85A-4561-A05B-8F32A4E11C6D} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
+		{49A37E5A-A8A3-4C89-B11C-D700A9F52BAA} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}
