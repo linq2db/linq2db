@@ -359,6 +359,10 @@ stages:
         SQLite_MS:
           title: 'SQLite.MS'
           config: 'sqlite_ms'
+        MySQL:
+          title: 'MySQL 5.7'
+          config: 'mysql'
+          script: 'mysql.sh'
 
     steps:
     - checkout: none

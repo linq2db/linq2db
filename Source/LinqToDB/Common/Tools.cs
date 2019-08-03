@@ -74,7 +74,13 @@ namespace LinqToDB.Common
 			try
 			{
 				var uri = new Uri(Uri.EscapeUriString(uriString));
-				var path =
+
+				var path = string.Empty;
+
+				if (uri.Host != string.Empty)
+					path = Path.DirectorySeparatorChar + uriString.Substring(uriString.ToLowerInvariant().IndexOf(uri.Host), uri.Host.Length);
+
+				path +=
 					  Uri.UnescapeDataString(uri.AbsolutePath)
 					+ Uri.UnescapeDataString(uri.Query)
 					+ Uri.UnescapeDataString(uri.Fragment);

@@ -11,7 +11,7 @@ namespace Tests.Common
 	[TestFixture]
 	public class ToolsTest
 	{
-		[Test, Category("WindowsOnly")]
+		[Test]
 		public void GetPathFromUriTest()
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
