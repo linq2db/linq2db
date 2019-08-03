@@ -43,12 +43,12 @@ No, this is not the donate link. We do need something really more valuable - you
 
 * NuGet [![NuGet](https://img.shields.io/nuget/vpre/linq2db.svg)](https://www.nuget.org/profiles/LinqToDB)
 * Nightly [![Azure DevOps](https://img.shields.io/myget/linq2db/vpre/linq2db.svg)](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db)
-  * feed `https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json`
+  * feed `https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json` ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
 
 ## Let's get started
 
 From **NuGet**:
-* `Install-Package linq2db` - .NET & .NET Core
+* `Install-Package linq2db`
 
 ## Configuring connection strings
 

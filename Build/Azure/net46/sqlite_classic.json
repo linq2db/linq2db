@@ -1,0 +1,9 @@
+﻿{
+	"NET46.Azure": {
+		"Providers": [
+			"SQLite.Classic",
+			"Northwind.SQLite",
+			"TestNoopProvider"
+		]
+	}
+}

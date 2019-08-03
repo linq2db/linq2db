@@ -1,0 +1,9 @@
+﻿{
+	"CORE2.Azure": {
+		"Providers": [
+			"SQLite.MS",
+			"Northwind.SQLite.MS",
+			"TestNoopProvider"
+		]
+	}
+}

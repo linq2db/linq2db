@@ -48,85 +48,13 @@
 	"NET46.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.Classic",
-		"TraceLevel": "Error",
-		"Providers": [
-			//"Access",
-			//"SqlCe",
-			"SQLite.Classic",
-			//"SQLite.MS",
-			//"Northwind.SQLite",
-			//"Northwind.SQLite.MS",
-			//"MySqlConnector",
-			//"MySql57",
-			//"PostgreSQL",
-			//"Northwind",
-			//"SqlServer",
-			//"SqlServer.2014",
-			"TestNoopProvider"
-		]
-		//,
-		//"Connections": {
-		//	"MySql57": {
-		//		"Provider": "MySql.Data.MySqlClient",
-		//		"ConnectionString": "Server=localhost;Port=3306;Database=testdatanet45;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;"
-		//	},
-		//	"MySqlConnector": {
-		//		"Provider": "MySql.Data.MySqlClient",
-		//		"ConnectionString": "Server=localhost;Port=3306;Database=testdatanet45;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;Treat Tiny As Boolean=False;Use Affected Rows=False"
-		//	},
-		//	"PostgreSQL": {
-		//		"Provider": "Npgsql",
-		//		"ConnectionString": "Server=localhost;Port=5432;Database=TestDatanet45;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"
-		//	},
-		//	"SqlServer": {
-		//		"Provider": "System.Data.SqlClient",
-		//		"ConnectionString": "Server=localhost\\SQL2014;Database=TestDatanet45;User Id=sa;Password=Password12!;"
-		//	},
-		//	"SqlServer.2014": {
-		//		"Provider": "System.Data.SqlClient",
-		//		"ConnectionString": "Server=localhost\\SQL2014;Database=TestDatanet45;User Id=sa;Password=Password12!;"
-		//	}
-		//}
+		"TraceLevel": "Error"
 	},
 
 	"CORE2.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
-		"TraceLevel": "Error",
-		"Providers": [
-			"SQLite.MS",
-			//"Northwind.SQLite.MS",
-			//"MySqlConnector",
-			//"MySql57",
-			//"PostgreSQL",
-			//"Northwind",
-			//"SqlServer",
-			//"SqlServer.2014",
-			"TestNoopProvider"
-		]
-		//,
-		//"Connections": {
-		//	"MySql57": {
-		//		"Provider": "MySql.Data.MySqlClient",
-		//		"ConnectionString": "Server=localhost;Port=3306;Database=testdatacore2;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;"
-		//	},
-		//	"MySqlConnector": {
-		//		"Provider": "MySql.Data.MySqlClient",
-		//		"ConnectionString": "Server=localhost;Port=3306;Database=testdatacore2;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;Treat Tiny As Boolean=False;Use Affected Rows=False"
-		//	},
-		//	"PostgreSQL": {
-		//		"Provider": "Npgsql",
-		//		"ConnectionString": "Server=localhost;Port=5432;Database=TestDatacore2;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"
-		//	},
-		//	"SqlServer": {
-		//		"Provider": "System.Data.SqlClient",
-		//		"ConnectionString": "Server=localhost\\SQL2014;Database=TestDatacore2;User Id=sa;Password=Password12!;"
-		//	},
-		//	"SqlServer.2014": {
-		//		"Provider": "System.Data.SqlClient",
-		//		"ConnectionString": "Server=localhost\\SQL2014;Database=TestDatacore2;User Id=sa;Password=Password12!;"
-		//	}
-		//}
+		"TraceLevel": "Error"
 	},
 
 	"CommonConnectionStrings": {
@@ -268,10 +196,7 @@
 	"AzureConnectionStrings": {
 		"BasedOn": "CommonConnectionStrings",
 		"Connections": {
-			//"MySql57": {
-			//	"Provider": "MySql.Data.MySqlClient",
-			//	"ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;"
-			//},
+			"MySql57": { "Provider": "MySql.Data.MySqlClient", "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;" },
 			//"MySqlConnector": {
 			//	"Provider": "MySql.Data.MySqlClient",
 			//	"ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=Password12!;charset=utf8;Allow User Variables=True;Treat Tiny As Boolean=False;Use Affected Rows=False"

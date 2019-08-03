@@ -6,7 +6,7 @@ variables:
   artifact_nugets: 'nugets'
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
-#  netfx45_tests: 'netfx45_tests' # maybe
+#  netfx45_tests: 'netfx45_tests' # maybe later
   netfx46_tests: 'netfx46_tests'
   netcore2_tests: 'netcoreapp20_tests'
 
@@ -68,6 +68,18 @@ stages:
         sourceFolder: '$(Build.SourcesDirectory)/Tests'
         contents: 'DataProviders.json'
       displayName: Copy test settings for NETCOREAPP2.0
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46/configs'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net46'
+      displayName: Copy test configs for NETFX46
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish/configs'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp20'
+      displayName: Copy test configs for NETCOREAPP2.0
 
     - task: PublishPipelineArtifact@1
       inputs:
@@ -177,10 +189,12 @@ stages:
     strategy:
       matrix:
         SQLite_Classic:
-           title: 'SQLite.Classic'
-#          file: 'win_netfx_job1.ps1'
-#        job2:
-#          file: 'win_netfx_job2.ps1'
+          title: 'SQLite.Classic'
+          config: 'sqlite_classic'
+        MySQL:
+          title: 'MySQL 5.7'
+          config: 'mysql'
+          script: 'mysql.cmd'
 
     steps:
     - checkout: none
@@ -190,9 +204,23 @@ stages:
         artifactName: '$(netfx46_tests)'
         targetPath: '$(System.DefaultWorkingDirectory)'
 
-#    - task: PowerShell@2
-#      inputs:
-#        filePath: '$(file)'
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netfx46_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'copy $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/configs/$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
 
     - task: VSTest@2
       inputs:
@@ -223,8 +251,11 @@ stages:
       matrix:
         SQLite_MS:
           title: 'SQLite.MS'
-#      file: 'win_core2_job1.ps1'
-
+          config: 'sqlite_ms'
+        MySQL:
+          title: 'MySQL 5.7'
+          config: 'mysql'
+          script: 'mysql.cmd'
     steps:
     - checkout: none
 
@@ -233,9 +264,18 @@ stages:
         artifactName: '$(netcore2_tests)'
         targetPath: '$(System.DefaultWorkingDirectory)'
 
-#    - task: PowerShell@2
-#      inputs:
-#        filePath: '$(file)'
+    - task: CmdLine@2
+      inputs:
+        script: 'copy $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/configs/$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
 
     - task: VSTest@2
       inputs:
@@ -266,8 +306,11 @@ stages:
       matrix:
         SQLite_MS:
           title: 'SQLite.MS'
-#      file: 'win_core2_job1.ps1'
-
+          config: 'sqlite_classic'
+        MySQL:
+          title: 'MySQL 5.7'
+          config: 'mysql'
+          script: 'mysql.sh'
     steps:
     - checkout: none
 
@@ -276,9 +319,18 @@ stages:
         artifactName: '$(netcore2_tests)'
         targetPath: '$(System.DefaultWorkingDirectory)'
 
-#    - task: PowerShell@2
-#      inputs:
-#        filePath: '$(file)'
+    - task: CmdLine@2
+      inputs:
+        script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/configs/$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
 
 # just because there is not vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
@@ -306,7 +358,7 @@ stages:
       matrix:
         SQLite_MS:
           title: 'SQLite.MS'
-#      file: 'win_core2_job1.ps1'
+          config: 'sqlite_ms'
 
     steps:
     - checkout: none
@@ -316,9 +368,18 @@ stages:
         artifactName: '$(netcore2_tests)'
         targetPath: '$(System.DefaultWorkingDirectory)'
 
-#    - task: PowerShell@2
-#      inputs:
-#        filePath: '$(file)'
+    - task: CmdLine@2
+      inputs:
+        script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/configs/$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
 
 # just because there is not vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
