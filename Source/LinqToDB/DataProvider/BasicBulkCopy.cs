@@ -116,7 +116,7 @@ namespace LinqToDB.DataProvider
 		{
 			var eventInfo   = bulkCopy.GetType().GetEventEx(eventName);
 			var handlerType = eventInfo.EventHandlerType;
-			var eventParams = handlerType.GetMethod("Invoke").GetParameters();
+			var eventParams = handlerType.GetMethodEx("Invoke").GetParameters();
 
 			// Expression<Func<Action<object>,Delegate>> lambda =
 			//     actionParameter => Delegate.CreateDelegate(

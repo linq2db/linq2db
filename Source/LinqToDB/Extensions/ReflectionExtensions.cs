@@ -73,9 +73,14 @@ namespace LinqToDB.Extensions
 				return type.GetField   (memberInfo.Name);
 
 			if (memberInfo.IsMethodEx())
-				return type.GetMethod  (memberInfo.Name, ((MethodInfo) memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray());
+				return type.GetMethodEx(memberInfo.Name, ((MethodInfo) memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray());
 
 			return null;
+		}
+
+		public static MethodInfo GetMethodEx(this Type type, string name)
+		{
+			return type.GetMethod(name);
 		}
 
 		public static MethodInfo GetMethodEx(this Type type, string name, params Type[] types)

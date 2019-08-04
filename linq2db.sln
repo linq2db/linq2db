@@ -73,6 +73,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{6278F811
 		CONTRIBUTING.md = CONTRIBUTING.md
 		MIT-LICENSE.txt = MIT-LICENSE.txt
 		README.md = README.md
+		Test.cmd = Test.cmd
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E-D3B3-433F-A3CA-EE29CD24C324}"
