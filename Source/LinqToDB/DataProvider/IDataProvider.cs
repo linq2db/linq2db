@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
 	using Data;
-	using LinqToDB.Linq;
 	using Mapping;
 	using Common;
 	using SchemaProvider;
@@ -51,9 +48,7 @@ namespace LinqToDB.DataProvider
 		/// <returns>Returns disposable scope object. Cannot be null.</returns>
 		IDisposable        ExecuteScope          ();
 
-#if !NETSTANDARD1_6
 		ISchemaProvider    GetSchemaProvider     ();
-#endif
 
 		BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source);
 	}

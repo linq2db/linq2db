@@ -6,9 +6,6 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Microsoft.SqlServer.Server;
 
@@ -21,7 +18,6 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using LinqToDB.Linq;
 
 	public class SqlServerDataProvider : DataProviderBase
 	{
@@ -173,12 +169,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			return typeof(SqlConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
 		}
 
-#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return Version == SqlServerVersion.v2000 ? new SqlServer2000SchemaProvider() : new SqlServerSchemaProvider();
 		}
-#endif
 
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();
 
@@ -217,11 +211,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						if (value != null && _udtTypes.TryGetValue(value.GetType(), out var s))
 							if (parameter is SqlParameter)
-#if NETSTANDARD1_6
-								((SqlParameter)parameter).TypeName = s;
-#else
 								((SqlParameter)parameter).UdtTypeName = s;
-#endif
 					}
 
 					break;

@@ -31,7 +31,7 @@ namespace LinqToDB.Mapping
 			_memberGetter = memberGetter ?? throw new ArgumentNullException(nameof(memberGetter));
 			_memberInfo   = MemberHelper.MemberOf(memberGetter);
 
-			if (_memberInfo.ReflectedTypeEx() != typeof(T))
+			if (_memberInfo.ReflectedType != typeof(T))
 				_memberInfo = typeof(T).GetMemberEx(_memberInfo) ?? _memberInfo;
 		}
 

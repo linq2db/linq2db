@@ -58,7 +58,7 @@ namespace LinqToDB.Common
 			if (_values.TryGetValue(type, out value))
 				return value;
 
-			if (type.IsEnumEx())
+			if (type.IsEnum)
 			{
 				var mapValues = ms.GetMapValues(type);
 
@@ -73,7 +73,7 @@ namespace LinqToDB.Common
 				}
 			}
 
-			if (value == null && !type.IsClassEx() && !type.IsNullable())
+			if (value == null && !type.IsClass && !type.IsNullable())
 			{
 				var mi = MemberHelper.MethodOf(() => GetValue<int>());
 

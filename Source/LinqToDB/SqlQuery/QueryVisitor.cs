@@ -341,15 +341,6 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		void Visit1X<T>(IEnumerable<T> elements)
-			where T : IQueryElement
-		{
-			if (elements == null)
-				return;
-			foreach (var element in elements)
-				_action1(element);
-		}
-
 		void Visit1X(SelectQuery q)
 		{
 			Visit1(q.Select);
@@ -858,15 +849,6 @@ namespace LinqToDB.SqlQuery
 
 			if (!_all && !_visitedElements.ContainsKey(element))
 				_visitedElements.Add(element, element);
-		}
-
-		void Visit2X<T>(IEnumerable<T> elements)
-			where T : IQueryElement
-		{
-			if (elements == null)
-				return;
-			foreach (var element in elements)
-				_action2(element);
 		}
 
 		void Visit2X(SelectQuery q)
@@ -2385,26 +2367,6 @@ namespace LinqToDB.SqlQuery
 			_visitedElements.Clear();
 			_convert = action;
 			return (T)ConvertImmutableInternal(element) ?? element;
-		}
-
-		T CloneElement<T>(T element)
-			where T : ICloneableElement
-		{
-			var objTree = new Dictionary<ICloneableElement, ICloneableElement>();
-
-			// do not clone already replaced
-			var newObj = (T)element.Clone(objTree,
-				e => !(e is IQueryElement c) || _visitedElements.ContainsKey(c));
-
-			foreach (var pair in objTree)
-			{
-				if (pair.Value != pair.Key && pair.Key is IQueryElement)
-				{
-					_visitedElements.Add((IQueryElement) pair.Key, (IQueryElement) pair.Value);
-				}
-			}
-
-			return newObj;
 		}
 
 		class ConvertScope : IDisposable

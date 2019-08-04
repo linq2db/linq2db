@@ -432,7 +432,7 @@ namespace LinqToDB
 		[Sql.Function(ServerSideOnly = true)]
 		public static bool Like(string matchExpression, string pattern)
 		{
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETCOREAPP2_0
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null &&
@@ -443,7 +443,7 @@ namespace LinqToDB
 		[Sql.Function(ServerSideOnly = true)]
 		public static bool Like(string matchExpression, string pattern, char? escapeCharacter)
 		{
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETCOREAPP2_0
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null && escapeCharacter != null &&

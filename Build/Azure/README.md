@@ -17,8 +17,7 @@ Legend:
 - `v`: test job implemented
 - `x`: test job not implemented yet
 - `?`: test job status not reviewed yet
-- `(T)`: test job was running before using Travis CI (to track not migrated yet tests)
-- `(A)`: test job was running before using AppVeyor CI (to track not migrated yet tests)
+- `(R)`: test job was running before using Travis or Appveryor CI (to track not migrated yet tests)
 - `net46`: .NET Framework 4.6
 - `netcoreapp2.0`: .NETCoreApp 2.0
 - `(W)`: Windows (2019)
@@ -28,15 +27,24 @@ Legend:
 | Database (version): provider \ Target framework (OS) | net46 (W) | netcoreapp2.0 (W) | netcoreapp2.0 (L) | netcoreapp2.0 (M) |
 |-|-|-|-|-|
 |TestNoopProvider|v|v|v|v|
-|Access:OLEDB|?|?|?|?|
+|Access:OLEDB|(R)|?|?|?|
 |Access:ACE|?|?|?|?|
-|MS SQL CE|?|?|?|?|
-|SQLite:[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) + NorthwindDB|?|?|?|?|
-|SQLite:[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/) + NorthwindDB|?|?|?|?|
-|MySQL:[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|?|?|?|?|
-|MySQL:[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|?|?|?|?|
-|PostgreSQL:[Npgsql](https://www.nuget.org/packages/Npgsql/)|?|?|?|?|
-|MS SQL:[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) + NorthwindDB|?|?|?|?|
+|MS SQL CE|(R)|?|?|?|
+|SQLite:[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) + NorthwindDB|v|?|?|?|
+|SQLite:[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/) + NorthwindDB|(R)|v|v|v|
+|MySQL (5.7):[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|v|v|v|v|
+|MySQL:[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|(R)|(R)|(R)|?|
+|PostgreSQL:[Npgsql](https://www.nuget.org/packages/Npgsql/)|(R)|(R)|?|?|
+|MS SQL:[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) + NorthwindDB|(R)|(R)|?|?|
+|Azure SQL:[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)|?|?|?|?|
+|DB2 LUW|?|?|?|?|
+|Informix|?|?|?|?|
+|SAP HANA 2.0|?|?|?|?|
+|MariaDB|?|?|?|?|
+|SAP/Sybase ASE|?|?|?|?|
+|SAP/Sybase ASE:[AdoNetCore.AseClient](https://www.nuget.org/packages/AdoNetCore.AseClient/)|?|?|?|?|
+|Oracle|?|?|?|?|
+|Firebird:[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/)|?|?|?|?|
 
 Providers:
 - `TestNoopProvider` fake test provider to perform testing without database dependencies

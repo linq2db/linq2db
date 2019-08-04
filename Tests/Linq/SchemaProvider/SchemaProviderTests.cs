@@ -37,11 +37,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
-//#if NETSTANDARD2_0
-//				, ProviderName.MySql
-//#endif
-			)]
+		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -160,8 +156,6 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-#if !NETCOREAPP2_0
-
 		[Test]
 		public void MySqlTest([IncludeDataSources(TestProvName.AllMySqlData)] string context)
 		{
@@ -195,8 +189,6 @@ namespace Tests.SchemaProvider
 				Assert.That(pk, Is.Not.Null);
 			}
 		}
-
-#endif
 
 		class PKTest
 		{
@@ -247,11 +239,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
-//#if NETSTANDARD2_0
-//				, ProviderName.MySql, TestProvName.MySql57
-//#endif
-			)]
+		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -269,11 +257,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
-//#if NETSTANDARD2_0
-//				, ProviderName.MySql, TestProvName.MySql57
-//#endif
-			)]
+		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -335,11 +319,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector
-//#if NETSTANDARD2_0
-//				, ProviderName.MySql
-//#endif
-			)]
+		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 			string context)
 		{
 			using (var db = new DataConnection(context))

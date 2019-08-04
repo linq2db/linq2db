@@ -877,8 +877,8 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						if (e.Type == t ||
-							t.IsEnumEx()      && Enum.GetUnderlyingType(t)      == e.Type ||
-							e.Type.IsEnumEx() && Enum.GetUnderlyingType(e.Type) == t)
+							t.IsEnum      && Enum.GetUnderlyingType(t)      == e.Type ||
+							e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
 							return o;
 
 						return Convert(
@@ -1034,7 +1034,7 @@ namespace LinqToDB.Linq.Builder
 
 									var p = pis[i];
 
-									if (p.GetCustomAttributesEx(true).OfType<ParamArrayAttribute>().Any())
+									if (p.GetCustomAttributes(true).OfType<ParamArrayAttribute>().Any())
 									{
 										parms.AddRange(nae.Expressions.Select(a => ConvertToSql(context, a)));
 									}
@@ -1376,9 +1376,9 @@ namespace LinqToDB.Linq.Builder
 				value = new SqlValue(v);
 			else
 			{
-				if (v != null && v.GetType().IsEnumEx())
+				if (v != null && v.GetType().IsEnum)
 				{
-					var attrs = v.GetType().GetCustomAttributesEx(typeof(Sql.EnumAttribute), true);
+					var attrs = v.GetType().GetCustomAttributes(typeof(Sql.EnumAttribute), true);
 
 					if (attrs.Length == 0)
 						v = MappingSchema.EnumToValue((Enum)v);
@@ -1599,7 +1599,7 @@ namespace LinqToDB.Linq.Builder
 
 							predicate = ConvertInPredicate(context, expr);
 						}
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_0
 						else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context, e);
 						else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context, e);
 #endif
@@ -1882,7 +1882,7 @@ namespace LinqToDB.Linq.Builder
 
 			var type = operand.Type;
 
-			if (!type.ToNullableUnderlying().IsEnumEx())
+			if (!type.ToNullableUnderlying().IsEnum)
 				return null;
 
 			var dic = new Dictionary<object, object>();
@@ -2163,8 +2163,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			var typeResult = new DbDataType(member.GetMemberType());
 
-			var dta      = MappingSchema.GetAttribute<DataTypeAttribute>(member.ReflectedTypeEx(), member);
-			var ca       = MappingSchema.GetAttribute<ColumnAttribute>  (member.ReflectedTypeEx(), member);
+			var dta      = MappingSchema.GetAttribute<DataTypeAttribute>(member.ReflectedType, member);
+			var ca       = MappingSchema.GetAttribute<ColumnAttribute>  (member.ReflectedType, member);
 
 			var dataType = ca?.DataType ?? dta?.DataType;
 
@@ -3050,12 +3050,12 @@ namespace LinqToDB.Linq.Builder
 
 		Sql.ExpressionAttribute GetExpressionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedTypeEx(), member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType, member, a => a.Configuration);
 		}
 
 		internal Sql.TableFunctionAttribute GetTableFunctionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedTypeEx(), member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType, member, a => a.Configuration);
 		}
 
 		public ISqlExpression Convert(IBuildContext context, ISqlExpression expr)

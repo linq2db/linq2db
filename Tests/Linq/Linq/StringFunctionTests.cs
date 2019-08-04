@@ -795,7 +795,6 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
 		public void CompareTo3([DataSources] string context)
 		{
@@ -825,7 +824,6 @@ namespace Tests.Linq
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
-#endif
 
 		[Test]
 		public void CompareOrdinal1([DataSources] string context)
@@ -882,11 +880,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-#if !NETSTANDARD1_6
 				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2, true) == 0 && p.ID == 1 select p;
-#else
-				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2, StringComparison.OrdinalIgnoreCase) == 0 && p.ID == 1 select p;
-#endif
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}

@@ -4,8 +4,6 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-#if !NETSTANDARD1_6
-
 	/// <summary>
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.
 	/// </summary>
@@ -143,6 +141,4 @@ namespace LinqToDB.Mapping
 		private void DummySetter<T>(T value)
 			=> throw new InvalidOperationException("Dynamic column setter is not to be called.");
 	}
-	
-#endif
 }

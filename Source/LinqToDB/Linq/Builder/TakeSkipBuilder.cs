@@ -54,7 +54,7 @@ namespace LinqToDB.Linq.Builder
 					Expression.Call(
 						methodCall.Method.DeclaringType,
 						methodCall.Method.Name,
-						new[] { info.Expression.Type.GetGenericArgumentsEx()[0] },
+						new[] { info.Expression.Type.GetGenericArguments()[0] },
 						info.Expression, methodCall.Arguments[1]);
 					//methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, null, ex));
 				info.Parameter  = param;

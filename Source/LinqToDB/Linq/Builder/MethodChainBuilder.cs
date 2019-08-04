@@ -60,9 +60,9 @@ namespace LinqToDB.Linq.Builder
 				_returnType = methodCall.Method.ReturnType;
 				_methodName = methodCall.Method.Name;
 
-				if (_returnType.IsGenericTypeEx() && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
+				if (_returnType.IsGenericType && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
 				{
-					_returnType = _returnType.GetGenericArgumentsEx()[0];
+					_returnType = _returnType.GetGenericArguments()[0];
 					_methodName = _methodName.Replace("Async", "");
 				}
 			}
@@ -102,7 +102,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression expr;
 
-				if (_returnType.IsClassEx() || _returnType.IsNullable())
+				if (_returnType.IsClass || _returnType.IsNullable())
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex);
 				}

@@ -88,7 +88,7 @@ namespace LinqToDB.DataProvider
 			var l  = Expression.Lambda<Func<IDbConnection,int,IDisposable>>(
 				Expression.Convert(
 					Expression.New(
-						bulkCopyType.GetConstructorEx(new[] { connectionType, bulkCopyOptionType }),
+						bulkCopyType.GetConstructor(new[] { connectionType, bulkCopyOptionType }),
 						Expression.Convert(p1, connectionType),
 						Expression.Convert(p2, bulkCopyOptionType)),
 					typeof(IDisposable)),
@@ -104,7 +104,7 @@ namespace LinqToDB.DataProvider
 			var l  = Expression.Lambda<Func<int,string,object>>(
 				Expression.Convert(
 					Expression.New(
-						columnMappingType.GetConstructorEx(new[] { typeof(int), typeof(string) }),
+						columnMappingType.GetConstructor(new[] { typeof(int), typeof(string) }),
 						new Expression[] { p1, p2 }),
 					typeof(object)),
 				p1, p2);
@@ -116,7 +116,7 @@ namespace LinqToDB.DataProvider
 		{
 			var eventInfo   = bulkCopy.GetType().GetEventEx(eventName);
 			var handlerType = eventInfo.EventHandlerType;
-			var eventParams = handlerType.GetMethodEx("Invoke").GetParameters();
+			var eventParams = handlerType.GetMethod("Invoke").GetParameters();
 
 			// Expression<Func<Action<object>,Delegate>> lambda =
 			//     actionParameter => Delegate.CreateDelegate(
@@ -128,10 +128,6 @@ namespace LinqToDB.DataProvider
 			var actionParameter = Expression.Parameter(typeof(Action<object>), "p1");
 			var senderParameter = Expression.Parameter(eventParams[0].ParameterType, eventParams[0].Name);
 			var argsParameter   = Expression.Parameter(eventParams[1].ParameterType, eventParams[1].Name);
-
-#if NETSTANDARD1_6
-			throw new NotImplementedException("This is not implemented for .Net Core");
-#else
 
 			var mi = MemberHelper.MethodOf(() => Delegate.CreateDelegate(typeof(string), (object) null, "", false));
 
@@ -155,7 +151,6 @@ namespace LinqToDB.DataProvider
 			var dgt = lambda.Compile();
 
 			return (obj,action) => eventInfo.AddEventHandler(obj, dgt(action));
-#endif
 		}
 
 		protected void TraceAction(DataConnection dataConnection, Func<string> commandText, Func<int> action)

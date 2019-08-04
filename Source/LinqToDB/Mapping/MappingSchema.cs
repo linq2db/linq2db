@@ -171,7 +171,7 @@ namespace LinqToDB.Mapping
 					return o.Value;
 			}
 
-			if (type.IsEnumEx())
+			if (type.IsEnum)
 			{
 				var mapValues = GetMapValues(type);
 
@@ -224,7 +224,7 @@ namespace LinqToDB.Mapping
 					return o.Value;
 			}
 
-			if (type.IsEnumEx())
+			if (type.IsEnum)
 			{
 				var mapValues = GetMapValues(type);
 
@@ -245,7 +245,7 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			return type.IsClassEx() || type.IsNullable();
+			return type.IsClass || type.IsNullable();
 		}
 
 		/// <summary>
@@ -289,7 +289,7 @@ namespace LinqToDB.Mapping
 		/// <param name="type">Generic type conversions provider.</param>
 		public void SetGenericConvertProvider(Type type)
 		{
-			if (!type.IsGenericTypeDefinitionEx())
+			if (!type.IsGenericTypeDefinition)
 				throw new LinqToDBException($"'{type}' must be a generic type.");
 
 			if (!typeof(IGenericInfoProvider).IsSameOrParentOf(type))
@@ -571,7 +571,7 @@ namespace LinqToDB.Mapping
 						new DefaultValueExpression(this, expr.Body.Type)),
 					expr.Parameters);
 
-			if (p.Type.IsClassEx())
+			if (p.Type.IsClass)
 				return Expression.Lambda(
 					Expression.Condition(
 						Expression.NotEqual(p, Expression.Constant(null, p.Type)),
@@ -618,13 +618,13 @@ namespace LinqToDB.Mapping
 
 			} while (true);
 
-			var isFromGeneric = from.SystemType.IsGenericTypeEx() && !from.SystemType.IsGenericTypeDefinitionEx();
-			var isToGeneric   = to.SystemType.  IsGenericTypeEx() && !to.SystemType.  IsGenericTypeDefinitionEx();
+			var isFromGeneric = from.SystemType.IsGenericType && !from.SystemType.IsGenericTypeDefinition;
+			var isToGeneric   = to.SystemType.  IsGenericType && !to.SystemType.  IsGenericTypeDefinition;
 
 			if (isFromGeneric || isToGeneric)
 			{
-				var fromGenericArgs = isFromGeneric ? from.SystemType.GetGenericArgumentsEx() : Array<Type>.Empty;
-				var toGenericArgs   = isToGeneric   ? to.SystemType.  GetGenericArgumentsEx() : Array<Type>.Empty;
+				var fromGenericArgs = isFromGeneric ? from.SystemType.GetGenericArguments() : Array<Type>.Empty;
+				var toGenericArgs   = isToGeneric   ? to.SystemType.  GetGenericArguments() : Array<Type>.Empty;
 
 				var args = fromGenericArgs.SequenceEqual(toGenericArgs) ?
 					fromGenericArgs : fromGenericArgs.Concat(toGenericArgs).ToArray();
@@ -823,7 +823,7 @@ namespace LinqToDB.Mapping
 			_metadataReaders = list.ToArray();
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_0
 		/// <summary>
 		/// Gets or sets metadata attributes provider for current schema.
 		/// Metadata providers, shipped with LINQ to DB:
@@ -841,6 +841,7 @@ namespace LinqToDB.Mapping
 		/// - <see cref="LinqToDB.Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
 		/// - <see cref="AttributeReader"/> - .NET attributes provider;
 		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
+		/// - <see cref="SystemDataSqlServerAttributeReader"/> - metadata provider that converts <see cref="Microsoft.SqlServer.Server"/> attributes to LINQ to DB mapping attributes;
 		/// - <see cref="XmlAttributeReader"/> - XML-based mappings metadata provider.
 		/// </summary>
 #endif
@@ -1200,7 +1201,7 @@ namespace LinqToDB.Mapping
 			{
 				type = type.ToNullableUnderlying();
 
-				if (type.IsEnumEx() || type.IsPrimitiveEx() || (Configuration.IsStructIsScalarType && type.IsValueTypeEx()))
+				if (type.IsEnum || type.IsPrimitive || (Configuration.IsStructIsScalarType && type.IsValueType))
 					ret = true;
 			}
 
@@ -1331,11 +1332,11 @@ namespace LinqToDB.Mapping
 
 			var underlyingType = type.ToNullableUnderlying();
 
-			if (underlyingType.IsEnumEx())
+			if (underlyingType.IsEnum)
 			{
 				var attrs =
 				(
-					from f in underlyingType.GetFieldsEx()
+					from f in underlyingType.GetFields()
 					where (f.Attributes & EnumField) == EnumField
 					from attr in GetAttributes<MapValueAttribute>(underlyingType, f, a => a.Configuration).Select(attr => attr)
 					orderby attr.IsDefault ? 0 : 1
@@ -1424,11 +1425,11 @@ namespace LinqToDB.Mapping
 
 			var underlyingType = type.ToNullableUnderlying();
 
-			if (underlyingType.IsEnumEx())
+			if (underlyingType.IsEnum)
 			{
 				var fields =
 				(
-					from f in underlyingType.GetFieldsEx()
+					from f in underlyingType.GetFields()
 					where (f.Attributes & EnumField) == EnumField
 					let attrs = GetAttributes<MapValueAttribute>(underlyingType, f, a => a.Configuration)
 					select new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs)

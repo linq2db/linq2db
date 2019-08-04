@@ -59,7 +59,7 @@ namespace Tests
 //			Configuration.AvoidSpecificDataProviderAPI = true;
 			Configuration.Linq.TraceMapperExpression   = false;
 //			Configuration.Linq.GenerateExpressionTest  = true;
-			var assemblyPath = typeof(TestBase).AssemblyEx().GetPath();
+			var assemblyPath = typeof(TestBase).Assembly.GetPath();
 
 #if !NETCOREAPP2_0
 			try

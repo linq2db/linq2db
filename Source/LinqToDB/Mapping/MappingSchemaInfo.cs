@@ -85,7 +85,7 @@ namespace LinqToDB.Mapping
 				{
 					foreach (var type in _genericConvertProviders)
 					{
-						var args = type.Key.GetGenericArgumentsEx();
+						var args = type.Key.GetGenericArguments();
 
 						if (args.Length == types.Length)
 						{

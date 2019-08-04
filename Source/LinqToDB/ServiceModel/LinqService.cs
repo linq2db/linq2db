@@ -202,7 +202,7 @@ namespace LinqToDB.ServiceModel
 
 							// async compiled query support
 							if (ret.FieldTypes[i].IsGenericType && ret.FieldTypes[i].GetGenericTypeDefinition() == typeof(Task<>))
-								ret.FieldTypes[i] = ret.FieldTypes[i].GetGenericArgumentsEx()[0];
+								ret.FieldTypes[i] = ret.FieldTypes[i].GetGenericArguments()[0];
 						}
 
 						var columnReaders = new ConvertFromDataReaderExpression.ColumnReader[rd.FieldCount];

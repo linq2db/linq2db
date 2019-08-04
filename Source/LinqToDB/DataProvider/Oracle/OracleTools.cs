@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			DataConnection.AddProviderDetector(ProviderDetector);
 
-			foreach (var method in typeof(OracleTools).GetMethodsEx().Where(_ => _.Name == "OracleXmlTable" && _.IsGenericMethod))
+			foreach (var method in typeof(OracleTools).GetMethods().Where(_ => _.Name == "OracleXmlTable" && _.IsGenericMethod))
 			{
 				var parameters = method.GetParameters();
 
@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.Oracle
 					OracleXmlTableString = method;
 				else if (parameters[1].ParameterType == typeof(Func<string>))
 					OracleXmlTableFuncString = method;
-				else if (parameters[1].ParameterType.IsGenericTypeEx() &&
+				else if (parameters[1].ParameterType.IsGenericType &&
 				         parameters[1].ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
 					OracleXmlTableIEnumerableT = method;
 				else
@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			try
 			{
-				var path = typeof(OracleTools).AssemblyEx().GetPath();
+				var path = typeof(OracleTools).Assembly.GetPath();
 
 				if (!File.Exists(Path.Combine(path, "Oracle.DataAccess.dll")))
 					if (File.Exists(Path.Combine(path, "Oracle.ManagedDataAccess.dll")))

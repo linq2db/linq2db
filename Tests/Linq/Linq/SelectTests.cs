@@ -964,7 +964,7 @@ namespace Tests.Linq
 						Id = a.Id,
 						Value = a.Value
 					};
-			}        
+			}
 
 			[ExpressionMethod("OwnerImpl")]
 			public static implicit operator DtoChildEntityObject(ChildEntityObject a)

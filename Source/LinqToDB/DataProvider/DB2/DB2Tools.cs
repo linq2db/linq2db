@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			try
 			{
-				var path = typeof(DB2Tools).AssemblyEx().GetPath();
+				var path = typeof(DB2Tools).Assembly.GetPath();
 
 				IsCore = File.Exists(Path.Combine(path, (AssemblyName = "IBM.Data.DB2.Core") + ".dll"));
 
@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.DB2
 						{
 							var connectionType = Type.GetType(AssemblyName + ".DB2Connection, " + AssemblyName, true);
 							var serverTypeProp = connectionType
-								.GetPropertiesEx (BindingFlags.NonPublic | BindingFlags.Instance)
+								.GetProperties (BindingFlags.NonPublic | BindingFlags.Instance)
 								.FirstOrDefault(p => p.Name == "eServerType");
 
 							if (serverTypeProp != null)

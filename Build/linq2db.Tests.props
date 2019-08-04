@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' ">
-		<DefineConstants>RELEASE;AZURE</DefineConstants>
+		<DefineConstants>AZURE</DefineConstants>
 		<DebugSymbols>false</DebugSymbols>
 		<Optimize>true</Optimize>
 	</PropertyGroup>

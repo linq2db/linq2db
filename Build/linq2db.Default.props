@@ -31,8 +31,4 @@
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp2.0'">
-		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
-	</PropertyGroup>
-
 </Project>

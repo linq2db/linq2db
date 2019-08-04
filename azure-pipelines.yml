@@ -334,7 +334,7 @@ stages:
         PostgreSQL:
           title: 'PostgreSQL'
           config: 'pgsql'
-          script: 'pgsql.cmd'
+          script: 'pgsql.sh'
     steps:
     - checkout: none
 
@@ -397,7 +397,7 @@ stages:
         PostgreSQL:
           title: 'PostgreSQL'
           config: 'pgsql'
-          script: 'pgsql.cmd'
+          script: 'pgsql.sh'
 
     steps:
     - checkout: none

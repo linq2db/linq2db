@@ -25,7 +25,7 @@ namespace LinqToDB.Metadata
 		{
 			if (_func == null)
 			{
-				var ctors = type.GetConstructorsEx();
+				var ctors = type.GetConstructors();
 				var ctor  = ctors.FirstOrDefault(c => c.GetParameters().Length == 0);
 
 				if (ctor != null)

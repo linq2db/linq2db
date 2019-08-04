@@ -455,7 +455,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
 		public void Issue695Test([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
@@ -470,7 +469,6 @@ namespace Tests.DataProvider
 				Assert.AreEqual(1, t.ForeignKeys.Count);
 			}
 		}
-#endif
 
 		[Test]
 		public void SelectTableWithHintTest([IncludeDataSources(ProviderName.SqlCe)] string context)

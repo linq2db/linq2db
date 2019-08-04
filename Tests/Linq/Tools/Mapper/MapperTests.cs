@@ -565,8 +565,6 @@ namespace Tests.Tools.Mapper
 			Assert.That(mapper.To.Class1, Is.Not.SameAs(mapper.To.Class2));
 		}
 
-#if !NETSTANDARD1_6
-
 		class Object3
 		{
 			public HashSet<string> HashSet = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
@@ -588,8 +586,6 @@ namespace Tests.Tools.Mapper
 				Assert.That(mapper.To.HashSet.Contains(str));
 			}
 		}
-
-#endif
 
 		class RTest1
 		{

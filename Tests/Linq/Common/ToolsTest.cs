@@ -29,7 +29,7 @@ namespace Tests.Common
 		[Test]
 		public void AssemblyPathTest()
 		{
-			var asm = typeof(ToolsTest).AssemblyEx();
+			var asm = typeof(ToolsTest).Assembly;
 
 			var path = asm.GetPath();
 			var file = asm.GetFileName();

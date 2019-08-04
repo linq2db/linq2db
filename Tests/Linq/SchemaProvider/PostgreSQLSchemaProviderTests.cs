@@ -246,7 +246,6 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
 		public void ProceduresSchemaProviderTest(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
@@ -416,7 +415,5 @@ namespace Tests.SchemaProvider
 				Assert.That(column.Description, Is.EqualTo("This is the Person.PersonID column"));
 			}
 		}
-#endif
 	}
-
 }

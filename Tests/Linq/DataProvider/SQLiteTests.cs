@@ -188,10 +188,8 @@ namespace Tests.DataProvider
 				TestNumeric(conn, ushort.MaxValue,   DataType.UInt16);
 				TestNumeric(conn, uint.MaxValue,     DataType.UInt32);
 
-#if NETSTANDARD1_6
 				if (context != ProviderName.SQLiteMS)
 					TestNumeric(conn, ulong.MaxValue,    DataType.UInt64,     "bigint bit decimal int money numeric smallint tinyint float real");
-#endif
 
 				TestNumeric(conn, -3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
 				TestNumeric(conn,  3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
@@ -281,7 +279,6 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 
-#if NETSTANDARD1_6
 				if (context != ProviderName.SQLiteMS)
 				{
 					Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
@@ -291,7 +288,6 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<char> ("SELECT Cast(@p as char(1))", DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
 					Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1))", DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
 				}
-#endif
 
 				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
@@ -485,8 +481,6 @@ namespace Tests.DataProvider
 			public int Id;
 		}
 
-#if !NETCOREAPP2_0
-
 		[Test, Parallelizable(ParallelScope.None)]
 		public void CreateDatabase([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -510,8 +504,6 @@ namespace Tests.DataProvider
 			SQLiteTools.DropDatabase   ("TestDatabase");
 			Assert.IsFalse(File.Exists ("TestDatabase.sqlite"));
 		}
-
-#endif
 
 		[Test]
 		public void BulkCopyLinqTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -539,8 +531,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD1_6
-
 		[Test]
 		public void Issue784Test([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
@@ -559,7 +549,5 @@ namespace Tests.DataProvider
 
 			}
 		}
-
-#endif
 	}
 }

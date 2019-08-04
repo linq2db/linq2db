@@ -16,6 +16,7 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 		public string                _sqlQueryText { get; }
+		public string                Path          { get; }
 #endif
 		public  ExpressionBuilder    Builder       { get; }
 		public  Expression           Expression    { get; }

@@ -468,7 +468,7 @@ namespace LinqToDB.Linq.Builder
 
 			var memberType = member.GetMemberType().ToNullableUnderlying();
 			var updateType = update.Type.ToNullableUnderlying();
-			if (memberType.IsEnumEx() && updateType != memberType)
+			if (memberType.IsEnum && updateType != memberType)
 				update = Expression.Convert(update, member.GetMemberType());
 
 			if (!update.Type.IsConstantable() && !builder.AsParameters.Contains(update))

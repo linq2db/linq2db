@@ -236,7 +236,7 @@ namespace LinqToDB.Data
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] IDbConnection connection,
-			                                bool          disposeConnection)
+											bool          disposeConnection)
 		{
 			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
 			if (connection   == null) throw new ArgumentNullException(nameof(connection));
@@ -538,7 +538,7 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_0
 				return _defaultSettings ?? (_defaultSettings = LinqToDBSection.Instance);
 #else
 				return _defaultSettings;
@@ -570,7 +570,7 @@ namespace LinqToDB.Data
 			_configurationIDs = new ConcurrentDictionary<string,int>();
 
 			LinqToDB.DataProvider.SqlServer. SqlServerTools. GetDataProvider();
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_0
 			LinqToDB.DataProvider.Access.    AccessTools.    GetDataProvider();
 #endif
 			LinqToDB.DataProvider.SqlCe.     SqlCeTools.     GetDataProvider();

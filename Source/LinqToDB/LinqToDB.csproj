@@ -57,7 +57,6 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
-		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
 		<Compile Remove="Configuration\DataProviderElement.cs" />
 		<Compile Remove="Configuration\DataProviderElementCollection.cs" />
 		<Compile Remove="Configuration\ElementBase.cs" />

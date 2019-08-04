@@ -39,9 +39,9 @@ namespace LinqToDB.DataProvider.DB2
 
 				if (_bulkCopyCreator == null)
 				{
-					var bulkCopyType       = _connectionType.AssemblyEx().GetType("IBM.Data.DB2.DB2BulkCopy",              false);
-					var bulkCopyOptionType = _connectionType.AssemblyEx().GetType("IBM.Data.DB2.DB2BulkCopyOptions",       false);
-					var columnMappingType  = _connectionType.AssemblyEx().GetType("IBM.Data.DB2.DB2BulkCopyColumnMapping", false);
+					var bulkCopyType       = _connectionType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopy",              false);
+					var bulkCopyOptionType = _connectionType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopyOptions",       false);
+					var columnMappingType  = _connectionType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopyColumnMapping", false);
 
 					if (bulkCopyType != null)
 					{

@@ -134,7 +134,7 @@ namespace LinqToDB.Linq.Builder
 				case BuildContextType.None                   : return null;
 				case BuildContextType.TableConstant          : return new TableContext(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()).ElementType);
 				case BuildContextType.GetTableMethod         :
-				case BuildContextType.MemberAccess           : return new TableContext(builder, buildInfo, buildInfo.Expression.Type.GetGenericArgumentsEx()[0]);
+				case BuildContextType.MemberAccess           : return new TableContext(builder, buildInfo, buildInfo.Expression.Type.GetGenericArguments()[0]);
 				case BuildContextType.Association            : return parentContext.GetContext(buildInfo.Expression, 0, buildInfo);
 				case BuildContextType.TableFunctionAttribute : return new TableContext    (builder, buildInfo);
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);

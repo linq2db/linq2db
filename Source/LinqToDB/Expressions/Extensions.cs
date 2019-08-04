@@ -1704,11 +1704,10 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
-		private static readonly MethodInfo _sqlProperty = typeof(Sql).GetMethodEx("Property").GetGenericMethodDefinition();
+		private static readonly MethodInfo _sqlProperty = typeof(Sql).GetMethod("Property").GetGenericMethodDefinition();
 
 		public static Expression GetMemberGetter(MemberInfo mi, Expression obj)
 		{
-#if !NETSTANDARD1_6
 			if (mi is DynamicColumnInfo)
 			{
 				return Expression.Call(
@@ -1717,7 +1716,6 @@ namespace LinqToDB.Expressions
 					Expression.Constant(mi.Name));
 			}
 			else
-#endif
 				return Expression.PropertyOrField(obj, mi.Name);
 		}
 	}

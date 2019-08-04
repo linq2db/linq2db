@@ -453,7 +453,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETCOREAPP2_0
 		[Test]
 		public void SchemaProviderTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
@@ -777,8 +776,6 @@ namespace Tests.DataProvider
 				Assert.AreNotEqual(null, res);
 			}
 		}
-
-#endif
 
 		[Sql.Expression("@n:=@n+1", ServerSideOnly = true)]
 		static int IncrementIndex()

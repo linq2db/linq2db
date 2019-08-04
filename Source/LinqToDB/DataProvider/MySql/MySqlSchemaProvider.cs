@@ -288,21 +288,20 @@ SELECT
 
 		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
 		{
-#if !NETSTANDARD
 			return
 			(
 				from r in resultTable.AsEnumerable()
 
 				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
-				let dataType = DataTypes.FirstOrDefault(t => t.ProviderDbType == providerType)
-				let columnType = dataType == null ? null : dataType.TypeName
+				let dataType     = DataTypes.FirstOrDefault(t => t.ProviderDbType == providerType)
+				let columnType   = dataType == null ? null : dataType.TypeName
 
 				let columnName = r.Field<string>("ColumnName")
 				let isNullable = r.Field<bool>("AllowDBNull")
 
-				let length = r.Field<int>("ColumnSize")
+				let length    = r.Field<int>("ColumnSize")
 				let precision = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
-				let scale = Converter.ChangeTypeTo<int>(r["NumericScale"])
+				let scale     = Converter.ChangeTypeTo<int>(r["NumericScale"])
 
 				let systemType = GetSystemType(columnType, null, dataType, length, precision, scale)
 
@@ -319,9 +318,6 @@ SELECT
 					IsIdentity           = r.IsNull("IsIdentity") ? false : r.Field<bool>("IsIdentity")
 				}
 			).ToList();
-#else
-			return new List<ColumnSchema>();
-#endif
 		}
 
 		protected override string GetProviderSpecificTypeNamespace()

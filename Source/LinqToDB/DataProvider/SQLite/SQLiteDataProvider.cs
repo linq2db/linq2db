@@ -91,12 +91,10 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
 
-#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SQLiteSchemaProvider();
 		}
-#endif
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{

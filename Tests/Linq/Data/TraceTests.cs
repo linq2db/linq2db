@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,10 +11,6 @@ using LinqToDB.Data;
 
 namespace Tests.Data
 {
-#if !NETSTANDARD1_6
-	using System.Configuration;
-#endif
-
 	using Model;
 
 	[TestFixture]

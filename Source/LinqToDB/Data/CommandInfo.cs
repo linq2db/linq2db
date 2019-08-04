@@ -1001,7 +1001,7 @@ namespace LinqToDB.Data
 											Expression.Constant(column.ColumnName));
 									}
 
-									if (memberType.IsEnumEx())
+									if (memberType.IsEnum)
 									{
 										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType);
 										var convExpr = dataConnection.MappingSchema.GetConvertExpression(column.MemberType, mapType);
@@ -1184,7 +1184,7 @@ namespace LinqToDB.Data
 
 				expr = null;
 
-				var ctors = typeof(T).GetConstructorsEx().Select(c => new { c, ps = c.GetParameters() }).ToList();
+				var ctors = typeof(T).GetConstructors().Select(c => new { c, ps = c.GetParameters() }).ToList();
 
 				if (ctors.Count > 0 && ctors.All(c => c.ps.Length > 0))
 				{

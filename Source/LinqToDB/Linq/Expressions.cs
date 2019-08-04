@@ -214,7 +214,7 @@ namespace LinqToDB.Linq
 			{
 				foreach (var type in _genericConvertProviders)
 				{
-					var args = type.Key.GetGenericArgumentsEx();
+					var args = type.Key.GetGenericArguments();
 
 					if (args.Length == types.Length)
 					{
@@ -238,7 +238,7 @@ namespace LinqToDB.Linq
 
 		public static void SetGenericInfoProvider(Type type)
 		{
-			if (!type.IsGenericTypeDefinitionEx())
+			if (!type.IsGenericTypeDefinition)
 				throw new LinqToDBException($"'{type}' must be a generic type.");
 
 			if (!typeof(IGenericInfoProvider).IsSameOrParentOf(type))
@@ -289,12 +289,12 @@ namespace LinqToDB.Linq
 
 			if (mi is MethodInfo mm)
 			{
-				var isTypeGeneric   = mm.DeclaringType.IsGenericTypeEx() && !mm.DeclaringType.IsGenericTypeDefinitionEx();
+				var isTypeGeneric   = mm.DeclaringType.IsGenericType && !mm.DeclaringType.IsGenericTypeDefinition;
 				var isMethodGeneric = mm.IsGenericMethod && !mm.IsGenericMethodDefinition;
 
 				if (isTypeGeneric || isMethodGeneric)
 				{
-					var typeGenericArgs   = isTypeGeneric   ? mm.DeclaringType.GetGenericArgumentsEx() : Array<Type>.Empty;
+					var typeGenericArgs   = isTypeGeneric   ? mm.DeclaringType.GetGenericArguments() : Array<Type>.Empty;
 					var methodGenericArgs = isMethodGeneric ? mm.GetGenericArguments()                 : Array<Type>.Empty;
 
 					args = typeGenericArgs.SequenceEqual(methodGenericArgs) ?
@@ -481,7 +481,7 @@ namespace LinqToDB.Linq
 		{
 			public void SetInfo(MappingSchema mappingSchema)
 			{
-				if (!typeof(T).IsClassEx() && !typeof(T).IsInterfaceEx() && !typeof(T).IsNullable())
+				if (!typeof(T).IsClass && !typeof(T).IsInterface && !typeof(T).IsNullable())
 				{
 					var gtype    = typeof(GetValueOrDefaultExpressionInfo<>).MakeGenericType(typeof(T));
 					var provider = (ISetInfo)Activator.CreateInstance(gtype);
@@ -541,9 +541,7 @@ namespace LinqToDB.Linq
 			{ M(() => "".ToLower    ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Lower(obj))) },
 			{ M(() => "".ToUpper    ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Upper(obj))) },
 			{ M(() => "".CompareTo  ("")      ), N(() => L<String,String,Int32>            ((String obj,String p0)                    => ConvertToCaseCompareTo(obj, p0).Value)) },
-#if !NETSTANDARD1_6
 			{ M(() => "".CompareTo  (1)       ), N(() => L<String,Object,Int32>            ((String obj,Object p0)                    => ConvertToCaseCompareTo(obj, p0.ToString()).Value)) },
-#endif
 
 			{ M(() => string.Concat((object)null)                           ), N(() => L<Object,String>                     ((Object p0)                               => p0.ToString()))           },
 			{ M(() => string.Concat((object)null,(object)null)              ), N(() => L<Object,Object,String>              ((Object p0,Object p1)                     => p0.ToString() + p1))      },
@@ -560,9 +558,7 @@ namespace LinqToDB.Linq
 			{ M(() => string.Compare       ("","")),                                          N(() => L<String,String,Int32>                                   ((String s1,String s2)                                               => s1.CompareTo(s2))) },
 			{ M(() => string.Compare       ("",0,"",0,0)),                                    N(() => L<String,Int32,String,Int32,Int32,Int32>                 ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)                     => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l)))) },
 			{ M(() => string.Compare       ("","",true)),                                     N(() => L<String,String,Boolean,Int32>                           ((String s1,String s2,Boolean b)                                     => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
-#if !NETSTANDARD1_6
 			{ M(() => string.Compare       ("",0,"",0,0,true)),                               N(() => L<String,Int32,String,Int32,Int32,Boolean,Int32>         ((String s1,Int32 i1,String s2,Int32 i2,Int32 l,Boolean b)           => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
-#endif
 			{ M(() => string.Compare       ("",0,"",0,0,StringComparison.OrdinalIgnoreCase)), N(() => L<String,Int32,String,Int32,Int32,StringComparison,Int32>((String s1,Int32 i1,String s2,Int32 i2,Int32 l,StringComparison sc) => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("","",StringComparison.OrdinalIgnoreCase)),       N(() => L<String,String,StringComparison,Int32>                  ((String s1,String s2,StringComparison sc)                           => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
 
@@ -678,13 +674,8 @@ namespace LinqToDB.Linq
 
 			{ M(() => Convert.ToBoolean((Boolean)true)), N(() => L<Boolean, Boolean>((Boolean  p0) => Sql.ConvertTo<Boolean>.From(p0))) },
 			{ M(() => Convert.ToBoolean((Byte)    0)  ), N(() => L<Byte,    Boolean>((Byte     p0) => Sql.ConvertTo<Boolean>.From(p0))) },
-			// here and above: NETSTANDARD1_6 do not have some overloads, so all af them are treated as method with Object parameter
-			// so if we do not exclude them we'll receive runtime exception like:
-			// An item with the same key has already been added. Key: Boolean ToBoolean(System.Object)
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToBoolean((Char)   '0') ), N(() => L<Char,    Boolean>((Char     p0) => Sql.ConvertTo<Boolean>.From(p0))) },
 			{ M(() => Convert.ToBoolean(DateTime.Now) ), N(() => L<DateTime,Boolean>((DateTime p0) => Sql.ConvertTo<Boolean>.From(p0))) },
-#endif
 			{ M(() => Convert.ToBoolean((Decimal) 0)  ), N(() => L<Decimal, Boolean>((Decimal  p0) => Sql.ConvertTo<Boolean>.From(p0))) },
 			{ M(() => Convert.ToBoolean((Double)  0)  ), N(() => L<Double,  Boolean>((Double   p0) => Sql.ConvertTo<Boolean>.From(p0))) },
 			{ M(() => Convert.ToBoolean((Int16)   0)  ), N(() => L<Int16,   Boolean>((Int16    p0) => Sql.ConvertTo<Boolean>.From(p0))) },
@@ -705,9 +696,7 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToByte((Boolean)true)), N(() => L<Boolean, Byte>((Boolean  p0) => Sql.ConvertTo<Byte>.From(p0))) },
 			{ M(() => Convert.ToByte((Byte)    0)  ), N(() => L<Byte,    Byte>((Byte     p0) => Sql.ConvertTo<Byte>.From(p0))) },
 			{ M(() => Convert.ToByte((Char)   '0') ), N(() => L<Char,    Byte>((Char     p0) => Sql.ConvertTo<Byte>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToByte(DateTime.Now) ), N(() => L<DateTime,Byte>((DateTime p0) => Sql.ConvertTo<Byte>.From(p0))) },
-#endif
 			{ M(() => Convert.ToByte((Decimal) 0)  ), N(() => L<Decimal, Byte>((Decimal  p0) => Sql.ConvertTo<Byte>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToByte((Double)  0)  ), N(() => L<Double,  Byte>((Double   p0) => Sql.ConvertTo<Byte>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToByte((Int16)   0)  ), N(() => L<Int16,   Byte>((Int16    p0) => Sql.ConvertTo<Byte>.From(p0))) },
@@ -725,24 +714,18 @@ namespace LinqToDB.Linq
 
 			#region ToChar
 
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToChar((Boolean)true)), N(() => L<Boolean, Char>((Boolean  p0) => Sql.ConvertTo<Char>.From(p0))) },
-#endif
 			{ M(() => Convert.ToChar((Byte)    0)  ), N(() => L<Byte,    Char>((Byte     p0) => Sql.ConvertTo<Char>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToChar((Char)   '0') ), N(() => L<Char,    Char>((Char     p0) => p0                          )) },
 			{ M(() => Convert.ToChar(DateTime.Now) ), N(() => L<DateTime,Char>((DateTime p0) => Sql.ConvertTo<Char>.From(p0))) },
 			{ M(() => Convert.ToChar((Decimal) 0)  ), N(() => L<Decimal, Char>((Decimal  p0) => Sql.ConvertTo<Char>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToChar((Double)  0)  ), N(() => L<Double,  Char>((Double   p0) => Sql.ConvertTo<Char>.From(Sql.RoundToEven(p0)))) },
-#endif
 			{ M(() => Convert.ToChar((Int16)   0)  ), N(() => L<Int16,   Char>((Int16    p0) => Sql.ConvertTo<Char>.From(p0))) },
 			{ M(() => Convert.ToChar((Int32)   0)  ), N(() => L<Int32,   Char>((Int32    p0) => Sql.ConvertTo<Char>.From(p0))) },
 			{ M(() => Convert.ToChar((Int64)   0)  ), N(() => L<Int64,   Char>((Int64    p0) => Sql.ConvertTo<Char>.From(p0))) },
 			{ M(() => Convert.ToChar((Object)  0)  ), N(() => L<Object,  Char>((Object   p0) => Sql.ConvertTo<Char>.From(p0))) },
 			{ M(() => Convert.ToChar((SByte)   0)  ), N(() => L<SByte,   Char>((SByte    p0) => Sql.ConvertTo<Char>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToChar((Single)  0)  ), N(() => L<Single,  Char>((Single   p0) => Sql.ConvertTo<Char>.From(Sql.RoundToEven(p0)))) },
-#endif
 			{ M(() => Convert.ToChar((String) "0") ), N(() => L<String,  Char>((String   p0) => Sql.ConvertTo<Char>.From(p0))) },
 			{ M(() => Convert.ToChar((UInt16)  0)  ), N(() => L<UInt16,  Char>((UInt16   p0) => Sql.ConvertTo<Char>.From(p0))) },
 			{ M(() => Convert.ToChar((UInt32)  0)  ), N(() => L<UInt32,  Char>((UInt32   p0) => Sql.ConvertTo<Char>.From(p0))) },
@@ -754,7 +737,6 @@ namespace LinqToDB.Linq
 
 			{ M(() => Convert.ToDateTime((Object)  0)  ), N(() => L<Object,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 			{ M(() => Convert.ToDateTime((String) "0") ), N(() => L<String,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToDateTime((Boolean)true)), N(() => L<Boolean, DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 			{ M(() => Convert.ToDateTime((Byte)    0)  ), N(() => L<Byte,    DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 			{ M(() => Convert.ToDateTime((Char)   '0') ), N(() => L<Char,    DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
@@ -769,7 +751,6 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToDateTime((UInt16)  0)  ), N(() => L<UInt16,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 			{ M(() => Convert.ToDateTime((UInt32)  0)  ), N(() => L<UInt32,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 			{ M(() => Convert.ToDateTime((UInt64)  0)  ), N(() => L<UInt64,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-#endif
 
 			#endregion
 
@@ -777,10 +758,8 @@ namespace LinqToDB.Linq
 
 			{ M(() => Convert.ToDecimal((Boolean)true)), N(() => L<Boolean, Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal((Byte)    0)  ), N(() => L<Byte,    Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToDecimal((Char)   '0') ), N(() => L<Char,    Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal(DateTime.Now) ), N(() => L<DateTime,Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
-#endif
 			{ M(() => Convert.ToDecimal((Decimal) 0)  ), N(() => L<Decimal, Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal((Double)  0)  ), N(() => L<Double,  Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal((Int16)   0)  ), N(() => L<Int16,   Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
@@ -800,10 +779,8 @@ namespace LinqToDB.Linq
 
 			{ M(() => Convert.ToDouble((Boolean)true)), N(() => L<Boolean, Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
 			{ M(() => Convert.ToDouble((Byte)    0)  ), N(() => L<Byte,    Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToDouble((Char)   '0') ), N(() => L<Char,    Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
 			{ M(() => Convert.ToDouble(DateTime.Now) ), N(() => L<DateTime,Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
-#endif
 			{ M(() => Convert.ToDouble((Decimal) 0)  ), N(() => L<Decimal, Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
 			{ M(() => Convert.ToDouble((Double)  0)  ), N(() => L<Double,  Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
 			{ M(() => Convert.ToDouble((Int16)   0)  ), N(() => L<Int16,   Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
@@ -824,9 +801,7 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToInt64((Boolean)true)), N(() => L<Boolean, Int64>(p0 => Sql.ConvertTo<Int64>.From(p0))) },
 			{ M(() => Convert.ToInt64((Byte)    0)  ), N(() => L<Byte,    Int64>(p0 => Sql.ConvertTo<Int64>.From(p0))) },
 			{ M(() => Convert.ToInt64((Char)   '0') ), N(() => L<Char,    Int64>(p0 => Sql.ConvertTo<Int64>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToInt64(DateTime.Now) ), N(() => L<DateTime,Int64>(p0 => Sql.ConvertTo<Int64>.From(p0))) },
-#endif
 			{ M(() => Convert.ToInt64((Decimal) 0)  ), N(() => L<Decimal, Int64>(p0 => Sql.ConvertTo<Int64>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToInt64((Double)  0)  ), N(() => L<Double,  Int64>(p0 => Sql.ConvertTo<Int64>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToInt64((Int16)   0)  ), N(() => L<Int16,   Int64>(p0 => Sql.ConvertTo<Int64>.From(p0))) },
@@ -847,9 +822,7 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToInt32((Boolean)true)), N(() => L<Boolean, Int32>(p0 => Sql.ConvertTo<Int32>.From(p0))) },
 			{ M(() => Convert.ToInt32((Byte)    0)  ), N(() => L<Byte,    Int32>(p0 => Sql.ConvertTo<Int32>.From(p0))) },
 			{ M(() => Convert.ToInt32((Char)   '0') ), N(() => L<Char,    Int32>(p0 => Sql.ConvertTo<Int32>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToInt32(DateTime.Now) ), N(() => L<DateTime,Int32>(p0 => Sql.ConvertTo<Int32>.From(p0))) },
-#endif
 			{ M(() => Convert.ToInt32((Decimal) 0)  ), N(() => L<Decimal, Int32>(p0 => Sql.ConvertTo<Int32>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToInt32((Double)  0)  ), N(() => L<Double,  Int32>(p0 => Sql.ConvertTo<Int32>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToInt32((Int16)   0)  ), N(() => L<Int16,   Int32>(p0 => Sql.ConvertTo<Int32>.From(p0))) },
@@ -870,9 +843,7 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToInt16((Boolean)true)), N(() => L<Boolean, Int16>(p0 => Sql.ConvertTo<Int16>.From(p0))) },
 			{ M(() => Convert.ToInt16((Byte)    0)  ), N(() => L<Byte,    Int16>(p0 => Sql.ConvertTo<Int16>.From(p0))) },
 			{ M(() => Convert.ToInt16((Char)   '0') ), N(() => L<Char,    Int16>(p0 => Sql.ConvertTo<Int16>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToInt16(DateTime.Now) ), N(() => L<DateTime,Int16>(p0 => Sql.ConvertTo<Int16>.From(p0))) },
-#endif
 			{ M(() => Convert.ToInt16((Decimal) 0)  ), N(() => L<Decimal, Int16>(p0 => Sql.ConvertTo<Int16>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToInt16((Double)  0)  ), N(() => L<Double,  Int16>(p0 => Sql.ConvertTo<Int16>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToInt16((Int16)   0)  ), N(() => L<Int16,   Int16>(p0 => Sql.ConvertTo<Int16>.From(p0))) },
@@ -893,9 +864,7 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToSByte((Boolean)true)), N(() => L<Boolean, SByte>(p0 => Sql.ConvertTo<SByte>.From(p0))) },
 			{ M(() => Convert.ToSByte((Byte)    0)  ), N(() => L<Byte,    SByte>(p0 => Sql.ConvertTo<SByte>.From(p0))) },
 			{ M(() => Convert.ToSByte((Char)   '0') ), N(() => L<Char,    SByte>(p0 => Sql.ConvertTo<SByte>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToSByte(DateTime.Now) ), N(() => L<DateTime,SByte>(p0 => Sql.ConvertTo<SByte>.From(p0))) },
-#endif
 			{ M(() => Convert.ToSByte((Decimal) 0)  ), N(() => L<Decimal, SByte>(p0 => Sql.ConvertTo<SByte>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToSByte((Double)  0)  ), N(() => L<Double,  SByte>(p0 => Sql.ConvertTo<SByte>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToSByte((Int16)   0)  ), N(() => L<Int16,   SByte>(p0 => Sql.ConvertTo<SByte>.From(p0))) },
@@ -915,10 +884,8 @@ namespace LinqToDB.Linq
 
 			{ M(() => Convert.ToSingle((Boolean)true)), N(() => L<Boolean, Single>(p0 => Sql.ConvertTo<Single>.From(p0))) },
 			{ M(() => Convert.ToSingle((Byte)    0)  ), N(() => L<Byte,    Single>(p0 => Sql.ConvertTo<Single>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToSingle((Char)   '0') ), N(() => L<Char,    Single>(p0 => Sql.ConvertTo<Single>.From(p0))) },
 			{ M(() => Convert.ToSingle(DateTime.Now) ), N(() => L<DateTime,Single>(p0 => Sql.ConvertTo<Single>.From(p0))) },
-#endif
 			{ M(() => Convert.ToSingle((Decimal) 0)  ), N(() => L<Decimal, Single>(p0 => Sql.ConvertTo<Single>.From(p0))) },
 			{ M(() => Convert.ToSingle((Double)  0)  ), N(() => L<Double,  Single>(p0 => Sql.ConvertTo<Single>.From(p0))) },
 			{ M(() => Convert.ToSingle((Int16)   0)  ), N(() => L<Int16,   Single>(p0 => Sql.ConvertTo<Single>.From(p0))) },
@@ -948,9 +915,7 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToString((Object)  0)  ), N(() => L<Object,  String>(p0 => Sql.ConvertTo<String>.From(p0))) },
 			{ M(() => Convert.ToString((SByte)   0)  ), N(() => L<SByte,   String>(p0 => Sql.ConvertTo<String>.From(p0))) },
 			{ M(() => Convert.ToString((Single)  0)  ), N(() => L<Single,  String>(p0 => Sql.ConvertTo<String>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToString((String) "0") ), N(() => L<String,  String>(p0 => p0                            )) },
-#endif
 			{ M(() => Convert.ToString((UInt16)  0)  ), N(() => L<UInt16,  String>(p0 => Sql.ConvertTo<String>.From(p0))) },
 			{ M(() => Convert.ToString((UInt32)  0)  ), N(() => L<UInt32,  String>(p0 => Sql.ConvertTo<String>.From(p0))) },
 			{ M(() => Convert.ToString((UInt64)  0)  ), N(() => L<UInt64,  String>(p0 => Sql.ConvertTo<String>.From(p0))) },
@@ -962,9 +927,7 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToUInt16((Boolean)true)), N(() => L<Boolean, UInt16>(p0 => Sql.ConvertTo<UInt16>.From(p0))) },
 			{ M(() => Convert.ToUInt16((Byte)    0)  ), N(() => L<Byte,    UInt16>(p0 => Sql.ConvertTo<UInt16>.From(p0))) },
 			{ M(() => Convert.ToUInt16((Char)   '0') ), N(() => L<Char,    UInt16>(p0 => Sql.ConvertTo<UInt16>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToUInt16(DateTime.Now) ), N(() => L<DateTime,UInt16>(p0 => Sql.ConvertTo<UInt16>.From(p0))) },
-#endif
 			{ M(() => Convert.ToUInt16((Decimal) 0)  ), N(() => L<Decimal, UInt16>(p0 => Sql.ConvertTo<UInt16>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToUInt16((Double)  0)  ), N(() => L<Double,  UInt16>(p0 => Sql.ConvertTo<UInt16>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToUInt16((Int16)   0)  ), N(() => L<Int16,   UInt16>(p0 => Sql.ConvertTo<UInt16>.From(p0))) },
@@ -985,9 +948,7 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToUInt32((Boolean)true)), N(() => L<Boolean, UInt32>(p0 => Sql.ConvertTo<UInt32>.From(p0))) },
 			{ M(() => Convert.ToUInt32((Byte)    0)  ), N(() => L<Byte,    UInt32>(p0 => Sql.ConvertTo<UInt32>.From(p0))) },
 			{ M(() => Convert.ToUInt32((Char)   '0') ), N(() => L<Char,    UInt32>(p0 => Sql.ConvertTo<UInt32>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToUInt32(DateTime.Now) ), N(() => L<DateTime,UInt32>(p0 => Sql.ConvertTo<UInt32>.From(p0))) },
-#endif
 			{ M(() => Convert.ToUInt32((Decimal) 0)  ), N(() => L<Decimal, UInt32>(p0 => Sql.ConvertTo<UInt32>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToUInt32((Double)  0)  ), N(() => L<Double,  UInt32>(p0 => Sql.ConvertTo<UInt32>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToUInt32((Int16)   0)  ), N(() => L<Int16,   UInt32>(p0 => Sql.ConvertTo<UInt32>.From(p0))) },
@@ -1008,9 +969,7 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToUInt64((Boolean)true)), N(() => L<Boolean, UInt64>(p0 => Sql.ConvertTo<UInt64>.From(p0))) },
 			{ M(() => Convert.ToUInt64((Byte)    0)  ), N(() => L<Byte,    UInt64>(p0 => Sql.ConvertTo<UInt64>.From(p0))) },
 			{ M(() => Convert.ToUInt64((Char)   '0') ), N(() => L<Char,    UInt64>(p0 => Sql.ConvertTo<UInt64>.From(p0))) },
-#if !NETSTANDARD1_6
 			{ M(() => Convert.ToUInt64(DateTime.Now) ), N(() => L<DateTime,UInt64>(p0 => Sql.ConvertTo<UInt64>.From(p0))) },
-#endif
 			{ M(() => Convert.ToUInt64((Decimal) 0)  ), N(() => L<Decimal, UInt64>(p0 => Sql.ConvertTo<UInt64>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToUInt64((Double)  0)  ), N(() => L<Double,  UInt64>(p0 => Sql.ConvertTo<UInt64>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToUInt64((Int16)   0)  ), N(() => L<Int16,   UInt64>(p0 => Sql.ConvertTo<UInt64>.From(p0))) },
