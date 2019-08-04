@@ -66,6 +66,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{6278F811
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitattributes = .gitattributes
+		.gitignore = .gitignore
 		azure-pipelines.yml = azure-pipelines.yml
 		Build.cmd = Build.cmd
 		Clean.cmd = Clean.cmd
@@ -269,14 +270,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net46", "net46", "{B7AADC73
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\net46\mysql.json = Build\Azure\net46\mysql.json
 		Build\Azure\net46\pgsql.json = Build\Azure\net46\pgsql.json
-		Build\Azure\net46\sqlite_classic.json = Build\Azure\net46\sqlite_classic.json
+		Build\Azure\net46\sqlite.json = Build\Azure\net46\sqlite.json
+		Build\Azure\net46\sqlite.ms.json = Build\Azure\net46\sqlite.ms.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp20", "netcoreapp20", "{9C01FF5E-F85A-4561-A05B-8F32A4E11C6D}"
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\netcoreapp20\mysql.json = Build\Azure\netcoreapp20\mysql.json
 		Build\Azure\netcoreapp20\pgsql.json = Build\Azure\netcoreapp20\pgsql.json
-		Build\Azure\netcoreapp20\sqlite_ms.json = Build\Azure\netcoreapp20\sqlite_ms.json
+		Build\Azure\netcoreapp20\sqlite.json = Build\Azure\netcoreapp20\sqlite.json
+		Build\Azure\netcoreapp20\sqlite.ms.json = Build\Azure\netcoreapp20\sqlite.ms.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A37E5A-A8A3-4C89-B11C-D700A9F52BAA}"

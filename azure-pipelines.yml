@@ -200,9 +200,12 @@ stages:
 
     strategy:
       matrix:
-        SQLite_Classic:
-          title: 'SQLite.Classic'
-          config: 'sqlite_classic'
+        SQLite:
+          title: 'SQLite'
+          config: 'sqlite'
+        SQLite_MS:
+          title: 'SQLite.MS'
+          config: 'sqlite.ms'
         MySQL:
           title: 'MySQL 5.7'
           config: 'mysql'
@@ -265,9 +268,12 @@ stages:
 
     strategy:
       matrix:
+        SQLite:
+          title: 'SQLite'
+          config: 'sqlite'
         SQLite_MS:
           title: 'SQLite.MS'
-          config: 'sqlite_ms'
+          config: 'sqlite.ms'
         MySQL:
           title: 'MySQL 5.7'
           config: 'mysql'
@@ -324,9 +330,12 @@ stages:
 
     strategy:
       matrix:
+        SQLite:
+          title: 'SQLite'
+          config: 'sqlite'
         SQLite_MS:
           title: 'SQLite.MS'
-          config: 'sqlite_ms'
+          config: 'sqlite.ms'
         MySQL:
           title: 'MySQL 5.7'
           config: 'mysql'
@@ -387,9 +396,12 @@ stages:
 
     strategy:
       matrix:
+        SQLite:
+          title: 'SQLite'
+          config: 'sqlite'
         SQLite_MS:
           title: 'SQLite.MS'
-          config: 'sqlite_ms'
+          config: 'sqlite.ms'
         MySQL:
           title: 'MySQL 5.7'
           config: 'mysql'

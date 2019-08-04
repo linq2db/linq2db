@@ -26,12 +26,13 @@ Legend:
 
 | Database (version): provider \ Target framework (OS) | net46 (W) | netcoreapp2.0 (W) | netcoreapp2.0 (L) | netcoreapp2.0 (M) |
 |-|-|-|-|-|
-|TestNoopProvider|v|v|v|v|
+|TestNoopProvider<sup>[1](#notes)</sup>|v|v|v|v|
+|SQLite [3.28.0](https://www.sqlite.org/releaselog/3_28_0.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.111<br>With NorthwindDB Tests|v|v|v|v|
+|separator between automated and pending providers|-|-|-|-|
+|SQLite 3.XX<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/) X.Y.Z<br>With NorthwindDB Tests|(R)|v|v|v|
 |Access:OLEDB|(R)|?|?|?|
 |Access:ACE|?|?|?|?|
 |MS SQL CE|(R)|?|?|?|
-|SQLite:[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) + NorthwindDB|v|?|?|?|
-|SQLite:[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/) + NorthwindDB|(R)|v|v|v|
 |MySQL (5.7):[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|v|v|v|v|
 |MySQL:[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|(R)|(R)|(R)|?|
 |PostgreSQL:[Npgsql](https://www.nuget.org/packages/Npgsql/)|(R)|(R)|?|?|
@@ -46,5 +47,5 @@ Legend:
 |Oracle|?|?|?|?|
 |Firebird:[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/)|?|?|?|?|
 
-Providers:
-- `TestNoopProvider` fake test provider to perform testing without database dependencies
+###### Notes:
+1. `TestNoopProvider` is a fake test provider to perform tests without database dependencies

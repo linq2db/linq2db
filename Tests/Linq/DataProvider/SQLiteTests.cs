@@ -482,13 +482,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test, Parallelizable(ParallelScope.None)]
-		public void CreateDatabase([IncludeDataSources(
-#if !NETCOREAPP2_0
-			TestProvName.AllSQLite
-#else
-			ProviderName.SQLiteClassic
-#endif
-			)] string context)
+		public void CreateDatabase([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			try
 			{

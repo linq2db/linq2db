@@ -9,7 +9,8 @@
 	<ItemGroup>
 		<PackageReference Include="System.Memory" Version="4.5.3" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
-		
+
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.111" />
 		<PackageReference Include="Npgsql" Version="4.0.8" />
 		<PackageReference Include="MySql.Data" Version="8.0.16" Alias="MySqlData" />
 		<PackageReference Include="MySqlConnector" Version="0.55.0" Alias="MySqlConnector" />
@@ -50,7 +51,6 @@
 			<HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
 		</Reference>
 
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.108" />
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
 		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.3.0" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />

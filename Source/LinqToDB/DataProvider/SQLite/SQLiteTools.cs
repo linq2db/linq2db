@@ -87,11 +87,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 			}
 
-#if NETSTANDARD2_0 || NETCOREAPP2_0
-			return ProviderName.SQLiteMS;
-#else
 			return ProviderName.SQLiteClassic;
-#endif
 		}
 
 

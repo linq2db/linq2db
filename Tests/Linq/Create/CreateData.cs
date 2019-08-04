@@ -237,7 +237,7 @@ namespace Tests._Create
 		}
 
 		[Test, Order(0)]
-		public void CreateDatabase([DataSources(false)] string context)
+		public void CreateDatabase([CreateDatabaseSources] string context)
 		{
 			switch (context)
 			{
@@ -264,9 +264,9 @@ namespace Tests._Create
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
 				case ProviderName.OracleManaged : RunScript(context,          "\n/\n",   "Oracle");                         break;
 				case ProviderName.SybaseManaged : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestDataCore"); break;
-#if !NETCOREAPP2_0
 				case ProviderName.SQLiteClassic : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
+#if !NETCOREAPP2_0
 				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
 				case ProviderName.DB2           : RunScript(context,          "\nGO\n",  "DB2");                            break;
 				case ProviderName.Informix      : RunScript(context,          "\nGO\n",  "Informix", InformixAction);       break;

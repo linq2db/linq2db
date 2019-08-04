@@ -7,10 +7,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
-#if !NETCOREAPP2_0
 using System.Data.SQLite;
-#endif
 
 namespace Tests.Samples
 {

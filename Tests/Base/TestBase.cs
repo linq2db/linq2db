@@ -158,13 +158,13 @@ namespace Tests
 			foreach (var userProvider in UserProviders)
 				Console.WriteLine($"\t{userProvider}");
 
-			var defaultConfiguration = testSettings.DefaultConfiguration;
+			DefaultProvider = testSettings.DefaultConfiguration;
 
-			if (!string.IsNullOrEmpty(defaultConfiguration))
+			if (!string.IsNullOrEmpty(DefaultProvider))
 			{
-				DataConnection.DefaultConfiguration       = defaultConfiguration;
+				DataConnection.DefaultConfiguration       = DefaultProvider;
 #if NETCOREAPP2_0
-				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
+				TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
 #endif
 			}
 
@@ -250,6 +250,7 @@ namespace Tests
 		}
 
 		public static readonly HashSet<string> UserProviders;
+		public static readonly string          DefaultProvider;
 		public static readonly HashSet<string> SkipCategories;
 
 		public static readonly List<string> Providers = new List<string>
@@ -262,8 +263,8 @@ namespace Tests
 			ProviderName.SapHana,
 			ProviderName.OracleNative,
 			ProviderName.SqlCe,
-			ProviderName.SQLiteClassic,
 #endif
+			ProviderName.SQLiteClassic,
 			ProviderName.SybaseManaged,
 			ProviderName.OracleManaged,
 			ProviderName.Firebird,
