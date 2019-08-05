@@ -10,6 +10,12 @@ variables:
   netfx46_tests: 'netfx46_tests'
   netcore2_tests: 'netcoreapp20_tests'
 
+trigger:
+  - master
+  - release
+  - release.3.0
+#pr: not specified, so we build all prs
+
 stages:
 
 ########################################
@@ -216,7 +222,7 @@ stages:
         SqlCE:
           title: 'SQL CE'
           config: 'sqlce'
-#          script: 'sqlce.ps1'
+          psscript: 'sqlce.ps1'
 #        MySQL:
 #          title: 'MySQL 5.7'
 #          config: 'mysql'
@@ -250,6 +256,13 @@ stages:
         script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       condition: variables['script']
+      displayName: Setup tests
+
+    - task: PowerShell@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)\scripts\$(psscript)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['psscript']
       displayName: Setup tests
 
     - task: VSTest@2
