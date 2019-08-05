@@ -4,6 +4,7 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 using LinqToDB.Data;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Tests.Model;
 
 namespace Tests.Data
@@ -11,7 +12,7 @@ namespace Tests.Data
 	[TestFixture]
 	public class QueryMultipleResultTests : TestBase
 	{
-		[Table]
+
 		class MultipleResultExample
 		{
 			[ResultSetIndex(0)] public IEnumerable<Person> AllPersons { get; set; }
@@ -40,7 +41,26 @@ namespace Tests.Data
 			}
 		}
 
-		[Table]
+		[Test]
+		public async Task TestQueryMultiAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var res = await db.QueryMultiAsync<MultipleResultExample>(
+					"select * from Person;" +
+					"select * from Doctor;" +
+					"select * from Patient;" +
+					"select top 1 * from Patient;"
+				);
+				Assert.IsTrue(res.AllDoctors.Any());
+				Assert.IsTrue(res.AllPatients.Any());
+				Assert.IsTrue(res.AllPersons.Any());
+				Assert.IsTrue(res.FirstPatient != null);
+				Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", res.FirstPatient.Diagnosis);
+				Assert.AreEqual(2, res.FirstPatient.PersonID);
+			}
+		}
+
 		class MultipleResultExampleWithoutAttributes
 		{
 			public IEnumerable<Person> AllPersons { get; set; }
@@ -59,6 +79,26 @@ namespace Tests.Data
 					 "select * from Doctor;" +
 					 "select * from Patient;" +
 					 "select top 1 * from Patient;"
+				);
+				Assert.IsTrue(res.AllDoctors.Any());
+				Assert.IsTrue(res.AllPatients.Any());
+				Assert.IsTrue(res.AllPersons.Any());
+				Assert.IsTrue(res.FirstPatient != null);
+				Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", res.FirstPatient.Diagnosis);
+				Assert.AreEqual(2, res.FirstPatient.PersonID);
+			}
+		}
+
+		[Test]
+		public async Task TestQueryMultiWithoutAttributesAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var res = await db.QueryMultiAsync<MultipleResultExampleWithoutAttributes>(
+					"select * from Person;" +
+					"select * from Doctor;" +
+					"select * from Patient;" +
+					"select top 1 * from Patient;"
 				);
 				Assert.IsTrue(res.AllDoctors.Any());
 				Assert.IsTrue(res.AllPatients.Any());
@@ -106,11 +146,57 @@ namespace Tests.Data
 		}
 
 		[Test]
+		public async Task TestSearchStoredProdecureAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var res = await db.QueryProcMultiAsync<ProcedureMultipleResultExample>(
+					"PersonSearch",
+					new DataParameter("nameFilter", "Jane")
+				);
+
+				Assert.IsFalse(res.DoctorFound);
+				Assert.AreEqual(res.MatchingPersonIds.Count(), 1);
+				Assert.AreEqual(res.MatchingPersons.Count(), 1);
+				Assert.AreEqual(res.MatchingPatients.Count(), 0);
+				Assert.AreEqual(res.MatchingPersons2.Count(), 1);
+				Assert.AreEqual(res.MatchCount, 1);
+				Assert.NotNull(res.MatchingPerson);
+				Assert.AreEqual("Jane", res.MatchingPerson.FirstName);
+				Assert.AreEqual("Doe", res.MatchingPerson.LastName);
+				Assert.AreEqual(Gender.Female, res.MatchingPerson.Gender);
+			}
+		}
+
+		[Test]
 		public void TestSearchStoredProdecure2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
 				var res = db.QueryProcMulti<ProcedureMultipleResultExample>(
+					"PersonSearch",
+					new DataParameter("nameFilter", "Pupkin")
+				);
+
+				Assert.IsTrue(res.DoctorFound);
+				Assert.AreEqual(res.MatchingPersonIds.Count(), 1);
+				Assert.AreEqual(res.MatchingPersons.Count(), 1);
+				Assert.AreEqual(res.MatchingPatients.Count(), 0);
+				Assert.AreEqual(res.MatchingPersons2.Count(), 1);
+				Assert.AreEqual(res.MatchCount, 1);
+				Assert.NotNull(res.MatchingPerson);
+				Assert.AreEqual("John", res.MatchingPerson.FirstName);
+				Assert.AreEqual("Pupkin", res.MatchingPerson.LastName);
+				Assert.AreEqual(Gender.Male, res.MatchingPerson.Gender);
+			}
+		}
+
+		[Test]
+		public async Task TestSearchStoredProdecure2Async([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var res = await db.QueryProcMultiAsync<ProcedureMultipleResultExample>(
 					"PersonSearch",
 					new DataParameter("nameFilter", "Pupkin")
 				);
@@ -163,5 +249,29 @@ namespace Tests.Data
 				Assert.AreEqual(Gender.Female, res.MatchingPerson.Gender);
 			}
 		}
+
+		[Test]
+		public async Task TestSearchStoredProdecureWithoutAttributesAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var res = await db.QueryProcMultiAsync<ProcedureMultipleResultExampleWithoutAttributes>(
+					"PersonSearch",
+					new DataParameter("nameFilter", "Jane")
+				);
+
+				Assert.IsFalse(res.DoctorFound);
+				Assert.AreEqual(res.MatchingPersonIds.Count(), 1);
+				Assert.AreEqual(res.MatchingPersons.Count(), 1);
+				Assert.AreEqual(res.MatchingPatients.Count(), 0);
+				Assert.AreEqual(res.MatchingPersons2.Count(), 1);
+				Assert.AreEqual(res.MatchCount, 1);
+				Assert.NotNull(res.MatchingPerson);
+				Assert.AreEqual("Jane", res.MatchingPerson.FirstName);
+				Assert.AreEqual("Doe", res.MatchingPerson.LastName);
+				Assert.AreEqual(Gender.Female, res.MatchingPerson.Gender);
+			}
+		}
+
 	}
 }

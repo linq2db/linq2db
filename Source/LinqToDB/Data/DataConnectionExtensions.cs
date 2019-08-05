@@ -395,6 +395,39 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Executes command asynchronously and returns a result containing multiple result sets.
+		/// </summary>
+		/// <typeparam name="T">Result set type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="parameters">Command parameters.</param>
+		/// <returns>
+		///     A task that represents the asynchronous operation.
+		///     The task result contains object with multiply result sets.
+		/// </returns>
+		public static Task<T> QueryMultiAsync<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryMultiAsync<T>();
+		}
+
+		/// <summary>
+		/// Executes command asynchronously and returns a result containing multiple result sets.
+		/// </summary>
+		/// <typeparam name="T">Result set type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <param name="parameters">Command parameters.</param>
+		/// <returns>
+		///     A task that represents the asynchronous operation.
+		///     The task result contains object with multiply result sets.
+		/// </returns>
+		public static Task<T> QueryMultiAsync<T>(this DataConnection connection, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryMultiAsync<T>(cancellationToken);
+		}
+
+		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
@@ -408,8 +441,40 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Executes command asynchronously using <see cref="CommandType.StoredProcedure"/> command type and returns a result containing multiple result sets.
+		/// </summary>
+		/// <typeparam name="T">Result set type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <param name="parameters">Command parameters.</param>
+		/// <returns>
+		///     A task that represents the asynchronous operation.
+		///     The task result contains object with multiply result sets.
+		/// </returns>
+		public static Task<T> QueryProcMultiAsync<T>(this DataConnection connection, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryProcMultiAsync<T>(cancellationToken);
+		}
+
+		/// <summary>
+		/// Executes command asynchronously using <see cref="CommandType.StoredProcedure"/> command type and returns a result containing multiple result sets.
+		/// </summary>
+		/// <typeparam name="T">Result set type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
+		/// <param name="parameters">Command parameters.</param>
+		/// <returns>
+		///     A task that represents the asynchronous operation.
+		///     The task result contains object with multiply result sets.
+		/// </returns>
+		public static Task<T> QueryProcMultiAsync<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryProcMultiAsync<T>();
+		}
+
+		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns a result containing multiple result sets.
-		/// Result type must be marked with <see cref="LinqToDB.Mapping.MultipleResultSetsAttribute"/> attribute, and have properties marked with <see cref="LinqToDB.Mapping.ResultSetIndexAttribute"/>.
 		/// </summary>
 		/// <typeparam name="T">Result set type.</typeparam>
 		/// <param name="connection">Database connection.</param>
