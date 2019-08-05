@@ -216,7 +216,7 @@ stages:
         SqlCE:
           title: 'SQL CE'
           config: 'sqlce'
-          script: 'sqlce.cmd'
+          script: 'sqlce.ps1'
 #        MySQL:
 #          title: 'MySQL 5.7'
 #          config: 'mysql'
