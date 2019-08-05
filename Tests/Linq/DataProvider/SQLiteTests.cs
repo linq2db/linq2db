@@ -151,6 +151,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumerics([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
+			// culture region needed if tests run on system with non-dot decimal separator, e.g. nl-NL
+			using (new InvariantCultureRegion())
 			using (var conn = new DataConnection(context))
 			{
 				TestSimple<bool>   (conn, true, DataType.Boolean);
@@ -547,6 +549,39 @@ namespace Tests.DataProvider
 				Assert.AreEqual("ID",                table.ForeignKeys[0].OtherColumns[0].ColumnName);
 				Assert.AreEqual("PrimaryKeyTableID", table.ForeignKeys[0].ThisColumns[0] .ColumnName);
 
+			}
+		}
+
+		// test to make sure our tests work with expected version of sqlite
+		// should be updated when we bump dependency
+		// also test matrix document should be updated too in that case (Build/Azure/README.md)
+		[Test]
+		public void TestDbVersion([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			string expectedVersion;
+			switch (context)
+			{
+				case ProviderName.SQLiteClassic:
+					expectedVersion = "3.28.0";
+					break;
+				case ProviderName.SQLiteMS:
+#if NET46
+					expectedVersion = "3.13.0";
+#else
+					expectedVersion = "3.26.0";
+#endif
+					break;
+				default:
+					throw new InvalidOperationException();
+			}
+
+			using (var db  = new TestDataConnection(context))
+			using (var cmd = db.CreateCommand())
+			{
+				cmd.CommandText = "select sqlite_version();";
+				var version     = (string)cmd.ExecuteScalar();
+
+				Assert.AreEqual(expectedVersion, version);
 			}
 		}
 	}

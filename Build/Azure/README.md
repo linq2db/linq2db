@@ -1,4 +1,4 @@
-This directory contains test configs and setup scripts for test jobs on Azure Pipelines
+﻿This directory contains test configs and setup scripts for test jobs on Azure Pipelines
 - `net46` folder stores test job configs for .NET 4.6 Windows tests
 - `netcoreapp20` folder stores test job configs for `netcoreapp2.0` test runs for Windows, Linux and MacOS
 - `scripts` folder stores test job setup scripts (`*.cmd` for windows jobs and `*.sh` for Linux and MacOS)
@@ -13,9 +13,9 @@ Following table contains information about which test jobs are awailable per:
 - database provider
 
 Legend:
-- `-`: test configuration not supported (e.g. db/provider not available for target OS/Framework)
-- `v`: test job implemented
-- `x`: test job not implemented yet
+- :heavy_minus_sign: - test configuration not supported (e.g. db/provider not available for target OS/Framework)
+- :heavy_check_mark: - test job implemented
+- `x` - test job not implemented yet
 - `?`: test job status not reviewed yet
 - `(R)`: test job was running before using Travis or Appveryor CI (to track not migrated yet tests)
 - `net46`: .NET Framework 4.6
@@ -26,10 +26,11 @@ Legend:
 
 | Database (version): provider \ Target framework (OS) | net46 (W) | netcoreapp2.0 (W) | netcoreapp2.0 (L) | netcoreapp2.0 (M) |
 |-|-|-|-|-|
-|TestNoopProvider<sup>[1](#notes)</sup>|v|v|v|v|
-|SQLite [3.28.0](https://www.sqlite.org/releaselog/3_28_0.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.111<br>With NorthwindDB Tests|v|v|v|v|
+|TestNoopProvider<sup>[1](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.13.0](https://www.sqlite.org/releaselog/3_13_0.html)<sup>[2](#notes)</sup><br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/) 1.1.1<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
+|SQLite [3.26.0](https://www.sqlite.org/releaselog/3_26_0.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/) 2.2.6<br>with NorthwindDB Tests|:heavy_minus_sign:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.28.0](https://www.sqlite.org/releaselog/3_28_0.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.111<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |separator between automated and pending providers|-|-|-|-|
-|SQLite 3.XX<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/) X.Y.Z<br>With NorthwindDB Tests|(R)|v|v|v|
 |Access:OLEDB|(R)|?|?|?|
 |Access:ACE|?|?|?|?|
 |MS SQL CE|(R)|?|?|?|
@@ -49,3 +50,4 @@ Legend:
 
 ###### Notes:
 1. `TestNoopProvider` is a fake test provider to perform tests without database dependencies
+2. `1.1.1` is the last version of `Microsoft.Data.SQLite`, that supports .NET Framework, so we use it for `net46` test configuration and recent version for `netcoreapp2.0`
