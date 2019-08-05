@@ -213,6 +213,9 @@ stages:
           title: 'Access ACE'
           config: 'access.ace'
           script: 'access.ace.cmd'
+        SqlCE:
+          title: 'SQL CE'
+          config: 'sqlce'
 #        MySQL:
 #          title: 'MySQL 5.7'
 #          config: 'mysql'

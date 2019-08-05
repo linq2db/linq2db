@@ -272,6 +272,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net46", "net46", "{B7AADC73
 		Build\Azure\net46\access.json = Build\Azure\net46\access.json
 		Build\Azure\net46\mysql.json = Build\Azure\net46\mysql.json
 		Build\Azure\net46\pgsql.json = Build\Azure\net46\pgsql.json
+		Build\Azure\net46\sqlce.json = Build\Azure\net46\sqlce.json
 		Build\Azure\net46\sqlite.json = Build\Azure\net46\sqlite.json
 		Build\Azure\net46\sqlite.ms.json = Build\Azure\net46\sqlite.ms.json
 	EndProjectSection
