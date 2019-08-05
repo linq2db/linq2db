@@ -15,24 +15,24 @@ Following table contains information about which test jobs are awailable per:
 Legend:
 - :heavy_minus_sign: - test configuration not supported (e.g. db/provider not available for target OS/Framework)
 - :heavy_check_mark: - test job implemented
-- `x` - test job not implemented yet
+- :x: - test job not implemented yet
 - `?`: test job status not reviewed yet
 - `(R)`: test job was running before using Travis or Appveryor CI (to track not migrated yet tests)
 - `net46`: .NET Framework 4.6
 - `netcoreapp2.0`: .NETCoreApp 2.0
-- `(W)`: Windows (2019)
-- `(L)`: Linux (Ununtu 16.04)
-- `(X)`: MacOS Mojave 10.14
+- :door: - Windows (2019)
+- :penguin: - Linux (Ununtu 16.04)
+- :green_apple: - MacOS Mojave 10.14
 
-| Database (version): provider \ Target framework (OS) | net46 (W) | netcoreapp2.0 (W) | netcoreapp2.0 (L) | netcoreapp2.0 (M) |
+| Database (version): provider \ Target framework (OS) | net46 :door: | netcoreapp2.0 :door: | netcoreapp2.0 :penguin: | netcoreapp2.0 :green_apple: |
 |-|-|-|-|-|
 |TestNoopProvider<sup>[1](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |SQLite [3.13.0](https://www.sqlite.org/releaselog/3_13_0.html)<sup>[2](#notes)</sup><br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/) 1.1.1<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
 |SQLite [3.26.0](https://www.sqlite.org/releaselog/3_26_0.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/) 2.2.6<br>with NorthwindDB Tests|:heavy_minus_sign:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |SQLite [3.28.0](https://www.sqlite.org/releaselog/3_28_0.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.111<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|Access<sup>[3](#notes)</sup><br>Jet OLE DB|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
+|Access<sup>[3](#notes)</sup><br>ACE OLE DB|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
 |separator between automated and pending providers|-|-|-|-|
-|Access:OLEDB|(R)|?|?|?|
-|Access:ACE|?|?|?|?|
 |MS SQL CE|(R)|?|?|?|
 |MySQL (5.7):[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|v|v|v|v|
 |MySQL:[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|(R)|(R)|(R)|?|
@@ -51,3 +51,5 @@ Legend:
 ###### Notes:
 1. `TestNoopProvider` is a fake test provider to perform tests without database dependencies
 2. `1.1.1` is the last version of `Microsoft.Data.SQLite`, that supports .NET Framework, so we use it for `net46` test configuration and recent version for `netcoreapp2.0`
+3. for Access right now we don't support .net core
+

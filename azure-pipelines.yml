@@ -206,6 +206,12 @@ stages:
         SQLite_MS:
           title: 'SQLite.MS'
           config: 'sqlite.ms'
+        Access_JET:
+          title: 'Access Jet'
+          config: 'access'
+        Access_ACE:
+          title: 'Access ACE'
+          config: 'access.ace'
         MySQL:
           title: 'MySQL 5.7'
           config: 'mysql'

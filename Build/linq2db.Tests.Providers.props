@@ -55,16 +55,13 @@
 		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.3.0" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 
-		<!-- + link sqlite binaries for sqlite.ms (we need x86 only)-->
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
-		<None Update="x86\**\*">
-			<Link>x86/%(FileName)%(Extension)</Link>
+		<!--Copy sqlite3.dll manually, as package copy scripts doesn't work properly for our project -->
+		<Content Include="..\..\Redist\SQLite\sqlite3.dll">
+			<Link>%(Filename)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="x86\sqlite3.dll">
-			<Link>sqlite3.dll</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
+			<Visible>False</Visible>
+		</Content>
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
