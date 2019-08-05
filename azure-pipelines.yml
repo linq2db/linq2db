@@ -212,6 +212,7 @@ stages:
         Access_ACE:
           title: 'Access ACE'
           config: 'access.ace'
+          script: 'access.ace.cmd'
         MySQL:
           title: 'MySQL 5.7'
           config: 'mysql'

@@ -286,6 +286,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp20", "netcoreapp2
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A37E5A-A8A3-4C89-B11C-D700A9F52BAA}"
 	ProjectSection(SolutionItems) = preProject
+		Build\Azure\scripts\access.ace.cmd = Build\Azure\scripts\access.ace.cmd
 		Build\Azure\scripts\mysql.cmd = Build\Azure\scripts\mysql.cmd
 		Build\Azure\scripts\mysql.sh = Build\Azure\scripts\mysql.sh
 		Build\Azure\scripts\pgsql.cmd = Build\Azure\scripts\pgsql.cmd
