@@ -213,14 +213,14 @@ stages:
           title: 'Access ACE'
           config: 'access.ace'
           script: 'access.ace.cmd'
-        MySQL:
-          title: 'MySQL 5.7'
-          config: 'mysql'
-          script: 'mysql.cmd'
-        PostgreSQL:
-          title: 'PostgreSQL'
-          config: 'pgsql'
-          script: 'pgsql.cmd'
+#        MySQL:
+#          title: 'MySQL 5.7'
+#          config: 'mysql'
+#          script: 'mysql.cmd'
+#        PostgreSQL:
+#          title: 'PostgreSQL'
+#          config: 'pgsql'
+#          script: 'pgsql.cmd'
 
     steps:
     - checkout: none
@@ -281,14 +281,14 @@ stages:
         SQLite_MS:
           title: 'SQLite.MS'
           config: 'sqlite.ms'
-        MySQL:
-          title: 'MySQL 5.7'
-          config: 'mysql'
-          script: 'mysql.cmd'
-        PostgreSQL:
-          title: 'PostgreSQL'
-          config: 'pgsql'
-          script: 'pgsql.cmd'
+#        MySQL:
+#          title: 'MySQL 5.7'
+#          config: 'mysql'
+#          script: 'mysql.cmd'
+#        PostgreSQL:
+#          title: 'PostgreSQL'
+#          config: 'pgsql'
+#          script: 'pgsql.cmd'
     steps:
     - checkout: none
 
@@ -343,14 +343,14 @@ stages:
         SQLite_MS:
           title: 'SQLite.MS'
           config: 'sqlite.ms'
-        MySQL:
-          title: 'MySQL 5.7'
-          config: 'mysql'
-          script: 'mysql.sh'
-        PostgreSQL:
-          title: 'PostgreSQL'
-          config: 'pgsql'
-          script: 'pgsql.sh'
+#        MySQL:
+#          title: 'MySQL 5.7'
+#          config: 'mysql'
+#          script: 'mysql.sh'
+#        PostgreSQL:
+#          title: 'PostgreSQL'
+#          config: 'pgsql'
+#          script: 'pgsql.sh'
     steps:
     - checkout: none
 
@@ -409,14 +409,14 @@ stages:
         SQLite_MS:
           title: 'SQLite.MS'
           config: 'sqlite.ms'
-        MySQL:
-          title: 'MySQL 5.7'
-          config: 'mysql'
-          script: 'mysql.sh'
-        PostgreSQL:
-          title: 'PostgreSQL'
-          config: 'pgsql'
-          script: 'pgsql.sh'
+#        MySQL:
+#          title: 'MySQL 5.7'
+#          config: 'mysql'
+#          script: 'mysql.sh'
+#        PostgreSQL:
+#          title: 'PostgreSQL'
+#          config: 'pgsql'
+#          script: 'pgsql.sh'
 
     steps:
     - checkout: none
