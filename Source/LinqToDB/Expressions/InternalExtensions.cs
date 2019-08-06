@@ -19,7 +19,7 @@ namespace LinqToDB.Expressions
 
 		public static bool IsConstantable(this Type type)
 		{
-			if (type.IsEnumEx())
+			if (type.IsEnum)
 				return true;
 
 			switch (type.GetTypeCodeEx())
@@ -41,7 +41,7 @@ namespace LinqToDB.Expressions
 			}
 
 			if (type.IsNullable())
-				return type.GetGenericArgumentsEx()[0].IsConstantable();
+				return type.GetGenericArguments()[0].IsConstantable();
 
 			return false;
 		}
@@ -997,7 +997,7 @@ namespace LinqToDB.Expressions
 
 		public static bool IsExtensionMethod(this MethodCallExpression methodCall, MappingSchema mapping)
 		{
-			var functions = mapping.GetAttributes<Sql.ExtensionAttribute>(methodCall.Method.ReflectedTypeEx(),
+			var functions = mapping.GetAttributes<Sql.ExtensionAttribute>(methodCall.Method.ReflectedType,
 				methodCall.Method,
 				f => f.Configuration);
 			return functions.Any();

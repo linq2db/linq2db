@@ -191,7 +191,7 @@ namespace LinqToDB.Linq.Builder
 						var ex = (MethodCallExpression)expr;
 						var mi = ex.Method;
 
-						var attrs = mi.GetCustomAttributesEx(typeof(ExtensionAttribute), false);
+						var attrs = mi.GetCustomAttributes(typeof(ExtensionAttribute), false);
 
 						if (attrs.Length != 0)
 						{
@@ -259,7 +259,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (typeof(Table<>).IsSameOrParentOf(expr.Type))
 						{
-							_exprBuilder.AppendFormat("db.GetTable<{0}>()", GetTypeName(expr.Type.GetGenericArgumentsEx()[0]));
+							_exprBuilder.AppendFormat("db.GetTable<{0}>()", GetTypeName(expr.Type.GetGenericArguments()[0]));
 						}
 						else if (expr.ToString() == "value(" + expr.Type + ")")
 							_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(")");
@@ -513,8 +513,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (!IsUserType(type) ||
 				IsAnonymous(type) ||
-				type.AssemblyEx() == GetType().AssemblyEx() ||
-				type.IsGenericTypeEx() && type.GetGenericTypeDefinition() != type)
+				type.Assembly == GetType().Assembly ||
+				type.IsGenericType && type.GetGenericTypeDefinition() != type)
 				return;
 
 			var isUserName = IsUserType(type);
@@ -524,20 +524,16 @@ namespace LinqToDB.Linq.Builder
 			if (idx > 0)
 				name = name.Substring(0, idx);
 
-			if (type.IsGenericTypeEx())
+			if (type.IsGenericType)
 				type = type.GetGenericTypeDefinition();
 
-			var baseClasses = new[] { type.BaseTypeEx() }
+			var baseClasses = new[] { type.BaseType }
 				.Where(t => t != null && t != typeof(object))
-				.Concat(type.GetInterfacesEx()).ToArray();
+				.Concat(type.GetInterfaces()).ToArray();
 
-			var ctors = type.GetConstructorsEx().Select(c =>
+			var ctors = type.GetConstructors().Select(c =>
 			{
-#if NETSTANDARD1_6
-				var attrs = c.GetCustomAttributes(false).ToList();
-#else
 				var attrs = c.GetCustomAttributesData();
-#endif
 				var attr  = attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "";
 				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p")).ToArray();
 
@@ -554,14 +550,10 @@ namespace LinqToDB.Linq.Builder
 			if (ctors.Count == 1 && ctors[0].IndexOf("()") >= 0)
 				ctors.Clear();
 
-			var members = type.GetFieldsEx().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>
+			var members = type.GetFields().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>
 			{
-#if NETSTANDARD1_6
-				var attrs = f.GetCustomAttributes(false).ToList();
-#else
 				var attrs = f.GetCustomAttributesData();
-#endif
-				var attr = attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "";
+				var attr  = attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "";
 
 				return string.Format(@"{0}
 		public {1} {2};",
@@ -572,26 +564,18 @@ namespace LinqToDB.Linq.Builder
 			.Concat(
 				type.GetPropertiesEx().Intersect(_usedMembers.OfType<PropertyInfo>()).Select(p =>
 				{
-#if NETSTANDARD1_6
-					var attrs = p.GetCustomAttributes(false).ToList();
-#else
 					var attrs = p.GetCustomAttributesData();
-#endif
 					return string.Format(@"{0}
 		{3}{1} {2} {{ get; set; }}",
 						attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 						GetTypeName(p.PropertyType),
 						MangleName(isUserName, p.Name, "P"),
-						type.IsInterfaceEx() ? "" : "public ");
+						type.IsInterface ? "" : "public ");
 				}))
 			.Concat(
-				type.GetMethodsEx().Intersect(_usedMembers.OfType<MethodInfo>()).Select(m =>
+				type.GetMethods().Intersect(_usedMembers.OfType<MethodInfo>()).Select(m =>
 				{
-#if NETSTANDARD1_6
-					var attrs = m.GetCustomAttributes(false).ToList();
-#else
 					var attrs = m.GetCustomAttributesData();
-#endif
 					var ps    = m.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p")).ToArray();
 					return string.Format(@"{0}
 		{5}{4}{1} {2}({3})
@@ -606,19 +590,15 @@ namespace LinqToDB.Linq.Builder
 						m.IsVirtual  ? "virtual "  :
 						m.IsAbstract ? "abstract " :
 						               "",
-						type.IsInterfaceEx() ? "" : "public ");
+						type.IsInterface ? "" : "public ");
 				}))
 			.ToArray();
 
 			{
-#if NETSTANDARD1_6
-				var attrs = type.GetCustomAttributesEx(false).ToList();
-#else
 				var attrs = type.GetCustomAttributesData();
-#endif
 
 				_typeBuilder.AppendFormat(
-					type.IsGenericTypeEx() ?
+					type.IsGenericType ?
 @"
 namespace {0}
 {{{8}
@@ -637,13 +617,13 @@ namespace {0}
 }}
 ",
 					MangleName(isUserName, type.Namespace, "T"),
-					type.IsInterfaceEx() ? "interface" : type.IsClassEx() ? "class" : "struct",
+					type.IsInterface ? "interface" : type.IsClass ? "class" : "struct",
 					name,
-					type.IsGenericTypeEx() ? GetTypeNames(type.GetGenericArgumentsEx(), ",") : null,
+					type.IsGenericType ? GetTypeNames(type.GetGenericArguments(), ",") : null,
 					ctors.Count == 0 ? "" : ctors.Aggregate((s,t) => s + "\r\n" + t),
 					baseClasses.Length == 0 ? "" : " : " + GetTypeNames(baseClasses),
-					type.IsPublicEx() ? "public " : "",
-					type.IsAbstractEx() && !type.IsInterfaceEx() ? "abstract " : "",
+					type.IsPublic ? "public " : "",
+					type.IsAbstract && !type.IsInterface ? "abstract " : "",
 					attrs.Count > 0 ? attrs.Select(a => "\r\n\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 					members.Length > 0 ?
 						(ctors.Count != 0 ? "\r\n" : "") + members.Aggregate((f1,f2) => f1 + "\r\n" + f2) :
@@ -723,9 +703,9 @@ namespace {0}
 				return null;
 			}
 
-			if (type.IsGenericTypeEx())
+			if (type.IsGenericType)
 			{
-				var args = type.GetGenericArgumentsEx();
+				var args = type.GetGenericArguments();
 
 				name = "";
 
@@ -829,16 +809,16 @@ namespace {0}
 
 			_usedTypes.Add(type);
 
-			if (type.IsGenericTypeEx())
-				foreach (var arg in type.GetGenericArgumentsEx())
+			if (type.IsGenericType)
+				foreach (var arg in type.GetGenericArguments())
 					AddType(arg);
 
-			if (type.IsGenericTypeEx() && type.GetGenericTypeDefinition() != type)
+			if (type.IsGenericType && type.GetGenericTypeDefinition() != type)
 				AddType(type.GetGenericTypeDefinition());
 
-			AddType(type.BaseTypeEx());
+			AddType(type.BaseType);
 
-			foreach (var i in type.GetInterfacesEx())
+			foreach (var i in type.GetInterfaces())
 				AddType(i);
 		}
 

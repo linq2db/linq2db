@@ -164,7 +164,7 @@ namespace LinqToDB.Mapping
 			{
 				TableName = TypeAccessor.Type.Name;
 
-				if (TypeAccessor.Type.IsInterfaceEx() && TableName.Length > 1 && TableName[0] == 'I')
+				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
 					TableName = TableName.Substring(1);
 			}
 

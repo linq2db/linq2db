@@ -150,7 +150,7 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			if (MemberType.ToNullableUnderlying().IsEnumEx())
+			if (MemberType.ToNullableUnderlying().IsEnum)
 			{
 				if (DataType == DataType.Undefined)
 				{

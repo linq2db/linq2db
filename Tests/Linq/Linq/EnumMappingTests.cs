@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 using System.ServiceModel;
 #endif
 
@@ -1734,7 +1734,7 @@ namespace Tests.Linq
 						TestField = 5
 					});
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 					if (isLinqService)
 					{
 						Assert.Throws<FaultException<ExceptionDetail>>(() =>

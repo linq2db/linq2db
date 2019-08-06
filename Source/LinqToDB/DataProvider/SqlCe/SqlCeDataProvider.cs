@@ -45,7 +45,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.SqlCeConnection, {ConnectionNamespace}";
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.SqlCeDataReader, {ConnectionNamespace}";
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_0
 		public override string DbFactoryProviderName => "System.Data.SqlServerCe.4.0";
 #endif
 
@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		static Action<IDbDataParameter> GetSetParameter(Type connectionType, SqlDbType value)
 		{
-			var pType  = connectionType.AssemblyEx().GetType(connectionType.Namespace + ".SqlCeParameter", true);
+			var pType  = connectionType.Assembly.GetType(connectionType.Namespace + ".SqlCeParameter", true);
 
 			var p = Expression.Parameter(typeof(IDbDataParameter));
 			var l = Expression.Lambda<Action<IDbDataParameter>>(
@@ -104,12 +104,10 @@ namespace LinqToDB.DataProvider.SqlCe
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SqlCeSchemaProvider();
 		}
-#endif
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
@@ -173,7 +171,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				dbName =>
 				{
 					dynamic eng = Activator.CreateInstance(
-						GetConnectionType().AssemblyEx().GetType("System.Data.SqlServerCe.SqlCeEngine"),
+						GetConnectionType().Assembly.GetType("System.Data.SqlServerCe.SqlCeEngine"),
 						"Data Source=" + dbName);
 
 					eng.CreateDatabase();

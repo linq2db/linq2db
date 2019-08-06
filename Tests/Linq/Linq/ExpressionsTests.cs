@@ -259,7 +259,6 @@ namespace Tests.Linq
 			return obj => obj != null;
 		}
 
-#if !MONO
 		[Test]
 		public void TestGenerics1()
 		{
@@ -273,7 +272,6 @@ namespace Tests.Linq
 				var _ = q.ToList();
 			}
 		}
-#endif
 
 		[ExpressionMethod("GetBoolExpression2_{0}")]
 		static bool GetBool2<T>(T obj)

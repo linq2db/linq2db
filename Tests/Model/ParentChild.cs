@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-#if !NOIMMUTABLE
 using System.Collections.Immutable;
-#endif
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -43,11 +41,7 @@ namespace Tests.Model
 		}
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-#if !NOIMMUTABLE
 		public ImmutableList<Child> Children3;
-#else
-		public List<Child> Children3;
-#endif
 
 		public override bool Equals(object obj)
 		{

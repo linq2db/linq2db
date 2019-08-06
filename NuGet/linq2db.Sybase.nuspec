@@ -19,7 +19,7 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"   target="tools" />
+		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"   target="tools" />
 		
 		<file src="Sybase\linq2db.Sybase.props"                        target="build" />
 		

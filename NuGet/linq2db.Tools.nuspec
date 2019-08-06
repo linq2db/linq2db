@@ -15,13 +15,7 @@
 			<group targetFramework=".NETFramework4.6" >
 				<dependency id="linq2db" version="2.6.4"/>
 			</group>
-			<group targetFramework=".NETStandard1.6">
-				<dependency id="linq2db" version="2.6.4"/>
-			</group>
 			<group targetFramework=".NETStandard2.0">
-				<dependency id="linq2db" version="2.6.4"/>
-			</group>
-			<group targetFramework=".NETCoreApp1.0">
 				<dependency id="linq2db" version="2.6.4"/>
 			</group>
 			<group targetFramework=".NETCoreApp2.0">
@@ -31,9 +25,6 @@
 	</metadata>
 
 	<files>
-		<file src="Readme.txt"         />
-		<file src="..\MIT-LICENSE.txt" />
-
 		<file src="..\Source\LinqToDB.Tools\bin\Release\**\linq2db.Tools.pdb" target="lib\" />
 		<file src="..\Source\LinqToDB.Tools\bin\Release\**\linq2db.Tools.xml" target="lib\" />
 		<file src="..\Source\LinqToDB.Tools\bin\Release\**\linq2db.Tools.dll" target="lib\" />

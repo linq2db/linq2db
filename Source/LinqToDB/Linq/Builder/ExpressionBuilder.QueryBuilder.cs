@@ -109,7 +109,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var parameter = mc.Method.GetParameters()[0];
 					if (mc.Method.ReturnParameter?.ParameterType != parameter.ParameterType
-						&& parameter.ParameterType.IsValueTypeEx()
+						&& parameter.ParameterType.IsValueType
 						&& mc.Arguments[0] is ConvertFromDataReaderExpression readerExpression)
 					{
 						resultExpr = readerExpression.MakeNullable();
@@ -175,7 +175,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (ctx != null)
 						{
-							if (ma.Type.IsGenericTypeEx() && typeof(IEnumerable<>).IsSameOrParentOf(ma.Type))
+							if (ma.Type.IsGenericType && typeof(IEnumerable<>).IsSameOrParentOf(ma.Type))
 							{
 								var res = ctx.IsExpression(ma, 0, RequestFor.Association);
 
@@ -443,7 +443,7 @@ namespace LinqToDB.Linq.Builder
 
 										var valueType = f.Sql.SystemType;
 
-										if (!valueType.IsNullable() && valueType.IsValueTypeEx())
+										if (!valueType.IsNullable() && valueType.IsValueType)
 											valueType = typeof(Nullable<>).MakeGenericType(valueType);
 
 										var reader     = BuildSql(context, f.Sql, valueType, null);

@@ -1708,7 +1708,6 @@ namespace LinqToDB.Expressions
 
 		public static Expression GetMemberGetter(MemberInfo mi, Expression obj)
 		{
-#if !NETSTANDARD1_6
 			if (mi is DynamicColumnInfo)
 			{
 				return Expression.Call(
@@ -1717,7 +1716,6 @@ namespace LinqToDB.Expressions
 					Expression.Constant(mi.Name));
 			}
 			else
-#endif
 				return Expression.PropertyOrField(obj, mi.Name);
 		}
 	}

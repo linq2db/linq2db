@@ -212,7 +212,7 @@ namespace LinqToDB.ServiceModel
 								_sqlBuilders.Add(type, _createSqlProvider =
 									Expression.Lambda<Func<ISqlBuilder>>(
 										Expression.New(
-											type.GetConstructorEx(new[]
+											type.GetConstructor(new[]
 											{
 												typeof(ISqlOptimizer),
 												typeof(SqlProviderFlags),
@@ -248,7 +248,7 @@ namespace LinqToDB.ServiceModel
 								_sqlOptimizers.Add(type, _getSqlOptimizer =
 									Expression.Lambda<Func<ISqlOptimizer>>(
 										Expression.New(
-											type.GetConstructorEx(new[]
+											type.GetConstructor(new[]
 											{
 												typeof(SqlProviderFlags)
 											}),

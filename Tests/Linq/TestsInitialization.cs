@@ -16,7 +16,7 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !APPVEYOR && !TRAVIS
+#if !NETCOREAPP2_0 && !AZURE
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
 		// but loaded from GAC assembly has other version
@@ -36,12 +36,6 @@ public class TestsInitialization
 
 		// register test providers
 		TestNoopProvider.Init();
-
-		// disabled for core, as default loader doesn't allow multiple assemblies with same name
-		// https://github.com/dotnet/coreclr/blob/master/Documentation/design-docs/assemblyloadcontext.md
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-		Npgsql4PostgreSQLDataProvider.Init();
-#endif
 	}
 
 	[OneTimeTearDown]

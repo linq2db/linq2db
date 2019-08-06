@@ -49,7 +49,7 @@ namespace LinqToDB.Reflection
 				MemberInfo = lastInfo.member;
 				Type       = lastInfo.type;
 
-				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsClassEx() || info.type.IsNullable());
+				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsClass || info.type.IsNullable());
 
 				// Build getter.
 				//
@@ -66,7 +66,7 @@ namespace LinqToDB.Reflection
 							if (i == infos.Length - 1)
 								return Expression.Assign(ret, next);
 
-							if (next.Type.IsClassEx() || next.Type.IsNullable())
+							if (next.Type.IsClass || next.Type.IsNullable())
 							{
 								var local = Expression.Variable(next.Type);
 
@@ -100,7 +100,7 @@ namespace LinqToDB.Reflection
 				// Build setter.
 				//
 				{
-					HasSetter = !infos.Any(info => info.member is PropertyInfo && ((PropertyInfo)info.member).GetSetMethodEx(true) == null);
+					HasSetter = !infos.Any(info => info.member is PropertyInfo && ((PropertyInfo)info.member).GetSetMethod(true) == null);
 
 					var valueParam = Expression.Parameter(Type, "value");
 
@@ -122,7 +122,7 @@ namespace LinqToDB.Reflection
 								}
 								else
 								{
-									if (next.Type.IsClassEx() || next.Type.IsNullable())
+									if (next.Type.IsClass || next.Type.IsNullable())
 									{
 										var local = Expression.Variable(next.Type);
 
@@ -191,8 +191,8 @@ namespace LinqToDB.Reflection
 
 			if (memberInfo is PropertyInfo info)
 			{
-				HasGetter = info.GetGetMethodEx(true) != null;
-				HasSetter = info.GetSetMethodEx(true) != null;
+				HasGetter = info.GetGetMethod(true) != null;
+				HasSetter = info.GetSetMethod(true) != null;
 			}
 			else
 			{
@@ -337,21 +337,21 @@ namespace LinqToDB.Reflection
 
 		public T GetAttribute<T>() where T : Attribute
 		{
-			var attrs = MemberInfo.GetCustomAttributesEx(typeof(T), true);
+			var attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
 
 			return attrs.Length > 0? (T)attrs[0]: null;
 		}
 
 		public T[] GetAttributes<T>() where T : Attribute
 		{
-			Array attrs = MemberInfo.GetCustomAttributesEx(typeof(T), true);
+			Array attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
 
 			return attrs.Length > 0? (T[])attrs: null;
 		}
 
 		public object[] GetAttributes()
 		{
-			var attrs = MemberInfo.GetCustomAttributesEx(true);
+			var attrs = MemberInfo.GetCustomAttributes(true);
 
 			return attrs.Length > 0? attrs: null;
 		}

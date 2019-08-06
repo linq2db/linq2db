@@ -69,7 +69,6 @@ namespace Tests.Linq
 			return new ToTableName<T>(table);
 		}
 
-#if !NET45
 		[Test]
 		public void TestFormattable([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)
 		{
@@ -200,8 +199,6 @@ namespace Tests.Linq
 				Assert.AreEqual(expected, projection);
 			}
 		}
-
-#endif
 
 		[Test]
 		public void TestParameters([DataSources(ProviderName.DB2, ProviderName.SapHana)] string context, [Values(14, 15)] int endId)

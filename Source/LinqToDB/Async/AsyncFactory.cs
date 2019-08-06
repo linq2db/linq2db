@@ -157,9 +157,9 @@ namespace LinqToDB.Async
 			var mi = instanceType.GetPublicInstanceMethodEx(methodName, parametersTypes);
 
 			if (mi == null
-				|| !mi.ReturnType.IsGenericTypeEx()
+				|| !mi.ReturnType.IsGenericType
 				|| mi.ReturnType.GetGenericTypeDefinition() != typeof(Task<>)
-				|| mi.ReturnType.GetGenericArgumentsEx()[0].IsSubclassOfEx(typeof(TTask)))
+				|| mi.ReturnType.GetGenericArguments()[0].IsSubclassOf(typeof(TTask)))
 				return default;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));
@@ -168,7 +168,7 @@ namespace LinqToDB.Async
 			return Expression
 				.Lambda<TDelegate>(
 					Expression.Call(
-						taskConverter.MakeGenericMethod(mi.ReturnType.GetGenericArgumentsEx()[0]),
+						taskConverter.MakeGenericMethod(mi.ReturnType.GetGenericArguments()[0]),
 						Expression.Call(Expression.Convert(pInstance, instanceType), mi, parameters)),
 					new[] { pInstance }.Concat(parameters))
 				.Compile();

@@ -59,7 +59,7 @@ namespace Tests.Model
 			var methodInfo = typeof(NorthwindDB).GetMethods()
 				.Where(_ =>  _.Name == "FreeTextTable")
 				.Where(_ => _.GetParameters().Length == 2)
-				.Where(_ => _.GetParameters().First().ParameterType.IsGenericTypeEx()) 
+				.Where(_ => _.GetParameters().First().ParameterType.IsGenericType)
 				.Single()
 				.MakeGenericMethod(typeof(TTable), typeof(TKey));
 

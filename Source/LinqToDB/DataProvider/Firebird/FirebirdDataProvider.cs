@@ -75,12 +75,10 @@ namespace LinqToDB.DataProvider.Firebird
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD1_6
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new FirebirdSchemaProvider();
 		}
-#endif
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{

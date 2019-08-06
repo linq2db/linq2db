@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 			var returnType = methodCall.Method.ReturnType;
 
 			if (methodCall.IsAsyncExtension())
-				returnType = returnType.GetGenericArgumentsEx()[0];
+				returnType = returnType.GetGenericArguments()[0];
 
 			if (sequence.SelectQuery != buildInfo.SelectQuery)
 			{

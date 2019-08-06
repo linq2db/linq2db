@@ -14,11 +14,10 @@ namespace LinqToDB.Metadata
 	{
 		public static MetadataReader Default = new MetadataReader(
 			new AttributeReader()
-#if NETSTANDARD1_6 || NETSTANDARD2_0
 			, new SystemComponentModelDataAnnotationsSchemaAttributeReader()
-#else
-			, new SystemDataLinqAttributeReader()
 			, new SystemDataSqlServerAttributeReader()
+#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+			, new SystemDataLinqAttributeReader()
 #endif
 		);
 

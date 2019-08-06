@@ -89,9 +89,9 @@ namespace LinqToDB
 							var expr = (MethodCallExpression)pi;
 
 							if (expr.Method.DeclaringType == typeof(AsyncExtensions) &&
-								expr.Method.GetCustomAttributesEx(typeof(AsyncExtensions.ElementAsyncAttribute), true).Length != 0)
+								expr.Method.GetCustomAttributes(typeof(AsyncExtensions.ElementAsyncAttribute), true).Length != 0)
 							{
-								var type = expr.Type.GetGenericArgumentsEx()[0];
+								var type = expr.Type.GetGenericArguments()[0];
 
 								var helper = (ITableHelper)Activator.CreateInstance(typeof(TableHelper<>).MakeGenericType(type));
 
@@ -105,7 +105,7 @@ namespace LinqToDB
 
 								var qtype  = type.GetGenericType(expr.Type);
 								var helper = (ITableHelper)Activator.CreateInstance(
-									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArgumentsEx()[0]));
+									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArguments()[0]));
 
 								return helper.CallTable(query, expr, ps, qtype != null ? MethodType.Queryable : MethodType.Element);
 							}
@@ -121,7 +121,7 @@ namespace LinqToDB
 						{
 							var helper = (ITableHelper)Activator
 								.CreateInstance(typeof(TableHelper<>)
-								.MakeGenericType(pi.Type.GetGenericArgumentsEx()[0]));
+								.MakeGenericType(pi.Type.GetGenericArguments()[0]));
 							return helper.CallTable(query, pi, ps, MethodType.Queryable);
 						}
 

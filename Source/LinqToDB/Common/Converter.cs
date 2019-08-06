@@ -213,7 +213,7 @@ namespace LinqToDB.Common
 
 			if (me != null)
 			{
-				if (me.Member.Name == "Value" && me.Member.DeclaringType.IsGenericTypeEx())
+				if (me.Member.Name == "Value" && me.Member.DeclaringType.IsGenericType)
 					return me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(DefaultValue<>);
 			}
 

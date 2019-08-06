@@ -95,8 +95,6 @@ namespace Tests.Tools
 			Assert.That(comparer.Equals(o1, o2), Is.EqualTo(expected));
 		}
 
-#if !NETSTANDARD1_6
-
 		[Test]
 		public void MethodHandleTest()
 		{
@@ -118,8 +116,6 @@ namespace Tests.Tools
 			Assert.False(comparer.Equals(a, b), "ComparerBuilder fails");
 			Assert.True(comparer.Equals(a, b2), "ComparerBuilder fails");
 		}
-
-#endif
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 		class TestClass

@@ -41,7 +41,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			DataConnection.AddProviderDetector(ProviderDetector);
 
-#if !NETSTANDARD1_6
 			try
 			{
 				_quoteIdentifier = TryToUseCommandBuilder();
@@ -50,20 +49,18 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				// see https://github.com/linq2db/linq2db/issues/1487
 			}
-#endif
+
 			if (_quoteIdentifier == null)
 				_quoteIdentifier = identifier => '[' + identifier.Replace("]", "]]") + ']';
 
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0
 		private static Func<string, string> TryToUseCommandBuilder()
 		{
 			return new SqlCommandBuilder().QuoteIdentifier;
 		}
-#endif
-
-#if NETSTANDARD2_0
+#else
 		// this sad code needed for mono linker https://github.com/linq2db/linq2db/issues/1487
 		private static Func<string, string> TryToUseCommandBuilder()
 		{

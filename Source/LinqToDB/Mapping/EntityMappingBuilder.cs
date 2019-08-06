@@ -667,7 +667,7 @@ namespace LinqToDB.Mapping
 			{
 				var memberInfo = MemberHelper.GetMemberInfo(e);
 
-				if (e is MemberExpression && memberInfo.ReflectedTypeEx() != typeof(T)) memberInfo = typeof(T).GetMemberEx(memberInfo);
+				if (e is MemberExpression && memberInfo.ReflectedType != typeof(T)) memberInfo = typeof(T).GetMemberEx(memberInfo);
 
 				if (memberInfo == null) throw new ArgumentException($"'{e}' cant be converted to a class member.");
 

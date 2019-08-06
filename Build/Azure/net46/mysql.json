@@ -1,0 +1,7 @@
+﻿{
+	"NET46.Azure": {
+		"Providers": [
+			"MySql57"
+		]
+	}
+}

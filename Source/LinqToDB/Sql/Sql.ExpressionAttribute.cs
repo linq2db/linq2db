@@ -96,8 +96,8 @@ namespace LinqToDB
 			{
 				if (member is MethodInfo method)
 				{
-					if (method.DeclaringType.IsGenericTypeEx())
-						args = args.Concat(method.DeclaringType.GetGenericArgumentsEx().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
+					if (method.DeclaringType.IsGenericType)
+						args = args.Concat(method.DeclaringType.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
 
 					if (method.IsGenericMethod)
 						args = args.Concat(method.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();

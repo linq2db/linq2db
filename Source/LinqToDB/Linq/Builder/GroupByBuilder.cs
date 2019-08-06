@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequenceExpr    = methodCall.Arguments[0];
 			var sequence        = builder.BuildSequence(new BuildInfo(buildInfo, sequenceExpr));
-			var groupingType    = methodCall.Type.GetGenericArgumentsEx()[0];
+			var groupingType    = methodCall.Type.GetGenericArguments()[0];
 			var keySelector     = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var elementSelector = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
@@ -59,7 +59,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var type = ((LambdaExpression)call.Arguments[1].Unwrap()).Body.Type;
 
-					if (type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(ExpressionBuilder.GroupSubQuery<,>))
+					if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ExpressionBuilder.GroupSubQuery<,>))
 					{
 						sequence = new SubQueryContext(sequence);
 					}
@@ -430,7 +430,7 @@ namespace LinqToDB.Linq.Builder
 							if (arg0.NodeType != ExpressionType.Call)
 							{
 								var l     = (LambdaExpression)arg.Arguments[1].Unwrap();
-								var largs = l.Type.GetGenericArgumentsEx();
+								var largs = l.Type.GetGenericArguments();
 
 								if (largs.Length == 2)
 								{
@@ -576,7 +576,7 @@ namespace LinqToDB.Linq.Builder
 									if (e.Member.Name == "Key")
 									{
 										if (_keyProperty == null)
-											_keyProperty = _groupingType.GetPropertyEx("Key");
+											_keyProperty = _groupingType.GetProperty("Key");
 
 										if (e.Member == _keyProperty)
 										{

@@ -246,13 +246,12 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
 		public void ProceduresSchemaProviderTest(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
 			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
 		{
-			var macaddr8Supported =  context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11) || context.Contains(TestProvName.PostgreSQLLatest);
+			var macaddr8Supported =  context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -416,7 +415,5 @@ namespace Tests.SchemaProvider
 				Assert.That(column.Description, Is.EqualTo("This is the Person.PersonID column"));
 			}
 		}
-#endif
 	}
-
 }

@@ -6,8 +6,6 @@ using System.Data.Common;
 using System.Data.Linq;
 using System.IO;
 using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 using System.Xml;
 using System.Xml.Linq;
@@ -17,7 +15,6 @@ namespace LinqToDB.DataProvider
 	using Data;
 	using Common;
 	using Expressions;
-	using LinqToDB.Linq;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -262,12 +259,8 @@ namespace LinqToDB.DataProvider
 
 		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
-#if !NETSTANDARD1_6
 			var st = ((DbDataReader)reader).GetSchemaTable();
 			return st == null || st.Rows[idx].IsNull("AllowDBNull") || (bool)st.Rows[idx]["AllowDBNull"];
-#else
-			return true;
-#endif
 		}
 
 		#endregion
@@ -357,9 +350,7 @@ namespace LinqToDB.DataProvider
 		}
 
 		public abstract bool            IsCompatibleConnection(IDbConnection connection);
-#if !NETSTANDARD1_6
 		public abstract ISchemaProvider GetSchemaProvider     ();
-#endif
 
 		protected virtual void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{

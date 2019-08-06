@@ -653,7 +653,6 @@ namespace Tests.xUpdate
 					case ProviderName.PostgreSQL95:
 					case TestProvName.PostgreSQL10:
 					case TestProvName.PostgreSQL11:
-					case TestProvName.PostgreSQLLatest:
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10) * 10);
 						break;
 					case ProviderName.DB2:

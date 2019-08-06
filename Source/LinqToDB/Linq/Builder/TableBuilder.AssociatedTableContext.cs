@@ -503,7 +503,7 @@ namespace LinqToDB.Linq.Builder
 					if (memberType.IsSameOrParentOf(typeof(List<T>)))
 						return Expression.Call(null, MemberHelper.MethodOf(() => Enumerable.ToList<T>(null)), expression);
 
-					var ctor = memberType.GetConstructorEx(new[] { typeof(IEnumerable<T>) });
+					var ctor = memberType.GetConstructor(new[] { typeof(IEnumerable<T>) });
 
 					if (ctor != null)
 						return Expression.New(ctor, expression);
