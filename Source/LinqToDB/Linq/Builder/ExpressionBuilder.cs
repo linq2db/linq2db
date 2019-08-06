@@ -41,6 +41,7 @@ namespace LinqToDB.Linq.Builder
 			new AggregationBuilder         (),
 			new MethodChainBuilder         (),
 			new ScalarSelectBuilder        (),
+			new SelectQueryBuilder         (),
 			new CountBuilder               (),
 			new PassThroughBuilder         (),
 			new TableAttributeBuilder      (),
