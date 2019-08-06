@@ -88,7 +88,7 @@ namespace LinqToDB.Linq.Builder
 
 			var setOperator = new SqlSetOperator(set2.SelectQuery, setOperation);
 
-			sequence1.SelectQuery.SetOperators.Add(setOperator);
+			set1.SelectQuery.SetOperators.Add(setOperator);
 
 			return new SetOperationContext(set1, set2, methodCall);
 		}
