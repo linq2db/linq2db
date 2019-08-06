@@ -469,11 +469,12 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Result set type.</typeparam>
 		/// <returns>Returns result.</returns>
-		public T QueryProcMulti<T>()
+		public T QueryProcMultiple<T>()
+			where T : class
 		{
 			CommandType = CommandType.StoredProcedure;
 
-			return QueryMulti<T>();
+			return QueryMultiple<T>();
 		}
 
 		/// <summary>
@@ -485,11 +486,12 @@ namespace LinqToDB.Data
 		///     A task that represents the asynchronous operation.
 		///     The task result contains object with multiply result sets.
 		/// </returns>
-		public Task<T> QueryProcMultiAsync<T>(CancellationToken cancellationToken = default)
+		public Task<T> QueryProcMultipleAsync<T>(CancellationToken cancellationToken = default)
+			where T : class
 		{
 			CommandType = CommandType.StoredProcedure;
 
-			return QueryMultiAsync<T>(cancellationToken);
+			return QueryMultipleAsync<T>(cancellationToken);
 		}
 
 		/// <summary>
@@ -497,7 +499,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Result set type.</typeparam>
 		/// <returns>Returns result.</returns>
-		public T QueryMulti<T>()
+		public T QueryMultiple<T>()
+			where T : class
 		{
 			var hasParameters = Parameters?.Length > 0;
 
@@ -521,7 +524,8 @@ namespace LinqToDB.Data
 		///     A task that represents the asynchronous operation.
 		///     The task result contains object with multiply result sets.
 		/// </returns>
-		public async Task<T> QueryMultiAsync<T>(CancellationToken cancellationToken = default)
+		public async Task<T> QueryMultipleAsync<T>(CancellationToken cancellationToken = default)
+			where T : class
 		{
 			var hasParameters = Parameters?.Length > 0;
 
@@ -584,6 +588,7 @@ namespace LinqToDB.Data
 		}
 
 		T ReadMultipleResultSets<T>(IDataReader rd)
+			where T : class
 		{
 			var typeAccessor = TypeAccessor.GetAccessor<T>();
 			var indexMap     = GetMultipleQueryIndexMap(typeAccessor);
@@ -722,6 +727,7 @@ namespace LinqToDB.Data
 		}
 
 		async Task<T> ReadMultipleResultSetsAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+			where T : class
 		{
 			var typeAccessor = TypeAccessor.GetAccessor<T>();
 			var indexMap     = GetMultipleQueryIndexMap(typeAccessor);

@@ -26,7 +26,7 @@ namespace Tests.Data
 		{
 			using (var db = new DataConnection(context))
 			{
-				var res = db.QueryMulti<MultipleResultExample>(
+				var res = db.QueryMultiple<MultipleResultExample>(
 					"select * from Person;" +
 					 "select * from Doctor;" +
 					 "select * from Patient;" +
@@ -46,7 +46,7 @@ namespace Tests.Data
 		{
 			using (var db = new DataConnection(context))
 			{
-				var res = await db.QueryMultiAsync<MultipleResultExample>(
+				var res = await db.QueryMultipleAsync<MultipleResultExample>(
 					"select * from Person;" +
 					"select * from Doctor;" +
 					"select * from Patient;" +
@@ -74,7 +74,7 @@ namespace Tests.Data
 		{
 			using (var db = new DataConnection(context))
 			{
-				var res = db.QueryMulti<MultipleResultExampleWithoutAttributes>(
+				var res = db.QueryMultiple<MultipleResultExampleWithoutAttributes>(
 					"select * from Person;" +
 					 "select * from Doctor;" +
 					 "select * from Patient;" +
@@ -94,7 +94,7 @@ namespace Tests.Data
 		{
 			using (var db = new DataConnection(context))
 			{
-				var res = await db.QueryMultiAsync<MultipleResultExampleWithoutAttributes>(
+				var res = await db.QueryMultipleAsync<MultipleResultExampleWithoutAttributes>(
 					"select * from Person;" +
 					"select * from Doctor;" +
 					"select * from Patient;" +
@@ -127,7 +127,7 @@ namespace Tests.Data
 		{
 			using (var db = new DataConnection(context))
 			{
-				var res = db.QueryProcMulti<ProcedureMultipleResultExample>(
+				var res = db.QueryProcMultiple<ProcedureMultipleResultExample>(
 					"PersonSearch",
 					new DataParameter("nameFilter", "Jane")
 				);
@@ -150,7 +150,7 @@ namespace Tests.Data
 		{
 			using (var db = new DataConnection(context))
 			{
-				var res = await db.QueryProcMultiAsync<ProcedureMultipleResultExample>(
+				var res = await db.QueryProcMultipleAsync<ProcedureMultipleResultExample>(
 					"PersonSearch",
 					new DataParameter("nameFilter", "Jane")
 				);
@@ -173,7 +173,7 @@ namespace Tests.Data
 		{
 			using (var db = new DataConnection(context))
 			{
-				var res = db.QueryProcMulti<ProcedureMultipleResultExample>(
+				var res = db.QueryProcMultiple<ProcedureMultipleResultExample>(
 					"PersonSearch",
 					new DataParameter("nameFilter", "Pupkin")
 				);
@@ -196,7 +196,7 @@ namespace Tests.Data
 		{
 			using (var db = new DataConnection(context))
 			{
-				var res = await db.QueryProcMultiAsync<ProcedureMultipleResultExample>(
+				var res = await db.QueryProcMultipleAsync<ProcedureMultipleResultExample>(
 					"PersonSearch",
 					new DataParameter("nameFilter", "Pupkin")
 				);
@@ -232,7 +232,7 @@ namespace Tests.Data
 		{
 			using (var db = new DataConnection(context))
 			{
-				var res = db.QueryProcMulti<ProcedureMultipleResultExampleWithoutAttributes>(
+				var res = db.QueryProcMultiple<ProcedureMultipleResultExampleWithoutAttributes>(
 					"PersonSearch",
 					new DataParameter("nameFilter", "Jane")
 				);
@@ -255,7 +255,7 @@ namespace Tests.Data
 		{
 			using (var db = new DataConnection(context))
 			{
-				var res = await db.QueryProcMultiAsync<ProcedureMultipleResultExampleWithoutAttributes>(
+				var res = await db.QueryProcMultipleAsync<ProcedureMultipleResultExampleWithoutAttributes>(
 					"PersonSearch",
 					new DataParameter("nameFilter", "Jane")
 				);
