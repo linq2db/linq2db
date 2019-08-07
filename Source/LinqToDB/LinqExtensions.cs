@@ -12,6 +12,7 @@ namespace LinqToDB
 {
 	using Async;
 	using Expressions;
+	using Extensions;
 	using Linq;
 	using Linq.Builder;
 
@@ -861,7 +862,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_setMethodInfo5.MakeGenericMethod(typeof(T), typeof(TV)),
-					new[] { currentSource.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV)) }));
+					new[] { currentSource.Expression, Expression.Quote(extract), WrapConstant(extract.Body, value) }));
 
 			return new Updatable<T> { Query = query };
 		}
@@ -893,7 +894,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_setMethodInfo6.MakeGenericMethod(typeof(T), typeof(TV)),
-					new[] { query.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV)) }));
+					new[] { query.Expression, Expression.Quote(extract), WrapConstant(extract.Body, value) }));
 
 			return new Updatable<T> { Query = query };
 		}
@@ -1203,7 +1204,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_valueMethodInfo2.MakeGenericMethod(typeof(T), typeof(TV)),
-					new[] { query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TV)) }));
+					new[] { query.Expression, Expression.Quote(field), WrapConstant(field.Body, value) }));
 
 			return new ValueInsertable<T> { Query = q };
 		}
@@ -1270,7 +1271,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_valueMethodInfo4.MakeGenericMethod(typeof(T), typeof(TV)),
-					new[] { query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TV)) }));
+					new[] { query.Expression, Expression.Quote(field), WrapConstant(field.Body, value) }));
 
 			return new ValueInsertable<T> { Query = q };
 		}
@@ -1721,6 +1722,15 @@ namespace LinqToDB
 			public IQueryable<T> Query;
 		}
 
+		static Expression WrapConstant<TV>(Expression body, TV value)
+		{
+			var valueType = ReferenceEquals(null, value) ? body.Unwrap().Type : value.GetType();
+			var result    = (Expression)Expression.Constant(value, valueType);
+			if (result.Type != typeof(TV))
+				result = Expression.Convert(result, typeof(TV));
+			return result;
+		}
+
 		static readonly MethodInfo _intoMethodInfo2 =
 			MemberHelper.MethodOf(() => Into<int,int>(null,null)).GetGenericMethodDefinition();
 
@@ -1850,7 +1860,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_valueMethodInfo7.MakeGenericMethod(typeof(TSource), typeof(TTarget), typeof(TValue)),
-					new[] { query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TValue)) }));
+					new[] { query.Expression, Expression.Quote(field), WrapConstant(field.Body, value) }));
 
 			return new SelectInsertable<TSource,TTarget> { Query = q };
 		}
