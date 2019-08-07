@@ -811,14 +811,6 @@ namespace LinqToDB.Expressions
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
 					return ((UnaryExpression)ex).Operand.Unwrap();
-				case ExpressionType.Constant       :
-					{
-						var c = (ConstantExpression)ex;
-
-						if (c.Value != null && c.Type != c.Value.GetType())
-							return Expression.Constant(c.Value, c.Value.GetType());
-						break;
-					}
 			}
 
 			return ex;
@@ -1034,6 +1026,13 @@ namespace LinqToDB.Expressions
 						return true;
 
 			return false;
+		}
+
+		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo genericMethodInfo)
+		{
+			if (!method.Method.IsGenericMethod)
+				return false;
+			return method.Method.GetGenericMethodDefinition() == genericMethodInfo;
 		}
 
 		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)

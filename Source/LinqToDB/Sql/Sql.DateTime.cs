@@ -455,22 +455,25 @@ namespace LinqToDB
 				string expStr;
 				switch (part)
 				{
-					case Sql.DateParts.Year        : expStr = "{0} + {1} * INTERVAL '1' YEAR"      ; break;
-					case Sql.DateParts.Quarter     : expStr = "{0} + {1} * INTERVAL '3' MONTH"     ; break;
-					case Sql.DateParts.Month       : expStr = "{0} + {1} * INTERVAL '1' MONTH"     ; break;
+					case Sql.DateParts.Year        : expStr = "{0} * INTERVAL '1' YEAR"      ; break;
+					case Sql.DateParts.Quarter     : expStr = "{0} * INTERVAL '3' MONTH"     ; break;
+					case Sql.DateParts.Month       : expStr = "{0} * INTERVAL '1' MONTH"     ; break;
 					case Sql.DateParts.DayOfYear   :
 					case Sql.DateParts.WeekDay     :
-					case Sql.DateParts.Day         : expStr = "{0} + {1} * INTERVAL '1' DAY"       ; break;
-					case Sql.DateParts.Week        : expStr = "{0} + {1} * INTERVAL '7' DAY"       ; break;
-					case Sql.DateParts.Hour        : expStr = "{0} + {1} * INTERVAL '1' HOUR"      ; break;
-					case Sql.DateParts.Minute      : expStr = "{0} + {1} * INTERVAL '1' MINUTE"    ; break;
-					case Sql.DateParts.Second      : expStr = "{0} + {1} * INTERVAL '1' SECOND"    ; break;
-					case Sql.DateParts.Millisecond : expStr = "{0} + {1} * INTERVAL '0.001' SECOND"; break;
+					case Sql.DateParts.Day         : expStr = "{0} * INTERVAL '1' DAY"       ; break;
+					case Sql.DateParts.Week        : expStr = "{0} * INTERVAL '7' DAY"       ; break;
+					case Sql.DateParts.Hour        : expStr = "{0} * INTERVAL '1' HOUR"      ; break;
+					case Sql.DateParts.Minute      : expStr = "{0} * INTERVAL '1' MINUTE"    ; break;
+					case Sql.DateParts.Second      : expStr = "{0} * INTERVAL '1' SECOND"    ; break;
+					case Sql.DateParts.Millisecond : expStr = "{0} * INTERVAL '0.001' SECOND"; break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
 
-				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Additive, date, number);
+				builder.ResultExpression = builder.Add(
+					date,
+					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number),
+					typeof(DateTime?));
 			}
 		}
 
@@ -486,22 +489,25 @@ namespace LinqToDB
 
 				switch (part)
 				{
-					case Sql.DateParts.Year        : expStr = "{0} + {1} Year";                 break;
-					case Sql.DateParts.Quarter     : expStr = "{0} + ({1} * 3) Month";          break;
-					case Sql.DateParts.Month       : expStr = "{0} + {1} Month";                break;
+					case Sql.DateParts.Year        : expStr = "{0} Year";                 break;
+					case Sql.DateParts.Quarter     : expStr = "({0} * 3) Month";          break;
+					case Sql.DateParts.Month       : expStr = "{0} Month";                break;
 					case Sql.DateParts.DayOfYear   : 
 					case Sql.DateParts.WeekDay     : 
-					case Sql.DateParts.Day         : expStr = "{0} + {1} Day";                  break;
-					case Sql.DateParts.Week        : expStr = "{0} + ({1} * 7) Day";            break;
-					case Sql.DateParts.Hour        : expStr = "{0} + {1} Hour";                 break;
-					case Sql.DateParts.Minute      : expStr = "{0} + {1} Minute";               break;
-					case Sql.DateParts.Second      : expStr = "{0} + {1} Second";               break;
-					case Sql.DateParts.Millisecond : expStr = "{0} + ({1} * 1000) Microsecond"; break;
+					case Sql.DateParts.Day         : expStr = "{0} Day";                  break;
+					case Sql.DateParts.Week        : expStr = "({0} * 7) Day";            break;
+					case Sql.DateParts.Hour        : expStr = "{0} Hour";                 break;
+					case Sql.DateParts.Minute      : expStr = "{0} Minute";               break;
+					case Sql.DateParts.Second      : expStr = "{0} Second";               break;
+					case Sql.DateParts.Millisecond : expStr = "({0} * 1000) Microsecond"; break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
 
-				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Additive, date, number);
+				builder.ResultExpression = builder.Add(
+					date,
+					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Primary, number),
+					typeof(DateTime?));
 			}
 		}
 
@@ -546,22 +552,25 @@ namespace LinqToDB
 				string expStr;
 				switch (part)
 				{
-					case Sql.DateParts.Year        : expStr = "{0} + {1} * Interval '1 Year'";         break;
-					case Sql.DateParts.Quarter     : expStr = "{0} + {1} * Interval '1 Month' * 3";    break;
-					case Sql.DateParts.Month       : expStr = "{0} + {1} * Interval '1 Month'";        break;
+					case Sql.DateParts.Year        : expStr = "{0} * Interval '1 Year'";         break;
+					case Sql.DateParts.Quarter     : expStr = "{0} * Interval '1 Month' * 3";    break;
+					case Sql.DateParts.Month       : expStr = "{0} * Interval '1 Month'";        break;
 					case Sql.DateParts.DayOfYear   : 
 					case Sql.DateParts.WeekDay     : 
-					case Sql.DateParts.Day         : expStr = "{0} + {1} * Interval '1 Day'";          break;
-					case Sql.DateParts.Week        : expStr = "{0} + {1} * Interval '1 Day' * 7";      break;
-					case Sql.DateParts.Hour        : expStr = "{0} + {1} * Interval '1 Hour'";         break;
-					case Sql.DateParts.Minute      : expStr = "{0} + {1} * Interval '1 Minute'";       break;
-					case Sql.DateParts.Second      : expStr = "{0} + {1} * Interval '1 Second'";       break;
-					case Sql.DateParts.Millisecond : expStr = "{0} + {1} * Interval '1 Millisecond'";  break;
+					case Sql.DateParts.Day         : expStr = "{0} * Interval '1 Day'";          break;
+					case Sql.DateParts.Week        : expStr = "{0} * Interval '1 Day' * 7";      break;
+					case Sql.DateParts.Hour        : expStr = "{0} * Interval '1 Hour'";         break;
+					case Sql.DateParts.Minute      : expStr = "{0} * Interval '1 Minute'";       break;
+					case Sql.DateParts.Second      : expStr = "{0} * Interval '1 Second'";       break;
+					case Sql.DateParts.Millisecond : expStr = "{0} * Interval '1 Millisecond'";  break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
 
-				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Additive, date, number);
+				builder.ResultExpression = builder.Add(
+					date,
+					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number),
+					typeof(DateTime?));
 			}
 		}
 
@@ -622,7 +631,7 @@ namespace LinqToDB
 						throw new ArgumentOutOfRangeException();
 				}
 
-				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, date, number);
+				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Concatenate, date, number);
 			}
 		}
 

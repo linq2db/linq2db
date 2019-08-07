@@ -33,7 +33,7 @@ namespace LinqToDB.Linq.Builder
 
 				defaultIfEmpty.Disabled = true;
 			}
-			else if (sequence.SelectQuery.HasUnion || !sequence.SelectQuery.IsSimple || sequence.GetType() == typeof(SelectContext))
+			else if (sequence.SelectQuery.HasSetOperators || !sequence.SelectQuery.IsSimple || sequence.GetType() == typeof(SelectContext))
 				// TODO: we should create subquery unconditionally and let optimizer remove it later if it is not needed,
 				// but right now it breaks at least association builder so it is not a small change
 				sequence = new SubQueryContext(sequence);

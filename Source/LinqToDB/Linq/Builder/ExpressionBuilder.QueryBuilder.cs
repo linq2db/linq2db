@@ -48,9 +48,9 @@ namespace LinqToDB.Linq.Builder
 			_convertedExpressions.Remove(ex);
 		}
 
-		public Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide)
+		public Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide, string alias = null)
 		{
-			var newExpr = expression.Transform(expr => TransformExpression(context, expr, enforceServerSide, null));
+			var newExpr = expression.Transform(expr => TransformExpression(context, expr, enforceServerSide, alias));
 			return newExpr;
 		}
 
@@ -58,15 +58,7 @@ namespace LinqToDB.Linq.Builder
 			string alias)
 		{
 			var resultExpr = expr;
-			if (resultExpr.NodeType == ExpressionType.Conditional)
-			{
-				var cond = (ConditionalExpression)CorrectConditional(context, resultExpr);
-				if (resultExpr != cond)
-					resultExpr = cond.Update(cond.Test, BuildExpression(context, cond.IfTrue, enforceServerSide), BuildExpression(context, cond.IfFalse, enforceServerSide));
-			}
-
-			if (resultExpr == expr)
-				resultExpr = expr.Transform(ae => TransformExpression(context, ae, enforceServerSide, alias));
+			resultExpr = CorrectConditional(context, resultExpr, enforceServerSide, alias);
 
 			// Update nullability
 			resultExpr = resultExpr.Transform(UpdateNullabilityFromExtension);
@@ -413,68 +405,80 @@ namespace LinqToDB.Linq.Builder
 			return new TransformInfo(expr);
 		}
 
-		Expression CorrectConditional(IBuildContext context, Expression expr)
+		Expression CorrectConditional(IBuildContext context, Expression expr, bool enforceServerSide, string alias)
 		{
-			var result = expr.Transform(e =>
+			if (expr.NodeType != ExpressionType.Conditional)
+				return BuildExpression(context, expr, enforceServerSide, alias);
+
+			var cond = (ConditionalExpression)expr;
+
+			if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
 			{
-				if (e.NodeType == ExpressionType.Conditional)
+				var b = (BinaryExpression)cond.Test;
+
+				Expression cnt = null;
+				Expression obj = null;
+
+				if (IsNullConstant(b.Left))
 				{
-					var cond = (ConditionalExpression)e;
-					if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
+					cnt = b.Left;
+					obj = b.Right;
+				}
+				else if (IsNullConstant(b.Right))
+				{
+					cnt = b.Right;
+					obj = b.Left;
+				}
+
+				if (cnt != null)
+				{
+					var objContext = GetContext(context, obj);
+					if (objContext != null && objContext.IsExpression(obj, 0, RequestFor.Object).Result)
 					{
-						var b = (BinaryExpression)cond.Test;
+						var sql = objContext.ConvertToSql(obj, 0, ConvertFlags.Key);
+						if (sql.Length == 0)
+							sql = objContext.ConvertToSql(obj, 0, ConvertFlags.All);
 
-						Expression cnt = null;
-						Expression obj = null;
-
-						if      (IsNullConstant(b.Left))  { cnt = b.Left;  obj = b.Right; }
-						else if (IsNullConstant(b.Right)) { cnt = b.Right; obj = b.Left;  }
-
-						if (cnt != null)
+						if (sql.Length > 0)
 						{
-							var objContext = GetContext(context, obj);
-							if (objContext != null && objContext.IsExpression(obj, 0, RequestFor.Object).Result)
+							Expression predicate = null;
+							foreach (var f in sql)
 							{
-								var sql = objContext.ConvertToSql(obj, 0, ConvertFlags.Key);
-								if (sql.Length == 0)
-									sql = objContext.ConvertToSql(obj, 0, ConvertFlags.All);
+								if (f.Sql is SqlField field && field.Table.All == field)
+									continue;
 
-								if (sql.Length > 0)
-								{
-									Expression predicate = null;
-									foreach (var f in sql)
-									{
-										if (f.Sql is SqlField field && field.Table.All == field)
-											continue;
+								var valueType = f.Sql.SystemType;
 
-										var valueType = f.Sql.SystemType;
+								if (!valueType.IsNullable() && valueType.IsValueTypeEx())
+									valueType = typeof(Nullable<>).MakeGenericType(valueType);
 
-										if (!valueType.IsNullable() && valueType.IsValueTypeEx())
-											valueType = typeof(Nullable<>).MakeGenericType(valueType);
+								var reader = BuildSql(context, f.Sql, valueType, null);
+								var comparison = Expression.MakeBinary(cond.Test.NodeType,
+									Expression.Default(valueType), reader);
 
-										var reader     = BuildSql(context, f.Sql, valueType, null);
-										var comparison = Expression.MakeBinary(cond.Test.NodeType,
-											Expression.Default(valueType), reader);
-
-										predicate = predicate == null
-											? comparison
-											: Expression.MakeBinary(
-												cond.Test.NodeType == ExpressionType.Equal
-													? ExpressionType.AndAlso
-													: ExpressionType.OrElse, predicate, comparison);
-									}
-
-									if (predicate != null)
-										return cond.Update(predicate, cond.IfTrue, cond.IfFalse);
-								}
+								predicate = predicate == null
+									? comparison
+									: Expression.MakeBinary(
+										cond.Test.NodeType == ExpressionType.Equal
+											? ExpressionType.AndAlso
+											: ExpressionType.OrElse, predicate, comparison);
 							}
+
+							if (predicate != null)
+								cond = cond.Update(predicate,
+									CorrectConditional(context, cond.IfTrue,  enforceServerSide, alias),
+									CorrectConditional(context, cond.IfFalse, enforceServerSide, alias));
 						}
 					}
 				}
+			}
 
-				return e;
-			});
-			return result;
+			if (cond == expr)
+				expr = BuildExpression(context, expr, enforceServerSide, alias);
+			else
+				expr = cond;
+
+			return expr;
 		}
 
 		static bool IsMultipleQuery(MethodCallExpression ce)

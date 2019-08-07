@@ -36,7 +36,7 @@ namespace LinqToDB.SqlQuery
 			SqlGroupByClause       groupBy,
 			SqlWhereClause         having,
 			SqlOrderByClause       orderBy,
-			List<SqlUnion>         unions,
+			List<SqlSetOperator>   setOparators,
 			List<ISqlExpression[]> uniqueKeys,
 			SelectQuery            parentSelect,
 			bool                   parameterDependent)
@@ -47,7 +47,7 @@ namespace LinqToDB.SqlQuery
 			GroupBy              = groupBy;
 			Having               = having;
 			OrderBy              = orderBy;
-			_unions              = unions;
+			_setOperators        = setOparators;
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
 
@@ -99,14 +99,14 @@ namespace LinqToDB.SqlQuery
 
 		#region Union
 
-		private List<SqlUnion> _unions;
-		public  List<SqlUnion>  Unions   => _unions ?? (_unions = new List<SqlUnion>());
+		private List<SqlSetOperator> _setOperators;
+		public  List<SqlSetOperator>  SetOperators => _setOperators ?? (_setOperators = new List<SqlSetOperator>());
 
-		public  bool            HasUnion => _unions != null && _unions.Count > 0;
+		public  bool            HasSetOperators    => _setOperators != null && _setOperators.Count > 0;
 
 		public void AddUnion(SelectQuery union, bool isAll)
 		{
-			Unions.Add(new SqlUnion(union, isAll));
+			SetOperators.Add(new SqlSetOperator(union, isAll ? SetOperation.UnionAll : SetOperation.Union));
 		}
 
 		#endregion
@@ -274,9 +274,9 @@ namespace LinqToDB.SqlQuery
 			((ISqlExpressionWalkable)Having) .Walk(options, func);
 			((ISqlExpressionWalkable)OrderBy).Walk(options, func);
 
-			if (HasUnion)
-				foreach (var union in Unions)
-					((ISqlExpressionWalkable)union.SelectQuery).Walk(options, func);
+			if (HasSetOperators)
+				foreach (var setOperator in SetOperators)
+					((ISqlExpressionWalkable)setOperator.SelectQuery).Walk(options, func);
 
 			if (HasUniqueKeys)
 				foreach (var uk in UniqueKeys)
@@ -367,8 +367,8 @@ namespace LinqToDB.SqlQuery
 			((IQueryElement)Having). ToString(sb, dic);
 			((IQueryElement)OrderBy).ToString(sb, dic);
 
-			if (HasUnion)
-				foreach (IQueryElement u in Unions)
+			if (HasSetOperators)
+				foreach (IQueryElement u in SetOperators)
 					u.ToString(sb, dic);
 
 			dic.Remove(this);
