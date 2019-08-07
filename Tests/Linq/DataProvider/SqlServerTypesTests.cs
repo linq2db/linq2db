@@ -98,8 +98,11 @@ namespace Tests.DataProvider
 						v5  = t.geographyDataType.M,
 						//v6  = t.geographyDataType.HasZ,
 						//v7  = t.geographyDataType.HasM,
+						// missing API
+#if !NETSTANDARD2_0
 						v8  = SqlGeography.GeomFromGml(t.geographyDataType.AsGml(), 4326),
 						v9  = t.geographyDataType.AsGml(),
+#endif
 						v10 = t.geographyDataType.ToString(),
 						v11 = SqlGeography.Parse("LINESTRING(-122.360 47.656, -122.343 47.656)"),
 						v12 = SqlGeography.Point(1, 1, 4326),
