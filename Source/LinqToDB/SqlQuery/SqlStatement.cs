@@ -366,13 +366,13 @@ namespace LinqToDB.SqlQuery
 									},
 									StringComparer.OrdinalIgnoreCase);
 
-								if (query.HasUnion)
+								if (query.HasSetOperators)
 								{
 									for (var i = 0; i < query.Select.Columns.Count; i++)
 									{
 										var col = query.Select.Columns[i];
 
-										foreach (var t in query.Unions)
+										foreach (var t in query.SetOperators)
 										{
 											var union = t.SelectQuery.Select;
 											union.Columns[i].Alias = col.Alias;

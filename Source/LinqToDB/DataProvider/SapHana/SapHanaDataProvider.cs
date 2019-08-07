@@ -38,9 +38,9 @@ namespace LinqToDB.DataProvider.SapHana
 			//testing
 
 			//not supported flags
-			SqlProviderFlags.IsSubQueryTakeSupported   = false;
-			SqlProviderFlags.IsApplyJoinSupported      = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported = false;
+			SqlProviderFlags.IsSubQueryTakeSupported     = false;
+			SqlProviderFlags.IsApplyJoinSupported        = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported   = false;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}

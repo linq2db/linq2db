@@ -294,7 +294,10 @@ namespace Tests.DataProvider
 				Assert.AreEqual(1, records[0].Id);
 				Assert.True(records[0].HomeLocation.IsNull);
 				Assert.AreEqual(2, records[1].Id);
+// missing API
+#if !NETSTANDARD2_0
 				Assert.True(Issue1836.Data[1].HomeLocation.STEquals(records[1].HomeLocation).IsTrue);
+#endif
 			}
 		}
 	}

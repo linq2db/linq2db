@@ -265,7 +265,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (subQuery.Select.Columns.Count == 1 &&
 							subQuery.Select.Columns[0].Expression.ElementType == QueryElementType.SqlFunction &&
-							subQuery.GroupBy.IsEmpty && !subQuery.Select.HasModifier && !subQuery.HasUnion &&
+							subQuery.GroupBy.IsEmpty && !subQuery.Select.HasModifier && !subQuery.HasSetOperators &&
 							subQuery.Where.SearchCondition.Conditions.Count == 1)
 						{
 							var cond = subQuery.Where.SearchCondition.Conditions[0];

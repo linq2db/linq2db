@@ -162,7 +162,7 @@ namespace LinqToDB.SqlQuery
 			if (Parent != otherColumn.Parent)
 				return false;
 
-			if (Parent.HasUnion)
+			if (Parent.HasSetOperators)
 				return false;
 
 			return

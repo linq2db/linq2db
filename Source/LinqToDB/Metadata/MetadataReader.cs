@@ -16,8 +16,11 @@ namespace LinqToDB.Metadata
 			new AttributeReader()
 #if NETSTANDARD1_6 || NETSTANDARD2_0
 			, new SystemComponentModelDataAnnotationsSchemaAttributeReader()
-#else
+#endif
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 			, new SystemDataLinqAttributeReader()
+#endif
+#if !NETSTANDARD1_6
 			, new SystemDataSqlServerAttributeReader()
 #endif
 		);
