@@ -14,7 +14,7 @@ namespace LinqToDB.Metadata
 	{
 		public static MetadataReader Default = new MetadataReader(
 			new AttributeReader()
-#if NETSTANDARD1_6
+#if NETSTANDARD1_6 || NETSTANDARD2_0
 			, new SystemComponentModelDataAnnotationsSchemaAttributeReader()
 #endif
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
