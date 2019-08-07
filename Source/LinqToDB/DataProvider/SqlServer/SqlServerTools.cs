@@ -221,12 +221,22 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlServerDataProvider2017.AddUdtType(udtName, nullValue, dataType);
 		}
 
+		/// <summary>
+		/// Loads and registers spatial types assembly (Microsoft.SqlServer.Types) using provided path.
+		/// Also check https://linq2db.github.io/articles/FAQ.html#how-can-i-use-sql-server-spatial-types
+		/// for additional required configuration steps.
+		/// </summary>
 		public static void ResolveSqlTypes([NotNull] string path)
 		{
 			if (path == null) throw new ArgumentNullException(nameof(path));
 			new AssemblyResolver(path, "Microsoft.SqlServer.Types");
 		}
 
+		/// <summary>
+		/// Registers spatial types assembly (Microsoft.SqlServer.Types).
+		/// Also check https://linq2db.github.io/articles/FAQ.html#how-can-i-use-sql-server-spatial-types
+		/// for additional required configuration steps.
+		/// </summary>
 		public static void ResolveSqlTypes([NotNull] Assembly assembly)
 		{
 			var types = assembly.GetTypes();

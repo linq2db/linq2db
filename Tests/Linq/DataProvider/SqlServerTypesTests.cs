@@ -98,8 +98,11 @@ namespace Tests.DataProvider
 						v5  = t.geographyDataType.M,
 						//v6  = t.geographyDataType.HasZ,
 						//v7  = t.geographyDataType.HasM,
+// missing API
+#if !NETSTANDARD2_0
 						v8  = SqlGeography.GeomFromGml(t.geographyDataType.AsGml(), 4326),
 						v9  = t.geographyDataType.AsGml(),
+#endif
 						v10 = t.geographyDataType.ToString(),
 						v11 = SqlGeography.Parse("LINESTRING(-122.360 47.656, -122.343 47.656)"),
 						v12 = SqlGeography.Point(1, 1, 4326),
@@ -294,7 +297,10 @@ namespace Tests.DataProvider
 				Assert.AreEqual(1, records[0].Id);
 				Assert.True(records[0].HomeLocation.IsNull);
 				Assert.AreEqual(2, records[1].Id);
+// missing API
+#if !NETSTANDARD2_0
 				Assert.True(Issue1836.Data[1].HomeLocation.STEquals(records[1].HomeLocation).IsTrue);
+#endif
 			}
 		}
 	}

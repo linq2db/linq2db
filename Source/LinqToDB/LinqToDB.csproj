@@ -70,7 +70,6 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
-		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
 		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
 		<Compile Remove="ServiceModel\**\*.cs;" />
 		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
@@ -94,6 +93,6 @@
 		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
-		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0"/>
+		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 	</ItemGroup>
 </Project>
