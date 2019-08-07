@@ -339,12 +339,20 @@ namespace LinqToDB.Reflection
 		{
 			var attrs = MemberInfo.GetCustomAttributesEx(typeof(T), true);
 
+#if NETSTANDARD1_6
+			attrs = attrs.Cast<T>().ToArray();
+#endif
+
 			return attrs.Length > 0? (T)attrs[0]: null;
 		}
 
 		public T[] GetAttributes<T>() where T : Attribute
 		{
 			Array attrs = MemberInfo.GetCustomAttributesEx(typeof(T), true);
+
+#if NETSTANDARD1_6
+			attrs = attrs.Cast<T>().ToArray();
+#endif
 
 			return attrs.Length > 0? (T[])attrs: null;
 		}
