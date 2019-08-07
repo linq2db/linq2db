@@ -58,15 +58,15 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var result = new List<T>();
-            using (var enumerator = source.GetEnumerator())
-            {
-	            while (await enumerator.MoveNext(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-	            {
-		            result.Add(enumerator.Current);
-	            }
-            }
+			using (var enumerator = source.GetEnumerator())
+			{
+				while (await enumerator.MoveNext(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				{
+					result.Add(enumerator.Current);
+				}
+			}
 
-            return result;
+			return result;
 		}
 
 		/// <summary>

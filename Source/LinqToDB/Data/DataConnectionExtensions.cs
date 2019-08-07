@@ -355,7 +355,7 @@ namespace LinqToDB.Data
 		#endregion
 
 		
-        #region Query
+		#region Query
 
 		/// <summary>
 		/// Executes command and returns results as collection of values of specified type.
