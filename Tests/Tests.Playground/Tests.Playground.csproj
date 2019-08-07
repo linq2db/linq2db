@@ -9,8 +9,6 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-		<Compile Include="..\Linq\Linq\FromSqlTests.cs" Link="FromSqlTests.cs" />
-		<Compile Include="..\Linq\Linq\SelectQueryTests.cs" Link="SelectQueryTests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
