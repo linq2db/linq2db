@@ -885,7 +885,7 @@ namespace LinqToDB
 		/// <summary>
 		///     <para>
 		///         Creates a LINQ query based on expression. Returned <see cref="IQueryable{T}" /> represents single record.
-		///			Could be useful for function calls, querying of database variables or properties, subqueries.
+		///         Could be useful for function calls, querying of database variables or properties, subqueries.
 		///     </para>
 		/// </summary>
 		/// <typeparam name="TEntity">Type of result.</typeparam>

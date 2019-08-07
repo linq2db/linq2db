@@ -86,27 +86,27 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(data))
 			{
 				var query = from t in db.GetTable<SampleClass>()
-                    from s in db.SelectQuery(() => new { Key = Sql.AsSql(1), SecondValue = Sql.AsSql(3)}).InnerJoin(s => s.Key == t.Id)
+					from s in db.SelectQuery(() => new { Key = Sql.AsSql(1), SecondValue = Sql.AsSql(3)}).InnerJoin(s => s.Key == t.Id)
 					select new
 					{
 						t,
-                        s
+						s
 					};
 
 				var actual = query.ToArray();
 
-                var expectedQuery = from t in data
-	                from s in new []{ new { Key = 1, SecondValue = 3}}.Where(s => s.Key == t.Id)
-	                select new
-	                {
-		                t,
-		                s
-	                };
+				var expectedQuery = from t in data
+					from s in new []{ new { Key = 1, SecondValue = 3}}.Where(s => s.Key == t.Id)
+					select new
+					{
+						t,
+						s
+					};
 
-                var expected = expectedQuery.ToArray();
+				var expected = expectedQuery.ToArray();
 
-                //TODO: Enable when merging new CompareBuilder
-                //AreEqual(expected, actual);
+				//TODO: Enable when merging new CompareBuilder
+				//AreEqual(expected, actual);
 			}
 		}
 

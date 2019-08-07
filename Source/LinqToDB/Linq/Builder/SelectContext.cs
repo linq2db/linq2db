@@ -49,9 +49,6 @@ namespace LinqToDB.Linq.Builder
 			Body        = lambda.Body;
 			SelectQuery = selectQuery;
 
-			foreach (var context in Sequence)
-				context.Parent = this;
-
 			IsScalar = !Builder.ProcessProjection(Members, Body);
 
 			Builder.Contexts.Add(this);
