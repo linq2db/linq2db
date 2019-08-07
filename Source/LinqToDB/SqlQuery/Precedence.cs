@@ -6,6 +6,10 @@ namespace LinqToDB.SqlQuery
 	{
 		public const int Primary            = 100; // (x) x.y f(x) a[x] x++ x-- new typeof sizeof checked unchecked
 		public const int Unary              =  90; // + - ! ++x --x (T)x
+		/// <summary>
+		/// This precedence is only for SQLite's || concatenate operator: https://www.sqlite.org/lang_expr.html
+		/// </summary>
+		public const int Concatenate        =  85; // SQLite's ||
 		public const int Multiplicative     =  80; // * / %
 		public const int Subtraction        =  70; // -
 		public const int Additive           =  60; // +
