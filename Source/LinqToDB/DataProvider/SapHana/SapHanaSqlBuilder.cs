@@ -132,7 +132,7 @@ namespace LinqToDB.DataProvider.SapHana
 			if (!statement.IsUpdate())
 				base.BuildFromClause(statement, selectQuery);
 			if (selectQuery.From.Tables.Count == 0)
-				StringBuilder.Append("FROM DUMMY");
+				StringBuilder.Append("FROM DUMMY").AppendLine();
 		}
 
 		public static bool TryConvertParameterSymbol { get; set; }

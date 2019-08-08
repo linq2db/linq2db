@@ -955,5 +955,54 @@ namespace LinqToDB
 
 		#endregion
 
+		#region SelectQuery
+
+		public static MethodInfo SelectQueryMethodInfo =
+			MemberHelper.MethodOf(() => SelectQuery<int>(null, null)).GetGenericMethodDefinition();
+
+		/// <summary>
+		///     <para>
+		///         Creates a LINQ query based on expression. Returned <see cref="IQueryable{T}" /> represents single record.<para />
+		///         Could be useful for function calls, querying of database variables, properties or subqueries.
+		///     </para>
+		/// </summary>
+		/// <typeparam name="TEntity">Type of result.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="selector">Value selection expression.</param>
+		/// <returns> An <see cref="IQueryable{T}" /> representing single record. </returns>
+		/// <remarks>
+		///     Method works for most supported database engines, except databases which do not support <code>SELECT Value</code> without FROM statement.<para />
+		///     For Oracle it will be translated to <code>SELECT Value FROM SYS.DUAL</code>
+		/// </remarks>
+		/// <example>
+		/// Complex record:
+		/// <code>
+		/// db.SelectQuery(() => new { Version = 1, CurrentTimeStamp = Sql.CurrentTimeStamp });
+		/// </code>
+		/// Scalar value:
+		/// <code>
+		/// db.SelectQuery(() => Sql.CurrentTimeStamp);
+		/// </code>
+		/// </example>
+		[Pure]
+		public static IQueryable<TEntity> SelectQuery<TEntity>(
+			[NotNull]                this IDataContext         dataContext,
+			[NotNull, InstantHandle] Expression<Func<TEntity>> selector)
+		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (selector    == null) throw new ArgumentNullException(nameof(selector));
+
+			var table = new Table<TEntity>(dataContext);
+
+			return ((IQueryable<TEntity>)table).Provider.CreateQuery<TEntity>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SelectQuery, dataContext, selector),
+					new Expression[] { Expression.Constant(dataContext), Expression.Quote(selector) }));
+		}
+
+
+		#endregion
+
 	}
 }

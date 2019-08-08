@@ -1017,6 +1017,7 @@ namespace Tests.Linq
 		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new AllowMultipleQuery())
 			using (db.CreateLocalTable(new []
 			{
 				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
@@ -1027,15 +1028,20 @@ namespace Tests.Linq
 				new ChildEntityObject{Id = 1, Value = "Value 1"}
 			}))
 			{
-				var query = 
+				var query =
 					from m in db.GetTable<MainEntityObject>()
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
-					select new 
+					select new
 					{
 						Child1 = c,
-						Child2 = c == null ? null : new ChildEntityObject{Id = c.Id, Value = c.Value},
-						Child3 = c != null ? c    : new ChildEntityObject{Id = 4, Value = "Generated"},
+						Child2 = c == null ? null : new ChildEntityObject { Id = c.Id, Value = c.Value },
+						Child3 = c != null ? c : new ChildEntityObject { Id = 4, Value = "Generated" },
 						Child4 = c.Value != "Value 1" ? c : null,
+						SubChild = c == null
+							? db.GetTable<ChildEntityObject>()
+								.Select(sc => new ChildEntityObject
+									{ Id = sc.Id, Value = sc != null ? sc.Value : "NeverHappen" }).FirstOrDefault()
+							: c
 					};
 
 				var result = query.ToArray();
@@ -1089,6 +1095,24 @@ namespace Tests.Linq
 
 			}
 		}
+
+		[Test]
+		public void TestConditionalRecursive([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					from c in db.Child.Take(1).DefaultIfEmpty()
+					select new
+					{
+						a = p.ParentID == 1 ? c != null ? "1" : "2" : "3"
+					};
+
+				_ = query.ToList();
+			}
+		}
+
 
 		[Test]
 		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]

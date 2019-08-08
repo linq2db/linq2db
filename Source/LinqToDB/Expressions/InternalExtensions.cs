@@ -1028,6 +1028,13 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
+		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo genericMethodInfo)
+		{
+			if (!method.Method.IsGenericMethod)
+				return false;
+			return method.Method.GetGenericMethodDefinition() == genericMethodInfo;
+		}
+
 		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)
 		{
 			return mappingSchema.GetAttribute<AssociationAttribute>(method.Method.DeclaringType, method.Method) != null;

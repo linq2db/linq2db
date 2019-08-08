@@ -574,6 +574,14 @@ namespace LinqToDB.Extensions
 			return typeof(object);
 		}
 
+		public static bool IsGenericEnumerableType(this Type type)
+		{
+			if (type.IsGenericType)
+				if (typeof(IEnumerable<>).IsSameOrParentOf(type))
+					return true;
+			return false;
+		}
+
 		public static Type GetItemType(this Type type)
 		{
 			if (type == null)

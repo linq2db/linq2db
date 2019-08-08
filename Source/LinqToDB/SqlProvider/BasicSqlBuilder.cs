@@ -70,6 +70,33 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual bool CanSkipRootAliases(SqlStatement statement) => true;
 
+		protected virtual void BuildSetOperation(SetOperation operation, StringBuilder sb)
+		{
+			switch (operation)
+			{
+				case SetOperation.Union:
+					sb.Append("UNION");
+					break;
+				case SetOperation.UnionAll:
+					sb.Append("UNION ALL");
+					break;
+				case SetOperation.Except:
+					sb.Append("EXCEPT");
+					break;
+				case SetOperation.ExceptAll:
+					sb.Append("EXCEPT ALL");
+					break;
+				case SetOperation.Intersect:
+					sb.Append("INTERSECT");
+					break;
+				case SetOperation.IntersectAll:
+					sb.Append("INTERSECT ALL");
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(operation), operation, null);
+			}
+		}
+
 		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
 		{
 			Statement     = statement;
@@ -81,13 +108,12 @@ namespace LinqToDB.SqlProvider
 			{
 				BuildSql();
 
-				if (Statement.SelectQuery != null && Statement.SelectQuery.HasUnion)
+				if (Statement.SelectQuery != null && Statement.SelectQuery.HasSetOperators)
 				{
-					foreach (var union in Statement.SelectQuery.Unions)
+					foreach (var union in Statement.SelectQuery.SetOperators)
 					{
 						AppendIndent();
-						sb.Append("UNION");
-						if (union.IsAll) sb.Append(" ALL");
+						BuildSetOperation(union.Operation, sb);
 						sb.AppendLine();
 
 						((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(commandNumber, new SqlSelectStatement(union.SelectQuery), sb, indent, skipAlias);

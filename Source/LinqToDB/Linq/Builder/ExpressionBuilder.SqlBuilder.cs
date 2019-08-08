@@ -233,11 +233,12 @@ namespace LinqToDB.Linq.Builder
 			var info = new BuildInfo(context, expr, new SelectQuery { ParentSelect = context.SelectQuery });
 			var ctx  = BuildSequence(info);
 
-			if (ctx.SelectQuery.Select.Columns.Count == 0 &&
-				(ctx.IsExpression(null, 0, RequestFor.Expression).Result ||
-				 ctx.IsExpression(null, 0, RequestFor.Field).     Result))
+			if (ctx.SelectQuery.Select.Columns.Count == 0) 
 			{
-				ctx.ConvertToIndex(null, 0, ConvertFlags.Field);
+				if (ctx.IsExpression(null, 0, RequestFor.Field).Result)
+					ctx.ConvertToIndex(null, 0, ConvertFlags.Field);
+				if (ctx.IsExpression(null, 0, RequestFor.Expression).Result)
+					ctx.ConvertToIndex(null, 0, ConvertFlags.All);
 			}
 
 			return ctx;
@@ -265,7 +266,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (subQuery.Select.Columns.Count == 1 &&
 							subQuery.Select.Columns[0].Expression.ElementType == QueryElementType.SqlFunction &&
-							subQuery.GroupBy.IsEmpty && !subQuery.Select.HasModifier && !subQuery.HasUnion &&
+							subQuery.GroupBy.IsEmpty && !subQuery.Select.HasModifier && !subQuery.HasSetOperators &&
 							subQuery.Where.SearchCondition.Conditions.Count == 1)
 						{
 							var cond = subQuery.Where.SearchCondition.Conditions[0];

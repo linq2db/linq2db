@@ -41,6 +41,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 
 			SetCharFieldToType<char>("bpchar", (r, i) => DataTools.GetChar(r, i));
 			SetCharFieldToType<char>("character", (r, i) => DataTools.GetChar(r, i));

@@ -324,10 +324,10 @@ namespace LinqToDB.SqlQuery
 		void OptimizeUnions()
 		{
 			var isAllUnion = new QueryVisitor().Find(_selectQuery,
-				ne => ne is SqlUnion nu && nu.IsAll);
+				ne => ne is SqlSetOperator nu && nu.Operation == SetOperation.UnionAll);
 
 			var isNotAllUnion = new QueryVisitor().Find(_selectQuery,
-				ne => ne is SqlUnion nu && !nu.IsAll);
+				ne => ne is SqlSetOperator nu && nu.Operation != SetOperation.UnionAll);
 
 			if (isNotAllUnion != null && isAllUnion != null)
 				return;
@@ -346,7 +346,7 @@ namespace LinqToDB.SqlQuery
 
 				var union = (SelectQuery)table.Source;
 
-				if (!union.HasUnion || sql.Select.Columns.Count != union.Select.Columns.Count)
+				if (!union.HasSetOperators || sql.Select.Columns.Count != union.Select.Columns.Count)
 					return;
 
 				for (var i = 0; i < sql.Select.Columns.Count; i++)
@@ -369,7 +369,7 @@ namespace LinqToDB.SqlQuery
 					scol.RawAlias   = ucol.RawAlias;
 
 					if (!exprs.ContainsKey(ucol))
-						exprs.Add(ucol, scol);
+					exprs.Add(ucol, scol);
 				}
 
 				for (var i = sql.Select.Columns.Count; i < union.Select.Columns.Count; i++)
@@ -382,7 +382,7 @@ namespace LinqToDB.SqlQuery
 				sql.Having. SearchCondition.Conditions.AddRange(union.Having.SearchCondition.Conditions);
 				sql.GroupBy.Items.                     AddRange(union.GroupBy.Items);
 				sql.OrderBy.Items.                     AddRange(union.OrderBy.Items);
-				sql.Unions.InsertRange(0, union.Unions);
+				sql.SetOperators.InsertRange(0, union.SetOperators);
 			});
 
 			if (exprs.Count > 0)
@@ -864,7 +864,7 @@ namespace LinqToDB.SqlQuery
 			var isQueryOK = !query.DoNotRemove && query.From.Tables.Count == 1;
 
 			isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
-			isQueryOK = isQueryOK && !query.HasUnion && query.GroupBy.IsEmpty && !query.Select.HasModifier;
+			isQueryOK = isQueryOK && !query.HasSetOperators && query.GroupBy.IsEmpty && !query.Select.HasModifier;
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
 
 			if (isQueryOK && parentJoin != JoinType.Inner)

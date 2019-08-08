@@ -28,8 +28,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			Version = version;
 
-			SqlProviderFlags.IsDistinctOrderBySupported = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported = false;
+			SqlProviderFlags.IsDistinctOrderBySupported       = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
 
 			if (version == SqlServerVersion.v2000)
 			{
