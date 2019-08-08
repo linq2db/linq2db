@@ -98,7 +98,6 @@ namespace Tests
 				case ProviderName.PostgreSQL95:
 				case TestProvName.PostgreSQL10:
 				case TestProvName.PostgreSQL11:
-				case TestProvName.PostgreSQLLatest:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
@@ -189,7 +188,7 @@ namespace Tests
 
 		private static string GetContextName(IDataContext db)
 		{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
+#if !NETCOREAPP2_0
 			if (db is TestServiceModelDataContext linqDb)
 				return linqDb.Configuration;
 #endif
@@ -223,7 +222,6 @@ namespace Tests
 				case ProviderName.PostgreSQL95:
 				case TestProvName.PostgreSQL10:
 				case TestProvName.PostgreSQL11:
-				case TestProvName.PostgreSQLLatest:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:

@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.SapHana
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count == 0)
-				StringBuilder.Append("FROM DUMMY");
+				StringBuilder.Append("FROM DUMMY").AppendLine();
 			else
 				base.BuildFromClause(statement, selectQuery);
 		}

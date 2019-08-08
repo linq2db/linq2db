@@ -134,10 +134,10 @@ namespace LinqToDB.SqlQuery
 				{
 					RegisterHierachry(selectQuery, s, new HierarchyInfo(selectQuery, HierarchyType.From, selectQuery));
 
-					foreach (var union in s.Unions)
+					foreach (var setOperator in s.SetOperators)
 					{
-						RegisterHierachry(selectQuery, union.SelectQuery, new HierarchyInfo(selectQuery, HierarchyType.Union, union));
-						BuildParentHierarchy(union.SelectQuery);
+						RegisterHierachry(selectQuery, setOperator.SelectQuery, new HierarchyInfo(selectQuery, HierarchyType.SetOperator, setOperator));
+						BuildParentHierarchy(setOperator.SelectQuery);
 					}
 
 					BuildParentHierarchy(s);
@@ -190,7 +190,7 @@ namespace LinqToDB.SqlQuery
 		{
 			From,
 			Join,
-			Union,
+			SetOperator,
 			InnerQuery
 		}
 

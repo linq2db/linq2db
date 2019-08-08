@@ -266,10 +266,10 @@ namespace LinqToDB.SqlQuery
 		{
 			var underlyingType = type;
 
-			if (underlyingType.IsGenericTypeEx() && underlyingType.GetGenericTypeDefinition() == typeof(Nullable<>))
-				underlyingType = underlyingType.GetGenericArgumentsEx()[0];
+			if (underlyingType.IsGenericType && underlyingType.GetGenericTypeDefinition() == typeof(Nullable<>))
+				underlyingType = underlyingType.GetGenericArguments()[0];
 
-			if (underlyingType.IsEnumEx())
+			if (underlyingType.IsEnum)
 				underlyingType = Enum.GetUnderlyingType(underlyingType);
 
 			switch (underlyingType.GetTypeCodeEx())
@@ -298,12 +298,7 @@ namespace LinqToDB.SqlQuery
 					if (underlyingType == typeof(TimeSpan))       return TimeSpan;
 					break;
 
-#if NETSTANDARD1_6
-				case (TypeCode)2       :
-#else
 				case TypeCode.DBNull   :
-#endif
-
 				case TypeCode.Empty    :
 				default                : break;
 			}
@@ -377,8 +372,8 @@ namespace LinqToDB.SqlQuery
 
 		public static bool TypeCanBeNull(Type type)
 		{
-			if (type.IsValueTypeEx() == false ||
-				type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) ||
+			if (type.IsValueType == false ||
+				type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) ||
 				typeof(INullable).IsSameOrParentOf(type))
 				return true;
 

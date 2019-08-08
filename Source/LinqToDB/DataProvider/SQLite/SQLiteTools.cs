@@ -77,7 +77,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			try
 			{
-				var path = typeof(SQLiteTools).AssemblyEx().GetPath();
+				var path = typeof(SQLiteTools).Assembly.GetPath();
 
 				if (!File.Exists(Path.Combine(path, "System.Data.SQLite.dll")))
 					if (File.Exists(Path.Combine(path, "Microsoft.Data.Sqlite.dll")))
@@ -87,11 +87,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 			}
 
-#if NETSTANDARD1_6 || NETSTANDARD2_0
-			return ProviderName.SQLiteMS;
-#else
 			return ProviderName.SQLiteClassic;
-#endif
 		}
 
 

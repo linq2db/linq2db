@@ -77,7 +77,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			try
 			{
-				var path = typeof(MySqlTools).AssemblyEx().GetPath();
+				var path = typeof(MySqlTools).Assembly.GetPath();
 
 				if (!File.Exists(Path.Combine(path, "MySql.Data.dll")))
 					if (File.Exists(Path.Combine(path, "MySqlConnector.dll")))
@@ -112,14 +112,14 @@ namespace LinqToDB.DataProvider.MySql
 		public static DataConnection CreateDataConnection(IDbConnection connection)
 		{
 			return new DataConnection(
-				connection.GetType().AssemblyEx().FullName.Contains("MySqlConnector") ? _mySqlConnectorDataProvider : _mySqlDataProvider,
+				connection.GetType().Assembly.FullName.Contains("MySqlConnector") ? _mySqlConnectorDataProvider : _mySqlDataProvider,
 				connection);
 		}
 
 		public static DataConnection CreateDataConnection(IDbTransaction transaction)
 		{
 			return new DataConnection(
-				transaction.GetType().AssemblyEx().FullName.Contains("MySqlConnector") ? _mySqlConnectorDataProvider : _mySqlDataProvider,
+				transaction.GetType().Assembly.FullName.Contains("MySqlConnector") ? _mySqlConnectorDataProvider : _mySqlDataProvider,
 				transaction);
 		}
 

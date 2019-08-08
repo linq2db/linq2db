@@ -1356,5 +1356,213 @@ namespace Tests.xUpdate
 						});
 			}
 		}
+		enum UpdateSetEnum
+		{
+			Value1 = 6,
+			Value2 = 7,
+			Value3 = 8
+		}
+		[Table]
+		class UpdateSetTest
+		{
+			[PrimaryKey] public int            Id     { get; set; }
+			[Column]     public Guid           Value1 { get; set; }
+			[Column]     public int            Value2 { get; set; }
+			[Column]     public UpdateSetEnum  Value3 { get; set; }
+			[Column]     public Guid?          Value4 { get; set; }
+			[Column]     public int?           Value5 { get; set; }
+			[Column]     public UpdateSetEnum? Value6 { get; set; }
+
+			public static UpdateSetTest[] Data = new UpdateSetTest[]
+			{
+				new UpdateSetTest() { Id = 1, Value1 = Guid.NewGuid(), Value2 = 10, Value3 = UpdateSetEnum.Value1 }
+			};
+		}
+
+		[Test]
+		public void TestSetValueCaching1(
+			[DataSources(
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			TestProvName.AllFirebird,
+			ProviderName.Informix,
+			ProviderName.DB2,
+			ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
+			{
+				var id = 1;
+				var value = Guid.NewGuid();
+
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value1, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value1).Single());
+
+				value = Guid.NewGuid();
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value1, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value1).Single());
+			}
+		}
+
+		[Test]
+		public void TestSetValueCaching2(
+			[DataSources(
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			TestProvName.AllFirebird,
+			ProviderName.Informix,
+			ProviderName.DB2,
+			ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
+			{
+				var id = 1;
+				var value = 11;
+
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value2, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value2).Single());
+
+				value = 12;
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value2, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value2).Single());
+			}
+		}
+
+		[Test]
+		public void TestSetValueCaching3(
+			[DataSources(
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			TestProvName.AllFirebird,
+			ProviderName.Informix,
+			ProviderName.DB2,
+			ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
+			{
+				var id = 1;
+				var value = UpdateSetEnum.Value2;
+
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value3, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value3).Single());
+
+				value = UpdateSetEnum.Value3;
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value3, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value3).Single());
+			}
+		}
+
+		[Test]
+		public void TestSetValueCaching4(
+			[DataSources(
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			TestProvName.AllFirebird,
+			ProviderName.Informix,
+			ProviderName.DB2,
+			ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
+			{
+				var id = 1;
+				var value = Guid.NewGuid();
+
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value4, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value4).Single());
+
+				value = Guid.NewGuid();
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value4, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value4).Single());
+			}
+		}
+
+		[Test]
+		public void TestSetValueCaching5(
+			[DataSources(
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			TestProvName.AllFirebird,
+			ProviderName.Informix,
+			ProviderName.DB2,
+			ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
+			{
+				var id = 1;
+				var value = 11;
+
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value5, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value5).Single());
+
+				value = 12;
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value5, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value5).Single());
+			}
+		}
+
+		[Test]
+		public void TestSetValueCaching6(
+			[DataSources(
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			TestProvName.AllFirebird,
+			ProviderName.Informix,
+			ProviderName.DB2,
+			ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
+			{
+				var id = 1;
+				var value = UpdateSetEnum.Value2;
+
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value6, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value6).Single());
+
+				value = UpdateSetEnum.Value3;
+				table.Where(_ => _.Id == id)
+					.Set(_ => _.Value6, value)
+					.Update();
+
+				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value6).Single());
+			}
+		}
 	}
 }

@@ -71,7 +71,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override LambdaExpression TryGetConvertExpression(Type from, Type to)
 		{
-			if (to.IsEnumEx() && from == typeof(decimal))
+			if (to.IsEnum && from == typeof(decimal))
 			{
 				var type = Converter.GetDefaultMappingFromEnumType(this, to);
 

@@ -1,6 +1,4 @@
-﻿#if !MONO && !TRAVIS
-
-using System;
+﻿using System;
 using System.Linq;
 
 using LinqToDB;
@@ -110,5 +108,3 @@ namespace Tests.Linq
 		}
 	}
 }
-
-#endif

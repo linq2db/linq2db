@@ -6,7 +6,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 using LinqToDB.DataProvider.Access;
 #endif
 
@@ -96,16 +96,11 @@ namespace Tests._Create
 								command.TrimStart().StartsWith("DROP") ||
 								command.TrimStart().StartsWith("CALL DROP");
 
-#if APPVEYOR
-							if (!isDrop)
-#endif
 							Console.WriteLine(ex.Message);
 
 							if (isDrop)
 							{
-#if !APPVEYOR
 								Console.WriteLine("\nnot too OK\n");
-#endif
 							}
 							else
 							{
@@ -242,7 +237,7 @@ namespace Tests._Create
 		}
 
 		[Test, Order(0)]
-		public void CreateDatabase([DataSources(false)] string context)
+		public void CreateDatabase([CreateDatabaseSources] string context)
 		{
 			switch (context)
 			{
@@ -267,14 +262,11 @@ namespace Tests._Create
 				case TestProvName.SqlAzure      : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 				case ProviderName.SQLiteMS      : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
-#if !NETSTANDARD1_6
 				case ProviderName.OracleManaged : RunScript(context,          "\n/\n",   "Oracle");                         break;
 				case ProviderName.SybaseManaged : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestDataCore"); break;
-#endif
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-				case TestProvName.PostgreSQLLatest: RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
 				case ProviderName.SQLiteClassic : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
+#if !NETCOREAPP2_0
 				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
 				case ProviderName.DB2           : RunScript(context,          "\nGO\n",  "DB2");                            break;
 				case ProviderName.Informix      : RunScript(context,          "\nGO\n",  "Informix", InformixAction);       break;
@@ -289,7 +281,7 @@ namespace Tests._Create
 			}
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 
 		static void AccessAction(IDbConnection connection)
 		{

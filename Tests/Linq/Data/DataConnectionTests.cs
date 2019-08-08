@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Threading;
@@ -16,10 +16,6 @@ using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.Data
 {
-#if !NETSTANDARD1_6
-	using System.Configuration;
-#endif
-
 	using Model;
 
 	[TestFixture]

@@ -139,7 +139,7 @@ namespace LinqToDB.Data
 				from info in GetReadIndexes(entityDescriptor)
 				where info.Column.Storage != null ||
 				      !(info.Column.MemberAccessor.MemberInfo is PropertyInfo) ||
-				      ((PropertyInfo) info.Column.MemberAccessor.MemberInfo).GetSetMethodEx(true) != null
+				      ((PropertyInfo) info.Column.MemberAccessor.MemberInfo).GetSetMethod(true) != null
 				select new
 				{
 					Column = info.Column,
@@ -224,7 +224,7 @@ namespace LinqToDB.Data
 
 						if (isRecord)
 						{
-							var ctor      = member.Type.GetConstructorsEx().Single();
+							var ctor      = member.Type.GetConstructors().Single();
 							var ctorParms = ctor.GetParameters();
 
 							var parms =
@@ -257,7 +257,7 @@ namespace LinqToDB.Data
 
 		Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType)
 		{
-			var ctor  = objectType.GetConstructorsEx().Single();
+			var ctor  = objectType.GetConstructors().Single();
 
 			var exprs = GetExpressions(entityDescriptor.TypeAccessor, true,
 				(

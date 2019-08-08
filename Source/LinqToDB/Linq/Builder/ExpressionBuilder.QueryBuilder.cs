@@ -47,9 +47,9 @@ namespace LinqToDB.Linq.Builder
 			_convertedExpressions.Remove(ex);
 		}
 
-		public Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide)
+		public Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide, string alias = null)
 		{
-			var newExpr = expression.Transform(expr => TransformExpression(context, expr, enforceServerSide, null));
+			var newExpr = expression.Transform(expr => TransformExpression(context, expr, enforceServerSide, alias));
 			return newExpr;
 		}
 
@@ -57,15 +57,7 @@ namespace LinqToDB.Linq.Builder
 			string alias)
 		{
 			var resultExpr = expr;
-			if (resultExpr.NodeType == ExpressionType.Conditional)
-			{
-				var cond = (ConditionalExpression)CorrectConditional(context, resultExpr);
-				if (resultExpr != cond)
-					resultExpr = cond.Update(cond.Test, BuildExpression(context, cond.IfTrue, enforceServerSide), BuildExpression(context, cond.IfFalse, enforceServerSide));
-			}
-
-			if (resultExpr == expr)
-				resultExpr = expr.Transform(ae => TransformExpression(context, ae, enforceServerSide, alias));
+			resultExpr = CorrectConditional(context, resultExpr, enforceServerSide, alias);
 
 			// Update nullability
 			resultExpr = resultExpr.Transform(UpdateNullabilityFromExtension);
@@ -109,7 +101,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var parameter = mc.Method.GetParameters()[0];
 					if (mc.Method.ReturnParameter?.ParameterType != parameter.ParameterType
-						&& parameter.ParameterType.IsValueTypeEx()
+						&& parameter.ParameterType.IsValueType
 						&& mc.Arguments[0] is ConvertFromDataReaderExpression readerExpression)
 					{
 						resultExpr = readerExpression.MakeNullable();
@@ -175,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (ctx != null)
 						{
-							if (ma.Type.IsGenericTypeEx() && typeof(IEnumerable<>).IsSameOrParentOf(ma.Type))
+							if (ma.Type.IsGenericType && typeof(IEnumerable<>).IsSameOrParentOf(ma.Type))
 							{
 								var res = ctx.IsExpression(ma, 0, RequestFor.Association);
 
@@ -407,13 +399,13 @@ namespace LinqToDB.Linq.Builder
 			return new TransformInfo(expr);
 		}
 
-		Expression CorrectConditional(IBuildContext context, Expression expr)
+		Expression CorrectConditional(IBuildContext context, Expression expr, bool enforceServerSide, string alias)
 		{
-			var result = expr.Transform(e =>
-			{
-				if (e.NodeType == ExpressionType.Conditional)
-				{
-					var cond = (ConditionalExpression)e;
+			if (expr.NodeType != ExpressionType.Conditional)
+				return BuildExpression(context, expr, enforceServerSide, alias);
+
+			var cond = (ConditionalExpression)expr;
+
 					if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
 					{
 						var b = (BinaryExpression)cond.Test;
@@ -421,8 +413,16 @@ namespace LinqToDB.Linq.Builder
 						Expression cnt = null;
 						Expression obj = null;
 
-						if      (IsNullConstant(b.Left))  { cnt = b.Left;  obj = b.Right; }
-						else if (IsNullConstant(b.Right)) { cnt = b.Right; obj = b.Left;  }
+				if (IsNullConstant(b.Left))
+				{
+					cnt = b.Left;
+					obj = b.Right;
+				}
+				else if (IsNullConstant(b.Right))
+				{
+					cnt = b.Right;
+					obj = b.Left;
+				}
 
 						if (cnt != null)
 						{
@@ -443,7 +443,7 @@ namespace LinqToDB.Linq.Builder
 
 										var valueType = f.Sql.SystemType;
 
-										if (!valueType.IsNullable() && valueType.IsValueTypeEx())
+										if (!valueType.IsNullable() && valueType.IsValueType)
 											valueType = typeof(Nullable<>).MakeGenericType(valueType);
 
 										var reader     = BuildSql(context, f.Sql, valueType, null);
@@ -459,16 +459,20 @@ namespace LinqToDB.Linq.Builder
 									}
 
 									if (predicate != null)
-										return cond.Update(predicate, cond.IfTrue, cond.IfFalse);
-								}
+								cond = cond.Update(predicate,
+									CorrectConditional(context, cond.IfTrue,  enforceServerSide, alias),
+									CorrectConditional(context, cond.IfFalse, enforceServerSide, alias));
 							}
 						}
 					}
 				}
 
-				return e;
-			});
-			return result;
+			if (cond == expr)
+				expr = BuildExpression(context, expr, enforceServerSide, alias);
+			else
+				expr = cond;
+
+			return expr;
 		}
 
 		static bool IsMultipleQuery(MethodCallExpression ce)

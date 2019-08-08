@@ -13,10 +13,6 @@ namespace Tests
 		public const string NorthwindSQLiteMS = "Northwind.SQLite.MS";
 		public const string PostgreSQL10      = "PostgreSQL.10";
 		public const string PostgreSQL11      = "PostgreSQL.11";
-		/// <summary>
-		/// Latest PostgreSQL and npgsql versions.
-		/// </summary>
-		public const string PostgreSQLLatest  = "PostgreSQL.EDGE";
 
 		/// <summary>
 		/// Fake provider, which doesn't execute any real queries. Could be used for tests, that shouldn't be affected
@@ -28,12 +24,12 @@ namespace Tests
 		// MySql excluded because v5.5 has inadequate FTS behavior
 		public const string AllMySqlFullText      = "MySqlConnector,MySql57,MariaDB";
 		public const string AllMySqlData          = "MySql,MySql57,MariaDB";
-		public const string AllPostgreSQL         = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.EDGE";
+		public const string AllPostgreSQL         = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
 		public const string AllPostgreSQLv3       = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
 		public const string AllPostgreSQLLess10   = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5";
-		public const string AllPostgreSQL93Plus   = "PostgreSQL,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.EDGE";
-		public const string AllPostgreSQL95Plus   = "PostgreSQL,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.EDGE";
-		public const string AllPostgreSQL10Plus   = "PostgreSQL.10,PostgreSQL.11,PostgreSQL.EDGE";
+		public const string AllPostgreSQL93Plus   = "PostgreSQL,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
+		public const string AllPostgreSQL95Plus   = "PostgreSQL,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
+		public const string AllPostgreSQL10Plus   = "PostgreSQL.10,PostgreSQL.11";
 		public const string AllOracle             = "Oracle.Native,Oracle.Managed";
 		public const string AllFirebird           = "Firebird,Firebird3";
 		public const string AllSQLite             = "SQLite.Classic,SQLite.MS";

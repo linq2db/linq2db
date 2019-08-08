@@ -418,13 +418,13 @@ namespace LinqToDB
 					return Array<ExtensionAttribute>.Empty;
 
 				var attributes =
-						mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedTypeEx(), memberInfo,
+						mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType, memberInfo,
 							a => a.Configuration, inherit: true, exactForConfiguration: true);
 
 				if (attributes.Length == 0)
 				{
 					// notify if there is method that has no defined attribute for specific configuration
-					attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedTypeEx(), memberInfo);
+					attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType, memberInfo);
 					if (attributes.Length > 0)
 						throw new LinqToDBException($"Expression {expression}, unsupported for configuration(s) '{string.Join(", ", mapping.ConfigurationList)}'.");
 				}

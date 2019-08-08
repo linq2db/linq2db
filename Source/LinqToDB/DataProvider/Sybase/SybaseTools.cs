@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			try
 			{
-				var path = typeof(SybaseTools).AssemblyEx().GetPath();
+				var path = typeof(SybaseTools).Assembly.GetPath();
 
 				var _ =
 					File.Exists(Path.Combine(path, (NativeAssemblyName = "Sybase.AdoNet45.AseClient") + ".dll")) ||
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		private static string DetectProviderName()
 		{
-			var path = typeof(SybaseTools).AssemblyEx().GetPath();
+			var path = typeof(SybaseTools).Assembly.GetPath();
 
 			if (File.Exists(Path.Combine(path, "AdoNetCore.AseClient.dll")))
 				return ProviderName.SybaseManaged;

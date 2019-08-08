@@ -167,8 +167,8 @@ namespace LinqToDB.Tools.Comparers
 				var arg0 = RemoveCastToObject(me.GetBody(x));
 				var arg1 = RemoveCastToObject(me.GetBody(y));
 				var eq   = GetEqualityComparer(arg1.Type);
-				var pi   = eq.GetPropertyEx("Default");
-				var mi   = eq.GetMethodsEx().Single(m => m.IsPublic && m.Name == "Equals" && m.GetParameters().Length == 2);
+				var pi   = eq.GetProperty("Default");
+				var mi   = eq.GetMethods().Single(m => m.IsPublic && m.Name == "Equals" && m.GetParameters().Length == 2);
 
 				Debug.Assert(pi != null, "pi != null");
 				Expression expr = Expression.Call(Expression.Property(null, pi), mi, arg0, arg1);
@@ -191,7 +191,7 @@ namespace LinqToDB.Tools.Comparers
 			if (type == typeof(BitArray))
 				return typeof(BitArrayEqualityComparer);
 
-			if (type != typeof(string) && typeof(IEnumerable).IsAssignableFromEx(type))
+			if (type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type))
 				return typeof(EnumerableEqualityComparer);
 
 			return typeof(EqualityComparer<>).MakeGenericType(type);
@@ -207,8 +207,8 @@ namespace LinqToDB.Tools.Comparers
 				{
 					var ma = RemoveCastToObject(me.GetBody(parameter));
 					var eq = GetEqualityComparer(ma.Type);
-					var pi = eq.GetPropertyEx("Default");
-					var mi = eq.GetMethodsEx().Single(m => m.IsPublic && m.Name == "GetHashCode" && m.GetParameters().Length == 1);
+					var pi = eq.GetProperty("Default");
+					var mi = eq.GetMethods().Single(m => m.IsPublic && m.Name == "GetHashCode" && m.GetParameters().Length == 1);
 
 					Debug.Assert(pi != null, "pi != null");
 					return Expression.Add(

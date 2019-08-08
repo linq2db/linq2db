@@ -63,7 +63,7 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			if (toType.IsEnumEx())
+			if (toType.IsEnum)
 			{
 				var mapType = ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, toType);
 
@@ -215,7 +215,7 @@ namespace LinqToDB.Expressions
 
 		public ConvertFromDataReaderExpression MakeNullable()
 		{
-			if (Type.IsValueTypeEx())
+			if (Type.IsValueType)
 			{
 				var type = typeof(Nullable<>).MakeGenericType(Type);
 				return new ConvertFromDataReaderExpression(type, _idx, _dataReaderParam, _dataContext);

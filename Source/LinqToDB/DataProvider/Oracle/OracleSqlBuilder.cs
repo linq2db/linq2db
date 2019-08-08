@@ -95,6 +95,16 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
+		protected override void BuildSetOperation(SetOperation operation, StringBuilder sb)
+		{
+			switch (operation)
+			{
+				case SetOperation.Except    : sb.Append("MINUS");     return;
+				case SetOperation.ExceptAll : sb.Append("MINUS ALL"); return;
+			}
+			base.BuildSetOperation(operation, sb);
+		}
+
 		protected override void BuildFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func);

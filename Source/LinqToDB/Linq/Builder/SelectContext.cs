@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 		public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
-
+		public string Path => this.GetPath();
 		public MethodCallExpression MethodCall;
 #endif
 
@@ -41,6 +41,20 @@ namespace LinqToDB.Linq.Builder
 		Expression IBuildContext.Expression => Lambda;
 
 		public readonly Dictionary<MemberInfo,Expression> Members = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
+
+		public SelectContext(IBuildContext parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery)
+		{
+			Parent      = parent;
+			Sequence    = Array<IBuildContext>.Empty;
+			Builder     = builder;
+			Lambda      = lambda;
+			Body        = lambda.Body;
+			SelectQuery = selectQuery;
+
+			IsScalar = !Builder.ProcessProjection(Members, Body);
+
+			Builder.Contexts.Add(this);
+		}
 
 		public SelectContext(IBuildContext parent, LambdaExpression lambda, params IBuildContext[] sequences)
 		{
@@ -700,7 +714,7 @@ namespace LinqToDB.Linq.Builder
 										{
 											var nm = Members.Keys.FirstOrDefault(m => m.Name == member.Name);
 
-											if (nm != null && member.DeclaringType.IsInterfaceEx())
+											if (nm != null && member.DeclaringType.IsInterface)
 											{
 												if (member.DeclaringType.IsSameOrParentOf(nm.DeclaringType))
 													memberExpression = Members[nm];
@@ -892,7 +906,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (level == 0)
 			{
-				if (Body.NodeType == ExpressionType.Parameter)
+				if (Body.NodeType == ExpressionType.Parameter && Lambda.Parameters.Count == 1)
 				{
 					var sequence = GetSequence(Body, 0);
 

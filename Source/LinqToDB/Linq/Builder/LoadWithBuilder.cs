@@ -77,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 							var member = ((MemberExpression)expr).Member;
 							var mtype  = member.GetMemberType();
 
-							if (lastMember.ReflectedTypeEx() != mtype.GetItemType())
+							if (lastMember.ReflectedType != mtype.GetItemType())
 								goto default;
 
 							expression = expr;
@@ -89,7 +89,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var mexpr  = (MemberExpression)expression;
 							var member = lastMember = mexpr.Member;
-							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedTypeEx(), member);
+							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedType, member);
 
 							if (attr == null)
 								throw new LinqToDBException(

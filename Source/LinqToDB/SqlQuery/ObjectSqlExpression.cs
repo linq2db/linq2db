@@ -36,7 +36,7 @@ namespace LinqToDB.SqlQuery
 				var valueType = mi.GetMemberType();
 				getter        = ta[mi.Name].Getter;
 
-				if (valueType.ToNullableUnderlying().IsEnumEx())
+				if (valueType.ToNullableUnderlying().IsEnum)
 				{
 					var toType           = Converter.GetDefaultMappingFromEnumType(_mappingSchema, valueType);
 					var convExpr         = _mappingSchema.GetConvertExpression(valueType, toType);

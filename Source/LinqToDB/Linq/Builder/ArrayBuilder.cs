@@ -28,6 +28,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						var c = (ConstantExpression)expression;
 
+						if (c.Value == null)
+							break;
+
 						var type = c.Value.GetType();
 
 						if (typeof(EnumerableQuery<>).IsSameOrParentOf(type))
@@ -144,6 +147,7 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 			public string _sqlQueryText { get; }
+			public string Path => this.GetPath();
 #endif
 			public ExpressionBuilder Builder     { get; }
 			public Expression        Expression  { get; }

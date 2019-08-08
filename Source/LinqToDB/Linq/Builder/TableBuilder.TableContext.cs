@@ -23,6 +23,7 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 			public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
+			public string Path => this.GetPath();
 #endif
 
 			public ExpressionBuilder  Builder     { get; }
@@ -103,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 				if (!typeof(ITable<>).IsSameOrParentOf(mc.Method.ReturnType))
 					throw new LinqException("Table function has to return Table<T>.");
 
-				OriginalType     = mc.Method.ReturnType.GetGenericArgumentsEx()[0];
+				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
 				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
 				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
@@ -119,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 
 			protected Type GetObjectType()
 			{
-				for (var type = OriginalType.BaseTypeEx(); type != null && type != typeof(object); type = type.BaseTypeEx())
+				for (var type = OriginalType.BaseType; type != null && type != typeof(object); type = type.BaseType)
 				{
 					var mapping = Builder.MappingSchema.GetEntityDescriptor(type).InheritanceMapping;
 
@@ -179,12 +180,12 @@ namespace LinqToDB.Linq.Builder
 							table.Table.LoadWith = member.NextLoadWith;
 						}
 
-						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(), member.MemberInfo);
+						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedType, member.MemberInfo);
 						var ex   = BuildExpression(ma, 1, parentObject);
 
 						if (member.MemberInfo.IsDynamicColumnPropertyEx())
 						{
-							var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedTypeEx());
+							var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedType);
 							var setter  = new MemberAccessor(typeAcc, member.MemberInfo, EntityDescriptor).SetterExpression;
 
 							exprs.Add(Expression.Invoke(setter, parentObject, ex));
@@ -209,8 +210,8 @@ namespace LinqToDB.Linq.Builder
 
 			bool IsAnonymous(Type type)
 			{
-				if (!type.IsPublicEx() &&
-					 type.IsGenericTypeEx() &&
+				if (!type.IsPublic &&
+					 type.IsGenericType &&
 					(type.Name.StartsWith("<>f__AnonymousType", StringComparison.Ordinal) ||
 					 type.Name.StartsWith("VB$AnonymousType",   StringComparison.Ordinal)))
 				{
@@ -230,7 +231,7 @@ namespace LinqToDB.Linq.Builder
 				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
 				// choosing type that can be instantiated
-				if ((objectType.IsInterfaceEx() || objectType.IsAbstractEx()) && !(ObjectType.IsInterfaceEx() || ObjectType.IsAbstractEx()))
+				if ((objectType.IsInterface || objectType.IsAbstract) && !(ObjectType.IsInterface || ObjectType.IsAbstract))
 				{
 					objectType = ObjectType;
 				}
@@ -342,7 +343,7 @@ namespace LinqToDB.Linq.Builder
 					where
 						cd.Storage != null ||
 						!(cd.MemberAccessor.MemberInfo is PropertyInfo) ||
-						((PropertyInfo)cd.MemberAccessor.MemberInfo).GetSetMethodEx(true) != null
+						((PropertyInfo)cd.MemberAccessor.MemberInfo).GetSetMethod(true) != null
 					select new
 					{
 						Column = cd,
@@ -455,7 +456,7 @@ namespace LinqToDB.Linq.Builder
 
 								if (isRecord)
 								{
-									var ctor      = member.Type.GetConstructorsEx().Single();
+									var ctor      = member.Type.GetConstructors().Single();
 									var ctorParms = ctor.GetParameters();
 
 									var parms =
@@ -487,7 +488,7 @@ namespace LinqToDB.Linq.Builder
 
 			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index, bool isRecord)
 			{
-				var ctor = objectType.GetConstructorsEx().Single();
+				var ctor = objectType.GetConstructors().Single();
 
 				var exprs = GetExpressions(entityDescriptor.TypeAccessor, isRecord,
 					(
@@ -1196,7 +1197,7 @@ namespace LinqToDB.Linq.Builder
 							else
 							{
 								var sameType =
-									levelMember.Member.ReflectedTypeEx() == SqlTable.ObjectType ||
+									levelMember.Member.ReflectedType == SqlTable.ObjectType ||
 									levelMember.Member.DeclaringType     == SqlTable.ObjectType;
 
 								if (!sameType)

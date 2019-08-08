@@ -550,7 +550,6 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
 		public void TestCultureInfo([DataSources(ProviderName.Informix)] string context)
 		{
@@ -565,7 +564,6 @@ namespace Tests.Linq
 
 			Thread.CurrentThread.CurrentCulture = current;
 		}
-#endif
 
 		[Test]
 		public void SmallInt([DataSources] string context)

@@ -29,6 +29,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
 			SqlProviderFlags.IsUpdateFromSupported      = true;
 
 			if (version == SqlServerVersion.v2000)
@@ -169,12 +170,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			return typeof(SqlConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
 		}
 
-#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return Version == SqlServerVersion.v2000 ? new SqlServer2000SchemaProvider() : new SqlServerSchemaProvider();
 		}
-#endif
 
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();
 
@@ -213,11 +212,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						if (value != null && _udtTypes.TryGetValue(value.GetType(), out var s))
 							if (parameter is SqlParameter)
-#if NETSTANDARD1_6
-								((SqlParameter)parameter).TypeName = s;
-#else
 								((SqlParameter)parameter).UdtTypeName = s;
-#endif
 					}
 
 					break;

@@ -35,7 +35,6 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 
-
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR",  (r, i) => DataTools.GetChar(r, i));
@@ -86,11 +85,11 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			_ifxBlob     = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxBlob",     true);
-			_ifxClob     = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxClob",     true);
-			_ifxDecimal  = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxDecimal",  true);
-			_ifxDateTime = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxDateTime", true);
-			_ifxTimeSpan = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxTimeSpan", true);
+			_ifxBlob     = connectionType.Assembly.GetType("IBM.Data.Informix.IfxBlob",     true);
+			_ifxClob     = connectionType.Assembly.GetType("IBM.Data.Informix.IfxClob",     true);
+			_ifxDecimal  = connectionType.Assembly.GetType("IBM.Data.Informix.IfxDecimal",  true);
+			_ifxDateTime = connectionType.Assembly.GetType("IBM.Data.Informix.IfxDateTime", true);
+			_ifxTimeSpan = connectionType.Assembly.GetType("IBM.Data.Informix.IfxTimeSpan", true);
 
 			if (!Configuration.AvoidSpecificDataProviderAPI)
 			{
@@ -105,7 +104,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			_newIfxTimeSpan = Expression.Lambda<Func<TimeSpan,object>>(
 				Expression.Convert(
-					Expression.New(_ifxTimeSpan.GetConstructorEx(new[] { typeof(TimeSpan) }), p),
+					Expression.New(_ifxTimeSpan.GetConstructor(new[] { typeof(TimeSpan) }), p),
 					typeof(object)),
 				p).Compile();
 
@@ -136,7 +135,7 @@ namespace LinqToDB.DataProvider.Informix
 		protected override string ConnectionTypeName  => "IBM.Data.Informix.IfxConnection, IBM.Data.Informix";
 		protected override string DataReaderTypeName  => "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix";
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_0
 		public override string DbFactoryProviderName => "IBM.Data.Informix";
 #endif
 
@@ -152,12 +151,10 @@ namespace LinqToDB.DataProvider.Informix
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD1_6
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new InformixSchemaProvider();
 		}
-#endif
 
 		Func<TimeSpan,object> _newIfxTimeSpan;
 

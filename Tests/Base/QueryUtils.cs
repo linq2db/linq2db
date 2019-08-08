@@ -54,6 +54,6 @@ namespace Tests
 		public static SqlTableSource GetTableSource<T>(this IQueryable<T> query)
 		{
 			return GetSelectQuery(query).From.Tables.Single();
-		}		
+		}
 	}
 }

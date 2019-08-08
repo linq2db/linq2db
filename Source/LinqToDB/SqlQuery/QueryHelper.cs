@@ -310,7 +310,7 @@ namespace LinqToDB.SqlQuery
 						break;
 					case QueryInformation.HierarchyType.Join:
 						return true;
-					case QueryInformation.HierarchyType.Union:
+					case QueryInformation.HierarchyType.SetOperator:
 						// currently removing ordering for all UNION
 						return true;
 					case QueryInformation.HierarchyType.InnerQuery:
@@ -570,7 +570,7 @@ namespace LinqToDB.SqlQuery
 				if (!(element is SelectQuery q))
 					return element;
 
-				if (!q.IsSimple || q.HasUnion)
+				if (!q.IsSimple || q.HasSetOperators)
 					return q;
 					
 				if (q.Select.From.Tables.Count != 1)
@@ -581,7 +581,7 @@ namespace LinqToDB.SqlQuery
 					return q;
 
 				// column list should be equal
-				if (subQuery.HasUnion || q.Select.Columns.Count != subQuery.Select.Columns.Count)
+				if (subQuery.HasSetOperators || q.Select.Columns.Count != subQuery.Select.Columns.Count)
 					return q;
 
 				for (var index = 0; index < q.Select.Columns.Count; index++)
@@ -811,14 +811,14 @@ namespace LinqToDB.SqlQuery
 
 			var str = Regex.Replace(expression, pattern, match =>
 			{
-                string open   = match.Groups["open"].Value;
-                string key    = match.Groups["key"].Value;
+				string open   = match.Groups["open"].Value;
+				string key    = match.Groups["key"].Value;
 
-                //string close  = match.Groups["close"].Value;
-                //string format = match.Groups["format"].Value;
+				//string close  = match.Groups["close"].Value;
+				//string format = match.Groups["format"].Value;
 
-                if (open.Length % 2 == 0)
-                    return match.Value;
+				if (open.Length % 2 == 0)
+					return match.Value;
 
 				if (!int.TryParse(key, out var idx))
 					return match.Value;

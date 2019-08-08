@@ -326,9 +326,9 @@ namespace LinqToDB.Linq
 					var type = vs.GetType();
 					var etype = type.GetItemType();
 
-					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
-						type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
-						etype.GetGenericArgumentsEx()[0].IsEnumEx())
+					if (etype == null || etype == typeof(object) || etype.IsEnum ||
+						type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+						etype.GetGenericArguments()[0].IsEnum)
 					{
 						var values = new List<object>();
 
@@ -340,7 +340,7 @@ namespace LinqToDB.Linq
 							{
 								var valueType = v.GetType();
 
-								if (valueType.ToNullableUnderlying().IsEnumEx())
+								if (valueType.ToNullableUnderlying().IsEnum)
 									value = query.GetConvertedEnum(valueType, value);
 							}
 

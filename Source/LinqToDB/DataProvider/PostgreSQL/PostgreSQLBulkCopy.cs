@@ -43,14 +43,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (connection == null)
 				return MultipleRowsCopy(table, options, source);
 
-			if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOfEx(_connectionType)))
+			if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOf(_connectionType)))
 				return MultipleRowsCopy(table, options, source);
 
 			var sqlBuilder   = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			var ed           = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var tableName    = GetTableName(sqlBuilder, options, table);
 			var columns      = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
-			var writerType   = _connectionType.AssemblyEx().GetType("Npgsql.NpgsqlBinaryImporter", true);
+			var writerType   = _connectionType.Assembly.GetType("Npgsql.NpgsqlBinaryImporter", true);
 
 			var fields       = string.Join(", ", columns.Select(column => sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField)));
 			var copyCommand  = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";

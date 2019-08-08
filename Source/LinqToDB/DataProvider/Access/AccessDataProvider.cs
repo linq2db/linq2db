@@ -35,6 +35,7 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.IsCrossJoinSupported        = false;
 			SqlProviderFlags.IsInnerJoinAsCrossSupported = false;
 			SqlProviderFlags.IsDistinctOrderBySupported  = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 			SqlProviderFlags.IsParameterOrderDependent   = true;
 			SqlProviderFlags.IsUpdateFromSupported       = false;
 

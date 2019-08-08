@@ -12,11 +12,19 @@
 		</summary>
 		<tags>linq linq2db Oracle LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<group targetFramework="net40">
+			<group targetFramework=".NETFramework4.5">
 				<dependency id="linq2db"                  version="2.6.0"/>
 				<dependency id="Oracle.ManagedDataAccess" version="12.2.1100"/>
 			</group>
-			<group targetFramework="netstandard2.0">
+			<group targetFramework=".NETFramework4.6">
+				<dependency id="linq2db"                  version="2.6.0"/>
+				<dependency id="Oracle.ManagedDataAccess" version="12.2.1100"/>
+			</group>
+			<group targetFramework=".NETStandard2.0">
+				<dependency id="linq2db"                       version="2.6.0"/>
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.18.3"/>
+			</group>
+			<group targetFramework=".NETCoreApp2.0">
 				<dependency id="linq2db"                       version="2.6.0"/>
 				<dependency id="Oracle.ManagedDataAccess.Core" version="2.18.3"/>
 			</group>
@@ -26,8 +34,8 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\Oracle.ManagedDataAccess.dll"  target="tools" />
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"               target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\Oracle.ManagedDataAccess.dll"     target="tools" />
+		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"               target="tools" />
 		
 		<file src="Oracle\linq2db.Oracle.props"                                    target="build\linq2db.Oracle.Managed.props" />
 		

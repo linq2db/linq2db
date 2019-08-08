@@ -8,7 +8,6 @@ using System.Linq;
 
 namespace Tests.UserTests
 {
-#if !NETSTANDARD1_6
 	/// <summary>
 	/// Note that tests below do only following:
 	/// - check if procedure schema works as it is or it executes procedures for real and should be wrapped in transaction and rolled back
@@ -155,5 +154,4 @@ namespace Tests.UserTests
 			}
 		}
 	}
-#endif
 }
