@@ -15,6 +15,7 @@ namespace Tests.Linq
 			[Column] public int Value { get; set; }
 		}
 
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix interval cannot be created from non-literal value")]
 		[Test]
 		public void UnionTest([DataSources(ProviderName.Access)] string context)
 		{
@@ -42,6 +43,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix interval cannot be created from non-literal value")]
 		[Test]
 		public void SubQueryTest([DataSources(ProviderName.Access)] string context)
 		{
