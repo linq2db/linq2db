@@ -114,7 +114,7 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				AppendIndent().AppendLine("SELECT");
 				BuildColumns(selectQuery);
-				AppendIndent().AppendLine("FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
+				AppendIndent().AppendLine("FROM SYSIBM.SYSDUMMY1");
 			}
 			else
 				base.BuildSelectClause(selectQuery);
