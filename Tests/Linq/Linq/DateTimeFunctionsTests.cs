@@ -827,6 +827,360 @@ namespace Tests.Linq
 
 		#endregion
 
+		#region DateAdd Expression
+
+		[Test]
+		public void DateAddYearExpression([DataSources] string context)
+		{
+			var part1 = 6;
+			var part2 = 5;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Year, 11, t.DateTimeValue).Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, part1 + part2, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test]
+		public void DateAddQuarterExpression([DataSources] string context)
+		{
+			var part1 = 6;
+			var part2 = 5;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Quarter, -1, t.DateTimeValue).Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Quarter, part2 - part1, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test]
+		public void DateAddMonthExpression([DataSources] string context)
+		{
+			var part1 = 5;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Month, 2, t.DateTimeValue).Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Month, part1 - part2, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test]
+		public void DateAddDayOfYearExpression([DataSources] string context)
+		{
+			var part1 = 6;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.DateTimeValue).Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, part1 - part2, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test]
+		public void DateAddDayExpression([DataSources] string context)
+		{
+			var part1 = 2;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Day, 5, t.DateTimeValue).Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Day, part1 + part2, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test]
+		public void DateAddWeekExpression([DataSources] string context)
+		{
+			var part1 = 2;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Week, -1, t.DateTimeValue).Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, part1 - part2, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test]
+		public void DateAddWeekDayExpression([DataSources] string context)
+		{
+			var part1 = 2;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.DateTimeValue).Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, part2 - part1, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test]
+		public void DateAddHourExpression([DataSources] string context)
+		{
+			var part1 = 2;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue).Value.Hour,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, part2 - part1, t.DateTimeValue)).Value.Hour);
+		}
+
+		[Test]
+		public void DateAddMinuteExpression([DataSources] string context)
+		{
+			var part1 = 2;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Minute, 5, t.DateTimeValue).Value.Minute,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Minute, part1 + part2, t.DateTimeValue)).Value.Minute);
+		}
+
+		[Test]
+		public void DateAddSecondExpression([DataSources] string context)
+		{
+			var part1 = 20;
+			var part2 = 21;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Second, 41, t.DateTimeValue).Value.Second,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, part1 + part2, t.DateTimeValue)).Value.Second);
+		}
+
+		[Test]
+		public void DateAddMillisecondExpression([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
+		{
+			var part1 = 200;
+			var part2 = 26;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+						from t in db.Types select Sql.DateAdd(Sql.DateParts.Millisecond, 226, t.DateTimeValue),
+						from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, part1 + part2, t.DateTimeValue)),
+						new CustomNullableDateTimeComparer());
+		}
+
+		[Test]
+		public void AddYearsExpression([DataSources] string context)
+		{
+			var part1 = 5;
+			var part2 = 4;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select t.DateTimeValue.AddYears(1).Date,
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddYears(part1 - part2)).Date);
+		}
+
+		[Test]
+		public void AddMonthsExpression([DataSources] string context)
+		{
+			var part1 = 2;
+			var part2 = 4;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select t.DateTimeValue.AddMonths(-2).Date,
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMonths(part1 - part2)).Date);
+		}
+
+		[Test]
+		public void AddDaysExpression([DataSources] string context)
+		{
+			var part1 = 2;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select t.DateTimeValue.AddDays(5).Date,
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddDays(part1 + part2)).Date);
+		}
+
+		[Test]
+		public void AddHoursExpression([DataSources] string context)
+		{
+			var part1 = 11;
+			var part2 = 11;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select t.DateTimeValue.AddHours(22).Hour,
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(part1 + part2)).Hour);
+		}
+
+		[Test]
+		public void AddMinutesExpression([DataSources] string context)
+		{
+			var part1 = 1;
+			var part2 = 9;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select t.DateTimeValue.AddMinutes(-8).Minute,
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMinutes(part1 - part2)).Minute);
+		}
+
+		[Test]
+		public void AddSecondsExpression([DataSources] string context)
+		{
+			var part1 = 5;
+			var part2 = 40;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select t.DateTimeValue.AddSeconds(-35).Second,
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddSeconds(part1 - part2)).Second);
+		}
+
+		[Test]
+		public void AddMillisecondsExpression([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)]
+			string context)
+		{
+			var part1 = 150;
+			var part2 = 76;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in db.Types select (t.DateTimeValue.AddMilliseconds(226)),
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMilliseconds(part1 + part2)),
+					new CustomDateTimeComparer());
+		}
+
+		[Test]
+		public void AddDaysFromColumnPositiveExpression([DataSources(ProviderName.Informix)] string context)
+		{
+			var part1 = 4;
+			var part2 = 4;
+
+			using (var db = GetDataContext(context))
+			{
+				db.Insert(new LinqDataTypes { ID = 5000, SmallIntValue = 2, DateTimeValue = new DateTime(2018, 01, 03) });
+				try
+				{
+					var result = db.Types
+						.Count(t => t.ID == 5000 && t.DateTimeValue.AddDays(t.SmallIntValue + part1 - part2) > new DateTime(2018, 01, 02));
+					Assert.AreEqual(1, result);
+				}
+				finally
+				{
+					db.Types.Delete(t => t.ID == 5000);
+				}
+			}
+		}
+
+		[Test]
+		public void AddDaysFromColumnNegativeExpression([DataSources(ProviderName.Informix)] string context)
+		{
+			var part1 = 4;
+			var part2 = 4;
+
+			using (var db = GetDataContext(context))
+			{
+				db.Insert(new LinqDataTypes { ID = 5000, SmallIntValue = -2, DateTimeValue = new DateTime(2018, 01, 03) });
+
+				try
+				{
+					var result = db.Types
+						.Count(t => t.ID == 5000 && Sql.AsSql(t.DateTimeValue.AddDays(t.SmallIntValue + part1 - part2)) < new DateTime(2018, 01, 02));
+
+					Assert.AreEqual(1, result);
+				}
+				finally
+				{
+					db.Types.Delete(t => t.ID == 5000);
+				}
+			}
+		}
+
+		[Test]
+		public void AddDaysFromColumnExpression([DataSources(ProviderName.Informix)] string context)
+		{
+			var part1 = 4;
+			var part2 = 4;
+
+			using (var db = GetDataContext(context))
+			{
+				var needsFix = db.ProviderNeedsTimeFix(context);
+
+				AreEqual(Types.Select(t => TestUtils.FixTime(t.DateTimeValue.AddDays(t.SmallIntValue + part1 - part2), needsFix)),
+					db.Types.Select(t => t.DateTimeValue.AddDays(t.SmallIntValue)));
+			}
+		}
+
+		[Test]
+		public void AddWeekFromColumnExpression([DataSources(ProviderName.Informix)] string context)
+		{
+			var part1 = 4;
+			var part2 = 4;
+
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Week, t.SmallIntValue, t.DateTimeValue).Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, t.SmallIntValue + part1 - part2, t.DateTimeValue)).Value.Date);
+			}
+		}
+
+		[Test]
+		public void AddQuarterFromColumnExpression([DataSources(ProviderName.Informix)] string context)
+		{
+			var part1 = 4;
+			var part2 = 4;
+
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Quarter, t.SmallIntValue, t.DateTimeValue).Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Quarter, t.SmallIntValue + part1 - part2, t.DateTimeValue)).Value.Date);
+			}
+		}
+
+		[Test]
+		public void AddYearFromColumnExpression([DataSources(ProviderName.Informix)] string context)
+		{
+			var part1 = 4;
+			var part2 = 4;
+
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Year, t.SmallIntValue, t.DateTimeValue).Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, t.SmallIntValue + part1 - part2, t.DateTimeValue)).Value.Date);
+			}
+		}
+
+		[Test]
+		public void AddDynamicFromColumnExpression(
+			[DataSources(ProviderName.Informix)] string context,
+			[Values(
+				Sql.DateParts.Day,
+				Sql.DateParts.Hour,
+				Sql.DateParts.Minute,
+				Sql.DateParts.Month,
+				Sql.DateParts.Year,
+				Sql.DateParts.Second
+				)] Sql.DateParts datepart)
+		{
+			var part1 = 4;
+			var part2 = 4;
+
+			using (var db = GetDataContext(context))
+			{
+				var expected =
+					(from t in Types select Sql.DateAdd(datepart, t.SmallIntValue, t.DateTimeValue)).Select(d =>
+						Truncate(d.Value, TimeSpan.TicksPerSecond));
+				var result =
+					(from t in db.Types select Sql.AsSql(Sql.DateAdd(datepart, t.SmallIntValue + part1 - part2, t.DateTimeValue)))
+					.ToList().Select(d => Truncate(d.Value, TimeSpan.TicksPerSecond));
+
+				AreEqual(expected, result);
+			}
+		}
+
+		#endregion
+
 		#region DateDiff
 
 		[Test]

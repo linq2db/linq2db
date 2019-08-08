@@ -28,6 +28,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						var c = (ConstantExpression)expression;
 
+						if (c.Value == null)
+							break;
+
 						var type = c.Value.GetType();
 
 						if (typeof(EnumerableQuery<>).IsSameOrParentOf(type))

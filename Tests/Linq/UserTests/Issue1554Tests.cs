@@ -99,7 +99,6 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ActiveIssue(1554)]
 		public void TestUpdate3([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -182,7 +181,6 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ActiveIssue(1554)]
 		public void TestUpdate7([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -240,7 +238,6 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ActiveIssue(1554)]
 		public void TestInsert3([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -315,7 +312,6 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ActiveIssue(1554)]
 		public void TestInsert7([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -375,7 +371,6 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ActiveIssue(1554)]
 		public void TestFluentUpdate3([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureFluentMapping()))
@@ -458,7 +453,6 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ActiveIssue(1554)]
 		public void TestFluentUpdate7([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureFluentMapping()))
@@ -503,20 +497,20 @@ namespace Tests.UserTests
 			using (var table = db.CreateLocalTable<PersonCacheFluent>())
 			{
 				object claimedKeyType = KeyTypes.EC;
+				object claimedKeyTypeNull = null;
 
 				table.Value(p => p.Id, 0)
 					.Value(p => p.ClaimedKeyType , claimedKeyType)
-					.Value(p => p.ClaimedKeyTypeN, claimedKeyType)
+					.Value(p => p.ClaimedKeyTypeN, claimedKeyTypeNull)
 					.Insert();
 
 				var record = table.Single();
 				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.IsNull(record.ClaimedKeyTypeN);
 			}
 		}
 
 		[Test]
-		[ActiveIssue(1554)]
 		public void TestFluentInsert3([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureFluentMapping()))
@@ -591,7 +585,6 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ActiveIssue(1554)]
 		public void TestFluentInsert7([DataSources] string context)
 		{
 			using (var db    = GetDataContext(context, ConfigureFluentMapping()))

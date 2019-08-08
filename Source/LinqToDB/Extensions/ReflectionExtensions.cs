@@ -365,7 +365,7 @@ namespace LinqToDB.Extensions
 		public static object[] GetCustomAttributesEx(this MemberInfo memberInfo, Type attributeType, bool inherit)
 		{
 #if NETSTANDARD1_6
-			return memberInfo.GetCustomAttributes(attributeType, inherit).Cast<object>().ToArray();
+			return memberInfo.GetCustomAttributes(attributeType, inherit).ToArray();
 #else
 			return memberInfo.GetCustomAttributes(attributeType, inherit);
 #endif
@@ -878,6 +878,14 @@ namespace LinqToDB.Extensions
 			}
 
 			return typeof(object);
+		}
+
+		public static bool IsGenericEnumerableType(this Type type)
+		{
+			if (type.IsGenericTypeEx())
+				if (typeof(IEnumerable<>).IsSameOrParentOf(type))
+					return true;
+			return false;
 		}
 
 		public static Type GetItemType(this Type type)

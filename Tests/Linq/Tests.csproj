@@ -72,6 +72,7 @@
 		<Compile Remove="Mapping\DynamicStoreTests.cs" />
 		<Compile Remove="Update\DynamicColumnsTests.cs" />
 		<Compile Remove="UserTests\Issue1268Tests.cs" />
+		<Compile Remove="DataProvider\SqlServerTypesTests.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
@@ -80,7 +81,6 @@
 		<Compile Remove="DataProvider\SybaseTests.cs" />
 		<Compile Remove="DataProvider\SapHanaTests.cs" />
 		<Compile Remove="DataProvider\InformixTests.cs" />
-		<Compile Remove="DataProvider\SqlServerTypesTests.cs" />
 		<Compile Remove="DataProvider\SqlServerTypesTests.TVP.cs" />
 		<Compile Remove="Data\MiniProfilerTests.cs" />
 		<Compile Remove="Linq\DataServiceTests.cs" />

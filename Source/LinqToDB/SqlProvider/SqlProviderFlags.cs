@@ -56,6 +56,15 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		public bool IsOrderByAggregateFunctionsSupported  { get; set; }
 
+		/// <summary>
+		/// Provider supports EXCEPT ALL, INTERSECT ALL set operators. Otherwise it will be emulated.
+		/// </summary>
+		public bool IsAllSetOperationsSupported           { get; set; }
+
+		/// <summary>
+		/// Provider supports EXCEPT, INTERSECT set operators. Otherwise it will be emulated.
+		/// </summary>
+		public bool IsDistinctSetOperationsSupported      { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{

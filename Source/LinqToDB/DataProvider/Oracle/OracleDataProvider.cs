@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public OracleDataProvider(string name)
 			: base(name, null)
 		{
-			//SqlProviderFlags.IsCountSubQuerySupported    = false;
+			//SqlProviderFlags.IsCountSubQuerySupported        = false;
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;

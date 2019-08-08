@@ -40,6 +40,20 @@ namespace LinqToDB.Linq.Builder
 
 		public readonly Dictionary<MemberInfo,Expression> Members = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
 
+		public SelectContext(IBuildContext parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery)
+		{
+			Parent      = parent;
+			Sequence    = Array<IBuildContext>.Empty;
+			Builder     = builder;
+			Lambda      = lambda;
+			Body        = lambda.Body;
+			SelectQuery = selectQuery;
+
+			IsScalar = !Builder.ProcessProjection(Members, Body);
+
+			Builder.Contexts.Add(this);
+		}
+
 		public SelectContext(IBuildContext parent, LambdaExpression lambda, params IBuildContext[] sequences)
 		{
 			Parent      = parent;
