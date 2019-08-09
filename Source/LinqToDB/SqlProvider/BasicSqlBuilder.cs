@@ -2957,6 +2957,7 @@ namespace LinqToDB.SqlProvider
 					}
 				case QueryElementType.SqlTable        :
 				case QueryElementType.SqlCteTable     :
+				case QueryElementType.SqlRawSqlTable  :
 					{
 						var alias = ((SqlTable)table).Alias;
 						return alias != "$" && alias != "$F" ? alias : null;
@@ -3065,6 +3066,7 @@ namespace LinqToDB.SqlProvider
 					return GetPhysicalTableName(((SqlTableSource)table).Source, alias);
 
 				case QueryElementType.SqlCteTable:
+				case QueryElementType.SqlRawSqlTable:
 					return GetTablePhysicalName((SqlTable)table);
 
 				case QueryElementType.MergeSourceTable:

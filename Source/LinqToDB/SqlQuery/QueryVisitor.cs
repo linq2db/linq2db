@@ -1223,6 +1223,34 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlUpdateClause)element).Keys );
 					}
 
+				case QueryElementType.SelectStatement:
+					{
+						return Find(((SqlSelectStatement)element).SelectQuery) ??
+						       Find(((SqlSelectStatement)element).With       );
+					}
+
+				case QueryElementType.InsertStatement:
+					{
+						return Find(((SqlInsertStatement)element).SelectQuery) ??
+						       Find(((SqlInsertStatement)element).Insert     ) ??
+						       Find(((SqlInsertStatement)element).With       );
+					}
+
+				case QueryElementType.UpdateStatement:
+					{
+						return Find(((SqlUpdateStatement)element).SelectQuery) ??
+						       Find(((SqlUpdateStatement)element).Update     ) ??
+						       Find(((SqlUpdateStatement)element).With       );
+					}
+
+				case QueryElementType.InsertOrUpdateStatement:
+					{
+						return Find(((SqlInsertOrUpdateStatement)element).SelectQuery) ??
+						       Find(((SqlInsertOrUpdateStatement)element).Insert     ) ??
+						       Find(((SqlInsertOrUpdateStatement)element).Update     ) ??
+						       Find(((SqlInsertOrUpdateStatement)element).With       );
+					}
+
 				case QueryElementType.DeleteStatement:
 					{
 						return
@@ -1240,7 +1268,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.DropTableStatement:
 					{
 						return
-							Find(((SqlCreateTableStatement)element).Table);
+							Find(((SqlDropTableStatement)element).Table);
 					}
 
 				case QueryElementType.SelectClause:
@@ -1263,11 +1291,55 @@ namespace LinqToDB.SqlQuery
 							(((SelectQuery)element).HasSetOperators ? Find(((SelectQuery)element).SetOperators) : null);
 					}
 
+				case QueryElementType.TruncateTableStatement:
+					{
+						return
+							Find(((SqlTruncateTableStatement)element).Table);
+					}
+
 				case QueryElementType.CteClause:
 					{
 						return
 							Find(((CteClause)element).Fields) ??
 							Find(((CteClause)element).Body  );
+					}
+
+				case QueryElementType.WithClause:
+					{
+						return Find(((SqlWithClause)element).Clauses);
+					}
+
+				case QueryElementType.MergeStatement:
+					{
+						return
+							Find(((SqlMergeStatement)element).Target    ) ??
+							Find(((SqlMergeStatement)element).Source    ) ??
+							Find(((SqlMergeStatement)element).On        ) ??
+							Find(((SqlMergeStatement)element).Target    ) ??
+							Find(((SqlMergeStatement)element).Operations);
+					}
+
+				case QueryElementType.MergeSourceTable:
+					{
+						return
+							Find(((SqlMergeSourceTable)element).SourceEnumerable) ??
+							Find(((SqlMergeSourceTable)element).SourceQuery     ) ??
+							Find(((SqlMergeSourceTable)element).SourceFields    );
+					}
+
+				case QueryElementType.MergeOperationClause:
+					{
+						return
+							Find(((SqlMergeOperationClause)element).Where      ) ??
+							Find(((SqlMergeOperationClause)element).WhereDelete) ??
+							Find(((SqlMergeOperationClause)element).Items      );
+					}
+
+				case QueryElementType.SqlValuesTable:
+					{
+						return 
+							Find(((SqlValuesTable)element).Fields.Values          ) ??
+							Find(((SqlValuesTable)element).Rows.SelectMany(r => r));
 					}
 
 				case QueryElementType.SqlField:
