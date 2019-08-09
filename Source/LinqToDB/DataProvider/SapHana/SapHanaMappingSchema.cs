@@ -1,4 +1,5 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿#nullable disable
+namespace LinqToDB.DataProvider.SapHana
 {
 	using Mapping;
 	using SqlQuery;

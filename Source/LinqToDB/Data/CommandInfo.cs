@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -465,7 +466,7 @@ namespace LinqToDB.Data
 		#region Query with multiple result sets
 
 		/// <summary>
-		/// Executes command using <see cref="StoredProcedure"/> command type and returns a result containing multiple result sets.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns a result containing multiple result sets.
 		/// </summary>
 		/// <typeparam name="T">Result set type.</typeparam>
 		/// <returns>Returns result.</returns>
@@ -478,7 +479,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command asynchronously using <see cref="StoredProcedure"/> command type and returns a result containing multiple result sets.
+		/// Executes command asynchronously using <see cref="CommandType.StoredProcedure"/> command type and returns a result containing multiple result sets.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <typeparam name="T">Result set type.</typeparam>

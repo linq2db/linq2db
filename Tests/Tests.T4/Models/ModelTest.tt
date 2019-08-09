@@ -5,6 +5,7 @@
 <#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude" #>
 <#@ include file="..\..\..\Source\LinqToDB.Templates\Validation.ttinclude"            #>
 <#
+	// https://github.com/dotnet/roslyn/issues/37829
 	AddNullablePragma = true;
 	EnableNullableReferenceTypes = true;
 

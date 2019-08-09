@@ -15,7 +15,7 @@ namespace LinqToDB.Linq
 
 		public int GetHashCode(MemberInfo obj)
 		{
-			return obj == null ? 0 : obj.Name.GetHashCode();
+			return obj.Name.GetHashCode();
 		}
 	}
 }

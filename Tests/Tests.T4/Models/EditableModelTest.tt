@@ -3,6 +3,7 @@
 <#@ include file="..\..\..\Source\LinqToDB.Templates\T4Model.ttinclude"        #>
 <#@ include file="..\..\..\Source\LinqToDB.Templates\EditableObject.ttinclude" #>
 <#
+	// https://github.com/dotnet/roslyn/issues/37829
 	AddNullablePragma = true;
 	EnableNullableReferenceTypes = true;
 

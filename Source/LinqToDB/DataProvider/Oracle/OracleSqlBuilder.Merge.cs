@@ -1,4 +1,5 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿#nullable disable
+namespace LinqToDB.DataProvider.Oracle
 {
 	using SqlQuery;
 	using System.Text;

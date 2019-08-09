@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿#nullable disable
+using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
