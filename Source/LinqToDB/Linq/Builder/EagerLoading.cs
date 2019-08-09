@@ -707,6 +707,25 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
+		static bool BisectChain(Expression masterQuery, Expression detailProjection, out Expression restOfMainExpression)
+		{
+			restOfMainExpression = null;
+			if (masterQuery.NodeType == ExpressionType.Call)
+			{
+				var mc = (MethodCallExpression)masterQuery;
+				if (mc.IsQueryable())
+				{
+					switch (mc.Method.Name)
+					{
+						case "Where":
+							break;
+					}
+				}
+			}
+
+			return false;
+		}
+
 		public static Expression GenerateDetailsExpression(IBuildContext context, MappingSchema mappingSchema,
 			Expression expression, HashSet<ParameterExpression> parameters)
 		{
@@ -716,6 +735,8 @@ namespace LinqToDB.Linq.Builder
 			var masterQueryFinal = initialMainQuery;
 			expression = expression.Unwrap();
 			var unchangedDetailQuery = expression;
+
+			BisectChain(masterQueryFinal, context.Expression, out var restOfMainExpression);
 
 			ExtractIndepended(initialMainQuery, unchangedDetailQuery, parameters, out var queryableDetail, out var finalExpression, out var replaceParam);
 
@@ -762,7 +783,7 @@ namespace LinqToDB.Linq.Builder
 								context = selectContext.Sequence[0];
 						}
 					}
-                    else if (mc.IsQueryable("Join"))
+					else if (mc.IsQueryable("Join"))
 					{
 						resultExpression = ProcessMethodCallWithLastProjection(builder, mc, selectContext.Sequence[1], 1, queryableDetail, mappingSchema);
 					}
@@ -838,7 +859,7 @@ namespace LinqToDB.Linq.Builder
 									new object[]
 										{ builder, unchangedDetailQuery });
 
-                                return resultExpression;
+								return resultExpression;
 							}
 
 							context = selectContext.Sequence[1];
@@ -987,7 +1008,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 			}
-            else 
+			else 
 			{
 
 			}
@@ -1124,7 +1145,7 @@ namespace LinqToDB.Linq.Builder
 
 		private static Expression ProcessMethodCallWithLastProjection(ExpressionBuilder builder, MethodCallExpression mc, IBuildContext context, int keyParamIndex, Expression queryableDetail, MappingSchema mappingSchema)
 		{
-            //TODO: remove
+			//TODO: remove
 			var initialMainQuery = mc;
 
 			var detailExpressionTransformation = new Dictionary<Expression, Expression>(new ExpressionEqualityComparer());
@@ -1354,7 +1375,7 @@ namespace LinqToDB.Linq.Builder
 			private bool IsSelectValid(SelectQuery select)
 			{
 				var isInvalid = select.Select.SkipValue != null ||
-				                select.Select.TakeValue != null;
+								select.Select.TakeValue != null;
 
 				if (!isInvalid)
 				{

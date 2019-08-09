@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using LinqToDB;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
@@ -549,6 +550,86 @@ namespace Tests.Playground
 			}
 		}
 
+		static void CollectProjection(Expression projection, Dictionary<Expression, Expression> transformations)
+		{
+			switch (projection.NodeType)
+			{
+				case ExpressionType.New :
+					{
+						var newExpression = (NewExpression)projection;
+						break;
+					}
+			}
+		}
+
+		static bool BisectChain(Expression masterQuery, Expression detailProjection, Dictionary<Expression, Expression> transformations, out Expression restOfMainExpression)
+		{
+			restOfMainExpression = null;
+			var current = masterQuery;
+			if (current.NodeType == ExpressionType.Call)
+			{
+				var mc = (MethodCallExpression)current;
+				// if (mc.IsQueryable())
+				{
+					switch (mc.Method.Name)
+					{
+						case "Where":
+							break;
+						case "Select":
+							CollectProjection(((LambdaExpression)mc.Arguments[1].Unwrap()).Body, transformations);
+							break;
+
+					}
+
+					current = mc.Arguments[0].Unwrap();
+
+				}
+			}
+
+			return false;
+		}
+
+		[Test]
+		public void SelectWithCondition([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query1 = master.Select(m => new
+				{
+					Master = m, Details = db.GetTable<DetailClass>().Where(d => d.MasterId == m.Id1)
+				});
+
+				var query2 = query1.OrderBy(q => q.Master.Id1)
+					.Where(q => q.Master.Id1 < 5)
+					.Select(q => new { FinalMaster = q.Master, Details = q.Details });
+
+				var transformations = new Dictionary<Expression, Expression>();
+				BisectChain(query2.Expression, query1.Expression, transformations, out var restOfMainExpression);
+
+
+//				var queryProjection = from m in master
+//					select new 
+//					{
+//						Master = m,
+//						Details = db.GetTable<DetailClass>().Where(d => d.MasterId == m.Id1)
+//					};
+//
+//				var query = from q in queryProjection
+//					orderby q.Master.Id1
+//					where q.Master.Id1 < 5
+//					select new
+//					{
+//						FinalMaster = q.Master,
+//						Details = q.Details
+//					};
+//
+				//var array = query.ToArray();
+			}
+		}
 
 	}
 }
