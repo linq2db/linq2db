@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -15,7 +16,7 @@ namespace LinqToDB.Linq
 
 		public int GetHashCode(MemberInfo obj)
 		{
-			return obj.Name.GetHashCode();
+			return obj == null ? 0 : obj.Name.GetHashCode();
 		}
 	}
 }

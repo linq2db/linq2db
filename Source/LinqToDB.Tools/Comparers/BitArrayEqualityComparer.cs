@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -10,6 +11,9 @@ namespace LinqToDB.Tools.Comparers
 
 		public override int GetHashCode(BitArray obj)
 		{
+			if (obj == null)
+				return 0;
+
 			var hash = obj.Length.GetHashCode();
 
 			for (var i = 0; i < obj.Length; i++)
@@ -18,7 +22,7 @@ namespace LinqToDB.Tools.Comparers
 			return hash;
 		}
 
-		public override bool Equals(BitArray? x, BitArray? y)
+		public override bool Equals(BitArray x, BitArray y)
 		{
 			if (x == null && y == null)
 				return true;
