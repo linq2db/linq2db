@@ -87,6 +87,12 @@ stages:
         sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp20'
       displayName: Copy test configs for NETCOREAPP2.0
 
+    - task: ExtractFiles@1
+      inputs:
+        archiveFilePatterns: '$(Build.SourcesDirectory)/Data/northwind.sql.zip'
+        destinationFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+      displayName: Copy northwind.sql to scripts
+
     - task: CopyFiles@2
       inputs:
         targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish/scripts'
@@ -223,6 +229,10 @@ stages:
           title: 'SQL CE'
           config: 'sqlce'
           psscript: 'sqlce.ps1'
+        SqlServer2017:
+          title: 'SQL Server 2017'
+          config: 'sqlserver.2017'
+          psscript: 'sqlserver.2017.cmd'
 #        MySQL:
 #          title: 'MySQL 5.7'
 #          config: 'mysql'
@@ -298,6 +308,10 @@ stages:
         SQLite_MS:
           title: 'SQLite.MS'
           config: 'sqlite.ms'
+        SqlServer2017:
+          title: 'SQL Server 2017'
+          config: 'sqlserver.2017'
+          psscript: 'sqlserver.2017.cmd'
 #        MySQL:
 #          title: 'MySQL 5.7'
 #          config: 'mysql'
@@ -360,6 +374,10 @@ stages:
         SQLite_MS:
           title: 'SQLite.MS'
           config: 'sqlite.ms'
+        SqlServer2017:
+          title: 'SQL Server 2017'
+          config: 'sqlserver.2017'
+          psscript: 'sqlserver.2017.sh'
 #        MySQL:
 #          title: 'MySQL 5.7'
 #          config: 'mysql'
@@ -426,6 +444,10 @@ stages:
         SQLite_MS:
           title: 'SQLite.MS'
           config: 'sqlite.ms'
+        SqlServer2017:
+          title: 'SQL Server 2017'
+          config: 'sqlserver.2017'
+          psscript: 'sqlserver.2017.sh'
 #        MySQL:
 #          title: 'MySQL 5.7'
 #          config: 'mysql'

@@ -33,11 +33,11 @@ Legend:
 |Access<sup>[3](#notes)</sup><br>Jet OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access<sup>[3](#notes)</sup><br>ACE OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL CE<sup>[4](#notes)</sup>|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.6.1<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |separator between automated and pending providers|-|-|-|-|
 |MySQL (5.7):[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|v|v|v|v|
 |MySQL:[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|(R)|(R)|(R)|?|
 |PostgreSQL:[Npgsql](https://www.nuget.org/packages/Npgsql/)|(R)|(R)|?|?|
-|MS SQL:[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) + NorthwindDB|(R)|(R)|?|?|
 |Azure SQL:[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)|?|?|?|?|
 |DB2 LUW|?|?|?|?|
 |Informix|?|?|?|?|
