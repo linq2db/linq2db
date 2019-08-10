@@ -89,7 +89,7 @@ stages:
 
     - task: CmdLine@2
       inputs:
-        script: 'copy "$(System.DefaultWorkingDirectory)\Data\Create Scripts\Northwind.sql" $(Build.SourcesDirectory)\Build\Azure\scripts\sql\northwind.sql'
+        script: 'copy "$(System.DefaultWorkingDirectory)\Data\Create Scripts\Northwind.sql" $(Build.SourcesDirectory)\Build\Azure\scripts\northwind.sql'
       displayName: Copy northwind.sql to scripts
 
     - task: CopyFiles@2
