@@ -90,7 +90,7 @@ stages:
     - task: ExtractFiles@1
       inputs:
         archiveFilePatterns: '$(Build.SourcesDirectory)/Data/northwind.sql.zip'
-        destinationFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+        destinationFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts/sql'
       displayName: Copy northwind.sql to scripts
 
     - task: CopyFiles@2

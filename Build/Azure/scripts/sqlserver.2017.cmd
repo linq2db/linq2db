@@ -6,5 +6,5 @@ docker exec -t mssql sqlcmd -S localhost -U sa -P Password12! -Q 'select @@Versi
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData;'
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData2017;'
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q 'CREATE DATABASE NorthwindDB;'
-docker cp northwind.sql scripts/northwind.sql mssql:/northwind.sql
+docker cp northwind.sql scripts/sql/northwind.sql mssql:/northwind.sql
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -i /northwind.sql
