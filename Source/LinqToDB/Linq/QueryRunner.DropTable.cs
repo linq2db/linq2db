@@ -13,7 +13,7 @@ namespace LinqToDB.Linq
 		{
 			public static void Query(
 				IDataContext dataContext,
-				string tableName, string serverName, string databaseName, string schemaName,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				bool ifExists)
 			{
 				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
@@ -28,7 +28,7 @@ namespace LinqToDB.Linq
 
 				var query = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { Statement = dropTable, } }
+					Queries = { new QueryInfo { Statement = dropTable } }
 				};
 
 				SetNonQueryQuery(query);
@@ -38,7 +38,7 @@ namespace LinqToDB.Linq
 
 			public static async Task QueryAsync(
 				IDataContext dataContext,
-				string tableName, string serverName, string databaseName, string schemaName,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
 				bool ifExists,
 				CancellationToken token)
 			{

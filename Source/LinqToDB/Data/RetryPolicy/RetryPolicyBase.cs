@@ -1,4 +1,5 @@
-﻿// BASEDON: https://github.com/aspnet/EntityFramework/blob/dev/src/EFCore/Storage/ExecutionStrategy.cs
+﻿#nullable disable
+// BASEDON: https://github.com/aspnet/EntityFramework/blob/dev/src/EFCore/Storage/ExecutionStrategy.cs
 
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.

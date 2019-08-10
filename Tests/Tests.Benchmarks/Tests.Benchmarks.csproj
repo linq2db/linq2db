@@ -4,11 +4,9 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Benchmarks</AssemblyName>
 		<RootNamespace>Tests</RootNamespace>
-
 		<TargetFrameworks>net462;netcoreapp2.0</TargetFrameworks>
-
 		<OutputType>Exe</OutputType>
-
+		<Nullable>disable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" Version="0.11.5" />

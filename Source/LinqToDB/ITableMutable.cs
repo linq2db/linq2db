@@ -10,19 +10,19 @@
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		ITable<T> ChangeServerName(string serverName);
+		ITable<T> ChangeServerName(string? serverName);
 
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		ITable<T> ChangeDatabaseName(string databaseName);
+		ITable<T> ChangeDatabaseName(string? databaseName);
 
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		ITable<T> ChangeSchemaName  (string schemaName);
+		ITable<T> ChangeSchemaName  (string? schemaName);
 
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.

@@ -12,8 +12,8 @@ namespace LinqToDB.Linq
 		public static class CreateTable<T>
 		{
 			public static ITable<T> Query(IDataContext dataContext,
-				string tableName, string serverName, string databaseName, string schemaName,
-				string statementHeader, string statementFooter,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
+				string? statementHeader, string? statementFooter,
 				DefaultNullable defaultNullable)
 			{
 				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema);
@@ -49,8 +49,8 @@ namespace LinqToDB.Linq
 			}
 
 			public static async Task<ITable<T>> QueryAsync(IDataContext dataContext,
-				string tableName, string serverName, string databaseName, string schemaName,
-				string statementHeader, string statementFooter,
+				string? tableName, string? serverName, string? databaseName, string? schemaName,
+				string? statementHeader, string? statementFooter,
 				DefaultNullable defaultNullable,
 				CancellationToken token)
 			{

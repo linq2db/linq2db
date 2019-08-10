@@ -7,6 +7,7 @@
 		<AssemblyName>linq2db.Tests.IBM.Core</AssemblyName>
 		<PlatformTarget>x64</PlatformTarget>
 		<RootNamespace>Tests</RootNamespace>
+		<Nullable>disable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>

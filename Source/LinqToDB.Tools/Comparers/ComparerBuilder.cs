@@ -94,7 +94,7 @@ namespace LinqToDB.Tools.Comparers
 
 			public override int  GetHashCode(T obj)    => obj == null ? 0 : _getHashCode(obj);
 
-			internal static Comparer<T> DefaultInstance;
+			internal static Comparer<T>? DefaultInstance;
 		}
 
 

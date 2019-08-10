@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Data.SqlTypes;
 using System.IO;
 using System.Text;

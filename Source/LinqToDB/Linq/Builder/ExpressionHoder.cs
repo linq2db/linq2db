@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 
 #pragma warning disable 649
 
