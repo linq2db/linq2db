@@ -402,7 +402,7 @@ stages:
 
     - task: CmdLine@2
       inputs:
-        script: 'chmod -x $(System.DefaultWorkingDirectory)/scripts/$(script)'
+        script: 'chmod +x $(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
       condition: variables['script']
       displayName: Mark script as executable
@@ -473,7 +473,7 @@ stages:
 
     - task: CmdLine@2
       inputs:
-        script: 'chmod -x $(System.DefaultWorkingDirectory)/scripts/$(script)'
+        script: 'chmod +x $(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
       condition: variables['script']
       displayName: Mark script as executable
