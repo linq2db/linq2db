@@ -1008,13 +1008,13 @@ namespace Tests
 
 		protected void CompareSql(string result, string expected)
 		{
-			var ss = expected.Trim('\r', '\n').Split('\n');
+			var ss = expected.Replace("\r", "").Trim('\r', '\n').Split('\n');
 
 			while (ss.All(_ => _.Length > 0 && _[0] == '\t'))
 				for (var i = 0; i < ss.Length; i++)
 					ss[i] = ss[i].Substring(1);
 
-			Assert.AreEqual(string.Join("\n", ss), result.Trim('\r', '\n'));
+			Assert.AreEqual(string.Join("\n", ss), result.Replace("\r", "").Trim('\r', '\n'));
 		}
 
 		protected List<LinqDataTypes> GetTypes(string context)
