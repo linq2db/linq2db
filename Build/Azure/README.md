@@ -20,7 +20,7 @@ Legend:
 - `(R)`: test job was running before using Travis or Appveryor CI (to track not migrated yet tests)
 - `net46`: .NET Framework 4.6
 - `netcoreapp2.0`: .NETCoreApp 2.0
-- :door: - Windows (2019)
+- :door: - Windows (2019 or 2016 for some docker-based tests)
 - :penguin: - Linux (Ununtu 16.04)
 - :green_apple: - MacOS Mojave 10.14
 
