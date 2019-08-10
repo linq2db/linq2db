@@ -199,7 +199,7 @@
 			"MySql57"       : { "Provider": "MySql.Data.MySqlClient", "ConnectionString": "Server=localhost;Port=33060;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                        },
 			"PostgreSQL"    : { "Provider": "Npgsql",                 "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
 			"SqlServer"     : { "Provider": "System.Data.SqlClient",  "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;" },
-			"Northwind"     : { "Provider": "System.Data.SqlClient",  "ConnectionString": "Server=localhost;Database=NorthwindDB;User Id=sa;Password=Password12!;" },
+			"Northwind"     : { "Provider": "System.Data.SqlClient",  "ConnectionString": "Server=localhost;Database=Northwind;User Id=sa;Password=Password12!;" },
 			"SqlServer.2017": { "Provider": "System.Data.SqlClient",  "ConnectionString": "Server=localhost;Database=TestData2017;User Id=sa;Password=Password12!;" }
 			//"MySqlConnector": {
 			//	"Provider": "MySql.Data.MySqlClient",
