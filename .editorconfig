@@ -10,3 +10,6 @@ end_of_line = crlf
 
 [*.{yml,sh,cmd,md}]
 indent_style = space
+
+[*.sh]
+end_of_line = lf
