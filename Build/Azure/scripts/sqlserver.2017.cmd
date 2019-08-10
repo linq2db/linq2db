@@ -10,9 +10,9 @@ if %errorlevel% NEQ 0 goto repeat
 echo "SQL Server is operational"
 
 echo "create TestData"
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData;'
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
 echo "create TestData2017"
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData2017;'
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData2017;"
 echo "copy Northwind"
 docker cp scripts/northwind.sql mssql:/northwind.sql
 echo "create Northwind"
