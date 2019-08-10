@@ -30,5 +30,5 @@ echo "SQL Server is operational"
 
 docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData;'
 docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData2017;'
-docker cp scripts/sql/northwind.sql mssql:/northwind.sql
+docker cp scripts/northwind.sql mssql:/northwind.sql
 docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -i /northwind.sql
