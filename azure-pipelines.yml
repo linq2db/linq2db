@@ -232,7 +232,7 @@ stages:
         SqlServer2017:
           title: 'SQL Server 2017'
           config: 'sqlserver.2017'
-          psscript: 'sqlserver.2017.cmd'
+          script: 'sqlserver.2017.cmd'
 #        MySQL:
 #          title: 'MySQL 5.7'
 #          config: 'mysql'
@@ -311,7 +311,7 @@ stages:
         SqlServer2017:
           title: 'SQL Server 2017'
           config: 'sqlserver.2017'
-          psscript: 'sqlserver.2017.cmd'
+          script: 'sqlserver.2017.cmd'
 #        MySQL:
 #          title: 'MySQL 5.7'
 #          config: 'mysql'
@@ -377,7 +377,7 @@ stages:
         SqlServer2017:
           title: 'SQL Server 2017'
           config: 'sqlserver.2017'
-          psscript: 'sqlserver.2017.sh'
+          script: 'sqlserver.2017.sh'
 #        MySQL:
 #          title: 'MySQL 5.7'
 #          config: 'mysql'
@@ -447,7 +447,7 @@ stages:
         SqlServer2017:
           title: 'SQL Server 2017'
           config: 'sqlserver.2017'
-          psscript: 'sqlserver.2017.sh'
+          script: 'sqlserver.2017.sh'
 #        MySQL:
 #          title: 'MySQL 5.7'
 #          config: 'mysql'
