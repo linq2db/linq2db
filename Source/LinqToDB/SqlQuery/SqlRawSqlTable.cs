@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Text;
 using LinqToDB.Mapping;
@@ -19,7 +20,7 @@ namespace LinqToDB.SqlQuery
 			[JetBrains.Annotations.NotNull] string sql,
 			[JetBrains.Annotations.NotNull] params ISqlExpression[] parameters) : base(mappingSchema, objectType)
 		{
-			SQL = sql ?? throw new ArgumentNullException(nameof(sql));
+			SQL        = sql        ?? throw new ArgumentNullException(nameof(sql));
 			Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var value in parameters)

@@ -11,10 +11,10 @@ namespace Tests.DataProvider
 {
 	public class DataProviderTestBase : TestBase
 	{
-		protected string GetNullSql   = "SELECT {0} FROM {1} WHERE ID = 1";
-		protected string GetValueSql  = "SELECT {0} FROM {1} WHERE ID = 2";
-		protected string PassNullSql  = "SELECT ID FROM {1} WHERE @p IS NULL AND {0} IS NULL OR @p IS NOT NULL AND {0} = @p";
-		protected string PassValueSql = "SELECT ID FROM {1} WHERE {0} = @p";
+		protected string  GetNullSql   = "SELECT {0} FROM {1} WHERE ID = 1";
+		protected string  GetValueSql  = "SELECT {0} FROM {1} WHERE ID = 2";
+		protected string? PassNullSql  = "SELECT ID FROM {1} WHERE @p IS NULL AND {0} IS NULL OR @p IS NOT NULL AND {0} = @p";
+		protected string  PassValueSql = "SELECT ID FROM {1} WHERE {0} = @p";
 
 		protected T TestType<T>(DataConnection conn, string fieldName,
 			DataType dataType          = DataType.Undefined,

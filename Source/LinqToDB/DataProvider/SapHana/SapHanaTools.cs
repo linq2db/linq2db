@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using LinqToDB.Common;
 using LinqToDB.Extensions;
 

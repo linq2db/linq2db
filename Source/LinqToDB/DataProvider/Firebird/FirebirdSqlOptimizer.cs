@@ -1,4 +1,5 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿#nullable disable
+namespace LinqToDB.DataProvider.Firebird
 {
 	using Extensions;
 	using SqlProvider;

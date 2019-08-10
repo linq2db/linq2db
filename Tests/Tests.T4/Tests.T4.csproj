@@ -107,6 +107,10 @@
 			<LastGenOutput>MultipleFiles.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
+		<None Update="WPF\ViewModel.tt">
+		  <LastGenOutput>ViewModel.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net46'">
@@ -255,5 +259,20 @@
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>Unlock.tt</DependentUpon>
 		</Compile>
+		<Compile Update="WPF\ViewModel.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>ViewModel.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
+		<Reference Include="PresentationCore" />
+		<Reference Include="PresentationFramework" />
+		<Reference Include="WindowsBase" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
+		<Compile Remove="WPF\ViewModel.cs" />
+		<Compile Remove="WPF\ViewModel.generated.cs" />
 	</ItemGroup>
 </Project>

@@ -414,7 +414,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.SQLite,        "", BuilderType = typeof(SqliteConcatWsBuilder))]
 		public static string ConcatStrings(
 			[ExprParameter] [NotNull] string separator,
-							[NotNull] params string[] arguments)
+							[NotNull] params string?[] arguments)
 		{
 			return string.Join(separator, arguments.Where(a => a != null));
 		}

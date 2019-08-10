@@ -1,4 +1,5 @@
-﻿namespace LinqToDB.ServiceModel
+﻿#nullable disable
+namespace LinqToDB.ServiceModel
 {
 	using LinqToDB.Common;
 	using LinqToDB.Expressions;

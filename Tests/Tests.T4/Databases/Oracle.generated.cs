@@ -392,7 +392,7 @@ namespace OracleDataContext
 
 		#nullable disable
 		/// <summary>
-		/// SYS_C00292843_BackReference
+		/// SYS_C00298816_BackReference
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; }
@@ -416,9 +416,9 @@ namespace OracleDataContext
 
 		#nullable disable
 		/// <summary>
-		/// SYS_C00292843
+		/// SYS_C00298816
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00292843", BackReferenceName="Syscs")]
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00298816", BackReferenceName="Syscs")]
 		public TTestUser USER { get; set; }
 
 		#nullable enable

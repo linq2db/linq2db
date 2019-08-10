@@ -91,7 +91,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Event, triggered before context connection closed using <see cref="Close"/> method.
 		/// </summary>
-		event EventHandler  OnClosing;
+		event EventHandler?  OnClosing;
 
 		/// <summary>
 		/// Returns query runner service for current context.

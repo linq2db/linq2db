@@ -1,4 +1,5 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+﻿#nullable disable
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 

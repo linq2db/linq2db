@@ -1,4 +1,5 @@
-﻿using LinqToDB.SqlQuery;
+﻿#nullable disable
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {

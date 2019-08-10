@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Threading;
 
 namespace LinqToDB.Tools.EntityServices

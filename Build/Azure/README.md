@@ -20,7 +20,7 @@ Legend:
 - `(R)`: test job was running before using Travis or Appveryor CI (to track not migrated yet tests)
 - `net46`: .NET Framework 4.6
 - `netcoreapp2.0`: .NETCoreApp 2.0
-- :door: - Windows (2019)
+- :door: - Windows (2019 or 2016 for some docker-based tests)
 - :penguin: - Linux (Ununtu 16.04)
 - :green_apple: - MacOS Mojave 10.14
 
@@ -33,11 +33,11 @@ Legend:
 |Access<sup>[3](#notes)</sup><br>Jet OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access<sup>[3](#notes)</sup><br>ACE OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL CE<sup>[4](#notes)</sup>|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.6.1<br>with NorthwindDB<sup>[5](#notes)</sup> Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |separator between automated and pending providers|-|-|-|-|
 |MySQL (5.7):[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|v|v|v|v|
 |MySQL:[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|(R)|(R)|(R)|?|
 |PostgreSQL:[Npgsql](https://www.nuget.org/packages/Npgsql/)|(R)|(R)|?|?|
-|MS SQL:[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) + NorthwindDB|(R)|(R)|?|?|
 |Azure SQL:[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)|?|?|?|?|
 |DB2 LUW|?|?|?|?|
 |Informix|?|?|?|?|
@@ -53,3 +53,4 @@ Legend:
 2. `1.1.1` is the last version of `Microsoft.Data.SQLite`, that supports .NET Framework, so we use it for `net46` test configuration and recent version for `netcoreapp2.0`
 3. for Access right now we don't support .net core
 4. for SQL CE right now we don't run .net core tests
+5. Northwind SQL Server tests not enabled yet, as we need SQL Server images with full-text search included
