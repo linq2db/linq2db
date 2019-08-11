@@ -478,18 +478,18 @@ stages:
 #          title: 'SQL Server 2017'
 #          config: 'sqlserver.2017'
 #          script: 'sqlserver.2017.sh'
-        MySQL:
-          title: 'MySQL'
-          config: 'mysql'
-          script: 'mysql.sh'
-        MySQL57:
-          title: 'MySQL 5.7'
-          config: 'mysql57'
-          script: 'mysql57.sh'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb'
-          script: 'mariadb.sh'
+#        MySQL:
+#          title: 'MySQL'
+#          config: 'mysql'
+#          script: 'mysql.sh'
+#        MySQL57:
+#          title: 'MySQL 5.7'
+#          config: 'mysql57'
+#          script: 'mysql57.sh'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb'
+#          script: 'mariadb.sh'
         PostgreSQL:
           title: 'PostgreSQL'
           config: 'pgsql'
@@ -558,9 +558,9 @@ stages:
 
     strategy:
       matrix:
-#        SQLite:
-#          title: 'SQLite'
-#          config: 'sqlite'
+        SQLite:
+          title: 'SQLite'
+          config: 'sqlite'
 #        SQLite_MS:
 #          title: 'SQLite.MS'
 #          config: 'sqlite.ms'
@@ -568,34 +568,34 @@ stages:
 #          title: 'SQL Server 2017'
 #          config: 'sqlserver.2017'
 #          script: 'mac.sqlserver.2017.sh'
-        MySQL:
-          title: 'MySQL'
-          config: 'mysql'
-          script: 'mac.mysql.sh'
-        MySQL57:
-          title: 'MySQL 5.7'
-          config: 'mysql57'
-          script: 'mac.mysql57.sh'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb'
-          script: 'mac.mariadb.sh'
-        PostgreSQL:
-          title: 'PostgreSQL'
-          config: 'pgsql'
-          script: 'mac.pgsql.sh'
-        PostgreSQL95:
-          title: 'PostgreSQL 9.5'
-          config: 'pgsql'
-          script: 'mac.pgsql95.sh'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql'
-          script: 'mac.pgsql10.sh'
-        PostgreSQL11:
-          title: 'PostgreSQL 11'
-          config: 'pgsql'
-          script: 'mac.pgsql11.sh'
+#        MySQL:
+#          title: 'MySQL'
+#          config: 'mysql'
+#          script: 'mac.mysql.sh'
+#        MySQL57:
+#          title: 'MySQL 5.7'
+#          config: 'mysql57'
+#          script: 'mac.mysql57.sh'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb'
+#          script: 'mac.mariadb.sh'
+#        PostgreSQL:
+#          title: 'PostgreSQL'
+#          config: 'pgsql'
+#          script: 'mac.pgsql.sh'
+#        PostgreSQL95:
+#          title: 'PostgreSQL 9.5'
+#          config: 'pgsql'
+#          script: 'mac.pgsql95.sh'
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql'
+#          script: 'mac.pgsql10.sh'
+#        PostgreSQL11:
+#          title: 'PostgreSQL 11'
+#          config: 'pgsql'
+#          script: 'mac.pgsql11.sh'
 
     steps:
     - checkout: none

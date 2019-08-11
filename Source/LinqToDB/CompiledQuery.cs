@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -24,18 +23,18 @@ namespace LinqToDB
 			_query = query;
 		}
 
-		readonly object                _sync = new object();
-		readonly LambdaExpression      _query;
-		volatile Func<object[],object> _compiledQuery;
+		readonly object                   _sync = new object();
+		readonly LambdaExpression         _query;
+		volatile Func<object?[],object?>? _compiledQuery;
 
-		TResult ExecuteQuery<TResult>(params object[] args)
+		TResult ExecuteQuery<TResult>(params object?[] args)
 		{
 			if (_compiledQuery == null)
 				lock (_sync)
 					if (_compiledQuery == null)
 						_compiledQuery = CompileQuery(_query);
 
-			return (TResult)_compiledQuery(args);
+			return (TResult)_compiledQuery(args)!;
 		}
 
 		enum MethodType
@@ -67,7 +66,7 @@ namespace LinqToDB
 			}
 		}
 
-		static Func<object[],object> CompileQuery(LambdaExpression query)
+		static Func<object?[],object?> CompileQuery(LambdaExpression query)
 		{
 			var ps = Expression.Parameter(typeof(object[]), "ps");
 
@@ -132,7 +131,7 @@ namespace LinqToDB
 				return pi;
 			});
 
-			return Expression.Lambda<Func<object[],object>>(Expression.Convert(info, typeof(object)), ps).Compile();
+			return Expression.Lambda<Func<object?[],object?>>(Expression.Convert(info, typeof(object)), ps).Compile();
 		}
 
 		#region Invoke

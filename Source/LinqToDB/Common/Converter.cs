@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Data.Linq;
 using System.Globalization;
@@ -101,7 +100,7 @@ namespace LinqToDB.Common
 		/// <param name="conversionType">Target conversion type.</param>
 		/// <param name="mappingSchema">Optional mapping schema.</param>
 		/// <returns>Converted value.</returns>
-		public static object ChangeType(object value, Type conversionType, MappingSchema mappingSchema = null)
+		public static object? ChangeType(object? value, Type conversionType, MappingSchema? mappingSchema = null)
 		{
 			if (value == null || value is DBNull)
 				return mappingSchema == null ?
@@ -161,7 +160,7 @@ namespace LinqToDB.Common
 		/// <param name="value">Value to convert.</param>
 		/// <param name="mappingSchema">Optional mapping schema.</param>
 		/// <returns>Converted value.</returns>
-		public static T ChangeTypeTo<T>(object value, MappingSchema mappingSchema = null)
+		public static T ChangeTypeTo<T>(object? value, MappingSchema? mappingSchema = null)
 		{
 			if (value == null || value is DBNull)
 				return mappingSchema == null ?
