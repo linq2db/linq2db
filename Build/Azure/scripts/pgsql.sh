@@ -1,6 +1,6 @@
 #!/bin/bash
 docker pull postgres:12
-docker run -d --name pgsql -p 5432:5432 postgres:12 -e POSTGRES_PASSWORD=Password12! --net host
+docker run -d --name pgsql -p 5432:5432 postgres:12 -e POSTGRES_PASSWORD=Password12!  -e POSTGRES_DB=testdata
 docker ps -a
 
 # Wait for start
@@ -12,5 +12,3 @@ while [ $is_up -ne 0 ] ; do
     is_up=$?
 done
 echo "PostgreSQL is operational"
-
-docker exec pgsql psql -U postgres -c 'create database testdata'
