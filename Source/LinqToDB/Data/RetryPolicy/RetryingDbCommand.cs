@@ -89,7 +89,7 @@ namespace LinqToDB.Data.RetryPolicy
 			return _policy.Execute(() => _command.ExecuteNonQueryExt());
 		}
 
-		public override object ExecuteScalar()
+		public override object? ExecuteScalar()
 		{
 			return _policy.Execute(() => _command.ExecuteScalarExt());
 		}
@@ -104,7 +104,7 @@ namespace LinqToDB.Data.RetryPolicy
 			return _policy.ExecuteAsync(ct => _command.ExecuteNonQueryExtAsync(ct), cancellationToken);
 		}
 
-		public override Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
+		public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
 			return _policy.ExecuteAsync(ct => _command.ExecuteScalarExtAsync(ct), cancellationToken);
 		}

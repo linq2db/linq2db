@@ -14,7 +14,7 @@ fi
 echo "Waiting for docker service to be in the running state"
 done
 
-docker pull mysql:5.7
+#docker pull mysql:5.7
 docker run -d --name mysql mysql:5.7 -e MYSQL_ROOT_PASSWORD=root -p 33060:3306
 docker ps -a
 

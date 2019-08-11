@@ -1,14 +1,9 @@
 #!/bin/bash
-docker pull postgres:11
-docker run -d --name pgsql -p 5432:5432 postgres:11 -e POSTGRES_PASSWORD=Password12!  -e POSTGRES_DB=testdata
-docker ps -a
-
-# Wait for start
-echo "Waiting for PostgreSQL started"
-docker exec pgsql psql -U postgres -c 'select 1'
-is_up=$?
-while [ $is_up -ne 0 ] ; do
-    docker exec pgsql psql -U postgres -c 'select 1'
-    is_up=$?
+#docker pull postgres:11
+docker run -d --name pgsql --net host -e POSTGRES_PASSWORD=Password12! -p 5432:5432 -v /var/run/postgresql:/var/run/postgresql postgres:11
+until docker exec pgsql psql -U postgres -c '\l'; do
+>&2 echo "Postgres is unavailable - sleeping"
+sleep 1
 done
-echo "PostgreSQL is operational"
+docker exec pgsql psql -U postgres -c 'create database testdata'
+docker exec pgsql psql -U postgres -c '\l'

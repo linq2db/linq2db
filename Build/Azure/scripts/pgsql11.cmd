@@ -1,4 +1,4 @@
-docker pull stellirin/postgres-windows:11
+rem docker pull stellirin/postgres-windows:11
 docker run -d --name pgsql -p 5432:5432 stellirin/postgres-windows:11 -e POSTGRES_PASSWORD=Password12!
 docker ps -a
 

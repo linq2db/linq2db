@@ -1,4 +1,4 @@
-docker pull steeltoeoss/mysql:5.7
+rem docker pull steeltoeoss/mysql:5.7
 docker run -d --name mysql steeltoeoss/mysql:5.7 -e MYSQL_ROOT_PASSWORD=root -p 33060:3306
 docker ps -a
 

@@ -558,9 +558,9 @@ stages:
 
     strategy:
       matrix:
-        SQLite:
-          title: 'SQLite'
-          config: 'sqlite'
+#        SQLite:
+#          title: 'SQLite'
+#          config: 'sqlite'
 #        SQLite_MS:
 #          title: 'SQLite.MS'
 #          config: 'sqlite.ms'
@@ -580,22 +580,22 @@ stages:
 #          title: 'MariaDB'
 #          config: 'mariadb'
 #          script: 'mac.mariadb.sh'
-#        PostgreSQL:
-#          title: 'PostgreSQL'
-#          config: 'pgsql'
-#          script: 'mac.pgsql.sh'
-#        PostgreSQL95:
-#          title: 'PostgreSQL 9.5'
-#          config: 'pgsql'
-#          script: 'mac.pgsql95.sh'
-#        PostgreSQL10:
-#          title: 'PostgreSQL 10'
-#          config: 'pgsql'
-#          script: 'mac.pgsql10.sh'
-#        PostgreSQL11:
-#          title: 'PostgreSQL 11'
-#          config: 'pgsql'
-#          script: 'mac.pgsql11.sh'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'mac.pgsql.sh'
+        PostgreSQL95:
+          title: 'PostgreSQL 9.5'
+          config: 'pgsql'
+          script: 'mac.pgsql95.sh'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql'
+          script: 'mac.pgsql10.sh'
+        PostgreSQL11:
+          title: 'PostgreSQL 11'
+          config: 'pgsql'
+          script: 'mac.pgsql11.sh'
 
     steps:
     - checkout: none

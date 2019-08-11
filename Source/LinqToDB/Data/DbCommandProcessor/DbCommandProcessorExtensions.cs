@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Data;
 using System.Data.Common;
 using System.Runtime.CompilerServices;
@@ -20,14 +19,14 @@ namespace LinqToDB.Data.DbCommandProcessor
 		/// <summary>
 		/// Single instance. Change of it is not thread safe.
 		/// </summary>
-		public static IDbCommandProcessor Instance { get; set; }
+		public static IDbCommandProcessor? Instance { get; set; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static object ExecuteScalarExt(this IDbCommand cmd) =>
+		public static object? ExecuteScalarExt(this IDbCommand cmd) =>
 			Instance == null ? cmd.ExecuteScalar() : Instance.ExecuteScalar((DbCommand)cmd);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Task<object> ExecuteScalarExtAsync(this DbCommand cmd, CancellationToken token) =>
+		public static Task<object?> ExecuteScalarExtAsync(this DbCommand cmd, CancellationToken token) =>
 			Instance == null ? cmd.ExecuteScalarAsync(token) : Instance.ExecuteScalarAsync(cmd, token);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

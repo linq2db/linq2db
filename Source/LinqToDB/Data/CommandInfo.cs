@@ -104,7 +104,7 @@ namespace LinqToDB.Data
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
-		public CommandInfo(DataConnection dataConnection, string commandText, object parameters)
+		public CommandInfo(DataConnection dataConnection, string commandText, object? parameters)
 		{
 			DataConnection = dataConnection;
 			CommandText    = commandText;
@@ -1251,7 +1251,7 @@ namespace LinqToDB.Data
 		static readonly PropertyInfo _dataParameterDbType   = MemberHelper.PropertyOf<DataParameter>(p => p.DbType);
 		static readonly PropertyInfo _dataParameterValue    = MemberHelper.PropertyOf<DataParameter>(p => p.Value);
 
-		static DataParameter[]? GetDataParameters(DataConnection dataConnection, object parameters)
+		static DataParameter[]? GetDataParameters(DataConnection dataConnection, object? parameters)
 		{
 			if (parameters == null)
 				return null;
