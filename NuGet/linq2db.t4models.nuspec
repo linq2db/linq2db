@@ -10,7 +10,7 @@
 			Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
 		<dependencies>
-			<dependency id="linq2db" version="2.6.0"/>
+			<dependency id="linq2db" version="3.0.0"/>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>

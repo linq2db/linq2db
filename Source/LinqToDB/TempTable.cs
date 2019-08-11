@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -44,10 +43,10 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
-			string tableName    = null,
-			string databaseName = null,
-			string schemaName   = null,
-			string serverName   = null)
+			string? tableName    = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			if (db == null) throw new ArgumentNullException(nameof(db));
 
@@ -66,11 +65,11 @@ namespace LinqToDB
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
 			[JetBrains.Annotations.NotNull] IEnumerable<T> items,
-			BulkCopyOptions options = null,
-			string tableName    = null,
-			string databaseName = null,
-			string schemaName   = null,
-			string serverName   = null)
+			BulkCopyOptions? options = null,
+			string? tableName    = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
@@ -90,12 +89,12 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
-			string tableName,
+			string? tableName,
 			[JetBrains.Annotations.NotNull] IEnumerable<T> items,
-			BulkCopyOptions options = null,
-			string databaseName = null,
-			string schemaName   = null,
-			string serverName   = null)
+			BulkCopyOptions? options = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
@@ -116,11 +115,11 @@ namespace LinqToDB
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
-			string tableName         = null,
-			string databaseName      = null,
-			string schemaName        = null,
-			Action<ITable<T>> action = null,
-			string serverName        = null)
+			string? tableName         = null,
+			string? databaseName      = null,
+			string? schemaName        = null,
+			Action<ITable<T>>? action = null,
+			string? serverName        = null)
 		{
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
@@ -141,12 +140,12 @@ namespace LinqToDB
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
-			string tableName,
+			string? tableName,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
-			string databaseName      = null,
-			string schemaName        = null,
-			Action<ITable<T>> action = null,
-			string serverName        = null)
+			string? databaseName      = null,
+			string? schemaName        = null,
+			Action<ITable<T>>? action = null,
+			string? serverName        = null)
 		{
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
@@ -162,7 +161,7 @@ namespace LinqToDB
 		/// <param name="items">Records to insert into table.</param>
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <returns>Number of records, inserted into table.</returns>
-		public long Copy(IEnumerable<T> items, BulkCopyOptions options = null)
+		public long Copy(IEnumerable<T> items, BulkCopyOptions? options = null)
 		{
 			var count = options != null ?
 				_table.BulkCopy(options, items) :
@@ -219,9 +218,9 @@ namespace LinqToDB
 
 		#region ITable<T> implementation
 
-		public string ServerName   => _table.ServerName;
-		public string DatabaseName => _table.DatabaseName;
-		public string SchemaName   => _table.SchemaName;
+		public string? ServerName   => _table.ServerName;
+		public string? DatabaseName => _table.DatabaseName;
+		public string? SchemaName   => _table.SchemaName;
 		public string TableName    => _table.TableName;
 
 		public string GetTableName()
@@ -233,17 +232,17 @@ namespace LinqToDB
 
 		#region ITableMutable<T> implementation
 
-		ITable<T> ITableMutable<T>.ChangeServerName(string serverName)
+		ITable<T> ITableMutable<T>.ChangeServerName(string? serverName)
 		{
 			return ((ITableMutable<T>)_table).ChangeServerName(serverName);
 		}
 
-		ITable<T> ITableMutable<T>.ChangeDatabaseName(string databaseName)
+		ITable<T> ITableMutable<T>.ChangeDatabaseName(string? databaseName)
 		{
 			return ((ITableMutable<T>)_table).ChangeDatabaseName(databaseName);
 		}
 
-		ITable<T> ITableMutable<T>.ChangeSchemaName(string schemaName)
+		ITable<T> ITableMutable<T>.ChangeSchemaName(string? schemaName)
 		{
 			return ((ITableMutable<T>)_table).ChangeSchemaName(schemaName);
 		}
@@ -362,10 +361,10 @@ namespace LinqToDB
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
-			string tableName    = null,
-			string databaseName = null,
-			string schemaName   = null,
-			string serverName   = null)
+			string? tableName    = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			return new TempTable<T>(db, tableName, databaseName, schemaName, serverName);
 		}
@@ -385,11 +384,11 @@ namespace LinqToDB
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] IEnumerable<T> items,
-			BulkCopyOptions options = null,
-			string tableName    = null,
-			string databaseName = null,
-			string schemaName   = null,
-			string serverName   = null)
+			BulkCopyOptions? options = null,
+			string? tableName    = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName, serverName);
 		}
@@ -408,12 +407,12 @@ namespace LinqToDB
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
-			[JetBrains.Annotations.NotNull] string tableName,
+			string? tableName,
 			[JetBrains.Annotations.NotNull] IEnumerable<T> items,
-			BulkCopyOptions options = null,
-			string databaseName = null,
-			string schemaName   = null,
-			string serverName   = null)
+			BulkCopyOptions? options = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			return new TempTable<T>(db, tableName, items, options, databaseName, schemaName, serverName);
 		}
@@ -433,11 +432,11 @@ namespace LinqToDB
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
-			string tableName         = null,
-			string databaseName      = null,
-			string schemaName        = null,
-			Action<ITable<T>> action = null,
-			string serverName        = null)
+			string? tableName         = null,
+			string? databaseName      = null,
+			string? schemaName        = null,
+			Action<ITable<T>>? action = null,
+			string? serverName        = null)
 		{
 			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action, serverName);
 		}
@@ -460,11 +459,11 @@ namespace LinqToDB
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
 			[JetBrains.Annotations.NotNull] Action<EntityMappingBuilder<T>> setTable,
-			string tableName         = null,
-			string databaseName      = null,
-			string schemaName        = null,
-			Action<ITable<T>> action = null,
-			string serverName        = null)
+			string? tableName         = null,
+			string? databaseName      = null,
+			string? schemaName        = null,
+			Action<ITable<T>>? action = null,
+			string? serverName        = null)
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
@@ -487,12 +486,12 @@ namespace LinqToDB
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
-			[JetBrains.Annotations.NotNull] string tableName,
+			string? tableName,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
-			string databaseName      = null,
-			string schemaName        = null,
-			Action<ITable<T>> action = null,
-			string serverName        = null)
+			string? databaseName      = null,
+			string? schemaName        = null,
+			Action<ITable<T>>? action = null,
+			string? serverName        = null)
 		{
 			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action, serverName);
 		}
@@ -513,13 +512,13 @@ namespace LinqToDB
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
-			[JetBrains.Annotations.NotNull] string tableName,
+			string? tableName,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
 			[JetBrains.Annotations.NotNull] Action<EntityMappingBuilder<T>> setTable,
-			string databaseName      = null,
-			string schemaName        = null,
-			Action<ITable<T>> action = null,
-			string serverName        = null)
+			string? databaseName      = null,
+			string? schemaName        = null,
+			Action<ITable<T>>? action = null,
+			string? serverName        = null)
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 

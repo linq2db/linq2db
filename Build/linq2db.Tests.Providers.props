@@ -8,16 +8,16 @@
 	
 	<ItemGroup>
 		<PackageReference Include="System.Memory" Version="4.5.3" />
-		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />
 
 		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.111" />
 		<PackageReference Include="Npgsql" Version="4.0.8" />
-		<PackageReference Include="MySql.Data" Version="8.0.16" Alias="MySqlData" />
-		<PackageReference Include="MySqlConnector" Version="0.55.0" Alias="MySqlConnector" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="6.6.0" />
-		<PackageReference Include="AdoNetCore.AseClient" Version="0.13.1" />
+		<PackageReference Include="MySql.Data" Version="8.0.17" Alias="MySqlData" />
+		<PackageReference Include="MySqlConnector" Version="0.56.0" Alias="MySqlConnector" />
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="6.7.0" />
+		<PackageReference Include="AdoNetCore.AseClient" Version="0.14.0" />
 
-		<PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
+		<PackageReference Include="NUnit3TestAdapter" Version="3.14.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
 
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
@@ -52,7 +52,7 @@
 		</Reference>
 
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
-		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.3.0" />
+		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.3.1" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
@@ -65,7 +65,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.3" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="2.2.6" />
 
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->

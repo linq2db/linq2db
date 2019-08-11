@@ -11,8 +11,8 @@
 		</summary>
 		<tags>linq linq2db MySql LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="MySql.Data" version="6.10.6" />
-			<dependency id="linq2db"    version="2.6.0"  />
+			<dependency id="MySql.Data" version="8.0.17" />
+			<dependency id="linq2db"    version="3.0.0"  />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>
