@@ -16,7 +16,7 @@ Legend:
 - :heavy_minus_sign: - test configuration not supported (e.g. db/provider not available for target OS/Framework)
 - :heavy_check_mark: - test job implemented
 - :x: - test job not implemented yet
-- `?`: test job status not reviewed yet
+- :question: - test job status not reviewed yet
 - `(R)`: test job was running before using Travis or Appveryor CI (to track not migrated yet tests)
 - `net46`: .NET Framework 4.6
 - `netcoreapp2.0`: .NETCoreApp 2.0
@@ -34,19 +34,32 @@ Legend:
 |Access<sup>[3](#notes)</sup><br>ACE OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL CE<sup>[4](#notes)</sup>|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.6.1<br>with NorthwindDB<sup>[5](#notes)</sup> Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 5.7<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.17|:question:|:question:|:question:|:question:|
+|MySQL 8<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.17|:question:|:question:|:question:|:question:|
+|MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.56.0|:question:|:question:|:question:|:question:|
+|MariaDB 10<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.17|:question:|:question:|:question:|:question:|
+|PostgreSQL 9.5<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:question:|:question:|:question:|:question:|
+|PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:question:|:question:|:question:|:question:|
+|PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:question:|:question:|:question:|:question:|
+|PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:question:|:question:|:question:|:question:|
 |separator between automated and pending providers|-|-|-|-|
-|MySQL (5.7):[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|v|v|v|v|
-|MySQL:[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|(R)|(R)|(R)|?|
-|PostgreSQL:[Npgsql](https://www.nuget.org/packages/Npgsql/)|(R)|(R)|?|?|
 |Azure SQL:[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)|?|?|?|?|
 |DB2 LUW|?|?|?|?|
 |Informix|?|?|?|?|
 |SAP HANA 2.0|?|?|?|?|
-|MariaDB|?|?|?|?|
 |SAP/Sybase ASE|?|?|?|?|
 |SAP/Sybase ASE:[AdoNetCore.AseClient](https://www.nuget.org/packages/AdoNetCore.AseClient/)|?|?|?|?|
 |Oracle|?|?|?|?|
 |Firebird:[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/)|?|?|?|?|
+|PostgreSQL 9.2<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:x:|:x:|:x:|:x:|
+|PostgreSQL 9.3<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:x:|:x:|:x:|:x:|
+|MS SQL Server 2000<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.6.1|:x:|:x:|:x:|:x:|
+|MS SQL Server 2005<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.6.1|:x:|:x:|:x:|:x:|
+|MS SQL Server 2008<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.6.1|:x:|:x:|:x:|:x:|
+|MS SQL Server 2012<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.6.1|:x:|:x:|:x:|:x:|
+|MS SQL Server 2014<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.6.1|:x:|:x:|:x:|:x:|
+|MS SQL Server 2016<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.6.1|:x:|:x:|:x:|:x:|
+|MS SQL Server 2019<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.6.1|:x:|:x:|:x:|:x:|
 
 ###### Notes:
 1. `TestNoopProvider` is a fake test provider to perform tests without database dependencies

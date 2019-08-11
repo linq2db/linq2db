@@ -1,2 +1,2 @@
-﻿echo missing suitable docker image yet
+echo missing suitable docker image yet
 exit 1
