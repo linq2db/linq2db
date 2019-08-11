@@ -1,8 +1,8 @@
 ﻿{
 	"CORE2.Azure": {
 		"Providers": [
-			// posgresql latest (12)
-			"PostgreSQL"
+			// posgresql 9.5
+			"PostgreSQL.9.5"
 		]
 	}
 }

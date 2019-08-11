@@ -1,8 +1,8 @@
 ﻿{
 	"NET46.Azure": {
 		"Providers": [
-			// posgresql latest (12)
-			"PostgreSQL"
+			// MySql 5.7
+			"MySql57"
 		]
 	}
 }

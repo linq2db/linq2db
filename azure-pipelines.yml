@@ -199,9 +199,10 @@ stages:
       displayName: Publish to Nuget.org
       condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
 
-####################################
-#  Tests: Windows (NETFX 4.6) 2019 #
-####################################
+##############################################################################################
+#  Tests: Windows (NETFX 4.6)                                                                #
+#  Windows 2019 (for Win2019 docker images, chocolatey-dependent tests and non-docker tests) #
+##############################################################################################
   - job: test_win_netfx46_job_2019
     pool:
       vmImage: 'windows-2019'
@@ -276,9 +277,10 @@ stages:
       inputs:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
-####################################
-#  Tests: Windows (NETFX 4.6) 2016 #
-####################################
+#############################################
+#  Tests: Windows (NETFX 4.6)               #
+#  Windows 2016 (for Win2016 docker images) #
+#############################################
   - job: test_win_netfx46_job_2016
     pool:
       vmImage: 'vs2017-win2016'
@@ -288,18 +290,38 @@ stages:
 
     strategy:
       matrix:
-        SqlServer2017:
-          title: 'SQL Server 2017'
-          config: 'sqlserver.2017'
-          script: 'sqlserver.2017.cmd'
-#        MySQL:
-#          title: 'MySQL 5.7'
-#          config: 'mysql'
-#          script: 'mysql.cmd'
-#        PostgreSQL:
-#          title: 'PostgreSQL'
-#          config: 'pgsql'
-#          script: 'pgsql.cmd'
+#        SqlServer2017:
+#          title: 'SQL Server 2017'
+#          config: 'sqlserver.2017'
+#          script: 'sqlserver.2017.cmd'
+        MySQL:
+          title: 'MySQL'
+          config: 'mysql'
+          script: 'mysql.cmd'
+        MySQL57:
+          title: 'MySQL 5.7'
+          config: 'mysql57'
+          script: 'mysql57.cmd'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb'
+          script: 'mariadb.cmd'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'pgsql.cmd'
+        PostgreSQL95:
+          title: 'PostgreSQL 9.5'
+          config: 'pgsql'
+          script: 'pgsql95.cmd'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql'
+          script: 'pgsql10.cmd'
+        PostgreSQL11:
+          title: 'PostgreSQL 11'
+          config: 'pgsql'
+          script: 'pgsql11.cmd'
 
     steps:
     - checkout: none
@@ -360,24 +382,44 @@ stages:
 
     strategy:
       matrix:
-        SQLite:
-          title: 'SQLite'
-          config: 'sqlite'
-        SQLite_MS:
-          title: 'SQLite.MS'
-          config: 'sqlite.ms'
-        SqlServer2017:
-          title: 'SQL Server 2017'
-          config: 'sqlserver.2017'
-          script: 'sqlserver.2017.cmd'
-#        MySQL:
-#          title: 'MySQL 5.7'
-#          config: 'mysql'
-#          script: 'mysql.cmd'
-#        PostgreSQL:
-#          title: 'PostgreSQL'
-#          config: 'pgsql'
-#          script: 'pgsql.cmd'
+#        SQLite:
+#          title: 'SQLite'
+#          config: 'sqlite'
+#        SQLite_MS:
+#          title: 'SQLite.MS'
+#          config: 'sqlite.ms'
+#        SqlServer2017:
+#          title: 'SQL Server 2017'
+#          config: 'sqlserver.2017'
+#          script: 'sqlserver.2017.cmd'
+        MySQL:
+          title: 'MySQL'
+          config: 'mysql'
+          script: 'mysql.cmd'
+        MySQL57:
+          title: 'MySQL 5.7'
+          config: 'mysql57'
+          script: 'mysql57.cmd'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb'
+          script: 'mariadb.cmd'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'pgsql.cmd'
+        PostgreSQL95:
+          title: 'PostgreSQL 9.5'
+          config: 'pgsql'
+          script: 'pgsql95.cmd'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql'
+          script: 'pgsql10.cmd'
+        PostgreSQL11:
+          title: 'PostgreSQL 11'
+          config: 'pgsql'
+          script: 'pgsql11.cmd'
     steps:
     - checkout: none
 
@@ -426,24 +468,44 @@ stages:
 
     strategy:
       matrix:
-        SQLite:
-          title: 'SQLite'
-          config: 'sqlite'
-        SQLite_MS:
-          title: 'SQLite.MS'
-          config: 'sqlite.ms'
-        SqlServer2017:
-          title: 'SQL Server 2017'
-          config: 'sqlserver.2017'
-          script: 'sqlserver.2017.sh'
-#        MySQL:
-#          title: 'MySQL 5.7'
-#          config: 'mysql'
-#          script: 'mysql.sh'
-#        PostgreSQL:
-#          title: 'PostgreSQL'
-#          config: 'pgsql'
-#          script: 'pgsql.sh'
+#        SQLite:
+#          title: 'SQLite'
+#          config: 'sqlite'
+#        SQLite_MS:
+#          title: 'SQLite.MS'
+#          config: 'sqlite.ms'
+#        SqlServer2017:
+#          title: 'SQL Server 2017'
+#          config: 'sqlserver.2017'
+#          script: 'sqlserver.2017.sh'
+        MySQL:
+          title: 'MySQL'
+          config: 'mysql'
+          script: 'mysql.sh'
+        MySQL57:
+          title: 'MySQL 5.7'
+          config: 'mysql57'
+          script: 'mysql57.sh'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb'
+          script: 'mariadb.sh'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'pgsql.sh'
+        PostgreSQL95:
+          title: 'PostgreSQL 9.5'
+          config: 'pgsql'
+          script: 'pgsql95.sh'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql'
+          script: 'pgsql10.sh'
+        PostgreSQL11:
+          title: 'PostgreSQL 11'
+          config: 'pgsql'
+          script: 'pgsql11.sh'
     steps:
     - checkout: none
 
@@ -496,24 +558,44 @@ stages:
 
     strategy:
       matrix:
-        SQLite:
-          title: 'SQLite'
-          config: 'sqlite'
-        SQLite_MS:
-          title: 'SQLite.MS'
-          config: 'sqlite.ms'
-        SqlServer2017:
-          title: 'SQL Server 2017'
-          config: 'sqlserver.2017'
-          script: 'mac.sqlserver.2017.sh'
-#        MySQL:
-#          title: 'MySQL 5.7'
-#          config: 'mysql'
-#          script: 'mysql.sh'
-#        PostgreSQL:
-#          title: 'PostgreSQL'
-#          config: 'pgsql'
-#          script: 'pgsql.sh'
+#        SQLite:
+#          title: 'SQLite'
+#          config: 'sqlite'
+#        SQLite_MS:
+#          title: 'SQLite.MS'
+#          config: 'sqlite.ms'
+#        SqlServer2017:
+#          title: 'SQL Server 2017'
+#          config: 'sqlserver.2017'
+#          script: 'mac.sqlserver.2017.sh'
+        MySQL:
+          title: 'MySQL'
+          config: 'mysql'
+          script: 'mac.mysql.sh'
+        MySQL57:
+          title: 'MySQL 5.7'
+          config: 'mysql57'
+          script: 'mac.mysql57.sh'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb'
+          script: 'mac.mariadb.sh'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'mac.pgsql.sh'
+        PostgreSQL95:
+          title: 'PostgreSQL 9.5'
+          config: 'pgsql'
+          script: 'mac.pgsql95.sh'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql'
+          script: 'mac.pgsql10.sh'
+        PostgreSQL11:
+          title: 'PostgreSQL 11'
+          config: 'pgsql'
+          script: 'mac.pgsql11.sh'
 
     steps:
     - checkout: none

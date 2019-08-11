@@ -1,8 +1,8 @@
 ﻿{
 	"NET46.Azure": {
 		"Providers": [
-			// posgresql latest (12)
-			"PostgreSQL"
+			// posgresql 10
+			"PostgreSQL.10"
 		]
 	}
 }

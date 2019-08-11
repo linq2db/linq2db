@@ -6,10 +6,10 @@ docker ps -a
 # Wait for start
 echo "Waiting for SQL Server to accept connections"
 docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "SELECT 1"
-is_up=$$?
-while [ $$is_up -ne 0 ] ; do
+is_up=$?
+while [ $is_up -ne 0 ] ; do
     docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "SELECT 1"
-    is_up=$$?
+    is_up=$?
 done
 echo "SQL Server is operational"
 
