@@ -9,4 +9,4 @@ docker exec pgsql psql -U postgres -c "\l"
 if %errorlevel% NEQ 0 goto repeat
 echo "PGSQL is operational"
 
-docker exec pgsql pgsql -U postgres -c "create database testdata"
+docker exec pgsql psql -U postgres -c "create database testdata"

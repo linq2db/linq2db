@@ -28,4 +28,4 @@ while [ $is_up -ne 0 ] ; do
 done
 echo "PostgreSQL is operational"
 
-docker exec pgsql pgsql -U postgres -c 'create database testdata'
+docker exec pgsql psql -U postgres -c 'create database testdata'

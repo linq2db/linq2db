@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -36,6 +35,8 @@ namespace LinqToDB
 		public static ITable<T> GetTable<T>(this IDataContext dataContext)
 			where T : class
 		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+
 			return new Table<T>(dataContext);
 		}
 
@@ -53,13 +54,14 @@ namespace LinqToDB
 		[Pure]
 		public static ITable<T> GetTable<T>(
 			this IDataContext dataContext,
-			object instance,
+			object? instance,
 			[NotNull] MethodInfo methodInfo,
-			[NotNull] params object[] parameters)
+			[NotNull] params object?[] parameters)
 			where T : class
 		{
-			if (methodInfo == null) throw new ArgumentNullException(nameof(methodInfo));
-			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (methodInfo  == null) throw new ArgumentNullException(nameof(methodInfo));
+			if (parameters  == null) throw new ArgumentNullException(nameof(parameters));
 
 			if (!typeof(ITable<>).IsSameOrParentOf(methodInfo.ReturnType))
 				throw new LinqException(
@@ -106,6 +108,9 @@ namespace LinqToDB
 			[NotNull] Expression<Func<TDc,TResult>> query)
 			where TDc : IDataContext
 		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (query       == null) throw new ArgumentNullException(nameof(query));
+
 			return CompiledQuery.Compile(query);
 		}
 
@@ -125,6 +130,9 @@ namespace LinqToDB
 			[NotNull] Expression<Func<TDc,TArg1,TResult>> query)
 			where TDc : IDataContext
 		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (query       == null) throw new ArgumentNullException(nameof(query));
+
 			return CompiledQuery.Compile(query);
 		}
 
@@ -145,6 +153,9 @@ namespace LinqToDB
 			[NotNull] Expression<Func<TDc,TArg1,TArg2,TResult>> query)
 			where TDc : IDataContext
 		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (query       == null) throw new ArgumentNullException(nameof(query));
+
 			return CompiledQuery.Compile(query);
 		}
 
@@ -166,6 +177,9 @@ namespace LinqToDB
 			[NotNull] Expression<Func<TDc,TArg1,TArg2,TArg3,TResult>> query)
 			where TDc : IDataContext
 		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (query       == null) throw new ArgumentNullException(nameof(query));
+
 			return CompiledQuery.Compile(query);
 		}
 
@@ -185,9 +199,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int Insert<T>([NotNull] this IDataContext dataContext, T obj,
-			string tableName = null, string databaseName = null, string schemaName = null, string serverName = null)
+			string? tableName = null, string? databaseName = null, string? schemaName = null, string? serverName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+
 			return QueryRunner.Insert<T>.Query(dataContext, obj, tableName, serverName, databaseName, schemaName);
 		}
 
@@ -206,13 +221,14 @@ namespace LinqToDB
 		public static Task<int> InsertAsync<T>(
 			[NotNull] this IDataContext dataContext,
 			T obj,
-			string            tableName    = null,
-			string            databaseName = null,
-			string            schemaName   = null,
-			string            serverName   = null,
+			string?           tableName    = null,
+			string?           databaseName = null,
+			string?           schemaName   = null,
+			string?           serverName   = null,
 			CancellationToken token = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+
 			return QueryRunner.Insert<T>.QueryAsync(dataContext, obj, tableName, serverName, databaseName, schemaName, token);
 		}
 
@@ -232,7 +248,11 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
-		public static int InsertOrReplace<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, string serverName = null)
+		public static int InsertOrReplace<T>([NotNull] this IDataContext dataContext, T obj,
+			string? tableName    = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.InsertOrReplace<T>.Query(dataContext, obj, tableName, serverName, databaseName, schemaName);
@@ -254,10 +274,10 @@ namespace LinqToDB
 		public static Task<int> InsertOrReplaceAsync<T>(
 			[NotNull] this IDataContext dataContext,
 			T obj,
-			string            tableName    = null,
-			string            databaseName = null,
-			string            schemaName   = null,
-			string            serverName   = null,
+			string?           tableName    = null,
+			string?           databaseName = null,
+			string?           schemaName   = null,
+			string?           serverName   = null,
 			CancellationToken token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -280,7 +300,13 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
-		public static object InsertWithIdentity<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, string serverName = null)
+		public static object InsertWithIdentity<T>(
+			[NotNull] this IDataContext dataContext,
+			T obj,
+			string? tableName    = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, tableName, serverName, databaseName, schemaName);
@@ -298,7 +324,13 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
-		public static int InsertWithInt32Identity<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, string serverName = null)
+		public static int InsertWithInt32Identity<T>(
+			[NotNull] this IDataContext dataContext,
+			T obj,
+			string? tableName    = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return dataContext.MappingSchema.ChangeTypeTo<int>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, tableName, serverName, databaseName, schemaName));
@@ -316,7 +348,13 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
-		public static long InsertWithInt64Identity<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, string serverName = null)
+		public static long InsertWithInt64Identity<T>(
+			[NotNull] this IDataContext dataContext,
+			T obj,
+			string? tableName    = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return dataContext.MappingSchema.ChangeTypeTo<long>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, tableName, serverName, databaseName, schemaName));
@@ -334,7 +372,13 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
-		public static decimal InsertWithDecimalIdentity<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, string serverName = null)
+		public static decimal InsertWithDecimalIdentity<T>(
+			[NotNull] this IDataContext dataContext,
+			T obj,
+			string? tableName    = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return dataContext.MappingSchema.ChangeTypeTo<decimal>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, tableName, serverName, databaseName, schemaName));
@@ -356,10 +400,10 @@ namespace LinqToDB
 		public static Task<object> InsertWithIdentityAsync<T>(
 			[NotNull] this IDataContext dataContext,
 			T obj,
-			string            tableName    = null,
-			string            databaseName = null,
-			string            schemaName   = null,
-			string            serverName   = null,
+			string?           tableName    = null,
+			string?           databaseName = null,
+			string?           schemaName   = null,
+			string?           serverName   = null,
 			CancellationToken token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -382,10 +426,10 @@ namespace LinqToDB
 		public static async Task<int> InsertWithInt32IdentityAsync<T>(
 			[NotNull] this IDataContext dataContext,
 			T obj,
-			string            tableName    = null,
-			string            databaseName = null,
-			string            schemaName   = null,
-			string            serverName   = null,
+			string?           tableName    = null,
+			string?           databaseName = null,
+			string?           schemaName   = null,
+			string?           serverName   = null,
 			CancellationToken token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -410,10 +454,10 @@ namespace LinqToDB
 		public static async Task<long> InsertWithInt64IdentityAsync<T>(
 			[NotNull] this IDataContext dataContext,
 			T obj,
-			string            tableName    = null,
-			string            databaseName = null,
-			string            schemaName   = null,
-			string            serverName   = null,
+			string?           tableName    = null,
+			string?           databaseName = null,
+			string?           schemaName   = null,
+			string?           serverName   = null,
 			CancellationToken token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -438,10 +482,10 @@ namespace LinqToDB
 		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>(
 			[NotNull] this IDataContext dataContext,
 			T obj,
-			string            tableName    = null,
-			string            databaseName = null,
-			string            schemaName   = null,
-			string            serverName   = null,
+			string?           tableName    = null,
+			string?           databaseName = null,
+			string?           schemaName   = null,
+			string?           serverName   = null,
 			CancellationToken token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -466,7 +510,13 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
-		public static int Update<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, string serverName = null)
+		public static int Update<T>(
+			[NotNull] this IDataContext dataContext,
+			T obj,
+			string? tableName    = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.Update<T>.Query(dataContext, obj, tableName, serverName, databaseName, schemaName);
@@ -488,10 +538,10 @@ namespace LinqToDB
 		public static Task<int> UpdateAsync<T>(
 			[NotNull] this IDataContext dataContext,
 			T obj,
-			string            tableName    = null,
-			string            databaseName = null,
-			string            schemaName   = null,
-			string            serverName   = null,
+			string?           tableName    = null,
+			string?           databaseName = null,
+			string?           schemaName   = null,
+			string?           serverName   = null,
 			CancellationToken token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -514,7 +564,13 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
-		public static int Delete<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, string serverName = null)
+		public static int Delete<T>(
+			[NotNull] this IDataContext dataContext,
+			T obj,
+			string? tableName    = null,
+			string? databaseName = null,
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.Delete<T>.Query(dataContext, obj, tableName, serverName, databaseName, schemaName);
@@ -536,10 +592,10 @@ namespace LinqToDB
 		public static Task<int> DeleteAsync<T>(
 			[NotNull] this IDataContext dataContext,
 			T obj,
-			string            tableName    = null,
-			string            databaseName = null,
-			string            schemaName   = null,
-			string            serverName   = null,
+			string?           tableName    = null,
+			string?           databaseName = null,
+			string?           schemaName   = null,
+			string?           serverName   = null,
 			CancellationToken token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -570,13 +626,13 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Created table as queryable source.</returns>
 		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext,
-			string          tableName       = null,
-			string          databaseName    = null,
-			string          schemaName      = null,
-			string          statementHeader = null,
-			string          statementFooter = null,
+			string?         tableName       = null,
+			string?         databaseName    = null,
+			string?         schemaName      = null,
+			string?         statementHeader = null,
+			string?         statementFooter = null,
 			DefaultNullable defaultNullable = DefaultNullable.None,
-			string          serverName      = null)
+			string?         serverName      = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.CreateTable<T>.Query(dataContext,
@@ -604,13 +660,13 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Created table as queryable source.</returns>
 		public static Task<ITable<T>> CreateTableAsync<T>([NotNull] this IDataContext dataContext,
-			string            tableName       = null,
-			string            databaseName    = null,
-			string            schemaName      = null,
-			string            statementHeader = null,
-			string            statementFooter = null,
+			string?           tableName       = null,
+			string?           databaseName    = null,
+			string?           schemaName      = null,
+			string?           statementHeader = null,
+			string?           statementFooter = null,
 			DefaultNullable   defaultNullable = DefaultNullable.None,
-			string            serverName      = null,
+			string?           serverName      = null,
 			CancellationToken token           = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -637,11 +693,11 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		public static void DropTable<T>(
 			[NotNull] this IDataContext dataContext,
-			string tableName                 = null,
-			string databaseName              = null,
-			string schemaName                = null,
-			bool   throwExceptionIfNotExists = true,
-			string serverName                = null)
+			string? tableName                 = null,
+			string? databaseName              = null,
+			string? schemaName                = null,
+			bool    throwExceptionIfNotExists = true,
+			string? serverName                = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
@@ -673,11 +729,11 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		public static void DropTable<T>(
 			[NotNull] this ITable<T> table,
-			string tableName                 = null,
-			string databaseName              = null,
-			string schemaName                = null,
-			bool   throwExceptionIfNotExists = true,
-			string serverName                = null)
+			string? tableName                 = null,
+			string? databaseName              = null,
+			string? schemaName                = null,
+			bool    throwExceptionIfNotExists = true,
+			string? serverName                = null)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -723,11 +779,11 @@ namespace LinqToDB
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static async Task DropTableAsync<T>(
 			[NotNull] this IDataContext dataContext,
-			string tableName                 = null,
-			string databaseName              = null,
-			string schemaName                = null,
-			bool   throwExceptionIfNotExists = true,
-			string serverName                = null,
+			string? tableName                 = null,
+			string? databaseName              = null,
+			string? schemaName                = null,
+			bool    throwExceptionIfNotExists = true,
+			string? serverName                = null,
 			CancellationToken token          = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -762,11 +818,11 @@ namespace LinqToDB
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static async Task DropTableAsync<T>(
 			[NotNull] this ITable<T> table,
-			string tableName                 = null,
-			string databaseName              = null,
-			string schemaName                = null,
-			bool   throwExceptionIfNotExists = true,
-			string serverName                = null,
+			string? tableName                 = null,
+			string? databaseName              = null,
+			string? schemaName                = null,
+			bool    throwExceptionIfNotExists = true,
+			string? serverName                = null,
 			CancellationToken token          = default)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
@@ -813,7 +869,7 @@ namespace LinqToDB
 		public static IQueryable<T> GetCte<T>(
 			[NotNull]   this IDataContext                 dataContext,
 			[NotNull, InstantHandle] Func<IQueryable<T>,IQueryable<T>> cteBody,
-			[CanBeNull] string                            cteTableName = null)
+			[CanBeNull] string?                           cteTableName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (cteBody     == null) throw new ArgumentNullException(nameof(cteBody));
@@ -840,7 +896,7 @@ namespace LinqToDB
 		/// <returns>Common table expression.</returns>
 		public static IQueryable<T> GetCte<T>(
 			[NotNull]                this IDataContext                 dataContext,
-			[CanBeNull]              string                            cteTableName,
+			[CanBeNull]              string?                           cteTableName,
 			[NotNull, InstantHandle] Func<IQueryable<T>,IQueryable<T>> cteBody)
 		{
 			return GetCte(dataContext, cteBody, cteTableName);
@@ -941,7 +997,7 @@ namespace LinqToDB
 		public static IQueryable<TEntity> FromSql<TEntity>(
 			[NotNull] this       IDataContext dataContext,
 			[SqlQueryDependent]  RawSqlString sql,
-			[NotNull] params     object[]     parameters)
+			[NotNull] params     object?[]    parameters)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
@@ -959,7 +1015,7 @@ namespace LinqToDB
 		#region SelectQuery
 
 		public static MethodInfo SelectQueryMethodInfo =
-			MemberHelper.MethodOf(() => SelectQuery<int>(null, null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => SelectQuery<int>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		///     <para>

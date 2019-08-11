@@ -229,10 +229,6 @@ stages:
 #          title: 'SQL CE'
 #          config: 'sqlce'
 #          psscript: 'sqlce.ps1'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb'
-          script: 'mariadb.cmd'
 
     steps:
     - checkout: none
@@ -298,30 +294,34 @@ stages:
 #          title: 'SQL Server 2017'
 #          config: 'sqlserver.2017'
 #          script: 'sqlserver.2017.cmd'
-        MySQL:
-          title: 'MySQL'
-          config: 'mysql'
-          script: 'mysql.cmd'
-        MySQL57:
-          title: 'MySQL 5.7'
-          config: 'mysql57'
-          script: 'mysql57.cmd'
-        PostgreSQL:
-          title: 'PostgreSQL'
-          config: 'pgsql'
-          script: 'pgsql.cmd'
-        PostgreSQL95:
-          title: 'PostgreSQL 9.5'
-          config: 'pgsql'
-          script: 'pgsql95.cmd'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql'
-          script: 'pgsql10.cmd'
-        PostgreSQL11:
-          title: 'PostgreSQL 11'
-          config: 'pgsql'
-          script: 'pgsql11.cmd'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb'
+#          script: 'mariadb.cmd'
+#        MySQL:
+#          title: 'MySQL'
+#          config: 'mysql'
+#          script: 'mysql.cmd'
+#        MySQL57:
+#          title: 'MySQL 5.7'
+#          config: 'mysql57'
+#          script: 'mysql57.cmd'
+#        PostgreSQL:
+#          title: 'PostgreSQL'
+#          config: 'pgsql'
+#          script: 'pgsql.cmd'
+#        PostgreSQL95:
+#          title: 'PostgreSQL 9.5'
+#          config: 'pgsql'
+#          script: 'pgsql95.cmd'
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql'
+#          script: 'pgsql10.cmd'
+#        PostgreSQL11:
+#          title: 'PostgreSQL 11'
+#          config: 'pgsql'
+#          script: 'pgsql11.cmd'
 
     steps:
     - checkout: none
@@ -392,34 +392,34 @@ stages:
 #          title: 'SQL Server 2017'
 #          config: 'sqlserver.2017'
 #          script: 'sqlserver.2017.cmd'
-        MySQL:
-          title: 'MySQL'
-          config: 'mysql'
-          script: 'mysql.cmd'
-        MySQL57:
-          title: 'MySQL 5.7'
-          config: 'mysql57'
-          script: 'mysql57.cmd'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb'
-          script: 'mariadb.cmd'
-        PostgreSQL:
-          title: 'PostgreSQL'
-          config: 'pgsql'
-          script: 'pgsql.cmd'
-        PostgreSQL95:
-          title: 'PostgreSQL 9.5'
-          config: 'pgsql'
-          script: 'pgsql95.cmd'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql'
-          script: 'pgsql10.cmd'
-        PostgreSQL11:
-          title: 'PostgreSQL 11'
-          config: 'pgsql'
-          script: 'pgsql11.cmd'
+#        MySQL:
+#          title: 'MySQL'
+#          config: 'mysql'
+#          script: 'mysql.cmd'
+#        MySQL57:
+#          title: 'MySQL 5.7'
+#          config: 'mysql57'
+#          script: 'mysql57.cmd'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb'
+#          script: 'mariadb.cmd'
+#        PostgreSQL:
+#          title: 'PostgreSQL'
+#          config: 'pgsql'
+#          script: 'pgsql.cmd'
+#        PostgreSQL95:
+#          title: 'PostgreSQL 9.5'
+#          config: 'pgsql'
+#          script: 'pgsql95.cmd'
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql'
+#          script: 'pgsql10.cmd'
+#        PostgreSQL11:
+#          title: 'PostgreSQL 11'
+#          config: 'pgsql'
+#          script: 'pgsql11.cmd'
     steps:
     - checkout: none
 
