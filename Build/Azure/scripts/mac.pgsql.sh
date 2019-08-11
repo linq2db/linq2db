@@ -15,7 +15,7 @@ echo "Waiting for docker service to be in the running state"
 done
 
 docker pull postgres:12
-docker run -d --name pgsql -p 5432:5432 postgres:12 -e POSTGRES_PASSWORD=Password12!
+docker run -d --name pgsql -p 5432:5432 postgres:12 -e POSTGRES_PASSWORD=Password12! --net host
 docker ps -a
 
 # Wait for start
