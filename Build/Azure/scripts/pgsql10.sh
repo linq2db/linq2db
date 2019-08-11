@@ -1,6 +1,6 @@
 #!/bin/bash
 docker pull postgres:10
-docker run -d --name pgsql postgres:10 -e POSTGRES_PASSWORD=Password12! -e POSTGRES_DB=testdata
+docker run -d --name pgsql --net host postgres:10 -e POSTGRES_PASSWORD=Password12! -e POSTGRES_DB=testdata -p 5432:5432 -v /var/run/postgresql:/var/run/postgresql
 docker ps -a
 
 # Wait for start
