@@ -212,9 +212,9 @@ stages:
 
     strategy:
       matrix:
-#        SQLite:
-#          title: 'SQLite'
-#          config: 'sqlite'
+        SQLite:
+          title: 'SQLite'
+          config: 'sqlite'
 #        SQLite_MS:
 #          title: 'SQLite.MS'
 #          config: 'sqlite.ms'
@@ -290,10 +290,10 @@ stages:
 
     strategy:
       matrix:
-#        SqlServer2017:
-#          title: 'SQL Server 2017'
-#          config: 'sqlserver.2017'
-#          script: 'sqlserver.2017.cmd'
+        SqlServer2017:
+          title: 'SQL Server 2017'
+          config: 'sqlserver.2017'
+          script: 'sqlserver.2017.cmd'
 #        MariaDB:
 #          title: 'MariaDB'
 #          config: 'mariadb'
@@ -382,9 +382,9 @@ stages:
 
     strategy:
       matrix:
-#        SQLite:
-#          title: 'SQLite'
-#          config: 'sqlite'
+        SQLite:
+          title: 'SQLite'
+          config: 'sqlite'
 #        SQLite_MS:
 #          title: 'SQLite.MS'
 #          config: 'sqlite.ms'
