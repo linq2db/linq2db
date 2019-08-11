@@ -5,7 +5,7 @@ docker ps -a
 echo "Waiting for PGSQL to start"
 :repeat
 echo pinging pgsql
-docker exec pgsql psql -U postgres -c "\l"
+docker exec pgsql psql -U postgres -c "select 1"
 if %errorlevel% NEQ 0 goto repeat
 echo "PGSQL is operational"
 

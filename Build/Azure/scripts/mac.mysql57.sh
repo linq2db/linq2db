@@ -20,10 +20,10 @@ docker ps -a
 
 # Wait for start
 echo "Waiting for MySQL started"
-docker exec mysql --protocol TCP -uroot -proot -e "show databases;"
+docker exec mysql mysql --protocol TCP -uroot -proot -e "show databases;"
 is_up=$?
 while [ $is_up -ne 0 ] ; do
-    docker exec mysql --protocol TCP -uroot -proot -e "show databases;"
+    docker exec mysql mysql --protocol TCP -uroot -proot -e "show databases;"
     is_up=$?
 done
 echo "MySQL is operational"

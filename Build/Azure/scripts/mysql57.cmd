@@ -5,7 +5,7 @@ docker ps -a
 echo "Waiting for MySQL to start"
 :repeat
 echo pinging MySQL
-docker exec mysql --protocol TCP -uroot -proot -e "show databases;"
+docker exec mysql mysql --protocol TCP -uroot -proot -e "show databases;"
 if %errorlevel% NEQ 0 goto repeat
 echo "MySQL is operational"
 
