@@ -19,7 +19,7 @@ docker run -d --name mariadb -e MYSQL_ROOT_PASSWORD=root -p 33060:3306 mariadb:l
 docker ps -a
 
 retries=0
-until docker exec mariadb --protocol TCP -uroot -proot -e "show databases;"; do
+until docker exec mariadb mysql --protocol TCP -uroot -proot -e "show databases;"; do
     sleep 1
     retries=`expr $retries + 1`
     if [ $retries -gt 30 ]; then
