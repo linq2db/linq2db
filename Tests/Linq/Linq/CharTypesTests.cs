@@ -24,7 +24,7 @@ namespace Tests.Linq
 			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
 			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
 			[Column(Configuration = ProviderName.MySqlConnector, IsColumn = false)]
-			[Column(Configuration = TestProvName.MySql57,        IsColumn = false)]
+			[Column(Configuration = TestProvName.MySql56,        IsColumn = false)]
 			[Column(Configuration = TestProvName.MariaDB,        IsColumn = false)]
 			public string String;
 
@@ -34,7 +34,7 @@ namespace Tests.Linq
 			[Column("char20DataType" , Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , Configuration = ProviderName.MySql)]
 			[Column("char20DataType" , Configuration = ProviderName.MySqlConnector)]
-			[Column("char20DataType" , Configuration = TestProvName.MySql57)]
+			[Column("char20DataType" , Configuration = TestProvName.MySql56)]
 			[Column("char20DataType" , Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public string NString;
@@ -53,7 +53,7 @@ namespace Tests.Linq
 			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
 			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
 			[Column(Configuration = ProviderName.MySqlConnector, IsColumn = false)]
-			[Column(Configuration = TestProvName.MySql57,		 IsColumn = false)]
+			[Column(Configuration = TestProvName.MySql56,		 IsColumn = false)]
 			[Column(Configuration = TestProvName.MariaDB,		 IsColumn = false)]
 			public char? Char;
 
@@ -63,7 +63,7 @@ namespace Tests.Linq
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySql)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySqlConnector)]
-			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MySql57)]
+			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MySql56)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public char? NChar;
@@ -97,9 +97,8 @@ namespace Tests.Linq
 			new StringTestTable()
 		};
 
-		// TODO: MySql57 disabled due to encoding issues on CI
 		[Test]
-		public void StringTrimming([DataSources(TestProvName.MySql57, ProviderName.Informix)] string context)
+		public void StringTrimming([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -233,9 +232,8 @@ namespace Tests.Linq
 			new CharTestTable()
 		};
 
-		// TODO: MySql57 disabled due to encoding issues on CI
 		[Test]
-		public void CharTrimming([DataSources(TestProvName.MySql57, ProviderName.Informix)] string context)
+		public void CharTrimming([DataSources(ProviderName.Informix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -290,8 +288,8 @@ namespace Tests.Linq
 							  || context == ProviderName.MySql + ".LinqService"
 							  || context == ProviderName.MySqlConnector
 							  || context == ProviderName.MySqlConnector + ".LinqService"
-							  || context == TestProvName.MySql57
-							  || context == TestProvName.MySql57 + ".LinqService"
+							  || context == TestProvName.MySql56
+							  || context == TestProvName.MySql56 + ".LinqService"
 							  || context == TestProvName.MariaDB
 							  || context == TestProvName.MariaDB + ".LinqService")
 							// for some reason mysql doesn't insert space
@@ -321,8 +319,8 @@ namespace Tests.Linq
 				|| context == ProviderName.MySql + ".LinqService"
 				|| context == ProviderName.MySqlConnector
 				|| context == ProviderName.MySqlConnector + ".LinqService"
-				|| context == TestProvName.MySql57
-				|| context == TestProvName.MySql57    + ".LinqService"
+				|| context == TestProvName.MySql56
+				|| context == TestProvName.MySql56 + ".LinqService"
 				|| context == TestProvName.MariaDB
 				|| context == TestProvName.MariaDB    + ".LinqService";
 		}

@@ -1,5 +1,5 @@
-rem docker pull steeltoeoss/mysql:5.7
-docker run -d --name mysql steeltoeoss/mysql:5.7 -e MYSQL_ROOT_PASSWORD=root -p 33060:3306
+rem docker pull steeltoeoss/mysql:5.6
+docker run -d --name mysql steeltoeoss/mysql:5.6 -e MYSQL_ROOT_PASSWORD=root -p 33060:3306
 docker ps -a
 
 echo "Waiting for MySQL to start"

@@ -21,7 +21,7 @@ stages:
 ########################################
 #  Build and publish testable binaries #
 ########################################
-- stage: Build
+- stage: ''
   displayName: ''
   jobs:
   - job: build_job
@@ -302,10 +302,10 @@ stages:
 #          title: 'MySQL'
 #          config: 'mysql'
 #          script: 'mysql.cmd'
-#        MySQL57:
-#          title: 'MySQL 5.7'
-#          config: 'mysql57'
-#          script: 'mysql57.cmd'
+#        MySQL56:
+#          title: 'MySQL 5.6'
+#          config: 'mysql56'
+#          script: 'mysql56.cmd'
 #        PostgreSQL:
 #          title: 'PostgreSQL'
 #          config: 'pgsql'
@@ -396,10 +396,10 @@ stages:
 #          title: 'MySQL'
 #          config: 'mysql'
 #          script: 'mysql.cmd'
-#        MySQL57:
-#          title: 'MySQL 5.7'
-#          config: 'mysql57'
-#          script: 'mysql57.cmd'
+#        MySQL56:
+#          title: 'MySQL 5.6'
+#          config: 'mysql56'
+#          script: 'mysql56.cmd'
 #        MariaDB:
 #          title: 'MariaDB'
 #          config: 'mariadb'
@@ -482,10 +482,10 @@ stages:
           title: 'MySQL'
           config: 'mysql'
           script: 'mysql.sh'
-        MySQL57:
-          title: 'MySQL 5.7'
-          config: 'mysql57'
-          script: 'mysql57.sh'
+        MySQL56:
+          title: 'MySQL 5.6'
+          config: 'mysql56'
+          script: 'mysql56.sh'
         MariaDB:
           title: 'MariaDB'
           config: 'mariadb'
@@ -572,10 +572,10 @@ stages:
           title: 'MySQL'
           config: 'mysql'
           script: 'mac.mysql.sh'
-        MySQL57:
-          title: 'MySQL 5.7'
-          config: 'mysql57'
-          script: 'mac.mysql57.sh'
+        MySQL56:
+          title: 'MySQL 5.6'
+          config: 'mysql56'
+          script: 'mac.mysql56.sh'
         MariaDB:
           title: 'MariaDB'
           config: 'mariadb'

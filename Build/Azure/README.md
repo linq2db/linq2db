@@ -34,14 +34,14 @@ Legend:
 |Access<sup>[3](#notes)</sup><br>ACE OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL CE<sup>[4](#notes)</sup>|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.6.1<br>with NorthwindDB<sup>[5](#notes)</sup> Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|MySQL 5.7<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.17|:question:|:question:|:question:|:question:|
-|MySQL 8<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.17|:question:|:question:|:question:|:question:|
-|MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.56.0|:question:|:question:|:question:|:question:|
-|MariaDB 10<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.17|:question:|:question:|:question:|:question:|
-|PostgreSQL 9.5<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:question:|:question:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:question:|:question:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:question:|:question:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:question:|:question:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 5.6<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.17|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 8<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.17|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.56.0|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MariaDB 10<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.17|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 9.5<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |separator between automated and pending providers|-|-|-|-|
 |Azure SQL:[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)|?|?|?|?|
 |DB2 LUW|?|?|?|?|
@@ -67,3 +67,47 @@ Legend:
 3. for Access right now we don't support .net core
 4. for SQL CE right now we don't run .net core tests
 5. Northwind SQL Server tests not enabled yet, as we need SQL Server images with full-text search included
+
+###### Provider names in context of tests
+| Name | Target Database | Extra Notes |
+|:---|:---:|:---:|
+|`ProviderName.Access`|Tests against Access using OLE DB or ACE (depends on connection string)||
+|`ProviderName.DB2`|tests against DB2 LUW||
+|`ProviderName.DB2LUW`|not used||
+|`ProviderName.DB2zOS`|not used||
+|`ProviderName.Firebird`|Firebird 2.5|Should be used for latest version of FB and this one replaced with `Firebird25`|
+|`TestProvName.Firebird3`|Firebird 3.0||
+|`ProviderName.Informix`|Informix 12| TODO: move to v14|
+|`TestProvName.SqlAzure`|Azure Sql||
+|`ProviderName.SqlServer`|SQL Server (2008)|TODO: use it for latest|
+|`ProviderName.SqlServer2000`|SQL Server 2000||
+|`ProviderName.SqlServer2005`|SQL Server 2005||
+|`ProviderName.SqlServer2008`|SQL Server 2008||
+|`ProviderName.SqlServer2012`|SQL Server 2012||
+|`ProviderName.SqlServer2014`|SQL Server 2014||
+|`ProviderName.SqlServer2017`|SQL Server 2017||
+|`TestProvName.Northwind`|SQL Server FTS tests||
+|`ProviderName.MySql`|Latest MySQL using MySQL.Data||
+|`TestProvName.MySql56`|MySQL < 5.7.5|TODO:better to use version less than 5.6.4, e.g. 5.5|
+|`ProviderName.MySqlOfficial`|not used||
+|`ProviderName.MySqlConnector`|Latest MySQL using MySqlConnector||
+|`TestProvName.MariaDB`|Latest MariaDB using MySQL.Data||
+|`ProviderName.Oracle`|not used||
+|`ProviderName.OracleNative`|Oracle using native provider||
+|`ProviderName.OracleManaged`|Oracle using managed provider (core version for .net core)||
+|`ProviderName.PostgreSQL`|Latest PostgreSQL (12)||
+|`ProviderName.PostgreSQL92`|PostgreSQL 9.2-||
+|`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)||
+|`ProviderName.PostgreSQL95`|PostgreSQL 9.5+||
+|`TestProvName.PostgreSQL10`|PostgreSQL 10||
+|`TestProvName.PostgreSQL11`|PostgreSQL 11||
+|`ProviderName.SqlCe`|SQL CE||
+|`ProviderName.SQLite`|not used||
+|`ProviderName.SQLiteClassic`|System.Data.Sqlite||
+|`TestProvName.NorthwindSQLite`|System.Data.Sqlite FTS||
+|`ProviderName.SQLiteMS`|Microsoft.Data.Sqlite||
+|`TestProvName.NorthwindSQLiteMS`|Microsoft.Data.Sqlite FTS||
+|`ProviderName.Sybase`|Sybase ASE using official provider||
+|`ProviderName.SybaseManaged`|Sybase ASE using DataAction provider||
+|`ProviderName.SapHana`|SAP HANA 2||
+|`TestProvName.NoopProvider`|fake test provider to perform tests without database dependencies|

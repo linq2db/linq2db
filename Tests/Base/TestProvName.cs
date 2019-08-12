@@ -6,7 +6,10 @@ namespace Tests
 	{
 		public const string SqlAzure          = "SqlAzure.2012";
 		public const string MariaDB           = "MariaDB";
-		public const string MySql57           = "MySql57";
+		/// <summary>
+		/// MySQL less than 5.6.4 (with year(2) support and without fractional seconds)
+		/// </summary>
+		public const string MySql56           = "MySql56";
 		public const string Firebird3         = "Firebird3";
 		public const string Northwind         = "Northwind";
 		public const string NorthwindSQLite   = "Northwind.SQLite";
@@ -20,10 +23,12 @@ namespace Tests
 		/// </summary>
 		public const string NoopProvider  = "TestNoopProvider";
 
-		public const string AllMySql              = "MySql,MySqlConnector,MySql57,MariaDB";
-		// MySql excluded because v5.5 has inadequate FTS behavior
-		public const string AllMySqlFullText      = "MySqlConnector,MySql57,MariaDB";
-		public const string AllMySqlData          = "MySql,MySql57,MariaDB";
+		public const string AllMySql              = "MySql,MySqlConnector,MySql56,MariaDB";
+		// MySql <5.7 has inadequate FTS behavior
+		public const string AllMySqlFullText      = "MySql,MySqlConnector,MariaDB";
+		public const string AllMySql57Plus        = "MySql,MySqlConnector,MariaDB";
+		public const string AllMySqlData57Plus    = "MySql,MySqlConnector";
+		public const string AllMySqlData          = "MySql,MySql56,MariaDB";
 		public const string AllPostgreSQL         = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
 		public const string AllPostgreSQLv3       = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
 		public const string AllPostgreSQLLess10   = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5";
