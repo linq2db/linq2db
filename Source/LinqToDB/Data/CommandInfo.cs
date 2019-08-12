@@ -606,7 +606,7 @@ namespace LinqToDB.Data
 					if (member.Type.IsArray)
 					{
 						valueMethodInfo = _readAsArrayMethodInfo;
-						elementType     = member.Type.GetItemType();
+						elementType     = member.Type.GetItemType()!;
 					}
 					else if (member.Type.IsGenericEnumerableType())
 					{
@@ -747,7 +747,7 @@ namespace LinqToDB.Data
 					if (member.Type.IsArray)
 					{
 						valueMethodInfo = _readAsArrayAsyncMethodInfo;
-						elementType     = member.Type.GetItemType();
+						elementType     = member.Type.GetItemType()!;
 					}
 					else if (member.Type.IsGenericEnumerableType())
 					{

@@ -191,7 +191,7 @@ namespace LinqToDB
 				{
 					var nctor   = (NewExpression)items.Expression.Find(e => e.NodeType == ExpressionType.New && e.Type == t);
 					var members = nctor.Members
-						.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
+						.Select(m => m is MethodInfo info ? info.GetPropertyInfo()! : m)
 						.ToList();
 
 					return Expression.Lambda<Func<T,T>>(

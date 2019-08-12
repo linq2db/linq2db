@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
@@ -62,10 +61,10 @@ namespace LinqToDB.DataProvider.Firebird
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection             dataConnection,
-			IEnumerable<T>             source,
-			int                        maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+			DataConnection              dataConnection,
+			IEnumerable<T>              source,
+			int                         maxBatchSize       = 1000,
+			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
 			where T : class
 		{
 			return dataConnection.BulkCopy(
@@ -81,7 +80,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		#region ClearAllPools
 
-		static Action _clearAllPools;
+		static Action? _clearAllPools;
 
 		public static void ClearAllPools()
 		{

@@ -15,7 +15,7 @@ echo "Waiting for docker service to be in the running state"
 done
 
 #docker pull mariadb:latest
-docker run -d --name mariadb -e MYSQL_ROOT_PASSWORD=root -p 33060:3306 mariadb:latest
+docker run -d --name mariadb -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mariadb:latest
 docker ps -a
 
 retries=0
