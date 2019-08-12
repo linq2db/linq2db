@@ -538,7 +538,7 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if ((provider != TestProvName.MySql56 && provider != TestProvName.MariaDB)
+				if ((provider == TestProvName.MySql || provider == ProviderName.MySqlConnector)
 					&& expected.Value.Millisecond > 500) expected = expected.Value.AddSeconds(1);
 
 				if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
