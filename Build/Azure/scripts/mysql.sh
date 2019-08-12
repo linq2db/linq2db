@@ -4,7 +4,7 @@ docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=root -p 33060:3306 mysql:lates
 docker ps -a
 
 retries=0
-while ! mysql -p 33060 --host 127.0.0.1 --protocol TCP -uroot -proot -e "show databases;" > /dev/null 2>&1; do
+until docker exec mysql --protocol TCP -uroot -proot -e "show databases;"; do
     sleep 1
     retries=`expr $retries + 1`
     if [ $retries -gt 30 ]; then
