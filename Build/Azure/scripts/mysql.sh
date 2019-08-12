@@ -1,6 +1,6 @@
 #!/bin/bash
 #docker pull mysql:latest
-docker run -d --name mysql mysql:latest -e MYSQL_ROOT_PASSWORD=root -p 33060:3306 -v /var/lib/mysql:/var/lib/mysql
+docker run -d --name mysql mysql:latest -e MYSQL_ROOT_PASSWORD=root -p 33060:3306 -v /var/lib/mysql:/var/lib/mysql --net host
 docker ps -a
 
 # Wait for start
