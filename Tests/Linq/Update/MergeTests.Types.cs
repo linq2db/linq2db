@@ -661,8 +661,11 @@ namespace Tests.xUpdate
 						var msecs = expected.Value.Milliseconds;
 						if (msecs > 500)
 						{
-							expected = TimeSpan.FromTicks((expected.Value.Add(TimeSpan.FromSeconds(1)).Ticks / 10000000) * 10000000);
+							expected.Value.Add(TimeSpan.FromSeconds(1));
 						}
+
+						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
+
 						break;
 				}
 			}
