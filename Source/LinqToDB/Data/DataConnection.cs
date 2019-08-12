@@ -602,8 +602,8 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly List<Func<IConnectionStringSettings,string,IDataProvider>> _providerDetectors =
-			new List<Func<IConnectionStringSettings,string,IDataProvider>>();
+		static readonly List<Func<IConnectionStringSettings,string,IDataProvider?>> _providerDetectors =
+			new List<Func<IConnectionStringSettings,string,IDataProvider?>>();
 
 		/// <summary>
 		/// Registers database provider factory method.
@@ -611,7 +611,7 @@ namespace LinqToDB.Data
 		/// instance using provided options.
 		/// </summary>
 		/// <param name="providerDetector">Factory method delegate.</param>
-		public static void AddProviderDetector(Func<IConnectionStringSettings,string,IDataProvider> providerDetector)
+		public static void AddProviderDetector(Func<IConnectionStringSettings,string,IDataProvider?> providerDetector)
 		{
 			_providerDetectors.Add(providerDetector);
 		}

@@ -1,6 +1,6 @@
 #!/bin/bash
 #docker pull mysql:latest
-docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=root -p 33060:3306 -v /var/lib/mysql:/var/lib/mysql mysql:latest
+docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=root -p 33060:3306 mysql:latest
 docker ps -a
 
 retries=0
