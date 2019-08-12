@@ -1,5 +1,5 @@
 #!/bin/bash
-systemctl stop mysql
+sudo systemctl stop mysql
 
 #docker pull mariadb:latest
 docker run -d --name mariadb -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mariadb:latest

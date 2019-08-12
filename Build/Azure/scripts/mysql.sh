@@ -1,5 +1,5 @@
 #!/bin/bash
-systemctl stop mysql
+sudo systemctl stop mysql
 
 #docker pull mysql:latest
 docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mysql:latest
