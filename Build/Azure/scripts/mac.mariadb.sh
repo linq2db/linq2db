@@ -25,6 +25,7 @@ while ! mysql -p 33060 --host 127.0.0.1 --protocol TCP -uroot -proot -e "show da
     if [ $retries -gt 30 ]; then
         >&2 echo "Failed to wait for mariadb to start."
         docker ps -a
+        docker logs mariadb
         exit 1
     fi;
 done

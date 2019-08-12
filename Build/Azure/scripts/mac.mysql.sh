@@ -15,7 +15,7 @@ echo "Waiting for docker service to be in the running state"
 done
 
 #docker pull mysql:latest
-docker run -it --name mysql mysql:latest -e MYSQL_ROOT_PASSWORD=root -p 33060:3306 -v mysql:/var/lib/mysql --net host
+docker run -d --name mysql mysql:latest -e MYSQL_ROOT_PASSWORD=root -p 33060:3306 -v mysql:/var/lib/mysql --net host
 docker ps -a
 
 retries=0
@@ -25,6 +25,7 @@ while ! mysql -p 33060 --host 127.0.0.1 --protocol TCP -uroot -proot -e "show da
     if [ $retries -gt 30 ]; then
         >&2 echo "Failed to wait for mysql to start."
         docker ps -a
+        docker logs mysql
         exit 1
     fi;
 done
