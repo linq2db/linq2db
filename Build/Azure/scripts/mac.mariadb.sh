@@ -22,7 +22,7 @@ retries=0
 until docker exec mariadb mysql --protocol TCP -uroot -proot -e "show databases;"; do
     sleep 1
     retries=`expr $retries + 1`
-    if [ $retries -gt 30 ]; then
+    if [ $retries -gt 90 ]; then
         >&2 echo "Failed to wait for mariadb to start."
         docker ps -a
         docker logs mariadb
