@@ -5,5 +5,8 @@ until docker exec pgsql psql -U postgres -c '\l'; do
 >&2 echo "Postgres is unavailable - sleeping"
 sleep 1
 done
-docker exec pgsql psql -U postgres -c 'create database testdata'
+until docker exec pgsql psql -U postgres -c 'create database testdata'; do
+>&2 echo "Postgres is unavailable - sleeping"
+sleep 1
+done
 docker exec pgsql psql -U postgres -c '\l'
