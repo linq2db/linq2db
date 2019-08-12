@@ -15,7 +15,7 @@ echo "Waiting for docker service to be in the running state"
 done
 
 #docker pull mariadb:latest
-docker run -it --name mariadb mariadb:latest -e MYSQL_ROOT_PASSWORD=root -p 33060:3306 -v mysql:/var/lib/mysql --net host
+docker run -it --name mariadb mariadb:latest -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 -v mysql:/var/lib/mysql --net host
 docker ps -a
 
 # Wait for start
