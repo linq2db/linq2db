@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 
 using JetBrains.Annotations;
@@ -238,7 +237,7 @@ namespace LinqToDB.Common
 			/// If factory method is not set, retry policy is not used.
 			/// Not set by default.
 			/// </summary>
-			public static Func<DataConnection,IRetryPolicy> Factory;
+			public static Func<DataConnection,IRetryPolicy>? Factory;
 
 			/// <summary>
 			/// Status of use of default retry policy.
@@ -248,7 +247,7 @@ namespace LinqToDB.Common
 			public static bool UseDefaultPolicy
 			{
 				get => Factory == DefaultRetryPolicyFactory.GetRetryPolicy;
-				set => Factory = value ? DefaultRetryPolicyFactory.GetRetryPolicy : (Func<DataConnection,IRetryPolicy>)null;
+				set => Factory = value ? DefaultRetryPolicyFactory.GetRetryPolicy : (Func<DataConnection,IRetryPolicy>?)null;
 			}
 
 			/// <summary>
@@ -317,7 +316,7 @@ namespace LinqToDB.Common
 			/// Set this value to <c>null</c> to disable special alias generation queries.
 			/// </remarks>
 			/// </summary>
-			public static string AssociationAlias { get; set; } = "a_{0}";
+			public static string? AssociationAlias { get; set; } = "a_{0}";
 
 			/// <summary>
 			/// Indicates whether SQL Builder should generate aliases for final projection.

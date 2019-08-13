@@ -181,6 +181,7 @@ namespace Tests.Linq
 			}
 		}
 
+		// if this test fails for mysql, check that you have no ONLY_FULL_GROUP_BY option set
 		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configurations = new[] { ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.DB2, ProviderName.SqlServer2005, ProviderName.SqlServer2008 })]
 		[Test]
 		public void OrderByDistinctTest([DataSources(ProviderName.SqlCe)] string context)

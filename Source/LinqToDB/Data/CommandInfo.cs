@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -32,15 +31,15 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Instance of database connection, associated with command.
 		/// </summary>
-		public DataConnection  DataConnection;
+		public DataConnection   DataConnection;
 		/// <summary>
 		/// Command text.
 		/// </summary>
-		public string          CommandText;
+		public string           CommandText;
 		/// <summary>
 		/// Command parameters.
 		/// </summary>
-		public DataParameter[] Parameters;
+		public DataParameter[]? Parameters;
 		/// <summary>
 		/// Type of command. See <see cref="System.Data.CommandType"/> for all supported types.
 		/// Default value: <see cref="System.Data.CommandType.Text"/>.
@@ -105,7 +104,7 @@ namespace LinqToDB.Data
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
-		public CommandInfo(DataConnection dataConnection, string commandText, object parameters)
+		public CommandInfo(DataConnection dataConnection, string commandText, object? parameters)
 		{
 			DataConnection = dataConnection;
 			CommandText    = commandText;
@@ -146,7 +145,7 @@ namespace LinqToDB.Data
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
 
 			if (hasParameters)
-				SetParameters(DataConnection, Parameters);
+				SetParameters(DataConnection, Parameters!);
 
 			return ReadEnumerator(DataConnection.ExecuteReader(GetCommandBehavior()), objectReader);
 		}
@@ -243,7 +242,7 @@ namespace LinqToDB.Data
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
 
 			if (hasParameters)
-				SetParameters(DataConnection, Parameters);
+				SetParameters(DataConnection, Parameters!);
 
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
@@ -277,7 +276,7 @@ namespace LinqToDB.Data
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
 
 			if (hasParameters)
-				SetParameters(DataConnection, Parameters);
+				SetParameters(DataConnection, Parameters!);
 
 			return ReadEnumerator<T>(DataConnection.ExecuteReader(GetCommandBehavior()));
 		}
@@ -401,7 +400,7 @@ namespace LinqToDB.Data
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
 
 			if (hasParameters)
-				SetParameters(DataConnection, Parameters);
+				SetParameters(DataConnection, Parameters!);
 
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
@@ -508,7 +507,7 @@ namespace LinqToDB.Data
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
 
 			if (hasParameters)
-				SetParameters(DataConnection, Parameters);
+				SetParameters(DataConnection, Parameters!);
 
 			using (var rd = DataConnection.ExecuteReader(GetCommandBehavior()))
 			{
@@ -534,7 +533,7 @@ namespace LinqToDB.Data
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
 
 			if (hasParameters)
-				SetParameters(DataConnection, Parameters);
+				SetParameters(DataConnection, Parameters!);
 
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
@@ -565,13 +564,13 @@ namespace LinqToDB.Data
 		}
 
 		static MethodInfo _readAsArrayMethodInfo =
-			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsArray<int>(null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsArray<int>(null!)).GetGenericMethodDefinition();
 
 		static MethodInfo _readAsListMethodInfo =
-			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsList<int>(null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsList<int>(null!)).GetGenericMethodDefinition();
 
 		static MethodInfo _readSingletMethodInfo =
-			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingle<int>(null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingle<int>(null!)).GetGenericMethodDefinition();
 
 		T[] ReadAsArray<T>(IDataReader rd)
 		{
@@ -607,7 +606,7 @@ namespace LinqToDB.Data
 					if (member.Type.IsArray)
 					{
 						valueMethodInfo = _readAsArrayMethodInfo;
-						elementType     = member.Type.GetItemType();
+						elementType     = member.Type.GetItemType()!;
 					}
 					else if (member.Type.IsGenericEnumerableType())
 					{
@@ -633,13 +632,13 @@ namespace LinqToDB.Data
 		}
 
 		static MethodInfo _readAsArrayAsyncMethodInfo =
-			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsArrayAsync<int>(null, default)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsArrayAsync<int>(null!, default)).GetGenericMethodDefinition();
 
 		static MethodInfo _readAsListAsyncMethodInfo =
-			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsListAsync<int>(null, default)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsListAsync<int>(null!, default)).GetGenericMethodDefinition();
 
 		static MethodInfo _readSingletAsyncMethodInfo =
-			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingleAsync<int>(null, default)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingleAsync<int>(null!, default)).GetGenericMethodDefinition();
 
 		class ReaderAsyncEnumerable<T> : IAsyncEnumerable<T>
 		{
@@ -662,12 +661,14 @@ namespace LinqToDB.Data
 		{
 			readonly CommandInfo      _commandInfo;
 			readonly DbDataReader     _rd;
-			readonly string           _additionalKey;
+			readonly string?          _additionalKey;
 			Func<IDataReader, T>      _objectReader;
 			bool                      _isFaulted;
 			bool                      _isFinished;
 
+#nullable disable
 			public ReaderAsyncEnumerator(CommandInfo commandInfo, DbDataReader rd)
+#nullable enable
 			{
 				_commandInfo   = commandInfo;
 				_rd            = rd;
@@ -746,7 +747,7 @@ namespace LinqToDB.Data
 					if (member.Type.IsArray)
 					{
 						valueMethodInfo = _readAsArrayAsyncMethodInfo;
-						elementType     = member.Type.GetItemType();
+						elementType     = member.Type.GetItemType()!;
 					}
 					else if (member.Type.IsGenericEnumerableType())
 					{
@@ -798,12 +799,12 @@ namespace LinqToDB.Data
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
 
 			if (hasParameters)
-				SetParameters(DataConnection, Parameters);
+				SetParameters(DataConnection, Parameters!);
 
 			var commandResult = DataConnection.ExecuteNonQuery();
 
 			if (hasParameters)
-				RebindParameters(DataConnection, Parameters);
+				RebindParameters(DataConnection, Parameters!);
 
 			return commandResult;
 		}
@@ -856,12 +857,12 @@ namespace LinqToDB.Data
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
 
 			if (hasParameters)
-				SetParameters(DataConnection, Parameters);
+				SetParameters(DataConnection, Parameters!);
 
 			var commandResult = await DataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			if (hasParameters)
-				RebindParameters(DataConnection, Parameters);
+				RebindParameters(DataConnection, Parameters!);
 
 			return commandResult;
 		}
@@ -893,7 +894,7 @@ namespace LinqToDB.Data
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
 
 			if (hasParameters)
-				SetParameters(DataConnection, Parameters);
+				SetParameters(DataConnection, Parameters!);
 
 			using (var rd = DataConnection.ExecuteReader(GetCommandBehavior()))
 			{
@@ -922,7 +923,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			return default(T);
+			return default(T)!;
 		}
 
 		#endregion
@@ -977,7 +978,7 @@ namespace LinqToDB.Data
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
 
 			if (hasParameters)
-				SetParameters(DataConnection, Parameters);
+				SetParameters(DataConnection, Parameters!);
 
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
@@ -995,7 +996,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			return default;
+			return default!;
 		}
 
 		#endregion
@@ -1023,7 +1024,7 @@ namespace LinqToDB.Data
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
 
 			if (hasParameters)
-				SetParameters(DataConnection, Parameters);
+				SetParameters(DataConnection, Parameters!);
 
 			return new DataReader { CommandInfo = this, Reader = DataConnection.ExecuteReader(GetCommandBehavior()) };
 		}
@@ -1075,7 +1076,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			return default(T);
+			return default(T)!;
 		}
 
 		#endregion
@@ -1105,7 +1106,7 @@ namespace LinqToDB.Data
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
 
 			if (hasParameters)
-				SetParameters(DataConnection, Parameters);
+				SetParameters(DataConnection, Parameters!);
 
 			return new DataReaderAsync { CommandInfo = this, Reader = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext) };
 		}
@@ -1157,7 +1158,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			return default(T);
+			return default(T)!;
 		}
 
 		#endregion
@@ -1166,9 +1167,6 @@ namespace LinqToDB.Data
 
 		static void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
 		{
-			if (parameters == null)
-				return;
-
 			foreach (var parameter in parameters)
 			{
 				var p        = dataConnection.Command.CreateParameter();
@@ -1253,7 +1251,7 @@ namespace LinqToDB.Data
 		static readonly PropertyInfo _dataParameterDbType   = MemberHelper.PropertyOf<DataParameter>(p => p.DbType);
 		static readonly PropertyInfo _dataParameterValue    = MemberHelper.PropertyOf<DataParameter>(p => p.Value);
 
-		static DataParameter[] GetDataParameters(DataConnection dataConnection, object parameters)
+		static DataParameter[]? GetDataParameters(DataConnection dataConnection, object? parameters)
 		{
 			if (parameters == null)
 				return null;
@@ -1320,7 +1318,7 @@ namespace LinqToDB.Data
 									if (mapper != null)
 									{
 										return Expression.Call(
-											MemberHelper.MethodOf(() => PrepareDataParameter(null, null)),
+											MemberHelper.MethodOf(() => PrepareDataParameter(null!, null!)),
 											mapper.GetBody(valueGetter),
 											Expression.Constant(column.ColumnName));
 									}
@@ -1375,7 +1373,7 @@ namespace LinqToDB.Data
 
 		struct QueryKey : IEquatable<QueryKey>
 		{
-			public QueryKey(Type type, int configID, string sql, [CanBeNull] string additionalKey)
+			public QueryKey(Type type, int configID, string sql, [CanBeNull] string? additionalKey)
 			{
 				_type          = type;
 				_configID      = configID;
@@ -1397,11 +1395,11 @@ namespace LinqToDB.Data
 				return Equals((QueryKey)obj);
 			}
 
-			readonly int    _hashCode;
-			readonly Type   _type;
-			readonly int    _configID;
-			readonly string _sql;
-			readonly string _additionalKey;
+			readonly int     _hashCode;
+			readonly Type    _type;
+			readonly int     _configID;
+			readonly string  _sql;
+			readonly string? _additionalKey;
 
 			public override int GetHashCode()
 			{
@@ -1430,7 +1428,7 @@ namespace LinqToDB.Data
 			_parameterReaders.Clear();
 		}
 
-		string GetCommandAdditionalKey(IDataReader rd)
+		string? GetCommandAdditionalKey(IDataReader rd)
 		{
 			return DataConnection.Command.CommandType == CommandType.StoredProcedure
 				? GetFieldsKey(rd)
@@ -1452,7 +1450,7 @@ namespace LinqToDB.Data
 			return sb.ToString();
 		}
 
-		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string additionalKey)
+		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string? additionalKey)
 		{
 			var key = new QueryKey(typeof(T), dataConnection.ID, sql, additionalKey);
 
@@ -1465,7 +1463,7 @@ namespace LinqToDB.Data
 			return (Func<IDataReader,T>)func;
 		}
 
-		static Func<IDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string additionalKey)
+		static Func<IDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string? additionalKey)
 		{
 			var key = new QueryKey(typeof(T), dataConnection.ID, sql, additionalKey);
 
@@ -1485,7 +1483,7 @@ namespace LinqToDB.Data
 			var parameter      = Expression.Parameter(typeof(IDataReader));
 			var dataReaderExpr = Expression.Convert(parameter, dataReader.GetType());
 
-			Expression expr;
+			Expression? expr;
 
 			if (dataConnection.MappingSchema.IsScalarType(typeof(T)))
 			{

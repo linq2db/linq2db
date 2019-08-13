@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -59,13 +58,13 @@ namespace LinqToDB.Extensions
 
 		/// <summary>
 		/// Returns <see cref="MemberInfo"/> of <paramref name="type"/> described by <paramref name="memberInfo"/>
-		/// It us useful when member's declared and reflected types are not the same
+		/// It us useful when member's declared and reflected types are not the same.
 		/// </summary>
 		/// <remarks>This method searches only properties, fields and methods</remarks>
 		/// <param name="type"><see cref="Type"/> to find member info</param>
 		/// <param name="memberInfo"><see cref="MemberInfo"/> </param>
 		/// <returns><see cref="MemberInfo"/> or null</returns>
-		public static MemberInfo GetMemberEx(this Type type, MemberInfo memberInfo)
+		public static MemberInfo? GetMemberEx(this Type type, MemberInfo memberInfo)
 		{
 			if (memberInfo.IsPropertyEx())
 				return type.GetProperty(memberInfo.Name);
@@ -282,7 +281,7 @@ namespace LinqToDB.Extensions
 			where T : Attribute
 		{
 			var attrs = GetAttributes<T>(type);
-			return attrs.Length > 0 ? attrs[0] : null;
+			return attrs.Length > 0 ? attrs[0] : null!;
 		}
 
 		/// <summary>
@@ -453,7 +452,7 @@ namespace LinqToDB.Extensions
 			}
 		}
 
-		public static Type GetGenericType([NotNull] this Type genericType, Type type)
+		public static Type? GetGenericType([NotNull] this Type genericType, Type type)
 		{
 			if (genericType == null) throw new ArgumentNullException("genericType");
 
@@ -484,7 +483,7 @@ namespace LinqToDB.Extensions
 		///</summary>
 		/// <param name="list">A <see cref="System.Object"/> instance. </param>
 		///<returns>The Type instance that represents the exact runtime type of a list item.</returns>
-		public static Type GetListItemType(this IEnumerable list)
+		public static Type GetListItemType(this IEnumerable? list)
 		{
 			var typeOfObject = typeof(object);
 
@@ -498,7 +497,7 @@ namespace LinqToDB.Extensions
 
 			if (list is IList || list is ITypedList || list is IListSource)
 			{
-				PropertyInfo last = null;
+				PropertyInfo? last = null;
 
 				foreach (var pi in type.GetPropertiesEx())
 				{
@@ -555,7 +554,7 @@ namespace LinqToDB.Extensions
 				if (elementType != null)
 					return elementType;
 
-				PropertyInfo last = null;
+				PropertyInfo? last = null;
 
 				foreach (var pi in listType.GetPropertiesEx())
 				{
@@ -583,7 +582,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-		public static Type GetItemType(this Type type)
+		public static Type? GetItemType(this Type? type)
 		{
 			if (type == null)
 				return null;
@@ -649,7 +648,7 @@ namespace LinqToDB.Extensions
 		///<param name="baseType">Non generic base type.</param>
 		///<returns>An array of Type objects that represent the type arguments
 		/// of a generic type. Returns an empty array if the current type is not a generic type.</returns>
-		public static Type[] GetGenericArguments(this Type type, Type baseType)
+		public static Type[]? GetGenericArguments(this Type type, Type baseType)
 		{
 			var baseTypeName = baseType.Name;
 
@@ -725,18 +724,18 @@ namespace LinqToDB.Extensions
 
 		interface IGetDefaultValueHelper
 		{
-			object GetDefaultValue();
+			object? GetDefaultValue();
 		}
 
 		class GetDefaultValueHelper<T> : IGetDefaultValueHelper
 		{
-			public object GetDefaultValue()
+			public object? GetDefaultValue()
 			{
-				return default(T);
+				return default(T)!;
 			}
 		}
 
-		public static object GetDefaultValue(this Type type)
+		public static object? GetDefaultValue(this Type type)
 		{
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
 			var helper = (IGetDefaultValueHelper)Activator.CreateInstance(dtype);
@@ -753,7 +752,7 @@ namespace LinqToDB.Extensions
 
 		#region MethodInfo extensions
 
-		public static PropertyInfo GetPropertyInfo(this MethodInfo method)
+		public static PropertyInfo? GetPropertyInfo(this MethodInfo? method)
 		{
 			if (method != null)
 			{
@@ -846,7 +845,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-		public static bool EqualsTo(this MemberInfo member1, MemberInfo member2, Type declaringType = null)
+		public static bool EqualsTo(this MemberInfo? member1, MemberInfo? member2, Type? declaringType = null)
 		{
 			if (ReferenceEquals(member1, member2))
 				return true;

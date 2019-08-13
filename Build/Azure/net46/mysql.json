@@ -1,7 +1,9 @@
 ﻿{
 	"NET46.Azure": {
 		"Providers": [
-			"MySql57"
+			// MySQL latest with MySql.Data and MySqlConnector providers
+			"MySql",
+			"MySqlConnector"
 		]
 	}
 }

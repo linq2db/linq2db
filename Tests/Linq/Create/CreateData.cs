@@ -251,7 +251,7 @@ namespace Tests._Create
 				case TestProvName.PostgreSQL11  : RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
 				case ProviderName.MySql         : RunScript(context,          "\nGO\n",  "MySql");                          break;
 				case ProviderName.MySqlConnector: RunScript(context,          "\nGO\n",  "MySql");                          break;
-				case TestProvName.MySql57       : RunScript(context,          "\nGO\n",  "MySql");                          break;
+				case TestProvName.MySql55       : RunScript(context,          "\nGO\n",  "MySql");                          break;
 				case TestProvName.MariaDB       : RunScript(context,          "\nGO\n",  "MySql");                          break;
 				case ProviderName.SqlServer2000 : RunScript(context,          "\nGO\n",  "SqlServer2000");                  break;
 				case ProviderName.SqlServer2005 : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
