@@ -1,11 +1,11 @@
 ﻿{
-	"NET46.Azure": {
+	"CORE2.Azure": {
 		"Providers": [
-			// posgresql latest (12)
-			"PostgreSQL"
+			// posgresql 10
+			"PostgreSQL.10"
 		],
 		"Connections": {
-			"PostgreSQL": {
+			"PostgreSQL.10": {
 				"Provider": "Npgsql",
 				"ConnectionString": "Server=pgsql;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"
 			}

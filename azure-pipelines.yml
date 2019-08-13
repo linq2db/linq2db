@@ -288,15 +288,14 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: ne('disabled', 'disabled')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
 
     strategy:
       matrix:
-        SqlServer2017:
-          title: 'SQL Server 2017'
-          config: 'sqlserver.2017'
-          script: 'sqlserver.2017.cmd'
+#        SqlServer2017:
+#          title: 'SQL Server 2017'
+#          config: 'sqlserver.2017'
+#          script: 'sqlserver.2017.cmd'
 #        MariaDB:
 #          title: 'MariaDB'
 #          config: 'mariadb'
@@ -309,30 +308,10 @@ stages:
 #          title: 'MySQL 5.5'
 #          config: 'mysql55'
 #          script: 'mysql55.cmd'
-#        PostgreSQL:
-#          title: 'PostgreSQL'
-#          config: 'pgsql'
-#          script: 'pgsql.cmd'
-#        PostgreSQL92:
-#          title: 'PostgreSQL 9.2'
-#          config: 'pgsql92'
-#          script: 'pgsql92.cmd'
-#        PostgreSQL93:
-#          title: 'PostgreSQL 9.3'
-#          config: 'pgsql93'
-#          script: 'pgsql93.cmd'
-#        PostgreSQL95:
-#          title: 'PostgreSQL 9.5'
-#          config: 'pgsql95'
-#          script: 'pgsql95.cmd'
-#        PostgreSQL10:
-#          title: 'PostgreSQL 10'
-#          config: 'pgsql10'
-#          script: 'pgsql10.cmd'
-#        PostgreSQL11:
-#          title: 'PostgreSQL 11'
-#          config: 'pgsql11'
-#          script: 'pgsql11.cmd'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql10.win'
+          script: 'pgsql10.cmd'
 
     steps:
     - checkout: none
@@ -389,14 +368,13 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETCOREAPP2.0 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: ne('disabled', 'disabled')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
 
     strategy:
       matrix:
-        SQLite:
-          title: 'SQLite'
-          config: 'sqlite'
+#        SQLite:
+#          title: 'SQLite'
+#          config: 'sqlite'
 #        SQLite_MS:
 #          title: 'SQLite.MS'
 #          config: 'sqlite.ms'
@@ -416,30 +394,10 @@ stages:
 #          title: 'MariaDB'
 #          config: 'mariadb'
 #          script: 'mariadb.cmd'
-#        PostgreSQL:
-#          title: 'PostgreSQL'
-#          config: 'pgsql'
-#          script: 'pgsql.cmd'
-#        PostgreSQL92:
-#          title: 'PostgreSQL 9.2'
-#          config: 'pgsql92'
-#          script: 'pgsql92.cmd'
-#        PostgreSQL93:
-#          title: 'PostgreSQL 9.3'
-#          config: 'pgsql93'
-#          script: 'pgsql93.cmd'
-#        PostgreSQL95:
-#          title: 'PostgreSQL 9.5'
-#          config: 'pgsql95'
-#          script: 'pgsql95.cmd'
-#        PostgreSQL10:
-#          title: 'PostgreSQL 10'
-#          config: 'pgsql10'
-#          script: 'pgsql10.cmd'
-#        PostgreSQL11:
-#          title: 'PostgreSQL 11'
-#          config: 'pgsql11'
-#          script: 'pgsql11.cmd'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql10.win'
+          script: 'pgsql10.cmd'
     steps:
     - checkout: none
 
@@ -668,124 +626,6 @@ stages:
     - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
       displayName: '$(title)'
 
-
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testRunner: VsTest
-        testResultsFiles: '**/*.trx'
-
-##################### test windows containers image
-  - job: test_win_2016
-    pool:
-      vmImage: 'vs2017-win2016'
-    displayName: 'Tests: vs2017-win2016'
-    dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-
-    strategy:
-      matrix:
-        Test7:
-          config: 'pgsql.win'
-          script: 'test7.cmd'
-        Test10:
-          config: 'pgsql.win'
-          script: 'test10.cmd'
-    steps:
-    - checkout: none
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: '$(netcore2_tests)'
-        targetPath: '$(System.DefaultWorkingDirectory)'
-
-    - task: CmdLine@2
-      inputs:
-        script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
-        workingDirectory: '$(System.DefaultWorkingDirectory)'
-      displayName: Copy test config
-
-    - task: CmdLine@2
-      inputs:
-        script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
-        workingDirectory: '$(System.DefaultWorkingDirectory)'
-      condition: variables['script']
-      displayName: Setup tests
-
-    - task: VSTest@2
-      inputs:
-        testAssemblyVer2: linq2db.Tests.dll
-        platform: '$(buildPlatform)'
-        configuration: '$(buildConfiguration)'
-        testFilterCriteria: 'TestCategory != SkipCI'
-        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
-      displayName: '$(title)'
-
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testRunner: VsTest
-        testResultsFiles: '**/*.trx'
-
-  - job: test_win_2019
-    pool:
-      vmImage: 'windows-2019'
-    displayName: 'Tests: windows-2019'
-    dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-
-    strategy:
-      matrix:
-        Test1:
-          config: 'pgsql.win'
-          script: 'test1.cmd'
-        Test3:
-          config: 'pgsql.win'
-          script: 'test3.cmd'
-        Test8:
-          config: 'pgsql.win'
-          script: 'test8.cmd'
-        Test9:
-          config: 'pgsql.win'
-          script: 'test9.cmd'
-        Test11:
-          config: 'pgsql.win'
-          script: 'test11.cmd'
-        Test12:
-          config: 'pgsql.win'
-          script: 'test12.cmd'
-        Test13:
-          config: 'pgsql.win'
-          script: 'test13.cmd'
-    steps:
-    - checkout: none
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: '$(netcore2_tests)'
-        targetPath: '$(System.DefaultWorkingDirectory)'
-
-    - task: CmdLine@2
-      inputs:
-        script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
-        workingDirectory: '$(System.DefaultWorkingDirectory)'
-      displayName: Copy test config
-
-    - task: CmdLine@2
-      inputs:
-        script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
-        workingDirectory: '$(System.DefaultWorkingDirectory)'
-      condition: variables['script']
-      displayName: Setup tests
-
-    - task: VSTest@2
-      inputs:
-        testAssemblyVer2: linq2db.Tests.dll
-        platform: '$(buildPlatform)'
-        configuration: '$(buildConfiguration)'
-        testFilterCriteria: 'TestCategory != SkipCI'
-        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
-      displayName: '$(title)'
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()

@@ -39,7 +39,7 @@ Legend:
 |MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.56.0|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MariaDB 10<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.17|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 9.5<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |separator between automated and pending providers|-|-|-|-|
