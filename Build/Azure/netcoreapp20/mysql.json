@@ -4,10 +4,6 @@
 			// MySQL latest with MySql.Data and MySqlConnector providers
 			"MySql",
 			"MySqlConnector"
-		],
-		"Connections": {
-			"MySql"         : { "Provider": "MySql.Data",             "ConnectionString": "Server=mysql;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                         },
-			"MySqlConnector": { "Provider": "MySqlConnector",         "ConnectionString": "Server=mysql;Port=3306;Database=testdata2;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                        },
-		}
+		]
 	}
 }

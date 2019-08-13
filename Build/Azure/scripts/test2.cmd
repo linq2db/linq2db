@@ -6,15 +6,15 @@ set max = 100
 :repeat
 echo pinging
 sleep 1
-mysql mysql --protocol TCP -uroot -proot -e "show databases;" -h mysql
+mysql --protocol TCP -uroot -proot -e "show databases;"
 set /a max=max-1
 if %max% EQU 0 goto fail
 if %errorlevel% NEQ 0 goto repeat
 echo "Container is UP"
 
-mysql mysql -e "CREATE DATABASE testdata DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" -uroot -proot -h mysql
-mysql mysql -e "CREATE DATABASE testdata2 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" -uroot -proot -h mysql
-mysql mysql -e "SELECT VERSION();" -uroot -proot -h mysql
+mysql -e "CREATE DATABASE testdata DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" -uroot -proot
+mysql -e "CREATE DATABASE testdata2 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" -uroot -proot
+mysql -e "SELECT VERSION();" -uroot -proot
 docker logs mysql
 goto:eof
 
