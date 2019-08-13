@@ -845,7 +845,7 @@ stages:
         testResultsFiles: '**/*.trx'
 
 
-- job: test_win_1803
+  - job: test_win_1803
     pool:
       vmImage: 'win1803'
     displayName: 'Tests: windows-1803'
