@@ -310,6 +310,14 @@ stages:
 #          title: 'PostgreSQL'
 #          config: 'pgsql'
 #          script: 'pgsql.cmd'
+#        PostgreSQL92:
+#          title: 'PostgreSQL 9.2'
+#          config: 'pgsql'
+#          script: 'pgsql92.cmd'
+#        PostgreSQL93:
+#          title: 'PostgreSQL 9.3'
+#          config: 'pgsql'
+#          script: 'pgsql93.cmd'
 #        PostgreSQL95:
 #          title: 'PostgreSQL 9.5'
 #          config: 'pgsql'
@@ -408,6 +416,14 @@ stages:
 #          title: 'PostgreSQL'
 #          config: 'pgsql'
 #          script: 'pgsql.cmd'
+#        PostgreSQL92:
+#          title: 'PostgreSQL 9.2'
+#          config: 'pgsql'
+#          script: 'pgsql92.cmd'
+#        PostgreSQL93:
+#          title: 'PostgreSQL 9.3'
+#          config: 'pgsql'
+#          script: 'pgsql93.cmd'
 #        PostgreSQL95:
 #          title: 'PostgreSQL 9.5'
 #          config: 'pgsql'
@@ -478,22 +494,30 @@ stages:
 #          title: 'SQL Server 2017'
 #          config: 'sqlserver.2017'
 #          script: 'sqlserver.2017.sh'
-        MySQL:
-          title: 'MySQL'
-          config: 'mysql'
-          script: 'mysql.sh'
-        MySQL55:
-          title: 'MySQL 5.5'
-          config: 'mysql55'
-          script: 'mysql55.sh'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb'
-          script: 'mariadb.sh'
+#        MySQL:
+#          title: 'MySQL'
+#          config: 'mysql'
+#          script: 'mysql.sh'
+#        MySQL55:
+#          title: 'MySQL 5.5'
+#          config: 'mysql55'
+#          script: 'mysql55.sh'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb'
+#          script: 'mariadb.sh'
 #        PostgreSQL:
 #          title: 'PostgreSQL'
 #          config: 'pgsql'
 #          script: 'pgsql.sh'
+        PostgreSQL92:
+          title: 'PostgreSQL 9.2'
+          config: 'pgsql'
+          script: 'pgsql92.sh'
+        PostgreSQL93:
+          title: 'PostgreSQL 9.3'
+          config: 'pgsql'
+          script: 'pgsql93.sh'
 #        PostgreSQL95:
 #          title: 'PostgreSQL 9.5'
 #          config: 'pgsql'
@@ -568,22 +592,30 @@ stages:
 #          title: 'SQL Server 2017'
 #          config: 'sqlserver.2017'
 #          script: 'mac.sqlserver.2017.sh'
-        MySQL:
-          title: 'MySQL'
-          config: 'mysql'
-          script: 'mac.mysql.sh'
-        MySQL55:
-          title: 'MySQL 5.5'
-          config: 'mysql55'
-          script: 'mac.mysql55.sh'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb'
-          script: 'mac.mariadb.sh'
+#        MySQL:
+#          title: 'MySQL'
+#          config: 'mysql'
+#          script: 'mac.mysql.sh'
+#        MySQL55:
+#          title: 'MySQL 5.5'
+#          config: 'mysql55'
+#          script: 'mac.mysql55.sh'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb'
+#          script: 'mac.mariadb.sh'
 #        PostgreSQL:
 #          title: 'PostgreSQL'
 #          config: 'pgsql'
 #          script: 'mac.pgsql.sh'
+        PostgreSQL92:
+          title: 'PostgreSQL 9.2'
+          config: 'pgsql'
+          script: 'mac.pgsql92.sh'
+        PostgreSQL93:
+          title: 'PostgreSQL 9.3'
+          config: 'pgsql'
+          script: 'mac.pgsql93.sh'
 #        PostgreSQL95:
 #          title: 'PostgreSQL 9.5'
 #          config: 'pgsql'
