@@ -34,7 +34,7 @@ namespace Tests.xUpdate
 				TestProvName.PostgreSQL11,
 				ProviderName.MySql,
 				ProviderName.MySqlConnector,
-				TestProvName.MySql56,
+				TestProvName.MySql55,
 				TestProvName.MariaDB
 			};
 

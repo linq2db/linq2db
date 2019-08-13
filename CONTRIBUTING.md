@@ -27,7 +27,6 @@ Follow this [document](https://github.com/linq2db/linq2db/files/1056002/Developm
 |.\Tests\Linq                | Main project for LINQ to DB unit tests                                                                                           |
 |.\Tests\Model               | Model classes for tests                                                                                                          |
 |.\Tests\Tests.T4            | T4 templates test project                                                                                                        |
-|.\Tests\Tests.T4.Wpf        | T4 WPF-related templates test project                                                                                            |
 |.\Tests\Tests.Android       | Xamarin Forms for Android test project                                                                                           |
 |.\Tests\Tests.Benchmark     | Benchmark tests                                                                                                                  |
 |.\Tests\Tests.PLayground    | Test project for use with linq2db.playground.sln lite test solution<br>Used for work on specific test without full solution load |
@@ -69,7 +68,6 @@ Allowed debugging defines:
 | `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |         |     √     |       √       |                            |
 | `.\Tests\Tests.Playground\Tests.Playground.csproj` |    √    |           |       √       |                            |
 | `.\Tests\Tests.T4\Tests.T4.csproj`                 |    √    |           |       √       |                            |
-| `.\Tests\Tests.T4.Wpf\Tests.T4.Wpf.csproj`         |    √    |           |               |                            |
 | `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |    √    |           |       √       |                            |
 
 

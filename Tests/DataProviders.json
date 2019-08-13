@@ -154,7 +154,7 @@
 				"Provider": "MySql.Data.MySqlClient",
 				"ConnectionString": "Server=DBHost;Port=3306;Database=testdata;Uid=root;Pwd=TestPassword;charset=utf8;Allow User Variables=True;Treat Tiny As Boolean=False;Use Affected Rows=False"
 			},
-			"MySql56": {
+			"MySql55": {
 				"Provider": "MySql.Data.MySqlClient",
 				"ConnectionString": "Server=DBHost;Port=3306;Database=testdata;Uid=root;Pwd=TestPassword;charset=utf8;Allow User Variables=True;"
 			},
@@ -205,7 +205,7 @@
 			"PostgreSQL.11" : { "Provider": "Npgsql",                 "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
 			"MySql"         : { "Provider": "MySql.Data",             "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                        },
 			"MySqlConnector": { "Provider": "MySqlConnector",         "ConnectionString": "Server=localhost;Port=3306;Database=testdata2;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                        },
-			"MySql56"       : { "Provider": "MySql.Data",             "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                        },
+			"MySql55"       : { "Provider": "MySql.Data",             "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                        },
 			"MariaDB"       : { "Provider": "MySql.Data",             "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                        },
 
 			//"MySqlConnector": {
@@ -242,7 +242,7 @@
 			"Informix",
 			"MySql",
 			"MySqlConnector",
-			"MySql56",
+			"MySql55",
 			"MariaDB",
 			"Oracle.Native",
 			"Oracle.Managed",

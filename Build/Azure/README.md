@@ -88,7 +88,7 @@ Legend:
 |`ProviderName.SqlServer2017`|SQL Server 2017||
 |`TestProvName.Northwind`|SQL Server FTS tests||
 |`ProviderName.MySql`|Latest MySQL using MySQL.Data||
-|`TestProvName.MySql56`|MySQL < 5.7.5|TODO:better to use version less than 5.6.4, e.g. 5.5|
+|`TestProvName.MySql55`|MySQL 5.5||
 |`ProviderName.MySqlOfficial`|not used||
 |`ProviderName.MySqlConnector`|Latest MySQL using MySqlConnector||
 |`TestProvName.MariaDB`|Latest MariaDB using MySQL.Data||

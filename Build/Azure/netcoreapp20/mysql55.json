@@ -1,8 +1,8 @@
 ﻿{
 	"CORE2.Azure": {
 		"Providers": [
-			// MySql 5.6
-			"MySql56"
+			// MySql 5.5
+			"MySql55"
 		]
 	}
 }

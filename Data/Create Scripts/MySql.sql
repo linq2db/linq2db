@@ -145,9 +145,9 @@ CREATE TABLE LinqDataTypes
 	ID             int,
 	MoneyValue     decimal(10,4),
 	DateTimeValue  datetime
--- SKIP MySql56 BEGIN
+-- SKIP MySql55 BEGIN
 	(3)
--- SKIP MySql56 END
+-- SKIP MySql55 END
 	,
 	DateTimeValue2 datetime NULL,
 	BoolValue      boolean,
@@ -199,9 +199,9 @@ CREATE TABLE AllTypes
 -- SKIP MySql END
 -- SKIP MySqlConnector END
 -- SKIP MariaDB END
--- SKIP MySql56 BEGIN
+-- SKIP MySql55 BEGIN
 	year2DataType       year(4)                      NULL,
--- SKIP MySql56 END
+-- SKIP MySql55 END
 	year4DataType       year(4)                      NULL,
 
 	charDataType        char(1)                      NULL,

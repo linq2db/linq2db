@@ -216,7 +216,7 @@ namespace Tests
 				case ProviderName.MySql:
 				case ProviderName.MySqlConnector:
 				case TestProvName.MariaDB:
-				case TestProvName.MySql56:
+				case TestProvName.MySql55:
 				case ProviderName.PostgreSQL:
 				case ProviderName.PostgreSQL92:
 				case ProviderName.PostgreSQL93:
@@ -243,7 +243,7 @@ namespace Tests
 
 		public static bool ProviderNeedsTimeFix(this IDataContext db, string context)
 		{
-			if (context == "MySql56" || context == "MySql56.LinqService")
+			if (context.Replace(".LinqService", "") == TestProvName.MySql55)
 			{
 				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
 				// them from expected data too

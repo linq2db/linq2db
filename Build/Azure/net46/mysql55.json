@@ -1,8 +1,8 @@
 ﻿{
 	"NET46.Azure": {
 		"Providers": [
-			// MySql <5.7.5
-			"MySql56"
+			// MySql 5.5
+			"MySql55"
 		]
 	}
 }

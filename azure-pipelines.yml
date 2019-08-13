@@ -302,10 +302,10 @@ stages:
 #          title: 'MySQL'
 #          config: 'mysql'
 #          script: 'mysql.cmd'
-#        MySQL56:
-#          title: 'MySQL 5.6'
-#          config: 'mysql56'
-#          script: 'mysql56.cmd'
+#        MySQL55:
+#          title: 'MySQL 5.5'
+#          config: 'mysql55'
+#          script: 'mysql55.cmd'
 #        PostgreSQL:
 #          title: 'PostgreSQL'
 #          config: 'pgsql'
@@ -396,10 +396,10 @@ stages:
 #          title: 'MySQL'
 #          config: 'mysql'
 #          script: 'mysql.cmd'
-#        MySQL56:
-#          title: 'MySQL 5.6'
-#          config: 'mysql56'
-#          script: 'mysql56.cmd'
+#        MySQL55:
+#          title: 'MySQL 5.5'
+#          config: 'mysql55'
+#          script: 'mysql55.cmd'
 #        MariaDB:
 #          title: 'MariaDB'
 #          config: 'mariadb'
@@ -482,10 +482,10 @@ stages:
           title: 'MySQL'
           config: 'mysql'
           script: 'mysql.sh'
-        MySQL56:
-          title: 'MySQL 5.6'
-          config: 'mysql56'
-          script: 'mysql56.sh'
+        MySQL55:
+          title: 'MySQL 5.5'
+          config: 'mysql55'
+          script: 'mysql55.sh'
         MariaDB:
           title: 'MariaDB'
           config: 'mariadb'
@@ -572,10 +572,10 @@ stages:
           title: 'MySQL'
           config: 'mysql'
           script: 'mac.mysql.sh'
-        MySQL56:
-          title: 'MySQL 5.6'
-          config: 'mysql56'
-          script: 'mac.mysql56.sh'
+        MySQL55:
+          title: 'MySQL 5.5'
+          config: 'mysql55'
+          script: 'mac.mysql55.sh'
         MariaDB:
           title: 'MariaDB'
           config: 'mariadb'
