@@ -649,10 +649,6 @@ stages:
           title: 'MySQL1'
           config: 'mysql'
           script: 'test1.cmd'
-        MySQL2:
-          title: 'MySQL2'
-          config: 'mysql'
-          script: 'test2.cmd'
 
     steps:
     - checkout: none
