@@ -296,14 +296,14 @@ stages:
 
     strategy:
       matrix:
-#        SqlServer2017:
-#          title: 'SQL Server 2017'
-#          config: 'sqlserver.2017'
-#          script: 'sqlserver.2017.cmd'
-#        PostgreSQL10:
-#          title: 'PostgreSQL 10'
-#          config: 'pgsql10.win'
-#          script: 'pgsql10.cmd'
+        SqlServer2017:
+          title: 'SQL Server 2017'
+          config: 'sqlserver.2017'
+          script: 'sqlserver.2017.cmd'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql10.win'
+          script: 'pgsql10.cmd'
 
     steps:
     - checkout: none
@@ -361,7 +361,6 @@ stages:
     displayName: 'Tests: Win / NETCOREAPP2.0 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: ne('disabled', 'disabled')
 
     strategy:
       matrix:
