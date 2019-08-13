@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
+			statement = SeparateDistinctFromPagination(statement);
 			statement = ReplaceTakeSkipWithRowNumber(statement, false);
 
 			CorrectRootSkip(statement.SelectQuery);

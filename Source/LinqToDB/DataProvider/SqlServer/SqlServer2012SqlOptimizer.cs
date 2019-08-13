@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				CorrectRootSkip(statement.SelectQuery);
 			}
 
-			return base.TransformStatement(statement);
+			return statement;
 		}
 	}
 }
