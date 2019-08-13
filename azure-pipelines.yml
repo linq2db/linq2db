@@ -645,36 +645,36 @@ stages:
 
     strategy:
       matrix:
-        MySQL:
-          title: 'MySQL'
+        MySQL1:
+          title: 'MySQL1'
           config: 'mysql'
           script: 'test1.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL2:
+          title: 'MySQL2'
           config: 'mysql'
           script: 'test2.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL3:
+          title: 'MySQL3'
           config: 'mysql'
           script: 'test3.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL4:
+          title: 'MySQL4'
           config: 'mysql'
           script: 'test4.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL5:
+          title: 'MySQL5'
           config: 'mysql'
           script: 'test5.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL6:
+          title: 'MySQL6'
           config: 'mysql'
           script: 'test6.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL7:
+          title: 'MySQL7'
           config: 'mysql'
           script: 'test7.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL8:
+          title: 'MySQL8'
           config: 'mysql'
           script: 'test8.cmd'
 
@@ -735,36 +735,36 @@ stages:
 
     strategy:
       matrix:
-        MySQL:
-          title: 'MySQL'
+        MySQL1:
+          title: 'MySQL1'
           config: 'mysql'
           script: 'test1.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL2:
+          title: 'MySQL2'
           config: 'mysql'
           script: 'test2.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL3:
+          title: 'MySQL3'
           config: 'mysql'
           script: 'test3.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL4:
+          title: 'MySQL4'
           config: 'mysql'
           script: 'test4.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL5:
+          title: 'MySQL5'
           config: 'mysql'
           script: 'test5.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL6:
+          title: 'MySQL6'
           config: 'mysql'
           script: 'test6.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL7:
+          title: 'MySQL7'
           config: 'mysql'
           script: 'test7.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL8:
+          title: 'MySQL8'
           config: 'mysql'
           script: 'test8.cmd'
 
@@ -825,36 +825,36 @@ stages:
 
     strategy:
       matrix:
-        MySQL:
-          title: 'MySQL'
+        MySQL1:
+          title: 'MySQL1'
           config: 'mysql'
           script: 'test1.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL2:
+          title: 'MySQL2'
           config: 'mysql'
           script: 'test2.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL3:
+          title: 'MySQL3'
           config: 'mysql'
           script: 'test3.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL4:
+          title: 'MySQL4'
           config: 'mysql'
           script: 'test4.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL5:
+          title: 'MySQL5'
           config: 'mysql'
           script: 'test5.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL6:
+          title: 'MySQL6'
           config: 'mysql'
           script: 'test6.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL7:
+          title: 'MySQL7'
           config: 'mysql'
           script: 'test7.cmd'
-        MySQL:
-          title: 'MySQL'
+        MySQL8:
+          title: 'MySQL8'
           config: 'mysql'
           script: 'test8.cmd'
 
