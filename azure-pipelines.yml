@@ -312,23 +312,23 @@ stages:
 #          script: 'pgsql.cmd'
 #        PostgreSQL92:
 #          title: 'PostgreSQL 9.2'
-#          config: 'pgsql'
+#          config: 'pgsql92'
 #          script: 'pgsql92.cmd'
 #        PostgreSQL93:
 #          title: 'PostgreSQL 9.3'
-#          config: 'pgsql'
+#          config: 'pgsql93'
 #          script: 'pgsql93.cmd'
 #        PostgreSQL95:
 #          title: 'PostgreSQL 9.5'
-#          config: 'pgsql'
+#          config: 'pgsql95'
 #          script: 'pgsql95.cmd'
 #        PostgreSQL10:
 #          title: 'PostgreSQL 10'
-#          config: 'pgsql'
+#          config: 'pgsql10'
 #          script: 'pgsql10.cmd'
 #        PostgreSQL11:
 #          title: 'PostgreSQL 11'
-#          config: 'pgsql'
+#          config: 'pgsql11'
 #          script: 'pgsql11.cmd'
 
     steps:
@@ -418,23 +418,23 @@ stages:
 #          script: 'pgsql.cmd'
 #        PostgreSQL92:
 #          title: 'PostgreSQL 9.2'
-#          config: 'pgsql'
+#          config: 'pgsql92'
 #          script: 'pgsql92.cmd'
 #        PostgreSQL93:
 #          title: 'PostgreSQL 9.3'
-#          config: 'pgsql'
+#          config: 'pgsql93'
 #          script: 'pgsql93.cmd'
 #        PostgreSQL95:
 #          title: 'PostgreSQL 9.5'
-#          config: 'pgsql'
+#          config: 'pgsql95'
 #          script: 'pgsql95.cmd'
 #        PostgreSQL10:
 #          title: 'PostgreSQL 10'
-#          config: 'pgsql'
+#          config: 'pgsql10'
 #          script: 'pgsql10.cmd'
 #        PostgreSQL11:
 #          title: 'PostgreSQL 11'
-#          config: 'pgsql'
+#          config: 'pgsql11'
 #          script: 'pgsql11.cmd'
     steps:
     - checkout: none
@@ -506,30 +506,30 @@ stages:
 #          title: 'MariaDB'
 #          config: 'mariadb'
 #          script: 'mariadb.sh'
-#        PostgreSQL:
-#          title: 'PostgreSQL'
-#          config: 'pgsql'
-#          script: 'pgsql.sh'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'pgsql.sh'
         PostgreSQL92:
           title: 'PostgreSQL 9.2'
-          config: 'pgsql'
+          config: 'pgsql92'
           script: 'pgsql92.sh'
         PostgreSQL93:
           title: 'PostgreSQL 9.3'
-          config: 'pgsql'
+          config: 'pgsql93'
           script: 'pgsql93.sh'
-#        PostgreSQL95:
-#          title: 'PostgreSQL 9.5'
-#          config: 'pgsql'
-#          script: 'pgsql95.sh'
-#        PostgreSQL10:
-#          title: 'PostgreSQL 10'
-#          config: 'pgsql'
-#          script: 'pgsql10.sh'
-#        PostgreSQL11:
-#          title: 'PostgreSQL 11'
-#          config: 'pgsql'
-#          script: 'pgsql11.sh'
+        PostgreSQL95:
+          title: 'PostgreSQL 9.5'
+          config: 'pgsql95'
+          script: 'pgsql95.sh'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql10'
+          script: 'pgsql10.sh'
+        PostgreSQL11:
+          title: 'PostgreSQL 11'
+          config: 'pgsql11'
+          script: 'pgsql11.sh'
     steps:
     - checkout: none
 
@@ -604,30 +604,30 @@ stages:
 #          title: 'MariaDB'
 #          config: 'mariadb'
 #          script: 'mac.mariadb.sh'
-#        PostgreSQL:
-#          title: 'PostgreSQL'
-#          config: 'pgsql'
-#          script: 'mac.pgsql.sh'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'mac.pgsql.sh'
         PostgreSQL92:
           title: 'PostgreSQL 9.2'
-          config: 'pgsql'
+          config: 'pgsql92'
           script: 'mac.pgsql92.sh'
         PostgreSQL93:
           title: 'PostgreSQL 9.3'
-          config: 'pgsql'
+          config: 'pgsql93'
           script: 'mac.pgsql93.sh'
-#        PostgreSQL95:
-#          title: 'PostgreSQL 9.5'
-#          config: 'pgsql'
-#          script: 'mac.pgsql95.sh'
-#        PostgreSQL10:
-#          title: 'PostgreSQL 10'
-#          config: 'pgsql'
-#          script: 'mac.pgsql10.sh'
-#        PostgreSQL11:
-#          title: 'PostgreSQL 11'
-#          config: 'pgsql'
-#          script: 'mac.pgsql11.sh'
+        PostgreSQL95:
+          title: 'PostgreSQL 9.5'
+          config: 'pgsql95'
+          script: 'mac.pgsql95.sh'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql10'
+          script: 'mac.pgsql10.sh'
+        PostgreSQL11:
+          title: 'PostgreSQL 11'
+          config: 'pgsql11'
+          script: 'mac.pgsql11.sh'
 
     steps:
     - checkout: none
