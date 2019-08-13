@@ -284,6 +284,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp20", "netcoreapp20", "{9C01FF5E-F85A-4561-A05B-8F32A4E11C6D}"
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\netcoreapp20\mariadb.json = Build\Azure\netcoreapp20\mariadb.json
+		Build\Azure\netcoreapp20\mariadb.win.json = Build\Azure\netcoreapp20\mariadb.win.json
 		Build\Azure\netcoreapp20\mysql.json = Build\Azure\netcoreapp20\mysql.json
 		Build\Azure\netcoreapp20\mysql55.json = Build\Azure\netcoreapp20\mysql55.json
 		Build\Azure\netcoreapp20\pgsql.json = Build\Azure\netcoreapp20\pgsql.json

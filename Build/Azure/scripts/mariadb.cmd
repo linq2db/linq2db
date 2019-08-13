@@ -1,12 +1,24 @@
-rem docker pull philotimo/mariadb-windows:10.3.16-nanoserver-1809
-docker run -d --name mariadb philotimo/mariadb-windows:10.3.16-nanoserver-1809 --health-cmd="mysqladmin ping --silent" -e MYSQL_ROOT_PASSWORD=root -p 33060:3306
+rem change password if it will work
+docker run -d --name mysql -h mysql -p 3306:3306 petrjahoda/mariadb-nanoserver:latest
 docker ps -a
 
-echo "Waiting for MariaDB to start"
+echo "Waiting"
+set max = 100
 :repeat
-echo pinging MySQL
-docker exec mariadb mysql --protocol TCP -uroot -proot -e "show databases;"
+echo pinging
+sleep 1
+docker exec mysql mysql --protocol TCP -uroot -p54321 -e "show databases;"
+set /a max=max-1
+if %max% EQU 0 goto fail
 if %errorlevel% NEQ 0 goto repeat
-echo "MariaDB is operational"
+echo "Container is UP"
 
-docker exec mariadb mysql -e "CREATE DATABASE testdata DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" -uroot -proot
+docker exec mysql mysql -e "CREATE DATABASE testdata DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" -uroot -p54321
+docker exec mysql mysql -e "CREATE DATABASE testdata2 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" -uroot -p54321
+docker exec mysql mysql -e "SELECT VERSION();" -uroot -p54321
+docker logs mysql
+goto:eof
+
+:fail
+echo "Fail"
+docker logs mysql
