@@ -1,5 +1,6 @@
 docker run -d --name pgsql -h pgsql -e POSTGRES_PASSWORD=Password12! -p 5432:5432 stellirin/postgres-windows:10
 docker ps -a
+docker-machine ip
 
 echo "Waiting"
 set max = 100

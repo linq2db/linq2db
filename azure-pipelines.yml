@@ -686,10 +686,10 @@ stages:
     strategy:
       matrix:
         Test7:
-          config: 'pgsql'
+          config: 'pgsql.win'
           script: 'test7.cmd'
         Test10:
-          config: 'pgsql'
+          config: 'pgsql.win'
           script: 'test10.cmd'
     steps:
     - checkout: none
@@ -737,25 +737,25 @@ stages:
     strategy:
       matrix:
         Test1:
-          config: 'pgsql'
+          config: 'pgsql.win'
           script: 'test1.cmd'
         Test3:
-          config: 'pgsql'
+          config: 'pgsql.win'
           script: 'test3.cmd'
         Test8:
-          config: 'pgsql'
+          config: 'pgsql.win'
           script: 'test8.cmd'
         Test9:
-          config: 'pgsql'
+          config: 'pgsql.win'
           script: 'test9.cmd'
         Test11:
-          config: 'pgsql'
+          config: 'pgsql.win'
           script: 'test11.cmd'
         Test12:
-          config: 'pgsql'
+          config: 'pgsql.win'
           script: 'test12.cmd'
         Test13:
-          config: 'pgsql'
+          config: 'pgsql.win'
           script: 'test13.cmd'
     steps:
     - checkout: none

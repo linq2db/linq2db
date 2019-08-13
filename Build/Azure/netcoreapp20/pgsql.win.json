@@ -1,0 +1,14 @@
+﻿{
+	"CORE2.Azure": {
+		"Providers": [
+			// posgresql latest (12)
+			"PostgreSQL"
+		],
+		"Connections": {
+			"PostgreSQL": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=pgsql;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"
+			}
+		}
+	}
+}
