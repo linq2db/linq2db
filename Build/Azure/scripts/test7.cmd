@@ -1,4 +1,4 @@
-docker run -d --name pgsql -e POSTGRES_PASSWORD=Password12! -p 5432:5432 stefanscherer/postgres-windows:10.2-nano
+docker run -d --name pgsql -h pgsql -e POSTGRES_PASSWORD=Password12! -p 5432:5432 stefanscherer/postgres-windows:10.2-nano
 docker ps -a
 
 echo "Waiting"
