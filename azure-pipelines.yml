@@ -291,7 +291,8 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: ne('disabled', 'disabled')
 
     strategy:
       matrix:
@@ -299,10 +300,6 @@ stages:
 #          title: 'SQL Server 2017'
 #          config: 'sqlserver.2017'
 #          script: 'sqlserver.2017.cmd'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb.win'
-          script: 'mariadb.cmd'
 #        PostgreSQL10:
 #          title: 'PostgreSQL 10'
 #          config: 'pgsql10.win'
@@ -363,8 +360,8 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETCOREAPP2.0 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: ne('disabled', 'disabled')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: ne('disabled', 'disabled')
 
     strategy:
       matrix:
@@ -378,22 +375,14 @@ stages:
 #          title: 'SQL Server 2017'
 #          config: 'sqlserver.2017'
 #          script: 'sqlserver.2017.cmd'
-#        MySQL:
-#          title: 'MySQL'
-#          config: 'mysql'
-#          script: 'mysql.cmd'
-#        MySQL55:
-#          title: 'MySQL 5.5'
-#          config: 'mysql55'
-#          script: 'mysql55.cmd'
-#        MariaDB:
-#          title: 'MariaDB'
-#          config: 'mariadb'
-#          script: 'mariadb.cmd'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql10.win'
-          script: 'pgsql10.cmd'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb.win'
+          script: 'mariadb.cmd'
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql10.win'
+#          script: 'pgsql10.cmd'
     steps:
     - checkout: none
 
