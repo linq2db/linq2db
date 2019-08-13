@@ -1,0 +1,8 @@
+﻿{
+	"CORE2.Azure": {
+		"Providers": [
+			// posgresql 11
+			"PostgreSQL.11"
+		]
+	}
+}

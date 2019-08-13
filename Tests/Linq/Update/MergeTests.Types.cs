@@ -96,8 +96,7 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
-			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
-			[Column(IsColumn = false, Configuration = ProviderName.MySqlConnector)]
+			[Column(IsColumn = false, Configuration = TestProvName.MySql55)]
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
@@ -493,7 +492,7 @@ namespace Tests.xUpdate
 				&& provider != TestProvName.Firebird3
 				&& provider != ProviderName.MySql
 				&& provider != ProviderName.MySqlConnector
-				&& provider != TestProvName.MySql57
+				&& provider != TestProvName.MySql55
 				&& provider != TestProvName.MariaDB
 				&& provider != ProviderName.Access
 				&& provider != ProviderName.SQLiteClassic
@@ -513,7 +512,7 @@ namespace Tests.xUpdate
 					&& (   provider == ProviderName.MySql
 						|| provider == ProviderName.MySqlConnector
 						|| provider == TestProvName.MariaDB
-						|| provider == TestProvName.MySql57))
+						|| provider == TestProvName.MySql55))
 					expected = '\0';
 			}
 
@@ -528,7 +527,7 @@ namespace Tests.xUpdate
 					&& (provider == ProviderName.MySql
 						|| provider == ProviderName.MySqlConnector
 						|| provider == TestProvName.MariaDB
-						|| provider == TestProvName.MySql57))
+						|| provider == TestProvName.MySql55))
 					expected = '\0';
 			}
 
@@ -539,8 +538,8 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if ((provider == TestProvName.MySql57 || provider == ProviderName.MySqlConnector)
-				    && expected.Value.Millisecond > 500) expected = expected.Value.AddSeconds(1);
+				if ((provider == ProviderName.MySql || provider == ProviderName.MySqlConnector)
+					&& expected.Value.Millisecond > 500) expected = expected.Value.AddSeconds(1);
 
 				if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
 				{
@@ -565,7 +564,7 @@ namespace Tests.xUpdate
 				if (   provider == ProviderName.MySql
 					|| provider == ProviderName.MySqlConnector
 					|| provider == TestProvName.MariaDB
-					|| provider == TestProvName.MySql57
+					|| provider == TestProvName.MySql55
 					|| provider == ProviderName.OracleManaged
 					|| provider == ProviderName.OracleNative)
 					expected = expected.Value.AddMilliseconds(-expected.Value.Millisecond);
@@ -603,11 +602,7 @@ namespace Tests.xUpdate
 				|| provider == ProviderName.SqlCe
 				|| provider == ProviderName.SQLiteClassic
 				|| provider == ProviderName.SQLiteMS
-				|| provider == ProviderName.MySql
-				|| provider == ProviderName.MySqlConnector
-				// MySql57 and MariaDB work, but column is disabled...
-				|| provider == TestProvName.MySql57
-				|| provider == TestProvName.MariaDB
+				|| provider == TestProvName.MySql55
 				|| provider == ProviderName.Firebird
 				|| provider == TestProvName.Firebird3)
 				return;
@@ -658,7 +653,19 @@ namespace Tests.xUpdate
 					case ProviderName.DB2:
 					case ProviderName.Access:
 					case ProviderName.SapHana:
+					case TestProvName.MariaDB:
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
+						break;
+					case ProviderName.MySqlConnector:
+					case ProviderName.MySql:
+						var msecs = expected.Value.Milliseconds;
+						if (msecs > 500)
+						{
+							expected = expected.Value.Add(TimeSpan.FromSeconds(1));
+						}
+
+						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
+
 						break;
 				}
 			}

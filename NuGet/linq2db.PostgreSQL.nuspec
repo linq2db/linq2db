@@ -11,8 +11,8 @@
 		</summary>
 		<tags>linq linq2db Npgsql PostgreSQL LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="Npgsql"  version="3.2.5" />
-			<dependency id="linq2db" version="2.6.0" />
+			<dependency id="Npgsql"  version="4.0.8" />
+			<dependency id="linq2db" version="3.0.0" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>

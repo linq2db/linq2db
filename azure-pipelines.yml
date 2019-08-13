@@ -21,7 +21,7 @@ stages:
 ########################################
 #  Build and publish testable binaries #
 ########################################
-- stage: Build
+- stage: ''
   displayName: ''
   jobs:
   - job: build_job
@@ -138,7 +138,8 @@ stages:
     variables:
       packageVersion: $(nugetVersion)
     dependsOn: build_job
-    condition: succeeded()
+#    condition: succeeded()
+    condition: ne('disabled', 'disabled')
 
     steps:
 
@@ -199,9 +200,10 @@ stages:
       displayName: Publish to Nuget.org
       condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
 
-####################################
-#  Tests: Windows (NETFX 4.6) 2019 #
-####################################
+##############################################################################################
+#  Tests: Windows (NETFX 4.6)                                                                #
+#  Windows 2019 (for Win2019 docker images, chocolatey-dependent tests and non-docker tests) #
+##############################################################################################
   - job: test_win_netfx46_job_2019
     pool:
       vmImage: 'windows-2019'
@@ -228,6 +230,10 @@ stages:
           title: 'SQL CE'
           config: 'sqlce'
           psscript: 'sqlce.ps1'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb'
+          script: 'mariadb.cmd'
 
     steps:
     - checkout: none
@@ -276,9 +282,12 @@ stages:
       inputs:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
-####################################
-#  Tests: Windows (NETFX 4.6) 2016 #
-####################################
+        testRunTitle: 'Windows / NET46 / $(title)'
+
+#############################################
+#  Tests: Windows (NETFX 4.6)               #
+#  Windows 2016 (for Win2016 docker images) #
+#############################################
   - job: test_win_netfx46_job_2016
     pool:
       vmImage: 'vs2017-win2016'
@@ -292,14 +301,10 @@ stages:
           title: 'SQL Server 2017'
           config: 'sqlserver.2017'
           script: 'sqlserver.2017.cmd'
-#        MySQL:
-#          title: 'MySQL 5.7'
-#          config: 'mysql'
-#          script: 'mysql.cmd'
-#        PostgreSQL:
-#          title: 'PostgreSQL'
-#          config: 'pgsql'
-#          script: 'pgsql.cmd'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql10.win'
+          script: 'pgsql10.cmd'
 
     steps:
     - checkout: none
@@ -348,10 +353,13 @@ stages:
       inputs:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
+        testRunTitle: 'Windows / NET46 / $(title)'
+
 ###################################
 #  Tests: Windows (NETCOREAPP2_0) #
+#  Windows 2016                   #
 ###################################
-  - job: test_win_netcoreapp20_job
+  - job: test_win2016_netcoreapp20_job
     pool:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETCOREAPP2.0 / '
@@ -370,14 +378,10 @@ stages:
           title: 'SQL Server 2017'
           config: 'sqlserver.2017'
           script: 'sqlserver.2017.cmd'
-#        MySQL:
-#          title: 'MySQL 5.7'
-#          config: 'mysql'
-#          script: 'mysql.cmd'
-#        PostgreSQL:
-#          title: 'PostgreSQL'
-#          config: 'pgsql'
-#          script: 'pgsql.cmd'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql10.win'
+          script: 'pgsql10.cmd'
     steps:
     - checkout: none
 
@@ -413,6 +417,61 @@ stages:
       inputs:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
+        testRunTitle: 'Windows / NETCOREAPP2.0 / $(title)'
+
+###################################
+#  Tests: Windows (NETCOREAPP2_0) #
+#  Windows 2019                   #
+###################################
+  - job: test_win2019_netcoreapp20_job
+    pool:
+      vmImage: 'windows-2019'
+    displayName: 'Tests: Win / NETCOREAPP2.0 / '
+    dependsOn: build_job
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+
+    strategy:
+      matrix:
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb.win'
+          script: 'mariadb.cmd'
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netcore2_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
+
+    - task: VSTest@2
+      inputs:
+        testAssemblyVer2: linq2db.Tests.dll
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        testFilterCriteria: 'TestCategory != SkipCI'
+        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.0'
+      displayName: '$(title)'
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
+        testRunTitle: 'Windows / NETCOREAPP2.0 / $(title)'
 
 #################################
 #  Tests: Linux (NETCOREAPP2_0) #
@@ -436,14 +495,42 @@ stages:
           title: 'SQL Server 2017'
           config: 'sqlserver.2017'
           script: 'sqlserver.2017.sh'
-#        MySQL:
-#          title: 'MySQL 5.7'
-#          config: 'mysql'
-#          script: 'mysql.sh'
-#        PostgreSQL:
-#          title: 'PostgreSQL'
-#          config: 'pgsql'
-#          script: 'pgsql.sh'
+        MySQL:
+          title: 'MySQL'
+          config: 'mysql'
+          script: 'mysql.sh'
+        MySQL55:
+          title: 'MySQL 5.5'
+          config: 'mysql55'
+          script: 'mysql55.sh'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb'
+          script: 'mariadb.sh'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'pgsql.sh'
+        PostgreSQL92:
+          title: 'PostgreSQL 9.2'
+          config: 'pgsql92'
+          script: 'pgsql92.sh'
+        PostgreSQL93:
+          title: 'PostgreSQL 9.3'
+          config: 'pgsql93'
+          script: 'pgsql93.sh'
+        PostgreSQL95:
+          title: 'PostgreSQL 9.5'
+          config: 'pgsql95'
+          script: 'pgsql95.sh'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql10'
+          script: 'pgsql10.sh'
+        PostgreSQL11:
+          title: 'PostgreSQL 11'
+          config: 'pgsql11'
+          script: 'pgsql11.sh'
     steps:
     - checkout: none
 
@@ -483,6 +570,7 @@ stages:
       inputs:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
+        testRunTitle: 'Linux / NETCOREAPP2.0 / $(title)'
 
 #################################
 #  Tests: MacOS (NETCOREAPP2_0) #
@@ -506,14 +594,42 @@ stages:
           title: 'SQL Server 2017'
           config: 'sqlserver.2017'
           script: 'mac.sqlserver.2017.sh'
-#        MySQL:
-#          title: 'MySQL 5.7'
-#          config: 'mysql'
-#          script: 'mysql.sh'
-#        PostgreSQL:
-#          title: 'PostgreSQL'
-#          config: 'pgsql'
-#          script: 'pgsql.sh'
+        MySQL:
+          title: 'MySQL'
+          config: 'mysql'
+          script: 'mac.mysql.sh'
+        MySQL55:
+          title: 'MySQL 5.5'
+          config: 'mysql55'
+          script: 'mac.mysql55.sh'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb'
+          script: 'mac.mariadb.sh'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'mac.pgsql.sh'
+        PostgreSQL92:
+          title: 'PostgreSQL 9.2'
+          config: 'pgsql92'
+          script: 'mac.pgsql92.sh'
+        PostgreSQL93:
+          title: 'PostgreSQL 9.3'
+          config: 'pgsql93'
+          script: 'mac.pgsql93.sh'
+        PostgreSQL95:
+          title: 'PostgreSQL 9.5'
+          config: 'pgsql95'
+          script: 'mac.pgsql95.sh'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql10'
+          script: 'mac.pgsql10.sh'
+        PostgreSQL11:
+          title: 'PostgreSQL 11'
+          config: 'pgsql11'
+          script: 'mac.pgsql11.sh'
 
     steps:
     - checkout: none
@@ -554,3 +670,4 @@ stages:
       inputs:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
+        testRunTitle: 'Mac / NETCOREAPP2.0 / $(title)'

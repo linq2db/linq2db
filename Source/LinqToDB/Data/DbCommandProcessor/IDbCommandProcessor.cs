@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Data;
 using System.Data.Common;
 using System.Threading;
@@ -12,8 +11,8 @@ namespace LinqToDB.Data.DbCommandProcessor
 	[PublicAPI]
 	public interface IDbCommandProcessor
 	{
-		object             ExecuteScalar       (DbCommand command);
-		Task<object>       ExecuteScalarAsync  (DbCommand command, CancellationToken cancellationToken);
+		object?            ExecuteScalar       (DbCommand command);
+		Task<object?>      ExecuteScalarAsync  (DbCommand command, CancellationToken cancellationToken);
 		int                ExecuteNonQuery     (DbCommand command);
 		Task<int>          ExecuteNonQueryAsync(DbCommand command, CancellationToken cancellationToken);
 		DbDataReader       ExecuteReader       (DbCommand command, CommandBehavior commandBehavior);

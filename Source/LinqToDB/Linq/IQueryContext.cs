@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LinqToDB.Linq
@@ -9,8 +8,8 @@ namespace LinqToDB.Linq
 	public interface IQueryContext
 	{
 		SqlStatement   Statement   { get; }
-		object         Context     { get; set; }
-		List<string>   QueryHints  { get; set; }
+		object?        Context     { get; set; }
+		List<string>?  QueryHints  { get; set; }
 
 		SqlParameter[] GetParameters();
 	}

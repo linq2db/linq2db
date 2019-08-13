@@ -21,7 +21,7 @@ namespace Tests.UserTests
 	///
 	/// Summary on tests below:
 	/// 1. SQL CE and SQLite excluded, as they don't support stored procedures
-	/// 2. Following providers execute procedures for real: Sybase, MySQL (5.6, 5.7, MariaDB)
+	/// 2. Following providers execute procedures for real: Sybase, MySQL/MariaDB
 	/// 3. Following providers miss procedures schema load so wasn't really tested yet: PostgreSQL, Informix
 	/// 4. Following providers doesn't support transactions during schema load:
 	///    Sybase (The 'CREATE TABLE' command is not allowed within a multi-statement transaction in the 'tempdb' database.)

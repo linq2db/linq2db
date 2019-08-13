@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -18,21 +17,21 @@ namespace LinqToDB
 	{
 		#region MethodInfo
 
-		internal static readonly MethodInfo MergeMethodInfo                           = MemberHelper.MethodOf(() => Merge<int>(null, null))                                          .GetGenericMethodDefinition();
-		internal static readonly MethodInfo MergeIntoMethodInfo                       = MemberHelper.MethodOf(() => MergeInto<int, int>(null, null, null))                           .GetGenericMethodDefinition();
-		internal static readonly MethodInfo UsingMethodInfo1                          = MemberHelper.MethodOf(() => Using<int, int>(null, (IQueryable<int>)null))                    .GetGenericMethodDefinition();
-		internal static readonly MethodInfo UsingMethodInfo2                          = MemberHelper.MethodOf(() => Using<int, int>(null, (IEnumerable<int>)null))                   .GetGenericMethodDefinition();
-		internal static readonly MethodInfo UsingTargetMethodInfo                     = MemberHelper.MethodOf(() => UsingTarget<int>(null))                                          .GetGenericMethodDefinition();
-		internal static readonly MethodInfo OnMethodInfo1                             = MemberHelper.MethodOf(() => On<int, int, int>(null, null, null))                             .GetGenericMethodDefinition();
-		internal static readonly MethodInfo OnMethodInfo2                             = MemberHelper.MethodOf(() => On<int, int>(null, null))                                        .GetGenericMethodDefinition();
-		internal static readonly MethodInfo OnTargetKeyMethodInfo                     = MemberHelper.MethodOf(() => OnTargetKey<int>(null))                                          .GetGenericMethodDefinition();
-		internal static readonly MethodInfo InsertWhenNotMatchedAndMethodInfo         = MemberHelper.MethodOf(() => InsertWhenNotMatchedAnd<int, int>(null, null, null))             .GetGenericMethodDefinition();
-		internal static readonly MethodInfo UpdateWhenMatchedAndMethodInfo            = MemberHelper.MethodOf(() => UpdateWhenMatchedAnd<int, int>(null, null, null))                .GetGenericMethodDefinition();
-		internal static readonly MethodInfo UpdateWhenMatchedAndThenDeleteMethodInfo  = MemberHelper.MethodOf(() => UpdateWhenMatchedAndThenDelete<int, int>(null, null, null, null)).GetGenericMethodDefinition();
-		internal static readonly MethodInfo DeleteWhenMatchedAndMethodInfo            = MemberHelper.MethodOf(() => DeleteWhenMatchedAnd<int, int>(null, null))                      .GetGenericMethodDefinition();
-		internal static readonly MethodInfo UpdateWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOf(() => UpdateWhenNotMatchedBySourceAnd<int, int>(null, null, null))     .GetGenericMethodDefinition();
-		internal static readonly MethodInfo DeleteWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOf(() => DeleteWhenNotMatchedBySourceAnd<int, int>(null, null))           .GetGenericMethodDefinition();
-		internal static readonly MethodInfo ExecuteMergeMethodInfo                    = MemberHelper.MethodOf(() => Merge<int, int>(null))                                           .GetGenericMethodDefinition();
+		internal static readonly MethodInfo MergeMethodInfo                           = MemberHelper.MethodOf(() => Merge<int>(null!, null!))                                            .GetGenericMethodDefinition();
+		internal static readonly MethodInfo MergeIntoMethodInfo                       = MemberHelper.MethodOf(() => MergeInto<int, int>(null!, null!, null!))                            .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UsingMethodInfo1                          = MemberHelper.MethodOf(() => Using<int, int>(null!, (IQueryable<int>)null!))                      .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UsingMethodInfo2                          = MemberHelper.MethodOf(() => Using<int, int>(null!, (IEnumerable<int>)null!))                     .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UsingTargetMethodInfo                     = MemberHelper.MethodOf(() => UsingTarget<int>(null!))                                             .GetGenericMethodDefinition();
+		internal static readonly MethodInfo OnMethodInfo1                             = MemberHelper.MethodOf(() => On<int, int, int>(null!, null!, null!))                              .GetGenericMethodDefinition();
+		internal static readonly MethodInfo OnMethodInfo2                             = MemberHelper.MethodOf(() => On<int, int>(null!, null!))                                          .GetGenericMethodDefinition();
+		internal static readonly MethodInfo OnTargetKeyMethodInfo                     = MemberHelper.MethodOf(() => OnTargetKey<int>(null!))                                             .GetGenericMethodDefinition();
+		internal static readonly MethodInfo InsertWhenNotMatchedAndMethodInfo         = MemberHelper.MethodOf(() => InsertWhenNotMatchedAnd<int, int>(null!, null!, null!))              .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UpdateWhenMatchedAndMethodInfo            = MemberHelper.MethodOf(() => UpdateWhenMatchedAnd<int, int>(null!, null!, null!))                 .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UpdateWhenMatchedAndThenDeleteMethodInfo  = MemberHelper.MethodOf(() => UpdateWhenMatchedAndThenDelete<int, int>(null!, null!, null!, null!)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo DeleteWhenMatchedAndMethodInfo            = MemberHelper.MethodOf(() => DeleteWhenMatchedAnd<int, int>(null!, null!))                        .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UpdateWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOf(() => UpdateWhenNotMatchedBySourceAnd<int, int>(null!, null!, null!))      .GetGenericMethodDefinition();
+		internal static readonly MethodInfo DeleteWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOf(() => DeleteWhenNotMatchedBySourceAnd<int, int>(null!, null!))             .GetGenericMethodDefinition();
+		internal static readonly MethodInfo ExecuteMergeMethodInfo                    = MemberHelper.MethodOf(() => Merge<int, int>(null!))                                              .GetGenericMethodDefinition();
 
 		#endregion
 

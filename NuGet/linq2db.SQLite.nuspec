@@ -11,7 +11,7 @@
 		</summary>
 		<tags>linq linq2db SQLite LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db"                  version="2.6.0"/>
+			<dependency id="linq2db"                  version="3.0.0"/>
 			<dependency id="System.Data.SQLite.Core"  version="1.0.111"/>
 		</dependencies>
 		<contentFiles>

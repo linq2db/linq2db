@@ -13,20 +13,20 @@
 		<tags>linq linq2db Oracle LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<group targetFramework=".NETFramework4.5">
-				<dependency id="linq2db"                  version="2.6.0"/>
-				<dependency id="Oracle.ManagedDataAccess" version="12.2.1100"/>
+				<dependency id="linq2db"                  version="3.0.0"/>
+				<dependency id="Oracle.ManagedDataAccess" version="19.3.1"/>
 			</group>
 			<group targetFramework=".NETFramework4.6">
-				<dependency id="linq2db"                  version="2.6.0"/>
-				<dependency id="Oracle.ManagedDataAccess" version="12.2.1100"/>
+				<dependency id="linq2db"                  version="3.0.0"/>
+				<dependency id="Oracle.ManagedDataAccess" version="19.3.1"/>
 			</group>
 			<group targetFramework=".NETStandard2.0">
-				<dependency id="linq2db"                       version="2.6.0"/>
-				<dependency id="Oracle.ManagedDataAccess.Core" version="2.18.3"/>
+				<dependency id="linq2db"                       version="3.0.0"/>
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.31"/>
 			</group>
 			<group targetFramework=".NETCoreApp2.0">
-				<dependency id="linq2db"                       version="2.6.0"/>
-				<dependency id="Oracle.ManagedDataAccess.Core" version="2.18.3"/>
+				<dependency id="linq2db"                       version="3.0.0"/>
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.31"/>
 			</group>
 		</dependencies>
 		<contentFiles>

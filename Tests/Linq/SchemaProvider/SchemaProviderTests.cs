@@ -157,7 +157,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void MySqlTest([IncludeDataSources(TestProvName.AllMySqlData)] string context)
+		public void MySqlTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -176,7 +176,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void MySqlPKTest([IncludeDataSources(TestProvName.AllMySqlData)]
+		public void MySqlPKTest([IncludeDataSources(TestProvName.AllMySql)]
 			string context)
 		{
 			using (var conn = new DataConnection(context))
