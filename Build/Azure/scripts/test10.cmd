@@ -15,6 +15,7 @@ echo "Container is UP"
 docker exec pgsql psql -U postgres -c "create database testdata"
 docker exec pgsql psql -U postgres -c "\l"
 docker exec pgsql psql -U postgres -c "SELECT version();"
+docker logs pgsql
 goto:eof
 
 :fail

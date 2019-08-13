@@ -685,45 +685,12 @@ stages:
 
     strategy:
       matrix:
-        Test1:
-          config: 'pgsql'
-          script: 'test1.cmd'
-        Test2:
-          config: 'pgsql'
-          script: 'test2.cmd'
-        Test3:
-          config: 'pgsql'
-          script: 'test3.cmd'
-        Test4:
-          config: 'pgsql'
-          script: 'test4.cmd'
-        Test5:
-          config: 'pgsql'
-          script: 'test5.cmd'
-        Test6:
-          config: 'pgsql'
-          script: 'test6.cmd'
         Test7:
           config: 'pgsql'
           script: 'test7.cmd'
-        Test8:
-          config: 'pgsql'
-          script: 'test8.cmd'
-        Test9:
-          config: 'pgsql'
-          script: 'test9.cmd'
         Test10:
           config: 'pgsql'
           script: 'test10.cmd'
-        Test11:
-          config: 'pgsql'
-          script: 'test11.cmd'
-        Test12:
-          config: 'pgsql'
-          script: 'test12.cmd'
-        Test13:
-          config: 'pgsql'
-          script: 'test13.cmd'
     steps:
     - checkout: none
 
@@ -772,33 +739,15 @@ stages:
         Test1:
           config: 'pgsql'
           script: 'test1.cmd'
-        Test2:
-          config: 'pgsql'
-          script: 'test2.cmd'
         Test3:
           config: 'pgsql'
           script: 'test3.cmd'
-        Test4:
-          config: 'pgsql'
-          script: 'test4.cmd'
-        Test5:
-          config: 'pgsql'
-          script: 'test5.cmd'
-        Test6:
-          config: 'pgsql'
-          script: 'test6.cmd'
-        Test7:
-          config: 'pgsql'
-          script: 'test7.cmd'
         Test8:
           config: 'pgsql'
           script: 'test8.cmd'
         Test9:
           config: 'pgsql'
           script: 'test9.cmd'
-        Test10:
-          config: 'pgsql'
-          script: 'test10.cmd'
         Test11:
           config: 'pgsql'
           script: 'test11.cmd'
@@ -854,45 +803,9 @@ stages:
 
     strategy:
       matrix:
-        Test1:
-          config: 'pgsql'
-          script: 'test1.cmd'
-        Test2:
-          config: 'pgsql'
-          script: 'test2.cmd'
-        Test3:
-          config: 'pgsql'
-          script: 'test3.cmd'
         Test4:
           config: 'pgsql'
           script: 'test4.cmd'
-        Test5:
-          config: 'pgsql'
-          script: 'test5.cmd'
-        Test6:
-          config: 'pgsql'
-          script: 'test6.cmd'
-        Test7:
-          config: 'pgsql'
-          script: 'test7.cmd'
-        Test8:
-          config: 'pgsql'
-          script: 'test8.cmd'
-        Test9:
-          config: 'pgsql'
-          script: 'test9.cmd'
-        Test10:
-          config: 'pgsql'
-          script: 'test10.cmd'
-        Test11:
-          config: 'pgsql'
-          script: 'test11.cmd'
-        Test12:
-          config: 'pgsql'
-          script: 'test12.cmd'
-        Test13:
-          config: 'pgsql'
-          script: 'test13.cmd'
     steps:
     - checkout: none
 
