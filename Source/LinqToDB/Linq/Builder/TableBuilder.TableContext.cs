@@ -538,6 +538,16 @@ namespace LinqToDB.Linq.Builder
 			{
 				SqlInfo[] info;
 
+				var isScalar = IsScalarType(tableType);
+				if (isScalar)
+				{
+					info = ConvertToIndex(null, 0, ConvertFlags.All);
+					if (info.Length != 1)
+						throw new LinqToDBException($"Invalid scalar type processing for type '{tableType.Name}'.");
+					var parentIndex = ConvertToParentIndex(info[0].Index, null);
+					return Builder.BuildSql(tableType, parentIndex);
+				}
+
 				if (ObjectType == tableType)
 				{
 					info = ConvertToIndex(null, 0, ConvertFlags.All);
@@ -645,6 +655,11 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
+			private bool IsScalarType(Type tableType)
+			{
+				return tableType.IsArray || Builder.MappingSchema.IsScalarType(tableType);
+			}
+
 			public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				var expr   = BuildQuery(typeof(T), this, null);
@@ -707,10 +722,26 @@ namespace LinqToDB.Linq.Builder
 							var table = FindTable(expression, level, false, true);
 
 							if (table.Field == null)
-								return table.Table.SqlTable.Fields.Values
-									.Select(f => new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f })
-									.ToArray();
+							{
+								SqlInfo[] result;
 
+								if (!IsScalarType(OriginalType))
+								{
+									result = table.Table.SqlTable.Fields.Values
+										.Select(f => new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f })
+										.ToArray();
+								}
+								else
+								{
+									// scalar
+									result = new[]
+									{
+										new SqlInfo(Enumerable.Empty<MemberInfo>()) { Sql = SqlTable }
+									};
+								}
+
+								return result;
+							}
 							break;
 						}
 
@@ -747,7 +778,7 @@ namespace LinqToDB.Linq.Builder
 							if (expression == null)
 								return new[]
 								{
-									new SqlInfo { Sql = table.Table.SqlTable.All }
+									new SqlInfo { Sql = IsScalarType(OriginalType) ? (ISqlExpression)SqlTable : table.Table.SqlTable.All }
 								};
 
 							break;

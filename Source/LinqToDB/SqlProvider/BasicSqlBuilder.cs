@@ -1304,8 +1304,9 @@ namespace LinqToDB.SqlProvider
 
 		private static Regex _selectDetector = new Regex(@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		protected void BuildPhysicalTable(ISqlTableSource table, string alias)
+		protected bool? BuildPhysicalTable(ISqlTableSource table, string alias)
 		{
+			bool? buildAlias = null;
 			switch (table.ElementType)
 			{
 				case QueryElementType.SqlTable   :
@@ -1335,7 +1336,17 @@ namespace LinqToDB.SqlProvider
 					if (multiLine)
 						StringBuilder.AppendLine();
 
-					BuildFormatValues(IdentText(rawSqlTable.SQL, multiLine ? Indent + 1 : 0), rawSqlTable.Parameters, () => Precedence.Primary);
+					var parameters = rawSqlTable.Parameters;
+					if (rawSqlTable.Parameters.Any(e => e.ElementType == QueryElementType.SqlAliasPlaceholder))
+					{
+						buildAlias = false;
+						var aliasExpr = new SqlExpression((string)Convert(alias, ConvertType.NameToQueryTableAlias), Precedence.Primary);
+						parameters = rawSqlTable.Parameters.Select(e =>
+								e.ElementType == QueryElementType.SqlAliasPlaceholder ? aliasExpr : e)
+							.ToArray();
+					}
+
+					BuildFormatValues(IdentText(rawSqlTable.SQL, multiLine ? Indent + 1 : 0), parameters, () => Precedence.Primary);
 
 					if (multiLine)
 						StringBuilder.AppendLine();
@@ -1347,6 +1358,8 @@ namespace LinqToDB.SqlProvider
 				default                          :
 					throw new InvalidOperationException();
 			}
+
+			return buildAlias;
 		}
 
 		protected void BuildTableName(SqlTableSource ts, bool buildName, bool buildAlias)
@@ -1354,7 +1367,9 @@ namespace LinqToDB.SqlProvider
 			if (buildName)
 			{
 				var alias = GetTableAlias(ts);
-				BuildPhysicalTable(ts.Source, alias);
+				var isBuildAlias = BuildPhysicalTable(ts.Source, alias);
+				if (isBuildAlias == false)
+					buildAlias = false;
 			}
 
 			if (buildAlias)
@@ -2328,6 +2343,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlTable:
+				case QueryElementType.SqlRawSqlTable:
 				case QueryElementType.TableSource:
 					{
 						var table = (ISqlTableSource) expr;
@@ -2959,21 +2975,29 @@ namespace LinqToDB.SqlProvider
 			return Statement?.GetTempAliases(n, defaultAlias) ?? Array<string>.Empty;
 		}
 
-		protected static string GetTableAlias(ISqlTableSource table)
+		protected string GetTableAlias(ISqlTableSource table)
 		{
 			switch (table.ElementType)
 			{
 				case QueryElementType.TableSource:
-					var ts    = (SqlTableSource)table;
-					var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
-					return alias != "$" ? alias : null;
-
+					{
+						var ts = (SqlTableSource)table;
+						var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
+						return alias != "$" ? alias : null;
+					}
 				case QueryElementType.SqlTable:
 					return ((SqlTable)table).Alias;
 
 				case QueryElementType.SqlCteTable:
 					return ((SqlTable)table).Alias;
 
+				case QueryElementType.SqlRawSqlTable:
+					{
+						var ts = Statement.SelectQuery?.GetTableSource(table);
+						if (ts == null)
+							ts = Statement.GetTableSource(table);
+						return ts != null ? GetTableAlias(ts) : ((SqlTable)table).Alias;
+					}
 				default:
 					throw new InvalidOperationException();
 			}
@@ -3070,6 +3094,9 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlCteTable:
 					return GetTablePhysicalName((SqlCteTable)table);
+
+				case QueryElementType.SqlRawSqlTable:
+					return GetTablePhysicalName((SqlRawSqlTable)table);
 
 				default:
 					throw new InvalidOperationException();

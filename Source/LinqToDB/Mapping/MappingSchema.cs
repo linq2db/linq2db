@@ -1204,8 +1204,6 @@ namespace LinqToDB.Mapping
 					ret = true;
 			}
 
-			SetScalarType(type, ret);
-
 			return ret;
 		}
 

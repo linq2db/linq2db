@@ -1239,6 +1239,11 @@ namespace LinqToDB.ServiceModel
 
 							break;
 						}
+
+					case QueryElementType.SqlAliasPlaceholder:
+						{
+							break;
+						};
 				}
 
 				Builder.AppendLine();
@@ -1959,6 +1964,11 @@ namespace LinqToDB.ServiceModel
 
 							obj = new SqlSetOperator(sqlQuery, setOperation);
 
+							break;
+						}
+					case QueryElementType.SqlAliasPlaceholder :
+						{
+							obj = new SqlAliasPlaceholder();
 							break;
 						}
 				}

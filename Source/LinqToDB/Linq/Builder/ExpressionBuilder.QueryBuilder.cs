@@ -381,7 +381,7 @@ namespace LinqToDB.Linq.Builder
 
 			}
 
-			if (EnforceServerSide(context))
+			if (enforceServerSide || EnforceServerSide(context))
 			{
 				switch (expr.NodeType)
 				{
@@ -390,7 +390,7 @@ namespace LinqToDB.Linq.Builder
 						break;
 
 					default                        :
-						if (CanBeCompiled(expr))
+						if (!enforceServerSide && CanBeCompiled(expr))
 							break;
 						return new TransformInfo(BuildSql(context, expr, alias));
 				}
