@@ -1665,6 +1665,19 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 				}
+				else if (firstTable.Source is SqlTable newUpdateTable && newUpdateTable != updateTable && QueryHelper.IsEqualTables(newUpdateTable, updateTable))
+				{
+					statement.Update.Table = newUpdateTable;
+					statement.Update = new QueryVisitor().ConvertImmutable(statement.Update, e =>
+					{
+						if (e is SqlField field && field.Table == updateTable)
+						{
+							return newUpdateTable.Fields[field.Name];
+						}
+
+						return e;
+					});
+				}
 			}
 
 			return statement;
