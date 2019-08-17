@@ -53,7 +53,7 @@ stages:
 # need it for DotNetCoreCLI task be able to build C#8 project
     - task: DotNetCoreInstaller@1
       inputs:
-        version: '3.0.100-preview8-013656'
+        version: '3.0.100-preview7-012821'
       displayName: Install .NET Core 3p7 SDK
 
     - task: DotNetCoreCLI@2
