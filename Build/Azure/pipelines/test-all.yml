@@ -2,19 +2,15 @@ variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
   assemblyVersion: 3.0.0
-  nugetVersion: 3.0.0
-  artifact_nugets: 'nugets'
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
 #  netfx45_tests: 'netfx45_tests' # maybe later
   netfx46_tests: 'netfx46_tests'
   netcore2_tests: 'netcoreapp20_tests'
 
-trigger:
-  - master
-  - release
-  - release.3.0
-#pr: not specified, so we build all prs
+trigger: none
+# https://github.com/MicrosoftDocs/vsts-docs/issues/4206
+#pr: none
 
 stages:
 
@@ -127,78 +123,6 @@ stages:
         path: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
         artifact: '$(artifact_linq2db_tools_binaries)'
       displayName: Publish linq2db.Tools build results
-
-#############################
-#  Build and Publish nugets #
-#############################
-  - job: build_nugets_job
-    pool:
-      vmImage: 'windows-2019'
-    displayName: 'Nugets Generation'
-    variables:
-      packageVersion: $(nugetVersion)
-    dependsOn: build_job
-#    condition: succeeded()
-    condition: ne('disabled', 'disabled')
-
-    steps:
-
-    - powershell: echo "##vso[task.setvariable variable=packageVersion]$(packageVersion)-rc$(Build.BuildId)"
-      condition: ne(variables['Build.SourceBranchName'], 'release')
-      displayName: Update nuget version
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: '$(artifact_linq2db_binaries)'
-        targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: '$(artifact_linq2db_Tools_binaries)'
-        targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: '$(netfx46_tests)'
-        targetPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
-
-    - task: PowerShell@2
-      inputs:
-        filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
-        workingDirectory: '$(Build.SourcesDirectory)'
-        arguments: -path $(Build.SourcesDirectory)/NuGet/*.nuspec -version $(packageVersion) -branch $(Build.SourceBranchName)
-      displayName: Update nuspecs
-
-    - task: CmdLine@2
-      inputs:
-        script: $(Build.SourcesDirectory)/NuGet/PackCI.bat
-        workingDirectory: $(Build.SourcesDirectory)/NuGet
-      displayName: Build nugets
-
-    - task: PublishBuildArtifacts@1
-      inputs:
-        pathToPublish: '$(Build.SourcesDirectory)/NuGet/built'
-        artifactName: '$(artifact_nugets)'
-      displayName: Publish nugets to artifacts
-
-    - task: NuGetCommand@2
-      inputs:
-        command: 'push'
-        packagesToPush: '$(Build.SourcesDirectory)/NuGet/built/*.nupkg'
-        nuGetFeedType: 'internal'
-        publishVstsFeed: '0dcc414b-ea54-451e-a54f-d63f05367c4b/967a4107-9788-41a4-9f6d-a2318aab1410'
-      displayName: Publish to Azure Artifacts feed
-      condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'master'), eq(variables['Build.SourceBranchName'], 'release.3.0')))
-
-# apikey exires around 31/07/2020
-    - task: NuGetCommand@2
-      inputs:
-        command: 'push'
-        packagesToPush: '$(Build.SourcesDirectory)/NuGet/built/*.nupkg'
-        nuGetFeedType: 'external'
-        publishFeedCredentials: 'linq2db nuget.org feed (allows update of linq2db and linq2db.EF nugets)'
-      displayName: Publish to Nuget.org
-      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
 
 ##############################################################################################
 #  Tests: Windows (NETFX 4.6)                                                                #
