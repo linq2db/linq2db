@@ -335,6 +335,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A3
 		Build\Azure\scripts\sqlserver.2017.sh = Build\Azure\scripts\sqlserver.2017.sh
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pipelines", "pipelines", "{C937AC8E-2714-4850-A1EA-1710D980DF0B}"
+	ProjectSection(SolutionItems) = preProject
+		Build\Azure\pipelines\default.yml = Build\Azure\pipelines\default.yml
+		Build\Azure\pipelines\test-all.yml = Build\Azure\pipelines\test-all.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Azure|Any CPU = Azure|Any CPU
@@ -449,6 +455,7 @@ Global
 		{B7AADC73-2739-4B07-B3EB-C9EF64846874} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{9C01FF5E-F85A-4561-A05B-8F32A4E11C6D} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{49A37E5A-A8A3-4C89-B11C-D700A9F52BAA} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
+		{C937AC8E-2714-4850-A1EA-1710D980DF0B} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}
