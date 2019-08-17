@@ -143,8 +143,7 @@ stages:
     variables:
       packageVersion: $(nugetVersion)
     dependsOn: build_job
-#    condition: succeeded()
-    condition: ne('disabled', 'disabled')
+    condition: succeeded()
 
     steps:
 

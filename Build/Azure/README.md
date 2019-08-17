@@ -3,6 +3,24 @@
 - `netcoreapp20` folder stores test job configs for `netcoreapp2.0` test runs for Windows, Linux and MacOS
 - `scripts` folder stores test job setup scripts (`*.cmd` for windows jobs and `*.sh` for Linux and MacOS)
 
+## Azure Pipelines
+Currently we have 3 pipelines listed below. If you need more flexible test runs, you can request more test pipelines. E.g. to run only specific database or framework/OS tests.
+
+#### `default` pipeline
+
+Automatically runs for:
+- PR to `release` branch: runs all tests for PR commit
+- commit to `master` or `release.3.0`: runs all tests and publish nugets to [Azure Artifacts feed](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db)
+- commit to `release`: publish nugets to Nuget.org
+
+#### `build` pipeline
+
+Automatically triggered for all PR commits and runs solution build
+
+#### `test-all` pipeline
+
+Runs manually using `/azp run test-all` command from PR comment by team member
+
 ## Test Matrix
 
 Following table contains information about which test jobs are awailable per:

@@ -3,7 +3,6 @@ variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
   assemblyVersion: 3.0.0
-  nugetVersion: 3.0.0
 
 # allways trigger on PRs
 trigger: none
