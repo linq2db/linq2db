@@ -1,18 +1,11 @@
 #!/bin/bash
-#https://github.com/microsoft/azure-pipelines-image-generation/issues/738
-brew cask install docker
-sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
-/Applications/Docker.app/Contents/MacOS/Docker --unattended &
-while ! docker info 2>/dev/null ; do
-sleep 5
-if pgrep -xq -- "Docker"; then
-    echo docker still running
-else
-    echo docker not running, restart
-    /Applications/Docker.app/Contents/MacOS/Docker --unattended &
+chmod +x mac.docker.sh
+mac.docker.sh
+ret=$?
+if [ $ret -ne 0 ]; then
+    echo 'Docker install failed'
+    exit 1
 fi
-echo "Waiting for docker service to be in the running state"
-done
 
 #docker pull postgres:9.2
 docker run -d --name pgsql -h pgsql -e POSTGRES_PASSWORD=Password12! -p 5432:5432 -v pgdb:/var/run/postgresql postgres:9.2

@@ -121,3 +121,58 @@ stages:
         artifact: '$(artifact_linq2db_tools_binaries)'
       displayName: Publish linq2db.Tools build results
 
+#################################################
+#### delete it
+
+  - job: test_macos_netcoreapp20_job
+    pool:
+      vmImage: 'macOS-10.14'
+    displayName: 'Tests: Mac / NETCOREAPP2.0 / '
+    dependsOn: build_job
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+
+    strategy:
+      matrix:
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'mac.pgsql.sh'
+
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netcore2_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: 'chmod +x $(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['script']
+      displayName: Mark script as executable
+      
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
+
+    - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
+      displayName: '$(title)'
+
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
+        testRunTitle: 'Mac / NETCOREAPP2.0 / $(title)'
