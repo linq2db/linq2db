@@ -1,0 +1,123 @@
+variables:
+  solution: 'linq2db.sln'
+  build_configuration: 'Azure'
+  assemblyVersion: 3.0.0
+  artifact_linq2db_binaries: 'linq2db_binaries'
+  artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
+  netfx46_tests: 'netfx46_tests'
+  netcore2_tests: 'netcoreapp20_tests'
+
+trigger: none
+
+stages:
+
+########################################
+#  Build and publish testable binaries #
+########################################
+- stage: ''
+  displayName: ''
+  jobs:
+  - job: build_job
+    pool:
+      vmImage: 'windows-2019'
+    displayName: 'Build'
+
+    steps:
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
+        workingDirectory: '$(Build.SourcesDirectory)'
+        arguments: -path $(Build.SourcesDirectory)/Build/linq2db.Default.props -version $(assemblyVersion)
+      displayName: Update assembly version
+
+    - task: MSBuild@1
+      inputs:
+        solution: '$(solution)'
+        configuration: '$(build_configuration)'
+        msbuildArguments: '/t:Restore;Rebuild -m'
+      displayName: Build Solution
+
+# need it for DotNetCoreCLI task be able to build C#8 project
+    - task: DotNetCoreInstaller@1
+      inputs:
+        version: '3.0.100-preview7-012821'
+      displayName: Install .NET Core 3p7 SDK
+
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'publish'
+        projects: '**/Tests/Linq/Tests.csproj'
+        publishWebProjects: false
+        zipAfterPublish: false
+        arguments: -f netcoreapp2.0 -c $(build_configuration)
+        nobuild: true
+      displayName: Publish Test Project
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
+        sourceFolder: '$(Build.SourcesDirectory)/Tests'
+        contents: 'DataProviders.json'
+      displayName: Copy test settings for NETFX46
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish'
+        sourceFolder: '$(Build.SourcesDirectory)/Tests'
+        contents: 'DataProviders.json'
+      displayName: Copy test settings for NETCOREAPP2.0
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46/configs'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net46'
+      displayName: Copy test configs for NETFX46
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish/configs'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp20'
+      displayName: Copy test configs for NETCOREAPP2.0
+
+    - task: CmdLine@2
+      inputs:
+        script: 'copy "$(System.DefaultWorkingDirectory)\Data\Create Scripts\Northwind.sql" $(Build.SourcesDirectory)\Build\Azure\scripts\northwind.sql'
+      displayName: Copy northwind.sql to scripts
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish/scripts'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+      displayName: Copy test scripts for NETCOREAPP2.0
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46/scripts'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+      displayName: Copy test scripts for NETFX46
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
+        artifact: '$(netfx46_tests)'
+      displayName: Publish test artifacts for NETFX46
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish'
+        artifact: '$(netcore2_tests)'
+      displayName: Publish test artifacts for NETCOREAPP2.0
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        path: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
+        artifact: '$(artifact_linq2db_binaries)'
+      displayName: Publish linq2db build results
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        path: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
+        artifact: '$(artifact_linq2db_tools_binaries)'
+      displayName: Publish linq2db.Tools build results
+

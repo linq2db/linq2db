@@ -4,7 +4,7 @@
 - `scripts` folder stores test job setup scripts (`*.cmd` for windows jobs and `*.sh` for Linux and MacOS)
 
 ## Azure Pipelines
-Currently we have 3 pipelines listed below. If you need more flexible test runs, you can request more test pipelines. E.g. to run only specific database or framework/OS tests.
+All existing pipelines we have listed below. If you need more flexible test runs, you can request more test pipelines. E.g. to run only specific database or framework/OS tests.
 
 #### `default` pipeline
 
@@ -20,6 +20,10 @@ Automatically triggered for all PR commits and runs solution build
 #### `test-all` pipeline
 
 Runs manually using `/azp run test-all` command from PR comment by team member
+
+#### `experimental` pipeline
+Runs manually using `/azp run experimental` command from PR and used for development and testing of new pipelines/test providers.
+Base pipeline template contains only solution build and should be reset to initial state before merge.
 
 ## Test Matrix
 
