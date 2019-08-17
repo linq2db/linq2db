@@ -9,7 +9,8 @@ variables:
   netcore2_tests: 'netcoreapp20_tests'
 
 trigger: none
-pr: none
+# https://github.com/MicrosoftDocs/vsts-docs/issues/4206
+#pr: none
 
 stages:
 
