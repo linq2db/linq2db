@@ -18,7 +18,8 @@ trigger:
 # don't trigger pr builds by default, users should trigger them manually using /azp bot commands to avoid situations
 # when we have multiple test runs waiting for free job, when nobody needs them
 # we only want to trigger it for pr to release branch
-pr: release
+pr:
+  - release
 
 stages:
 
