@@ -137,6 +137,10 @@ stages:
           title: 'Sybase ASE 16'
           config: 'sybase'
           script: 'sybase.sh'
+        Oracle:
+          title: 'Oracle 11.2'
+          config: 'oracle'
+          script: 'oracle.sh'
         Firebird25:
           title: 'Firebird 2.5'
           config: 'firebird25'
@@ -199,6 +203,11 @@ stages:
           title: 'Sybase ASE 16'
           config: 'sybase'
           script: 'sybase.sh'
+          docker: 'true'
+        Oracle:
+          title: 'Oracle 11.2'
+          config: 'oracle'
+          script: 'oracle.sh'
           docker: 'true'
         Firebird25:
           title: 'Firebird 2.5'

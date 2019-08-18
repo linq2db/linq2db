@@ -292,7 +292,7 @@ namespace Tests._Create
 			using (var db = new TestDataConnection(context))
 			{
 				var results = db.QueryMultiple<HelpSort>("sp_helpsort");
-				Assert.Fail(string.Join(";", results));
+				Assert.Fail(string.Join(";", results.Settings));
 			}
 		}
 
