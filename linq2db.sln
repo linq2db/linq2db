@@ -305,6 +305,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A37E5A-A8A3-4C89-B11C-D700A9F52BAA}"
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\scripts\access.ace.cmd = Build\Azure\scripts\access.ace.cmd
+		Build\Azure\scripts\firebird25.sh = Build\Azure\scripts\firebird25.sh
+		Build\Azure\scripts\firebird3.sh = Build\Azure\scripts\firebird3.sh
 		Build\Azure\scripts\mac.docker.sh = Build\Azure\scripts\mac.docker.sh
 		Build\Azure\scripts\mac.mariadb.sh = Build\Azure\scripts\mac.mariadb.sh
 		Build\Azure\scripts\mac.mysql.sh = Build\Azure\scripts\mac.mysql.sh

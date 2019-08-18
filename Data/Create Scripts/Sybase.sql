@@ -3,9 +3,6 @@ GO
 
 DROP DATABASE {DBNAME}
 GO
-sp_configure "default character set id", 190
-GO
-
 CREATE DATABASE {DBNAME}
 	ON master = '102400K'
 GO
