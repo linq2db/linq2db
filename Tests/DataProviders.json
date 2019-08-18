@@ -211,7 +211,7 @@
 			"MariaDB"       : { "Provider": "MySql.Data",                      "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                                                   },
 			"Sybase.Managed": { "Provider": "AdoNetCore.AseClient",            "ConnectionString": "Data Source=localhost;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;" },
 			"Firebird"      : {                                                "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8"                                         },
-			"Firebird3"     : { "Provider": "FirebirdSql.Data.FirebirdClient", "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/TESTDB.FDB;User Id=test;Password=test"                                                             },
+			"Firebird3"     : { "Provider": "FirebirdSql.Data.FirebirdClient", "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=test;Password=test"                                                             },
 			"Oracle.Managed": { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"            },
 			//"SqlServer.2014": {
 			//	"Provider": "System.Data.SqlClient",
