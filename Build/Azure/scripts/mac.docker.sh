@@ -7,8 +7,7 @@ retries=0
 # recent 37199 version of docker fails to start, so we need to specify most recent working one
 #brew cask install docker
 # install working 2.0.0.3-ce-mac81,31259
-#brew cask install https://raw.githubusercontent.com/Homebrew/homebrew-cask/8ce4e89d10716666743b28c5a46cd54af59a9cc2/Casks/docker.rb
-brew cask install https://raw.githubusercontent.com/Homebrew/homebrew-cask/b8c67034bd78f9585b1316564f223b97055bc0dc/Casks/docker.rb
+brew cask install https://raw.githubusercontent.com/Homebrew/homebrew-cask/8ce4e89d10716666743b28c5a46cd54af59a9cc2/Casks/docker.rb
 sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
 /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 while ! docker info 2>/dev/null ; do
@@ -21,7 +20,6 @@ while ! docker info 2>/dev/null ; do
         /Applications/Docker.app/Contents/MacOS/Docker --unattended &
     fi
     if [ $retries -gt 20 ]; then
-        sudo cat '/var/root/Library/Group Containers/group.com.docker/DockerAppStderr.txt'
         >&2 echo 'Failed to run docker'
         exit 1
     fi;
