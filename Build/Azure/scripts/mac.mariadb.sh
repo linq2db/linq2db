@@ -1,11 +1,4 @@
 #!/bin/bash
-chmod +x scripts/mac.docker.sh
-scripts/mac.docker.sh
-ret=$?
-if [ $ret -ne 0 ]; then
-    echo 'Docker install failed'
-    exit 1
-fi
 
 #docker pull mariadb:latest
 docker run -d --name mariadb -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mariadb:latest

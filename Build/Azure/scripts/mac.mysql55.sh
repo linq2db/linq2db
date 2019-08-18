@@ -1,11 +1,4 @@
 #!/bin/bash
-chmod +x scripts/mac.docker.sh
-scripts/mac.docker.sh
-ret=$?
-if [ $ret -ne 0 ]; then
-    echo 'Docker install failed'
-    exit 1
-fi
 
 #docker pull mysql:5.5
 docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mysql:5.5

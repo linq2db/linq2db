@@ -1,11 +1,4 @@
 #!/bin/bash
-chmod +x scripts/mac.docker.sh
-scripts/mac.docker.sh
-ret=$?
-if [ $ret -ne 0 ]; then
-    echo 'Docker install failed'
-    exit 1
-fi
 
 #docker pull mcr.microsoft.com/mssql/server:2017-latest
 docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Password12!' -p 1433:1433 -h mssql --name=mssql -d mcr.microsoft.com/mssql/server:2017-latest
