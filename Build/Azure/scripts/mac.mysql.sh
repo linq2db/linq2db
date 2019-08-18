@@ -1,6 +1,6 @@
 #!/bin/bash
 chmod +x mac.docker.sh
-mac.docker.sh
+scripts/mac.docker.sh
 ret=$?
 if [ $ret -ne 0 ]; then
     echo 'Docker install failed'
