@@ -596,19 +596,20 @@ stages:
       inputs:
         script: 'chmod +x $(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-      condition: variables['script']
+      condition: and(succeeded(), variables['script'])
       displayName: Mark script as executable
       
     - task: CmdLine@2
       inputs:
         script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
-      condition: variables['script']
+      condition: and(succeeded(), variables['script'])
       displayName: Setup tests
 
 # just because there is not vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
     - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
+      condition: succeeded()
       displayName: '$(title)'
 
 
