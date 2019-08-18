@@ -134,7 +134,7 @@ stages:
     strategy:
       matrix:
         Sybase:
-          title: 'Sybase ASE 16.2'
+          title: 'Sybase ASE 16'
           config: 'sybase'
           script: 'sybase.sh'
     steps:
@@ -188,9 +188,9 @@ stages:
     strategy:
       matrix:
         Sybase:
-          title: 'Sybase ASE 16.2'
+          title: 'Sybase ASE 16'
           config: 'sybase'
-          script: 'mac.sybase.sh'
+          script: 'sybase.sh'
           docker: 'true'
 
     steps:

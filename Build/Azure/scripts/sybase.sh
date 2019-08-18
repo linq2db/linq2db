@@ -2,6 +2,8 @@
 
 docker run -d --name sybase -e SYBASE_DB=TestDataCore -p 5000:5000 datagrip/sybase:16.0
 docker ps -a
+sleep 30
+docker logs sybase
 
 #retries=0
 #until docker exec sybase /opt/sybase/OCS-16_0/bin/isql -Usa -PmyPassword -SMYSYBASE -i"./init1.sql"
