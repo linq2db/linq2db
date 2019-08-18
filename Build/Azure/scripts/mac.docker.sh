@@ -4,7 +4,9 @@
 # unfortunatelly, installer is not very good and sometimes just doesn't work
 #https://github.com/microsoft/azure-pipelines-image-generation/issues/738
 retries=0
-brew cask install docker
+# recent 37199 version of docker fails to start, so we need to specify most recent working one
+#brew cask install docker
+brew cask install https://raw.githubusercontent.com/Homebrew/homebrew-cask/b8c67034bd78f9585b1316564f223b97055bc0dc/Casks/docker.rb
 sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
 /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 while ! docker info 2>/dev/null ; do
