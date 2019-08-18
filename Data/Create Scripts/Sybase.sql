@@ -3,15 +3,14 @@ GO
 
 DROP DATABASE {DBNAME}
 GO
+sp_configure "default character set id", 190
+GO
 
 CREATE DATABASE {DBNAME}
 	ON master = '102400K'
 GO
 
 USE {DBNAME}
-GO
--- for debug purposes
-sp_helpsort
 GO
 sp_configure 'enable unicode normalization', 0
 GO
