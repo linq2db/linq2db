@@ -281,21 +281,6 @@ namespace Tests._Create
 			}
 		}
 
-		class HelpSort
-		{
-			[LinqToDB.Mapping.ResultSetIndex(2)] public string[] Settings { get; set; }
-		}
-
-		[Test, Order(1)]
-		public void CreateDatabaseDebug([IncludeDataSources(ProviderName.SybaseManaged)] string context)
-		{
-			using (var db = new TestDataConnection(context))
-			{
-				var results = db.QueryMultiple<HelpSort>("sp_helpsort");
-				Assert.Fail(string.Join(";", results.Settings));
-			}
-		}
-
 #if !NETCOREAPP2_0
 
 		static void AccessAction(IDbConnection connection)
