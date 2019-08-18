@@ -17,7 +17,8 @@ while ! docker info 2>/dev/null ; do
         /Applications/Docker.app/Contents/MacOS/Docker --unattended &
     fi
     if [ $retries -gt 20 ]; then
-        >&2 echo 'Failed to install/run docker.'
+        >&2 echo 'Failed to run docker.'
+        cat '/var/root/Library/Group Containers/group.com.docker/DockerAppStderr.txt'
         exit 1
     fi;
 
