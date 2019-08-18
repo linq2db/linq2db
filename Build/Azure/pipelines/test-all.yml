@@ -455,6 +455,10 @@ stages:
           title: 'PostgreSQL 11'
           config: 'pgsql11'
           script: 'pgsql11.sh'
+        Sybase:
+          title: 'Sybase ASE 16'
+          config: 'sybase'
+          script: 'sybase.sh'
     steps:
     - checkout: none
 
@@ -564,7 +568,11 @@ stages:
           config: 'pgsql11'
           script: 'mac.pgsql11.sh'
           docker: 'true'
-
+        Sybase:
+          title: 'Sybase ASE 16'
+          config: 'sybase'
+          script: 'sybase.sh'
+          docker: 'true'
     steps:
     - checkout: none
 

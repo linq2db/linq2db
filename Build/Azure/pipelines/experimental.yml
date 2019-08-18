@@ -133,10 +133,6 @@ stages:
 
     strategy:
       matrix:
-        Sybase:
-          title: 'Sybase ASE 16'
-          config: 'sybase'
-          script: 'sybase.sh'
         Oracle:
           title: 'Oracle 11.2'
           config: 'oracle'
@@ -199,11 +195,6 @@ stages:
 
     strategy:
       matrix:
-        Sybase:
-          title: 'Sybase ASE 16'
-          config: 'sybase'
-          script: 'sybase.sh'
-          docker: 'true'
         Oracle:
           title: 'Oracle 11.2'
           config: 'oracle'

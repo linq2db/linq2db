@@ -78,7 +78,7 @@ Legend:
 |DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/), [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/)) 1.3.0.100|:x:|:x:|:x:|:x:|
 |Informix 14.10.FC1DEM<br>Native Provider|:x:|:x:|:x:|:x:|
 |SAP HANA 2.0 SPS 04r40<br>Native Provider|:x:|:x:|:x:|:x:|
-|SAP/Sybase ASE 16.2<br>[AdoNetCore.AseClient](https://www.nuget.org/packages/AdoNetCore.AseClient/) 0.14.0|:x:|:x:|:x:|:x:|
+|SAP/Sybase ASE 16.2<br>[AdoNetCore.AseClient](https://www.nuget.org/packages/AdoNetCore.AseClient/) 0.14.0|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |SAP/Sybase ASE 16.2<br>Native Client|:x:|:x:|:x:|:x:|
 |Oracle 18 XE<br>Native Client|:x:|:x:|:x:|:x:|
 |Oracle 18 XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 19.3.1|:x:|:x:|:x:|:x:|

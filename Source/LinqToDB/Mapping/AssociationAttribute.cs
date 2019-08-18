@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq.Expressions;
 using JetBrains.Annotations;
 
@@ -37,35 +36,35 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string       Configuration       { get; set; }
+		public string?      Configuration       { get; set; }
 
 		/// <summary>
 		/// Gets or sets comma-separated list of association key members on this side of association.
 		/// Those keys will be used for join predicate generation and must be compatible with <see cref="OtherKey"/> keys.
 		/// You must specify keys it you do not use custom predicate (see <see cref="ExpressionPredicate"/>).
 		/// </summary>
-		public string       ThisKey             { get; set; }
+		public string?      ThisKey             { get; set; }
 
 		/// <summary>
 		/// Gets or sets comma-separated list of association key members on another side of association.
 		/// Those keys will be used for join predicate generation and must be compatible with <see cref="ThisKey"/> keys.
 		/// You must specify keys it you do not use custom predicate (see <see cref="ExpressionPredicate"/>).
 		/// </summary>
-		public string       OtherKey            { get; set; }
+		public string?      OtherKey            { get; set; }
 
 		/// <summary>
 		/// Specifies static property or method without parameters, that returns join predicate expression. This predicate will be used together with
 		/// <see cref="ThisKey"/>/<see cref="OtherKey"/> join keys, if they are specified.
 		/// Predicate expression lambda function takes two parameters: this record and other record and returns boolean result.
 		/// </summary>
-		public string       ExpressionPredicate { get; set; }
+		public string?      ExpressionPredicate { get; set; }
 
 		/// <summary>
 		/// Specifies predicate expression. This predicate will be used together with
 		/// <see cref="ThisKey"/>/<see cref="OtherKey"/> join keys, if they are specified.
 		/// Predicate expression lambda function takes two parameters: this record and other record and returns boolean result.
 		/// </summary>
-		public Expression   Predicate           { get; set; }
+		public Expression?  Predicate           { get; set; }
 
 
 		/// <summary>
@@ -88,7 +87,7 @@ namespace LinqToDB.Mapping
 		/// </example>
 		/// </para>
 		/// </summary>
-		public string       QueryExpressionMethod { get; set; }
+		public string?      QueryExpressionMethod { get; set; }
 
 		/// <summary>
 		/// Specifies query expression. If is set, other association keys are ignored.
@@ -103,13 +102,13 @@ namespace LinqToDB.Mapping
 		/// </example>
 		/// </para>
 		/// </summary>
-		public Expression   QueryExpression       { get; set; }
+		public Expression?  QueryExpression       { get; set; }
 
 		/// <summary>
 		/// Specify name of property or field to store association value, loaded using <see cref="LinqExtensions.LoadWith{T}(ITable{T}, System.Linq.Expressions.Expression{Func{T, object}})"/> method.
 		/// When not specified, current association member will be used.
 		/// </summary>
-		public string       Storage             { get; set; }
+		public string?      Storage             { get; set; }
 
 		/// <summary>
 		/// Defines type of join:
@@ -123,13 +122,13 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// This property is not used by linq2db.
 		/// </summary>
-		public string       KeyName             { get; set; }
+		public string?      KeyName             { get; set; }
 
 		// TODO: V2 - remove?
 		/// <summary>
 		/// This property is not used by linq2db.
 		/// </summary>
-		public string       BackReferenceName   { get; set; }
+		public string?      BackReferenceName   { get; set; }
 
 		// TODO: V2 - remove?
 		/// <summary>
@@ -146,7 +145,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets alias for association. Used in SQL generation process.
 		/// </summary>
-		public string       AliasName           { get; set; }
+		public string?      AliasName           { get; set; }
 
 		/// <summary>
 		/// Returns <see cref="ThisKey"/> value as a list of key member names.
