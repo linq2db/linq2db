@@ -124,6 +124,60 @@ stages:
 #################################################
 #### delete it
 
+  - job: test_linux_netcoreapp20_job
+    pool:
+      vmImage: 'ubuntu-16.04'
+    displayName: 'Tests: Lin / NETCOREAPP2.0 / '
+    dependsOn: build_job
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+
+    strategy:
+      matrix:
+        Sybase:
+          title: 'Sybase ASE 16.2'
+          config: 'sybase'
+          script: 'sybase.sh'
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netcore2_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: 'chmod +x $(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['script']
+      displayName: Mark script as executable
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
+
+# just because there is not vstest handing in DotNetCoreCLI@2
+# https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
+    - script: dotnet vstest ./linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
+      displayName: '$(title)'
+
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
+        testRunTitle: 'Linux / NETCOREAPP2.0 / $(title)'
+
   - job: test_macos_netcoreapp20_job
     pool:
       vmImage: 'macOS-10.14'
@@ -133,10 +187,10 @@ stages:
 
     strategy:
       matrix:
-        PostgreSQL:
-          title: 'PostgreSQL'
-          config: 'pgsql'
-          script: 'mac.pgsql.sh'
+        Sybase:
+          title: 'Sybase ASE 16.2'
+          config: 'sybase'
+          script: 'mac.sybase.sh'
           docker: 'true'
 
     steps:
