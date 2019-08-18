@@ -10,7 +10,9 @@ GO
 
 USE {DBNAME}
 GO
-
+-- for debug purposes
+sp_helpsort
+GO
 sp_configure 'enable unicode normalization', 0
 GO
 CREATE TABLE InheritanceParent

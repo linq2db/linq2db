@@ -137,6 +137,14 @@ stages:
           title: 'Sybase ASE 16'
           config: 'sybase'
           script: 'sybase.sh'
+        Firebird25:
+          title: 'Firebird 2.5'
+          config: 'firebird25'
+          script: 'firebird25.sh'
+        Firebird3:
+          title: 'Firebird 3.0'
+          config: 'firebird3'
+          script: 'firebird3.sh'
     steps:
     - checkout: none
 
@@ -191,6 +199,16 @@ stages:
           title: 'Sybase ASE 16'
           config: 'sybase'
           script: 'sybase.sh'
+          docker: 'true'
+        Firebird25:
+          title: 'Firebird 2.5'
+          config: 'firebird25'
+          script: 'firebird25.sh'
+          docker: 'true'
+        Firebird3:
+          title: 'Firebird 3.0'
+          config: 'firebird3'
+          script: 'firebird3.sh'
           docker: 'true'
 
     steps:
