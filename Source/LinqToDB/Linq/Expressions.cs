@@ -78,12 +78,12 @@ namespace LinqToDB.Linq
 			MapMember(providerName, M(memberInfo), expression);
 		}
 
-		public static void MapMember<T>(Expression<Func<T,object>> memberInfo, LambdaExpression expression)
+		public static void MapMember<T>(Expression<Func<T,object?>> memberInfo, LambdaExpression expression)
 		{
 			MapMember("", M(memberInfo), expression);
 		}
 
-		public static void MapMember<T>(string providerName, Expression<Func<T,object>> memberInfo, LambdaExpression expression)
+		public static void MapMember<T>(string providerName, Expression<Func<T,object?>> memberInfo, LambdaExpression expression)
 		{
 			MapMember(providerName, M(memberInfo), expression);
 		}
@@ -401,7 +401,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public static MemberInfo M<T>(Expression<Func<T,object>> func)
+		public static MemberInfo M<T>(Expression<Func<T,object?>> func)
 		{
 			return MemberHelper.GetMemberInfo(func);
 		}
@@ -506,8 +506,8 @@ namespace LinqToDB.Linq
 			#region String
 
 			{ M(() => "".Length               ), N(() => L<String,Int32>                   ((String obj)                              => Sql.Length(obj)!.Value)) },
-			{ M(() => "".Substring  (0)       ), N(() => L<String,Int32,String>            ((String obj,Int32  p0)                    => Sql.Substring(obj, p0 + 1, obj.Length - p0))) },
-			{ M(() => "".Substring  (0,0)     ), N(() => L<String,Int32,Int32,String>      ((String obj,Int32  p0,Int32  p1)          => Sql.Substring(obj, p0 + 1, p1))) },
+			{ M(() => "".Substring  (0)       ), N(() => L<String?,Int32,String?>          ((String? obj,Int32  p0)                    => Sql.Substring(obj, p0 + 1, obj!.Length - p0))) },
+			{ M(() => "".Substring  (0,0)     ), N(() => L<String?,Int32,Int32,String?>    ((String? obj,Int32  p0,Int32  p1)          => Sql.Substring(obj, p0 + 1, p1))) },
 			{ M(() => "".IndexOf    ("")      ), N(() => L<String,String,Int32>            ((String obj,String p0)                    => p0.Length == 0                    ? 0  : (Sql.CharIndex(p0, obj)!                      .Value) - 1)) },
 			{ M(() => "".IndexOf    ("",0)    ), N(() => L<String,String,Int32,Int32>      ((String obj,String p0,Int32  p1)          => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, obj,               p1 + 1)!.Value) - 1)) },
 			{ M(() => "".IndexOf    ("",0,0)  ), N(() => L<String,String,Int32,Int32,Int32>((String obj,String p0,Int32  p1,Int32 p2) => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)!    .Value) - 1)) },
@@ -520,16 +520,16 @@ namespace LinqToDB.Linq
 			{ M(() => "".LastIndexOf(' ')     ), N(() => L<String,Char,Int32>              ((String obj,Char   p0)                    => (Sql.CharIndex(p0, obj)!                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj))!                               .Value))) },
 			{ M(() => "".LastIndexOf(' ',0)   ), N(() => L<String,Char,Int32,Int32>        ((String obj,Char   p0,Int32  p1)          => (Sql.CharIndex(p0, obj, p1 + 1)!                   .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, obj.Length - p1)))!.Value))) },
 			{ M(() => "".LastIndexOf(' ',0,0) ), N(() => L<String,Char,Int32,Int32,Int32>  ((String obj,Char   p0,Int32  p1,Int32 p2) => (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1)!.Value) == 0 ? -1 : p1 + p2    - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, p2)))!             .Value))) },
-			{ M(() => "".Insert     (0,"")    ), N(() => L<String,Int32,String,String>     ((String obj,Int32  p0,String p1)          => obj.Length == p0 ? obj + p1 : Sql.Stuff(obj, p0 + 1, 0, p1))) },
-			{ M(() => "".Remove     (0)       ), N(() => L<String,Int32,String>            ((String obj,Int32  p0)                    => Sql.Left     (obj, p0))) },
-			{ M(() => "".Remove     (0,0)     ), N(() => L<String,Int32,Int32,String>      ((String obj,Int32  p0,Int32  p1)          => Sql.Stuff    (obj, p0 + 1, p1, ""))) },
-			{ M(() => "".PadLeft    (0)       ), N(() => L<String,Int32,String>            ((String obj,Int32  p0)                    => Sql.PadLeft  (obj, p0, ' '))) },
-			{ M(() => "".PadLeft    (0,' ')   ), N(() => L<String,Int32,Char,String>       ((String obj,Int32  p0,Char   p1)          => Sql.PadLeft  (obj, p0, p1))) },
-			{ M(() => "".PadRight   (0)       ), N(() => L<String,Int32,String>            ((String obj,Int32  p0)                    => Sql.PadRight (obj, p0, ' '))) },
-			{ M(() => "".PadRight   (0,' ')   ), N(() => L<String,Int32,Char,String>       ((String obj,Int32  p0,Char   p1)          => Sql.PadRight (obj, p0, p1))) },
-			{ M(() => "".Replace    ("","")   ), N(() => L<String,String,String,String>    ((String obj,String p0,String p1)          => Sql.Replace  (obj, p0, p1))) },
-			{ M(() => "".Replace    (' ',' ') ), N(() => L<String,Char,Char,String>        ((String obj,Char   p0,Char   p1)          => Sql.Replace  (obj, p0, p1))) },
-			{ M(() => "".Trim       ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Trim     (obj))) },
+			{ M(() => "".Insert     (0,"")    ), N(() => L<String?,Int32,String?,String?>  ((String? obj,Int32  p0,String? p1)        => obj!.Length == p0 ? obj + p1 : Sql.Stuff(obj, p0 + 1, 0, p1))) },
+			{ M(() => "".Remove     (0)       ), N(() => L<String?,Int32,String?>          ((String? obj,Int32  p0)                   => Sql.Left     (obj, p0))) },
+			{ M(() => "".Remove     (0,0)     ), N(() => L<String?,Int32,Int32,String?>    ((String? obj,Int32  p0,Int32  p1)         => Sql.Stuff    (obj, p0 + 1, p1, ""))) },
+			{ M(() => "".PadLeft    (0)       ), N(() => L<String?,Int32,String?>          ((String? obj,Int32  p0)                   => Sql.PadLeft  (obj, p0, ' '))) },
+			{ M(() => "".PadLeft    (0,' ')   ), N(() => L<String?,Int32,Char,String?>     ((String? obj,Int32  p0,Char   p1)         => Sql.PadLeft  (obj, p0, p1))) },
+			{ M(() => "".PadRight   (0)       ), N(() => L<String?,Int32,String?>          ((String? obj,Int32  p0)                   => Sql.PadRight (obj, p0, ' '))) },
+			{ M(() => "".PadRight   (0,' ')   ), N(() => L<String?,Int32,Char,String?>     ((String? obj,Int32  p0,Char   p1)         => Sql.PadRight (obj, p0, p1))) },
+			{ M(() => "".Replace    ("","")   ), N(() => L<String?,String?,String?,String?>((String? obj,String? p0,String? p1)       => Sql.Replace  (obj, p0, p1))) },
+			{ M(() => "".Replace    (' ',' ') ), N(() => L<String?,Char,Char,String?>      ((String? obj,Char   p0,Char   p1)         => Sql.Replace  (obj, p0, p1))) },
+			{ M(() => "".Trim       ()        ), N(() => L<String?,String?>                ((String? obj)                             => Sql.Trim     (obj))) },
 
 #if NETCOREAPP2_0
 			{ M(() => "".TrimEnd    ()        ), N(() => L<String,String?>                 ((String obj)                              =>     TrimRight(obj))) },
@@ -538,8 +538,8 @@ namespace LinqToDB.Linq
 			{ M(() => "".TrimEnd    ()        ), N(() => L<String,Char[],String?>          ((String obj,Char[] ch)                    =>     TrimRight(obj, ch))) },
 			{ M(() => "".TrimStart  ()        ), N(() => L<String,Char[],String?>          ((String obj,Char[] ch)                    =>     TrimLeft (obj, ch))) },
 #endif
-			{ M(() => "".ToLower    ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Lower(obj))) },
-			{ M(() => "".ToUpper    ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Upper(obj))) },
+			{ M(() => "".ToLower    ()        ), N(() => L<String?,String?>                  ((String? obj)                              => Sql.Lower(obj))) },
+			{ M(() => "".ToUpper    ()        ), N(() => L<String?,String?>                  ((String? obj)                              => Sql.Upper(obj))) },
 			{ M(() => "".CompareTo  ("")      ), N(() => L<String,String,Int32>            ((String obj,String p0)                    => ConvertToCaseCompareTo(obj, p0)!.Value)) },
 			{ M(() => "".CompareTo  (1)       ), N(() => L<String,Object,Int32>            ((String obj,Object p0)                    => ConvertToCaseCompareTo(obj, p0.ToString())!.Value)) },
 
@@ -1149,7 +1149,7 @@ namespace LinqToDB.Linq
 
 				{ ProviderName.SqlCe, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Left    ("",0)    ), N(() => L<String?,Int32?,String?>   ((String? p0,Int32? p1)       => Sql.Substring(p0, 1, p1))) },
-					{ M(() => Sql.Right   ("",0)    ), N(() => L<String?,Int32?,String?>   ((String? p0,Int32? p1)       => Sql.Substring(p0, p0.Length - p1 + 1, p1))) },
+					{ M(() => Sql.Right   ("",0)    ), N(() => L<String?,Int32?,String?>   ((String? p0,Int32? p1)       => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.PadRight("",0,' ')), N(() => L<String,Int32?,Char?,String>((String p0,Int32? p1,Char? p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ')), N(() => L<String,Int32?,Char?,String>((String p0,Int32? p1,Char? p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 					{ M(() => Sql.Trim    ("")      ), N(() => L<String?,String?>      ((String? p0)             => Sql.TrimLeft(Sql.TrimRight(p0)))) },
@@ -1189,7 +1189,7 @@ namespace LinqToDB.Linq
 
 				{ ProviderName.Informix, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<String?,Int32?,String?>     ((String? p0,Int32? p1)            => Sql.Substring(p0,  1, p1)))                  },
-					{ M(() => Sql.Right("",0)     ), N(() => L<String?,Int32?,String?>     ((String? p0,Int32? p1)            => Sql.Substring(p0,  p0.Length - p1 + 1, p1))) },
+					{ M(() => Sql.Right("",0)     ), N(() => L<String?,Int32?,String?>     ((String? p0,Int32? p1)            => Sql.Substring(p0,  p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<String?,Int32?,Int32?,String?,String?>((String? p0,Int32? p1,Int32? p2,String? p3) =>     AltStuff (p0,  p1, p2, p3)))             },
 					{ M(() => Sql.Space(0)        ), N(() => L<Int32?,String?>       ((Int32? p0)                 => Sql.PadRight (" ", p0, ' ')))                },
 
@@ -1227,9 +1227,9 @@ namespace LinqToDB.Linq
 
 				{ ProviderName.Oracle, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<String?,Int32?,String?>     ((String? p0,Int32? p1)            => Sql.Substring(p0, 1, p1))) },
-					{ M(() => Sql.Right("",0)     ), N(() => L<String?,Int32?,String?>     ((String? p0,Int32? p1)            => Sql.Substring(p0, p0.Length - p1 + 1, p1))) },
+					{ M(() => Sql.Right("",0)     ), N(() => L<String?,Int32?,String?>     ((String? p0,Int32? p1)            => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<String?,Int32?,Int32?,String?,String?>((String? p0,Int32? p1,Int32? p2,String? p3) => AltStuff(p0, p1, p2, p3))) },
-					{ M(() => Sql.Space(0)        ), N(() => L<Int32?,String>       ((Int32? p0)                 => Sql.PadRight(" ", p0, ' '))) },
+					{ M(() => Sql.Space(0)        ), N(() => L<Int32?,String?>       ((Int32? p0)                 => Sql.PadRight(" ", p0, ' '))) },
 
 					{ M(() => Sql.ConvertTo<String>.From(Guid.Empty)), N(() => L<Guid,String?>(p => Sql.Lower(
 						Sql.Substring(Sql.Convert2(Sql.Char(36), p),  7,  2) + Sql.Substring(Sql.Convert2(Sql.Char(36), p),  5, 2) + Sql.Substring(Sql.Convert2(Sql.Char(36), p), 3, 2) + Sql.Substring(Sql.Convert2(Sql.Char(36), p), 1, 2) + "-" +
@@ -1275,7 +1275,7 @@ namespace LinqToDB.Linq
 				#region MySql
 
 				{ ProviderName.MySql, new Dictionary<MemberInfo,IExpressionInfo> {
-					{ M<String>(s => Sql.Stuff(s, 0, 0, s)), N(() => L<String,Int32?,Int32?,String,String>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
+					{ M<String>(s => Sql.Stuff(s, 0, 0, s)), N(() => L<String?,Int32?,Int32?,String?,String?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 
 					{ M(() => Sql.Cosh(0)), N(() => L<Double?,Double?>(v => (Sql.Exp(v) + Sql.Exp(-v)) / 2)) },
 					{ M(() => Sql.Sinh(0)), N(() => L<Double?,Double?>(v => (Sql.Exp(v) - Sql.Exp(-v)) / 2)) },
@@ -1288,8 +1288,8 @@ namespace LinqToDB.Linq
 
 				{ ProviderName.PostgreSQL, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<String?,Int32?,String?>              ((p0,p1)                                   => Sql.Substring(p0, 1, p1))) },
-					{ M(() => Sql.Right("",0)     ), N(() => L<String?,Int32?,String?>              ((String p0,Int32? p1)                     => Sql.Substring(p0, p0.Length - p1 + 1, p1))) },
-					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<String?,Int32?,Int32?,String?,String?>((String p0,Int32? p1,Int32? p2,String p3) => AltStuff(p0, p1, p2, p3))) },
+					{ M(() => Sql.Right("",0)     ), N(() => L<String?,Int32?,String?>              ((String? p0,Int32? p1)                     => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
+					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<String?,Int32?,Int32?,String?,String?>((String? p0,Int32? p1,Int32? p2,String? p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.Space(0)        ), N(() => L<Int32?,String?>                     ((Int32? p0)                              => Replicate(" ", p0))) },
 
 					{ M(() => Sql.Cosh(0)           ), N(() => L<Double?,Double?>       ((Double? v)          => (Sql.Exp(v) + Sql.Exp(-v)) / 2 )) },
@@ -1309,7 +1309,7 @@ namespace LinqToDB.Linq
 				#region SQLite
 
 				{ ProviderName.SQLite, new Dictionary<MemberInfo,IExpressionInfo> {
-					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<String,Int32?,Int32?,String,String>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
+					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<String?,Int32?,Int32?,String?,String?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<String,Int32?,Char?,String>  ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<String,Int32?,Char?,String>  ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 

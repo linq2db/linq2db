@@ -165,7 +165,7 @@ namespace LinqToDB.Common
 			if (value == null || value is DBNull)
 				return mappingSchema == null ?
 					DefaultValue<T>.Value :
-					(T)mappingSchema.GetDefaultValue(typeof(T));
+					(T)mappingSchema.GetDefaultValue(typeof(T))!;
 
 			if (value.GetType() == typeof(T))
 				return (T)value;
