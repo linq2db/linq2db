@@ -12,13 +12,13 @@ cat <<-EOSQL > sybase_init.sql
 USE master
 GO
 IF NOT EXISTS(SELECT * FROM dbo.sysdatabases WHERE name = 'TestDataCore')
-  CREATE DATABASE TestDataCore
+  CREATE DATABASE TestDataCore ON master = '102400K'
 GO
 EOSQL
 
 retries=0
 docker cp sybase_init.sql sybase:/init.sql
-while ! docker exec -e SYBASE=/opt/sybase sybase /opt/sybase/OCS-16_0/bin/isql -Usa -PmyPassword -SMYSYBASE -i"/init.sql" ; do
+until docker exec -e SYBASE=/opt/sybase sybase /opt/sybase/OCS-16_0/bin/isql -Usa -PmyPassword -SMYSYBASE -i"/init.sql" ; do
     sleep 5
     retries=`expr $retries + 1`
     if [ $retries -gt 30 ]; then

@@ -24,7 +24,7 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class InsertTests : TestBase
 	{
-		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = ProviderName.Firebird)]
+		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void DistinctInsert1(
 			[DataSources(
@@ -63,7 +63,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = ProviderName.Firebird)]
+		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void DistinctInsert2(
 			[DataSources(
