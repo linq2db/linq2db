@@ -19,7 +19,7 @@ while ! docker info 2>/dev/null ; do
         echo 'docker not running, restart'
         /Applications/Docker.app/Contents/MacOS/Docker --unattended &
     fi
-    if [ $retries -gt 20 ]; then
+    if [ $retries -gt 30 ]; then
         >&2 echo 'Failed to run docker'
         exit 1
     fi;
