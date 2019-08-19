@@ -6,7 +6,7 @@ docker run -d --name oracle -p 1521:1521 -p 8080:8080 datagrip/oracle:11.2
 #chmod +x scripts/wait-for-it.sh
 #scripts/wait-for-it.sh localhost:8080 --timeout=600
 
-docker cp scripts/ping-oracle oracle:/test.sql
+docker cp scripts/ping-oracle.sql oracle:/test.sql
 
 retries=0
 status="1"

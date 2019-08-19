@@ -17,7 +17,7 @@ EOSQL
 
 retries=0
 docker cp sybase_init.sql sybase:/init.sql
-while ! docker exec sybase /opt/sybase/OCS-16_0/bin/isql -Usa -PmyPassword -SMYSYBASE -i"/init.sql" ; do
+while ! docker exec sybase -e SYBASE=/opt/sybase /opt/sybase/OCS-16_0/bin/isql -Usa -PmyPassword -SMYSYBASE -i"/init.sql" ; do
     sleep 5
     retries=`expr $retries + 1`
     if [ $retries -gt 30 ]; then
