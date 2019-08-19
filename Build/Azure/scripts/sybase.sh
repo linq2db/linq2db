@@ -9,10 +9,11 @@ echo Generate CREATE DATABASE script
 # https://github.com/DataGrip/docker-env/issues/8
 # we just need to create db if it is missing, nothing else
 cat <<-EOSQL > sybase_init.sql
-use master
-go
+USE master
+GO
 IF NOT EXISTS(SELECT * FROM dbo.sysdatabases WHERE name = 'TestDataCore')
   CREATE DATABASE TestDataCore
+GO
 EOSQL
 
 retries=0
