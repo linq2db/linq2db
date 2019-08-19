@@ -4,6 +4,7 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.FSharp</AssemblyName>
+		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

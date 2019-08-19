@@ -97,6 +97,8 @@ namespace Tests.Linq
 			new StringTestTable()
 		};
 
+		// need to configure sybase docker image to use utf8 character set
+		[ActiveIssue(Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void StringTrimming([DataSources(ProviderName.Informix)] string context)
 		{
@@ -232,6 +234,8 @@ namespace Tests.Linq
 			new CharTestTable()
 		};
 
+		// need to configure sybase docker image to use utf8 character set
+		[ActiveIssue(Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharTrimming([DataSources(ProviderName.Informix)] string context)
 		{

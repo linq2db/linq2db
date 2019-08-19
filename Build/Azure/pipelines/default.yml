@@ -53,8 +53,8 @@ stages:
 # need it for DotNetCoreCLI task be able to build C#8 project
     - task: DotNetCoreInstaller@1
       inputs:
-        version: '3.0.100-preview7-012821'
-      displayName: Install .NET Core 3p7 SDK
+        version: '3.0.100-preview8-013656'
+      displayName: Install .NET Core 3p8 SDK
 
     - task: DotNetCoreCLI@2
       inputs:
@@ -535,6 +535,22 @@ stages:
           title: 'PostgreSQL 11'
           config: 'pgsql11'
           script: 'pgsql11.sh'
+        Sybase:
+          title: 'Sybase ASE 16'
+          config: 'sybase'
+          script: 'sybase.sh'
+        Oracle:
+          title: 'Oracle 11.2'
+          config: 'oracle'
+          script: 'oracle.sh'
+        Firebird25:
+          title: 'Firebird 2.5'
+          config: 'firebird25'
+          script: 'firebird25.sh'
+        Firebird3:
+          title: 'Firebird 3.0'
+          config: 'firebird3'
+          script: 'firebird3.sh'
     steps:
     - checkout: none
 
@@ -598,43 +614,72 @@ stages:
           title: 'SQL Server 2017'
           config: 'sqlserver.2017'
           script: 'mac.sqlserver.2017.sh'
+          docker: 'true'
         MySQL:
           title: 'MySQL'
           config: 'mysql'
           script: 'mac.mysql.sh'
+          docker: 'true'
         MySQL55:
           title: 'MySQL 5.5'
           config: 'mysql55'
           script: 'mac.mysql55.sh'
+          docker: 'true'
         MariaDB:
           title: 'MariaDB'
           config: 'mariadb'
           script: 'mac.mariadb.sh'
+          docker: 'true'
         PostgreSQL:
           title: 'PostgreSQL'
           config: 'pgsql'
           script: 'mac.pgsql.sh'
+          docker: 'true'
         PostgreSQL92:
           title: 'PostgreSQL 9.2'
           config: 'pgsql92'
           script: 'mac.pgsql92.sh'
+          docker: 'true'
         PostgreSQL93:
           title: 'PostgreSQL 9.3'
           config: 'pgsql93'
           script: 'mac.pgsql93.sh'
+          docker: 'true'
         PostgreSQL95:
           title: 'PostgreSQL 9.5'
           config: 'pgsql95'
           script: 'mac.pgsql95.sh'
+          docker: 'true'
         PostgreSQL10:
           title: 'PostgreSQL 10'
           config: 'pgsql10'
           script: 'mac.pgsql10.sh'
+          docker: 'true'
         PostgreSQL11:
           title: 'PostgreSQL 11'
           config: 'pgsql11'
           script: 'mac.pgsql11.sh'
-
+          docker: 'true'
+        Sybase:
+          title: 'Sybase ASE 16'
+          config: 'sybase'
+          script: 'sybase.sh'
+          docker: 'true'
+        Oracle:
+          title: 'Oracle 11.2'
+          config: 'oracle'
+          script: 'oracle.sh'
+          docker: 'true'
+        Firebird25:
+          title: 'Firebird 2.5'
+          config: 'firebird25'
+          script: 'firebird25.sh'
+          docker: 'true'
+        Firebird3:
+          title: 'Firebird 3.0'
+          config: 'firebird3'
+          script: 'firebird3.sh'
+          docker: 'true'
     steps:
     - checkout: none
 
@@ -651,21 +696,35 @@ stages:
 
     - task: CmdLine@2
       inputs:
+        script: 'chmod +x mac.docker.sh'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: eq(variables['docker'], 'true')
+      displayName: Mark docker install script as executable
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/scripts/mac.docker.sh'
+      condition: eq(variables['docker'], 'true')
+      displayName: Install Docker
+
+    - task: CmdLine@2
+      inputs:
         script: 'chmod +x $(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-      condition: variables['script']
+      condition: and(succeeded(), variables['script'])
       displayName: Mark script as executable
       
     - task: CmdLine@2
       inputs:
         script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
-      condition: variables['script']
+      condition: and(succeeded(), variables['script'])
       displayName: Setup tests
 
 # just because there is not vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
     - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
+      condition: succeeded()
       displayName: '$(title)'
 
 

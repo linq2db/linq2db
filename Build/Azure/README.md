@@ -4,7 +4,7 @@
 - `scripts` folder stores test job setup scripts (`*.cmd` for windows jobs and `*.sh` for Linux and MacOS)
 
 ## Azure Pipelines
-Currently we have 3 pipelines listed below. If you need more flexible test runs, you can request more test pipelines. E.g. to run only specific database or framework/OS tests.
+All existing pipelines we have listed below. If you need more flexible test runs, you can request more test pipelines. E.g. to run only specific database or framework/OS tests.
 
 #### `default` pipeline
 
@@ -21,6 +21,10 @@ Automatically triggered for all PR commits and runs solution build
 
 Runs manually using `/azp run test-all` command from PR comment by team member
 
+#### `experimental` pipeline
+Runs manually using `/azp run experimental` command from PR and used for development and testing of new pipelines/test providers.
+Base pipeline template contains only solution build and should be reset to initial state before merge.
+
 ## Test Matrix
 
 Following table contains information about which test jobs are awailable per:
@@ -34,8 +38,6 @@ Legend:
 - :heavy_minus_sign: - test configuration not supported (e.g. db/provider not available for target OS/Framework)
 - :heavy_check_mark: - test job implemented
 - :x: - test job not implemented yet
-- :question: - test job status not reviewed yet
-- `(R)`: test job was running before using Travis or Appveryor CI (to track not migrated yet tests)
 - `net46`: .NET Framework 4.6
 - `netcoreapp2.0`: .NETCoreApp 2.0
 - :door: - Windows (2019 or 2016 for some docker-based tests)
@@ -73,15 +75,18 @@ Legend:
 |DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) 11.1.4040.4|:x:|:x:|:x:|:x:|
 |DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/), [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/)) 1.3.0.100|:x:|:x:|:x:|:x:|
 |Informix 14.10.FC1DEM<br>Native Provider|:x:|:x:|:x:|:x:|
-|SAP HANA 2.0 SPS 04r40<br>Native Provider|:x:|:x:|:x:|:x:|
-|SAP/Sybase ASE 16.2<br>[AdoNetCore.AseClient](https://www.nuget.org/packages/AdoNetCore.AseClient/) 0.14.0|:x:|:x:|:x:|:x:|
+|SAP HANA 2.0 SPS 04r40<br>Native Provider|:x:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
+|SAP/Sybase ASE 16.2<br>[AdoNetCore.AseClient](https://www.nuget.org/packages/AdoNetCore.AseClient/) 0.14.0|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |SAP/Sybase ASE 16.2<br>Native Client|:x:|:x:|:x:|:x:|
-|Oracle 18 XE<br>Native Client|:x:|:x:|:x:|:x:|
-|Oracle 18 XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 19.3.1|:x:|:x:|:x:|:x:|
-|Oracle 18 XE<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 2.19.31|:x:|:x:|:x:|:x:|
+|Oracle 11c XE<br>Native Client|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
+|Oracle 11c XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 19.3.1|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
+|Oracle 11g XE<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 2.19.31|:heavy_minus_sign:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|Oracle 18c XE<br>Native Client|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
+|Oracle 18c XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 19.3.1|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
+|Oracle 18c XE<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 2.19.31|:heavy_minus_sign:|:x:|:x:|:x:|
 |Firebird 2.1<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.0.0|:x:|:x:|:x:|:x:|
-|Firebird 2.5<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.0.0|:x:|:x:|:x:|:x:|
-|Firebird 3.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.0.0|:x:|:x:|:x:|:x:|
+|Firebird 2.5<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.0.0|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|Firebird 3.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.0.0|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 4.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.0.0|:x:|:x:|:x:|:x:|
 
 ###### Notes:

@@ -283,10 +283,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net46", "net46", "{B7AADC73
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp20", "netcoreapp20", "{9C01FF5E-F85A-4561-A05B-8F32A4E11C6D}"
 	ProjectSection(SolutionItems) = preProject
+		Build\Azure\netcoreapp20\firebird25.json = Build\Azure\netcoreapp20\firebird25.json
+		Build\Azure\netcoreapp20\firebird3.json = Build\Azure\netcoreapp20\firebird3.json
 		Build\Azure\netcoreapp20\mariadb.json = Build\Azure\netcoreapp20\mariadb.json
 		Build\Azure\netcoreapp20\mariadb.win.json = Build\Azure\netcoreapp20\mariadb.win.json
 		Build\Azure\netcoreapp20\mysql.json = Build\Azure\netcoreapp20\mysql.json
 		Build\Azure\netcoreapp20\mysql55.json = Build\Azure\netcoreapp20\mysql55.json
+		Build\Azure\netcoreapp20\oracle.json = Build\Azure\netcoreapp20\oracle.json
 		Build\Azure\netcoreapp20\pgsql.json = Build\Azure\netcoreapp20\pgsql.json
 		Build\Azure\netcoreapp20\pgsql10.json = Build\Azure\netcoreapp20\pgsql10.json
 		Build\Azure\netcoreapp20\pgsql10.win.json = Build\Azure\netcoreapp20\pgsql10.win.json
@@ -297,11 +300,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp20", "netcoreapp2
 		Build\Azure\netcoreapp20\sqlite.json = Build\Azure\netcoreapp20\sqlite.json
 		Build\Azure\netcoreapp20\sqlite.ms.json = Build\Azure\netcoreapp20\sqlite.ms.json
 		Build\Azure\netcoreapp20\sqlserver.2017.json = Build\Azure\netcoreapp20\sqlserver.2017.json
+		Build\Azure\netcoreapp20\sybase.json = Build\Azure\netcoreapp20\sybase.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A37E5A-A8A3-4C89-B11C-D700A9F52BAA}"
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\scripts\access.ace.cmd = Build\Azure\scripts\access.ace.cmd
+		Build\Azure\scripts\firebird25.sh = Build\Azure\scripts\firebird25.sh
+		Build\Azure\scripts\firebird3.sh = Build\Azure\scripts\firebird3.sh
+		Build\Azure\scripts\mac.docker.sh = Build\Azure\scripts\mac.docker.sh
 		Build\Azure\scripts\mac.mariadb.sh = Build\Azure\scripts\mac.mariadb.sh
 		Build\Azure\scripts\mac.mysql.sh = Build\Azure\scripts\mac.mysql.sh
 		Build\Azure\scripts\mac.mysql55.sh = Build\Azure\scripts\mac.mysql55.sh
@@ -318,6 +325,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A3
 		Build\Azure\scripts\mysql.sh = Build\Azure\scripts\mysql.sh
 		Build\Azure\scripts\mysql55.cmd = Build\Azure\scripts\mysql55.cmd
 		Build\Azure\scripts\mysql55.sh = Build\Azure\scripts\mysql55.sh
+		Build\Azure\scripts\oracle.sh = Build\Azure\scripts\oracle.sh
 		Build\Azure\scripts\pgsql.cmd = Build\Azure\scripts\pgsql.cmd
 		Build\Azure\scripts\pgsql.sh = Build\Azure\scripts\pgsql.sh
 		Build\Azure\scripts\pgsql10.cmd = Build\Azure\scripts\pgsql10.cmd
@@ -333,12 +341,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A3
 		Build\Azure\scripts\sqlce.ps1 = Build\Azure\scripts\sqlce.ps1
 		Build\Azure\scripts\sqlserver.2017.cmd = Build\Azure\scripts\sqlserver.2017.cmd
 		Build\Azure\scripts\sqlserver.2017.sh = Build\Azure\scripts\sqlserver.2017.sh
+		Build\Azure\scripts\sybase.sh = Build\Azure\scripts\sybase.sh
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pipelines", "pipelines", "{C937AC8E-2714-4850-A1EA-1710D980DF0B}"
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\pipelines\build.yml = Build\Azure\pipelines\build.yml
 		Build\Azure\pipelines\default.yml = Build\Azure\pipelines\default.yml
+		Build\Azure\pipelines\experimental.yml = Build\Azure\pipelines\experimental.yml
 		Build\Azure\pipelines\test-all.yml = Build\Azure\pipelines\test-all.yml
 	EndProjectSection
 EndProject

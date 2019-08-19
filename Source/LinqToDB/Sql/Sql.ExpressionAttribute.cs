@@ -1,5 +1,4 @@
-﻿#nullable disable
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -48,9 +47,9 @@ namespace LinqToDB
 			}
 
 			public string         Expression       { get; set; }
-			public int[]          ArgIndices       { get; set; }
+			public int[]?         ArgIndices       { get; set; }
 			public int            Precedence       { get; set; }
-			public string         Configuration    { get; set; }
+			public string?        Configuration    { get; set; }
 			public bool           ServerSideOnly   { get; set; }
 			public bool           PreferServerSide { get; set; }
 			public bool           InlineParameters { get; set; }
@@ -128,7 +127,7 @@ namespace LinqToDB
 				};
 			}
 
-			public virtual ISqlExpression GetExpression(IDataContext dataContext, SelectQuery query,
+			public virtual ISqlExpression? GetExpression(IDataContext dataContext, SelectQuery query,
 				Expression expression, Func<Expression, ISqlExpression> converter)
 			{
 				return null;
