@@ -22,5 +22,21 @@ do
     fi;
 done
 
+sleep 10
+
+retries=0
+status="1"
+while [ "$status" != "0" ]
+do
+    sleep 5
+    retries=`expr $retries + 1`
+    docker exec oracle sqlplus /nolog @/test.sql
+    status=$?
+    if [ $retries -gt 100 ]; then
+        >&2 echo 'Failed to start oracle'
+        exit 1
+    fi;
+done
+
 docker ps -a
 docker logs oracle
