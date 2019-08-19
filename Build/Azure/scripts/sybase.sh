@@ -11,8 +11,10 @@ echo Generate CREATE DATABASE script
 cat <<-EOSQL > sybase_init.sql
 USE master
 GO
+disk resize name='master', size='200m'
+GO
 IF NOT EXISTS(SELECT * FROM dbo.sysdatabases WHERE name = 'TestDataCore')
-  CREATE DATABASE TestDataCore ON default = "102400K"
+  CREATE DATABASE TestDataCore ON master = '102400K'
 GO
 EOSQL
 
