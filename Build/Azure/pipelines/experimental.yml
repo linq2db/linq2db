@@ -137,10 +137,6 @@ stages:
           title: 'Oracle 11.2'
           config: 'oracle'
           script: 'oracle.sh'
-        Firebird25:
-          title: 'Firebird 2.5'
-          config: 'firebird25'
-          script: 'firebird25.sh'
         Firebird3:
           title: 'Firebird 3.0'
           config: 'firebird3'
@@ -206,11 +202,6 @@ stages:
           title: 'Oracle 11.2'
           config: 'oracle'
           script: 'oracle.sh'
-          docker: 'true'
-        Firebird25:
-          title: 'Firebird 2.5'
-          config: 'firebird25'
-          script: 'firebird25.sh'
           docker: 'true'
         Firebird3:
           title: 'Firebird 3.0'

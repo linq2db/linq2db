@@ -14,7 +14,7 @@ while [ "$status" != "0" ]
 do
     sleep 5
     retries=`expr $retries + 1`
-    docker exec sqlplus /nolog @test.sql
+    docker exec oracle sqlplus /nolog @test.sql
     status=$?
     if [ $retries -gt 100 ]; then
         >&2 echo 'Failed to start oracle'
