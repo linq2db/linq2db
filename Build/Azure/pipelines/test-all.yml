@@ -459,14 +459,14 @@ stages:
           title: 'Sybase ASE 16'
           config: 'sybase'
           script: 'sybase.sh'
-        Firebird25:
-          title: 'Firebird 2.5'
-          config: 'firebird25'
-          script: 'firebird25.sh'
         Oracle:
           title: 'Oracle 11.2'
           config: 'oracle'
           script: 'oracle.sh'
+        Firebird25:
+          title: 'Firebird 2.5'
+          config: 'firebird25'
+          script: 'firebird25.sh'
         Firebird3:
           title: 'Firebird 3.0'
           config: 'firebird3'
