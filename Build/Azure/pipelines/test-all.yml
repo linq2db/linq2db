@@ -459,6 +459,10 @@ stages:
           title: 'Sybase ASE 16'
           config: 'sybase'
           script: 'sybase.sh'
+        Firebird25:
+          title: 'Firebird 2.5'
+          config: 'firebird25'
+          script: 'firebird25.sh'
     steps:
     - checkout: none
 
@@ -572,6 +576,11 @@ stages:
           title: 'Sybase ASE 16'
           config: 'sybase'
           script: 'sybase.sh'
+          docker: 'true'
+        Firebird25:
+          title: 'Firebird 2.5'
+          config: 'firebird25'
+          script: 'firebird25.sh'
           docker: 'true'
     steps:
     - checkout: none

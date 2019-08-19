@@ -338,10 +338,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A3
 		Build\Azure\scripts\pgsql93.sh = Build\Azure\scripts\pgsql93.sh
 		Build\Azure\scripts\pgsql95.cmd = Build\Azure\scripts\pgsql95.cmd
 		Build\Azure\scripts\pgsql95.sh = Build\Azure\scripts\pgsql95.sh
+		Build\Azure\scripts\ping-oracle.sql = Build\Azure\scripts\ping-oracle.sql
 		Build\Azure\scripts\sqlce.ps1 = Build\Azure\scripts\sqlce.ps1
 		Build\Azure\scripts\sqlserver.2017.cmd = Build\Azure\scripts\sqlserver.2017.cmd
 		Build\Azure\scripts\sqlserver.2017.sh = Build\Azure\scripts\sqlserver.2017.sh
 		Build\Azure\scripts\sybase.sh = Build\Azure\scripts\sybase.sh
+		Build\Azure\scripts\wait-for-it.sh = Build\Azure\scripts\wait-for-it.sh
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pipelines", "pipelines", "{C937AC8E-2714-4850-A1EA-1710D980DF0B}"
