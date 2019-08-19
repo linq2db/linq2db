@@ -343,7 +343,8 @@ namespace Tests.xUpdate
 		// Expected: '*'
 		// But was:  '4'
 		// at Tests.Merge.MergeTests.AssertChar
-		[ActiveIssue("ORA-22053: overflow error", Configuration = ProviderName.OracleNative)]
+		// Sybase: need to configure sybase docker image to use utf8 character set
+		[ActiveIssue("ORA-22053: overflow error", Configurations = new [] { ProviderName.OracleNative, TestProvName.AllSybase })]
 		[Test]
 		public void TestMergeTypes([DataSources(true, ProviderName.SQLiteMS)] string context)
 		{

@@ -2,19 +2,15 @@ variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
   assemblyVersion: 3.0.0
-  nugetVersion: 3.0.0
-  artifact_nugets: 'nugets'
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
 #  netfx45_tests: 'netfx45_tests' # maybe later
   netfx46_tests: 'netfx46_tests'
   netcore2_tests: 'netcoreapp20_tests'
 
-trigger:
-  - master
-  - release
-  - release.3.0
-#pr: not specified, so we build all prs
+trigger: none
+# https://github.com/MicrosoftDocs/vsts-docs/issues/4206
+#pr: none
 
 stages:
 
@@ -48,8 +44,8 @@ stages:
 # need it for DotNetCoreCLI task be able to build C#8 project
     - task: DotNetCoreInstaller@1
       inputs:
-        version: '3.0.100-preview7-012821'
-      displayName: Install .NET Core 3p7 SDK
+        version: '3.0.100-preview8-013656'
+      displayName: Install .NET Core 3p8 SDK
 
     - task: DotNetCoreCLI@2
       inputs:
@@ -127,78 +123,6 @@ stages:
         path: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
         artifact: '$(artifact_linq2db_tools_binaries)'
       displayName: Publish linq2db.Tools build results
-
-#############################
-#  Build and Publish nugets #
-#############################
-  - job: build_nugets_job
-    pool:
-      vmImage: 'windows-2019'
-    displayName: 'Nugets Generation'
-    variables:
-      packageVersion: $(nugetVersion)
-    dependsOn: build_job
-#    condition: succeeded()
-    condition: ne('disabled', 'disabled')
-
-    steps:
-
-    - powershell: echo "##vso[task.setvariable variable=packageVersion]$(packageVersion)-rc$(Build.BuildId)"
-      condition: ne(variables['Build.SourceBranchName'], 'release')
-      displayName: Update nuget version
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: '$(artifact_linq2db_binaries)'
-        targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: '$(artifact_linq2db_Tools_binaries)'
-        targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: '$(netfx46_tests)'
-        targetPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
-
-    - task: PowerShell@2
-      inputs:
-        filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
-        workingDirectory: '$(Build.SourcesDirectory)'
-        arguments: -path $(Build.SourcesDirectory)/NuGet/*.nuspec -version $(packageVersion) -branch $(Build.SourceBranchName)
-      displayName: Update nuspecs
-
-    - task: CmdLine@2
-      inputs:
-        script: $(Build.SourcesDirectory)/NuGet/PackCI.bat
-        workingDirectory: $(Build.SourcesDirectory)/NuGet
-      displayName: Build nugets
-
-    - task: PublishBuildArtifacts@1
-      inputs:
-        pathToPublish: '$(Build.SourcesDirectory)/NuGet/built'
-        artifactName: '$(artifact_nugets)'
-      displayName: Publish nugets to artifacts
-
-    - task: NuGetCommand@2
-      inputs:
-        command: 'push'
-        packagesToPush: '$(Build.SourcesDirectory)/NuGet/built/*.nupkg'
-        nuGetFeedType: 'internal'
-        publishVstsFeed: '0dcc414b-ea54-451e-a54f-d63f05367c4b/967a4107-9788-41a4-9f6d-a2318aab1410'
-      displayName: Publish to Azure Artifacts feed
-      condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'master'), eq(variables['Build.SourceBranchName'], 'release.3.0')))
-
-# apikey exires around 31/07/2020
-    - task: NuGetCommand@2
-      inputs:
-        command: 'push'
-        packagesToPush: '$(Build.SourcesDirectory)/NuGet/built/*.nupkg'
-        nuGetFeedType: 'external'
-        publishFeedCredentials: 'linq2db nuget.org feed (allows update of linq2db and linq2db.EF nugets)'
-      displayName: Publish to Nuget.org
-      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
 
 ##############################################################################################
 #  Tests: Windows (NETFX 4.6)                                                                #
@@ -531,6 +455,22 @@ stages:
           title: 'PostgreSQL 11'
           config: 'pgsql11'
           script: 'pgsql11.sh'
+        Sybase:
+          title: 'Sybase ASE 16'
+          config: 'sybase'
+          script: 'sybase.sh'
+        Oracle:
+          title: 'Oracle 11.2'
+          config: 'oracle'
+          script: 'oracle.sh'
+        Firebird25:
+          title: 'Firebird 2.5'
+          config: 'firebird25'
+          script: 'firebird25.sh'
+        Firebird3:
+          title: 'Firebird 3.0'
+          config: 'firebird3'
+          script: 'firebird3.sh'
     steps:
     - checkout: none
 
@@ -594,43 +534,72 @@ stages:
           title: 'SQL Server 2017'
           config: 'sqlserver.2017'
           script: 'mac.sqlserver.2017.sh'
+          docker: 'true'
         MySQL:
           title: 'MySQL'
           config: 'mysql'
           script: 'mac.mysql.sh'
+          docker: 'true'
         MySQL55:
           title: 'MySQL 5.5'
           config: 'mysql55'
           script: 'mac.mysql55.sh'
+          docker: 'true'
         MariaDB:
           title: 'MariaDB'
           config: 'mariadb'
           script: 'mac.mariadb.sh'
+          docker: 'true'
         PostgreSQL:
           title: 'PostgreSQL'
           config: 'pgsql'
           script: 'mac.pgsql.sh'
+          docker: 'true'
         PostgreSQL92:
           title: 'PostgreSQL 9.2'
           config: 'pgsql92'
           script: 'mac.pgsql92.sh'
+          docker: 'true'
         PostgreSQL93:
           title: 'PostgreSQL 9.3'
           config: 'pgsql93'
           script: 'mac.pgsql93.sh'
+          docker: 'true'
         PostgreSQL95:
           title: 'PostgreSQL 9.5'
           config: 'pgsql95'
           script: 'mac.pgsql95.sh'
+          docker: 'true'
         PostgreSQL10:
           title: 'PostgreSQL 10'
           config: 'pgsql10'
           script: 'mac.pgsql10.sh'
+          docker: 'true'
         PostgreSQL11:
           title: 'PostgreSQL 11'
           config: 'pgsql11'
           script: 'mac.pgsql11.sh'
-
+          docker: 'true'
+        Sybase:
+          title: 'Sybase ASE 16'
+          config: 'sybase'
+          script: 'sybase.sh'
+          docker: 'true'
+        Oracle:
+          title: 'Oracle 11.2'
+          config: 'oracle'
+          script: 'oracle.sh'
+          docker: 'true'
+        Firebird25:
+          title: 'Firebird 2.5'
+          config: 'firebird25'
+          script: 'firebird25.sh'
+          docker: 'true'
+        Firebird3:
+          title: 'Firebird 3.0'
+          config: 'firebird3'
+          script: 'firebird3.sh'
+          docker: 'true'
     steps:
     - checkout: none
 
@@ -647,21 +616,35 @@ stages:
 
     - task: CmdLine@2
       inputs:
+        script: 'chmod +x mac.docker.sh'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: eq(variables['docker'], 'true')
+      displayName: Mark docker install script as executable
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/scripts/mac.docker.sh'
+      condition: eq(variables['docker'], 'true')
+      displayName: Install Docker
+
+    - task: CmdLine@2
+      inputs:
         script: 'chmod +x $(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-      condition: variables['script']
+      condition: and(succeeded(), variables['script'])
       displayName: Mark script as executable
       
     - task: CmdLine@2
       inputs:
         script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
-      condition: variables['script']
+      condition: and(succeeded(), variables['script'])
       displayName: Setup tests
 
 # just because there is not vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
     - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
+      condition: succeeded()
       displayName: '$(title)'
 
 
