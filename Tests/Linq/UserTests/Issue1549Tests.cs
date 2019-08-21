@@ -117,7 +117,7 @@ namespace Tests.UserTests
 		    }
 
 		    [Test]
-		    public void UpdateTest([DataSources(ProviderName.Access, ProviderName.SqlCe, ProviderName.Informix)] string context)
+		    public void UpdateTest([DataSources(ProviderName.Access, ProviderName.SqlCe, ProviderName.Informix, TestProvName.AllOracle)] string context)
 		    {
 			    using (var db = GetDataContext(context))
 			    using (db.CreateLocalTable<billing_Devtype>())
