@@ -129,15 +129,13 @@ stages:
       vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.0 / '
     dependsOn: build_job
-    condition: ne('true', 'true')
-    #condition: ne(variables['Build.SourceBranchName'], 'release')
+    condition: ne(variables['Build.SourceBranchName'], 'release')
 
     strategy:
       matrix:
-        Sybase:
-          title: 'Sybase ASE 16'
-          config: 'sybase'
-          script: 'sybase.sh'
+        SQLite:
+          title: 'SQLite'
+          config: 'sqlite'
     steps:
     - checkout: none
 
@@ -187,16 +185,13 @@ stages:
       vmImage: 'macOS-10.14'
     displayName: 'Tests: Mac / NETCOREAPP2.0 / '
     dependsOn: build_job
-    #condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: ne('true', 'true')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
 
     strategy:
       matrix:
-        Sybase:
-          title: 'Sybase ASE 16'
-          config: 'sybase'
-          script: 'sybase.sh'
-          docker: 'true'
+        SQLite:
+          title: 'SQLite'
+          config: 'sqlite'
 
     steps:
     - checkout: none

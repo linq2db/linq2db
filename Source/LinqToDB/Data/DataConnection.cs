@@ -410,7 +410,8 @@ namespace LinqToDB.Data
 				case TraceInfoStep.BeforeExecute:
 					WriteTraceLine(
 						$"{info.TraceInfoStep}{Environment.NewLine}{info.SqlText}",
-						TraceSwitch.DisplayName);
+						TraceSwitch.DisplayName,
+						info.TraceLevel);
 					break;
 
 				case TraceInfoStep.AfterExecute:
@@ -418,7 +419,8 @@ namespace LinqToDB.Data
 						info.RecordsAffected != null
 							? $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
 							: $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
-						TraceSwitch.DisplayName);
+						TraceSwitch.DisplayName,
+						info.TraceLevel);
 					break;
 
 				case TraceInfoStep.Error:
@@ -451,7 +453,7 @@ namespace LinqToDB.Data
 						}
 					}
 
-					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
+					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName, info.TraceLevel);
 
 					break;
 				}
@@ -465,7 +467,7 @@ namespace LinqToDB.Data
 					if (Configuration.Linq.TraceMapperExpression && info.MapperExpression != null)
 						sb.AppendLine(info.MapperExpression.GetDebugView());
 
-					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
+					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName, info.TraceLevel);
 
 					break;
 				}
@@ -481,7 +483,7 @@ namespace LinqToDB.Data
 
 					sb.AppendLine();
 
-					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
+					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName, info.TraceLevel);
 
 					break;
 				}
@@ -520,9 +522,10 @@ namespace LinqToDB.Data
 		/// Trace function. By Default use <see cref="Debug"/> class for logging, but could be replaced to log e.g. to your log file.
 		/// <para>First parameter contains trace message.</para>
 		/// <para>Second parameter contains context (<see cref="Switch.DisplayName"/>)</para>
+		/// <para>Third parameter contains trace level for message (<see cref="TraceLevel"/>)</para>
 		/// <seealso cref="TraceSwitch"/>
 		/// </summary>
-		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
+		public static Action<string, string, TraceLevel> WriteTraceLine = (message, displayName, level) => Debug.WriteLine(message, displayName);
 
 		#endregion
 

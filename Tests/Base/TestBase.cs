@@ -35,6 +35,8 @@ namespace Tests
 //	[Order(1000)]
 	public class TestBase
 	{
+		private const int TRACES_LIMIT = 10000;
+
 		static TestBase()
 		{
 			Console.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
@@ -43,16 +45,24 @@ namespace Tests
 
 			var traceCount = 0;
 
-			DataConnection.WriteTraceLine = (s1,s2) =>
+			DataConnection.WriteTraceLine = (message, name, level) =>
 			{
-				if (traceCount < 10000)
+				var trace = CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.TRACE);
+				if (trace == null)
 				{
-					Console.WriteLine("{0}: {1}", s2, s1);
-					Debug.WriteLine(s1, s2);
+					trace = new StringBuilder();
+					CustomTestContext.Get().Set(CustomTestContext.TRACE, trace);
 				}
 
-				if (traceCount++ > 10000)
-					DataConnection.TurnTraceSwitchOn(TraceLevel.Error);
+				trace.AppendLine($"{name}: {message}");
+
+				if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
+				{
+					Console.WriteLine("{0}: {1}", name, message);
+					Debug.WriteLine(message, name);
+				}
+
+				traceCount++;
 			};
 
 //			Configuration.RetryPolicy.Factory = db => new Retry();
@@ -1027,6 +1037,20 @@ namespace Tests
 		{
 			isLinqService = context.EndsWith(".LinqService");
 			return context.Replace(".LinqService", "");
+		}
+
+		[TearDown]
+		public virtual void OnAfterTest()
+		{
+			// append outputs to failed tests, so we always have them even if logging limit reached
+			if (TestContext.CurrentContext.Result.FailCount > 0)
+			{
+				var trace = CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.TRACE);
+				if (trace != null)
+					TestContext.Write(trace);
+			}
+
+			CustomTestContext.Release();
 		}
 	}
 
