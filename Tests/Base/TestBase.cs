@@ -36,7 +36,7 @@ namespace Tests
 //	[Order(1000)]
 	public class TestBase
 	{
-		private const int TRACES_LIMIT = 1;
+		private const int TRACES_LIMIT = 100000;
 
 		static TestBase()
 		{
@@ -46,20 +46,22 @@ namespace Tests
 
 			var traceCount = 0;
 
+			DataConnection.TurnTraceSwitchOn(TraceLevel.Info);
 			DataConnection.WriteTraceLine = (message, name, level) =>
 			{
-				var trace = CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.TRACE);
+				var ctx = CustomTestContext.Get();
+				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
 				if (trace == null)
 				{
 					trace = new StringBuilder();
-					CustomTestContext.Get().Set(CustomTestContext.TRACE, trace);
+					ctx.Set(CustomTestContext.TRACE, trace);
 				}
 
 				trace.AppendLine($"{name}: {message}");
 
 				if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
 				{
-					CustomTestContext.Get().Set(CustomTestContext.LIMITED, true);
+					ctx.Set(CustomTestContext.LIMITED, true);
 					Console.WriteLine("{0}: {1}", name, message);
 					Debug.WriteLine(message, name);
 				}
@@ -1044,15 +1046,11 @@ namespace Tests
 		[TearDown]
 		public virtual void OnAfterTest()
 		{
-			TestExecutionContext.CurrentContext.CurrentResult.SetResult(
-						TestExecutionContext.CurrentContext.CurrentResult.ResultState,
-						TestExecutionContext.CurrentContext.CurrentResult.Message + "[debug]\r\n[debug]",
-						TestExecutionContext.CurrentContext.CurrentResult.StackTrace);
-
 			if (TestContext.CurrentContext.Result.FailCount > 0)
 			{
-				var trace = CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.TRACE);
-				if (trace != null && CustomTestContext.Get().Get<bool>(CustomTestContext.LIMITED))
+				var ctx = CustomTestContext.Get();
+				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+				if (trace != null && ctx.Get<bool>(CustomTestContext.LIMITED))
 				{
 					// we need to set ErrorInfo.Message element text
 					// because Azure displays only ErrorInfo node data
