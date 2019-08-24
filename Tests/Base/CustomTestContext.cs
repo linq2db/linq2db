@@ -14,16 +14,12 @@ namespace Tests
 
 		public static CustomTestContext Create()
 		{
-			_context.Value = new CustomTestContext();
-			return Get();
+			return _context.Value = new CustomTestContext();
 		}
 
 		public static CustomTestContext Get()
 		{
-			if (_context.Value == null)
-				return Create();
-
-			return _context.Value;
+			return _context.Value ?? Create();
 		}
 
 		public static void Release()

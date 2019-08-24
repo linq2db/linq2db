@@ -1046,35 +1046,20 @@ namespace Tests
 		[TearDown]
 		public virtual void OnAfterTest()
 		{
-			var ctx = CustomTestContext.Get();
-			var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
-
-			var message = TestExecutionContext.CurrentContext.CurrentResult.Message;
-			message += $"FailCount:{TestContext.CurrentContext.Result.FailCount}";
-			message += $"HasTrace:{trace != null}";
-			if (trace != null)
+			if (TestContext.CurrentContext.Result.FailCount > 0)
 			{
-				message += $"Trace:{trace.ToString()}";
-			}
-			TestExecutionContext.CurrentContext.CurrentResult.SetResult(
+				var ctx = CustomTestContext.Get();
+				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+				if (trace != null && ctx.Get<bool>(CustomTestContext.LIMITED))
+				{
+					// we need to set ErrorInfo.Message element text
+					// because Azure displays only ErrorInfo node data
+					TestExecutionContext.CurrentContext.CurrentResult.SetResult(
 						TestExecutionContext.CurrentContext.CurrentResult.ResultState,
-						message,
+						TestExecutionContext.CurrentContext.CurrentResult.Message + "\r\n" + trace.ToString(),
 						TestExecutionContext.CurrentContext.CurrentResult.StackTrace);
-
-			//if (TestContext.CurrentContext.Result.FailCount > 0)
-			//{
-			//	var ctx = CustomTestContext.Get();
-			//	var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
-			//	if (trace != null && ctx.Get<bool>(CustomTestContext.LIMITED))
-			//	{
-			//		// we need to set ErrorInfo.Message element text
-			//		// because Azure displays only ErrorInfo node data
-			//		TestExecutionContext.CurrentContext.CurrentResult.SetResult(
-			//			TestExecutionContext.CurrentContext.CurrentResult.ResultState,
-			//			TestExecutionContext.CurrentContext.CurrentResult.Message + "\r\n" + trace.ToString(),
-			//			TestExecutionContext.CurrentContext.CurrentResult.StackTrace);
-			//	}
-			//}
+				}
+			}
 
 			CustomTestContext.Release();
 		}

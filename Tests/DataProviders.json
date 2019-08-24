@@ -48,13 +48,13 @@
 	"NET46.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.Classic",
-		"TraceLevel": "Error"
+		"TraceLevel": "Info"
 	},
 
 	"CORE2.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
-		"TraceLevel": "Error"
+		"TraceLevel": "Info"
 	},
 
 	"CommonConnectionStrings": {
