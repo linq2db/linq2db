@@ -133,9 +133,14 @@ stages:
 
     strategy:
       matrix:
-        SQLite:
-          title: 'SQLite'
-          config: 'sqlite'
+        Informix12:
+          title: 'Informix 12.10'
+          config: 'informix'
+          script: 'informix12.sh'
+        Informix14:
+          title: 'Informix 14.10'
+          config: 'informix'
+          script: 'informix14.sh'
     steps:
     - checkout: none
 
@@ -189,9 +194,16 @@ stages:
 
     strategy:
       matrix:
-        SQLite:
-          title: 'SQLite'
-          config: 'sqlite'
+        Informix12:
+          title: 'Informix 12.10'
+          config: 'informix'
+          script: 'mac.informix12.sh'
+          docker: 'true'
+        Informix14:
+          title: 'Informix 14.10'
+          config: 'informix'
+          script: 'mac.informix14.sh'
+          docker: 'true'
 
     steps:
     - checkout: none

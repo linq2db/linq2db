@@ -25,8 +25,6 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(db.Person);
-
-			Assert.Fail("test trx sql attachment");
 		}
 
 		[Test]
