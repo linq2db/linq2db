@@ -59,6 +59,7 @@ namespace Tests
 
 				if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
 				{
+					CustomTestContext.Get().Set(CustomTestContext.LIMITED, true);
 					Console.WriteLine("{0}: {1}", name, message);
 					Debug.WriteLine(message, name);
 				}
@@ -1043,18 +1044,21 @@ namespace Tests
 		[TearDown]
 		public virtual void OnAfterTest()
 		{
-			// append outputs to failed tests, so we always have them even if logging limit reached
+			TestExecutionContext.CurrentContext.CurrentResult.SetResult(
+						TestExecutionContext.CurrentContext.CurrentResult.ResultState,
+						TestExecutionContext.CurrentContext.CurrentResult.Message + "[debug]\r\n[debug]",
+						TestExecutionContext.CurrentContext.CurrentResult.StackTrace);
+
 			if (TestContext.CurrentContext.Result.FailCount > 0)
 			{
 				var trace = CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.TRACE);
-				if (trace != null)
+				if (trace != null && CustomTestContext.Get().Get<bool>(CustomTestContext.LIMITED))
 				{
-					TestContext.Write($"[1]:{trace.ToString()}");
-					TestExecutionContext.CurrentContext.CurrentResult.OutWriter.Write($"[2]:{trace.ToString()}");
-					// looks like output in teardown is ignored, so we need to modify test result directly
+					// we need to set ErrorInfo.Message element text
+					// because Azure displays only ErrorInfo node data
 					TestExecutionContext.CurrentContext.CurrentResult.SetResult(
 						TestExecutionContext.CurrentContext.CurrentResult.ResultState,
-						TestExecutionContext.CurrentContext.CurrentResult.Message + "\r\n[3]" + trace.ToString(),
+						TestExecutionContext.CurrentContext.CurrentResult.Message + "\r\n" + trace.ToString(),
 						TestExecutionContext.CurrentContext.CurrentResult.StackTrace);
 				}
 			}

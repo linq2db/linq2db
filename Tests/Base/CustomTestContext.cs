@@ -6,6 +6,7 @@ namespace Tests
 	internal class CustomTestContext
 	{
 		public static string TRACE = "key-trace";
+		public static string LIMITED = "key-limited";
 
 		private static readonly AsyncLocal<CustomTestContext?> _context = new AsyncLocal<CustomTestContext?>();
 
