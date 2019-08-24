@@ -9,7 +9,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 
-		<PackageReference Include="NUnit3TestAdapter" Version="3.14.0" />
+		<PackageReference Include="NUnit3TestAdapter" Version="3.15.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
 	</ItemGroup>
 

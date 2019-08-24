@@ -39,10 +39,10 @@ stages:
       displayName: Build Solution
 
 # need it for DotNetCoreCLI task be able to build C#8 project
-    - task: DotNetCoreInstaller@1
-      inputs:
-        version: '3.0.100-preview8-013656'
+    - task: UseDotNet@2
       displayName: Install .NET Core 3p8 SDK
+      inputs:
+        version: 3.0.100-preview8-013656
 
     - task: DotNetCoreCLI@2
       inputs:
@@ -129,7 +129,8 @@ stages:
       vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.0 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: ne('true', 'true')
+    #condition: ne(variables['Build.SourceBranchName'], 'release')
 
     strategy:
       matrix:
@@ -186,7 +187,8 @@ stages:
       vmImage: 'macOS-10.14'
     displayName: 'Tests: Mac / NETCOREAPP2.0 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    #condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: ne('true', 'true')
 
     strategy:
       matrix:

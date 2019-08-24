@@ -17,7 +17,7 @@
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.0.0" />
 		<PackageReference Include="AdoNetCore.AseClient" Version="0.14.0" />
 
-		<PackageReference Include="NUnit3TestAdapter" Version="3.14.0" />
+		<PackageReference Include="NUnit3TestAdapter" Version="3.15.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
 
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
