@@ -30,12 +30,13 @@ using NUnit.Framework;
 namespace Tests
 {
 	using Model;
+	using NUnit.Framework.Internal;
 	using Tools;
 
 //	[Order(1000)]
 	public class TestBase
 	{
-		private const int TRACES_LIMIT = 10000;
+		private const int TRACES_LIMIT = 1;
 
 		static TestBase()
 		{
@@ -1047,7 +1048,15 @@ namespace Tests
 			{
 				var trace = CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.TRACE);
 				if (trace != null)
-					TestContext.Write(trace);
+				{
+					TestContext.Write($"[1]:{trace.ToString()}");
+					TestExecutionContext.CurrentContext.CurrentResult.OutWriter.Write($"[2]:{trace.ToString()}");
+					// looks like output in teardown is ignored, so we need to modify test result directly
+					TestExecutionContext.CurrentContext.CurrentResult.SetResult(
+						TestExecutionContext.CurrentContext.CurrentResult.ResultState,
+						TestExecutionContext.CurrentContext.CurrentResult.Message + "\r\n[3]" + trace.ToString(),
+						TestExecutionContext.CurrentContext.CurrentResult.StackTrace);
+				}
 			}
 
 			CustomTestContext.Release();
