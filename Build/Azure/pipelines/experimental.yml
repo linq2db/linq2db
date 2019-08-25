@@ -197,13 +197,18 @@ stages:
       condition: variables['script']
       displayName: Setup tests
 
+    - task: CmdLine@2
+      inputs:
+        script: 'echo LD_LIBRARY_PATH'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: DEBUG
+
 # just because there is not vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
     - script: dotnet vstest ./linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
 # set TZ variable for oracle client
       env:
         TZ: CET
-        LD_LIBRARY_PATH:$(System.DefaultWorkingDirectory)/clidriver/lib/
       displayName: '$(title)'
 
     - task: PublishTestResults@2
