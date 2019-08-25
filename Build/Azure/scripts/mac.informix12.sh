@@ -1,9 +1,8 @@
 #!/bin/bash
 
-#NuGet.exe install IBM.Data.DB2.Core-osx -ExcludeVersion
-cp -f IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ../IBM.Data.DB2.Core.dll
-rm -rf ../clidriver/
-cp -rf IBM.Data.DB2.Core-lnx/build/clidriver/ ../clidriver/
+cp -f ./IBM.Data.DB2.Core-osx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ./IBM.Data.DB2.Core.dll
+rm -rf ./clidriver/
+cp -rf ./IBM.Data.DB2.Core-osx/build/clidriver/ ./clidriver/
 
 docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9088:9088 ibmcom/informix-developer-database:12.10.FC12W1DE
 
