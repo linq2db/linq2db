@@ -2,17 +2,10 @@
 
 rm -rf ./clidriver/*
 rm ./IBM.Data.DB2.Core.dll
-echo list .
-ls .
-echo list clidriver
-ls ./clidriver
 cp -a ./IBM.Data.DB2.Core-lnx/build/clidriver/. ./clidriver/
 cp -f ./IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ./IBM.Data.DB2.Core.dll
-echo list .
-ls .
-echo list clidriver
-ls ./clidriver
 
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/clidriver/lib/
 export PATH=$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib
 
 docker run -d --name db2 --privileged -e LICENSE=accept -e DB2INST1_PASSWORD=Password12! -e DBNAME=testdb -p 50000:50000 ibmcom/db2:11.5.0.0a
