@@ -16,8 +16,8 @@ CREATE DATABASE testdb WITH BUFFERED LOG
 EOSQL
 
 cat informix_init.sql
-#docker cp informix_init.sql informix:/opt/ibm/data/sch_init_informix.custom.sql
-#docker exec informix cp /opt/ibm/data/informix_config.small /opt/ibm/data/informix_config.custom
+docker cp informix_init.sql informix:/linq2db.sql
+docker exec informix cat /linq2db.sql >> /opt/ibm/sql/sch_init_informix.small.sql
 
 docker ps -a
 
