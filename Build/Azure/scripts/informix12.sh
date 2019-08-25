@@ -15,16 +15,16 @@ export PATH=$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib
 echo $LD_LIBRARY_PATH
 echo $PATH
 
-docker run -d --name informix -e SIZE=custom -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:12.10.FC12W1DE
-
+docker run -d --name informix -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:12.10.FC12W1DE
+# -e SIZE=custom
 echo Generate CREATE DATABASE script
 cat <<-EOSQL > informix_init.sql
 CREATE DATABASE testdb WITH BUFFERED LOG
 EOSQL
 
 cat informix_init.sql
-docker cp informix_init.sql informix:/opt/ibm/data/sch_init_informix.custom.sql
-docker exec informix cp /opt/ibm/data/informix_config.small /opt/ibm/data/informix_config.custom
+#docker cp informix_init.sql informix:/opt/ibm/data/sch_init_informix.custom.sql
+#docker exec informix cp /opt/ibm/data/informix_config.small /opt/ibm/data/informix_config.custom
 
 docker ps -a
 
