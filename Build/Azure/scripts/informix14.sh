@@ -5,6 +5,8 @@ rm ./IBM.Data.DB2.Core.dll
 cp -a ./IBM.Data.DB2.Core-lnx/build/clidriver/. ./clidriver/
 cp -f ./IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ./IBM.Data.DB2.Core.dll
 
+sudo apt-get install libxml2
+
 export LD_LIBRARY_PATH=$PWD/clidriver/lib/
 export PATH=$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib
 
