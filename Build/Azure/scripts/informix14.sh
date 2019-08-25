@@ -5,7 +5,7 @@ rm ./IBM.Data.DB2.Core.dll
 cp -a ./IBM.Data.DB2.Core-lnx/build/clidriver/. ./clidriver/
 cp -f ./IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ./IBM.Data.DB2.Core.dll
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/clidriver/lib/
+export LD_LIBRARY_PATH=$PWD/clidriver/lib/
 export PATH=$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib
 
 docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:14.10.FC1DE
