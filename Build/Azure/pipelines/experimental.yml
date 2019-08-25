@@ -148,6 +148,12 @@ stages:
           config: 'db2'
           script: 'db2.sh'
           nuget: 'IBM.Data.DB2.Core-lnx'
+        SAPHANA2:
+          title: 'SAP HANA 2 SPS 04r40'
+          config: 'hana2'
+          script: 'mac.hana2.sh'
+          docker: 'true'
+          docker_login: 'true'
     steps:
     - checkout: none
 
@@ -169,6 +175,13 @@ stages:
         arguments: '$(nuget) -ExcludeVersion'
         workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
       condition: variables['nuget']
+
+    - task: Docker@2
+      displayName: Auth on hub.docker.com
+      inputs:
+        command: login
+        containerRegistry: dockerhub
+      condition: eq(variables['docker_login'], 'true')
 
     - task: CmdLine@2
       inputs:
@@ -227,6 +240,12 @@ stages:
           script: 'mac.db2.sh'
           docker: 'true'
           nuget: 'IBM.Data.DB2.Core-osx'
+        SAPHANA2:
+          title: 'SAP HANA 2 SPS 04r40'
+          config: 'hana2'
+          script: 'mac.hana2.sh'
+          docker: 'true'
+          docker_login: 'true'
 
     steps:
     - checkout: none
@@ -241,6 +260,13 @@ stages:
         script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       displayName: Copy test config
+
+    - task: Docker@2
+      displayName: Auth on hub.docker.com
+      inputs:
+        command: login
+        containerRegistry: dockerhub
+      condition: eq(variables['docker_login'], 'true')
 
     - task: CmdLine@2
       inputs:
