@@ -199,9 +199,14 @@ stages:
 
     - task: CmdLine@2
       inputs:
-        script: 'echo LD_LIBRARY_PATH'
+        script: 'echo $LD_LIBRARY_PATH'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       displayName: DEBUG
+    - task: CmdLine@2
+      inputs:
+        script: 'echo $PATH'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: DEBUG22
 
 # just because there is not vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60

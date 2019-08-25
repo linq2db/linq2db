@@ -12,7 +12,6 @@ docker cp hana_password.json hana2:/password.json
 docker ps -a
 
 retries=0
-status="1"
 until docker logs hana2 | grep -q 'cannot remove'; do
     sleep 5
     retries=`expr $retries + 1`
@@ -26,7 +25,6 @@ done
 docker exec hana2 sudo rm /password.json
 
 retries=0
-status="1"
 until docker logs hana2 | grep -q 'Startup finished'; do
     sleep 5
     retries=`expr $retries + 1`
