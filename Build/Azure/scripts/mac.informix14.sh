@@ -12,7 +12,7 @@ CREATE DATABASE testdb
 EOSQL
 
 cat informix_init.sql
-docker cp informix_init.sql informix:linq2db.sql
+docker cp informix_init.sql informix:/opt/ibm/config/linq2db.sql
 
 docker ps -a
 
