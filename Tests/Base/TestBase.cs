@@ -272,12 +272,12 @@ namespace Tests
 		{
 #if !NETCOREAPP2_0
 			ProviderName.Access,
-			ProviderName.DB2,
 			ProviderName.Sybase,
 			ProviderName.SapHana,
 			ProviderName.OracleNative,
 			ProviderName.SqlCe,
 #endif
+			ProviderName.DB2,
 			ProviderName.Informix,
 			ProviderName.SQLiteClassic,
 			ProviderName.SybaseManaged,
