@@ -13,7 +13,7 @@ docker ps -a
 
 retries=0
 status="1"
-until docker logs hana2 | grep -q "rm: cannot remove '/password.json'"; do
+until docker logs hana2 | grep -q 'rm: cannot remove'; do
     sleep 5
     retries=`expr $retries + 1`
     echo waiting for hana2 to complain about password.json
