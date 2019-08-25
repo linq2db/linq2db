@@ -4,7 +4,7 @@ cp -f ./IBM.Data.DB2.Core-osx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ./IBM.Dat
 rm -rf ./clidriver/
 cp -rf ./IBM.Data.DB2.Core-osx/build/clidriver/ ./clidriver/
 
-docker run -d --name informix -e SIZE=custom -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:12.10.FC12W1DE
+docker run -d --name informix -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:12.10.FC12W1DE
 
 echo Generate CREATE DATABASE script
 cat <<-EOSQL > informix_init.sql

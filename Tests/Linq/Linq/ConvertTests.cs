@@ -606,6 +606,7 @@ namespace Tests.Linq
 
 		#endregion
 
+		[ActiveIssue("CI: SQL0245N  The invocation of routine DECIMAL is ambiguous. The argument in position 1 does not have a best fit", Configuration = ProviderName.DB2)]
 		[Test]
 		public void ConvertFromOneToAnother([DataSources] string context)
 		{
