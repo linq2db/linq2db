@@ -12,6 +12,7 @@ export PATH=$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib
 echo $LD_LIBRARY_PATH
 echo $PATH
 
+export LD_DEBUG_OUTPUT=ldlogs.log
 export LD_DEBUG=all
 
 docker run -d --name informix -e SIZE=custom -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:12.10.FC12W1DE

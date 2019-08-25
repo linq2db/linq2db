@@ -138,6 +138,7 @@ stages:
           config: 'informix'
           script: 'informix12.sh'
           nuget: 'IBM.Data.DB2.Core-lnx'
+          debug: 'true'
         Informix14:
           title: 'Informix 14.10'
           config: 'informix'
@@ -205,6 +206,12 @@ stages:
         TZ: CET
       displayName: '$(title)'
 
+    - task: CmdLine@2
+      inputs:
+        script: 'cat ldlogs.log'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['debug']
+      displayName: Print ld_debug log
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()
