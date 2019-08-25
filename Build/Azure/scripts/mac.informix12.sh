@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NuGet.exe install IBM.Data.DB2.Core-osx -ExcludeVersion
+#NuGet.exe install IBM.Data.DB2.Core-osx -ExcludeVersion
 cp -f IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ../IBM.Data.DB2.Core.dll
 rm -rf ../clidriver/
 cp -rf IBM.Data.DB2.Core-lnx/build/clidriver/ ../clidriver/

@@ -137,14 +137,17 @@ stages:
           title: 'Informix 12.10'
           config: 'informix'
           script: 'informix12.sh'
+          nuget: 'IBM.Data.DB2.Core-lnx'
         Informix14:
           title: 'Informix 14.10'
           config: 'informix'
           script: 'informix14.sh'
+          nuget: 'IBM.Data.DB2.Core-lnx'
         DB2:
           title: 'DB2 LUW 11.5'
           config: 'db2'
           script: 'db2.sh'
+          nuget: 'IBM.Data.DB2.Core-lnx'
     steps:
     - checkout: none
 
@@ -158,6 +161,14 @@ stages:
         script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       displayName: Copy test config
+
+    - task: NuGet@0
+      displayName: Install nugets
+      inputs:
+        command: 'install'
+        arguments: '$(nuget) -ExcludeVersion'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['nuget']
 
     - task: CmdLine@2
       inputs:
@@ -203,16 +214,19 @@ stages:
           config: 'informix'
           script: 'mac.informix12.sh'
           docker: 'true'
+          nuget: 'IBM.Data.DB2.Core-osx'
         Informix14:
           title: 'Informix 14.10'
           config: 'informix'
           script: 'mac.informix14.sh'
           docker: 'true'
+          nuget: 'IBM.Data.DB2.Core-osx'
         DB2:
           title: 'DB2 LUW 11.5'
           config: 'db2'
           script: 'mac.db2.sh'
           docker: 'true'
+          nuget: 'IBM.Data.DB2.Core-osx'
 
     steps:
     - checkout: none
@@ -241,6 +255,14 @@ stages:
       condition: eq(variables['docker'], 'true')
       displayName: Install Docker
 
+    - task: NuGet@0
+      displayName: Install nugets
+      inputs:
+        command: 'install'
+        arguments: '$(nuget) -ExcludeVersion'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['nuget']
+      
     - task: CmdLine@2
       inputs:
         script: 'chmod +x $(script)'
