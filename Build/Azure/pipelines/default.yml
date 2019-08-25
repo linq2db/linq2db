@@ -551,6 +551,11 @@ stages:
           title: 'Firebird 3.0'
           config: 'firebird3'
           script: 'firebird3.sh'
+        Informix14:
+          title: 'Informix 14.10'
+          config: 'informix'
+          script: 'informix14.sh'
+          nuget: 'IBM.Data.DB2.Core-lnx'
     steps:
     - checkout: none
 
@@ -564,6 +569,14 @@ stages:
         script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       displayName: Copy test config
+
+    - task: NuGet@0
+      displayName: Install nugets
+      inputs:
+        command: 'install'
+        arguments: '$(nuget) -ExcludeVersion'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['nuget']
 
     - task: CmdLine@2
       inputs:
@@ -582,9 +595,6 @@ stages:
 # just because there is not vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
     - script: dotnet vstest ./linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
-# set TZ variable for oracle client
-      env:
-        TZ: CET
       displayName: '$(title)'
 
 
@@ -683,6 +693,12 @@ stages:
           config: 'firebird3'
           script: 'firebird3.sh'
           docker: 'true'
+        Informix14:
+          title: 'Informix 14.10'
+          config: 'informix'
+          script: 'mac.informix14.sh'
+          docker: 'true'
+          nuget: 'IBM.Data.DB2.Core-osx'
     steps:
     - checkout: none
 
@@ -710,6 +726,14 @@ stages:
       condition: eq(variables['docker'], 'true')
       displayName: Install Docker
 
+    - task: NuGet@0
+      displayName: Install nugets
+      inputs:
+        command: 'install'
+        arguments: '$(nuget) -ExcludeVersion'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['nuget']
+
     - task: CmdLine@2
       inputs:
         script: 'chmod +x $(script)'
@@ -727,9 +751,6 @@ stages:
 # just because there is not vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
     - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
-# set TZ variable for oracle client
-      env:
-        TZ: CET
       condition: succeeded()
       displayName: '$(title)'
 

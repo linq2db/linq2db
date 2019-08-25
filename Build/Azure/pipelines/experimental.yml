@@ -138,11 +138,6 @@ stages:
           config: 'informix'
           script: 'informix12.sh'
           nuget: 'IBM.Data.DB2.Core-lnx'
-        Informix14:
-          title: 'Informix 14.10'
-          config: 'informix'
-          script: 'informix14.sh'
-          nuget: 'IBM.Data.DB2.Core-lnx'
         DB2:
           title: 'DB2 LUW 11.5'
           config: 'db2'
@@ -197,23 +192,9 @@ stages:
       condition: variables['script']
       displayName: Setup tests
 
-    - task: CmdLine@2
-      inputs:
-        script: 'echo $LD_LIBRARY_PATH'
-        workingDirectory: '$(System.DefaultWorkingDirectory)'
-      displayName: DEBUG
-    - task: CmdLine@2
-      inputs:
-        script: 'echo $PATH'
-        workingDirectory: '$(System.DefaultWorkingDirectory)'
-      displayName: DEBUG22
-
 # just because there is not vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
     - script: dotnet vstest ./linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
-# set TZ variable for oracle client
-      env:
-        TZ: CET
       displayName: '$(title)'
 
     - task: PublishTestResults@2
@@ -236,12 +217,6 @@ stages:
           title: 'Informix 12.10'
           config: 'informix'
           script: 'mac.informix12.sh'
-          docker: 'true'
-          nuget: 'IBM.Data.DB2.Core-osx'
-        Informix14:
-          title: 'Informix 14.10'
-          config: 'informix'
-          script: 'mac.informix14.sh'
           docker: 'true'
           nuget: 'IBM.Data.DB2.Core-osx'
         DB2:
@@ -315,9 +290,6 @@ stages:
 
     - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
       condition: succeeded()
-# set TZ variable for oracle client
-      env:
-        TZ: CET
       displayName: '$(title)'
 
 
