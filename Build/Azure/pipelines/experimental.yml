@@ -204,7 +204,6 @@ stages:
       env:
         TZ: CET
         LD_LIBRARY_PATH:$(System.DefaultWorkingDirectory)/clidriver/lib/
-        PATH:$PATH:$(System.DefaultWorkingDirectory)/clidriver/bin:$(System.DefaultWorkingDirectory)/clidriver/lib
       displayName: '$(title)'
 
     - task: PublishTestResults@2
