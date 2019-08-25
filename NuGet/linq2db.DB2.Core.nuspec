@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
-		<id>linq2db.DB2</id>
+		<id>linq2db.DB2.Core</id>
 		<title>LINQ to IBM DB2</title>
 		<description>
 			LINQ to DB2 is a data access technology that provides a run-time infrastructure for managing relational data as objects.

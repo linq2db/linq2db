@@ -10,7 +10,7 @@ docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089
 
 echo Generate CREATE DATABASE script
 cat <<-EOSQL > informix_init.sql
-CREATE DATABASE testdb
+CREATE DATABASE testdb WITH BUFFERED LOG
 EOSQL
 
 cat informix_init.sql
