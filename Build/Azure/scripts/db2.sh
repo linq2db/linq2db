@@ -1,9 +1,11 @@
 #!/bin/bash
 
 #NuGet.exe install IBM.Data.DB2.Core-lnx -ExcludeVersion
-cp -f IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ../IBM.Data.DB2.Core.dll
-rm -rf ../clidriver/
-cp -rf IBM.Data.DB2.Core-lnx/build/clidriver/ ../clidriver/
+ls .
+ls ..
+#cp -f IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ../IBM.Data.DB2.Core.dll
+#rm -rf ../clidriver/
+#cp -rf IBM.Data.DB2.Core-lnx/build/clidriver/ ../clidriver/
 
 docker run -d --name db2 --privileged -e LICENSE=accept -e DB2INST1_PASSWORD=Password12! -e DBNAME=testdb -p 50000:50000 ibmcom/db2:11.5.0.0a
 
