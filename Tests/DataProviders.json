@@ -215,7 +215,7 @@
 			"Oracle.Managed": { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"            },
 			"Informix"      : { "Provider": "Informix",                        "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"                                                                                    },
 			"DB2"           : { "Provider": "IBM.Data.DB2.Core",               "ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"                                                                                      },
-			"SapHana"       : { "Provider": "Sap.Data.Hana",                   "ConnectionString": "Server=localhost:39013;Current Schema=testdb;UserID=SYSTEM;Password=password;"                                                                            },
+			"SapHana"       : { "Provider": "Sap.Data.Hana",                   "ConnectionString": "Server=localhost:39013;Current Schema=testdb;UserID=SYSTEM;Password=HXEHana1;"                                                                            },
 		}
 	},
 

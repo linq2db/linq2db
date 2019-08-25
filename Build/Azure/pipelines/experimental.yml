@@ -138,11 +138,6 @@ stages:
           config: 'informix'
           script: 'informix12.sh'
           nuget: 'IBM.Data.DB2.Core-lnx'
-        DB2:
-          title: 'DB2 LUW 11.5'
-          config: 'db2'
-          script: 'db2.sh'
-          nuget: 'IBM.Data.DB2.Core-lnx'
         SAPHANA2:
           title: 'SAP HANA 2 SPS 04r40'
           config: 'hana2'
@@ -217,12 +212,6 @@ stages:
           title: 'Informix 12.10'
           config: 'informix'
           script: 'mac.informix12.sh'
-          docker: 'true'
-          nuget: 'IBM.Data.DB2.Core-osx'
-        DB2:
-          title: 'DB2 LUW 11.5'
-          config: 'db2'
-          script: 'mac.db2.sh'
           docker: 'true'
           nuget: 'IBM.Data.DB2.Core-osx'
         SAPHANA2:
