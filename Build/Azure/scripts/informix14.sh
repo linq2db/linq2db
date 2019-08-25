@@ -11,7 +11,7 @@ echo list .
 ls .
 
 echo $PATH
-export PATH=`$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib`
+export PATH=$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib
 echo $PATH
 
 docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:14.10.FC1DE
