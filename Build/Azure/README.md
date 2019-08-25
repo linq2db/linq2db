@@ -72,8 +72,8 @@ Legend:
 |PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.9|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.9|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.9|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) 11.1.4040.4|:x:|:x:|:x:|:x:|
-|DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/), [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/)) 1.3.0.100|:x:|:x:|:x:|:x:|
+|DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) 11.1.4040.4|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
+|DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/), [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/)) 1.3.0.100|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Informix 12.10.FC12W1DE<br>IBM.Data.Informix ?|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Informix 14.10.FC1DE<br>IBM.Data.Informix ?|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Informix 12.10.FC12W1DE<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/), [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/)) 1.3.0.100|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|

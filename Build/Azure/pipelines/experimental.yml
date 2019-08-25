@@ -141,6 +141,10 @@ stages:
           title: 'Informix 14.10'
           config: 'informix'
           script: 'informix14.sh'
+        DB2:
+          title: 'DB2 LUW 11.5'
+          config: 'db2'
+          script: 'db2.sh'
     steps:
     - checkout: none
 
@@ -203,6 +207,11 @@ stages:
           title: 'Informix 14.10'
           config: 'informix'
           script: 'mac.informix14.sh'
+          docker: 'true'
+        DB2:
+          title: 'DB2 LUW 11.5'
+          config: 'db2'
+          script: 'mac.db2.sh'
           docker: 'true'
 
     steps:

@@ -4,7 +4,15 @@ NuGet.exe install IBM.Data.DB2.Core-lnx -ExcludeVersion
 cp -f IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ../IBM.Data.DB2.Core.dll
 cp -rf IBM.Data.DB2.Core-lnx/build/clidriver/ ../clidriver/
 
-docker run -d --name informix -e INFORMIX_PASSWORD=Password12! -e LICENSE=ACCEPT -p 9088:9088 ibmcom/informix-developer-database:14.10.FC1DE
+docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9088:9088 ibmcom/informix-developer-database:14.10.FC1DE
+
+echo Generate CREATE DATABASE script
+cat <<-EOSQL > informix_init.sql
+CREATE DATABASE testdb
+EOSQL
+
+cat informix_init.sql
+docker cp informix_init.sql informix:linq2db.sql
 
 docker ps -a
 

@@ -166,7 +166,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			if (value is TimeSpan ts)
+			if (value is TimeSpan ts && _newIfxTimeSpan != null)
 			{
 				if (dataType.DataType != DataType.Int64)
 					value = _newIfxTimeSpan(ts);
