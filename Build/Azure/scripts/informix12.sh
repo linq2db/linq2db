@@ -1,8 +1,9 @@
 #!/bin/bash
 
-cp -f ./IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ./IBM.Data.DB2.Core.dll
 rm -rf ./clidriver/*
+rm ./IBM.Data.DB2.Core.dll
 cp -a ./IBM.Data.DB2.Core-lnx/build/clidriver/. ./clidriver/
+cp -f ./IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ./IBM.Data.DB2.Core.dll
 
 export PATH=$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib
 
@@ -14,7 +15,7 @@ CREATE DATABASE testdb WITH BUFFERED LOG
 EOSQL
 
 cat informix_init.sql
-docker cp informix_init.sql informix:/opt/ibm/config/linq2db.sql
+docker cp informix_init.sql informix:/opt/ibm/sql/sch_init_informix.custom.sql
 
 docker ps -a
 

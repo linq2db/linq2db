@@ -1,14 +1,17 @@
 #!/bin/bash
 
-
-cp -f ./IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ./IBM.Data.DB2.Core.dll
 rm -rf ./clidriver/*
 rm ./IBM.Data.DB2.Core.dll
 echo list .
 ls .
+echo list clidriver
+ls ./clidriver
 cp -a ./IBM.Data.DB2.Core-lnx/build/clidriver/. ./clidriver/
+cp -f ./IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ./IBM.Data.DB2.Core.dll
 echo list .
 ls .
+echo list clidriver
+ls ./clidriver
 
 echo $PATH
 export PATH=$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib
