@@ -518,7 +518,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("COUNT({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<T> Count<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
+		public static IAggregateFunctionSelfContained<long> Count<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
 			throw new LinqException($"'{nameof(Count)}' is server-side method.");
 		}

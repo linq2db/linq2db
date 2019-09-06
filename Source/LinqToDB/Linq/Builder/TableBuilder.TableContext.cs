@@ -708,7 +708,10 @@ namespace LinqToDB.Linq.Builder
 
 							if (table.Field == null)
 								return table.Table.SqlTable.Fields.Values
-									.Select(f => new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f })
+									.Select(f =>
+										f.ColumnDescriptor != null
+											? new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f }
+											: new SqlInfo { Sql = f })
 									.ToArray();
 
 							break;

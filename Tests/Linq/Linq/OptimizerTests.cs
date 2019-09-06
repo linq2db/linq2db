@@ -379,5 +379,50 @@ namespace Tests.Linq
 			}
 		}
 
+
+		[Test]
+		public void UniqueKeysAndSubqueries([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		{
+			var testData = GenerateTestData();
+
+			using (var db = GetDataContext(context))
+			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
+			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
+			using (new WithoutJoinOptimization(opimizerSwitch))
+			{
+				var subqueryWhichWillBeOptimized =
+					from f in first
+					where f.ValueStr.StartsWith("Str")
+					select f;
+
+				subqueryWhichWillBeOptimized = subqueryWhichWillBeOptimized.HasUniqueKey(f => f.DataKey11);
+
+				var query =
+					from s in second.HasUniqueKey(s => new { s.Key1, s.Key2 })
+					from f1 in subqueryWhichWillBeOptimized.LeftJoin(f => f.DataKey11 == s.DataKey11)
+					from f2 in subqueryWhichWillBeOptimized.LeftJoin(f => f.DataKey11 == 10)
+					select new
+					{
+						S = s,
+						F1 = f1,
+						F2 = f2,
+					};
+
+				Console.WriteLine(query.ToString());
+
+				var selectQuery = query.EnumQueries().First();
+				var table = selectQuery.From.Tables[0];
+				Assert.AreEqual(2, table.Joins.Count);
+
+				var smallProjection = query.Select(q => q.S);
+				Console.WriteLine(smallProjection.ToString());
+
+				var selectQuery2 = smallProjection.EnumQueries().First();
+				var table2 = selectQuery2.From.Tables[0];
+
+				Assert.AreEqual(opimizerSwitch ? 0 : 2, table2.Joins.Count);
+			}
+		}
+
 	}
 }
