@@ -220,7 +220,8 @@ namespace LinqToDB.Linq.Builder
 						{
 							// field = localVariable
 							//
-							var c = _expressionAccessors[ex];
+							if (!_expressionAccessors.TryGetValue(ex, out var c))
+								return new TransformInfo(ma);
 							return new TransformInfo(Expression.MakeMemberAccess(Expression.Convert(c, ex.Type), ma.Member));
 						}
 
