@@ -9,7 +9,6 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Extensions;
-	using Mapping;
 	using SqlQuery;
 
 	partial class Sql
@@ -71,7 +70,7 @@ namespace LinqToDB
 				if (_canBeNull != null)
 					return _canBeNull.Value;
 
-			return CalcCanBeNull(IsNullable, parameters.Select(p => p.CanBeNull)) ?? true;
+				return CalcCanBeNull(IsNullable, parameters.Select(p => p.CanBeNull)) ?? true;
 			}
 
 			public static bool? CalcCanBeNull(IsNullableType isNullable, IEnumerable<bool> nullInfo)
