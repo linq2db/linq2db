@@ -2331,6 +2331,55 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
+		public void ProcedureOutParameters([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var pms = new[]
+				{
+					new DataParameter {Name = "ID"                    , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+
+					new DataParameter {Name = "bigintDataType"        , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "numericDataType"       , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "bitDataType"           , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "smallintDataType"      , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "decimalDataType"       , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "smallmoneyDataType"    , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "intDataType"           , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "tinyintDataType"       , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "moneyDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.Decimal,        Value = 1},
+					new DataParameter {Name = "floatDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.Double,         Value = 1},
+					new DataParameter {Name = "realDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Single,         Value = 1},
+																											 
+					new DataParameter {Name = "datetimeDataType"      , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTime,       Value = DateTime.Now},
+					new DataParameter {Name = "datetime2DataType"     , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTime2,      Value = DateTime.Now},
+					new DataParameter {Name = "datetimeoffsetDataType", Direction = ParameterDirection.InputOutput, DataType = DataType.DateTimeOffset, Value = DateTimeOffset.Now},
+					new DataParameter {Name = "localZoneDataType"     , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTimeOffset, Value = DateTimeOffset.Now},
+																											 
+					new DataParameter {Name = "charDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Char,           Value = 'A'},
+					new DataParameter {Name = "char20DataType"        , Direction = ParameterDirection.InputOutput, DataType = DataType.Char,           Value = 'B'},
+					new DataParameter {Name = "varcharDataType"       , Direction = ParameterDirection.InputOutput, DataType = DataType.VarChar,        Value = "VarChar"},
+					new DataParameter {Name = "textDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Text,           Value = "Text"},
+					new DataParameter {Name = "ncharDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.NChar,          Value = "NChar"},
+					new DataParameter {Name = "nvarcharDataType"      , Direction = ParameterDirection.InputOutput, DataType = DataType.NVarChar,       Value = "NVarChar"},
+					new DataParameter {Name = "ntextDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.NText,          Value = "NText"},
+
+					new DataParameter {Name = "binaryDataType"        , Direction = ParameterDirection.InputOutput, DataType = DataType.Blob,           Value = new byte []{ 1,2,3 }},
+
+					// BFile is not working, needs investigation
+					//new DataParameter {Name = "bfileDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.BFile,          Value = new byte []{ 1,2,3 }},
+
+					new DataParameter {Name = "guidDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Guid,           Value = Guid.NewGuid()},
+																											 
+//					new DataParameter {Name = "uriDataType"           , Direction = ParameterDirection.InputOutput, DataType = DataType.Undefined},
+					new DataParameter {Name = "xmlDataType"           , Direction = ParameterDirection.InputOutput, DataType = DataType.Xml,            Value = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"},
+				};
+
+				db.ExecuteProc("AllOutputParameters", pms);
+			}
+		}
+
 		class MyTestDataConnection : TestDataConnection
 		{
 			public MyTestDataConnection(string configurationString)

@@ -257,5 +257,10 @@ namespace LinqToDB
 		/// SQL Server 2008+ table-valued parameter type (TVP).
 		/// </summary>
 		Structured,
+
+		/// <summary>
+		/// Oracle BFILE data type
+		/// </summary>
+		BFile
 	}
 }

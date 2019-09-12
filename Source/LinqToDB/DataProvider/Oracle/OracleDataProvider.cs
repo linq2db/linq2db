@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
@@ -155,65 +156,15 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			{
-				// static decimal GetOracleDecimal(OracleDataReader rd, int idx)
-				// {
-				//     var tstz = rd.GetOracleDecimal(idx);
-				//     decimal decimalVar;
-				//     var precision = 29;
-				//     while (true)
-				//     {
-				//        try
-				//        {
-				//           tstz = OracleDecimal.SetPrecision(tstz, precision);
-				//           decimalVar = (decimal)tstz;
-				//           break;
-				//        }
-				//        catch(OverflowException exceptionVar)
-				//        {
-				//           if (--precision <= 26)
-				//              throw exceptionVar;
-				//        }
-				//     }
-				//
-				//     return decimalVar;
-				// }
 
-				var tstz               = Expression.Parameter(_oracleDecimal, "tstz");
-				var decimalVar         = Expression.Variable(typeof(decimal), "decimalVar");
-				var precision          = Expression.Variable(typeof(int),     "precision");
-				var label              = Expression.Label(typeof(decimal));
 				var setPrecisionMethod = _oracleDecimal.GetMethod("SetPrecision", BindingFlags.Static | BindingFlags.Public);
 
-				var getDecimalAdv = Expression.Lambda(
-					Expression.Block(
-						new[] {tstz, decimalVar, precision},
-						Expression.Assign(tstz, Expression.Call(dataReaderParameter, "GetOracleDecimal", null, indexParameter)),
-						Expression.Assign(precision, Expression.Constant(29)),
-						Expression.Loop(
-							Expression.TryCatch(
-								Expression.Block(
-									Expression.Assign(tstz, Expression.Call(setPrecisionMethod, tstz, precision)),
-									Expression.Assign(decimalVar, Expression.Convert(tstz, typeof(decimal))),
-									Expression.Break(label, decimalVar),
-									Expression.Constant(0)
-								),
-								Expression.Catch(typeof(OverflowException),
-									Expression.Block(
-										Expression.IfThen(
-											Expression.LessThanOrEqual(Expression.SubtractAssign(precision, Expression.Constant(1)),
-												Expression.Constant(26)),
-											Expression.Rethrow()
-										),
-										Expression.Constant(0)
-									)
-
-								)
-							),
-							label),
-						decimalVar
-					),
-					dataReaderParameter,
-					indexParameter);
+				var getDecimalAdv = 
+					Expression.Lambda(
+						BuildGetDecimalExpr(Expression.Call(dataReaderParameter, "GetOracleDecimal", null, indexParameter), false),
+						dataReaderParameter,
+						indexParameter
+					);
 
 
 				// static T GetDecimalValue<T>(OracleDataReader rd, int idx)
@@ -347,8 +298,10 @@ namespace LinqToDB.DataProvider.Oracle
 			_setCursor         = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "RefCursor");
 			_setNVarchar2      = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "NVarchar2");
 			_setVarchar2       = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Varchar2");
+			_setBFile          = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "BFile");
+			_setXml            = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "XmlType");
 
-			MappingSchema.AddScalarType(_oracleBFile,        GetNullValue(_oracleBFile),        true, DataType.VarChar);    // ?
+			MappingSchema.AddScalarType(_oracleBFile,        GetNullValue(_oracleBFile),        true, DataType.BFile);    
 			MappingSchema.AddScalarType(_oracleBinary,       GetNullValue(_oracleBinary),       true, DataType.VarBinary);
 			MappingSchema.AddScalarType(_oracleBlob,         GetNullValue(_oracleBlob),         true, DataType.Blob);       // ?
 			MappingSchema.AddScalarType(_oracleClob,         GetNullValue(_oracleClob),         true, DataType.NText);
@@ -362,6 +315,27 @@ namespace LinqToDB.DataProvider.Oracle
 			MappingSchema.AddScalarType(_oracleTimeStampLTZ, GetNullValue(_oracleTimeStampLTZ), true, DataType.DateTimeOffset);
 			MappingSchema.AddScalarType(_oracleTimeStampTZ,  GetNullValue(_oracleTimeStampTZ),  true, DataType.DateTimeOffset);
 
+			if (Configuration.AvoidSpecificDataProviderAPI)
+			{
+				SetTypeConversion<DBNull>(_ => null);
+				SetOracleTypeConversion(_oracleBFile,        "Value");
+				SetOracleTypeConversion(_oracleBinary,       "Value");
+				SetOracleTypeConversion(_oracleBlob,         "Value");
+				SetOracleTypeConversion(_oracleClob,         "Value");
+				SetOracleTypeConversion(_oracleDate,         "Value");
+				SetOracleTypeConversion(_oracleDecimal,      "Value");
+				SetOracleTypeConversion(_oracleIntervalDS,   "Value");
+				SetOracleTypeConversion(_oracleIntervalYM,   "Value");
+				SetOracleTypeConversion(_oracleRefCursor,    "");
+				SetOracleTypeConversion(_oracleString,       "Value");
+				SetOracleTypeConversion(_oracleTimeStamp,    "Value");
+				SetOracleTypeConversion(_oracleTimeStampLTZ, "Value");
+				SetOracleTypeConversion(_oracleTimeStampTZ,  "Value");
+			}
+
+			var valueParam = Expression.Parameter(_oracleDecimal, "v");
+			SetTypeConversion(_oracleDecimal, Expression.Lambda(BuildGetDecimalExpr(valueParam, true), valueParam));
+
 			if (_oracleRef != null)
 				MappingSchema.AddScalarType(_oracleRef, GetNullValue(_oracleRef), true, DataType.Binary); // ?
 
@@ -370,6 +344,109 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (_oracleXmlStream != null)
 				MappingSchema.AddScalarType(_oracleXmlStream, GetNullValue(_oracleXmlStream), true, DataType.Xml); // ?
+		}
+
+		protected void SetOracleTypeConversion(Type oracleType, string memberName)
+		{
+			var valueParam = Expression.Parameter(oracleType, "v");
+			var member = memberName.IsNullOrEmpty() ? null : oracleType.GetInstanceMemberEx(memberName)
+				.Single(m =>
+					m.IsMethodEx() && ((MethodInfo)m).GetParameters().Length == 0 ||
+					!m.IsMethodEx());
+			
+			Expression memberExpression;
+			if (member == null)
+				memberExpression = valueParam;
+			else if (member.IsMethodEx())
+				memberExpression = Expression.Call(valueParam, (MethodInfo)member);
+			else
+				memberExpression = Expression.MakeMemberAccess(valueParam, member);
+
+			var condition = Expression.Condition(
+				Expression.Equal(valueParam, Expression.Field(null, oracleType, "Null")),
+				Expression.Constant(null, typeof(object)),
+				Expression.Convert(memberExpression, typeof(object))
+			);
+
+			var convertExpression = Expression.Lambda(condition, valueParam);
+			SetTypeConversion(oracleType, convertExpression);
+		}
+
+		/*
+		static decimal GetOracleDecimal(OracleDecimal valueProvider)
+		{
+		    var tstz = valueProvider;
+		    decimal decimalVar;
+		    var precision = 29;
+		    while (true)
+		    {
+		       try
+		       {
+		          tstz = OracleDecimal.SetPrecision(tstz, precision);
+		          decimalVar = (decimal)tstz;
+		          break;
+		       }
+		       catch(OverflowException exceptionVar)
+		       {
+		          if (--precision <= 26)
+		             throw exceptionVar;
+		       }
+		    }
+		
+		    return decimalVar;
+		}
+		*/
+
+		Expression BuildGetDecimalExpr(Expression valueProvider, bool checkForNull)
+		{
+			var tstz               = Expression.Variable(_oracleDecimal,  "tstz");
+			var decimalVar         = Expression.Variable(typeof(decimal), "decimalVar");
+			var precision          = Expression.Variable(typeof(int),     "precision");
+			var label              = Expression.Label(typeof(decimal));
+			var setPrecisionMethod = _oracleDecimal.GetMethod("SetPrecision", BindingFlags.Static | BindingFlags.Public);
+
+
+			var convertExpr =
+				Expression.Block(
+					new[] { decimalVar, precision },
+					Expression.Assign(precision, Expression.Constant(29)),
+					Expression.Loop(
+						Expression.TryCatch(
+							Expression.Block(
+								Expression.Assign(tstz, Expression.Call(setPrecisionMethod, tstz, precision)),
+								Expression.Assign(decimalVar, Expression.Convert(tstz, typeof(decimal))),
+								Expression.Break(label, decimalVar),
+								Expression.Constant(0)
+							),
+							Expression.Catch(typeof(OverflowException),
+								Expression.Block(
+									Expression.IfThen(
+										Expression.LessThanOrEqual(
+											Expression.SubtractAssign(precision, Expression.Constant(1)),
+											Expression.Constant(26)),
+										Expression.Rethrow()
+									),
+									Expression.Constant(0)
+								)
+
+							)
+						),
+						label),
+					decimalVar);
+
+			var getDecimalAdv =
+				Expression.Block(
+					new[] { tstz },
+					Expression.Assign(tstz, valueProvider),
+					checkForNull
+						? (Expression)Expression.Condition(
+							Expression.Equal(Expression.Field(null, _oracleDecimal, "Null"), tstz),
+							Expression.Constant(null, typeof(decimal?)),
+							Expression.Convert(convertExpr, typeof(decimal?)))
+						: convertExpr
+				);
+
+			return getDecimalAdv;
 		}
 
 		static int GetDateTimeOffsetNanoseconds(DateTimeOffset value)
@@ -519,6 +596,12 @@ namespace LinqToDB.DataProvider.Oracle
 					if (value is TimeSpan)
 						dataType = dataType.WithDataType(DataType.Undefined);
 					break;
+				case DataType.BFile:
+					{
+						// BFile we do not support setting parameter value
+						value = null;
+						break;
+					}
 			}
 
 			if (dataType.DataType == DataType.Undefined && value is string && ((string)value).Length >= 4000)
@@ -559,6 +642,8 @@ namespace LinqToDB.DataProvider.Oracle
 		Action<IDbDataParameter> _setCursor;
 		Action<IDbDataParameter> _setNVarchar2;
 		Action<IDbDataParameter> _setVarchar2;
+		Action<IDbDataParameter> _setBFile;
+		Action<IDbDataParameter> _setXml;
 
 		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
@@ -588,6 +673,8 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Cursor         : _setCursor           (parameter);           break;
 				case DataType.NVarChar       : _setNVarchar2        (parameter);           break;
 				case DataType.VarChar        : _setVarchar2         (parameter);           break;
+				case DataType.BFile          : _setBFile            (parameter);           break;
+				case DataType.Xml            : _setXml              (parameter);           break;
 				default                      : base.SetParameterType(parameter, dataType); break;
 			}
 		}

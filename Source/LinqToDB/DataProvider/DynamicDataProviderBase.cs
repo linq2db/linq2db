@@ -3,11 +3,13 @@ using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider
 {
 	using Configuration;
 	using Extensions;
+	using Expressions;
 	using Mapping;
 
 	public abstract class DynamicDataProviderBase : DataProviderBase
@@ -311,6 +313,44 @@ namespace LinqToDB.DataProvider
 				Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
 
 			return true;
+		}
+
+		protected void SetTypeConversion<T>(Func<T, object> convertFunc)
+		{
+			MappingSchema.SetConverter(convertFunc);
+		}
+
+		protected void SetTypeConversion(Type type, LambdaExpression convertExpression)
+		{
+			if (convertExpression.Body.Type != typeof(object))
+			{
+				var body = convertExpression.Body.Unwrap();
+				if (body.Type != typeof(object))
+					body = Expression.Convert(body, typeof(object));
+
+				convertExpression = Expression.Lambda(
+					body,
+					convertExpression.Parameters);
+			}	
+			MappingSchema.SetConvertExpression(type, typeof(object), convertExpression);
+		}
+
+		protected void SetTypeConversion(Type type, string memberName)
+		{
+			var valueParam = Expression.Parameter(type, "v");
+			var member = type.GetInstanceMemberEx(memberName)
+				.Single(m =>
+					m.IsMethodEx() && ((MethodInfo)m).GetParameters().Length == 0 ||
+					!m.IsMethodEx());
+
+			Expression memberExpression;
+			if (member.IsMethodEx())
+				memberExpression = Expression.Call(valueParam, (MethodInfo)member);
+			else
+				memberExpression = Expression.MakeMemberAccess(valueParam, member);
+
+			var convertExpression = Expression.Lambda(memberExpression, valueParam);
+			SetTypeConversion(type, convertExpression);
 		}
 
 		#endregion
