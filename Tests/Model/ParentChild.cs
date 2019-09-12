@@ -112,6 +112,11 @@ namespace Tests.Model
 				where p.ParentID == gc.ParentID && gc.ChildID == id
 				select gc;
 		}
+
+		public override string ToString()
+		{
+			return $"ParentID={ParentID}, Value1={Value1}";
+		}
 	}
 
 	public class Child

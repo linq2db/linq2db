@@ -1026,10 +1026,14 @@ namespace Tests
 			var b = expectedList.SequenceEqual(resultList);
 
 			if (!b)
-				for (var i = 0; i < resultList.Count; i++)
-					Debug.WriteLine("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+			{
+				var sb = new StringBuilder();
 
-			Assert.IsTrue(b);
+				for (var i = 0; i < resultList.Count; i++)
+					sb.AppendLine($"{(Equals(expectedList[i], resultList[i]) ? " " : "-")} {expectedList[i]} --- {resultList[i]}");
+
+				Assert.Fail(sb.ToString());
+			}
 		}
 
 		protected void CompareSql(string result, string expected)

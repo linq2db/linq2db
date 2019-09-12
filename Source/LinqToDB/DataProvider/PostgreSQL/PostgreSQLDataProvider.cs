@@ -347,8 +347,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						Expression.New(
 							MemberHelper.ConstructorOf(() => new DateTimeOffset(new DateTime())),
 							expr), p));
-			}			
-			
+			}
+
 			if (NpgsqlRange != null)
 			{
 				void SetRangeConversion<T>(string fromDbType = null, DataType fromDataType = DataType.Undefined, string toDbType = null, DataType toDataType = DataType.Undefined)
@@ -389,7 +389,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		private void AddUdtType(Type type)
+		void AddUdtType(Type type)
 		{
 			if (type == null)
 				return;
@@ -403,12 +403,23 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		private bool TryAddType(string dbType, string enumName)
+		bool TryAddType(string dbType, string enumName)
 		{
 			try
 			{
+#if NETCOREAPP2_0
+				if (Enum.TryParse(NpgsqlDbType, enumName, false, out var value))
+				{
+					_npgsqlTypeMap.Add(dbType, value);
+					return true;
+				}
+
+				return false;
+#else
+
 				_npgsqlTypeMap.Add(dbType, Enum.Parse(NpgsqlDbType, enumName));
 				return true;
+#endif
 			}
 			catch
 			{
@@ -417,9 +428,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		public    override string ConnectionNamespace { get { return "Npgsql";                          } }
-		protected override string ConnectionTypeName  { get { return "Npgsql.NpgsqlConnection, Npgsql"; } }
-		protected override string DataReaderTypeName  { get { return "Npgsql.NpgsqlDataReader, Npgsql"; } }
+		public    override string ConnectionNamespace => "Npgsql";
+		protected override string ConnectionTypeName  => "Npgsql.NpgsqlConnection, Npgsql";
+		protected override string DataReaderTypeName  => "Npgsql.NpgsqlDataReader, Npgsql";
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
