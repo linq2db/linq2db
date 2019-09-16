@@ -18,7 +18,7 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[] parameters)
 		{
 			CheckAndThrowOnDisposed();
 			return new QueryRunner(query, queryNumber, this, expression, parameters);
@@ -26,7 +26,7 @@ namespace LinqToDB.Data
 
 		internal class QueryRunner : QueryRunnerBase
 		{
-			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, Expression expression, object[] parameters)
+			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, Expression expression, object?[] parameters)
 				: base(query, queryNumber, dataConnection, expression, parameters)
 			{
 				_dataConnection = dataConnection;
@@ -36,10 +36,10 @@ namespace LinqToDB.Data
 			readonly DateTime       _startedOn = DateTime.UtcNow;
 			readonly Stopwatch      _stopwatch = Stopwatch.StartNew();
 
-			bool       _isAsync;
-			Expression _mapperExpression;
+			bool        _isAsync;
+			Expression? _mapperExpression;
 
-			public override Expression  MapperExpression
+			public override Expression? MapperExpression
 			{
 				get => _mapperExpression;
 				set
@@ -66,7 +66,7 @@ namespace LinqToDB.Data
 			{
 				SetCommand(false);
 
-				var sqlProvider = _preparedQuery.SqlProvider ?? _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema);
+				var sqlProvider = _preparedQuery!.SqlProvider ?? _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema);
 
 				var sb = new StringBuilder();
 
@@ -134,6 +134,7 @@ namespace LinqToDB.Data
 				base.Dispose();
 			}
 
+#nullable disable
 			public class PreparedQuery
 			{
 				public string[]           Commands;
@@ -141,10 +142,11 @@ namespace LinqToDB.Data
 				public IDbDataParameter[] Parameters;
 				public SqlStatement       Statement;
 				public ISqlBuilder        SqlProvider;
-				public List<string>       QueryHints;
+#nullable enable
+				public List<string>?      QueryHints;
 			}
 
-			PreparedQuery _preparedQuery;
+			PreparedQuery? _preparedQuery;
 
 			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, int startIndent = 0)
 			{
@@ -285,12 +287,12 @@ namespace LinqToDB.Data
 			{
 				SetCommand(true);
 
-				var hasParameters = _preparedQuery.Parameters?.Length > 0;
+				var hasParameters = _preparedQuery!.Parameters?.Length > 0;
 
 				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, hasParameters);
 
 				if (hasParameters)
-					foreach (var p in _preparedQuery.Parameters)
+					foreach (var p in _preparedQuery.Parameters!)
 						_dataConnection.Command.Parameters.Add(p);
 			}
 
@@ -305,7 +307,7 @@ namespace LinqToDB.Data
 					dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints, hasParameters);
 
 					if (hasParameters)
-						foreach (var p in preparedQuery.Parameters)
+						foreach (var p in preparedQuery.Parameters!)
 							dataConnection.Command.Parameters.Add(p);
 
 					return dataConnection.ExecuteNonQuery();
@@ -320,7 +322,7 @@ namespace LinqToDB.Data
 					dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[i], null, i == 0 ? preparedQuery.QueryHints : null, hasParameters);
 
 					if (hasParameters)
-						foreach (var p in preparedQuery.Parameters)
+						foreach (var p in preparedQuery.Parameters!)
 							dataConnection.Command.Parameters.Add(p);
 
 					if (i < preparedQuery.Commands.Length - 1 && preparedQuery.Commands[i].StartsWith("DROP"))
@@ -348,7 +350,7 @@ namespace LinqToDB.Data
 			public override int ExecuteNonQuery()
 			{
 				SetCommand(true);
-				return ExecuteNonQueryImpl(_dataConnection, _preparedQuery);
+				return ExecuteNonQueryImpl(_dataConnection, _preparedQuery!);
 			}
 
 			public static int ExecuteNonQuery(DataConnection dataConnection, IQueryContext context)
@@ -364,9 +366,9 @@ namespace LinqToDB.Data
 
 			#region ExecuteScalar
 
-			static object ExecuteScalarImpl(DataConnection dataConnection, PreparedQuery preparedQuery)
+			static object? ExecuteScalarImpl(DataConnection dataConnection, PreparedQuery preparedQuery)
 			{
-				IDbDataParameter idParam = null;
+				IDbDataParameter? idParam = null;
 
 				if (dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 				{
@@ -403,7 +405,7 @@ namespace LinqToDB.Data
 				return dataConnection.ExecuteScalar();
 			}
 
-			public static object ExecuteScalar(DataConnection dataConnection, IQueryContext context)
+			public static object? ExecuteScalar(DataConnection dataConnection, IQueryContext context)
 			{
 				var preparedQuery = GetCommand(dataConnection, context);
 
@@ -414,16 +416,16 @@ namespace LinqToDB.Data
 				dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints, hasParameters);
 
 				if (hasParameters)
-					foreach (var p in preparedQuery.Parameters)
+					foreach (var p in preparedQuery.Parameters!)
 						dataConnection.Command.Parameters.Add(p);
 
 				return ExecuteScalarImpl(dataConnection, preparedQuery);
 			}
 
-			public override object ExecuteScalar()
+			public override object? ExecuteScalar()
 			{
 				SetCommand();
-				return ExecuteScalarImpl(_dataConnection, _preparedQuery);
+				return ExecuteScalarImpl(_dataConnection, _preparedQuery!);
 			}
 
 			#endregion
@@ -441,7 +443,7 @@ namespace LinqToDB.Data
 				dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints, hasParameters);
 
 				if (hasParameters)
-					foreach (var p in preparedQuery.Parameters)
+					foreach (var p in preparedQuery.Parameters!)
 						dataConnection.Command.Parameters.Add(p);
 
 				return dataConnection.ExecuteReader();
@@ -451,12 +453,12 @@ namespace LinqToDB.Data
 			{
 				SetCommand(true);
 
-				var hasParameters = _preparedQuery.Parameters?.Length > 0;
+				var hasParameters = _preparedQuery!.Parameters?.Length > 0;
 
 				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, hasParameters);
 
 				if (hasParameters)
-					foreach (var p in _preparedQuery.Parameters)
+					foreach (var p in _preparedQuery.Parameters!)
 						_dataConnection.Command.Parameters.Add(p);
 
 				return _dataConnection.ExecuteReader();
@@ -496,12 +498,12 @@ namespace LinqToDB.Data
 
 				base.SetCommand(true);
 
-				var hasParameters = _preparedQuery.Parameters?.Length > 0;
+				var hasParameters = _preparedQuery!.Parameters?.Length > 0;
 
 				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, hasParameters);
 
 				if (hasParameters)
-					foreach (var p in _preparedQuery.Parameters)
+					foreach (var p in _preparedQuery.Parameters!)
 						_dataConnection.Command.Parameters.Add(p);
 
 				var dataReader = await _dataConnection.ExecuteReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -517,7 +519,7 @@ namespace LinqToDB.Data
 
 				base.SetCommand(true);
 
-				if (_preparedQuery.Commands.Length == 1)
+				if (_preparedQuery!.Commands.Length == 1)
 				{
 					var hasParameters = _preparedQuery.Parameters?.Length > 0;
 
@@ -525,7 +527,7 @@ namespace LinqToDB.Data
 						CommandType.Text, _preparedQuery.Commands[0], null, _preparedQuery.QueryHints, hasParameters);
 
 					if (hasParameters)
-						foreach (var p in _preparedQuery.Parameters)
+						foreach (var p in _preparedQuery.Parameters!)
 							_dataConnection.Command.Parameters.Add(p);
 
 					return await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -539,7 +541,7 @@ namespace LinqToDB.Data
 						CommandType.Text, _preparedQuery.Commands[i], null, i == 0 ? _preparedQuery.QueryHints : null, hasParameters);
 
 					if (hasParameters)
-						foreach (var p in _preparedQuery.Parameters)
+						foreach (var p in _preparedQuery.Parameters!)
 							_dataConnection.Command.Parameters.Add(p);
 
 					if (i < _preparedQuery.Commands.Length - 1 && _preparedQuery.Commands[i].StartsWith("DROP"))
@@ -561,7 +563,7 @@ namespace LinqToDB.Data
 				return -1;
 			}
 
-			public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
+			public override async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
 				_isAsync = true;
 
@@ -569,11 +571,11 @@ namespace LinqToDB.Data
 
 				SetCommand();
 
-				IDbDataParameter idparam = null;
+				IDbDataParameter? idparam = null;
 
 				if (_dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 				{
-					if (_preparedQuery.Statement.NeedsIdentity())
+					if (_preparedQuery!.Statement.NeedsIdentity())
 					{
 						idparam = _dataConnection.Command.CreateParameter();
 
@@ -585,7 +587,7 @@ namespace LinqToDB.Data
 					}
 				}
 
-				if (_preparedQuery.Commands.Length == 1)
+				if (_preparedQuery!.Commands.Length == 1)
 				{
 					if (idparam != null)
 					{

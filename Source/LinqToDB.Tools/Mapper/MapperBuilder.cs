@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -470,7 +471,7 @@ namespace LinqToDB.Tools.Mapper
 							var member = ((MemberExpression)expr).Member;
 							var mType = member.GetMemberType();
 
-							if (lastMember.ReflectedTypeEx() != mType.GetItemType())
+							if (lastMember.ReflectedType != mType.GetItemType())
 								goto default;
 
 							expression = expr;

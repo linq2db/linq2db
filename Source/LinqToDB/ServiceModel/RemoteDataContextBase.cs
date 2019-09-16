@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -92,7 +93,17 @@ namespace LinqToDB.ServiceModel
 		public  MappingSchema  MappingSchema
 		{
 			get => _mappingSchema ?? (_mappingSchema = GetConfigurationInfo().MappingSchema);
-			set => _mappingSchema = value;
+			set
+			{
+				_mappingSchema = value;
+				_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema);
+			}
+		}
+
+		private  MappingSchema _serializationMappingSchema;
+		internal MappingSchema SerializationMappingSchema
+		{
+			get => _serializationMappingSchema ?? (_serializationMappingSchema = new SerializationMappingSchema(MappingSchema));
 		}
 
 		public  bool InlineParameters { get; set; }
@@ -202,7 +213,7 @@ namespace LinqToDB.ServiceModel
 								_sqlBuilders.Add(type, _createSqlProvider =
 									Expression.Lambda<Func<ISqlBuilder>>(
 										Expression.New(
-											type.GetConstructorEx(new[]
+											type.GetConstructor(new[]
 											{
 												typeof(ISqlOptimizer),
 												typeof(SqlProviderFlags),
@@ -238,7 +249,7 @@ namespace LinqToDB.ServiceModel
 								_sqlOptimizers.Add(type, _getSqlOptimizer =
 									Expression.Lambda<Func<ISqlOptimizer>>(
 										Expression.New(
-											type.GetConstructorEx(new[]
+											type.GetConstructor(new[]
 											{
 												typeof(SqlProviderFlags)
 											}),
@@ -276,7 +287,7 @@ namespace LinqToDB.ServiceModel
 
 				try
 				{
-					var data = LinqServiceSerializer.Serialize(_queryBatch.ToArray());
+					var data = LinqServiceSerializer.Serialize(SerializationMappingSchema, _queryBatch.ToArray());
 					client.ExecuteBatch(Configuration, data);
 				}
 				finally
@@ -300,7 +311,7 @@ namespace LinqToDB.ServiceModel
 
 				try
 				{
-					var data = LinqServiceSerializer.Serialize(_queryBatch.ToArray());
+					var data = LinqServiceSerializer.Serialize(SerializationMappingSchema, _queryBatch.ToArray());
 					await client.ExecuteBatchAsync(Configuration, data).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 				finally

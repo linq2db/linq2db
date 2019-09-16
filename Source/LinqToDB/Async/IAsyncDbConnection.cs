@@ -50,6 +50,6 @@ namespace LinqToDB.Async
 		/// <summary>
 		/// Returns cloned connection instance, if underlying provider support cloning or null otherwise.
 		/// </summary>
-		IAsyncDbConnection TryClone();
+		IAsyncDbConnection? TryClone();
 	}
 }

@@ -127,10 +127,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(
-			Configuration         = TestProvName.AllOracle,
-			Details               = "Specified cast is not valid.",
-			SkipForNonLinqService = true)]
 		[Test]
 		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
@@ -159,7 +155,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestAvgOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestAvgOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -239,7 +235,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCorrOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestCorrOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -340,7 +336,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCovarPopOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestCovarPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -377,7 +373,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCovarSampOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -414,7 +410,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCumeDistOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestCumeDistOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -830,7 +826,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestPercentRankOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestPercentRankOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -857,7 +853,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestPercentRatioToReportOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestPercentRatioToReportOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -894,7 +890,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestRankOracle([IncludeDataSources(true,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -923,7 +919,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestRegrOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			true, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -950,7 +946,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestStdDevOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -979,7 +975,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDev([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void TestStdDev([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1006,7 +1002,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevPopOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestStdDevPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1042,7 +1038,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevSampOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestStdDevSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1079,7 +1075,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestSumOracle([IncludeDataSources(true,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1110,7 +1106,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestVarPopOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestVarPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1146,7 +1142,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestVarSampOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1183,7 +1179,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void TestVarianceOracle([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void TestVarianceOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

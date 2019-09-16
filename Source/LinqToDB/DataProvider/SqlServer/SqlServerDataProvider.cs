@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -6,9 +7,6 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Microsoft.SqlServer.Server;
 
@@ -173,12 +171,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			return typeof(SqlConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
 		}
 
-#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return Version == SqlServerVersion.v2000 ? new SqlServer2000SchemaProvider() : new SqlServerSchemaProvider();
 		}
-#endif
 
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();
 
@@ -217,11 +213,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						if (value != null && _udtTypes.TryGetValue(value.GetType(), out var s))
 							if (parameter is SqlParameter)
-#if NETSTANDARD1_6
-								((SqlParameter)parameter).TypeName = s;
-#else
 								((SqlParameter)parameter).UdtTypeName = s;
-#endif
 					}
 
 					break;
@@ -329,6 +321,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.UInt32        : parameter.DbType = DbType.Int64;   break;
 				case DataType.UInt64        : parameter.DbType = DbType.Decimal; break;
 				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal; break;
+				case DataType.DateTime      :
 				case DataType.DateTime2     :
 					parameter.DbType =
 						Version == SqlServerVersion.v2000 || Version == SqlServerVersion.v2005 ?
@@ -403,29 +396,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				table,
 				options,
 				source);
-		}
-
-		#endregion
-
-		#region Merge
-
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
-		{
-			return new SqlServerMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-		}
-
-		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-		{
-			return new SqlServerMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
-		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new SqlServerMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		#endregion

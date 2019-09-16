@@ -1,7 +1,8 @@
+#nullable disable
 using System;
 using System.Linq;
 using System.Collections.Generic;
-
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 
 namespace LinqToDB.SqlQuery
@@ -53,7 +54,7 @@ namespace LinqToDB.SqlQuery
 		public static SqlJoinedTable FindJoin(this SelectQuery query,
 			Func<SqlJoinedTable, bool> match)
 		{
-			return QueryVisitor.Find(query, e =>
+			return new QueryVisitor().Find(query, e =>
 			{
 				if (e.ElementType == QueryElementType.JoinedTable)
 				{
@@ -223,7 +224,7 @@ namespace LinqToDB.SqlQuery
 
 							if (selectQuery.Select.SkipValue == null && selectQuery.Select.TakeValue == null)
 							{
-								// we can sefely remove DISTINCT
+								// we can safely remove DISTINCT
 								selectQuery.Select.IsDistinct = false;
 								selectQuery.Select.Columns.Clear();
 								return true;
@@ -253,7 +254,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
- 		static SqlField GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
+		static SqlField GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
 		{
 			switch (expression)
 			{
@@ -276,12 +277,42 @@ namespace LinqToDB.SqlQuery
 				   table1              != null
 				&& table2              != null
 				&& table1.ObjectType   == table2.ObjectType
+				&& table1.Server       == table2.Server
 				&& table1.Database     == table2.Database
 				&& table1.Schema       == table2.Schema
 				&& table1.Name         == table2.Name
 				&& table1.PhysicalName == table2.PhysicalName;
 
 			return result;
+		}
+
+		public static string TransformExpressionIndexes([NotNull] string expression, [NotNull] Func<int, int> transformFunc)
+		{
+			if (expression    == null) throw new ArgumentNullException(nameof(expression));
+			if (transformFunc == null) throw new ArgumentNullException(nameof(transformFunc));
+
+			const string pattern = @"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)";
+
+			var str = Regex.Replace(expression, pattern, match =>
+			{
+				string open   = match.Groups["open"].Value;
+				string key    = match.Groups["key"].Value;
+
+				//string close  = match.Groups["close"].Value;
+				//string format = match.Groups["format"].Value;
+
+				if (open.Length % 2 == 0)
+					return match.Value;
+
+				if (!int.TryParse(key, out var idx))
+					return match.Value;
+
+				var newIndex = transformFunc(idx);
+
+				return $"{{{newIndex}}}";
+			});
+
+			return str;
 		}
 
 	}

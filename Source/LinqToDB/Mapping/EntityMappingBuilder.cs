@@ -24,7 +24,7 @@ namespace LinqToDB.Mapping
 		/// <param name="builder">Fluent mapping builder.</param>
 		/// <param name="configuration">Optional mapping schema configuration name, for which this entity builder should be taken into account.
 		/// <see cref="ProviderName"/> for standard configuration names.</param>
-		public EntityMappingBuilder([JetBrains.Annotations.NotNull] FluentMappingBuilder builder, string configuration)
+		public EntityMappingBuilder([JetBrains.Annotations.NotNull] FluentMappingBuilder builder, string? configuration)
 		{
 			_builder = builder ?? throw new ArgumentNullException(nameof(builder));
 
@@ -40,7 +40,7 @@ namespace LinqToDB.Mapping
 		/// Gets mapping schema configuration name, for which this entity builder should be taken into account.
 		/// <see cref="ProviderName"/> for standard configuration names.
 		/// </summary>
-		public string Configuration { get; }
+		public string? Configuration { get; }
 
 		#endregion
 
@@ -88,7 +88,7 @@ namespace LinqToDB.Mapping
 		/// <typeparam name="TA">Attribute type.</typeparam>
 		/// <param name="configGetter">Function to extract configuration name from attribute instance.</param>
 		/// <returns>Returns list of attributes.</returns>
-		public TA[] GetAttributes<TA>(Func<TA,string> configGetter)
+		public TA[] GetAttributes<TA>(Func<TA,string?> configGetter)
 			where TA : Attribute
 		{
 			var attrs = GetAttributes<TA>();
@@ -105,7 +105,7 @@ namespace LinqToDB.Mapping
 		/// <param name="type">Entity type.</param>
 		/// <param name="configGetter">Function to extract configuration name from attribute instance.</param>
 		/// <returns>Returns list of attributes.</returns>
-		public TA[] GetAttributes<TA>(Type type, Func<TA,string> configGetter)
+		public TA[] GetAttributes<TA>(Type type, Func<TA,string?> configGetter)
 			where TA : Attribute
 		{
 			var attrs = GetAttributes<TA>(type);
@@ -122,7 +122,7 @@ namespace LinqToDB.Mapping
 		/// <param name="memberInfo">Member info object.</param>
 		/// <param name="configGetter">Function to extract configuration name from attribute instance.</param>
 		/// <returns>Returns list of attributes.</returns>
-		public TA[] GetAttributes<TA>(MemberInfo memberInfo, Func<TA,string> configGetter)
+		public TA[] GetAttributes<TA>(MemberInfo memberInfo, Func<TA,string?> configGetter)
 			where TA : Attribute
 		{
 			var attrs = GetAttributes<TA>(memberInfo);
@@ -192,7 +192,7 @@ namespace LinqToDB.Mapping
 		/// <param name="configuration">Optional mapping schema configuration name, for which this entity builder should be taken into account.
 		/// <see cref="ProviderName"/> for standard configuration names.</param>
 		/// <returns>Returns new fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<TE> Entity<TE>(string configuration = null)
+		public EntityMappingBuilder<TE> Entity<TE>(string? configuration = null)
 		{
 			return _builder.Entity<TE>(configuration);
 		}
@@ -202,7 +202,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="func">Column mapping property or field getter expression.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
-		public PropertyMappingBuilder<T> Property(Expression<Func<T,object>> func)
+		public PropertyMappingBuilder<T> Property(Expression<Func<T,object?>> func)
 		{
 			return (new PropertyMappingBuilder<T>(this, func)).IsColumn();
 		}
@@ -212,7 +212,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="func">Column mapping property or field getter expression.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
-		public PropertyMappingBuilder<T> Member(Expression<Func<T,object>> func)
+		public PropertyMappingBuilder<T> Member(Expression<Func<T,object?>> func)
 		{
 			return new PropertyMappingBuilder<T>(this, func);
 		}
@@ -241,7 +241,7 @@ namespace LinqToDB.Mapping
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
-			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
+			var objProp = Expression.Lambda<Func<T, object?>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
 
 			return Property( objProp ).HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull } );
 		}
@@ -270,7 +270,7 @@ namespace LinqToDB.Mapping
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
-			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
+			var objProp = Expression.Lambda<Func<T, object?>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
 
 			return Property( objProp ).HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull } );
 		}
@@ -291,7 +291,7 @@ namespace LinqToDB.Mapping
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
+			var objProp = Expression.Lambda<Func<T, object?>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
 
 			return Property( objProp ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull, Relationship = Relationship.OneToMany } );
 		}
@@ -312,7 +312,7 @@ namespace LinqToDB.Mapping
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
+			var objProp = Expression.Lambda<Func<T, object?>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
 
 			return Property( objProp ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull } );
 		}
@@ -333,7 +333,7 @@ namespace LinqToDB.Mapping
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
 
-			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
+			var objProp = Expression.Lambda<Func<T, object?>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
 
 			return Property( objProp ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull, Relationship = Relationship.OneToMany } );
 		}
@@ -354,7 +354,7 @@ namespace LinqToDB.Mapping
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
 
-			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
+			var objProp = Expression.Lambda<Func<T, object?>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
 
 			return Property( objProp ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull } );
 		}
@@ -367,7 +367,7 @@ namespace LinqToDB.Mapping
 		/// When multiple fields specified by getter expression, fields will be ordered from first menthioned
 		/// field to last one starting from provided order with step <c>1</c>.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<T> HasPrimaryKey(Expression<Func<T,object>> func, int order = -1)
+		public EntityMappingBuilder<T> HasPrimaryKey(Expression<Func<T,object?>> func, int order = -1)
 		{
 			var n = 0;
 
@@ -384,7 +384,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="func">Identity field getter expression.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<T> HasIdentity(Expression<Func<T,object>> func)
+		public EntityMappingBuilder<T> HasIdentity(Expression<Func<T,object?>> func)
 		{
 			return SetAttribute(
 				func,
@@ -401,7 +401,7 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Column member getter expression.</param>
 		/// <param name="order">Unused.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<T> HasColumn(Expression<Func<T,object>> func, int order = -1)
+		public EntityMappingBuilder<T> HasColumn(Expression<Func<T,object?>> func, int order = -1)
 		{
 			return SetAttribute(
 				func,
@@ -418,7 +418,7 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Member getter expression.</param>
 		/// <param name="order">Unused.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<T> Ignore(Expression<Func<T,object>> func, int order = -1)
+		public EntityMappingBuilder<T> Ignore(Expression<Func<T,object?>> func, int order = -1)
 		{
 			return SetAttribute(
 				func,
@@ -434,7 +434,7 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Column member getter expression.</param>
 		/// <param name="values">Values that should be skipped during insert.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<T> HasSkipValuesOnInsert(Expression<Func<T, object>> func, params object[] values)
+		public EntityMappingBuilder<T> HasSkipValuesOnInsert(Expression<Func<T, object?>> func, params object?[] values)
 		{
 			return SetAttribute(func,
 			                    true,
@@ -449,7 +449,7 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Column member getter expression.</param>
 		/// <param name="values">Values that should be skipped during update.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<T> HasSkipValuesOnUpdate(Expression<Func<T, object>> func, params object[] values)
+		public EntityMappingBuilder<T> HasSkipValuesOnUpdate(Expression<Func<T, object?>> func, params object?[] values)
 		{
 			return SetAttribute(func,
 			                    true,
@@ -510,6 +510,17 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Sets linked server name.
+		/// See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
+		/// <param name="serverName">Linked server name.</param>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<T> HasServerName(string serverName)
+		{
+			return SetTable(a => a.Server = serverName);
+		}
+
+		/// <summary>
 		/// Adds inheritance mapping for specified discriminator value.
 		/// </summary>
 		/// <typeparam name="TS">Discriminator value type.</typeparam>
@@ -521,7 +532,7 @@ namespace LinqToDB.Mapping
 		public EntityMappingBuilder<T> Inheritance<TS>(Expression<Func<T, TS>> key, TS value, Type type, bool isDefault = false)
 		{
 			HasAttribute(new InheritanceMappingAttribute {Code = value, Type = type, IsDefault = isDefault});
-			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(key.Body, typeof(object)), key.Parameters);
+			var objProp = Expression.Lambda<Func<T, object?>>(Expression.Convert(key.Body, typeof(object)), key.Parameters);
 			Property(objProp).IsDiscriminator();
 
 			return this;
@@ -533,7 +544,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="func">Column mapping property or field getter expression.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
-		public EntityMappingBuilder<T> DynamicColumnsStore(Expression<Func<T, object>> func)
+		public EntityMappingBuilder<T> DynamicColumnsStore(Expression<Func<T, object?>> func)
 		{
 			Member(func)
 				.HasAttribute(new DynamicColumnsStoreAttribute() { Configuration = Configuration });
@@ -576,15 +587,16 @@ namespace LinqToDB.Mapping
 					Name                      = a.Name,
 					Schema                    = a.Schema,
 					Database                  = a.Database,
+					Server                    = a.Server,
 					IsColumnAttributeRequired = a.IsColumnAttributeRequired,
 				});
 		}
 
 		EntityMappingBuilder<T> SetAttribute<TA>(
-			Func<TA>        getNew,
-			Action<TA>      modifyExisting,
-			Func<TA,string> configGetter,
-			Func<TA,TA>     overrideAttribute)
+			Func<TA>         getNew,
+			Action<TA>       modifyExisting,
+			Func<TA,string?> configGetter,
+			Func<TA,TA>      overrideAttribute)
 			where TA : Attribute
 		{
 			var attrs = GetAttributes(typeof(T), configGetter);
@@ -612,9 +624,9 @@ namespace LinqToDB.Mapping
 		}
 
 		internal EntityMappingBuilder<T> SetAttribute<TA>(
-			Func<TA> getNew,
-			Action<TA> modifyExisting,
-			Func<TA, string> configGetter,
+			Func<TA>                  getNew,
+			Action<TA>                modifyExisting,
+			Func<TA, string?>         configGetter,
 			Func<IEnumerable<TA>, TA> existingGetter)
 			where TA : Attribute
 		{
@@ -633,13 +645,13 @@ namespace LinqToDB.Mapping
 		}
 
 		internal EntityMappingBuilder<T> SetAttribute<TA>(
-			Expression<Func<T,object>> func,
-			bool                       processNewExpression,
-			Func<bool,TA>              getNew,
-			Action<bool,TA>            modifyExisting,
-			Func<TA,string>            configGetter,
-			Func<TA,TA>                overrideAttribute = null,
-			Func<IEnumerable<TA>, TA>  existingGetter    = null
+			Expression<Func<T,object?>> func,
+			bool                        processNewExpression,
+			Func<bool,TA>               getNew,
+			Action<bool,TA>             modifyExisting,
+			Func<TA,string?>            configGetter,
+			Func<TA,TA>?                overrideAttribute = null,
+			Func<IEnumerable<TA>, TA>?  existingGetter    = null
 			)
 			where TA : Attribute
 		{
@@ -655,11 +667,11 @@ namespace LinqToDB.Mapping
 			{
 				var memberInfo = MemberHelper.GetMemberInfo(e);
 
-				if (e is MemberExpression && memberInfo.ReflectedTypeEx() != typeof(T)) memberInfo = typeof(T).GetMemberEx(memberInfo);
+				if (e is MemberExpression && memberInfo.ReflectedType != typeof(T)) memberInfo = typeof(T).GetMemberEx(memberInfo)!;
 
 				if (memberInfo == null) throw new ArgumentException($"'{e}' cant be converted to a class member.");
 
-				var attr = existingGetter(GetAttributes(memberInfo, configGetter));
+				var attr = existingGetter!(GetAttributes(memberInfo, configGetter));
 
 				if (attr == null)
 				{

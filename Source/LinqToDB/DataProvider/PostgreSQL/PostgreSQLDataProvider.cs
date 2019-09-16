@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -118,7 +119,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			var npgSql = connectionType.AssemblyEx();
+			var npgSql = connectionType.Assembly;
 
 			// NpgsqlInterval was renamed to NpgsqlTimeSpan
 			NpgsqlIntervalType   = npgSql.GetType("NpgsqlTypes.NpgsqlInterval"   , false);
@@ -265,7 +266,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					MappingSchema.SetConvertExpression(from, NpgsqlInetType,
 						Expression.Lambda(
 							Expression.New(
-								NpgsqlInetType.GetConstructorEx(new[] { typeof(IPAddress), typeof(int) }),
+								NpgsqlInetType.GetConstructor(new[] { typeof(IPAddress), typeof(int) }),
 								Expression.Field(p, "Item1"),
 								Expression.Field(p, "Item2")),
 							p));
@@ -333,7 +334,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (NpgsqlDateTimeType != null)
 			{
 				var p = Expression.Parameter(NpgsqlDateTimeType, "p");
-				var pi = p.Type.GetPropertyEx("DateTime");
+				var pi = p.Type.GetProperty("DateTime");
 
 				Expression expr;
 
@@ -394,7 +395,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (type == null)
 				return;
 
-			if (!type.IsValueTypeEx())
+			if (!type.IsValueType)
 				MappingSchema.AddScalarType(type, null, true, DataType.Udt);
 			else
 			{
@@ -433,14 +434,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD1_6
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new PostgreSQLSchemaProvider(this);
 		}
-#endif
 
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETCOREAPP2_0
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
 			return true;

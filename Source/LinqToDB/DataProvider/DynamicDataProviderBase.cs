@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
@@ -41,7 +42,7 @@ namespace LinqToDB.DataProvider
 		private         Type _dataReaderType;
 
 		// DbProviderFactories supported added to netcoreapp2.1/netstandard2.1, but we don't build those targets yet
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETCOREAPP2_0
 		public override Type DataReaderType => _dataReaderType ?? (_dataReaderType = Type.GetType(DataReaderTypeName, true));
 
 		protected internal virtual Type GetConnectionType()
@@ -132,7 +133,7 @@ namespace LinqToDB.DataProvider
 		{
 			var p = Expression.Parameter(typeof(string));
 			var l = Expression.Lambda<Func<string,IDbConnection>>(
-				Expression.New(connectionType.GetConstructorEx(new[] { typeof(string) }), p),
+				Expression.New(connectionType.GetConstructor(new[] { typeof(string) }), p),
 				p);
 
 			return l;
@@ -144,7 +145,7 @@ namespace LinqToDB.DataProvider
 			Type connectionType,
 			string parameterTypeName, string propertyName, Type dbType)
 		{
-			var pType = connectionType.AssemblyEx().GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+			var pType = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
 
 			var p = Expression.Parameter(typeof(IDbDataParameter));
 			var v = Expression.Parameter(typeof(TResult));
@@ -163,7 +164,7 @@ namespace LinqToDB.DataProvider
 			Type connectionType,
 			string parameterTypeName, string propertyName, Type dbType, string valueName)
 		{
-			var pType = connectionType.AssemblyEx().GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+			var pType = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
 			var value = Enum.Parse(dbType, valueName);
 
 			var p = Expression.Parameter(typeof(IDbDataParameter));
@@ -182,7 +183,7 @@ namespace LinqToDB.DataProvider
 			Type connectionType,
 			string parameterTypeName, string propertyName, string dbTypeName, string valueName)
 		{
-			var dbType = connectionType.AssemblyEx().GetType(dbTypeName.Contains(".") ? dbTypeName : connectionType.Namespace + "." + dbTypeName, true);
+			var dbType = connectionType.Assembly.GetType(dbTypeName.Contains(".") ? dbTypeName : connectionType.Namespace + "." + dbTypeName, true);
 			return GetSetParameter(connectionType, parameterTypeName, propertyName, dbType, valueName);
 		}
 
@@ -191,8 +192,8 @@ namespace LinqToDB.DataProvider
 			//   ((FbParameter)parameter).   FbDbType =           FbDbType.          TimeStamp;
 			string parameterTypeName, string propertyName, string dbTypeName, string valueName)
 		{
-			var pType  = connectionType.AssemblyEx().GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
-			var dbType = connectionType.AssemblyEx().GetType(dbTypeName.       Contains(".") ? dbTypeName        : connectionType.Namespace + "." + dbTypeName,        true);
+			var pType  = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+			var dbType = connectionType.Assembly.GetType(dbTypeName.       Contains(".") ? dbTypeName        : connectionType.Namespace + "." + dbTypeName,        true);
 			var value  = Enum.Parse(dbType, valueName);
 
 			var p = Expression.Parameter(typeof(IDbDataParameter));
@@ -226,7 +227,7 @@ namespace LinqToDB.DataProvider
 			}
 			else
 			{
-				var methodInfo = DataReaderType.GetMethodsEx().FirstOrDefault(m => m.Name == methodName);
+				var methodInfo = DataReaderType.GetMethods().FirstOrDefault(m => m.Name == methodName);
 
 				if (methodInfo == null)
 					return false;
@@ -298,7 +299,7 @@ namespace LinqToDB.DataProvider
 			}
 			else
 			{
-				var methodInfo = DataReaderType.GetMethodsEx().FirstOrDefault(m => m.Name == methodName);
+				var methodInfo = DataReaderType.GetMethods().FirstOrDefault(m => m.Name == methodName);
 
 				if (methodInfo == null)
 					return false;

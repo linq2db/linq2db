@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Data;
@@ -41,7 +42,7 @@ namespace LinqToDB.DataProvider.SapHana
 			if (connection == null )
 				return MultipleRowsCopy(table, options, source);
 
-			if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOfEx(_connectionType)))
+			if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOf(_connectionType)))
 				return MultipleRowsCopy(table, options, source);
 
 			var transaction = dataConnection.Transaction;
@@ -52,10 +53,10 @@ namespace LinqToDB.DataProvider.SapHana
 			if (_bulkCopyCreator == null)
 			{
 				var clientNamespace    = _dataProvider.ConnectionNamespace;
-				var bulkCopyType       = _connectionType.AssemblyEx().GetType(clientNamespace + ".HanaBulkCopy", false);
-				_bulkCopyOptionType    = _connectionType.AssemblyEx().GetType(clientNamespace + ".HanaBulkCopyOptions", false);
-				var columnMappingType  = _connectionType.AssemblyEx().GetType(clientNamespace + ".HanaBulkCopyColumnMapping", false);
-				var transactionType    = _connectionType.AssemblyEx().GetType(clientNamespace + ".HanaTransaction", false);
+				var bulkCopyType       = _connectionType.Assembly.GetType(clientNamespace + ".HanaBulkCopy", false);
+				_bulkCopyOptionType    = _connectionType.Assembly.GetType(clientNamespace + ".HanaBulkCopyOptions", false);
+				var columnMappingType  = _connectionType.Assembly.GetType(clientNamespace + ".HanaBulkCopyColumnMapping", false);
+				var transactionType    = _connectionType.Assembly.GetType(clientNamespace + ".HanaTransaction", false);
 
 				if (bulkCopyType != null)
 				{
@@ -138,7 +139,7 @@ namespace LinqToDB.DataProvider.SapHana
 			var p1   = Expression.Parameter(typeof(IDbConnection),  "pc");
 			var p2   = Expression.Parameter(typeof(int),            "po");
 			var p3   = Expression.Parameter(typeof(IDbTransaction), "pt");
-			var ctor = bulkCopyType.GetConstructorEx(new[]
+			var ctor = bulkCopyType.GetConstructor(new[]
 			{
 				connectionType,
 				bulkCopyOptionType,

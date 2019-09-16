@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -7,6 +8,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Common;
 	using Data;
 	using Extensions;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 
@@ -49,7 +51,7 @@ namespace LinqToDB.DataProvider.SapHana
 		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.HanaConnection, {SapHanaTools.AssemblyName}";
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.HanaDataReader, {SapHanaTools.AssemblyName}";
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_0
 		public override string DbFactoryProviderName => "Sap.Data.Hana";
 #endif
 
@@ -69,12 +71,10 @@ namespace LinqToDB.DataProvider.SapHana
 			_setVarBinary = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "VarBinary");
 		}
 
-#if !NETSTANDARD1_6
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new SapHanaSchemaProvider();
 		}
-#endif
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
@@ -149,13 +149,6 @@ namespace LinqToDB.DataProvider.SapHana
 				table,
 				options,
 				source);
-		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new SapHanaMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)

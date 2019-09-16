@@ -47,9 +47,9 @@ namespace LinqToDB
 			}
 
 			public string         Expression       { get; set; }
-			public int[]          ArgIndices       { get; set; }
+			public int[]?         ArgIndices       { get; set; }
 			public int            Precedence       { get; set; }
-			public string         Configuration    { get; set; }
+			public string?        Configuration    { get; set; }
 			public bool           ServerSideOnly   { get; set; }
 			public bool           PreferServerSide { get; set; }
 			public bool           InlineParameters { get; set; }
@@ -96,8 +96,8 @@ namespace LinqToDB
 			{
 				if (member is MethodInfo method)
 				{
-					if (method.DeclaringType.IsGenericTypeEx())
-						args = args.Concat(method.DeclaringType.GetGenericArgumentsEx().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
+					if (method.DeclaringType.IsGenericType)
+						args = args.Concat(method.DeclaringType.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
 
 					if (method.IsGenericMethod)
 						args = args.Concat(method.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
@@ -127,7 +127,7 @@ namespace LinqToDB
 				};
 			}
 
-			public virtual ISqlExpression GetExpression(IDataContext dataContext, SelectQuery query,
+			public virtual ISqlExpression? GetExpression(IDataContext dataContext, SelectQuery query,
 				Expression expression, Func<Expression, ISqlExpression> converter)
 			{
 				return null;

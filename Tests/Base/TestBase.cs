@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -6,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 using System.ServiceModel;
 using System.ServiceModel.Description;
 #endif
@@ -20,7 +21,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 using LinqToDB.ServiceModel;
 #endif
 
@@ -36,21 +37,9 @@ namespace Tests
 	{
 		static TestBase()
 		{
-			Console.WriteLine("Tests started in {0}...",
-#if NETSTANDARD1_6
-				System.IO.Directory.GetCurrentDirectory()
-#else
-				Environment.CurrentDirectory
-#endif
-				);
+			Console.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
 
-			Console.WriteLine("CLR Version: {0}...",
-#if NETSTANDARD1_6
-				System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription
-#else
-				Environment.Version
-#endif
-				);
+			Console.WriteLine("CLR Version: {0}...", Environment.Version);
 
 			var traceCount = 0;
 
@@ -71,9 +60,9 @@ namespace Tests
 //			Configuration.AvoidSpecificDataProviderAPI = true;
 			Configuration.Linq.TraceMapperExpression   = false;
 //			Configuration.Linq.GenerateExpressionTest  = true;
-			var assemblyPath = typeof(TestBase).AssemblyEx().GetPath();
+			var assemblyPath = typeof(TestBase).Assembly.GetPath();
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
@@ -82,11 +71,7 @@ namespace Tests
 			{ }
 #endif
 
-#if NETSTANDARD1_6
-			System.IO.Directory.SetCurrentDirectory(assemblyPath);
-#else
 			Environment.CurrentDirectory = assemblyPath;
-#endif
 
 			var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json");
 			var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json");
@@ -95,32 +80,20 @@ namespace Tests
 			var userDataProvidersJson =
 				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
-#if NETSTANDARD1_6
-			var configName = "CORE1";
-#elif NETSTANDARD2_0
+#if NETCOREAPP2_0
 			var configName = "CORE2";
 #elif NET46
-			var configName = "NET45";
-#elif NETCOREAPP2_0
-			var configName = "CORE1";
-#elif NETCOREAPP1_0
-			var configName = "CORE2";
+			var configName = "NET46";
 #else
 			var configName = "";
 #error Unknown framework
 #endif
 
-#if APPVEYOR
-#warning "AppVeyor configuration detected."
+#if AZURE
+#warning "Azure configuration detected."
 
-			Console.WriteLine("AppVeyor configuration detected.");
-			configName += ".AppVeyor";
-#endif
-#if TRAVIS
-#warning "Travis configuration detected."
-
-			Console.WriteLine("Travis configuration detected.");
-			configName += ".Travis";
+			Console.WriteLine("Azure configuration detected.");
+			configName += ".Azure";
 #endif
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
 			var databasePath = Path.GetFullPath(Path.Combine("Database"));
@@ -155,7 +128,7 @@ namespace Tests
 
 			Console.WriteLine("Connection strings:");
 
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETCOREAPP2_0
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -186,17 +159,17 @@ namespace Tests
 			foreach (var userProvider in UserProviders)
 				Console.WriteLine($"\t{userProvider}");
 
-			var defaultConfiguration = testSettings.DefaultConfiguration;
+			DefaultProvider = testSettings.DefaultConfiguration;
 
-			if (!string.IsNullOrEmpty(defaultConfiguration))
+			if (!string.IsNullOrEmpty(DefaultProvider))
 			{
-				DataConnection.DefaultConfiguration       = defaultConfiguration;
-#if NETSTANDARD1_6 || NETSTANDARD2_0
-				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
+				DataConnection.DefaultConfiguration       = DefaultProvider;
+#if NETCOREAPP2_0
+				TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
 #endif
 			}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -230,20 +203,24 @@ namespace Tests
 			return fileName;
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
+#if !NETCOREAPP2_0
 		const int IP = 22654;
 		static bool _isHostOpen;
+		static LinqService _service;
 #endif
 
-		static void OpenHost()
+		static void OpenHost(MappingSchema ms)
 		{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
+#if !NETCOREAPP2_0
 			if (_isHostOpen)
+			{
+				_service.MappingSchema = ms;
 				return;
+			}
 
 			_isHostOpen = true;
 
-			var host = new ServiceHost(new LinqService { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
+			var host = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
 
 			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
 			host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
@@ -274,11 +251,12 @@ namespace Tests
 		}
 
 		public static readonly HashSet<string> UserProviders;
+		public static readonly string          DefaultProvider;
 		public static readonly HashSet<string> SkipCategories;
 
 		public static readonly List<string> Providers = new List<string>
 		{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Informix,
@@ -286,12 +264,10 @@ namespace Tests
 			ProviderName.SapHana,
 			ProviderName.OracleNative,
 			ProviderName.SqlCe,
-			ProviderName.SQLiteClassic,
 #endif
-#if !NETSTANDARD1_6
+			ProviderName.SQLiteClassic,
 			ProviderName.SybaseManaged,
 			ProviderName.OracleManaged,
-#endif
 			ProviderName.Firebird,
 			TestProvName.Firebird3,
 			ProviderName.SqlServer2008,
@@ -307,10 +283,9 @@ namespace Tests
 			ProviderName.PostgreSQL95,
 			TestProvName.PostgreSQL10,
 			TestProvName.PostgreSQL11,
-			TestProvName.PostgreSQLLatest,
 			ProviderName.MySql,
 			ProviderName.MySqlConnector,
-			TestProvName.MySql57,
+			TestProvName.MySql55,
 			TestProvName.MariaDB,
 			ProviderName.SQLiteMS
 		};
@@ -319,8 +294,8 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
-				OpenHost();
+#if !NETCOREAPP2_0
+				OpenHost(ms);
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 				var dx  = new TestServiceModelDataContext(IP) { Configuration = str };
@@ -1034,18 +1009,24 @@ namespace Tests
 
 		protected void CompareSql(string result, string expected)
 		{
-			var ss = expected.Trim('\r', '\n').Split('\n');
+			var ss = expected.Replace("\r", "").Trim('\r', '\n').Split('\n');
 
 			while (ss.All(_ => _.Length > 0 && _[0] == '\t'))
 				for (var i = 0; i < ss.Length; i++)
 					ss[i] = ss[i].Substring(1);
 
-			Assert.AreEqual(string.Join("\n", ss), result.Trim('\r', '\n'));
+			Assert.AreEqual(string.Join("\n", ss), result.Replace("\r", "").Trim('\r', '\n'));
 		}
 
 		protected List<LinqDataTypes> GetTypes(string context)
 		{
 			return DataCache<LinqDataTypes>.Get(context);
+		}
+
+		protected string GetProviderName(string context, out bool isLinqService)
+		{
+			isLinqService = context.EndsWith(".LinqService");
+			return context.Replace(".LinqService", "");
 		}
 	}
 

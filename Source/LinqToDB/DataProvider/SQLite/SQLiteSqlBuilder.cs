@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -110,12 +111,12 @@ namespace LinqToDB.DataProvider.SQLite
 			return value;
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
-				case DataType.Int32 : StringBuilder.Append("INTEGER");               break;
-				default             : base.BuildDataType(type, createDbType);        break;
+				case DataType.Int32 : StringBuilder.Append("INTEGER");                      break;
+				default             : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 			}
 		}
 
@@ -171,7 +172,7 @@ namespace LinqToDB.DataProvider.SQLite
 			base.BuildPredicate(predicate);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string server, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 
@@ -192,6 +193,11 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			BuildDropTableStatementIfExists(dropTable);
+		}
+
+		protected override void BuildMergeStatement(SqlMergeStatement merge)
+		{
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 	}
 }

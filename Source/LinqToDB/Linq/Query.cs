@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -233,8 +234,8 @@ namespace LinqToDB.Linq
 
 				// move lock as far as possible, because this method called a lot
 				if (!query.DoNotCache)
-				lock (_sync)
-				{
+					lock (_sync)
+					{
 						if (oldVersion == _cacheVersion || FindQuery(dataContext, expr) == null)
 						{
 							if (_orderedCache.Count == CacheSize)

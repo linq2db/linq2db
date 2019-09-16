@@ -1,7 +1,4 @@
-﻿// mono 5.0.1.1-0xamarin5+debian7b1 crashes on those tests
-// TODO: try to uncomment, when newer version used on Travis
-#if !MONO
-using System;
+﻿using System;
 using System.Collections;
 using System.Linq;
 using System.Linq.Expressions;
@@ -221,12 +218,10 @@ namespace Tests.UserTests
 
 		private void TestIt(string context, string caseName, int threadCount, Action<ITestDataContext>[] actions, CacheMode mode)
 		{
-#if !NETSTANDARD1_6
 			ThreadPool.GetMaxThreads(out var workerThreads, out var iocpThreads);
 
 			if (workerThreads < threadCount)
 				ThreadPool.SetMaxThreads(threadCount, iocpThreads);
-#endif
 
 			var start = DateTimeOffset.Now;
 
@@ -343,4 +338,3 @@ namespace Tests.UserTests
 		}
 	}
 }
-#endif

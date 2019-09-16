@@ -1,4 +1,4 @@
-﻿#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+﻿#if !NETCOREAPP2_0
 using System;
 
 using LinqToDB;
@@ -20,7 +20,7 @@ namespace Tests.UserTests
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 
 				var schema = schemaProvider.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-
+				
 				Assert.IsNotNull(schema);
 			}
 		}

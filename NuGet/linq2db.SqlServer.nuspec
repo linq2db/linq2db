@@ -11,15 +11,15 @@
 		</summary>
 		<tags>linq linq2db SqlServer LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db" version="2.6.0"/>
+			<dependency id="linq2db" version="3.0.0"/>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\Microsoft.SqlServer.Types.dll"  target="tools" />
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"                target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\Microsoft.SqlServer.Types.dll"     target="tools" />
+		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                target="tools" />
 		
 		<file src="SqlServer\linq2db.SqlServer.props"                               target="build" />
 		

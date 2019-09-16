@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Globalization;
 
 namespace LinqToDB
@@ -32,7 +33,7 @@ namespace LinqToDB
 			/// Primitive (each 7 days counted as week) numbering schema: DB2, Oracle databases;
 			/// SQLite numbering logic cannot be classified by human being.
 			/// </summary>
-			Week        =  5,
+			Week =  5,
 			WeekDay     =  6,
 			Hour        =  7,
 			Minute      =  8,
@@ -261,14 +262,14 @@ namespace LinqToDB
 							var param = builder.GetExpression("date");
 							builder.ResultExpression = builder.Inc(
 								builder.Sub<int>(
-									new SqlFunction(null, "Mdy",
-										new SqlFunction(null, "Month", param),
-										new SqlFunction(null, "Day", param),
-										new SqlFunction(null, "Year", param)),
-									new SqlFunction(null, "Mdy",
+									new SqlFunction(typeof(DateTime?), "Mdy",
+										new SqlFunction(typeof(int?), "Month", param),
+										new SqlFunction(typeof(int?), "Day",   param),
+										new SqlFunction(typeof(int?), "Year",  param)),
+									new SqlFunction(typeof(DateTime?), "Mdy",
 										new SqlValue(1),
 										new SqlValue(1),
-										new SqlFunction(null, "Year", param)))
+										new SqlFunction(typeof(int?), "Year", param)))
 							);
 							return;
 						}
@@ -439,7 +440,7 @@ namespace LinqToDB
 				var partStr = DatePartBuilder.DatePartToStr(part);
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
-				builder.ResultExpression = new SqlFunction(typeof(int), builder.Expression,
+				builder.ResultExpression = new SqlFunction(typeof(DateTime?), builder.Expression,
 					new SqlExpression(partStr, Precedence.Primary), number, date);
 			}
 		}
@@ -718,7 +719,7 @@ namespace LinqToDB
 				{
 					case Sql.DateParts.Quarter   :
 						part   = DateParts.Month;
-						number = builder.Mul(number, 3);
+						number  = builder.Mul(number, 3);
 						break;
 					case Sql.DateParts.DayOfYear :
 					case Sql.DateParts.WeekDay   :

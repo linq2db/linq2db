@@ -30,7 +30,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <returns></returns>
 		[Sql.Expression("*", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Primary)]
-		public static object[] AllColumns()
+		public static object?[] AllColumns()
 		{
 			throw new LinqException("'AllColumns' is only server-side method.");
 		}
@@ -424,15 +424,15 @@ namespace LinqToDB
 		[Sql.Function  (PN.SQLite,   "Substr",                          PreferServerSide = true)]
 		[Sql.Expression(PN.Firebird, "Substring({0} from {1} for {2})", PreferServerSide = true)]
 		[Sql.Function  (PN.SapHana,  "Substring",                       PreferServerSide = true)]
-		public static string Substring(string str, int? startIndex, int? length)
+		public static string? Substring(string? str, int? startIndex, int? length)
 		{
 			return str == null || startIndex == null || length == null ? null : str.Substring(startIndex.Value - 1, length.Value);
 		}
 
 		[Sql.Function(ServerSideOnly = true)]
-		public static bool Like(string matchExpression, string pattern)
+		public static bool Like(string? matchExpression, string? pattern)
 		{
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETCOREAPP2_0
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null &&
@@ -441,9 +441,9 @@ namespace LinqToDB
 		}
 
 		[Sql.Function(ServerSideOnly = true)]
-		public static bool Like(string matchExpression, string pattern, char? escapeCharacter)
+		public static bool Like(string? matchExpression, string? pattern, char? escapeCharacter)
 		{
-#if NETSTANDARD1_6 || NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETCOREAPP2_0
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null && escapeCharacter != null &&
@@ -457,7 +457,7 @@ namespace LinqToDB
 		[Sql.Function(PN.MySql,    "Locate")]
 		[Sql.Function(PN.SapHana,  "Locate", 1, 0)]
 		[Sql.Function(PN.Firebird, "Position")]
-		public static int? CharIndex(string value, string str)
+		public static int? CharIndex(string? value, string? str)
 		{
 			if (str == null || value == null)
 				return null;
@@ -470,7 +470,7 @@ namespace LinqToDB
 		[Sql.Function  (PN.MySql,    "Locate")]
 		[Sql.Function  (PN.Firebird, "Position")]
 		[Sql.Expression(PN.SapHana,  "Locate(Substring({1},{2} + 1),{0}) + {2}")]
-		public static int? CharIndex(string value, string str, int? startLocation)
+		public static int? CharIndex(string? value, string? str, int? startLocation)
 		{
 			if (str == null || value == null || startLocation == null)
 				return null;
@@ -482,7 +482,7 @@ namespace LinqToDB
 		[Sql.Function(PN.DB2,     "Locate")]
 		[Sql.Function(PN.MySql,   "Locate")]
 		[Sql.Function(PN.SapHana, "Locate")]
-		public static int? CharIndex(char? value, string str)
+		public static int? CharIndex(char? value, string? str)
 		{
 			if (value == null || str == null)
 				return null;
@@ -494,7 +494,7 @@ namespace LinqToDB
 		[Sql.Function(PN.DB2,     "Locate")]
 		[Sql.Function(PN.MySql,   "Locate")]
 		[Sql.Function(PN.SapHana, "Locate")]
-		public static int? CharIndex(char? value, string str, int? startLocation)
+		public static int? CharIndex(char? value, string? str, int? startLocation)
 		{
 			if (str == null || value == null || startLocation == null)
 				return null;
@@ -503,7 +503,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Function]
-		public static string Reverse(string str)
+		public static string? Reverse(string? str)
 		{
 			if (string.IsNullOrEmpty(str))
 				return str;
@@ -515,14 +515,14 @@ namespace LinqToDB
 
 		[Sql.Function(                      PreferServerSide = true)]
 		[Sql.Function(PN.SQLite, "LeftStr", PreferServerSide = true)]
-		public static string Left(string str, int? length)
+		public static string? Left(string? str, int? length)
 		{
 			return length == null || str == null || str.Length < length? null: str.Substring(1, length.Value);
 		}
 
 		[Sql.Function(                       PreferServerSide = true)]
 		[Sql.Function(PN.SQLite, "RightStr", PreferServerSide = true)]
-		public static string Right(string str, int? length)
+		public static string? Right(string? str, int? length)
 		{
 			return length == null || str == null || str.Length < length?
 				null :
@@ -530,7 +530,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Function]
-		public static string Stuff(string str, int? startLocation, int? length, string value)
+		public static string? Stuff(string? str, int? startLocation, int? length, string? value)
 		{
 			return str == null || value == null || startLocation == null || length == null ?
 				null :
@@ -545,13 +545,13 @@ namespace LinqToDB
 
 		[Sql.Function]
 		[Sql.Expression(ProviderName.SapHana, "Lpad('',{0},' ')")]
-		public static string Space(int? length)
+		public static string? Space(int? length)
 		{
 			return length == null ? null : "".PadRight(length.Value);
 		}
 
 		[Sql.Function(Name = "LPad")]
-		public static string PadLeft(string str, int? totalWidth, char? paddingChar)
+		public static string? PadLeft(string? str, int? totalWidth, char? paddingChar)
 		{
 			return str == null || totalWidth == null || paddingChar == null ?
 				null :
@@ -559,7 +559,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Function(Name = "RPad")]
-		public static string PadRight(string str, int? totalWidth, char? paddingChar)
+		public static string? PadRight(string? str, int? totalWidth, char? paddingChar)
 		{
 			return str == null || totalWidth == null || paddingChar == null ?
 				null :
@@ -568,7 +568,7 @@ namespace LinqToDB
 
 		[Sql.Function]
 		[Sql.Function(PN.Sybase, "Str_Replace")]
-		public static string Replace(string str, string oldValue, string newValue)
+		public static string? Replace(string? str, string? oldValue, string? newValue)
 		{
 			return str == null || oldValue == null || newValue == null ?
 				null :
@@ -577,7 +577,7 @@ namespace LinqToDB
 
 		[Sql.Function]
 		[Sql.Function(PN.Sybase, "Str_Replace")]
-		public static string Replace(string str, char? oldValue, char? newValue)
+		public static string? Replace(string? str, char? oldValue, char? newValue)
 		{
 			return str == null || oldValue == null || newValue == null ?
 				null :
@@ -585,54 +585,54 @@ namespace LinqToDB
 		}
 
 		[Sql.Function]
-		public static string Trim(string str)
+		public static string? Trim(string? str)
 		{
 			return str?.Trim();
 		}
 
 		[Sql.Function("LTrim")]
-		public static string TrimLeft(string str)
+		public static string? TrimLeft(string? str)
 		{
 			return str?.TrimStart();
 		}
 
 		[Sql.Function("RTrim")]
-		public static string TrimRight(string str)
+		public static string? TrimRight(string? str)
 		{
 			return str?.TrimEnd();
 		}
 
 		[Sql.Function]
 		[Sql.Expression(PN.DB2, "Strip({0}, B, {1})")]
-		public static string Trim(string str, char? ch)
+		public static string? Trim(string? str, char? ch)
 		{
 			return str == null || ch == null ? null : str.Trim(ch.Value);
 		}
 
 		[Sql.Expression(PN.DB2, "Strip({0}, L, {1})")]
 		[Sql.Function  (        "LTrim")]
-		public static string TrimLeft(string str, char? ch)
+		public static string? TrimLeft(string? str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimStart(ch.Value);
 		}
 
 		[Sql.Expression(PN.DB2, "Strip({0}, T, {1})")]
 		[Sql.Function  (        "RTrim")]
-		public static string TrimRight(string str, char? ch)
+		public static string? TrimRight(string? str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimEnd(ch.Value);
 		}
 
 		[Sql.Function(                    ServerSideOnly = true)]
 		[Sql.Function(PN.Access, "LCase", ServerSideOnly = true)]
-		public static string Lower(string str)
+		public static string? Lower(string? str)
 		{
 			return str?.ToLower();
 		}
 
 		[Sql.Function(                    ServerSideOnly = true)]
 		[Sql.Function(PN.Access, "UCase", ServerSideOnly = true)]
-		public static string Upper(string str)
+		public static string? Upper(string? str)
 		{
 			return str?.ToUpper();
 		}
@@ -699,7 +699,7 @@ namespace LinqToDB
 		[Sql.Function(PN.SqlServer, "DataLength",   PreferServerSide = true)]
 		[Sql.Function(PN.SqlCe,     "DataLength",   PreferServerSide = true)]
 		[Sql.Function(PN.Sybase,    "DataLength",   PreferServerSide = true)]
-		public static int? Length(Binary value)
+		public static int? Length(Binary? value)
 		{
 			return value == null ? null : (int?)value.Length;
 		}

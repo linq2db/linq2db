@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 
 namespace LinqToDB.DataProvider.SapHana
 {
@@ -13,8 +14,22 @@ namespace LinqToDB.DataProvider.SapHana
 
 		}
 
+		static void SetQueryParameter(IQueryElement element)
+		{
+			if (element.ElementType == QueryElementType.SqlParameter)
+			{
+				var p = (SqlParameter)element;
+
+				// enforce timespan as parameter
+				if (p.SystemType.ToNullableUnderlying() == typeof(TimeSpan))
+					p.IsQueryParameter = true;
+			}
+		}
+
 		public override SqlStatement Finalize(SqlStatement statement)
 		{
+			new QueryVisitor().VisitAll(statement, SetQueryParameter);
+
 			statement = base.Finalize(statement);
 
 			switch (statement.QueryType)

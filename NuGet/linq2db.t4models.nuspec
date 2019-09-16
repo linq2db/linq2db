@@ -10,24 +10,24 @@
 			Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
 		<dependencies>
-			<dependency id="linq2db" version="2.6.0"/>
+			<dependency id="linq2db" version="3.0.0"/>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="Init.ps1"                                                                target="tools" />
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"                        target="tools" />
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\Npgsql.dll"                             target="tools" />
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\FirebirdSql.Data.FirebirdClient.dll"    target="tools" />
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\MySql.Data.dll"                         target="tools" />
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\BouncyCastle.Crypto.dll"                target="tools" />
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\Oracle.ManagedDataAccess.dll"           target="tools" />
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\System.Threading.Tasks.Extensions.dll"  target="tools" />
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\System.Data.SQLite.dll"                 target="tools" />
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\x86\SQLite.Interop.dll"                 target="tools" />
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\Microsoft.SqlServer.Types.dll"          target="tools" />
+		<file src="Init.ps1"                                                             target="tools" />
+		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                     target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\Npgsql.dll"                             target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\FirebirdSql.Data.FirebirdClient.dll"    target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\MySql.Data.dll"                         target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\BouncyCastle.Crypto.dll"                target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\Oracle.ManagedDataAccess.dll"           target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\System.Threading.Tasks.Extensions.dll"  target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\System.Data.SQLite.dll"                 target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\x86\SQLite.Interop.dll"                 target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net46\Microsoft.SqlServer.Types.dll"          target="tools" />
 
 		<file src="t4models\linq2db.t4models.props"                  target="build" />
 

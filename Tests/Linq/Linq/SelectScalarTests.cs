@@ -176,6 +176,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void Scalar3([DataSources] string context)
 		{
@@ -187,6 +188,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void Scalar31([DataSources] string context)
 		{

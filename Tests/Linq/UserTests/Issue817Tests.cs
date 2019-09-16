@@ -12,6 +12,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue817Tests : TestBase
 	{
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void TestUnorderedTake([DataSources] string context)
 		{
@@ -23,6 +24,25 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue(
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				ProviderName.Informix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				ProviderName.SapHana,
+				ProviderName.SqlServer2000,
+				ProviderName.SqlServer2005,
+				ProviderName.SqlServer2008,
+				TestProvName.AllSybase
+			},
+			SkipForNonLinqService = true,
+			Details = "SELECT * query")]
 		[Test]
 		public void TestUnorderedSkip([DataSources] string context)
 		{
@@ -36,6 +56,25 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue(
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				ProviderName.Informix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				ProviderName.SapHana,
+				ProviderName.SqlServer2000,
+				ProviderName.SqlServer2005,
+				ProviderName.SqlServer2008,
+				TestProvName.AllSybase
+			},
+			SkipForNonLinqService = true,
+			Details = "SELECT * query")]
 		[Test]
 		public void TestUnorderedTakeSkip([DataSources] string context)
 		{
@@ -47,6 +86,26 @@ namespace Tests.UserTests
 			}
 		}
 
+
+		[ActiveIssue(
+			Configurations = new[]
+			{
+				ProviderName.Access,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				ProviderName.Informix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				ProviderName.SapHana,
+				ProviderName.SqlServer2000,
+				ProviderName.SqlServer2005,
+				ProviderName.SqlServer2008,
+				TestProvName.AllSybase
+			},
+			SkipForNonLinqService = true,
+			Details = "SELECT * query")]
 		[Test]
 		public void TestUnorderedTakeSkipZero([DataSources] string context)
 		{

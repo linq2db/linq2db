@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -323,10 +324,10 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeUnions()
 		{
-			var isAllUnion = QueryVisitor.Find(_selectQuery,
+			var isAllUnion = new QueryVisitor().Find(_selectQuery,
 				ne => ne is SqlSetOperator nu && nu.Operation == SetOperation.UnionAll);
 
-			var isNotAllUnion = QueryVisitor.Find(_selectQuery,
+			var isNotAllUnion = new QueryVisitor().Find(_selectQuery,
 				ne => ne is SqlSetOperator nu && nu.Operation != SetOperation.UnionAll);
 
 			if (isNotAllUnion != null && isAllUnion != null)
@@ -368,6 +369,7 @@ namespace LinqToDB.SqlQuery
 					scol.Expression = ucol.Expression;
 					scol.RawAlias   = ucol.RawAlias;
 
+					if (!exprs.ContainsKey(ucol))
 					exprs.Add(ucol, scol);
 				}
 
@@ -837,7 +839,7 @@ namespace LinqToDB.SqlQuery
 			var visitor = new QueryVisitor();
 
 			if (optimizeColumns &&
-				QueryVisitor.Find(expr, ex => ex is SelectQuery || IsAggregationFunction(ex)) == null)
+				new QueryVisitor().Find(expr, ex => ex is SelectQuery || IsAggregationFunction(ex)) == null)
 			{
 				var n = 0;
 				var q = query.ParentSelect ?? query;
@@ -961,7 +963,7 @@ namespace LinqToDB.SqlQuery
 
 			bool ContainsTable(ISqlTableSource table, IQueryElement qe)
 			{
-				return null != QueryVisitor.Find(qe, e =>
+				return null != new QueryVisitor().Find(qe, e =>
 					e == table ||
 					e.ElementType == QueryElementType.SqlField && table == ((SqlField) e).Table ||
 					e.ElementType == QueryElementType.Column   && table == ((SqlColumn)e).Parent);

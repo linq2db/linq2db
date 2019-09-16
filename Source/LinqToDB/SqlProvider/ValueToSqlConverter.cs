@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Globalization;
@@ -180,11 +181,7 @@ namespace LinqToDB.SqlProvider
 				{
 					switch (type.GetTypeCodeEx())
 					{
-#if NETSTANDARD1_6
-					case (TypeCode)2          : stringBuilder.Append("NULL")  ; return true;
-#else
 						case TypeCode.DBNull  : stringBuilder.Append("NULL")  ; return true;
-#endif
 						case TypeCode.Boolean : converter = _booleanConverter ; break;
 						case TypeCode.Char    : converter = _charConverter    ; break;
 						case TypeCode.SByte   : converter = _sByteConverter   ; break;
@@ -232,14 +229,16 @@ namespace LinqToDB.SqlProvider
 		public StringBuilder Convert(StringBuilder stringBuilder, object value)
 		{
 			if (!TryConvert(stringBuilder, value))
-				stringBuilder.Append(value);
+				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
+
 			return stringBuilder;
 		}
 
 		public StringBuilder Convert(StringBuilder stringBuilder, SqlDataType dataType, object value)
 		{
 			if (!TryConvert(stringBuilder, dataType, value))
-				stringBuilder.Append(value);
+				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
+
 			return stringBuilder;
 		}
 
@@ -254,7 +253,7 @@ namespace LinqToDB.SqlProvider
 			{
 				_converters[type] = converter;
 
-				if (!type.IsEnumEx())
+				if (!type.IsEnum)
 				{
 					switch (type.GetTypeCodeEx())
 					{

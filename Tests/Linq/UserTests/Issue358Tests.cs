@@ -10,7 +10,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue358Tests : TestBase
 	{
-#if !MONO
 		enum TestIssue358Enum
 		{
 			Value1,
@@ -292,6 +291,5 @@ namespace Tests.UserTests
 					db.Types2.Where(_ => boolFilter.  Contains(_.BoolValue) == true));
 			}
 		}
-#endif
 	}
 }

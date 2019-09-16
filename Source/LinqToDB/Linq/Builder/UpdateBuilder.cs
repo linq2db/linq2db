@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -170,15 +171,26 @@ namespace LinqToDB.Linq.Builder
 		#region Helpers
 
 		internal static void BuildSetter(
+			ExpressionBuilder builder,
+			BuildInfo buildInfo,
+			LambdaExpression setter,
+			IBuildContext into,
+			List<SqlSetExpression> items,
+			IBuildContext sequence)
+		{
+			var ctx = new ExpressionContext(buildInfo.Parent, sequence, setter);
+
+			BuildSetterWithContext(builder, buildInfo, setter, into, items, ctx);
+		}
+
+		internal static void BuildSetterWithContext(
 			ExpressionBuilder      builder,
 			BuildInfo              buildInfo,
 			LambdaExpression       setter,
 			IBuildContext          into,
 			List<SqlSetExpression> items,
-			IBuildContext          sequence)
+			ExpressionContext      ctx)
 		{
-			var ctx = new ExpressionContext(buildInfo.Parent, sequence, setter);
-
 			void BuildSetter(MemberExpression memberExpression, Expression expression)
 			{
 				var column = into.ConvertToSql(memberExpression, 1, ConvertFlags.Field);
@@ -262,7 +274,7 @@ namespace LinqToDB.Linq.Builder
 			if (bodyExpr.NodeType == ExpressionType.New && bodyExpr.Type.IsAnonymous())
 			{
 				var ex = (NewExpression)bodyExpr;
-				var p  = sequence.Parent;
+				var p  = ctx.Sequence.Parent;
 
 				BuildNew(ex, bodyPath);
 
@@ -271,7 +283,7 @@ namespace LinqToDB.Linq.Builder
 			else if (bodyExpr.NodeType == ExpressionType.MemberInit)
 			{
 				var ex = (MemberInitExpression)bodyExpr;
-				var p  = sequence.Parent;
+				var p  = ctx.Sequence.Parent;
 
 				BuildMemberInit(ex, bodyPath);
 
@@ -457,7 +469,7 @@ namespace LinqToDB.Linq.Builder
 
 			var memberType = member.GetMemberType().ToNullableUnderlying();
 			var updateType = update.Type.ToNullableUnderlying();
-			if (memberType.IsEnumEx() && updateType != memberType)
+			if (memberType.IsEnum && updateType != memberType)
 				update = Expression.Convert(update, member.GetMemberType());
 
 			if (!update.Type.IsConstantable() && !builder.AsParameters.Contains(update))

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -82,7 +83,7 @@ namespace LinqToDB.DataProvider.SapHana
 			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.DataType)
 			{
@@ -120,7 +121,7 @@ namespace LinqToDB.DataProvider.SapHana
 					StringBuilder.Append("Char (36)");
 					break;
 				default:
-					base.BuildDataType(type, createDbType);
+					base.BuildDataTypeFromDataType(type, forCreateTable);
 					break;
 			}
 		}
@@ -177,6 +178,7 @@ namespace LinqToDB.DataProvider.SapHana
 						return "\"" + value + "\"";
 					}
 
+				case ConvertType.NameToServer     :
 				case ConvertType.NameToDatabase   :
 				case ConvertType.NameToSchema     :
 				case ConvertType.NameToQueryTable :

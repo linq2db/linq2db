@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Linq.Expressions;
 
@@ -22,6 +23,10 @@ namespace LinqToDB.Expressions
 		{
 			if (ReferenceEquals(obj1, obj2))
 				return true;
+
+			// if both null, ReferenceEquals will return true
+			if (obj1 == null || obj2 == null)
+				return false;
 
 			if (obj1 is IEnumerable list1 && obj2 is IEnumerable list2)
 			{

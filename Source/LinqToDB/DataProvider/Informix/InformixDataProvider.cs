@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
@@ -11,6 +12,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Common;
 	using Data;
 	using Extensions;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 
@@ -83,11 +85,11 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			_ifxBlob     = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxBlob",     true);
-			_ifxClob     = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxClob",     true);
-			_ifxDecimal  = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxDecimal",  true);
-			_ifxDateTime = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxDateTime", true);
-			_ifxTimeSpan = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxTimeSpan", true);
+			_ifxBlob     = connectionType.Assembly.GetType("IBM.Data.Informix.IfxBlob",     true);
+			_ifxClob     = connectionType.Assembly.GetType("IBM.Data.Informix.IfxClob",     true);
+			_ifxDecimal  = connectionType.Assembly.GetType("IBM.Data.Informix.IfxDecimal",  true);
+			_ifxDateTime = connectionType.Assembly.GetType("IBM.Data.Informix.IfxDateTime", true);
+			_ifxTimeSpan = connectionType.Assembly.GetType("IBM.Data.Informix.IfxTimeSpan", true);
 
 			if (!Configuration.AvoidSpecificDataProviderAPI)
 			{
@@ -102,7 +104,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			_newIfxTimeSpan = Expression.Lambda<Func<TimeSpan,object>>(
 				Expression.Convert(
-					Expression.New(_ifxTimeSpan.GetConstructorEx(new[] { typeof(TimeSpan) }), p),
+					Expression.New(_ifxTimeSpan.GetConstructor(new[] { typeof(TimeSpan) }), p),
 					typeof(object)),
 				p).Compile();
 
@@ -133,7 +135,7 @@ namespace LinqToDB.DataProvider.Informix
 		protected override string ConnectionTypeName  => "IBM.Data.Informix.IfxConnection, IBM.Data.Informix";
 		protected override string DataReaderTypeName  => "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix";
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_0
 		public override string DbFactoryProviderName => "IBM.Data.Informix";
 #endif
 
@@ -149,12 +151,10 @@ namespace LinqToDB.DataProvider.Informix
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD1_6
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new InformixSchemaProvider();
 		}
-#endif
 
 		Func<TimeSpan,object> _newIfxTimeSpan;
 
@@ -207,35 +207,6 @@ namespace LinqToDB.DataProvider.Informix
 				table,
 				options,
 				source);
-		}
-
-		#endregion
-
-		#region Merge
-
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
-		{
-			if (delete)
-				throw new LinqToDBException("Informix MERGE statement does not support DELETE by source.");
-
-			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-		}
-
-		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-		{
-			if (delete)
-				throw new LinqToDBException("Informix MERGE statement does not support DELETE by source.");
-
-			return new InformixMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
-		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new InformixMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		#endregion

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 using System.Windows.Forms;
 #endif
 
@@ -457,7 +457,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+#if !NETCOREAPP2_0
 		[Test]
 		public void ConstractClass([DataSources] string context)
 		{
@@ -549,6 +549,7 @@ namespace Tests.Linq
 			public string FirstName;
 		}
 
+		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void ObjectFactoryTest([DataSources] string context)
 		{
@@ -963,7 +964,7 @@ namespace Tests.Linq
 						Id = a.Id,
 						Value = a.Value
 					};
-			}        
+			}
 
 			[ExpressionMethod("OwnerImpl")]
 			public static implicit operator DtoChildEntityObject(ChildEntityObject a)

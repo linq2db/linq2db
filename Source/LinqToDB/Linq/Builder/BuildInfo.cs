@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -28,13 +29,14 @@ namespace LinqToDB.Linq.Builder
 			CreateSubQuery = buildInfo.CreateSubQuery;
 		}
 
-		public BuildInfo            SequenceInfo   { get; set; }
-		public IBuildContext        Parent         { get; set; }
-		public Expression           Expression     { get; set; }
-		public SelectQuery          SelectQuery    { get; set; }
-		public bool                 CopyTable      { get; set; }
-		public bool                 CreateSubQuery { get; set; }
-		public JoinType             JoinType       { get; set; }
+		public BuildInfo            SequenceInfo             { get; set; }
+		public IBuildContext        Parent                   { get; set; }
+		public Expression           Expression               { get; set; }
+		public SelectQuery          SelectQuery              { get; set; }
+		public bool                 CopyTable                { get; set; }
+		public bool                 CreateSubQuery           { get; set; }
+		public bool                 AssociationsAsSubQueries { get; set; }
+		public JoinType             JoinType                 { get; set; }
 		public bool                 IsSubQuery => Parent != null;
 
 		private bool _isAssociationBuilt;

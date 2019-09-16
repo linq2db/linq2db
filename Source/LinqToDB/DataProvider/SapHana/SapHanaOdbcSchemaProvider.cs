@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -19,7 +20,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			DefaultSchema   = dataConnection.Execute<string>("SELECT CURRENT_SCHEMA FROM DUMMY");
 			_databaseName   = ((DbConnection)dataConnection.Connection).Database;
-			_dataSourceName = ((DbConnection) dataConnection.Connection).DataSource;            
+			_dataSourceName = ((DbConnection) dataConnection.Connection).DataSource;
 
 			if (String.IsNullOrEmpty(_dataSourceName) || String.IsNullOrEmpty(_databaseName))
 			{

@@ -11,6 +11,9 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
+#if !NETCOREAPP2_0
+	using System.ServiceModel;
+#endif
 
 	[TestFixture]
 	public class MappingTests : TestBase
@@ -439,23 +442,47 @@ namespace Tests.Linq
 		[Test]
 		public void ColumnMappingException1([DataSources] string context)
 		{
+			GetProviderName(context, out var isLinqService);
+
 			using (var db = GetDataContext(context))
 			{
-				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
+#if !NETCOREAPP2_0
+				if (isLinqService)
+				{
+					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
+					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
+				}
+				else
+#endif
+				{
+					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
+					// field name casing depends on database
+					Assert.AreEqual("firstname", ex.ColumnName.ToLowerInvariant());
 
-				// field name casing depends on database
-				Assert.AreEqual("firstname", ex.ColumnName.ToLower());
+				}
+
 			}
 		}
 
 		[Test]
 		public void ColumnMappingException2([DataSources] string context)
 		{
+			GetProviderName(context, out var isLinqService);
+
 			using (var db = GetDataContext(context))
 			{
-				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
-
-				Assert.AreEqual("lastname", ex.ColumnName.ToLower());
+#if !NETCOREAPP2_0
+				if (isLinqService)
+				{
+					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
+					Assert.True(fe.Message.Contains("Cannot convert value 'Pupkin' to type 'Tests.Linq.MappingTests+BadEnum'"));
+				}
+				else
+#endif
+				{
+					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
+					Assert.AreEqual("lastname", ex.ColumnName.ToLower());
+				}
 			}
 		}
 	}

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -101,7 +102,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var parameter = mc.Method.GetParameters()[0];
 					if (mc.Method.ReturnParameter?.ParameterType != parameter.ParameterType
-						&& parameter.ParameterType.IsValueTypeEx()
+						&& parameter.ParameterType.IsValueType
 						&& mc.Arguments[0] is ConvertFromDataReaderExpression readerExpression)
 					{
 						resultExpr = readerExpression.MakeNullable();
@@ -167,7 +168,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (ctx != null)
 						{
-							if (ma.Type.IsGenericTypeEx() && typeof(IEnumerable<>).IsSameOrParentOf(ma.Type))
+							if (ma.Type.IsGenericType && typeof(IEnumerable<>).IsSameOrParentOf(ma.Type))
 							{
 								var res = ctx.IsExpression(ma, 0, RequestFor.Association);
 
@@ -406,12 +407,12 @@ namespace LinqToDB.Linq.Builder
 
 			var cond = (ConditionalExpression)expr;
 
-			if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
-			{
-				var b = (BinaryExpression)cond.Test;
+					if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
+					{
+						var b = (BinaryExpression)cond.Test;
 
-				Expression cnt = null;
-				Expression obj = null;
+						Expression cnt = null;
+						Expression obj = null;
 
 				if (IsNullConstant(b.Left))
 				{
@@ -424,48 +425,48 @@ namespace LinqToDB.Linq.Builder
 					obj = b.Left;
 				}
 
-				if (cnt != null)
-				{
-					var objContext = GetContext(context, obj);
-					if (objContext != null && objContext.IsExpression(obj, 0, RequestFor.Object).Result)
-					{
-						var sql = objContext.ConvertToSql(obj, 0, ConvertFlags.Key);
-						if (sql.Length == 0)
-							sql = objContext.ConvertToSql(obj, 0, ConvertFlags.All);
-
-						if (sql.Length > 0)
+						if (cnt != null)
 						{
-							Expression predicate = null;
-							foreach (var f in sql)
+							var objContext = GetContext(context, obj);
+							if (objContext != null && objContext.IsExpression(obj, 0, RequestFor.Object).Result)
 							{
-								if (f.Sql is SqlField field && field.Table.All == field)
-									continue;
+								var sql = objContext.ConvertToSql(obj, 0, ConvertFlags.Key);
+								if (sql.Length == 0)
+									sql = objContext.ConvertToSql(obj, 0, ConvertFlags.All);
 
-								var valueType = f.Sql.SystemType;
+								if (sql.Length > 0)
+								{
+									Expression predicate = null;
+									foreach (var f in sql)
+									{
+										if (f.Sql is SqlField field && field.Table.All == field)
+											continue;
 
-								if (!valueType.IsNullable() && valueType.IsValueTypeEx())
-									valueType = typeof(Nullable<>).MakeGenericType(valueType);
+										var valueType = f.Sql.SystemType;
 
-								var reader = BuildSql(context, f.Sql, valueType, null);
-								var comparison = Expression.MakeBinary(cond.Test.NodeType,
-									Expression.Default(valueType), reader);
+										if (!valueType.IsNullable() && valueType.IsValueType)
+											valueType = typeof(Nullable<>).MakeGenericType(valueType);
 
-								predicate = predicate == null
-									? comparison
-									: Expression.MakeBinary(
-										cond.Test.NodeType == ExpressionType.Equal
-											? ExpressionType.AndAlso
-											: ExpressionType.OrElse, predicate, comparison);
-							}
+										var reader     = BuildSql(context, f.Sql, valueType, null);
+										var comparison = Expression.MakeBinary(cond.Test.NodeType,
+											Expression.Default(valueType), reader);
 
-							if (predicate != null)
+										predicate = predicate == null
+											? comparison
+											: Expression.MakeBinary(
+												cond.Test.NodeType == ExpressionType.Equal
+													? ExpressionType.AndAlso
+													: ExpressionType.OrElse, predicate, comparison);
+									}
+
+									if (predicate != null)
 								cond = cond.Update(predicate,
 									CorrectConditional(context, cond.IfTrue,  enforceServerSide, alias),
 									CorrectConditional(context, cond.IfFalse, enforceServerSide, alias));
+							}
 						}
 					}
 				}
-			}
 
 			if (cond == expr)
 				expr = BuildExpression(context, expr, enforceServerSide, alias);
