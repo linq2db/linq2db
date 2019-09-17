@@ -1194,9 +1194,9 @@ namespace LinqToDB.Data
 		}
 
 		private static MethodInfo _convertParameterValueMethodInfo =
-			MemberHelper.MethodOf(() => ConvertParameterValue(1, null)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => ConvertParameterValue(1, MappingSchema.Default)).GetGenericMethodDefinition();
 
-		static object ConvertParameterValue(object value, MappingSchema mappingSchema)
+		static object? ConvertParameterValue(object? value, MappingSchema mappingSchema)
 		{
 			if (ReferenceEquals(value, null))
 				return null;
