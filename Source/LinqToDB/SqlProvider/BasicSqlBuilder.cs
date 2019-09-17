@@ -1302,7 +1302,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
-		private static Regex _selectDetector = new Regex(@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		static readonly Regex _selectDetector = new Regex(@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		protected void BuildPhysicalTable(ISqlTableSource table, string alias)
 		{
@@ -1457,7 +1457,7 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
-		#region Where Clause
+		#region Build Where Clause
 
 		protected virtual bool BuildWhere(SelectQuery selectQuery)
 		{

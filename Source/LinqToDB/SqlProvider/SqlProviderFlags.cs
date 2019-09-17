@@ -36,7 +36,7 @@ namespace LinqToDB.SqlProvider
 
 		/// <summary>
 		/// Provider supports:
-		/// INNER JOIN a ON 1 = 1 
+		/// INNER JOIN a ON 1 = 1
 		/// </summary>
 		public bool IsInnerJoinAsCrossSupported           { get; set; }
 
@@ -83,6 +83,11 @@ namespace LinqToDB.SqlProvider
 
 			return (TakeHintsSupported.Value & hints) == hints;
 		}
+
+		/// <summary>
+		/// Provider supports VALUES
+		/// </summary>
+		public bool IsValueListSupported { get; set; } = true;
 
 		/// <summary>
 		/// Flags for use by external providers.

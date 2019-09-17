@@ -81,7 +81,6 @@ namespace LinqToDB.SqlQuery
 			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
 			.ToString();
 
-
 		#endregion
 	}
 }

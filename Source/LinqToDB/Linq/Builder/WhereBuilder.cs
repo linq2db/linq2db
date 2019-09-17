@@ -18,8 +18,8 @@ namespace LinqToDB.Linq.Builder
 			var condition = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
 			if (sequence.SelectQuery.Select.IsDistinct        ||
-			    sequence.SelectQuery.Select.TakeValue != null ||
-			    sequence.SelectQuery.Select.SkipValue != null)
+				sequence.SelectQuery.Select.TakeValue != null ||
+				sequence.SelectQuery.Select.SkipValue != null)
 				sequence = new SubQueryContext(sequence);
 
 			var result    = builder.BuildWhere(buildInfo.Parent, sequence, condition, !isHaving, isHaving);

@@ -104,11 +104,11 @@ namespace LinqToDB.SqlQuery
 				{
 					foreach (var item in exprs)
 					{
-						if (item == null || item is SqlValue && ((SqlValue)item).Value == null)
+						if (item == null || item is SqlValue value && value.Value == null)
 							continue;
 
-						if (item is ISqlExpression)
-							list.Values.Add((ISqlExpression)item);
+						if (item is ISqlExpression ex)
+							list.Values.Add(ex);
 						else
 							list.Values.Add(new SqlValue(item));
 					}

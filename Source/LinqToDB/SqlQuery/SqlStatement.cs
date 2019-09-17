@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Linq;
-using LinqToDB.Common;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+	using LinqToDB.Extensions;
 	using Mapping;
+	using SqlProvider;
 
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
 	public abstract class SqlStatement: IQueryElement, ISqlExpressionWalkable, ICloneableElement
@@ -24,7 +25,7 @@ namespace LinqToDB.SqlQuery
 
 		public abstract bool IsParameterDependent { get; set; }
 
-		public SqlStatement ProcessParameters(MappingSchema mappingSchema)
+		public SqlStatement ProcessParameters(MappingSchema mappingSchema, SqlProviderFlags sqlProviderFlags)
 		{
 			if (IsParameterDependent)
 			{
@@ -77,7 +78,7 @@ namespace LinqToDB.SqlQuery
 							break;
 
 						case QueryElementType.InListPredicate :
-							return ConvertInListPredicate(mappingSchema, (SqlPredicate.InList)e);
+							return ConvertInListPredicate(mappingSchema, (SqlPredicate.InList)e, sqlProviderFlags);
 					}
 
 					return null;
@@ -121,7 +122,7 @@ namespace LinqToDB.SqlQuery
 			throw new InvalidOperationException();
 		}
 
-		static SqlPredicate ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p)
+		static SqlPredicate ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p, SqlProviderFlags sqlProviderFlags)
 		{
 			if (p.Values == null || p.Values.Count == 0)
 				return new SqlPredicate.Expr(new SqlValue(p.IsNot));
@@ -133,13 +134,10 @@ namespace LinqToDB.SqlQuery
 				if (pr.Value == null)
 					return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
-				if (pr.Value is IEnumerable)
+				if (pr.Value is IEnumerable items)
 				{
-					var items = (IEnumerable)pr.Value;
-
-					if (p.Expr1 is ISqlTableSource)
+					if (p.Expr1 is ISqlTableSource table)
 					{
-						var table = (ISqlTableSource)p.Expr1;
 						var keys  = table.GetKeys(true);
 
 						if (keys == null || keys.Count == 0)
@@ -189,16 +187,14 @@ namespace LinqToDB.SqlQuery
 								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
 							if (p.IsNot)
-								return new SqlPredicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
+								return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
 
-							return new SqlPredicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
+							return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
 						}
 					}
 
-					if (p.Expr1 is ObjectSqlExpression)
+					if (p.Expr1 is ObjectSqlExpression expr)
 					{
-						var expr = (ObjectSqlExpression)p.Expr1;
-
 						if (expr.Parameters.Length == 1)
 						{
 							var values = new List<ISqlExpression>();

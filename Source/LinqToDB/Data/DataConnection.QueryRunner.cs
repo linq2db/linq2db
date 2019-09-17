@@ -160,7 +160,7 @@ namespace LinqToDB.Data
 				}
 
 				// before processing query we correct parameters
-				var sql    = query.Statement.ProcessParameters(dataConnection.MappingSchema);
+				var sql    = query.Statement.ProcessParameters(dataConnection.MappingSchema, dataConnection.DataProvider.SqlProviderFlags);
 
 				// custom query handling
 				var newSql = dataConnection.ProcessQuery(sql);

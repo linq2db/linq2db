@@ -1,10 +1,11 @@
 ﻿using System;
+
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.SqlProvider
 {
-	internal static class SqlOptimizerExtensions
+	static class SqlOptimizerExtensions
 	{
 		public static SqlStatement OptimizeStatement([JetBrains.Annotations.NotNull] this ISqlOptimizer optimizer, [JetBrains.Annotations.NotNull] SqlStatement statement,
 			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
@@ -14,7 +15,7 @@ namespace LinqToDB.SqlProvider
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
 			// transforming parameters to values
-			var newStatement = statement.ProcessParameters(mappingSchema);
+			var newStatement = statement.ProcessParameters(mappingSchema, optimizer.SqlProviderFlags);
 
 			// optimizing expressions according to new values
 			newStatement = optimizer.OptimizeStatement(newStatement);
