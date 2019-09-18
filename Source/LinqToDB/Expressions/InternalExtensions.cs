@@ -1151,6 +1151,13 @@ namespace LinqToDB.Expressions
 
 						break;
 					}
+				case ExpressionType.Call:
+					{
+						var mc = (MethodCallExpression)expr;
+						var arguments = mc.Arguments.Select(EvaluateExpression).ToArray();
+						var instance  = mc.Object.EvaluateExpression();
+						return mc.Method.Invoke(instance, arguments);
+					}
 			}
 
 			var value = Expression.Lambda(expr).Compile().DynamicInvoke();
