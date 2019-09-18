@@ -3078,7 +3078,7 @@ namespace LinqToDB
 		/// <exception cref="T:System.ArgumentNullException">
 		/// <paramref name="source" /> is <see langword="null" />.</exception>
 		public static IQueryable<TElement> AsQueryable<TElement>(
-			[SqlQueryDependent] [NotNull] this IEnumerable<TElement> source, 
+			[SqlQueryDependent] [NotNull] this IEnumerable<TElement> source,
 			[NotNull]                          IDataContext          dataContext)
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
@@ -3150,9 +3150,9 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(HasUniqueKey, source, keySelector),
 					source.Expression,
-					Expression.Quote(keySelector) 
+					Expression.Quote(keySelector)
 				));
-		}		
+		}
 
 		#endregion
 
@@ -3245,7 +3245,7 @@ namespace LinqToDB
 		/// Gets or sets callback for preprocessing query before execution.
 		/// Useful for intercepting queries.
 		/// </summary>
-		public static Func<IQueryable, IQueryable> ProcessSourceQueryable { get; set; }
+		public static Func<IQueryable,IQueryable> ProcessSourceQueryable { get; set; }
 
 		public static IExtensionsAdapter ExtensionsAdapter { get; set; }
 

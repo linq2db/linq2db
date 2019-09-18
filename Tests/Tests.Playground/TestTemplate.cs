@@ -10,7 +10,7 @@ namespace Tests.Playground
 	using Model;
 
 	[TestFixture]
-	public class ValueTableTests : TestBase
+	public class ValuesTableTests : TestBase
 	{
 		readonly Parent[] _parenArray =
 		{

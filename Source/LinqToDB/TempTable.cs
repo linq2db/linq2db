@@ -27,7 +27,7 @@ namespace LinqToDB
 	[PublicAPI]
 	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable
 	{
-		readonly ITable<T> _table;
+		ITable<T> _table;
 
 		/// <summary>
 		/// Gets total number of records, inserted into table using BulkCopy.
@@ -223,17 +223,17 @@ namespace LinqToDB
 
 		ITable<T> ITableMutable<T>.ChangeDatabaseName(string databaseName)
 		{
-			return ((ITableMutable<T>)_table).ChangeDatabaseName(databaseName);
+			return _table = ((ITableMutable<T>)_table).ChangeDatabaseName(databaseName);
 		}
 
 		ITable<T> ITableMutable<T>.ChangeSchemaName(string schemaName)
 		{
-			return ((ITableMutable<T>)_table).ChangeSchemaName(schemaName);
+			return _table = ((ITableMutable<T>)_table).ChangeSchemaName(schemaName);
 		}
 
 		ITable<T> ITableMutable<T>.ChangeTableName(string tableName)
 		{
-			return ((ITableMutable<T>)_table).ChangeTableName(tableName);
+			return _table = ((ITableMutable<T>)_table).ChangeTableName(tableName);
 		}
 
 		#endregion

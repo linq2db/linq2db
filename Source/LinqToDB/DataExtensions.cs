@@ -879,7 +879,7 @@ namespace LinqToDB
 
 		#region SelectQuery
 
-		public static MethodInfo SelectQueryMethodInfo =
+		internal static MethodInfo SelectQueryMethodInfo =
 			MemberHelper.MethodOf(() => SelectQuery<int>(null, null)).GetGenericMethodDefinition();
 
 		/// <summary>
@@ -926,5 +926,54 @@ namespace LinqToDB
 
 		#endregion
 
+		#region AsValuesTable
+
+		/// <summary>
+		/// Creates a LINQ query based on a collection of objects.
+		/// </summary>
+		/// <typeparam name="T">Source query record type.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="source">The object collection source.</param>
+		/// <returns> An <see cref="IQueryable{T}" /> representing the object collection. </returns>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable AsValuesTable<T>(
+			[NotNull] this IDataContext dataContext, [SqlQueryDependent] IEnumerable<T> source)
+		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+
+			var table = new ValuesTable<T>(dataContext, source);
+
+			return ((IQueryable<T>)table).Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsValuesTable, dataContext, source),
+					new Expression[] { Expression.Constant(dataContext), Expression.Constant(source) }));
+		}
+
+		/// <summary>
+		/// Creates a LINQ query based on a collection of objects.
+		/// </summary>
+		/// <typeparam name="T">Source query record type.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="source">The object collection source.</param>
+		/// <returns> An <see cref="IQueryable{T}" /> representing the object collection. </returns>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable AsValuesTable<T>(
+			[SqlQueryDependent] this IEnumerable<T> source, [NotNull] IDataContext dataContext)
+		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+
+			var table = new ValuesTable<T>(dataContext, source);
+
+			return ((IQueryable<T>)table).Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsValuesTable, dataContext, source),
+					new Expression[] { Expression.Constant(dataContext), Expression.Constant(source) }));
+		}
+
+		#endregion
 	}
 }
