@@ -21,7 +21,8 @@ namespace LinqToDB.Linq.Builder
 			TableFunctionAttribute,
 			AsCteMethod,
 			CteConstant,
-			FromSqlMethod
+			FromSqlMethod,
+			ValuesTable
 		}
 
 		static BuildContextType FindBuildContext(ExpressionBuilder builder, BuildInfo buildInfo, out IBuildContext parentContext)
@@ -62,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 						switch (mc.Method.Name)
 						{
 							case "GetTable":
-							if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
+								if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
 									return BuildContextType.GetTableMethod;
 								break;
 
@@ -71,6 +72,9 @@ namespace LinqToDB.Linq.Builder
 
 							case "FromSql":
 								return BuildContextType.FromSqlMethod;
+
+							case nameof(DataExtensions.AsValuesTable):
+								return BuildContextType.ValuesTable;
 						}
 
 						var attr = builder.GetTableFunctionAttribute(mc.Method);
@@ -139,7 +143,8 @@ namespace LinqToDB.Linq.Builder
 				case BuildContextType.TableFunctionAttribute : return new TableContext    (builder, buildInfo);
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
 				case BuildContextType.CteConstant            : return BuildCteContextTable(builder, buildInfo);
-				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable(builder, buildInfo);
+				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable    (builder, buildInfo);
+				case BuildContextType.ValuesTable            : return BuildValuesTable    (builder, buildInfo);
 			}
 
 			throw new InvalidOperationException();

@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
-
+using LinqToDB;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
@@ -12,6 +13,32 @@ namespace Tests.Playground
 	[TestFixture]
 	public class ValuesTableTests : TestBase
 	{
+		class Test
+		{
+			public int Field1;
+			public string Field2;
+		}
+
+		[Test, Explicit("Work In Progress")]
+		public void AsValuesTableTests([IncludeDataSources(ProviderName.SqlServer2014)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var arr = new[]
+				{
+					new { Field1 = 1, Field2 = "1" },
+					new { Field1 = 2, Field2 = "2" },
+				};
+
+				var q = arr.AsValuesTable(db);
+
+				foreach (var item in q)
+				{
+					Debug.WriteLine(item);
+				}
+			}
+		}
+
 		readonly Parent[] _parenArray =
 		{
 			new Parent { ParentID = 1, Value1 = 1    },
@@ -21,7 +48,7 @@ namespace Tests.Playground
 			new Parent { ParentID = 5, Value1 = null },
 		};
 
-		[Test]
+		[Test, Explicit("Work In Progress")]
 		public void InArrayTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -40,7 +67,7 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test]
+		[Test, Explicit("Work In Progress")]
 		public void InArrayTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

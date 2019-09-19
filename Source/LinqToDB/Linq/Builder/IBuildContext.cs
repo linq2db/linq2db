@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 			while (true)
 			{
 				context = context.Parent;
-				if (context == null) 
+				if (context == null)
 					break;
 				str = $"{GetContextInfo(context)} <- {str}";
 				if (!alreadyProcessed.Add(context))
@@ -66,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 		SqlInfo[]          ConvertToIndex      (Expression expression, int level, ConvertFlags flags);
 
 		/// <summary>
-		/// Returns information about expression according to <paramref name="requestFlag"/>. 
+		/// Returns information about expression according to <paramref name="requestFlag"/>.
 		/// </summary>
 		/// <param name="expression">Analyzed expression.</param>
 		/// <param name="level">Member level.</param>

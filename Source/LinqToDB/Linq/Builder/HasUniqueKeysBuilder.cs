@@ -14,7 +14,7 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			
+
 			var keySelector = (LambdaExpression) methodCall.Arguments[1].Unwrap();
 			var keyContext  = new SelectContext(sequence, keySelector, sequence);
 			var keySql      = builder.ConvertExpressions(keyContext, keySelector.Body.Unwrap(), ConvertFlags.All);

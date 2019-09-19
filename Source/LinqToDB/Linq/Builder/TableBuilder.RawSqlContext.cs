@@ -31,19 +31,19 @@ namespace LinqToDB.Linq.Builder
 			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], format, sqlArguments);
 		}
 
-		public static void PrepareRawSqlArguments(Expression fromatArg, Expression parametersArg, out string format, out IEnumerable<Expression> arguments)
+		public static void PrepareRawSqlArguments(Expression formatArg, Expression parametersArg, out string format, out IEnumerable<Expression> arguments)
 		{
 			// Consider that FormattableString is used
-			if (fromatArg.NodeType == ExpressionType.Call)
+			if (formatArg.NodeType == ExpressionType.Call)
 			{
-				var mc = (MethodCallExpression)fromatArg;
+				var mc = (MethodCallExpression)formatArg;
 
 				format = (string)mc.Arguments[0].EvaluateExpression();
 				arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
 			}
 			else
 			{
-				var evaluatedSql = fromatArg.EvaluateExpression();
+				var evaluatedSql = formatArg.EvaluateExpression();
 #if !NET45
 				if (evaluatedSql is FormattableString formattable)
 				{
