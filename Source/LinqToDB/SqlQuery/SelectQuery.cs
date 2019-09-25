@@ -95,6 +95,25 @@ namespace LinqToDB.SqlQuery
 		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
 
 
+		private List<SqlApplyTableExpression> _applyTableExpressions;
+
+		public void AddApplyTableExpression(bool isExcept, string expressionStr, IEnumerable<string> groups)
+		{
+			var apply = new SqlApplyTableExpression(isExcept, expressionStr, groups);
+			if (_applyTableExpressions == null)
+				_applyTableExpressions = new List<SqlApplyTableExpression>();
+			_applyTableExpressions.Add(apply);
+		}
+
+		public IEnumerable<SqlApplyTableExpression> GetApplyTableExpressions()
+		{
+			if (_applyTableExpressions == null)
+				return Enumerable.Empty<SqlApplyTableExpression>();
+			return _applyTableExpressions;
+		}
+
+		public bool HasApplyTableExpressions => _applyTableExpressions?.Count > 0;
+
 		#endregion
 
 		#region Union

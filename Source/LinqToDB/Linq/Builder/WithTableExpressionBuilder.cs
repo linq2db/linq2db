@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("With", "WithTableExpression");
+			return methodCall.IsSameGenericMethod(LinqExtensions.WithTableExpressionMethodInfo);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -22,12 +22,7 @@ namespace LinqToDB.Linq.Builder
 
 			table.SqlTable.SqlTableType   = SqlTableType.Expression;
 			table.SqlTable.TableArguments = new ISqlExpression[0];
-
-			switch (methodCall.Method.Name)
-			{
-				case "With"                : table.SqlTable.Name = $"{{0}} {{1}} WITH ({value})"; break;
-				case "WithTableExpression" : table.SqlTable.Name = value;                         break;
-			}
+			table.SqlTable.Name           = value;
 
 			return sequence;
 		}

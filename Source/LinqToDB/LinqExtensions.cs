@@ -105,7 +105,7 @@ namespace LinqToDB
 			return result;
 		}
 
-		static readonly MethodInfo _withTableExpressionMethodInfo = MemberHelper.MethodOf(() => WithTableExpression<int>(null, null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo WithTableExpressionMethodInfo = MemberHelper.MethodOf(() => WithTableExpression<int>(null, null)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Replaces access to a table in generated query with SQL expression.
@@ -127,40 +127,298 @@ namespace LinqToDB
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-			table.Expression = Expression.Call(
+			table = ((ITableMutable<T>)table).ChangeExpression(Expression.Call(
 				null,
-				_withTableExpressionMethodInfo.MakeGenericMethod(typeof(T)),
-				new[] { table.Expression, Expression.Constant(expression) });
+				WithTableExpressionMethodInfo.MakeGenericMethod(typeof(T)),
+				new[] { table.Expression, Expression.Constant(expression) }));
 
 			return table;
 		}
 
-		static readonly MethodInfo _with = MemberHelper.MethodOf(() => With<int>(null, null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo TableGroupMethodInfo = MemberHelper.MethodOf(() => TableGroup<object>(null, "")).GetGenericMethodDefinition();
+
+		/// <summary>
+		/// Associates table with group(s). Used in pair with <see cref="ApplyTableExpression{T}(IQueryable{T},string,string)"/> and <see cref="ApplyTableExpressionExcept{T}(IQueryable{T},string,string)"/>
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="tableGroup">Group name or several groups separated by comma or semicolon.</param>
+		/// <returns>Table-like query source associated with group(s).</returns>
+		[LinqTunnel]
+		[Pure]
+		public static ITable<T> TableGroup<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string tableGroup)
+		{
+			if (tableGroup == null) throw new ArgumentNullException(nameof(tableGroup));
+
+			table = ((ITableMutable<T>)table).ChangeExpression(Expression.Call(
+				null,
+				TableGroupMethodInfo.MakeGenericMethod(typeof(T)),
+				new[] { table.Expression, Expression.Constant(tableGroup) }));
+
+			return table;
+		}
+
+		internal static readonly MethodInfo ApplyTableExpressionMethodInfo1 = MemberHelper.MethodOf(() => ApplyTableExpression<int>(null, "")).GetGenericMethodDefinition();
+
+		/// <summary>
+		/// Applies Table Expression to a tables in generated query.
+		/// <code>
+		/// var queryWithHints = query.ApplyTableExpression("{0} {1} with (UpdLock)");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="expression">SQL template to use instead of table name. Template supports two parameters:
+		/// <para> - {0} original table name;</para>
+		/// <para> - {1} table alias.</para>
+		/// </param>
+		/// <returns>Query with applied Table Expression.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable<TSource> ApplyTableExpression<TSource>(
+			[NotNull]               this IQueryable<TSource> source,
+			[NotNull, SqlQueryDependent] string              expression)
+		{
+			if (source     == null) throw new ArgumentNullException(nameof(source));
+			if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+			var expr = Expression.Call(
+				null,
+				ApplyTableExpressionMethodInfo1.MakeGenericMethod(typeof(TSource)),
+				new[] { source.Expression, Expression.Constant(expression) });
+
+			return source.Provider.CreateQuery<TSource>(expr);
+		}
+
+		internal static readonly MethodInfo ApplyTableExpressionMethodInfo2 = MemberHelper.MethodOf(() => ApplyTableExpression<int>(null, "", "")).GetGenericMethodDefinition();
+
+		/// <summary>
+		/// Applies Table Expression to a tables in generated query. Table Expression will be applied only to tables which are assigned to specific group.
+		/// <example>
+		/// The following example applies Table Expression only to <code>table1</code>.
+		/// <code>
+		/// var query = from t1 in table1.TableGroup("G1")
+		///	            from t2 in table2.TableGroup("G2")
+		///             select new { t1, t2 }
+		/// var queryWithHints = query.ApplyTableExpression("{0} {1} with (UpdLock)", "G1;A1,A2");
+		/// </code>
+		/// </example>
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="expression">SQL template to use instead of table name. Template supports two parameters:
+		/// <para> - {0} original table name;</para>
+		/// <para> - {1} table alias.</para>
+		/// </param>
+		/// <param name="tableGroups">Group filter to which groups Table Expression should be applied.</param>
+		/// <returns>Query with applied Table Expression.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable<TSource> ApplyTableExpression<TSource>(
+			[NotNull]               this IQueryable<TSource> source,
+			[NotNull, SqlQueryDependent] string              expression,
+			[NotNull, SqlQueryDependent] string              tableGroups)
+		{
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (expression  == null) throw new ArgumentNullException(nameof(expression));
+			if (tableGroups == null) throw new ArgumentNullException(nameof(tableGroups));
+
+			var expr = Expression.Call(
+				null,
+				ApplyTableExpressionMethodInfo2.MakeGenericMethod(typeof(TSource)),
+				new[] { source.Expression, Expression.Constant(expression), Expression.Constant(tableGroups) });
+
+			return source.Provider.CreateQuery<TSource>(expr);
+		}
+
+		internal static readonly MethodInfo ApplyTableExpressionExceptMethodInfo = MemberHelper.MethodOf(() => ApplyTableExpressionExcept<int>(null, "", "")).GetGenericMethodDefinition();
+
+		/// <summary>
+		/// Applies Table Expression to a tables in generated query. Table Expression will be applied only to tables which are NOT assigned to specific group.
+		/// <example>
+		/// The following example applies Table Expression only to <code>table2</code>.
+		/// <code>
+		/// var query = from t1 in table1.TableGroup("G1")
+		///	            from t2 in table2.TableGroup("G2")
+		///             select new { t1, t2 }
+		/// var queryWithHints = query.ApplyTableExpressionExcept("{0} {1} with (UpdLock)", "G1;A1,A2");
+		/// </code>
+		/// </example>
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="expression">SQL template to use instead of table name. Template supports two parameters:
+		/// <para> - {0} original table name;</para>
+		/// <para> - {1} table alias.</para>
+		/// </param>
+		/// <param name="exceptTableGroups">Group filter which groups should be omitted when applying Table Expression.</param>
+		/// <returns>Query with applied Table Expression.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable<TSource> ApplyTableExpressionExcept<TSource>(
+			[NotNull]               this IQueryable<TSource> source,
+			[NotNull, SqlQueryDependent] string              expression,
+			[NotNull, SqlQueryDependent] string              exceptTableGroups)
+		{
+			if (source            == null) throw new ArgumentNullException(nameof(source));
+			if (expression              == null) throw new ArgumentNullException(nameof(expression));
+			if (exceptTableGroups == null) throw new ArgumentNullException(nameof(exceptTableGroups));
+
+			var expr = Expression.Call(
+				null,
+				ApplyTableExpressionExceptMethodInfo.MakeGenericMethod(typeof(TSource)),
+				new[] { source.Expression, Expression.Constant(expression), Expression.Constant(exceptTableGroups) });
+
+			return source.Provider.CreateQuery<TSource>(expr);
+		}
 
 		/// <summary>
 		/// Adds table hints to a table in generated query.
 		/// Also see <see cref="WithTableExpression{T}(ITable{T}, string)"/> method.
 		/// <code>
-		/// // will produce following SQL code in generated query: table tablealias with(UpdLock)
+		/// // will produce following SQL code in generated query: <code>table tablealias WITH (UpdLock)</code>
 		/// var tableWithHint = db.Table.With("UpdLock");
 		/// </code>
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="args">SQL text, added to WITH({0}) after table name in generated query.</param>
+		/// <param name="args">SQL text, added to WITH ({0}) after table name in generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel]
 		[Pure]
+		[ExpressionMethod(nameof(WithImpl))]
 		public static ITable<T> With<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string args)
 		{
 			if (args == null) throw new ArgumentNullException(nameof(args));
 
-			table.Expression = Expression.Call(
+			table = ((ITableMutable<T>)table).ChangeExpression(Expression.Call(
 				null,
-				_with.MakeGenericMethod(typeof(T)),
-				new[] { table.Expression, Expression.Constant(args) });
+				MethodHelper.GetMethodInfo(With, table, args),
+				new[] { table.Expression, Expression.Constant(args) }));
 
 			return table;
+		}
+
+		static Expression<Func<ITable<T>, string, ITable<T>>> WithImpl<T>()
+		{
+			return (t, args) => t.WithTableExpression("{0} {1} WITH (" + args + ")");
+		}
+
+		/// <summary>
+		/// Applies WITH arguments to a tables in generated query.
+		/// <code>
+		/// var queryWithHints = query.ApplyWith("NOLOCK");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="args">WITH arguments.</param>
+		/// <returns>Query with applied WITH arguments.</returns>
+		[LinqTunnel]
+		[Pure]
+		[ExpressionMethod(nameof(ApplyWithImpl1))]
+		public static IQueryable<TSource> ApplyWith<TSource>(
+			[NotNull]               this IQueryable<TSource> source,
+			[NotNull, SqlQueryDependent] string              args)
+		{
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (args        == null) throw new ArgumentNullException(nameof(args));
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(ApplyWith, source, args),
+				new[] { source.Expression, Expression.Constant(args) });
+
+			return source.Provider.CreateQuery<TSource>(expr);
+		}
+
+		static Expression<Func<IQueryable<T>, string, IQueryable<T>>> ApplyWithImpl1<T>()
+		{
+			return (source, args) => source.ApplyTableExpression("{0} {1} WITH (" + args + ")");
+		}
+
+		/// <summary>
+		/// Applies WITH arguments to a tables in generated query. WITH arguments will be applied only to tables which are assigned to specific group.
+		/// <example>
+		/// The following example applies Table Expression only to <code>table1</code>.
+		/// <code>
+		/// var query = from t1 in table1.TableGroup("G1")
+		///	            from t2 in table2.TableGroup("G2")
+		///             select new { t1, t2 }
+		/// var queryWithHints = query.ApplyWith("NOLOCK", "G1;A1,A2");
+		/// </code>
+		/// </example>
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="args">WITH arguments.</param>
+		/// <param name="tableGroups">Group filter to which groups WITH Table Expression should be applied. Groups can be separated by comma or semicolon.</param>
+		/// <returns>Query with applied WITH arguments.</returns>
+		[LinqTunnel]
+		[Pure]
+		[ExpressionMethod(nameof(ApplyWithImpl2))]
+		public static IQueryable<TSource> ApplyWith<TSource>(
+			[NotNull]               this IQueryable<TSource> source,
+			[NotNull, SqlQueryDependent] string              args,
+			[NotNull, SqlQueryDependent] string              tableGroups)
+		{
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (args        == null) throw new ArgumentNullException(nameof(args));
+			if (tableGroups == null) throw new ArgumentNullException(nameof(tableGroups));
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(ApplyWith, source, args, tableGroups),
+				new[] { source.Expression, Expression.Constant(args), Expression.Constant(tableGroups) });
+
+			return source.Provider.CreateQuery<TSource>(expr);
+		}
+
+		static Expression<Func<IQueryable<T>, string, string, IQueryable<T>>> ApplyWithImpl2<T>()
+		{
+			return (source, args, tableGroups) => source.ApplyTableExpression("{0} {1} WITH (" + args + ")", tableGroups);
+		}
+
+		/// <summary>
+		/// Applies WITH arguments to a tables in generated query. WITH arguments will be applied only to tables which are NOT assigned to specific group.
+		/// <example>
+		/// The following example applies WITH arguments only to <code>table2</code>.
+		/// <code>
+		/// var query = from t1 in table1.TableGroup("G1")
+		///	            from t2 in table2.TableGroup("G2")
+		///             select new { t1, t2 }
+		/// var queryWithHints = query.ApplyWithExcept("NOLOCK", "G1;A1,A2");
+		/// </code>
+		/// </example>
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="args">WITH arguments.</param>
+		/// <param name="exceptTableGroups">Group filter which groups should be omitted when applying WITH arguments. Groups can be separated by comma or semicolon.</param>
+		/// <returns>Query with applied WITH arguments.</returns>
+		[LinqTunnel]
+		[Pure]
+		[ExpressionMethod(nameof(ApplyWithExceptImpl))]
+		public static IQueryable<TSource> ApplyWithExcept<TSource>(
+			[NotNull]               this IQueryable<TSource> source,
+			[NotNull, SqlQueryDependent] string              args,
+			[NotNull, SqlQueryDependent] string              exceptTableGroups)
+		{
+			if (source            == null) throw new ArgumentNullException(nameof(source));
+			if (args              == null) throw new ArgumentNullException(nameof(args));
+			if (exceptTableGroups == null) throw new ArgumentNullException(nameof(exceptTableGroups));
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(ApplyWithExcept, source, args, exceptTableGroups),
+				new[] { source.Expression, Expression.Constant(args), Expression.Constant(exceptTableGroups) });
+
+			return source.Provider.CreateQuery<TSource>(expr);
+		}
+
+		static Expression<Func<IQueryable<T>, string, string, IQueryable<T>>> ApplyWithExceptImpl<T>()
+		{
+			return (source, args, tableGroups) => source.ApplyTableExpressionExcept("{0} {1} WITH (" + args + ")", tableGroups);
 		}
 
 		#endregion

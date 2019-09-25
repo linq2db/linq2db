@@ -207,6 +207,9 @@ namespace LinqToDB.SqlQuery
 		public virtual SqlTableType     SqlTableType   { get; set; }
 		public         ISqlExpression[] TableArguments { get; set; }
 
+		public HashSet<string>          Groups         { get; set; }
+
+
 		public Dictionary<string,SqlField> Fields { get; }
 
 		public SequenceNameAttribute[] SequenceAttributes { get; protected set; }

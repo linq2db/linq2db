@@ -236,6 +236,11 @@ namespace LinqToDB
 			return ((ITableMutable<T>)_table).ChangeTableName(tableName);
 		}
 
+		ITable<T> ITableMutable<T>.ChangeExpression(Expression expression)
+		{
+			return ((ITableMutable<T>)_table).ChangeExpression(expression);
+		}
+
 		#endregion
 
 		#region IQueryProvider
