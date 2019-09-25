@@ -137,11 +137,22 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q =
+				var q1 =
 					from p in db.Parent.SchemaName("dbo").With("TABLOCK,UPDLOCK")
 					select p;
 
-				q.ToList();
+				var q2 = 
+					(from p in db.Parent.SchemaName("dbo")
+					select p).ApplyWith("TABLOCK,UPDLOCK");
+
+				var str1 = q1.ToString();
+				var str2 = q2.ToString();
+
+				Console.WriteLine(str2);
+
+				Assert.That(str1, Is.EqualTo(str2));
+
+				Assert.That(str1, Does.Contain("WITH (TABLOCK,UPDLOCK)"));
 			}
 		}
 

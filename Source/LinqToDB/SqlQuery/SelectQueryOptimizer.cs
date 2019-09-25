@@ -40,7 +40,7 @@ namespace LinqToDB.SqlQuery
 				}
 			});
 #endif
-
+			ProcessApplyExpressions(_selectQuery, new List<SqlApplyTableExpression>());
 			OptimizeUnions();
 			FinalizeAndValidateInternal(isApplySupported, optimizeColumns, new List<ISqlTableSource>());
 			ResolveFields();
@@ -320,6 +320,79 @@ namespace LinqToDB.SqlQuery
 				if (query.Queries.Count > 0)
 					ResolveFields(query);
 		}
+
+		void ProcessApplyExpressions(SelectQuery query, List<SqlApplyTableExpression> currentStack)
+		{
+			string GetApplyTableExpression(HashSet<string> groups)
+			{
+				if (currentStack.Count == 0)
+					return null;
+
+				foreach (var info in currentStack)
+				{
+					if (!info.IsExcept)
+					{
+						if (info.Groups.Count == 0)
+							return info.ExpressionStr;
+
+						if (groups == null)
+							continue;
+
+						if (info.Groups.Intersect(groups).Any()) 
+							return info.ExpressionStr;
+					}
+					else
+					{
+						if (groups == null)
+							return info.ExpressionStr;
+
+						if (!info.Groups.Intersect(groups).Any()) 
+							return info.ExpressionStr;
+					}
+				}
+
+				return null;
+			}
+
+			var items = query.GetApplyTableExpressions().ToArray();
+			currentStack.AddRange(items);
+
+			new QueryVisitor().VisitParentFirst(query, e =>
+			{
+				switch (e.ElementType)
+				{
+					case QueryElementType.SqlQuery:
+						{
+							var sq = (SelectQuery)e;
+							if (sq == query)
+								return true;
+							ProcessApplyExpressions(sq, currentStack);
+							return false;
+						}
+					case QueryElementType.SqlTable:
+						{
+							var table = (SqlTable)e;
+							if (currentStack.Count > 0 && table.SqlTableType == SqlTableType.Table)
+							{
+								var applyExpression = GetApplyTableExpression(table.Groups);
+								if (applyExpression != null)
+								{
+									table.SqlTableType = SqlTableType.Expression;
+									table.Name = applyExpression;
+								}
+							}
+
+							break;
+						}
+				}
+
+				return true;
+			});
+
+			if (items.Length > 0) 
+				currentStack.RemoveRange(currentStack.Count - items.Length, items.Length);
+		}
+
 
 		void OptimizeUnions()
 		{

@@ -918,6 +918,7 @@ namespace LinqToDB.Linq.Builder
 					if (queryMethod != null)
 					{
 						expr = queryMethod.GetBody(parent, Expression.Constant(association.Builder.DataContext));
+						expr = association.Builder.ConvertExpressionTree(expr);
 						return expr;
 					}
 

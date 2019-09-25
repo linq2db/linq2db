@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -68,6 +69,8 @@ namespace LinqToDB.Linq.Builder
 			new ArrayBuilder               (),
 			new AsSubQueryBuilder          (),
 			new HasUniqueKeyBuilder        (),
+			new TableGroupBuilder          (),
+			new ApplyTableExpressionBuilder(),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
@@ -245,9 +248,9 @@ namespace LinqToDB.Linq.Builder
 			var paramType   = expr.Type;
 			var isQueryable = false;
 
-			if (expression.NodeType == ExpressionType.Call)
+			if (expr.NodeType == ExpressionType.Call)
 			{
-				var call = (MethodCallExpression)expression;
+				var call = (MethodCallExpression)expr;
 
 				if (call.IsQueryable() && call.Object == null && call.Arguments.Count > 0 && call.Type.IsGenericTypeEx())
 				{
@@ -709,6 +712,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						var call = (MethodCallExpression)expr;
 
+						var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedTypeEx(),
+							call.Method);
+
+						if (l != null)
+							return new TransformInfo(OptimizeExpression(ConvertMethod(call, l)));
+
 						if (call.IsQueryable() || call.IsAsyncExtension())
 						{
 							switch (call.Method.Name)
@@ -744,11 +753,6 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedTypeEx(), call.Method);
-
-							if (l != null)
-								return new TransformInfo(OptimizeExpression(ConvertMethod(call, l)));
-
 							if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 							{
 								var attr = GetTableFunctionAttribute(call.Method);

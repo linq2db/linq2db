@@ -1362,9 +1362,15 @@ namespace LinqToDB.Expressions
 			TransformInfo ti;
 
 			{
-				ti = func(expr);
-				if (ti.Stop || ti.Expression != expr)
-					return ti.Expression;
+				do
+				{
+					ti = func(expr);
+					if (ti.Stop || !ti.Continue && ti.Expression != expr)
+						return ti.Expression;
+					if (expr == ti.Expression)
+						break;
+					expr = ti.Expression;
+				} while (true);
 			}
 
 			switch (expr.NodeType)

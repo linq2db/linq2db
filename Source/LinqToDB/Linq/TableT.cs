@@ -123,6 +123,16 @@ namespace LinqToDB.Linq
 			return table;
 		}
 
+		public ITable<T> ChangeExpression(Expression expression)
+		{
+			var table          = new Table<T>(DataContext);
+			table.SchemaName   = SchemaName;
+			table.DatabaseName = DatabaseName;
+			table.Expression   = expression;
+			table.TableName    = TableName;
+			return table;
+		}
+
 		#region Overrides
 
 		public override string ToString()

@@ -73,6 +73,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var selectManyMethod = GetAssociationQueryExpression(Expression.Constant(builder.DataContext),
 						queryMethod.Parameters[0], parent.ObjectType, parent.Expression, queryMethod);
+					selectManyMethod = builder.ConvertExpressionTree(selectManyMethod);
 
 					var ownerTableSource = SelectQuery.From.Tables[0];
 
@@ -359,6 +360,8 @@ namespace LinqToDB.Linq.Builder
 
 						expression = queryMethod.Body.Transform(e =>
 							e == ownerParam ? ownerExpr : (e == dcParam ? lContext : e));
+
+						expression = builder.ConvertExpressionTree(expression);
 					}
 					else
 					{

@@ -826,6 +826,7 @@ namespace LinqToDB.Linq.Builder
 											var dcConst = Expression.Constant(context.Builder.DataContext.Clone(true));
 
 											expr = queryMethod.GetBody(me.Expression, dcConst);
+											expr = context.Builder.ConvertExpressionTree(expr);
 										}
 										else
 										{

@@ -1028,16 +1028,22 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
-		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo genericMethodInfo)
+		public static bool IsSameGenericMethod(this MethodCallExpression method, params MethodInfo[] genericMethodInfo)
 		{
 			if (!method.Method.IsGenericMethod)
 				return false;
-			return method.Method.GetGenericMethodDefinition() == genericMethodInfo;
+			var genericDefinition = method.Method.GetGenericMethodDefinition();
+			return Array.IndexOf(genericMethodInfo, genericDefinition) >= 0;
 		}
 
 		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)
 		{
 			return mappingSchema.GetAttribute<AssociationAttribute>(method.Method.DeclaringType, method.Method) != null;
+		}
+
+		public static bool IsAssociation(this MemberExpression member, MappingSchema mappingSchema)
+		{
+			return mappingSchema.GetAttribute<AssociationAttribute>(member.Member.DeclaringType, member.Member) != null;
 		}
 
 		static Expression FindLevel(Expression expression, MappingSchema mapping, int level, ref int current)
@@ -1141,18 +1147,82 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.MemberAccess:
 					{
-						var member = (MemberExpression) expr;
+						var member   = (MemberExpression) expr;
+						var instance = member.Expression.EvaluateExpression();
 
 						if (member.Member.IsFieldEx())
-							return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpression());
+							return ((FieldInfo)member.Member).GetValue(instance);
 
 						if (member.Member.IsPropertyEx())
-							return ((PropertyInfo)member.Member).GetValue(member.Expression.EvaluateExpression(), null);
+							return ((PropertyInfo)member.Member).GetValue(instance, null);
 
+						break;
+					}
+				case ExpressionType.Call:
+					{
+						var mc = (MethodCallExpression)expr;
+						var arguments = mc.Arguments.Select(EvaluateExpression).ToArray();
+						var instance  = mc.Object.EvaluateExpression();
+						return mc.Method.Invoke(instance, arguments);
+					}
+				case ExpressionType.Negate:
+				case ExpressionType.NegateChecked:
+				case ExpressionType.Not:
+				case ExpressionType.Convert:
+				case ExpressionType.ConvertChecked:
+				case ExpressionType.ArrayLength:
+				case ExpressionType.Quote:
+				case ExpressionType.TypeAs:
+				case ExpressionType.UnaryPlus:
+					{
+						var unary = (UnaryExpression)expr;
+
+						if (unary.Method?.IsStatic == true)
+						{
+							var arguments = new[] { unary.Operand.EvaluateExpression() };
+							return unary.Method.Invoke(null, arguments);
+						}
+
+						break;
+					}
+				case ExpressionType.Add:
+				case ExpressionType.AddChecked:
+				case ExpressionType.And:
+				case ExpressionType.AndAlso:
+				case ExpressionType.ArrayIndex:
+				case ExpressionType.Assign:
+				case ExpressionType.Coalesce:
+				case ExpressionType.Divide:
+				case ExpressionType.Equal:
+				case ExpressionType.ExclusiveOr:
+				case ExpressionType.GreaterThan:
+				case ExpressionType.GreaterThanOrEqual:
+				case ExpressionType.LeftShift:
+				case ExpressionType.LessThan:
+				case ExpressionType.LessThanOrEqual:
+				case ExpressionType.Modulo:
+				case ExpressionType.Multiply:
+				case ExpressionType.MultiplyChecked:
+				case ExpressionType.NotEqual:
+				case ExpressionType.Or:
+				case ExpressionType.OrElse:
+				case ExpressionType.Power:
+				case ExpressionType.RightShift:
+				case ExpressionType.Subtract:
+				case ExpressionType.SubtractChecked:
+					{
+						var binary = (BinaryExpression)expr;
+						if (binary.Method?.IsStatic == true)
+						{
+							var arguments = new[]
+								{ binary.Left.EvaluateExpression(), binary.Right.EvaluateExpression() };
+							return binary.Method.Invoke(null, arguments);
+						}
 						break;
 					}
 			}
 
+			// We have to avoid this
 			var value = Expression.Lambda(expr).Compile().DynamicInvoke();
 			return value;
 		}
