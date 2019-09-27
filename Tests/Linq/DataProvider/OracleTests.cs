@@ -609,6 +609,7 @@ namespace Tests.DataProvider
 			[Column(DataType=DataType.DateTime2,      Length=11, Scale=6),                  Nullable         ] public DateTime?       DATETIME2DATATYPE      { get; set; } // TIMESTAMP(6)
 			[Column(DataType=DataType.DateTimeOffset, Length=13, Scale=6),                  Nullable         ] public DateTimeOffset? DATETIMEOFFSETDATATYPE { get; set; } // TIMESTAMP(6) WITH TIME ZONE
 			[Column(DataType=DataType.DateTimeOffset, Length=11, Scale=6),                  Nullable         ] public DateTimeOffset? LOCALZONEDATATYPE      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
+			[Column(DataType=DataType.VarChar),                                             Nullable         ] public string          LONGDATATYPE           { get; set; } // LONG
 			[Column(DataType=DataType.Char,           Length=1),                            Nullable         ] public char?           CHARDATATYPE           { get; set; } // CHAR(1)
 			[Column(DataType=DataType.VarChar,        Length=20),                           Nullable         ] public string          VARCHARDATATYPE        { get; set; } // VARCHAR2(20)
 			[Column(DataType=DataType.Text,           Length=4000),                         Nullable         ] public string          TEXTDATATYPE           { get; set; } // CLOB
@@ -716,6 +717,17 @@ namespace Tests.DataProvider
 
 				var res = query.Single();
 				Assert.That(res.NVARCHARDATATYPE, Is.EqualTo(value));
+			}
+		}
+
+		[ActiveIssue(18991)]
+		[Test]
+		public void LongSelectTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var longValue = db.GetTable<ALLTYPE>().Where(t => t.LONGDATATYPE != null).Select(t => t.LONGDATATYPE).First();
+				Assert.That(longValue, Is.Not.Empty);
 			}
 		}
 

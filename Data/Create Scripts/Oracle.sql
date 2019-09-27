@@ -737,6 +737,7 @@ CREATE TABLE AllTypes
 	datetimeoffsetDataType   timestamp with time zone       NULL,
 	localZoneDataType        timestamp with local time zone NULL,
 
+	longDataType             long                           NULL, 
 	charDataType             char(1)                        NULL,
 	char20DataType           char(20)                       NULL,
 	varcharDataType          varchar2(20)                   NULL,
@@ -790,6 +791,7 @@ INSERT INTO AllTypes
 	datetimeoffsetDataType,
 	localZoneDataType,
 
+	longDataType,
 	charDataType,
 	varcharDataType,
 	textDataType,
@@ -822,6 +824,7 @@ SELECT
 	NULL datetimeoffsetDataType,
 	NULL localZoneDataType,
 
+	NULL longDataType,
 	NULL charDataType,
 	NULL varcharDataType,
 	NULL textDataType,
@@ -855,6 +858,7 @@ SELECT
 	timestamp '2012-12-12 12:12:12.012 -5:00',
 	timestamp '2012-12-12 12:12:12.012',
 
+	'lvalue',
 	'1',
 	'234',
 	'567',
