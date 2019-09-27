@@ -739,7 +739,7 @@ namespace Tests.DataProvider
 			using (var db = new DataConnection(context))
 			{
 				var longValue = db.GetTable<ALLTYPE>().Where(t => t.LONGDATATYPE != null).Select(t => new { t.LONGDATATYPE, t.ID }).First();
-				Assert.That(longValue.LONGDATATYPE, Is.Not.Empty);
+				Assert.That(longValue.LONGDATATYPE, Is.Equal("lvalue"));
 			}
 		}
 
