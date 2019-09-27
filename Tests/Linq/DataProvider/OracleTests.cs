@@ -734,6 +734,16 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public void LongSelectAllTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var longValue = db.GetTable<ALLTYPE>().Where(t => t.LONGDATATYPE != null).Select(t => new { t.LONGDATATYPE, t.ID }).First();
+				Assert.That(longValue.LONGDATATYPE, Is.Not.Empty);
+			}
+		}
+
+		[Test]
 		public void SelectDateTime([IncludeDataSources(ProviderName.OracleNative)] string context)
 		{
 			using (var db = new DataConnection(context))
