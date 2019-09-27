@@ -24,6 +24,10 @@ using Oracle.ManagedDataAccess.Types;
 
 namespace Tests.DataProvider
 {
+	using System.Data.Common;
+	using System.Threading;
+	using System.Threading.Tasks;
+	using LinqToDB.Data.DbCommandProcessor;
 	using LinqToDB.Linq;
 	using Model;
 
@@ -720,16 +724,59 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if NETSTANDARD2_0
-		[ActiveIssue(1899)]
-#endif
+		class OracleLongReader : IDbCommandProcessor
+		{
+			int IDbCommandProcessor.ExecuteNonQuery(DbCommand command)
+			{
+				return command.ExecuteNonQuery();
+			}
+
+			Task<int> IDbCommandProcessor.ExecuteNonQueryAsync(DbCommand command, CancellationToken cancellationToken)
+			{
+				return command.ExecuteNonQueryAsync(cancellationToken);
+			}
+
+			DbDataReader IDbCommandProcessor.ExecuteReader(DbCommand command, CommandBehavior commandBehavior)
+			{
+				((dynamic)command).InitialLONGFetchSize = -1;
+				return command.ExecuteReader(commandBehavior);
+			}
+
+			Task<DbDataReader> IDbCommandProcessor.ExecuteReaderAsync(DbCommand command, CommandBehavior commandBehavior, CancellationToken cancellationToken)
+			{
+				((dynamic)command).InitialLONGFetchSize = -1;
+
+				return command.ExecuteReaderAsync(commandBehavior, cancellationToken);
+			}
+
+			object IDbCommandProcessor.ExecuteScalar(DbCommand command)
+			{
+				return command.ExecuteScalar();
+			}
+
+			Task<object> IDbCommandProcessor.ExecuteScalarAsync(DbCommand command, CancellationToken cancellationToken)
+			{
+				return command.ExecuteScalarAsync(cancellationToken);
+			}
+		}
+
 		[Test]
 		public void LongSelectTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = new DataConnection(context))
+			try
 			{
-				var longValue = db.GetTable<ALLTYPE>().Where(t => t.LONGDATATYPE != null).Select(t => t.LONGDATATYPE).First();
-				Assert.That(longValue, Is.Not.Empty);
+				if (context.StartsWith(ProviderName.OracleManaged))
+					DbCommandProcessorExtensions.Instance = new OracleLongReader();
+
+				using (var db = new DataConnection(context))
+				{
+					var longValue = db.GetTable<ALLTYPE>().Where(t => t.LONGDATATYPE != null).Select(t => t.LONGDATATYPE).First();
+					Assert.AreEqual("lvalue", longValue);
+				}
+			}
+			finally
+			{
+				DbCommandProcessorExtensions.Instance = null;
 			}
 		}
 
@@ -739,7 +786,7 @@ namespace Tests.DataProvider
 			using (var db = new DataConnection(context))
 			{
 				var longValue = db.GetTable<ALLTYPE>().Where(t => t.LONGDATATYPE != null).Select(t => new { t.LONGDATATYPE, t.ID }).First();
-				Assert.That(longValue.LONGDATATYPE, Is.Equal("lvalue"));
+				Assert.AreEqual("lvalue", longValue.LONGDATATYPE);
 			}
 		}
 
