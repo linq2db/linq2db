@@ -720,7 +720,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue(18991)]
+#if NETSTANDARD2_0
+		[ActiveIssue(1899)]
+#endif
 		[Test]
 		public void LongSelectTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
