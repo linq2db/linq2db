@@ -53,5 +53,8 @@
 	//GenerateConstructors = false;
 
 	LoadSqlServerMetadata(GetConnectionString("SqlServer.2014"));
+
+	AddReturnParameter("Issue1897");
+
 	GenerateModel();
 #>

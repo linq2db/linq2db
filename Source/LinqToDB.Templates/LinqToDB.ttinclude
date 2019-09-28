@@ -778,9 +778,9 @@ void GenerateTypesFromMetadata()
 			}
 
 			if (!p.IsAggregateFunction)
-				foreach (var pr in p.ProcParameters.Where(par => !par.IsResult))
+				foreach (var pr in p.ProcParameters.Where(par => !par.IsResult || !p.IsFunction))
 					p.ParameterBuilders.Add(() => string.Format("{0}{1} {2}",
-						pr.IsOut ? pr.IsIn ? "ref " : "out " : "", pr.Type.ToTypeName(), pr.ParameterName));
+						pr.IsOut || pr.IsResult ? pr.IsIn ? "ref " : "out " : "", pr.Type.ToTypeName(), pr.ParameterName));
 
 			if (p.IsTableFunction)
 			{
@@ -812,9 +812,9 @@ void GenerateTypesFromMetadata()
 
 				spName = ToStringLiteral(spName);
 
-				var inputParameters      = p.ProcParameters.Where(pp => pp.IsIn).            ToList();
-				var outputParameters     = p.ProcParameters.Where(pp => pp.IsOut).           ToList();
-				var inOrOutputParameters = p.ProcParameters.Where(pp => pp.IsIn || pp.IsOut).ToList();
+				var inputParameters      = p.ProcParameters.Where(pp => pp.IsIn).                            ToList();
+				var outputParameters     = p.ProcParameters.Where(pp => pp.IsOut || pp.IsResult).            ToList();
+				var inOrOutputParameters = p.ProcParameters.Where(pp => pp.IsIn  || pp.IsOut || pp.IsResult).ToList();
 
 				spName += inOrOutputParameters.Count == 0
 					? (p.ResultTable == null || !GenerateProcedureResultAsList ? ");" : ").ToList();")
@@ -826,7 +826,7 @@ void GenerateTypesFromMetadata()
 				while (p.ProcParameters.Any(pp => pp.ParameterName == retName))
 					retName = "ret" + ++retNo;
 
-				var hasOut = outputParameters.Any(pr => pr.IsOut);
+				var hasOut = outputParameters.Any(pr => pr.IsOut || pr.IsResult);
 				var prefix = hasOut ? "var " + retName + " = " : "return ";
 
 				if (p.ResultTable == null)
@@ -874,7 +874,7 @@ void GenerateTypesFromMetadata()
 					p.BodyBuilders.Add(() =>
 					{
 						var str = string.Format(
-							!pr.IsIn && pr.IsOut
+							!pr.IsIn && (pr.IsOut || pr.IsResult)
 								? "\tnew DataParameter({0}, null, {3}{4})"
 								: "\tnew DataParameter({0}, {1}{2}, {3}{4})" + (GenerateProcedureDbType(pr) ? "{{ DbType = {5} }}" : null),
 							ToStringLiteral(pr.SchemaName),
@@ -884,10 +884,10 @@ void GenerateTypesFromMetadata()
 							"DataType." + pr.DataType,
 							ToStringLiteral(pr.SchemaType));
 
-						if (pr.IsOut)
+						if (pr.IsOut || pr.IsResult)
 						{
 							str += LenDiff(maxLenType, "DataType." + pr.DataType);
-							str += " { Direction = " + (pr.IsIn ? "ParameterDirection.InputOutput" : "ParameterDirection.Output");
+							str += " { Direction = " + (pr.IsIn ? "ParameterDirection.InputOutput" : (pr.IsResult ? "ParameterDirection.ReturnValue" : "ParameterDirection.Output"));
 
 							if (pr.Size != null && pr.Size.Value != 0)
 								str += ", Size = " + pr.Size.Value;
@@ -913,7 +913,7 @@ void GenerateTypesFromMetadata()
 
 					p.BodyBuilders.Add(() => new [] { string.Empty });
 
-					foreach (var pr in p.ProcParameters.Where(_ => _.IsOut))
+					foreach (var pr in p.ProcParameters.Where(_ => _.IsOut || _.IsResult))
 					{
 						p.BodyBuilders.Add(() => new [] { string.Format("{0} {1}= Converter.ChangeTypeTo<{2}>{3}(((IDbDataParameter)dataConnection.Command.Parameters[{4}]).{5}Value);",
 							pr.ParameterName,
