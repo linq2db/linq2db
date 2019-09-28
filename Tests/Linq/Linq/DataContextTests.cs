@@ -108,8 +108,6 @@ namespace Tests.Linq
 			{
 				var items1 = db.GetTable<Child>().ToArray();
 			}
-
-			System.Threading.Thread.Sleep(5000);
 		}
 
 		// sdanyliv: Disabled other providers for performance purposes
@@ -132,8 +130,6 @@ namespace Tests.Linq
 				var db     = new DataContext(context);
 				var items1 = db.GetTable<Child>().ToArray();
 			}
-
-			System.Threading.Thread.Sleep(5000);
 		}
 
 		// sdanyliv: Disabled other providers for performance purposes
