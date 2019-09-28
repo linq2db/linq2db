@@ -108,6 +108,8 @@ namespace Tests.Linq
 			{
 				var items1 = db.GetTable<Child>().ToArray();
 			}
+
+			System.Threading.Thread.Sleep(5000);
 		}
 
 		// sdanyliv: Disabled other providers for performance purposes
@@ -121,5 +123,28 @@ namespace Tests.Linq
 			}
 		}
 
+		// sdanyliv: Disabled other providers for performance purposes
+		[Test]
+		public void LoopTestMultipleContexts([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			for (int i = 0; i < 1000; i++)
+			{
+				var db     = new DataContext(context);
+				var items1 = db.GetTable<Child>().ToArray();
+			}
+
+			System.Threading.Thread.Sleep(5000);
+		}
+
+		// sdanyliv: Disabled other providers for performance purposes
+		[Test]
+		public async Task LoopTestMultipleContextsAsync([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			for (int i = 0; i < 1000; i++)
+			{
+				var db     = new DataContext(context);
+				var items1 = await db.GetTable<Child>().ToArrayAsync();
+			}
+		}
 	}
 }
