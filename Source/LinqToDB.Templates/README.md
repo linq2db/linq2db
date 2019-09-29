@@ -270,6 +270,12 @@ Func<string, bool, string> ConvertToCompilable = ConvertToCompilableDefault;
 // NOTE: this option is not needed anymore, as it generates old-style FTS support code and not recommeded for use
 // use new extesions from this PR: https://github.com/linq2db/linq2db/pull/1649
 bool GenerateSqlServerFreeText = false;
+
+// Enables return value parameter generation for procedure.
+// By default generation of this parameter is disabled, because it is not possible to say (except examining
+// procedure code) if procedure uses this parameter or it always returns default value (0).
+// Usefull for procedures, that use "RETURN code" statements to returns integer values from procedure.
+void AddReturnParameter(string procedureName, string parameterName = "@return");
 ```
 
 ### PostgreSQL
