@@ -1,6 +1,6 @@
 ﻿using System;
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 using System.Data.Linq.Mapping;
 #else
 using System.Data;
@@ -15,7 +15,7 @@ namespace Tests.Linq
 {
 	using Model;
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 	[System.Data.Linq.Mapping.Table(Name = "Person")]
 #else
 	[System.ComponentModel.DataAnnotations.Schema.Table("Person")]
@@ -24,7 +24,7 @@ namespace Tests.Linq
 	{
 		private int _personID;
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 		[System.Data.Linq.Mapping.Column(
 			Storage       = "_personID",
 			Name          = "PersonID",
@@ -42,28 +42,28 @@ namespace Tests.Linq
 			get { return _personID;  }
 			set { _personID = value; }
 		}
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 		[System.Data.Linq.Mapping.Column]
 #else
 		[System.ComponentModel.DataAnnotations.Schema.Column]
 #endif
 		public string FirstName { get; set; }
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 		[System.Data.Linq.Mapping.Column]
 #else
 		[System.ComponentModel.DataAnnotations.Schema.Column]
 #endif
 		public string LastName;
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 		[System.Data.Linq.Mapping.Column]
 #else
 		[System.ComponentModel.DataAnnotations.Schema.Column]
 #endif
 		public string MiddleName;
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 		[System.Data.Linq.Mapping.Column]
 #else
 		[System.ComponentModel.DataAnnotations.Schema.Column]

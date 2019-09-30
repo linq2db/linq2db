@@ -1,7 +1,0 @@
-﻿{
-	"CORE2.Azure": {
-		"Providers": [
-			"Firebird3"
-		]
-	}
-}

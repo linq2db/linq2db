@@ -5,7 +5,7 @@
 	<PropertyGroup>
 	<!-- because VS doesn't support multi-targeting for tests (works for r# test runner): https://github.com/Microsoft/vstest/issues/298
 			 just put required test target framework to first position - VS always use first one only -->
-		<TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
+		<TargetFrameworks>net46;netcoreapp2.1</TargetFrameworks>
 		<Configurations>Debug;Release;Azure</Configurations>
 	</PropertyGroup>
 
@@ -29,7 +29,7 @@
 		<Reference Include="System.Data.Linq" />
 		<Reference Include="System.ServiceModel" />
 
-		<PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
+		<PackageReference Include="System.Collections.Immutable" Version="1.6.0" />
 	</ItemGroup>
 
 </Project>

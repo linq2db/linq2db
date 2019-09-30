@@ -6,7 +6,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 using LinqToDB.DataProvider.Access;
 #endif
 
@@ -268,7 +268,7 @@ namespace Tests._Create
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
 				case ProviderName.Informix      : RunScript(context,          "\nGO\n",  "Informix", InformixAction);       break;
 				case ProviderName.DB2           : RunScript(context,          "\nGO\n",  "DB2");                            break;
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
 				case ProviderName.SqlCe         : RunScript(context,          "\nGO\n",  "SqlCe");
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                          break;
@@ -281,7 +281,7 @@ namespace Tests._Create
 			}
 		}
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 
 		static void AccessAction(IDbConnection connection)
 		{

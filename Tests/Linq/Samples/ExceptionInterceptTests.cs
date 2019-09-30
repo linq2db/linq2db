@@ -89,7 +89,7 @@ namespace Tests.Samples
 			public int ID { get; set; }
 		}
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 		[Test]
 		public void StandardExceptionExecuteReader([IncludeDataSources(ProviderName.SQLiteClassic)]
 			string context)

@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 using System.ServiceModel;
 using System.ServiceModel.Description;
 #endif
@@ -21,7 +21,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 using LinqToDB.ServiceModel;
 #endif
 
@@ -76,7 +76,7 @@ namespace Tests
 //			Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = typeof(TestBase).Assembly.GetPath();
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
@@ -94,8 +94,8 @@ namespace Tests
 			var userDataProvidersJson =
 				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
-#if NETCOREAPP2_0
-			var configName = "CORE2";
+#if NETCOREAPP2_1
+			var configName = "CORE21";
 #elif NET46
 			var configName = "NET46";
 #else
@@ -142,7 +142,7 @@ namespace Tests
 
 			Console.WriteLine("Connection strings:");
 
-#if NETCOREAPP2_0
+#if NETCOREAPP2_1
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -178,12 +178,12 @@ namespace Tests
 			if (!string.IsNullOrEmpty(DefaultProvider))
 			{
 				DataConnection.DefaultConfiguration       = DefaultProvider;
-#if NETCOREAPP2_0
+#if NETCOREAPP2_1
 				TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
 #endif
 			}
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -217,7 +217,7 @@ namespace Tests
 			return fileName;
 		}
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 		const int IP = 22654;
 		static bool _isHostOpen;
 		static LinqService _service;
@@ -225,7 +225,7 @@ namespace Tests
 
 		static void OpenHost(MappingSchema ms)
 		{
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 			if (_isHostOpen)
 			{
 				_service.MappingSchema = ms;
@@ -270,7 +270,7 @@ namespace Tests
 
 		public static readonly List<string> Providers = new List<string>
 		{
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 			ProviderName.Access,
 			ProviderName.Sybase,
 			ProviderName.SapHana,
@@ -308,7 +308,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 				OpenHost(ms);
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);

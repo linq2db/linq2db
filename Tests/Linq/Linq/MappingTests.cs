@@ -11,7 +11,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 	using System.ServiceModel;
 #endif
 
@@ -446,7 +446,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 				if (isLinqService)
 				{
 					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
@@ -471,7 +471,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 				if (isLinqService)
 				{
 					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());

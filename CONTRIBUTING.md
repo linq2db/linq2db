@@ -57,7 +57,7 @@ Allowed debugging defines:
 
 #### Test projects
 
-| Project \ Target                                   |.NET 4.6 |.NET 4.6.2 | .NET Core 2.0 | Xamarin.Forms Android v8.1 |
+| Project \ Target                                   |.NET 4.6 |.NET 4.6.2 | .NET Core 2.1 | Xamarin.Forms Android v8.1 |
 |---------------------------------------------------:|:-------:|:---------:|:-------------:|:--------------------------:|
 | `.\Tests\Base\Tests.Base.csproj`                   |    √    |           |       √       |                            |
 | `.\Tests\FSharp\Tests.FSharp.fsproj`               |    √    |           |       √       |                            |
@@ -72,7 +72,7 @@ Allowed debugging defines:
 
 
 Allowed target defines:
-- `NETCOREAPP2_0` - `netcoreapp2.0` target ifdef
+- `NETCOREAPP2_1` - `netcoreapp2.1` target ifdef
 - `NET46` - `net46` target ifdef
 - `AZURE` - for Azure Pipelines CI builds
 
@@ -84,11 +84,11 @@ You can use the solution to build and run tests. Also you can build whole soluti
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - build `Debug` configuration and run tests for `net46` and `netcoreapp2.0` targets. You can set other configuration by passing it as first paramenter and disable test targets by passing 0 to second(for `net46`) or third (for `netcoreapp2.0`) parameter
+* `.\Test.cmd` - build `Debug` configuration and run tests for `net46` and `netcoreapp2.1` targets. You can set other configuration by passing it as first paramenter, disable test targets by passing 0 to second(for `net46`) or third (for `netcoreapp2.1`) parameter and format (default:html) as 4th parameter.
 
-Example of running Release build tests for `netcoreapp2.0` only:
+Example of running Release build tests for `netcoreapp2.1` only with trx as output:
 ```
-test.cmd Release 0 1
+test.cmd Release 0 1 trx
 ```
 
 ### Different platforms support
@@ -200,8 +200,8 @@ The `[User]DataProviders.json` is a regular JSON file:
 
     },
 
-    // .net core 2.0 test configuration
-    "CORE2" :
+    // .net core 2.1 test configuration
+    "CORE21" :
     {
         "BasedOn"              : "LocalConnectionStrings",
         "Providers"            :
@@ -255,7 +255,7 @@ We do run builds and tests with:
 * [Azure Pipelines](https://dev.azure.com/linq2db/linq2db/_build?definitionId=1) [azure-pipelines.yml](https://github.com/linq2db/linq2db/blob/master/azure-pipelines.yml).
 It builds solution, generate and publish nugets and runs tests for:
   * .Net 4.6
-  * .Net Core 2.0 (Windows/Linux and MacOS)
+  * .Net Core 2.1 (Windows/Linux and MacOS)
 For more details check [readme](https://github.com/linq2db/linq2db/blob/master/Build/Azure/README.md)
 
 CI builds are done for all branches and PRs.

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 using System.ServiceModel;
 #endif
 
@@ -74,7 +74,7 @@ namespace Tests.UserTests
 
 				if (throws && context.Contains(".LinqService"))
 				{
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 					Assert.Throws<FaultException<ExceptionDetail>>(() => table.ToList());
 #endif
 				}
