@@ -17,16 +17,19 @@ while ! docker info 2>/dev/null ; do
     if pgrep -xq -- "Docker"; then
         echo 'docker still running'
     else
-        echo 'docker not running, restart'
-        /Applications/Docker.app/Contents/MacOS/Docker --unattended &
         echo 'searching for logs start'
         echo 'tree1'
         tree '/Users/vsts/Library/Containers/com.docker.docker/'
         echo 'tree2'
         tree '/Users/vsts/Library/Group Containers/group.com.docker/'
+        echo 'cat start'
+        cat '/Users/vsts/Library/Group Containers/group.com.docker/DockerAppStderr.txt'
+        echo 'cat end'
         #ls '/Users/vsts/Library/Containers/com.docker.docker/Data/vms/0/data'
         #cat '/Users/vsts/Library/Containers/com.docker.docker/Data/vms/0/data'
         echo 'searching for logs end'
+        echo 'docker not running, restart'
+        /Applications/Docker.app/Contents/MacOS/Docker --unattended &
     fi
     if [ $retries -gt 30 ]; then
         >&2 echo 'Failed to run docker'
