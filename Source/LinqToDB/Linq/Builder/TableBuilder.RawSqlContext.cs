@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -12,9 +11,6 @@ namespace LinqToDB.Linq.Builder
 
 	partial class TableBuilder
 	{
-		private static MethodInfo _asSqlMethodInfo =
-			MemberHelper.MethodOf(() => Sql.AsSql(""));
-
 		static IBuildContext BuildRawSqlTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;

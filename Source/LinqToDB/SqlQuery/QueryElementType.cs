@@ -10,6 +10,7 @@ namespace LinqToDB.SqlQuery
 		SqlExpression,
 		SqlBinaryExpression,
 		SqlValue,
+		SqlValueList,
 		SqlDataType,
 		SqlTable,
 
@@ -45,6 +46,7 @@ namespace LinqToDB.SqlQuery
 		CteClause,
 		SqlCteTable,
 		SqlRawSqlTable,
+		SqlValuesTable,
 
 		SelectStatement,
 		InsertStatement,

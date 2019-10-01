@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
+
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	partial class TableBuilder
@@ -16,22 +14,38 @@ namespace LinqToDB.Linq.Builder
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
 
-			if (builder.MappingSchema.IsScalarType(methodCall.Method.GetGenericArguments()[0]))
-				throw new LinqToDBException("Selection of scalar types not supported by AsValuesTable method. Use mapping class with one column for scalar values");
+			var originalType = methodCall.Method.GetGenericArguments()[0];
+			var isScalarType = builder.MappingSchema.IsScalarType(originalType);
 
-			PrepareRawSqlArguments(methodCall.Arguments[1],
-				methodCall.Arguments.Count > 2 ? methodCall.Arguments[2] : null,
-				out var format, out var arguments);
+			Expression dataContext, sourceExpression;
 
-			var sqlArguments = arguments.Select(a => builder.ConvertToSql(buildInfo.Parent, a)).ToArray();
+			if (typeof(IDataContext).IsAssignableFromEx(methodCall.Arguments[0].Type))
+			{
+				dataContext      = methodCall.Arguments[0];
+				sourceExpression = methodCall.Arguments[1];
+			}
+			else
+			{
+				dataContext      = methodCall.Arguments[1];
+				sourceExpression = methodCall.Arguments[0];
+			}
 
-			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], format, sqlArguments);
+			ISqlExpression expr = null;
+
+			switch (sourceExpression.NodeType)
+			{
+				case ExpressionType.Constant:
+					break;
+			}
+
+			return new ValuesTableContext(builder, buildInfo,
+				new SqlValuesTable(builder.MappingSchema, originalType, "Values", expr));
 		}
 
 		class ValuesTableContext : TableContext
 		{
-			public ValuesTableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, string sql, params ISqlExpression[] parameters)
-				: base(builder, buildInfo, new SqlRawSqlTable(builder.MappingSchema, originalType, sql, parameters))
+			public ValuesTableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlValuesTable table)
+				: base(builder, buildInfo, table)
 			{
 			}
 		}

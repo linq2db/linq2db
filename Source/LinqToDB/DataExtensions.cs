@@ -937,8 +937,8 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the object collection. </returns>
 		[LinqTunnel]
 		[Pure]
-		public static IQueryable AsValuesTable<T>(
-			[NotNull] this IDataContext dataContext, [SqlQueryDependent] IEnumerable<T> source)
+		public static IQueryable<T> AsValuesTable<T>(
+			[NotNull] this IDataContext dataContext, IEnumerable<T> source)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
@@ -960,8 +960,8 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the object collection. </returns>
 		[LinqTunnel]
 		[Pure]
-		public static IQueryable AsValuesTable<T>(
-			[SqlQueryDependent] this IEnumerable<T> source, [NotNull] IDataContext dataContext)
+		public static IQueryable<T> AsValuesTable<T>(
+			this IEnumerable<T> source, [NotNull] IDataContext dataContext)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 

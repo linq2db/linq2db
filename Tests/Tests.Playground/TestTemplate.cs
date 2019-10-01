@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Tools;
 
@@ -13,12 +14,6 @@ namespace Tests.Playground
 	[TestFixture]
 	public class ValuesTableTests : TestBase
 	{
-		class Test
-		{
-			public int Field1;
-			public string Field2;
-		}
-
 		[Test, Explicit("Work In Progress")]
 		public void AsValuesTableTests([IncludeDataSources(ProviderName.SqlServer2014)] string context)
 		{

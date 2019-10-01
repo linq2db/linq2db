@@ -8,6 +8,7 @@ namespace LinqToDB.SqlQuery
 		Function,
 		Expression,
 		Cte,
-		RawSql
+		RawSql,
+		Values
 	}
 }
