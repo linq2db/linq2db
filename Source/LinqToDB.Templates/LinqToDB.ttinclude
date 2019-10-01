@@ -355,7 +355,7 @@ void GenerateTypesFromMetadata()
 				canBeReplaced = false;
 			}
 
-			c.Attributes.Add(ca);
+			c.Attributes.Insert(0, ca);
 
 			// PK.
 			//
@@ -367,9 +367,9 @@ void GenerateTypesFromMetadata()
 					pka.Parameters.Add(c.PrimaryKeyOrder.ToString());
 
 				if (canBeReplaced)
-					c.Attributes[0] = pka;
-				else
-					c.Attributes.Add(pka);
+					c.Attributes.Remove(ca);
+
+				c.Attributes.Add(pka);
 
 				canBeReplaced = false;
 			}
@@ -381,9 +381,9 @@ void GenerateTypesFromMetadata()
 				var ida = new Attribute("Identity");
 
 				if (canBeReplaced)
-					c.Attributes[0] = ida;
-				else
-					c.Attributes.Add(ida);
+					c.Attributes.Remove(ca);
+
+				c.Attributes.Add(ida);
 
 				canBeReplaced = false;
 			}
