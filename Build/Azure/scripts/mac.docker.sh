@@ -17,7 +17,8 @@ while ! docker info 2>/dev/null ; do
         echo 'docker still running'
     else
         echo 'docker not running, restart'
-        /Applications/Docker.app/Contents/MacOS/Docker --unattended &
+        /Applications/Docker.app/Contents/MacOS/Docker
+        #--unattended &
         cat '/Users/vsts/Library/Group Containers/group.com.docker/DockerAppStderr.txt'
         sudo cat '/Users/vsts/Library/Group Containers/group.com.docker/DockerAppStderr.txt'
     fi
