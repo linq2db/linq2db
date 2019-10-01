@@ -19,8 +19,8 @@ while ! docker info 2>/dev/null ; do
         echo 'docker not running, restart'
         /Applications/Docker.app/Contents/MacOS/Docker --unattended &
         echo 'searching for logs start'
-        ls '/Users/vsts/Library/Containers/com.docker.docker/Data/vms'
-        cat '/Users/vsts/Library/Containers/com.docker.docker/Data/vms'
+        ls '/Users/vsts/Library/Containers/com.docker.docker/Data/vms/0'
+        cat '/Users/vsts/Library/Containers/com.docker.docker/Data/vms/0'
         echo 'searching for logs end'
     fi
     if [ $retries -gt 30 ]; then
