@@ -19,6 +19,7 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using System.Diagnostics;
 
 	public abstract class Query
 	{
@@ -259,7 +260,8 @@ namespace LinqToDB.Linq
 				if (DataConnection.TraceSwitch.TraceInfo)
 					DataConnection.WriteTraceLine(
 						$"Expression test code generated: \'{testFile}\'.",
-						DataConnection.TraceSwitch.DisplayName);
+						DataConnection.TraceSwitch.DisplayName,
+						TraceLevel.Info);
 			}
 
 			var query = new Query<T>(dataContext, expr);
@@ -274,7 +276,8 @@ namespace LinqToDB.Linq
 				{
 					DataConnection.WriteTraceLine(
 						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
-						DataConnection.TraceSwitch.DisplayName);
+						DataConnection.TraceSwitch.DisplayName,
+						TraceLevel.Error);
 				}
 
 				throw;

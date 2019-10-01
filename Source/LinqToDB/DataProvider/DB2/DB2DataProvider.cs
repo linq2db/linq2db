@@ -15,6 +15,7 @@ namespace LinqToDB.DataProvider.DB2
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using System.Diagnostics;
 
 	public class DB2DataProvider : DynamicDataProviderBase
 	{
@@ -107,11 +108,13 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				DataConnection.WriteTraceLine(
 					DataReaderType.Assembly.FullName,
-					DataConnection.TraceSwitch.DisplayName);
+					DataConnection.TraceSwitch.DisplayName,
+					TraceLevel.Info);
 
 				DataConnection.WriteTraceLine(
 					DB2Types.DB2DateTime.IsSupported ? "DB2DateTime is supported." : "DB2DateTime is not supported.",
-					DataConnection.TraceSwitch.DisplayName);
+					DataConnection.TraceSwitch.DisplayName,
+					TraceLevel.Info);
 			}
 
 			DB2Tools.Initialized();

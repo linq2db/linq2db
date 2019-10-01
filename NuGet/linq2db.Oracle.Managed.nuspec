@@ -36,6 +36,11 @@
 	<files>
 		<file src="..\Tests\Linq\bin\Azure\net46\Oracle.ManagedDataAccess.dll"     target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"               target="tools" />
+
+		<file src="_._"                                                            target="lib\net45" />
+		<file src="_._"                                                            target="lib\net46" />
+		<file src="_._"                                                            target="lib\netstandard2.0" />
+		<file src="_._"                                                            target="lib\netcoreapp2.0" />
 		
 		<file src="Oracle\linq2db.Oracle.props"                                    target="build\linq2db.Oracle.Managed.props" />
 		

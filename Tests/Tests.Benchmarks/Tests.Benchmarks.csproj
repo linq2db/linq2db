@@ -4,7 +4,7 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Benchmarks</AssemblyName>
 		<RootNamespace>Tests</RootNamespace>
-		<TargetFrameworks>net462;netcoreapp2.0</TargetFrameworks>
+		<TargetFrameworks>net462;netcoreapp2.1</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<Nullable>disable</Nullable>
 	</PropertyGroup>

@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 using System.ServiceModel;
 using System.ServiceModel.Description;
 #endif
@@ -21,7 +21,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 using LinqToDB.ServiceModel;
 #endif
 
@@ -30,11 +30,14 @@ using NUnit.Framework;
 namespace Tests
 {
 	using Model;
+	using NUnit.Framework.Internal;
 	using Tools;
 
 //	[Order(1000)]
 	public class TestBase
 	{
+		private const int TRACES_LIMIT = 100000;
+
 		static TestBase()
 		{
 			Console.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
@@ -43,16 +46,27 @@ namespace Tests
 
 			var traceCount = 0;
 
-			DataConnection.WriteTraceLine = (s1,s2) =>
+			DataConnection.TurnTraceSwitchOn(TraceLevel.Info);
+			DataConnection.WriteTraceLine = (message, name, level) =>
 			{
-				if (traceCount < 10000)
+				var ctx = CustomTestContext.Get();
+				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+				if (trace == null)
 				{
-					Console.WriteLine("{0}: {1}", s2, s1);
-					Debug.WriteLine(s1, s2);
+					trace = new StringBuilder();
+					ctx.Set(CustomTestContext.TRACE, trace);
 				}
 
-				if (traceCount++ > 10000)
-					DataConnection.TurnTraceSwitchOn(TraceLevel.Error);
+				trace.AppendLine($"{name}: {message}");
+
+				if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
+				{
+					ctx.Set(CustomTestContext.LIMITED, true);
+					Console.WriteLine("{0}: {1}", name, message);
+					Debug.WriteLine(message, name);
+				}
+
+				traceCount++;
 			};
 
 //			Configuration.RetryPolicy.Factory = db => new Retry();
@@ -62,7 +76,7 @@ namespace Tests
 //			Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = typeof(TestBase).Assembly.GetPath();
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
@@ -80,8 +94,8 @@ namespace Tests
 			var userDataProvidersJson =
 				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
-#if NETCOREAPP2_0
-			var configName = "CORE2";
+#if NETCOREAPP2_1
+			var configName = "CORE21";
 #elif NET46
 			var configName = "NET46";
 #else
@@ -128,7 +142,7 @@ namespace Tests
 
 			Console.WriteLine("Connection strings:");
 
-#if NETCOREAPP2_0
+#if NETCOREAPP2_1
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -164,12 +178,12 @@ namespace Tests
 			if (!string.IsNullOrEmpty(DefaultProvider))
 			{
 				DataConnection.DefaultConfiguration       = DefaultProvider;
-#if NETCOREAPP2_0
+#if NETCOREAPP2_1
 				TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
 #endif
 			}
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -203,7 +217,7 @@ namespace Tests
 			return fileName;
 		}
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 		const int IP = 22654;
 		static bool _isHostOpen;
 		static LinqService _service;
@@ -211,7 +225,7 @@ namespace Tests
 
 		static void OpenHost(MappingSchema ms)
 		{
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 			if (_isHostOpen)
 			{
 				_service.MappingSchema = ms;
@@ -256,15 +270,15 @@ namespace Tests
 
 		public static readonly List<string> Providers = new List<string>
 		{
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 			ProviderName.Access,
-			ProviderName.DB2,
-			ProviderName.Informix,
 			ProviderName.Sybase,
 			ProviderName.SapHana,
 			ProviderName.OracleNative,
 			ProviderName.SqlCe,
 #endif
+			ProviderName.DB2,
+			ProviderName.Informix,
 			ProviderName.SQLiteClassic,
 			ProviderName.SybaseManaged,
 			ProviderName.OracleManaged,
@@ -294,7 +308,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 				OpenHost(ms);
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
@@ -1027,6 +1041,27 @@ namespace Tests
 		{
 			isLinqService = context.EndsWith(".LinqService");
 			return context.Replace(".LinqService", "");
+		}
+
+		[TearDown]
+		public virtual void OnAfterTest()
+		{
+			if (TestContext.CurrentContext.Result.FailCount > 0)
+			{
+				var ctx = CustomTestContext.Get();
+				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+				if (trace != null && ctx.Get<bool>(CustomTestContext.LIMITED))
+				{
+					// we need to set ErrorInfo.Message element text
+					// because Azure displays only ErrorInfo node data
+					TestExecutionContext.CurrentContext.CurrentResult.SetResult(
+						TestExecutionContext.CurrentContext.CurrentResult.ResultState,
+						TestExecutionContext.CurrentContext.CurrentResult.Message + "\r\n" + trace.ToString(),
+						TestExecutionContext.CurrentContext.CurrentResult.StackTrace);
+				}
+			}
+
+			CustomTestContext.Release();
 		}
 	}
 

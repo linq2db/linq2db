@@ -265,6 +265,10 @@ namespace LinqToDB.DataProvider.Informix
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			dynamic p = parameter;
+
+			if (parameter.GetType().Name == "DB2Parameter")
+				return p.DB2Type.ToString();
+
 			return p.IfxType.ToString();
 		}
 

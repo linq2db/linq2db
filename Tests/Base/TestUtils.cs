@@ -189,7 +189,7 @@ namespace Tests
 
 		private static string GetContextName(IDataContext db)
 		{
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 			if (db is TestServiceModelDataContext linqDb)
 				return linqDb.Configuration;
 #endif

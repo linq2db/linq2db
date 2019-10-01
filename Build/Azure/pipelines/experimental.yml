@@ -5,7 +5,7 @@ variables:
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
   netfx46_tests: 'netfx46_tests'
-  netcore2_tests: 'netcoreapp20_tests'
+  netcore21_tests: 'netcoreapp21_tests'
 
 trigger: none
 
@@ -39,10 +39,10 @@ stages:
       displayName: Build Solution
 
 # need it for DotNetCoreCLI task be able to build C#8 project
-    - task: DotNetCoreInstaller@1
+    - task: UseDotNet@2
+      displayName: Install .NET Core 3.0
       inputs:
-        version: '3.0.100-preview8-013656'
-      displayName: Install .NET Core 3p8 SDK
+        version: 3.0.100
 
     - task: DotNetCoreCLI@2
       inputs:
@@ -50,7 +50,7 @@ stages:
         projects: '**/Tests/Linq/Tests.csproj'
         publishWebProjects: false
         zipAfterPublish: false
-        arguments: -f netcoreapp2.0 -c $(build_configuration)
+        arguments: -f netcoreapp2.1 -c $(build_configuration)
         nobuild: true
       displayName: Publish Test Project
 
@@ -63,10 +63,10 @@ stages:
 
     - task: CopyFiles@2
       inputs:
-        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish'
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish'
         sourceFolder: '$(Build.SourcesDirectory)/Tests'
         contents: 'DataProviders.json'
-      displayName: Copy test settings for NETCOREAPP2.0
+      displayName: Copy test settings for NETCOREAPP2.1
 
     - task: CopyFiles@2
       inputs:
@@ -76,9 +76,9 @@ stages:
 
     - task: CopyFiles@2
       inputs:
-        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish/configs'
-        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp20'
-      displayName: Copy test configs for NETCOREAPP2.0
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/configs'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp21'
+      displayName: Copy test configs for NETCOREAPP2.1
 
     - task: CmdLine@2
       inputs:
@@ -87,9 +87,9 @@ stages:
 
     - task: CopyFiles@2
       inputs:
-        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish/scripts'
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/scripts'
         sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
-      displayName: Copy test scripts for NETCOREAPP2.0
+      displayName: Copy test scripts for NETCOREAPP2.1
 
     - task: CopyFiles@2
       inputs:
@@ -105,9 +105,9 @@ stages:
 
     - task: PublishPipelineArtifact@1
       inputs:
-        path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.0/publish'
-        artifact: '$(netcore2_tests)'
-      displayName: Publish test artifacts for NETCOREAPP2.0
+        path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish'
+        artifact: '$(netcore21_tests)'
+      displayName: Publish test artifacts for NETCOREAPP2.1
 
     - task: PublishPipelineArtifact@1
       inputs:
@@ -124,25 +124,32 @@ stages:
 #################################################
 #### delete it
 
-  - job: test_linux_netcoreapp20_job
+  - job: test_linux_netcoreapp21_job
     pool:
       vmImage: 'ubuntu-16.04'
-    displayName: 'Tests: Lin / NETCOREAPP2.0 / '
+    displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: ne(variables['Build.SourceBranchName'], 'release')
 
     strategy:
       matrix:
-        Sybase:
-          title: 'Sybase ASE 16'
-          config: 'sybase'
-          script: 'sybase.sh'
+        Informix12:
+          title: 'Informix 12.10'
+          config: 'informix'
+          script: 'informix12.sh'
+          nuget: 'IBM.Data.DB2.Core-lnx'
+        SAPHANA2:
+          title: 'SAP HANA 2 SPS 04r40'
+          config: 'hana2'
+          script: 'mac.hana2.sh'
+          docker: 'true'
+          docker_login: 'true'
     steps:
     - checkout: none
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: '$(netcore2_tests)'
+        artifactName: '$(netcore21_tests)'
         targetPath: '$(System.DefaultWorkingDirectory)'
 
     - task: CmdLine@2
@@ -150,6 +157,21 @@ stages:
         script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
       displayName: Copy test config
+
+    - task: NuGet@0
+      displayName: Install nugets
+      inputs:
+        command: 'install'
+        arguments: '$(nuget) -ExcludeVersion'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['nuget']
+
+    - task: Docker@2
+      displayName: Auth on hub.docker.com
+      inputs:
+        command: login
+        containerRegistry: dockerhub
+      condition: eq(variables['docker_login'], 'true')
 
     - task: CmdLine@2
       inputs:
@@ -167,41 +189,44 @@ stages:
 
 # just because there is not vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
-    - script: dotnet vstest ./linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
-# set TZ variable for oracle client
-      env:
-        TZ: CET
+    - script: dotnet vstest ./linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.1 /logger:trx
       displayName: '$(title)'
-
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()
       inputs:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
-        testRunTitle: 'Linux / NETCOREAPP2.0 / $(title)'
+        testRunTitle: 'Linux / NETCOREAPP2.1 / $(title)'
 
-  - job: test_macos_netcoreapp20_job
+  - job: test_macos_netcoreapp21_job
     pool:
       vmImage: 'macOS-10.14'
-    displayName: 'Tests: Mac / NETCOREAPP2.0 / '
+    displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
 
     strategy:
       matrix:
-        Sybase:
-          title: 'Sybase ASE 16'
-          config: 'sybase'
-          script: 'sybase.sh'
+        Informix12:
+          title: 'Informix 12.10'
+          config: 'informix'
+          script: 'mac.informix12.sh'
           docker: 'true'
+          nuget: 'IBM.Data.DB2.Core-osx'
+        SAPHANA2:
+          title: 'SAP HANA 2 SPS 04r40'
+          config: 'hana2'
+          script: 'mac.hana2.sh'
+          docker: 'true'
+          docker_login: 'true'
 
     steps:
     - checkout: none
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: '$(netcore2_tests)'
+        artifactName: '$(netcore21_tests)'
         targetPath: '$(System.DefaultWorkingDirectory)'
 
     - task: CmdLine@2
@@ -223,6 +248,21 @@ stages:
       condition: eq(variables['docker'], 'true')
       displayName: Install Docker
 
+    - task: Docker@2
+      displayName: Auth on hub.docker.com
+      inputs:
+        command: login
+        containerRegistry: dockerhub
+      condition: eq(variables['docker_login'], 'true')
+
+    - task: NuGet@0
+      displayName: Install nugets
+      inputs:
+        command: 'install'
+        arguments: '$(nuget) -ExcludeVersion'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['nuget']
+      
     - task: CmdLine@2
       inputs:
         script: 'chmod +x $(script)'
@@ -237,11 +277,8 @@ stages:
       condition: and(succeeded(), variables['script'])
       displayName: Setup tests
 
-    - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.0 /logger:trx
+    - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v2.1 /logger:trx
       condition: succeeded()
-# set TZ variable for oracle client
-      env:
-        TZ: CET
       displayName: '$(title)'
 
 
@@ -250,4 +287,4 @@ stages:
       inputs:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
-        testRunTitle: 'Mac / NETCOREAPP2.0 / $(title)'
+        testRunTitle: 'Mac / NETCOREAPP2.1 / $(title)'

@@ -73,9 +73,20 @@ if ($version) {
 		$child.InnerText = 'http://linq2db.com'
 		$xml.package.metadata.AppendChild($child)
 
-		$child = $xml.CreateElement('iconUrl', $nsUri)
-		$child.InnerText = 'http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320'
+		# add icon + icon file
+		$child = $xml.CreateElement('icon', $nsUri)
+		$child.InnerText = 'images\icon.png'
 		$xml.package.metadata.AppendChild($child)
+
+		$child = $xml.CreateElement('file', $nsUri)
+		$attr = $xml.CreateAttribute('src')
+		$attr.Value = 'icon64.png'
+		$child.Attributes.Append($attr)
+		$attr = $xml.CreateAttribute('target')
+		$attr.Value = 'images\icon.png'
+		$child.Attributes.Append($attr)
+		$xml.package.files.AppendChild($child)
+
 
 		$child = $xml.CreateElement('requireLicenseAcceptance', $nsUri)
 		$child.InnerText = 'false'
