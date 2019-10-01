@@ -5,10 +5,9 @@
 #https://github.com/microsoft/azure-pipelines-image-generation/issues/738
 retries=0
 # recent 37199 version of docker fails to start, so we need to specify most recent working one
-brew install tree
-brew cask install docker
+#brew cask install docker
 # install working 2.0.0.3-ce-mac81,31259
-#brew cask install https://raw.githubusercontent.com/Homebrew/homebrew-cask/8ce4e89d10716666743b28c5a46cd54af59a9cc2/Casks/docker.rb
+brew cask install https://raw.githubusercontent.com/Homebrew/homebrew-cask/8ce4e89d10716666743b28c5a46cd54af59a9cc2/Casks/docker.rb
 sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
 /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 while ! docker info 2>/dev/null ; do
@@ -17,9 +16,6 @@ while ! docker info 2>/dev/null ; do
     if pgrep -xq -- "Docker"; then
         echo 'docker still running'
     else
-        echo 'searching for logs start'
-        tree '/'
-        echo 'searching for logs end'
         echo 'docker not running, restart'
         /Applications/Docker.app/Contents/MacOS/Docker --unattended &
     fi
