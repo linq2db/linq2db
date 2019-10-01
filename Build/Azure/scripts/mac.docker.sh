@@ -27,6 +27,10 @@ while ! docker info 2>/dev/null ; do
         echo 'cat end'
         #ls '/Users/vsts/Library/Containers/com.docker.docker/Data/vms/0/data'
         #cat '/Users/vsts/Library/Containers/com.docker.docker/Data/vms/0/data'
+        echo 'launchctl start'
+        launchctl print-disabled system
+        echo 'launchctl end'
+        sudo launchctl enable system/com.docker.vmnetd
         echo 'searching for logs end'
         echo 'docker not running, restart'
         /Applications/Docker.app/Contents/MacOS/Docker --unattended &
