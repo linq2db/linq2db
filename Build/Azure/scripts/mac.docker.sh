@@ -17,10 +17,11 @@ while ! docker info 2>/dev/null ; do
         echo 'docker still running'
     else
         echo 'docker not running, restart'
-        /Applications/Docker.app/Contents/MacOS/Docker
-        #--unattended &
+        /Applications/Docker.app/Contents/MacOS/Docker --unattended &
         cat '/Users/vsts/Library/Group Containers/group.com.docker/DockerAppStderr.txt'
         sudo cat '/Users/vsts/Library/Group Containers/group.com.docker/DockerAppStderr.txt'
+        ls '/Users/vsts/Library/Containers/com.docker.docker/Data/vms/0/console-ring'
+        cat '/Users/vsts/Library/Containers/com.docker.docker/Data/vms/0/console-ring'
     fi
     if [ $retries -gt 30 ]; then
         >&2 echo 'Failed to run docker'
