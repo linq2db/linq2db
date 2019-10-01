@@ -18,19 +18,7 @@ while ! docker info 2>/dev/null ; do
         echo 'docker still running'
     else
         echo 'searching for logs start'
-        echo 'tree1'
-        tree '/Users/vsts/Library/Containers/com.docker.docker/'
-        echo 'tree2'
-        tree '/Users/vsts/Library/Group Containers/group.com.docker/'
-        echo 'cat start'
-        cat '/Users/vsts/Library/Group Containers/group.com.docker/DockerAppStderr.txt'
-        echo 'cat end'
-        #ls '/Users/vsts/Library/Containers/com.docker.docker/Data/vms/0/data'
-        #cat '/Users/vsts/Library/Containers/com.docker.docker/Data/vms/0/data'
-        echo 'launchctl start'
-        launchctl print-disabled system
-        echo 'launchctl end'
-        sudo launchctl enable system/com.docker.vmnetd
+        tree '/'
         echo 'searching for logs end'
         echo 'docker not running, restart'
         /Applications/Docker.app/Contents/MacOS/Docker --unattended &
