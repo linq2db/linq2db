@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using System.Diagnostics;
 	using Async;
 	using Builder;
 	using Common;
@@ -80,7 +81,8 @@ namespace LinqToDB.Linq
 					if (DataConnection.TraceSwitch.TraceInfo)
 						DataConnection.WriteTraceLine(
 							$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
-							DataConnection.TraceSwitch.DisplayName);
+							DataConnection.TraceSwitch.DisplayName,
+							TraceLevel.Error);
 
 					var qr = QueryRunner;
 					if (qr != null)

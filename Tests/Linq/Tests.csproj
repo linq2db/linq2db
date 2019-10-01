@@ -16,7 +16,7 @@
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
 		<Compile Remove="DataProvider\AccessTests.cs" />
 		<Compile Remove="DataProvider\DB2Tests.cs" />
 		<Compile Remove="DataProvider\SybaseTests.cs" />

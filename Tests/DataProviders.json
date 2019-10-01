@@ -35,7 +35,7 @@
 		]
 	},
 
-	"CORE2": {
+	"CORE21": {
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
@@ -48,13 +48,13 @@
 	"NET46.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.Classic",
-		"TraceLevel": "Error"
+		"TraceLevel": "Info"
 	},
 
-	"CORE2.Azure": {
+	"CORE21.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
-		"TraceLevel": "Error"
+		"TraceLevel": "Info"
 	},
 
 	"CommonConnectionStrings": {
@@ -213,10 +213,9 @@
 			"Firebird"      : {                                                "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8"                                         },
 			"Firebird3"     : { "Provider": "FirebirdSql.Data.FirebirdClient", "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                      },
 			"Oracle.Managed": { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"            },
-			//"SqlServer.2014": {
-			//	"Provider": "System.Data.SqlClient",
-			//	"ConnectionString": "Server=localhost\\SQL2014;Database=TestData;User Id=sa;Password=Password12!;"
-			//}
+			"Informix"      : { "Provider": "Informix",                        "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"                                                                                    },
+			"DB2"           : { "Provider": "IBM.Data.DB2.Core",               "ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"                                                                                      },
+			"SapHana"       : { "Provider": "Sap.Data.Hana",                   "ConnectionString": "Server=localhost:39013;Current Schema=testdb;UserID=SYSTEM;Password=HXEHana1;"                                                                            },
 		}
 	},
 

@@ -12,11 +12,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Npgsql" Version="4.0.9" />
-		<PackageReference Include="Humanizer.Core" Version="2.6.2" />
+		<PackageReference Include="Npgsql" Version="4.0.10" />
+		<PackageReference Include="Humanizer.Core" Version="2.7.2" />
 		
-		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
-
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 
 		<None Update="Databases\Access.tt">
@@ -122,7 +120,7 @@
 		</None>
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
 		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" Version="1.1.0" />-->
 		<Reference Include="Microsoft.SqlServer.Types">
@@ -131,7 +129,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.6.0" />
 	<None Remove="Models\bbb.txt" />
 	<Content Include="Models\bbb.txt" />
 	</ItemGroup>
@@ -270,9 +268,15 @@
 		<Reference Include="PresentationCore" />
 		<Reference Include="PresentationFramework" />
 		<Reference Include="WindowsBase" />
+		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" >
+			<SetTargetFramework>TargetFramework=net46</SetTargetFramework>
+		</ProjectReference>
 	</ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
 		<Compile Remove="WPF\ViewModel.cs" />
 		<Compile Remove="WPF\ViewModel.generated.cs" />
+		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" >
+			<SetTargetFramework>TargetFramework=netcoreapp2.0</SetTargetFramework>
+		</ProjectReference>
 	</ItemGroup>
 </Project>

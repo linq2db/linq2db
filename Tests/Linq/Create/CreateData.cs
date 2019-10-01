@@ -6,7 +6,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 using LinqToDB.DataProvider.Access;
 #endif
 
@@ -266,10 +266,10 @@ namespace Tests._Create
 				case ProviderName.SybaseManaged : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestDataCore"); break;
 				case ProviderName.SQLiteClassic : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
-#if !NETCOREAPP2_0
-				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
-				case ProviderName.DB2           : RunScript(context,          "\nGO\n",  "DB2");                            break;
 				case ProviderName.Informix      : RunScript(context,          "\nGO\n",  "Informix", InformixAction);       break;
+				case ProviderName.DB2           : RunScript(context,          "\nGO\n",  "DB2");                            break;
+#if !NETCOREAPP2_1
+				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
 				case ProviderName.SqlCe         : RunScript(context,          "\nGO\n",  "SqlCe");
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                          break;
 				case ProviderName.Access        : RunScript(context,          "\nGO\n",  "Access",   AccessAction);
@@ -281,7 +281,7 @@ namespace Tests._Create
 			}
 		}
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 
 		static void AccessAction(IDbConnection connection)
 		{
@@ -368,11 +368,14 @@ namespace Tests._Create
 				conn.Execute(@"
 					UPDATE AllTypes
 					SET
-						byteDataType = ?
+						byteDataType = ?,
+						textDataType = ?
 					WHERE ID = 2",
 					new
 					{
-						blob = new byte[] { 1, 2 },
+						blob     = new byte[] { 1, 2 },
+						// no idea why it works with IBM.Data.Informix provider
+						textBlob ="BBBBB"
 					});
 			}
 		}

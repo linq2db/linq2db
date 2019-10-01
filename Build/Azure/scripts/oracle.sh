@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "##vso[task.setvariable variable=TZ]CET"
+
 docker run -d --name oracle -p 1521:1521 datagrip/oracle:11.2
 
 docker ps -a

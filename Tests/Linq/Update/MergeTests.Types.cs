@@ -8,6 +8,7 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
+	using LinqToDB.DataProvider.Informix;
 	using Model;
 
 	public partial class MergeTests : TestBase
@@ -586,7 +587,8 @@ namespace Tests.xUpdate
 						expected = expected.TrimEnd(' ');
 						break;
 					case ProviderName.Informix:
-						expected = expected.TrimEnd('\t', ' ');
+						if (!InformixTools.IsCore)
+							expected = expected.TrimEnd('\t', ' ');
 						break;
 				}
 			}
@@ -641,7 +643,10 @@ namespace Tests.xUpdate
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 1000) * 1000);
 						break;
 					case ProviderName.Informix:
-						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
+						if (InformixTools.IsCore)
+							expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
+						else
+							expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
 						break;
 					case ProviderName.PostgreSQL:
 					case ProviderName.PostgreSQL92:
