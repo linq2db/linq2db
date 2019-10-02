@@ -120,6 +120,8 @@ namespace LinqToDB.Linq.Builder
 			if (expr.Find(IsNoneSqlMember) != null)
 				return new TransformInfo(expr);
 
+			alias = alias ?? GetExpressionAlias(expr);
+
 			switch (expr.NodeType)
 			{
 				case ExpressionType.Convert       :
@@ -941,6 +943,38 @@ namespace LinqToDB.Linq.Builder
 			var helper = (IMultipleQueryHelper)Activator.CreateInstance(sqtype);
 
 			return helper.GetSubquery(this, expression, paramex, parms);
+		}
+
+		#endregion
+
+		#region Aliases
+
+		private readonly Dictionary<Expression, string> _expressionAliases = new Dictionary<Expression, string>();
+
+		void RegisterAlias(Expression expression, string alias, bool force = false)
+		{
+			if (_expressionAliases.ContainsKey(expression))
+			{
+				if (!force)
+					return;
+				_expressionAliases.Remove(expression);
+			}
+			_expressionAliases.Add(expression, alias);
+		}
+
+		void RelocateAlias(Expression oldExpression, Expression newExpression)
+		{
+			if (ReferenceEquals(oldExpression, newExpression))
+				return;
+
+			if (_expressionAliases.TryGetValue(oldExpression, out var alias))
+				RegisterAlias(newExpression, alias);
+		}
+
+		string GetExpressionAlias(Expression expression)
+		{
+			_expressionAliases.TryGetValue(expression, out var value);
+			return value;
 		}
 
 		#endregion
