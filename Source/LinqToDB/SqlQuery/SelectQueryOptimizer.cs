@@ -1012,6 +1012,22 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
+				// correct conditions
+				if (searchCondition.Count > 0 && sql.Select.Columns.Count > 0)
+				{
+					var map = sql.Select.Columns.ToDictionary(c => c.Expression);
+					foreach (var condition in searchCondition)
+					{
+						condition.Predicate.Walk(new WalkOptions(), e =>
+						{
+							if (map.TryGetValue(e, out var newExpr))
+								return newExpr;
+
+							return e;
+						});
+					}
+				}
+
 				if (!ContainsTable(tableSource.Source, sql))
 				{
 					if (!(joinTable.JoinType == JoinType.CrossApply && searchCondition.Count == 0) // CROSS JOIN

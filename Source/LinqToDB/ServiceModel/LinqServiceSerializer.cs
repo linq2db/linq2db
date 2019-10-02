@@ -676,6 +676,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsIdentity);
 							Append(elem.IsUpdatable);
 							Append(elem.IsInsertable);
+							Append(elem.IsDynamic);
 							Append((int)elem.DataType);
 							Append(elem.DbType);
 							Append(elem.Length);
@@ -1334,6 +1335,7 @@ namespace LinqToDB.ServiceModel
 							var isIdentity       = ReadBool();
 							var isUpdatable      = ReadBool();
 							var isInsertable     = ReadBool();
+							var isDynamic        = ReadBool();
 							var dataType         = ReadInt();
 							var dbType           = ReadString();
 							var length           = ReadNullableInt();
@@ -1352,8 +1354,9 @@ namespace LinqToDB.ServiceModel
 								IsPrimaryKey    = isPrimaryKey,
 								PrimaryKeyOrder = primaryKeyOrder,
 								IsIdentity      = isIdentity,
-								IsInsertable    = isInsertable,
 								IsUpdatable     = isUpdatable,
+								IsInsertable    = isInsertable,
+								IsDynamic       = isDynamic,
 								DataType        = (DataType)dataType,
 								DbType          = dbType,
 								Length          = length,
