@@ -1040,6 +1040,11 @@ namespace LinqToDB.Expressions
 			return mappingSchema.GetAttribute<AssociationAttribute>(method.Method.DeclaringType, method.Method) != null;
 		}
 
+		public static bool IsCte(this MethodCallExpression method, MappingSchema mappingSchema)
+		{
+			return method.IsQueryable("AsCte", "GetCte");
+		}
+
 		static Expression FindLevel(Expression expression, MappingSchema mapping, int level, ref int current)
 		{
 			switch (expression.NodeType)

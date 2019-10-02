@@ -930,6 +930,48 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void TestCteOptimization([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var children = db.Child.Where(c => c.ChildID > 1).AsCte().HasUniqueKey(ct => ct.ChildID);
+
+				var query =
+					from c in db.Child
+					from ct in children.LeftJoin(ct => c.ChildID == ct.ChildID)
+					select c;
+
+				var sql = query.ToString();
+				Console.WriteLine(sql);
+
+				Assert.That(sql, Is.Not.Contains("WITH"));
+			}
+		}
+
+		[ActiveIssue("Scalar recursive CTE are not working")]
+		[Test]
+		public void TestRecursiveScalar([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cteRecursive = db.GetCte<int>(cte =>
+						(
+							from c in db.Child.Take(1)
+							select c.ChildID
+						)
+						.Concat
+						(
+							from c in db.Child
+							from ct in cte.InnerJoin(ct => ct == c.ChildID + 1)
+							select c.ChildID + 1
+						)
+					, "MY_CTE");
+
+				var result = cteRecursive.ToArray();
+			}
+		}
+
 		class OrgGroupDepthWrapper
 		{
 			public OrgGroup OrgGroup { get; set; }

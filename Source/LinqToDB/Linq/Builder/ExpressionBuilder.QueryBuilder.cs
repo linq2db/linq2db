@@ -117,7 +117,7 @@ namespace LinqToDB.Linq.Builder
 			if (_skippedExpressions.Contains(expr))
 				return new TransformInfo(expr, true);
 
-			if (expr.Find(IsNoneSqlMember) != null)
+			if (HasNoneSqlMember(expr))
 				return new TransformInfo(expr);
 
 			alias = alias ?? GetExpressionAlias(expr);
@@ -583,25 +583,40 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsNonSqlMember
 
-		bool IsNoneSqlMember(Expression expr)
+		bool HasNoneSqlMember(Expression expr)
 		{
-			switch (expr.NodeType)
+			var inCte = false;
+
+			var found = expr.Find(e =>
 			{
-				case ExpressionType.MemberAccess:
-					{
-						var me = (MemberExpression)expr;
+				switch (e.NodeType)
+				{
+					case ExpressionType.MemberAccess:
+						{
+							var me = (MemberExpression)e;
 
-						var om = (
-							from c in Contexts.OfType<TableBuilder.TableContext>()
-							where c.ObjectType == me.Member.DeclaringType
-							select c.EntityDescriptor
-						).FirstOrDefault();
+							var om = (
+								from c in Contexts.OfType<TableBuilder.TableContext>()
+								where c.ObjectType == me.Member.DeclaringType
+								select c.EntityDescriptor
+							).FirstOrDefault();
 
-						return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) && om[me.Member.Name] == null;
-					}
-			}
+							return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) &&
+							       om[me.Member.Name] == null;
+						}
+					case ExpressionType.Call:
+						{
+							var mc = (MethodCallExpression)e;
+							if (mc.IsCte(MappingSchema))
+								inCte = true;
+							break;
+						}
+				}
 
-			return false;
+				return inCte;
+			});
+
+			return found != null && !inCte;
 		}
 
 		#endregion
