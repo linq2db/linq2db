@@ -96,10 +96,10 @@ namespace DataModel
 	[Table("Categories")]
 	public partial class Category
 	{
-		[Column(DbType="int",          DataType=DataType.Int32),               SequenceName("https://github.com/linq2db/linq2db/issues/1866"), PrimaryKey, Identity] public int    CategoryID   { get; set; } // int
-		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull                                                                             ] public string CategoryName { get; set; } // nvarchar(15)
-		[Column(DbType="ntext",        DataType=DataType.NText),                  Nullable                                                                         ] public string Description  { get; set; } // ntext
-		[Column(DbType="image",        DataType=DataType.Image),                  Nullable                                                                         ] public byte[] Picture      { get; set; } // image
+		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey,  Identity] public int    CategoryID   { get; set; } // int
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull              ] public string CategoryName { get; set; } // nvarchar(15)
+		[Column(DbType="ntext",        DataType=DataType.NText),                  Nullable          ] public string Description  { get; set; } // ntext
+		[Column(DbType="image",        DataType=DataType.Image),                  Nullable          ] public byte[] Picture      { get; set; } // image
 	}
 
 	[Obsolete("Use Category instead.")]
@@ -1617,9 +1617,14 @@ namespace DataModel
 
 		#region Issue1897
 
-		public static int Issue1897(this TestData2014DB dataConnection)
+		public static int Issue1897(this TestData2014DB dataConnection, out int @return)
 		{
-			return dataConnection.ExecuteProc("[Issue1897]");
+			var ret = dataConnection.ExecuteProc("[Issue1897]",
+				new DataParameter("@return", null, DataType.Int32) { Direction = ParameterDirection.ReturnValue });
+
+			@return = Converter.ChangeTypeTo<int>(((IDbDataParameter)dataConnection.Command.Parameters["@return"]).Value);
+
+			return ret;
 		}
 
 		#endregion

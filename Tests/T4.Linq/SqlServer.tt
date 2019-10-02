@@ -57,5 +57,7 @@
 
 	LoadSqlServerMetadata(GetConnectionString("SqlServer.2014"));
 
-		GenerateModel();
+	AddReturnParameter("Issue1897");
+
+	GenerateModel();
 #>
