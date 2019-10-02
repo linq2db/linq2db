@@ -707,7 +707,7 @@ namespace LinqToDB.Linq.Builder
 							var table = FindTable(expression, level, false, true);
 
 							if (table.Field == null)
-								return table.Table.SqlTable.Fields.Values
+								return table.Table.SqlTable.Fields.Values.Where(f => !f.IsDynamic)
 									.Select(f => new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f })
 									.ToArray();
 
@@ -1004,7 +1004,7 @@ namespace LinqToDB.Linq.Builder
 						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess ||
-						    expression.NodeType == ExpressionType.Call)
+							expression.NodeType == ExpressionType.Call)
 						{
 							var tableLevel  = GetAssociation(expression, level);
 							var association = (AssociatedTableContext)tableLevel.Table;
@@ -1248,6 +1248,7 @@ namespace LinqToDB.Linq.Builder
 											{
 												Name             = fieldName,
 												PhysicalName     = fieldName,
+												IsDynamic        = true,
 												ColumnDescriptor = new ColumnDescriptor(Builder.MappingSchema, new ColumnAttribute(fieldName),
 													new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member, EntityDescriptor))
 											};

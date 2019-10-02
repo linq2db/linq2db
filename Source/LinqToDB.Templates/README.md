@@ -46,6 +46,8 @@ All loaded schema information is used for mappings generation, so if you want to
 ```cs
 // Enables loading of tables and views information
 GetSchemaOptions.GetTables             = true;
+// Enables loading of foreign key relations for associations
+GetSchemaOptions.GetForeignKeys        = true;
 // Enables loading of functions and procedures information
 GetSchemaOptions.GetProcedures         = true;
 // Enables use of System.Char type in generated model for text types
