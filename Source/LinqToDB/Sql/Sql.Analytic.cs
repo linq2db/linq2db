@@ -484,26 +484,26 @@ namespace LinqToDB
 		#region Count
 
 		[Sql.Extension("COUNT({expr})", IsAggregate = true, ChainPrecedence = 0)]
-		public static long CountExt<TEntity>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, object> expr)
+		public static int CountExt<TEntity>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, object> expr)
 		{
 			throw new LinqException($"'{nameof(CountExt)}' is server-side method.");
 		}
 
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
-		public static long CountExt<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
+		public static int CountExt<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
 			throw new LinqException($"'{nameof(CountExt)}' is server-side method.");
 		}
 
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
-		public static long CountExt<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
+		public static int CountExt<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
-			return currentSource.Provider.Execute<long>(
+			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AnalyticFunctions.CountExt, source, expr, modifier),
@@ -512,19 +512,19 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("COUNT(*)", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<long> Count(this Sql.ISqlExtension ext)
+		public static IAggregateFunctionSelfContained<int> Count(this Sql.ISqlExtension ext)
 		{
 			throw new LinqException($"'{nameof(Count)}' is server-side method.");
 		}
 
 		[Sql.Extension("COUNT({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<long> Count<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
+		public static IAggregateFunctionSelfContained<int> Count<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
 			throw new LinqException($"'{nameof(Count)}' is server-side method.");
 		}
 
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<long> Count(this Sql.ISqlExtension ext, [ExprParameter] object expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
+		public static IAggregateFunctionSelfContained<int> Count(this Sql.ISqlExtension ext, [ExprParameter] object expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
 			throw new LinqException($"'{nameof(Count)}' is server-side method.");
 		}
