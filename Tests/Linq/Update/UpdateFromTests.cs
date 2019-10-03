@@ -238,15 +238,10 @@ namespace Tests.Update
 		{
 			var data = GenerateData();
 			var newData = GenerateNewData();
-			//using (var db = GetDataContext(context))
-			//using (var forUpdates = db.CreateLocalTable(data))
-			//using (var tempTable = db.CreateLocalTable(newData))
-
-			var db = GetDataContext(context);
+			using (var db = GetDataContext(context))
+			using (var forUpdates = db.CreateLocalTable(data))
+			using (var tempTable = db.CreateLocalTable(newData))
 			{
-				var forUpdates = db.CreateLocalTable(data);
-				var tempTable = db.CreateLocalTable(newData);
-
 				var someId = 100;
 
 				var recordsToUpdate =

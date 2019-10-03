@@ -962,6 +962,8 @@ namespace LinqToDB.Data
 
 		internal IAsyncDbConnection EnsureConnection()
 		{
+			CheckAndThrowOnDisposed();
+
 			if (_connection == null)
 			{
 				IDbConnection connection;
@@ -1511,6 +1513,8 @@ namespace LinqToDB.Data
 		/// <returns>Cloned connection.</returns>
 		public object Clone()
 		{
+			CheckAndThrowOnDisposed();
+
 			var connection = _connection?.TryClone() ?? _connectionFactory?.Invoke();
 
 			// https://github.com/linq2db/linq2db/issues/1486
@@ -1541,6 +1545,7 @@ namespace LinqToDB.Data
 		public void Dispose()
 		{
 			Disposed = true;
+
 			Close();
 		}
 

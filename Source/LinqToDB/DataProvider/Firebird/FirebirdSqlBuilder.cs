@@ -347,7 +347,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			// should we introduce new converstion types like NameToGeneratorName/NameToTriggerName?
+			// should we introduce new convertion types like NameToGeneratorName/NameToTriggerName?
 			switch (Statement)
 			{
 				case SqlTruncateTableStatement truncate:
