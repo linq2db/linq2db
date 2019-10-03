@@ -50,6 +50,8 @@ namespace LinqToDB.SqlProvider
 		/// </example>
 		public virtual bool WrapJoinCondition => false;
 
+		protected virtual bool CanSkipRootAliases(SqlStatement statement) => true;
+
 		#endregion
 
 		#region CommandCount
@@ -70,10 +72,8 @@ namespace LinqToDB.SqlProvider
 
 		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0)
 		{
-			BuildSql(commandNumber, statement, sb, startIndent, CanSkipRootAliases(statement));
+			BuildSql(commandNumber, statement, sb, startIndent, !Configuration.Sql.GenerateFinalAliases && CanSkipRootAliases(statement));
 		}
-
-		protected virtual bool CanSkipRootAliases(SqlStatement statement) => true;
 
 		protected virtual void BuildSetOperation(SetOperation operation, StringBuilder sb)
 		{

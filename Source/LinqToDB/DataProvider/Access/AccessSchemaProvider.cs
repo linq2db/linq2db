@@ -137,8 +137,10 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
+			// this line (GetOleDbSchemaTable) could crash application hard with AV:
+			// https://github.com/linq2db/linq2db.LINQPad/issues/23
 			var data = ((OleDbConnection)Proxy.GetUnderlyingObject((DbConnection)dataConnection.Connection))
-				.GetOleDbSchemaTable(OleDbSchemaGuid.Foreign_Keys, new object[] { null, null });
+				.GetOleDbSchemaTable(OleDbSchemaGuid.Foreign_Keys, null);
 
 			var q = from fk in data.AsEnumerable()
 					select new ForeignKeyInfo

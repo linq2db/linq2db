@@ -1116,4 +1116,14 @@ BEGIN
 END
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Issue1897')
+BEGIN DROP Procedure Issue1897 END
+GO
 
+CREATE PROCEDURE dbo.Issue1897
+AS
+BEGIN
+	RETURN 4
+END
+
+GO

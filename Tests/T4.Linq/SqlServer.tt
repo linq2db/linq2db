@@ -43,6 +43,9 @@
 	GetTable("Order Details").AliasPropertyName = "Order_Details";
 	GetTable("Order Details").AliasTypeName     = "ORD_DET";
 
+	var member = GetColumn("Categories", "CategoryID");
+	member.Attributes.Add(new Attribute("SequenceName", "\"https://github.com/linq2db/linq2db/issues/1866\""));
+
 	GenerateTypesFromMetadata();
 
 	DataContextName   = null;
@@ -53,5 +56,8 @@
 	//GenerateConstructors = false;
 
 	LoadSqlServerMetadata(GetConnectionString("SqlServer.2014"));
+
+	AddReturnParameter("Issue1897");
+
 	GenerateModel();
 #>
