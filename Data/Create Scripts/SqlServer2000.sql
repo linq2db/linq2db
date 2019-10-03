@@ -678,3 +678,13 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Column descrip
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Index description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'INDEX',@level2name=N'PK_Issue1144'
 
 GO
+
+DROP Procedure Issue1897
+GO
+
+CREATE PROCEDURE Issue1897
+AS
+BEGIN
+	RETURN 4
+END
+GO

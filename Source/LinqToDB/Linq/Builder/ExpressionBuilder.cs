@@ -307,6 +307,8 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
+		#endregion
+
 		#region ConvertParameters
 
 		internal static Expression AggregateExpression(Expression expression)
@@ -521,7 +523,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ExposeExpression(Expression expression)
 		{
-			return expression.Transform(expr =>
+			var result = expression.Transform(expr =>
 			{
 				switch (expr.NodeType)
 				{
@@ -535,7 +537,7 @@ namespace LinqToDB.Linq.Builder
 								return Expression.NotEqual(obj, Expression.Constant(null, obj.Type));
 							}
 
-							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedType, me.Member);
+							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedType, me.Member, out var alias);
 
 							if (l != null)
 							{
@@ -565,8 +567,9 @@ namespace LinqToDB.Linq.Builder
 
 								if (ex.Type != expr.Type)
 									ex = new ChangeTypeExpression(ex, expr.Type);
-
-								return ExposeExpression(ex);
+								ex = ExposeExpression(ex);
+								RegisterAlias(ex, alias);
+								return ex;
 							}
 
 							break;
@@ -577,11 +580,13 @@ namespace LinqToDB.Linq.Builder
 							var ex = (UnaryExpression)expr;
 							if (ex.Method != null)
 							{
-								var l = ConvertMethodExpression(ex.Method.DeclaringType, ex.Method);
+								var l = ConvertMethodExpression(ex.Method.DeclaringType, ex.Method, out var alias);
 								if (l != null)
 								{
 									var exposed = l.GetBody(ex.Operand);
-									return ExposeExpression(exposed);
+									exposed = ExposeExpression(exposed);
+									RegisterAlias(exposed, alias);
+									return exposed;
 								}
 							}
 							break;
@@ -646,6 +651,9 @@ namespace LinqToDB.Linq.Builder
 
 				return expr;
 			});
+
+			RelocateAlias(expression, result);
+			return result;
 		}
 
 		#endregion
@@ -669,6 +677,8 @@ namespace LinqToDB.Linq.Builder
 			expr = expr.Transform((Func<Expression,TransformInfo>)OptimizeExpressionImpl);
 
 			_optimizedExpressions[expression] = expr;
+
+			RelocateAlias(expression, expr);
 
 			return expr;
 		}
@@ -756,10 +766,14 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType, call.Method);
+							var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType, call.Method, out var alias);
 
 							if (l != null)
-								return new TransformInfo(OptimizeExpression(ConvertMethod(call, l)));
+							{
+								var optimized = OptimizeExpression(ConvertMethod(call, l));
+								RegisterAlias(optimized, alias);
+								return new TransformInfo(optimized);
+							}
 
 							if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 							{
@@ -782,12 +796,13 @@ namespace LinqToDB.Linq.Builder
 			return new TransformInfo(expr);
 		}
 
-		LambdaExpression ConvertMethodExpression(Type type, MemberInfo mi)
+		LambdaExpression ConvertMethodExpression(Type type, MemberInfo mi, out string alias)
 		{
 			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi, a => a.Configuration);
 
 			if (attr != null)
 			{
+				alias = attr.Alias ?? mi.Name;
 				if (attr.Expression != null)
 					return attr.Expression;
 
@@ -811,13 +826,12 @@ namespace LinqToDB.Linq.Builder
 						expr = Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty);
 					}
 
-					var call = Expression.Lambda<Func<LambdaExpression>>(Expression.Convert(expr,
-						typeof(LambdaExpression)));
-
-					return call.Compile()();
+					var evaluated = (LambdaExpression)(expr.EvaluateExpression());
+					return evaluated;
 				}
 			}
 
+			alias = null;
 			return null;
 		}
 
@@ -1672,12 +1686,6 @@ namespace LinqToDB.Linq.Builder
 				method.Method.GetParameters()[1].ParameterType.GetGenericArguments() :
 				method.Method.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments();
 		}
-
-		#endregion
-
-		#endregion
-
-		#region Helpers
 
 		/// <summary>
 		/// Gets Expression.Equal if <paramref name="left"/> and <paramref name="right"/> expression types are not same

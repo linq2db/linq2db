@@ -150,7 +150,7 @@ namespace LinqToDB.SchemaProvider
 
 				#region FK
 
-				var fks = GetForeignKeys(dataConnection);
+				var fks = options.GetForeignKeys ? GetForeignKeys(dataConnection) : new List<ForeignKeyInfo>();
 
 				foreach (var fk in fks.OrderBy(f => f.Ordinal))
 				{

@@ -88,5 +88,13 @@ namespace LinqToDB
 		/// </summary>
 		public bool IsColumn { get; set; }
 
+		/// <summary>
+		/// Gets or sets alias for substitution expression.
+		/// <remarks>
+		/// Note that alias can be overriden by projection member name.
+		/// </remarks>
+		/// </summary>
+		public string Alias { get; set; }
+
 	}
 }
