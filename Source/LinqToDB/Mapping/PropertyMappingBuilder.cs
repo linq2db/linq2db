@@ -454,12 +454,13 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="expression">Expression for mapping member during read.</param>
 		/// <param name="isColumn">Indicates whether a property value should be filled during entity materialization (calculated property).</param>
+		/// <param name="alias">Optional alias for specific member expression. By default Member Name is used.</param>
 		/// <returns>Returns current column mapping builder.</returns>
-		public PropertyMappingBuilder<T> IsExpression<TR>([JetBrains.Annotations.NotNull] Expression<Func<T, TR>> expression, bool isColumn = false)
+		public PropertyMappingBuilder<T> IsExpression<TR>([JetBrains.Annotations.NotNull] Expression<Func<T, TR>> expression, bool isColumn = false, string alias = null)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-			return HasAttribute(new ExpressionMethodAttribute(expression) {  IsColumn = isColumn }).IsNotColumn();
+			return HasAttribute(new ExpressionMethodAttribute(expression) { IsColumn = isColumn, Alias = alias }).IsNotColumn();
 		}
 
 	}

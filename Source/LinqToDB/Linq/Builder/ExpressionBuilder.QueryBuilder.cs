@@ -118,8 +118,10 @@ namespace LinqToDB.Linq.Builder
 			if (_skippedExpressions.Contains(expr))
 				return new TransformInfo(expr, true);
 
-			if (expr.Find(IsNoneSqlMember) != null)
+			if (HasNoneSqlMember(expr))
 				return new TransformInfo(expr);
+
+			alias = alias ?? GetExpressionAlias(expr);
 
 			switch (expr.NodeType)
 			{
@@ -221,7 +223,8 @@ namespace LinqToDB.Linq.Builder
 						{
 							// field = localVariable
 							//
-							var c = _expressionAccessors[ex];
+							if (!_expressionAccessors.TryGetValue(ex, out var c))
+								return new TransformInfo(ma);
 							return new TransformInfo(Expression.MakeMemberAccess(Expression.Convert(c, ex.Type), ma.Member));
 						}
 
@@ -581,25 +584,40 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsNonSqlMember
 
-		bool IsNoneSqlMember(Expression expr)
+		bool HasNoneSqlMember(Expression expr)
 		{
-			switch (expr.NodeType)
+			var inCte = false;
+
+			var found = expr.Find(e =>
 			{
-				case ExpressionType.MemberAccess:
-					{
-						var me = (MemberExpression)expr;
+				switch (e.NodeType)
+				{
+					case ExpressionType.MemberAccess:
+						{
+							var me = (MemberExpression)e;
 
-						var om = (
-							from c in Contexts.OfType<TableBuilder.TableContext>()
-							where c.ObjectType == me.Member.DeclaringType
-							select c.EntityDescriptor
-						).FirstOrDefault();
+							var om = (
+								from c in Contexts.OfType<TableBuilder.TableContext>()
+								where c.ObjectType == me.Member.DeclaringType
+								select c.EntityDescriptor
+							).FirstOrDefault();
 
-						return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) && om[me.Member.Name] == null;
-					}
-			}
+							return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) &&
+							       om[me.Member.Name] == null;
+						}
+					case ExpressionType.Call:
+						{
+							var mc = (MethodCallExpression)e;
+							if (mc.IsCte(MappingSchema))
+								inCte = true;
+							break;
+						}
+				}
 
-			return false;
+				return inCte;
+			});
+
+			return found != null && !inCte;
 		}
 
 		#endregion
@@ -941,6 +959,38 @@ namespace LinqToDB.Linq.Builder
 			var helper = (IMultipleQueryHelper)Activator.CreateInstance(sqtype);
 
 			return helper.GetSubquery(this, expression, paramex, parms);
+		}
+
+		#endregion
+
+		#region Aliases
+
+		private readonly Dictionary<Expression, string> _expressionAliases = new Dictionary<Expression, string>();
+
+		void RegisterAlias(Expression expression, string alias, bool force = false)
+		{
+			if (_expressionAliases.ContainsKey(expression))
+			{
+				if (!force)
+					return;
+				_expressionAliases.Remove(expression);
+			}
+			_expressionAliases.Add(expression, alias);
+		}
+
+		void RelocateAlias(Expression oldExpression, Expression newExpression)
+		{
+			if (ReferenceEquals(oldExpression, newExpression))
+				return;
+
+			if (_expressionAliases.TryGetValue(oldExpression, out var alias))
+				RegisterAlias(newExpression, alias);
+		}
+
+		string GetExpressionAlias(Expression expression)
+		{
+			_expressionAliases.TryGetValue(expression, out var value);
+			return value;
 		}
 
 		#endregion

@@ -733,7 +733,11 @@ namespace LinqToDB.Linq.Builder
 
 							if (table.Field == null)
 								return table.Table.SqlTable.Fields.Values
-									.Select(f => new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f })
+									.Where(f => !f.IsDynamic)
+									.Select(f =>
+										f.ColumnDescriptor != null
+											? new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f }
+											: new SqlInfo { Sql = f })
 									.ToArray();
 
 							break;
@@ -1278,7 +1282,10 @@ namespace LinqToDB.Linq.Builder
 											newField = new SqlField(new ColumnDescriptor(
 												Builder.MappingSchema,
 												new ColumnAttribute(fieldName),
-												new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member, EntityDescriptor)));
+												new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member, EntityDescriptor)))
+												{
+													IsDynamic        = true,
+												};
 
 											SqlTable.Add(newField);
 										}

@@ -550,3 +550,6 @@ private static IDataProvider GetDataProvider()
   return new LinqToDB.DataProvider.MySql.MySqlDataProvider();
 }
 ```
+
+# More
+Still have questions left? Check out our [documentation site](https://linq2db.github.io) and [FAQ](https://linq2db.github.io/articles/FAQ.html)

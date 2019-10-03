@@ -1371,5 +1371,26 @@ namespace Tests.DataProvider
 				Assert.AreEqual(query1, query2);
 			}
 		}
+
+		public static int Issue1897(DataConnection dataConnection, out int @return)
+		{
+			var ret = dataConnection.ExecuteProc("[Issue1897]",
+				new DataParameter("@return", null, DataType.Int32) { Direction = ParameterDirection.ReturnValue });
+
+			@return = Converter.ChangeTypeTo<int>(((IDbDataParameter)dataConnection.Command.Parameters["@return"]).Value);
+
+			return ret;
+		}
+
+		[Test]
+		public void Issue1897Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var rows = Issue1897(db, out var result);
+				Assert.AreEqual(-1, rows);
+				Assert.AreEqual(4, result);
+			}
+		}
 	}
 }

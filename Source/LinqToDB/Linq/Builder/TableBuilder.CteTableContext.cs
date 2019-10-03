@@ -127,8 +127,10 @@ namespace LinqToDB.Linq.Builder
 					.Select(info =>
 					{
 						var expr     = (info.Sql is SqlColumn column) ? column.Expression : info.Sql;
-						var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info))?.Sql;
-						var field    = RegisterCteField(baseInfo, expr, info.Index, info.MemberChain.LastOrDefault());
+						var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info));
+						var alias    = baseInfo?.MemberChain.LastOrDefault()?.Name ??
+						                  info.MemberChain.LastOrDefault()?.Name;
+						var field    = RegisterCteField(baseInfo?.Sql, expr, info.Index, alias);
 						return new SqlInfo(info.MemberChain)
 						{
 							Sql = field,
@@ -142,9 +144,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (context == _cteQueryContext)
 				{
-					var expr  = context.SelectQuery.Select.Columns[index].Expression;
+					var queryColumn = context.SelectQuery.Select.Columns[index];
+					var expr  = queryColumn.Expression;
 					    expr  = expr is SqlColumn column ? column.Expression : expr;
-					var field = RegisterCteField(null, expr, index, null);
+					var field = RegisterCteField(null, expr, index, queryColumn.Alias);
 
 					index = SelectQuery.Select.Add(field);
 				}
@@ -152,7 +155,7 @@ namespace LinqToDB.Linq.Builder
 				return base.ConvertToParentIndex(index, context);
 			}
 
-			SqlField RegisterCteField(ISqlExpression baseExpression, [NotNull] ISqlExpression expression, int index, MemberInfo member)
+			SqlField RegisterCteField(ISqlExpression baseExpression, [NotNull] ISqlExpression expression, int index, string alias)
 			{
 				if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -161,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 							var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
 
 							var newField = f == null
-								? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull, Name = member?.Name }
+								? new SqlField { SystemType = expression.SystemType, CanBeNull = expression.CanBeNull, Name = alias }
 								: new SqlField(f);
 
 							newField.PhysicalName = newField.Name;
