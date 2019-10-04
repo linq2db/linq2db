@@ -39,14 +39,14 @@ Solutions:
 
 #### Source projects
 
-| Project \ Target                                 |.NET 4.5 |.NET 4.6 | .NET Standard 2.0 | .NET Core 2.0 |
+| Project \ Target                                 |.NET 4.5 |.NET 4.6 | .NET Standard 2.0 | .NET Core 2.1 |
 |-------------------------------------------------:|:-------:|:-------:|:-----------------:|:-------------:|
 | `.\Source\LinqToDB\LinqToDB.csproj`              |    √    |    √    |         √         |       √       |
 | `.\Source\LinqToDB\LinqToDB.Tools.csproj`        |    √    |         |         √         |               |
 
 Allowed target defines:
 - `NETSTANDARD2_0` - `netstandard2.0` target ifdef
-- `NETCOREAPP2_0` - `netcoreapp2.0` target ifdef
+- `NETCOREAPP2_1` - `netcoreapp2.1` target ifdef
 - `NET45` - `net45` target ifdef
 - `NET46` - `net46` target ifdef
 

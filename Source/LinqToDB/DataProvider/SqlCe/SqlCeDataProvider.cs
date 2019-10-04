@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.SqlCeConnection, {ConnectionNamespace}";
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.SqlCeDataReader, {ConnectionNamespace}";
 
-#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 		public override string DbFactoryProviderName => "System.Data.SqlServerCe.4.0";
 #endif
 

@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.Informix
 	public static class InformixTools
 	{
 		public static string? AssemblyName;
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 		public static bool             IsCore;
 #else
 		public static readonly bool    IsCore = true;
@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.Informix
 
 				AssemblyName = "IBM.Data.DB2.Core";
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 				IsCore = File.Exists(Path.Combine(path, (AssemblyName = "IBM.Data.DB2.Core") + ".dll"));
 
 				if (!IsCore)
@@ -47,12 +47,12 @@ namespace LinqToDB.DataProvider.Informix
 
 			DataConnection.AddDataProvider(_informixDataProvider);
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 			DataConnection.AddProviderDetector(ProviderDetector);
 #endif
 		}
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP2_1
 		static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			// IBM.Data.DB2.Core already mapped to DB2 provider...

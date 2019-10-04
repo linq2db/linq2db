@@ -55,7 +55,7 @@
 		<Compile Include="Compatibility\System\Threading\AsyncLocal.cs" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
 		<Compile Remove="Configuration\DataProviderElement.cs" />
 		<Compile Remove="Configuration\DataProviderElementCollection.cs" />

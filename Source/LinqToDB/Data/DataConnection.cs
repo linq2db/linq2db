@@ -541,7 +541,7 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 				return _defaultSettings ?? (_defaultSettings = LinqToDBSection.Instance);
 #else
 				return _defaultSettings;
@@ -573,7 +573,7 @@ namespace LinqToDB.Data
 			_configurationIDs = new ConcurrentDictionary<string,int>();
 
 			LinqToDB.DataProvider.SqlServer. SqlServerTools. GetDataProvider();
-#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 			LinqToDB.DataProvider.Access.    AccessTools.    GetDataProvider();
 #endif
 			LinqToDB.DataProvider.SqlCe.     SqlCeTools.     GetDataProvider();

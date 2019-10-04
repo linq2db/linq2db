@@ -53,7 +53,7 @@ namespace LinqToDB.DataProvider.Sybase
 		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.AseConnection, {AssemblyName}";
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.AseDataReader, {AssemblyName}";
 
-#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 		public override string DbFactoryProviderName => "Sybase.Data.AseClient";
 #endif
 

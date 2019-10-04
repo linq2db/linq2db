@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.Oracle
 		Type _oracleXmlType;
 		Type _oracleXmlStream;
 
-#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 		public override string DbFactoryProviderName => Name == ProviderName.OracleNative ? "Oracle.DataAccess.Client" : null;
 #endif
 		protected override void OnConnectionTypeCreated(Type connectionType)
