@@ -8,7 +8,6 @@ namespace LinqToDB.DataProvider.SapHana
 	using Common;
 	using Data;
 	using Extensions;
-	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 
@@ -51,7 +50,7 @@ namespace LinqToDB.DataProvider.SapHana
 		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.HanaConnection, {SapHanaTools.AssemblyName}";
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.HanaDataReader, {SapHanaTools.AssemblyName}";
 
-#if !NETSTANDARD2_0 && !NETCOREAPP2_1
+#if !NETSTANDARD2_0
 		public override string DbFactoryProviderName => "Sap.Data.Hana";
 #endif
 
@@ -62,8 +61,8 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			const String paramTypeName = "HanaParameter";
-			const String dataTypeName  = "HanaDbType";
+			const string paramTypeName = "HanaParameter";
+			const string dataTypeName  = "HanaDbType";
 
 			_setText      = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "Text");
 			_setNText     = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "NClob");
@@ -97,7 +96,7 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				case DataType.NChar:
 				case DataType.Char:
-					type = typeof (String);
+					type = typeof (string);
 					break;
 				case DataType.Boolean: if (type == typeof(bool)) return typeof(byte);  break;
 				case DataType.Guid   : if (type == typeof(Guid)) return typeof(string); break;

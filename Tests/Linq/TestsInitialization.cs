@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Common;
+using System.IO;
 using System.Reflection;
 
 using NUnit.Framework;
@@ -32,6 +33,8 @@ public class TestsInitialization
 		domainManagerField.SetValue(domain, manager);
 #endif
 
+		RegisterSapHanaFactory();
+
 #if !NETCOREAPP2_1 && !AZURE
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
@@ -52,6 +55,29 @@ public class TestsInitialization
 
 		// register test providers
 		TestNoopProvider.Init();
+	}
+
+	private void RegisterSapHanaFactory()
+	{
+		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
+		// this code allows to load assembly using factory without adding explicit reference to project
+#if NETCOREAPP2_1
+		try
+		{
+			// woo-hoo, hardcoded pathes! default install location on x64 system
+			var srcPath = @"c:\Program Files (x86)\sap\hdbclient\dotnetcore\v2.1\Sap.Data.Hana.Core.v2.1.dll";
+			var targetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, Path.GetFileName(srcPath));
+			if (File.Exists(srcPath))
+			{
+				// original path contains spaces which breaks broken native dlls discovery logic in SAP provider
+				// if you run tests from path with spaces - it will not help you
+				File.Copy(srcPath, targetPath);
+				var sapHanaAssembly = Assembly.LoadFrom(targetPath);
+				DbProviderFactories.RegisterFactory("Sap.Data.Hana", sapHanaAssembly.GetType("Sap.Data.Hana.HanaFactory"));
+			}
+		}
+		catch { }
+#endif
 	}
 
 	[OneTimeTearDown]

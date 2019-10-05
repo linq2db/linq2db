@@ -20,7 +20,6 @@
 		<Compile Remove="DataProvider\AccessTests.cs" />
 		<Compile Remove="DataProvider\DB2Tests.cs" />
 		<Compile Remove="DataProvider\SybaseTests.cs" />
-		<Compile Remove="DataProvider\SapHanaTests.cs" />
 		<Compile Remove="DataProvider\InformixTests.cs" />
 		<Compile Remove="DataProvider\SqlServerTypesTests.TVP.cs" />
 		<Compile Remove="Data\MiniProfilerTests.cs" />

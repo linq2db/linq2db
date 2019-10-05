@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Data;
 
-using LinqToDB.Extensions;
-
 namespace LinqToDB.DataProvider.SapHana
 {
 	using System.Linq.Expressions;

@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 	class SapHanaSchemaProvider : SchemaProviderBase
 	{
-		protected String               DefaultSchema;
+		protected string               DefaultSchema;
 		protected GetHanaSchemaOptions HanaSchemaOptions;
 		protected bool                 HaveAccessForCalculationViews;
 
@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return combinedQuery.ToList();
 		}
 
-		private String GetTablesQuery()
+		private string GetTablesQuery()
 		{
 			var result = @"
 				SELECT
@@ -320,7 +320,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 				return new ProcedureParameterInfo
 				{
-					ProcedureID   = String.Concat(schema, '.', procedure),
+					ProcedureID   = string.Concat(schema, '.', procedure),
 					DataType      = dataType,
 					IsIn          = paramType.Contains("IN"),
 					IsOut         = paramType.Contains("OUT"),
@@ -396,7 +396,7 @@ namespace LinqToDB.DataProvider.SapHana
 		private static string GetEmptyStringIfInvalidColumnName(string columnName)
 		{
 			var invalidCharacters = new[] {':', '(', '"', ' '};
-			return columnName.IndexOfAny(invalidCharacters) > -1 ? String.Empty : columnName;
+			return columnName.IndexOfAny(invalidCharacters) > -1 ? string.Empty : columnName;
 		}
 
 		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
@@ -469,7 +469,7 @@ namespace LinqToDB.DataProvider.SapHana
 			if (procedure.IsTableFunction)
 			{
 				commandText = "SELECT * FROM " + commandText + "(";
-				commandText += String.Join(",", procedure.Parameters.Select(p => (
+				commandText += string.Join(",", procedure.Parameters.Select(p => (
 					p.SystemType == typeof (DateTime)
 						? "'" + DateTime.Now + "'"
 						: DefaultValue.GetValue(p.SystemType)) ?? "''"));

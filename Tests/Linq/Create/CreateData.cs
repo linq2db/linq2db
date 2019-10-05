@@ -268,13 +268,13 @@ namespace Tests._Create
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
 				case ProviderName.Informix      : RunScript(context,          "\nGO\n",  "Informix", InformixAction);       break;
 				case ProviderName.DB2           : RunScript(context,          "\nGO\n",  "DB2");                            break;
+				case ProviderName.SapHana       : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
 #if !NETCOREAPP2_1
 				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
 				case ProviderName.SqlCe         : RunScript(context,          "\nGO\n",  "SqlCe");
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                          break;
 				case ProviderName.Access        : RunScript(context,          "\nGO\n",  "Access",   AccessAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);         break;
-				case ProviderName.SapHana       : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
 				case ProviderName.OracleNative  : RunScript(context,          "\n/\n",   "Oracle");                         break;
 #endif
 				default: throw new InvalidOperationException(context);

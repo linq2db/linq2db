@@ -13,8 +13,8 @@ namespace LinqToDB.DataProvider.SapHana
 
 	class SapHanaOdbcSchemaProvider:SapHanaSchemaProvider
 	{
-		private String _dataSourceName;
-		private String _databaseName;
+		private string _dataSourceName;
+		private string _databaseName;
 
 		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
 		{
@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.SapHana
 			_databaseName   = ((DbConnection)dataConnection.Connection).Database;
 			_dataSourceName = ((DbConnection) dataConnection.Connection).DataSource;
 
-			if (String.IsNullOrEmpty(_dataSourceName) || String.IsNullOrEmpty(_databaseName))
+			if (string.IsNullOrEmpty(_dataSourceName) || string.IsNullOrEmpty(_databaseName))
 			{
 				using (var reader = dataConnection.ExecuteReader(@"
 					SELECT
@@ -66,10 +66,10 @@ namespace LinqToDB.DataProvider.SapHana
 					x.CreateFormat = x.TypeName;
 					if (x.CreateParameters != null)
 					{
-						x.CreateFormat += String.Concat('(',
-							String.Join(", ",
+						x.CreateFormat += string.Concat('(',
+							string.Join(", ",
 								Enumerable.Range(0, x.CreateParameters.Split(',').Length)
-									.Select(i => String.Concat('{', i, '}'))),
+									.Select(i => string.Concat('{', i, '}'))),
 							')');
 					}
 				}
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 				return new PrimaryKeyInfo
 				{
-					TableID = String.Concat(schema, '.', tableName),
+					TableID = string.Concat(schema, '.', tableName),
 					ColumnName = columnName,
 					Ordinal = position,
 					PrimaryKeyName = indexName
@@ -115,7 +115,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			if (commandType == CommandType.StoredProcedure)
 			{
-				commandText = "{ CALL " + commandText + "(" + String.Join(",", parameters.Select(x => "?")) + ")}";    
+				commandText = "{ CALL " + commandText + "(" + string.Join(",", parameters.Select(x => "?")) + ")}";    
 			}
 
 			//bug SchemaOnly simply doesn't work

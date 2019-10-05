@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider
 		private         Type _dataReaderType;
 
 		// DbProviderFactories supported added to netcoreapp2.1/netstandard2.1, but we don't build those targets yet
-#if NETSTANDARD2_0 || NETCOREAPP2_1
+#if NETSTANDARD2_0
 		public override Type DataReaderType => _dataReaderType ?? (_dataReaderType = Type.GetType(DataReaderTypeName, true));
 
 		protected internal virtual Type GetConnectionType()
