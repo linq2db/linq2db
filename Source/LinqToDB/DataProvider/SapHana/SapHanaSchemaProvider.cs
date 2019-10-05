@@ -667,8 +667,8 @@ namespace LinqToDB.DataProvider.SapHana
 				where
 					(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(v.SchemaName)) &&
 					(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(v.SchemaName)) &&
-					(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(v.SchemaName)) &&
-					(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(v.SchemaName))
+					(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(v.CatalogName)) &&
+					(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(v.CatalogName))
 				select new ViewWithParametersTableSchema
 				{
 					ID              = v.TableID,

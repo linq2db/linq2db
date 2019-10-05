@@ -131,12 +131,14 @@ namespace Tests
 
 				bool loadCheck(ProcedureSchema p)
 				{
-					return p.ProcedureName != "SERIES_GENERATE_TIME"
-						&& p.ProcedureName != "SERIES_DISAGGREGATE_TIME"
-						// just too slow
-						&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP"
-						&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP_WITH_PARAMETERS"
-						&& p.ProcedureName != "FULL_SYSTEM_INFO_DUMP_CREATE";
+					// TODO: actualize list for SPS04
+					return false;
+					//return p.ProcedureName != "SERIES_GENERATE_TIME"
+					//	&& p.ProcedureName != "SERIES_DISAGGREGATE_TIME"
+					//	// just too slow
+					//	&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP"
+					//	&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP_WITH_PARAMETERS"
+					//	&& p.ProcedureName != "FULL_SYSTEM_INFO_DUMP_CREATE";
 				}
 
 				return options;

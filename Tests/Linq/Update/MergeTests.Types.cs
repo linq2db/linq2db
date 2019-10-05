@@ -514,7 +514,9 @@ namespace Tests.xUpdate
 					&& (   provider == ProviderName.MySql
 						|| provider == ProviderName.MySqlConnector
 						|| provider == TestProvName.MariaDB
-						|| provider == TestProvName.MySql55))
+						|| provider == TestProvName.MySql55
+						// after migration to 2.4.126 provider + SPS4, hana or provider started to trim spaces on insert for some reason
+						|| provider == ProviderName.SapHana))
 					expected = '\0';
 			}
 
@@ -529,7 +531,9 @@ namespace Tests.xUpdate
 					&& (provider == ProviderName.MySql
 						|| provider == ProviderName.MySqlConnector
 						|| provider == TestProvName.MariaDB
-						|| provider == TestProvName.MySql55))
+						|| provider == TestProvName.MySql55
+						// after migration to 2.4.126 provider + SPS4, hana or provider started to trim spaces on insert for some reason
+						|| provider == ProviderName.SapHana))
 					expected = '\0';
 			}
 
