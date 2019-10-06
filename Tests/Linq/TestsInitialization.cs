@@ -71,7 +71,7 @@ public class TestsInitialization
 			{
 				// original path contains spaces which breaks broken native dlls discovery logic in SAP provider
 				// if you run tests from path with spaces - it will not help you
-				File.Copy(srcPath, targetPath);
+				File.Copy(srcPath, targetPath, true);
 				var sapHanaAssembly = Assembly.LoadFrom(targetPath);
 				DbProviderFactories.RegisterFactory("Sap.Data.Hana", sapHanaAssembly.GetType("Sap.Data.Hana.HanaFactory"));
 			}

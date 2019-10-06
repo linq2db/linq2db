@@ -573,9 +573,7 @@ namespace LinqToDB.Data
 			_configurationIDs = new ConcurrentDictionary<string,int>();
 
 			LinqToDB.DataProvider.SqlServer. SqlServerTools. GetDataProvider();
-#if !NETSTANDARD2_0 && !NETCOREAPP2_1
 			LinqToDB.DataProvider.Access.    AccessTools.    GetDataProvider();
-#endif
 			LinqToDB.DataProvider.SqlCe.     SqlCeTools.     GetDataProvider();
 			LinqToDB.DataProvider.Firebird.  FirebirdTools.  GetDataProvider();
 			LinqToDB.DataProvider.MySql.     MySqlTools.     GetDataProvider();
