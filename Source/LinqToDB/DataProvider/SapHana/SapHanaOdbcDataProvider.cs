@@ -122,6 +122,12 @@ namespace LinqToDB.DataProvider.SapHana
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
+		public override IDisposable ExecuteScope()
+		{
+			// shame!
+			return new InvariantCultureRegion();
+		}
+
 		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
