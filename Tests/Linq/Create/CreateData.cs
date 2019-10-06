@@ -269,10 +269,10 @@ namespace Tests._Create
 				case ProviderName.SapHanaOdbc   : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
 				case ProviderName.Access        : RunScript(context,          "\nGO\n",  "Access",   AccessAction);
 				                                  RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);         break;
-#if !NETCOREAPP2_1
-				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
 				case ProviderName.SqlCe         : RunScript(context,          "\nGO\n",  "SqlCe");
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                          break;
+#if !NETCOREAPP2_1
+				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
 				case ProviderName.OracleNative  : RunScript(context,          "\n/\n",   "Oracle");                         break;
 #endif
 				default: throw new InvalidOperationException(context);

@@ -33,7 +33,10 @@ public class TestsInitialization
 		domainManagerField.SetValue(domain, manager);
 #endif
 
+		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
+		// this code allows to load assembly using factory without adding explicit reference to project
 		RegisterSapHanaFactory();
+		RegisterSqlCEFactory();
 
 #if !NETCOREAPP2_1 && !AZURE
 		// configure assembly redirect for referenced assemblies to use version from GAC
@@ -59,8 +62,6 @@ public class TestsInitialization
 
 	private void RegisterSapHanaFactory()
 	{
-		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
-		// this code allows to load assembly using factory without adding explicit reference to project
 #if NETCOREAPP2_1
 		try
 		{
@@ -75,6 +76,22 @@ public class TestsInitialization
 				var sapHanaAssembly = Assembly.LoadFrom(targetPath);
 				DbProviderFactories.RegisterFactory("Sap.Data.Hana", sapHanaAssembly.GetType("Sap.Data.Hana.HanaFactory"));
 			}
+		}
+		catch { }
+#endif
+	}
+
+	private void RegisterSqlCEFactory()
+	{
+#if NETCOREAPP2_1
+		try
+		{
+			// default install pathes. Hardcoded for now as hardly anyone will need other location in near future
+			var pathx64 = @"c:\Program Files\Microsoft SQL Server Compact Edition\v4.0\Private\System.Data.SqlServerCe.dll";
+			var pathx86 = @"c:\Program Files (x86)\Microsoft SQL Server Compact Edition\v4.0\Private\System.Data.SqlServerCe.dll";
+			var path = IntPtr.Size == 4 ? pathx86 : pathx64;
+			var assembly = Assembly.LoadFrom(path);
+			DbProviderFactories.RegisterFactory("System.Data.SqlServerCe.4.0", assembly.GetType("System.Data.SqlServerCe.SqlCeProviderFactory"));
 		}
 		catch { }
 #endif
