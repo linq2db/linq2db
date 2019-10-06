@@ -20,7 +20,7 @@ namespace Tests.UserTests
 				TestProvName.AllSqlServer,
 				ProviderName.DB2,
 				ProviderName.SqlCe,
-				ProviderName.SapHana)
+				TestProvName.AllSapHana)
 			{
 			}
 		}

@@ -29,7 +29,7 @@ namespace Tests.xUpdate
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
 				TestProvName.AllSybase,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -68,7 +68,7 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -92,7 +92,7 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -116,7 +116,7 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -140,7 +140,7 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -164,7 +164,7 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -189,7 +189,7 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -216,7 +216,7 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -247,7 +247,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
@@ -283,7 +283,7 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)

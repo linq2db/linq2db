@@ -1464,7 +1464,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertSingleIdentity([DataSources(
-			ProviderName.Informix, ProviderName.SqlCe, ProviderName.SapHana)]
+			ProviderName.Informix, ProviderName.SqlCe, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

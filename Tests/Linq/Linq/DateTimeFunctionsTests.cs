@@ -393,7 +393,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
+		public void DatePartMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -497,7 +497,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Millisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
+		public void Millisecond([DataSources(ProviderName.Informix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -637,7 +637,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
+		public void DateAddMillisecond([DataSources(ProviderName.Informix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -701,7 +701,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddMilliseconds([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)]
+		public void AddMilliseconds([DataSources(ProviderName.Informix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -951,7 +951,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMillisecondExpression([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)] string context)
+		public void DateAddMillisecondExpression([DataSources(ProviderName.Informix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			var part1 = 200;
 			var part2 = 26;
@@ -1036,7 +1036,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddMillisecondsExpression([DataSources(ProviderName.Informix, ProviderName.Access, ProviderName.SapHana, TestProvName.AllMySql)]
+		public void AddMillisecondsExpression([DataSources(ProviderName.Informix, ProviderName.Access, TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)
 		{
 			var part1 = 150;

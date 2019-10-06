@@ -502,7 +502,7 @@ namespace Tests.xUpdate
 				&& provider != ProviderName.Sybase
 				&& provider != ProviderName.SybaseManaged
 				&& provider != ProviderName.DB2
-				&& provider != ProviderName.SapHana)
+				&& !provider.StartsWith(ProviderName.SapHana))
 				Assert.AreEqual(expected, actual);
 		}
 
@@ -516,7 +516,7 @@ namespace Tests.xUpdate
 						|| provider == TestProvName.MariaDB
 						|| provider == TestProvName.MySql55
 						// after migration to 2.4.126 provider + SPS4, hana or provider started to trim spaces on insert for some reason
-						|| provider == ProviderName.SapHana))
+						|| provider.StartsWith(ProviderName.SapHana)))
 					expected = '\0';
 			}
 
@@ -533,7 +533,7 @@ namespace Tests.xUpdate
 						|| provider == TestProvName.MariaDB
 						|| provider == TestProvName.MySql55
 						// after migration to 2.4.126 provider + SPS4, hana or provider started to trim spaces on insert for some reason
-						|| provider == ProviderName.SapHana))
+						|| provider.StartsWith(ProviderName.SapHana)))
 					expected = '\0';
 			}
 
@@ -662,7 +662,8 @@ namespace Tests.xUpdate
 						break;
 					case ProviderName.DB2:
 					case ProviderName.Access:
-					case ProviderName.SapHana:
+					case ProviderName.SapHanaNative:
+					case ProviderName.SapHanaOdbc:
 					case TestProvName.MariaDB:
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
 						break;

@@ -158,8 +158,7 @@ namespace Tests.Linq
 				|| context == ProviderName.DB2        + ".LinqService"
 				|| context == ProviderName.SqlCe
 				|| context == ProviderName.SqlCe      + ".LinqService"
-				|| context == ProviderName.SapHana
-				|| context == ProviderName.SapHana    + ".LinqService")
+				|| context.StartsWith(ProviderName.SapHana))
 				return CharTestData.Where(_ => _.NChar != '\0').ToArray();
 
 			// I wonder why
@@ -189,8 +188,7 @@ namespace Tests.Linq
 				|| context == ProviderName.SQLiteMS      + ".LinqService"
 				|| context == ProviderName.SqlCe
 				|| context == ProviderName.SqlCe         + ".LinqService"
-				|| context == ProviderName.SapHana
-				|| context == ProviderName.SapHana       + ".LinqService")
+				|| context.StartsWith(ProviderName.SapHana))
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\0")).ToArray();
 
 			// I wonder why
@@ -268,9 +266,9 @@ namespace Tests.Linq
 
 					for (var i = 0; i < records.Length; i++)
 					{
-						if (context == ProviderName.SapHana || context == ProviderName.SapHana + ".LinqService")
+						if (context.StartsWith(ProviderName.SapHana))
 						{
-							// for some reason, SAP returns \0 for space character
+							// SAP or provider trims space and we return default value, which is \0 for char
 							// or we insert it incorrectly?
 							if (testData[i].Char == ' ')
 								Assert.AreEqual('\0', records[i].Char);

@@ -58,7 +58,7 @@ namespace Tests.UserTests
 				false,
 				ProviderName.MySqlConnector,
 				TestProvName.AllOracle,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 					string context,
 			[Values]
 					bool providerSpecific)

@@ -5,17 +5,14 @@ using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Configuration;
 	using Common;
+	using Configuration;
 	using Data;
 	using Expressions;
 	using Extensions;
-	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 	using Tools;

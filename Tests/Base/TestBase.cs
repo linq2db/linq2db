@@ -276,7 +276,6 @@ namespace Tests
 			ProviderName.OracleNative,
 			ProviderName.SqlCe,
 #endif
-			ProviderName.SapHana,
 			ProviderName.DB2,
 			ProviderName.Informix,
 			ProviderName.SQLiteClassic,
@@ -301,7 +300,9 @@ namespace Tests
 			ProviderName.MySqlConnector,
 			TestProvName.MySql55,
 			TestProvName.MariaDB,
-			ProviderName.SQLiteMS
+			ProviderName.SQLiteMS,
+			ProviderName.SapHanaNative,
+			ProviderName.SapHanaOdbc
 		};
 
 		protected ITestDataContext GetDataContext(string configuration, MappingSchema ms = null)

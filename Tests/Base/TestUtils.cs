@@ -109,7 +109,8 @@ namespace Tests
 				case ProviderName.SqlServer2014:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlAzure:
-				case ProviderName.SapHana:
+				case ProviderName.SapHanaNative:
+				case ProviderName.SapHanaOdbc:
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
 			}
 
@@ -163,12 +164,12 @@ namespace Tests
 				case ProviderName.SqlServer2014:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlAzure:
-				case ProviderName.Oracle:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
 				case ProviderName.Informix:
 					return db.Select(() => ServerName());
-				case ProviderName.SapHana:
+				case ProviderName.SapHanaNative:
+				case ProviderName.SapHanaOdbc:
 					/* SAP HANA should be configured for linked server queries
 					 This will help to configure (especially second link):
 					 https://www.linkedin.com/pulse/cross-database-queries-thing-past-how-use-sap-hana-your-nandan

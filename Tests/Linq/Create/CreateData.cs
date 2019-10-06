@@ -268,7 +268,8 @@ namespace Tests._Create
 				                                  RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
 				case ProviderName.Informix      : RunScript(context,          "\nGO\n",  "Informix", InformixAction);       break;
 				case ProviderName.DB2           : RunScript(context,          "\nGO\n",  "DB2");                            break;
-				case ProviderName.SapHana       : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
+				case ProviderName.SapHanaNative : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
+				case ProviderName.SapHanaOdbc   : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
 #if !NETCOREAPP2_1
 				case ProviderName.Sybase        : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
 				case ProviderName.SqlCe         : RunScript(context,          "\nGO\n",  "SqlCe");

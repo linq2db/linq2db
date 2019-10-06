@@ -13,7 +13,7 @@ namespace Tests.Linq
 	public class DataContextTests : TestBase
 	{
 		[Test]
-		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			var ctx = new DataContext(context);
 
@@ -40,7 +40,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestContextToString([IncludeDataSources(TestProvName.AllSqlServer2008Plus, ProviderName.SapHana)] string context)
+		public void TestContextToString([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var ctx = new DataContext(context))
 			{

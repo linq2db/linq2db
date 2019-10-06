@@ -14,10 +14,14 @@ namespace LinqToDB.DataProvider.SapHana
 	public class SapHanaDataProvider : DynamicDataProviderBase
 	{
 		public SapHanaDataProvider()
-			: this(ProviderName.SapHana, new SapHanaMappingSchema())
+			: this(SapHanaTools.DetectedProviderName)
 		{
 		}
 
+		public SapHanaDataProvider(string name)
+			: this(name, null)
+		{
+		}
 		protected SapHanaDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
@@ -35,8 +39,6 @@ namespace LinqToDB.DataProvider.SapHana
 
 			SqlProviderFlags.IsTakeSupported            = true;
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
-
-			//testing
 
 			//not supported flags
 			SqlProviderFlags.IsSubQueryTakeSupported     = false;
@@ -155,5 +157,21 @@ namespace LinqToDB.DataProvider.SapHana
 			// provider fails to set AllowDBNull for some results
 			return true;
 		}
+
+		static class MappingSchemaInstance
+		{
+#if !NETSTANDARD2_0
+			public static readonly SapHanaMappingSchema.NativeMappingSchema NativeMappingSchema = new SapHanaMappingSchema.NativeMappingSchema();
+#endif
+			public static readonly SapHanaMappingSchema.OdbcMappingSchema   OdbcMappingSchema   = new SapHanaMappingSchema.OdbcMappingSchema();
+		}
+
+#if !NETSTANDARD2_0
+		public override MappingSchema MappingSchema => Name == ProviderName.SapHanaOdbc
+			? MappingSchemaInstance.OdbcMappingSchema as MappingSchema
+			: MappingSchemaInstance.NativeMappingSchema;
+#else
+		public override MappingSchema MappingSchema => MappingSchemaInstance.OdbcMappingSchema;
+#endif
 	}
 }
