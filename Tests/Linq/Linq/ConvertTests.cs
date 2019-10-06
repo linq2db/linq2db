@@ -606,7 +606,8 @@ namespace Tests.Linq
 
 		#endregion
 
-		[ActiveIssue("CI: SQL0245N  The invocation of routine DECIMAL is ambiguous. The argument in position 1 does not have a best fit", Configuration = ProviderName.DB2)]
+		// SAP HANA ODBC: OdbcException : ERROR [S1000] [SAP AG][LIBODBCHDB32 DLL][HDBODBC32] General error;339 invalid number: exception 71000339: SQL Error
+		[ActiveIssue("CI: SQL0245N  The invocation of routine DECIMAL is ambiguous. The argument in position 1 does not have a best fit", Configurations = new[] { ProviderName.DB2, ProviderName.SapHanaOdbc })]
 		[Test]
 		public void ConvertFromOneToAnother([DataSources] string context)
 		{

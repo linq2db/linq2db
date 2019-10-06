@@ -58,7 +58,7 @@ namespace Tests.UserTests
 					var schema     = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
 					{
 						GetTables       = false,
-						IncludedSchemas = new[] { schemaName }
+						IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
 					}));
 
 					var recordsAfter = db.GetTable<AllTypes>().Count();
@@ -102,7 +102,7 @@ namespace Tests.UserTests
 				var schema     = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
 				{
 					GetTables       = false,
-					IncludedSchemas = new[] { schemaName }
+					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
 				}));
 
 				var recordsAfter = db.GetTable<AllTypes>().Count();

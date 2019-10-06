@@ -46,7 +46,7 @@ namespace Tests.SchemaProvider
 				var schemaName = TestUtils.GetSchemaName(conn);
 				var dbSchema   = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
 				{
-					IncludedSchemas = new[] { schemaName }
+					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ?new[] { schemaName } : null
 				}));
 
 				var tableNames = new HashSet<string>();
@@ -332,7 +332,7 @@ namespace Tests.SchemaProvider
 				var schemaName = TestUtils.GetSchemaName(db);
 				var s = p.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
 				{
-					IncludedSchemas = new[] { schemaName }
+					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
 				}));
 
 				var fkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
